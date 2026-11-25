@@ -23,8 +23,8 @@ field. `movedFrom` is the authored earlier path under the
 [move contract](./mokly-moves.md). `sourcePath` is the repository-relative
 authored file: an HTML or YAML file, a Markdown file, an entry module, or a
 stories file. `propSchema`, `props`, and `controls` follow the
-[entry props contract](./mokly-entry-props.md): `props` holds the entry's own
-props or a variant's merged props, and `propSchema` is the declared or
+[entry props contract](./mokly-entry-props.md): `props` holds the complete
+props of the entry or the variant, and `propSchema` is the declared or
 inferred schema. `element` is the registry name of an HTML component or of a
 JavaScript component registered with one. No record carries a route, a file
 name, a rendered document, or usage: the

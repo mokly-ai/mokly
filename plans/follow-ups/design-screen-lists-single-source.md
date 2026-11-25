@@ -241,10 +241,10 @@
   `crates/mokly-cli/tests/design_support/scopes.rs:39`, which kept 69. So the
   nightly test failed at its first scope check, until the branch
   `conductor/storybook-support-a-mockups` set the count to 70 on 2026-11-23.
-- **Related:** `plans/follow-ups/design-external-link-check.md`, same code.
-  That item says that the browser link checks run only on the entries of
-  `browser-inventory.json`. D deletes that file, so the branch that applies D
-  updates that sentence.
+- **Related:** None open. The item `design-external-link-check.md`, which
+  named `browser-inventory.json`, was fixed and deleted on 2026-11-25: the
+  Node check `linkViolations` now rejects an unmarked external link in every
+  served design view, so it does not depend on that file.
 - **Recommendation:** D. One list replaces the separate screen lists and
   counts, so a new screen changes one list, not a copy in each runner.
 - **Action:** fix after merge, apply D, because it reaches three test

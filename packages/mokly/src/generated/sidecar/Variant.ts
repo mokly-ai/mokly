@@ -2,6 +2,7 @@
 
 import type { ColorScheme } from "./ColorScheme.js";
 import type { EntryReference } from "./EntryReference.js";
+import type { IgnoredParameter } from "./IgnoredParameter.js";
 import type { JsonValue } from "./JsonValue.js";
 
 // prettier-ignore
@@ -10,6 +11,10 @@ export type Variant = {
  * Non-data inference exclusions, before catalogue path derivation.
  */
 excludedProps?: Array<string>,
+/**
+ * Invalid Storybook parameter values, before catalogue path derivation.
+ */
+ignoredParameters?: Array<IgnoredParameter>,
 /**
  * Authored final path segment.
  */

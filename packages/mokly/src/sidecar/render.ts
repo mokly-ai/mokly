@@ -15,7 +15,7 @@ import { HtmlInput } from "./html_input.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
 import type { StoredStory } from "./story-reader.js";
-import { setupStories } from "./story-setup.js";
+import { renderStory } from "./story-render.js";
 import { collectStyles } from "./styles.js";
 
 export async function render(
@@ -32,150 +32,148 @@ export async function render(
     };
     const session = renderSession(generation, context, handleLocation(name));
     return await generation.runtime.withSession(session, async () => {
-      const props: Record<string, unknown> = structuredClone(params.props);
-      let node: ReactNode;
-      let resources: readonly string[] = [];
       if (
         kind === "story" ||
         (kind === "component" && generation.stories.has(name))
       ) {
         const stored = generation.stories.get(name) as StoredStory;
-        const story = stored.compose();
-        story.globals.moklyViewport = params.viewport;
-        story.globals.moklyColorScheme = params.colorScheme;
-        await setupStories(generation, stored.beforeAll);
-        await story.load();
-        const args = {
-          ...Object.fromEntries(stored.dataKeys.map((key) => [key, undefined])),
-          ...props,
-        };
-        node = React.createElement(() => story(args));
-      } else {
-        const definition = generation.handles.get(name);
-        const data = definitionData(definition)!;
-        const adapter = data.input.render as (
-          props: object,
-          context: object,
-        ) => ReactNode;
-        if ("slots" in params) {
-          for (const [slot, value] of Object.entries(params.slots)) {
-            const token = value.kind === "placeholder" ? value.token : "";
-            function Placeholder() {
-              session.placeholders.add(JSON.stringify([slot, token]));
-              const enabled = React.useContext(
-                generation.runtime.contexts.ignore,
-              );
-              return React.createElement("mokly-slot", {
-                name: slot,
-                token,
-                "ignore-scope": enabled ? "enabled" : "disabled",
-              });
-            }
-            if (value.kind === "saved") {
-              props[slot] = generation.savedSlots.get(value.handle);
-            } else props[slot] = React.createElement(Placeholder);
+        return renderStory(generation, stored, params, renderMarkup);
+      }
+
+      const props: Record<string, unknown> = structuredClone(params.props);
+      let resources: readonly string[] = [];
+      const definition = generation.handles.get(name);
+      const data = definitionData(definition)!;
+      const adapter = data.input.render as (
+        props: object,
+        context: object,
+      ) => ReactNode;
+      if ("slots" in params) {
+        for (const [slot, value] of Object.entries(params.slots)) {
+          const token = value.kind === "placeholder" ? value.token : "";
+          function Placeholder() {
+            session.placeholders.add(JSON.stringify([slot, token]));
+            const enabled = React.useContext(
+              generation.runtime.contexts.ignore,
+            );
+            return React.createElement("mokly-slot", {
+              name: slot,
+              token,
+              "ignore-scope": enabled ? "enabled" : "disabled",
+            });
           }
-        }
-        function Adapter() {
-          return adapter(props, context);
-        }
-        node = React.createElement(Adapter);
-        if (kind === "component")
-          node = componentOutput(generation.runtime, session, node);
-        const renderer = generation.exports?.renderer?.default;
-        if (generation.params.renderer) {
-          if (typeof renderer !== "function")
-            throw new Error("renderer default export must be a function");
-          const entry = ("entry" in params ? params.entry : undefined)!;
-          const output = (renderer as Renderer)({
-            ...context,
-            node,
-            props: params.props,
-            entry: { kind, path: entry.path, title: entry.title },
-          });
-          if (
-            output &&
-            typeof output === "object" &&
-            !React.isValidElement(output) &&
-            "node" in output
-          ) {
-            node = output.node;
-            resources = output.resources ?? [];
-            if (
-              !Array.isArray(resources) ||
-              resources.some((resource) => typeof resource !== "string")
-            )
-              throw new Error("renderer resources must be an array of paths");
-          } else node = output as ReactNode;
+          if (value.kind === "saved") {
+            props[slot] = generation.savedSlots.get(value.handle);
+          } else props[slot] = React.createElement(Placeholder);
         }
       }
-      node = React.createElement(
-        generation.runtime.contexts.session.Provider,
-        { value: session },
-        React.createElement(
-          generation.runtime.contexts.owner.Provider,
-          { value: { kind: "entry", seen: new Set<string>() } },
+      function Adapter() {
+        return adapter(props, context);
+      }
+      let node: ReactNode = React.createElement(Adapter);
+      if (kind === "component")
+        node = componentOutput(generation.runtime, session, node);
+      const renderer = generation.exports?.renderer?.default;
+      if (generation.params.renderer) {
+        if (typeof renderer !== "function")
+          throw new Error("renderer default export must be a function");
+        const entry = ("entry" in params ? params.entry : undefined)!;
+        const output = (renderer as Renderer)({
+          ...context,
+          node,
+          props: params.props,
+          entry: { kind, path: entry.path, title: entry.title },
+        });
+        if (
+          output &&
+          typeof output === "object" &&
+          !React.isValidElement(output) &&
+          "node" in output
+        ) {
+          node = output.node;
+          resources = output.resources ?? [];
+          if (
+            !Array.isArray(resources) ||
+            resources.some((resource) => typeof resource !== "string")
+          )
+            throw new Error("renderer resources must be an array of paths");
+        } else node = output as ReactNode;
+      }
+      return renderMarkup(node, resources);
+
+      function renderMarkup(
+        node: ReactNode,
+        resources: readonly string[] = [],
+      ): RenderResult {
+        const rooted = React.createElement(
+          generation.runtime.contexts.session.Provider,
+          { value: session },
           React.createElement(
-            generation.runtime.contexts.ignore.Provider,
-            {
-              value:
-                !("ignoreScope" in params) || params.ignoreScope === "enabled",
-            },
-            node,
+            generation.runtime.contexts.owner.Provider,
+            { value: { kind: "entry", seen: new Set<string>() } },
+            React.createElement(
+              generation.runtime.contexts.ignore.Provider,
+              {
+                value:
+                  !("ignoreScope" in params) ||
+                  params.ignoreScope === "enabled",
+              },
+              node,
+            ),
           ),
-        ),
-      );
-      const server = generation.require(
-        "react-dom/server",
-      ) as typeof ReactDOMServer;
-      const collected = collectStyles(
-        generation,
-        server.renderToStaticMarkup,
-        node,
-        kind === "component" ? generation.bindings![name]!.path : undefined,
-      );
-      if (
-        kind === "component" &&
-        !generation.stories.has(name) &&
-        !session.componentOutput
-      )
-        collected.input = new HtmlInput(
-          server.renderToStaticMarkup(
-            componentOutput(generation.runtime, session, null),
-          ) + collected.input.html,
         );
-      const result = finishMarkup(
-        collected.input,
-        session,
-        true,
-        collected.inlineAttribution,
-      );
-      const owners =
-        kind === "component" ? [generation.bindings![name]!.path] : [];
-      return {
-        html: result.html,
-        styles: [
-          ...collected.styles.map((style) => ({
-            ...style,
-            owners: style.owners.length ? style.owners : owners,
-          })),
-          ...result.styles.map((style) => ({
-            ...style,
-            owners: style.owners.length ? style.owners : owners,
-          })),
-        ].filter(
-          (style, index, all) =>
-            all.findIndex(
-              (other) =>
-                other.css === style.css &&
-                JSON.stringify(other.owners) === JSON.stringify(style.owners),
-            ) === index,
-        ),
-        markers: result.markers,
-        resources: [...resources],
-        instances: session.instances,
-        slots: session.slots,
-      };
+        const server = generation.require(
+          "react-dom/server",
+        ) as typeof ReactDOMServer;
+        const collected = collectStyles(
+          generation,
+          server.renderToStaticMarkup,
+          rooted,
+          kind === "component" ? generation.bindings![name]!.path : undefined,
+        );
+        if (
+          kind === "component" &&
+          !generation.stories.has(name) &&
+          !session.componentOutput
+        )
+          collected.input = new HtmlInput(
+            server.renderToStaticMarkup(
+              componentOutput(generation.runtime, session, null),
+            ) + collected.input.html,
+          );
+        const result = finishMarkup(
+          collected.input,
+          session,
+          true,
+          collected.inlineAttribution,
+        );
+        const owners =
+          kind === "component" ? [generation.bindings![name]!.path] : [];
+        return {
+          html: result.html,
+          styles: [
+            ...collected.styles.map((style) => ({
+              ...style,
+              owners: style.owners.length ? style.owners : owners,
+            })),
+            ...result.styles.map((style) => ({
+              ...style,
+              owners: style.owners.length ? style.owners : owners,
+            })),
+          ].filter(
+            (style, index, all) =>
+              all.findIndex(
+                (other) =>
+                  other.css === style.css &&
+                  JSON.stringify(other.owners) === JSON.stringify(style.owners),
+              ) === index,
+          ),
+          markers: result.markers,
+          resources: [...resources],
+          instances: session.instances,
+          slots: session.slots,
+        };
+      }
     });
   } catch (error) {
     if (error instanceof SidecarError) throw error;

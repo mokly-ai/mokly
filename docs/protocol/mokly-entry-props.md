@@ -13,10 +13,12 @@ Every screen and component is a render over props:
 - `props`: the entry's own prop values. They default to the empty map and
   must satisfy the schema, so a component whose schema requires a prop
   declares `props`.
-- `variants`: optional. Each declares `slug`, `title`, and `props` that
-  replace top-level keys of the entry's props and never deep merge, plus the
-  metadata overrides of the variants contract. A story variant takes its props
-  only from its own story under the
+- `variants`: optional. Each declares `slug`, `title`, and `props`, plus the
+  metadata overrides of the variants contract. The entry's complete props are
+  its own props. The complete props of a variant in this list are the entry's
+  props with the top-level keys of the variant's `props` replaced, never deep
+  merged. The complete props of a story variant are only the data args of its
+  own story, under the
   [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 - Controls: derived from the schema. A text control for `string` with
   `maxLength`; a toggle for `boolean`; a number control for `number` and
@@ -32,7 +34,7 @@ Every screen and component is a render over props:
 The entry's own view renders `props`. Each variant is an entry of the
 parent's kind at the parent's path plus its slug, with `variantOf`, its own
 views, its own Changes row, and its own comparison, and it renders the
-parent's render with the merged props. A story variant renders its own story
+parent's render with its complete props. A story variant renders its own story
 under the
 [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 A component needs no variant, and a component page shows the entry's own props
@@ -81,7 +83,7 @@ rule. Each affected saved entry or component invocation emits a
 The core and viewer use that same rounded value. Safe integers and negative zero
 keep their values. Rounding with a warning keeps recoverable inputs usable and
 visible, instead of rejecting them or rounding silently.
-Saved props are the entry's own props or a variant's merged props. A warning
+Saved props are the complete props of an entry or a variant. A warning
 for saved props names that entry or variant. Its message is
 `prop <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`,
 with a JSON pointer relative to those props, such as `"/count"` or
@@ -109,13 +111,11 @@ message records merge under the [warning contract](./mokly-build-warnings.md#rec
 `--strict` treats control warnings like the other unsafe-integer warnings.
 
 When an entry declares no `propSchema`, the schema is inferred, in the
-profile, from the entry's own props and every variant's merged props. Each key
-seen is a property. At the top level the keys of the entry's own props are
-`required`, and a key that only a variant adds is optional; inside an object,
-a key present in every object value of that key is `required`. For a stories
-file, the top-level `required` keys follow the
-[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants)
-instead. A value's
+profile, from the complete props of the entry and of every variant. Each key
+seen is a property. At the top level, a key is `required` when the complete
+props of the entry and of every variant contain it, and every other key is
+optional. Inside an object, a key present in every object value of that key is
+`required`. A value's
 `type` comes from the value: `string`, `number`, `boolean`, `null`, `object`
 with inferred properties and `additionalProperties: false`, or `array` whose
 `items` is inferred from every element across the sets. Kinds that differ across sets or across elements form a `type`
@@ -156,12 +156,11 @@ tags from its own story under the
 
 ## Validation
 
-- The entry's props and every variant's merged props must satisfy the
-  schema; a variant's own map may omit keys the entry's props supply. For HTML
-  kinds a rejected value fails with `html-attribute` naming the variant slug,
-  when any, and the property path; for React kinds the component diagnostics of the
-  [components contract](./mokly-components.md) apply; for a stories file the
-  story is named.
+- The complete props of the entry and of every variant must satisfy the
+  schema. For HTML kinds a rejected value fails with `html-attribute` naming
+  the variant slug, when any, and the property path; for React kinds the
+  component diagnostics of the [components contract](./mokly-components.md)
+  apply; for a stories file the story is named.
 - A slug outside the segment grammar, two variants with one slug, a nested
   `variants`, and an unknown key keep the diagnostics of the variants
   contract.
@@ -174,8 +173,8 @@ tags from its own story under the
 ## Read Model
 
 The [public catalogue read model](./mokly-catalogue.md) gives every screen
-and component the same prop fields: `propSchema`, `props`, which holds the
-entry's own props or a variant's merged props, and `controls`. A component
+and component the same prop fields: `propSchema`, `props`, which holds its
+complete props, and `controls`. A component
 parent has its own `views`, rendered from its own props without caller slot
 content, and an empty `suppliedSlots`; only a variant's `slots` and a
 composing caller fill slots. `variantOf` is present exactly on the variants of

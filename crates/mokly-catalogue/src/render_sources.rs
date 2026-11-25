@@ -113,6 +113,15 @@ pub struct ExcludedProp {
     pub key: String,
 }
 
+/// Ignored Storybook parameter before its final entry path exists.
+#[derive(Clone, Debug)]
+pub struct IgnoredStoryParameter {
+    /// Dotted parameter path.
+    pub path: String,
+    /// Warning reason text for this value.
+    pub reason: &'static str,
+}
+
 /// A path reference or an imported definition handle.
 #[derive(Clone, Debug)]
 pub enum EntryReference {
@@ -133,6 +142,8 @@ pub struct ProvidedRendering {
     pub story_hints: BTreeMap<String, BTreeMap<String, StoryControlHint>>,
     /// Excluded data keys awaiting identity resolution.
     pub excluded_props: Vec<ExcludedProp>,
+    /// Ignored Storybook parameters keyed by slug, with the empty key for the parent.
+    pub ignored_parameters: BTreeMap<String, Vec<IgnoredStoryParameter>>,
     /// Parent and variant flow memberships keyed by slug.
     pub use_cases: BTreeMap<String, Vec<EntryReference>>,
     /// Imported screen references in step order.

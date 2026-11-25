@@ -73,6 +73,25 @@ export function registerComponentDesign(
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} component designs`, () => {
       test.use({ viewport: VIEWPORTS[viewport] });
+      if (mode === "serve" && viewport === "desktop")
+        test("the failed story shows one Expanded · Light pair side by side", async ({
+          page,
+        }) => {
+          await page.goto(
+            designDocumentUrl("design/canvas/stories/failed/changes", viewport),
+          );
+          const frames = page
+            .locator('.cv-frames[data-cv-compare="side-by-side"]')
+            .getByRole("figure");
+          await expect(frames).toHaveCount(2);
+          for (const side of ["before", "after"]) {
+            const frame = page.locator(
+              `[data-cv-frame="expanded-light"][data-cv-side="${side}"]`,
+            );
+            await expect(frames.and(frame)).toBeVisible();
+          }
+        });
+
       test("a component-only change lists the component and its variants, not its affected screens", async ({
         page,
       }) => {

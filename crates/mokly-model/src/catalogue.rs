@@ -72,7 +72,7 @@ pub struct VisualEntry {
     pub color_schemes: Vec<ColorScheme>,
     /// Validated declared or inferred schema.
     pub prop_schema: PropSchema,
-    /// Own props or merged variant props.
+    /// Complete props of this entry or variant.
     pub props: Props,
     /// Controls derived or declared for editing.
     pub controls: BTreeMap<String, ComponentControl>,

@@ -266,3 +266,30 @@ test("composed function and React element args stay out of data props without ex
     "<button>Edited<span>Icon</span><i>Array icon</i> callback</button>",
   );
 });
+
+test("composed view globals reach story loaders, hooks, decorators, and markup", async (context) => {
+  const file = "button.stories.tsx";
+  const { sidecar, generation } = await describeFixture(
+    context,
+    [file],
+    "story-view-globals",
+  );
+  await installBindings(sidecar, generation);
+  for (const [viewport, colorScheme, density, globals] of [
+    ["mobile", "dark", "compact", "dark/compact/fr/mobile/dark"],
+    ["desktop", "light", "wide", "light/wide/fr/desktop/light"],
+  ]) {
+    const rendered = await sidecar.call<RenderResult>("renderStory", {
+      generation,
+      storyId: `${file}#Themed`,
+      props: {},
+      viewport,
+      colorScheme,
+    });
+    assert.equal(
+      rendered.html,
+      `<section data-theme="${colorScheme}" data-density="${density}"><output>loader=${globals} hook=${globals} markup=${globals}</output></section>`,
+      `${viewport} ${colorScheme}`,
+    );
+  }
+});

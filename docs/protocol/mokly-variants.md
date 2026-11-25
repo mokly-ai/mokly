@@ -29,11 +29,12 @@ changed view; it never creates navigation rows.
 An authored `variants` list declares a props set for each variant under the
 [entry props contract](./mokly-entry-props.md). Each variant declares `slug`,
 `title`, and `props`. The variant props replace only top-level keys of the parent's
-props. The variant uses the parent's render with the merged props. A state
-that needs another tree is a separate entry.
+props. The variant uses the parent's render with its
+[complete props](./mokly-entry-props.md#one-model). A state that needs another
+tree is a separate entry.
 
-A story variant takes its props from its own story and renders that story
-under the [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+A story variant renders its own story under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 
 `defineScreen` and `defineComponent` accept an optional `variants` list.
 `.screen.html` and `.component.html` files declare `variants` in front matter
@@ -98,7 +99,7 @@ Validation rejects, with source attribution:
   as a [duplicate path](./mokly-paths.md#diagnostics);
 - undeclared input keys such as `path` under the general unknown-field rule,
   including keys whose value is `undefined`;
-- merged props that the parent's prop schema rejects, under the
+- complete props that the parent's prop schema rejects, under the
   [entry props validation](./mokly-entry-props.md#validation).
 
 Nested `variants` produces an `invalid-variants` registry violation with the
@@ -115,7 +116,7 @@ parent with invalid metadata reports no violation of its component definition.
 A parent that fails either check keeps those parent violations, and no child's
 props or slots are validated against it; the parent stays present for the
 relationship rules and the inheritance checks above. Once both parent checks
-succeed, each variant's merged props and slots are validated against the parent
+succeed, each variant's complete props and slots are validated against the parent
 exactly once.
 
 Every other rule of a valid parent's kind applies unchanged: path and tag

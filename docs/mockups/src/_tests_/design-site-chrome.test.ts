@@ -9,11 +9,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
-
-type SiteScreenPath = (typeof siteScreens)[number];
+import { siteScreens, type SiteScreenPath } from "./site-stylesheets";
 
 /** The page name that each screen's file title and status bar show. */
 const pageNames: Record<SiteScreenPath, string> = {
@@ -210,35 +208,55 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 }
 
-test("split site styles own the chrome compositions without imports", () => {
+test("split site styles hold no imports and no product rules", () => {
   const css = siteStyles();
   assert.doesNotMatch(css, /@import/);
   assert.doesNotMatch(css, /\.pd-/);
-  for (const selector of [
-    ".site-band",
-    ".site-policy",
-    ".site-footer-nav",
-    ".site-scheme",
-    ".site-statusbar",
-    ".site-page-frame",
-    ".site-frame-name",
-    ".site-sel",
-    ".site-panel",
-    ".site-code",
-  ])
-    assert.ok(css.includes(`${selector} {`), selector);
 });
 
-test("every promised chrome control changes more than color on hover", () => {
-  assertHoverChangesMoreThanColor(hoverClasses);
-});
+/** The legal documents, the only screens that draw the policy layout. */
+const legalScreens: readonly SiteScreenPath[] = [
+  "design/site/terms",
+  "design/site/privacy",
+  "design/site/complaints",
+  "design/site/security",
+];
 
-// apps/site/tests/styles-focus.test.ts checks the focus glow of every control.
-test("meaningful control boundaries use the strong border role", () => {
-  // The chosen segment of the footer's scheme control is a control boundary
-  // too: it sits raised with a strong ring.
-  assertStrongBoundaries([
-    ".site-button--quiet",
-    ".site-scheme-option:has(.site-scheme-input:checked)",
-  ]);
-});
+// Each page loads only the shared sheets and its own area's sheets, so each
+// page's own CSS must hold the rules of the parts that every page draws.
+for (const id of siteScreens) {
+  test(`${id} styles own the chrome compositions`, () => {
+    const css = siteStyles(id);
+    const selectors = [
+      ".site-band",
+      ".site-footer-nav",
+      ".site-scheme",
+      ".site-statusbar",
+      ".site-page-frame",
+      ".site-frame-name",
+      ".site-sel",
+      ".site-panel",
+      ".site-code",
+      ...(legalScreens.includes(id) ? [".site-policy"] : []),
+    ];
+    for (const selector of selectors)
+      assert.ok(css.includes(`${selector} {`), `${id}: ${selector}`);
+  });
+
+  test(`${id}: every promised chrome control changes more than color on hover`, () => {
+    assertHoverChangesMoreThanColor(hoverClasses, id);
+  });
+
+  // apps/site/tests/styles-focus.test.ts checks the focus glow of every control.
+  test(`${id}: meaningful control boundaries use the strong border role`, () => {
+    // The chosen segment of the footer's scheme control is a control
+    // boundary too: it sits raised with a strong ring.
+    assertStrongBoundaries(
+      [
+        ".site-button--quiet",
+        ".site-scheme-option:has(.site-scheme-input:checked)",
+      ],
+      id,
+    );
+  });
+}

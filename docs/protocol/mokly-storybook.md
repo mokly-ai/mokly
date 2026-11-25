@@ -1,7 +1,5 @@
 # Storybook Stories
 
-Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
-
 ## Stories Files
 
 A stories file is a `*.stories.{ts,tsx,js,jsx}` file that a root matches. The
@@ -58,13 +56,12 @@ repeats the state of the first story. A meta page with a fallback and a
 summary page were rejected.
 
 The story id is the file path, `#`, and the export name. `describe` lists
-every included story of the generation. Mokly infers the schema from the
-props of every included story under the
-[entry props contract](./mokly-entry-props.md#schema-inference). At the top
-level, a key is `required` when the props of every included story contain it.
-Every other top-level key is optional. Each included story renders with its
-own non-data args and exactly the data props of its render request. A data arg
-of the story that the request leaves out is unset in the render.
+every included story of the generation. Mokly infers the schema, with its
+required keys, from the props of every included story under the
+[entry props contract](./mokly-entry-props.md#schema-inference). Each included
+story renders with its own non-data args and exactly the data props of its
+render request. A data arg that the render request leaves out is not in the
+story's args.
 
 Decision: each story shows, edits, compares, and renders exactly its own args,
 so that each story renders as in Storybook. A render that lays the requested
@@ -86,6 +83,11 @@ with the file's own value for it. Every other arg whose value is not data
 stays out of the props with the `props-not-data` warning of the
 [entry props contract](./mokly-entry-props.md#schema-inference). The args that
 remain are the data args of the story.
+
+Each story render applies the argTypes `mapping` and `if` of its composed
+story, as Storybook's own preview does. A mapped arg reaches the decorators,
+the loaders, the `beforeEach` hooks, and the render with its mapped value. An
+arg whose `if` condition does not hold is not in their args.
 
 Decision: Mokly follows the composed argTypes and leaves React element args
 out without a warning, so Storybook's own example stories pass `--strict`.
@@ -131,59 +133,15 @@ variant keeps the entry's description. Decision: story descriptions stay
 hidden, because the variants of a stories entry have no description of their
 own.
 
-## Setup Before Render
+## Story Setup
 
-Before each story render, the sidecar runs the story's loaders and
-`beforeEach` hooks, as Storybook's portable stories do. The render receives
-the loaded data. A `beforeEach` cleanup runs before the next story loads, as
-in Storybook. Each sidecar keeps at most one active setup from the preview's
-`beforeAll` hook. Before a story of a bundle generation loads, the sidecar
-checks the active setup. When the active setup belongs to another generation,
-the sidecar runs its cleanup first. Then it runs the `beforeAll` hook of the
-story's generation, and that setup becomes the active one. So a sidecar runs
-the hook once for each generation, and again only after the setup of another
-generation replaced it. The last setup gets no cleanup when the sidecar
-exits. A loader, a hook, a cleanup, or a render that throws fails the render
-with [`render-failed`](./mokly-sidecar.md#fail-closed-rules). When the
-`beforeAll` hook throws, it does not run again for that generation, and each
-story render of that generation fails with its error. Mokly runs no `play`
-function and no `afterEach` hook.
-
-Decision: Mokly also runs the preview's `beforeAll` hook, as Storybook's test
-runners do. Running only the loaders and the `beforeEach` hooks was rejected.
-Decision: one setup at a time is active in a sidecar, as in Storybook's own
-preview after a reload, because a setup changes globals that the whole process
-shares. A cleanup when the sidecar releases a generation was rejected, because
-two loaded generations would then keep two setups.
-
-## Globals For Views
-
-Each story render gets the view's viewport, `mobile` or `desktop`, as the
-global `moklyViewport`. It gets the view's colour scheme, `light` or `dark`,
-as the global `moklyColorScheme`.
-
-A story can have a `mokly` parameter with the fields `colorSchemes` and
-`viewports`. `colorSchemes` maps a colour scheme name, `light` or `dark`, to
-an object of Storybook globals. `viewports` maps a viewport name, `mobile` or
-`desktop`, to an object of Storybook globals. Mokly reads the parameter from
-the composed parameters of each story, so the preview, the meta, and the
-story can each set or override it. For each view, Mokly applies these globals
-over the composed story's globals, the story's own `globals` included. It
-applies them in this order, so that a later item wins:
-
-1. The mapped globals of the view's viewport.
-2. The mapped globals of the view's colour scheme.
-3. `moklyViewport` and `moklyColorScheme`.
-
-Decision: a `mokly` parameter maps the views to Storybook globals, because
-Storybook merges parameters for each story, as Chromatic's modes do.
-Documentation alone, detection of `addon-themes`, and a map in
-`mokly.config.json` were rejected. One view combines one viewport and one
-colour scheme, so both maps apply to it. The mapped globals win over the
-story's own `globals`, as the globals of a Chromatic mode do.
+The [story setup rules](./mokly-storybook-setup.md) define how the sidecar
+runs the loaders, the `beforeEach` and `beforeAll` hooks, and their cleanups.
+They also define the globals that each view gives a story.
 
 ## Related Docs
 
+- [Storybook story setup](./mokly-storybook-setup.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Entry props and variants](./mokly-entry-props.md)
 - [Variants](./mokly-variants.md)

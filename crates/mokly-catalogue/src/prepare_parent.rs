@@ -5,13 +5,13 @@ use std::collections::BTreeSet;
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{SourceLocation, VisualEntry};
 use mokly_model::controls;
-use mokly_model::data::{merge_props, round_unsafe_integer};
+use mokly_model::data::{Props, round_unsafe_integer};
 use mokly_model::inference::infer;
 use mokly_model::validation::PropValidator;
 use serde_json::Value;
 
 use crate::diagnostic::{Code, Issue};
-use crate::input::{ParsedEntry, VariantInput};
+use crate::input::ParsedEntry;
 use crate::{declared_controls, props};
 
 pub(crate) struct Parent {
@@ -25,32 +25,10 @@ pub(crate) fn prepare(
     kind: EntryKind,
     source: &SourceLocation,
     configured: &[ColorScheme],
-    candidates: &[Result<VariantInput, Issue>],
-    story: bool,
+    complete_props: &[&Props],
 ) -> Parent {
     let input = &parsed.input;
-    let complete: Vec<_> = candidates
-        .iter()
-        .filter_map(|candidate| candidate.as_ref().ok())
-        .map(|variant| {
-            if story {
-                variant.props.clone()
-            } else {
-                merge_props(&input.props, &variant.props)
-            }
-        })
-        .collect();
-    let mut inferred = infer(&input.props, &complete);
-    if story {
-        inferred.required = Some(
-            input
-                .props
-                .keys()
-                .filter(|key| complete.iter().all(|props| props.contains_key(*key)))
-                .cloned()
-                .collect(),
-        );
-    }
+    let inferred = infer(complete_props);
     let mut parent = Parent {
         visual: VisualEntry {
             color_schemes: configured.into(),

@@ -50,10 +50,11 @@
   flex-direction: column;
 }
 
-/* Three phones, the middle one centred under the copy */
+/* Three phones, the middle one centred under the copy, and the Components
+   box under them, whose rules are in home-spread.css */
 
 [data-site-viewport="mobile"] .site-home-spread {
-  height: 460px;
+  height: 826px;
   margin-top: 56px;
 }
 

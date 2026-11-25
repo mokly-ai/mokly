@@ -79,6 +79,7 @@ const REASONS: readonly ReasonRow[] = [
   ["design/canvas/outcomes/removed-document/loading", ["removed"], DESKTOP],
   ["design/canvas/outcomes/removed-document/unavailable", ["removed"], DESKTOP],
   ["design/canvas/outcomes/removed-variant", ["removed"], BOTH],
+  ["design/canvas/stories/failed/changes", ["material"], DESKTOP],
 ];
 
 /** Unchanged Canvas entries without evidence, which draw no details. */

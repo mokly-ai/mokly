@@ -66,6 +66,11 @@ export interface TagState {
   rows?: string[];
 }
 
+type ViewFact =
+  | { path: string; alert: string }
+  | { path: string; label: string; defaultPreview: string }
+  | { path: string; story: string; storybook: boolean };
+
 export const INVENTORY = fixture<DesignInventory>("inventory");
 
 /**
@@ -94,11 +99,13 @@ export const {
   sharedComponents: SHARED_COMPONENTS,
   links,
   tagStates,
+  viewFacts,
 } = fixture<{
   /** Saved variant names in order, by `{group}/{slug}`. */
   sharedComponents: Record<string, string[]>;
   links: LinkExpectation[];
   tagStates: TagState[];
+  viewFacts: ViewFact[];
 }>("expectations");
 
 /** Design entries that render in both schemes; every other one is light-only. */

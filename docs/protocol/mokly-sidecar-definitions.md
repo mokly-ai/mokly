@@ -66,6 +66,11 @@ inference keys. The core emits their `props-not-data` warnings after it
 derives each final entry path. For a stories file, these lists leave out the
 args that the [Storybook stories contract](./mokly-storybook.md#args-and-props)
 excludes without a warning.
+Definitions and variants of a stories file also carry optional
+`ignoredParameters` lists of `{ path, reason }` items, one for each malformed
+value of the story's `mokly` parameter. The core emits their
+`storybook-parameter-ignored` warnings after it derives each final entry path,
+under the [Storybook stories contract](./mokly-storybook-setup.md#globals-for-views).
 Saved React slot values remain inside the loaded generation and serialize
 as slot-name to opaque handle records. Functions and React elements never
 serialize as data props. The core builds the catalogue and component registry
