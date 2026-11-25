@@ -95,8 +95,8 @@ decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
 Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
 merged Milestone 1a, pull request #508 finished track B, pull request #509
-applied the asset follow-up answers, and pull request #511 finished track D.
-Tracks E and F run on their own branches. This section
+applied the asset follow-up answers, pull request #511 finished track D, and
+pull request #524 finished track F. Tracks E and I run on their own branches. This section
 tells the next agent what is done, what waits for the user, and how to
 continue.
 
@@ -107,8 +107,10 @@ continue.
 | C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
 | D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Track D decision 6                                                                    |
 | J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
-| E and F                  | Not yet               | In progress         | Milestones 18 to 25                                                                   |
-| G to I                   | None                  | Nothing             | Milestones 26 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| E. Storybook folders     | Not yet               | In progress         | Milestones 18 to 22                                                                   |
+| F. Failed stories        | #524, merged          | Milestones 23 to 25 | Two follow-up items that wait for the user                                            |
+| I. Story component usage | Not yet               | In progress         | Milestones 34 to 36                                                                   |
+| G and H                  | None                  | Nothing             | Milestones 26 to 33. The [Tracks](#tracks) table gives the order in which they start. |
 | All                      | None                  | Nothing             | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
@@ -183,6 +185,14 @@ holds the full item and its recommended option. They block no milestone.
 - [vite-outside-env-directory.md](follow-ups/vite-outside-env-directory.md)
 - [base-extraction-committed-links.md](follow-ups/base-extraction-committed-links.md)
 - [vite-lazy-css-order.md](follow-ups/vite-lazy-css-order.md)
+
+The review of track F found these problems. Each file holds the full item
+and its recommended option. They block no milestone.
+
+- [links-to-failed-stories-fail-builds.md](follow-ups/links-to-failed-stories-fail-builds.md):
+  an incoming fragment link makes a failed story stop the build.
+- [story-errors-hide-fatal-cleanup-errors.md](follow-ups/story-errors-hide-fatal-cleanup-errors.md):
+  a story error can hide a fatal cleanup error.
 
 ### Defects in merged code
 
