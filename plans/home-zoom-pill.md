@@ -490,12 +490,16 @@ Evidence: `.context/home-zoom-pill/m6/`, with the repeat runs
 Depends on: 1, 2, 3, 4, 5, 6
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Get Cal's answer to review finding 8, how the zoomed-out home
+      mockup looks in Safari. The follow-up item
+      `plans/follow-ups/safari-reflows-the-zoomed-out-home-mockup.md` holds
+      it. The pull request waits for the answer.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
