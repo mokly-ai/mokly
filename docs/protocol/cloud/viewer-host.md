@@ -72,8 +72,8 @@ one publication origin and access policy, in memory only. The
 source changes only when the publication origin or the access policy changes,
 and the `postMessageAdapter({ frameOrigin: catalogueOrigin })` frame boundary
 changes only with that origin; the package runtime remounts only when one of
-them changes. A query-only Back that reconstructs the route keeps the same
-source and its version failure.
+them changes. A traversal that reconstructs the route keeps the same source
+and its version failure.
 
 Link the public `@mokly/viewer/styles.css` export once, and serve the font
 bytes it declares unchanged beside it. The package and the app chrome take

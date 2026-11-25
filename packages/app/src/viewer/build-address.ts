@@ -1,4 +1,4 @@
-import type { Query } from "../navigation/address";
+import type { Query } from "../navigation/query";
 
 import { readViewerState } from "./selection";
 import type { SelectionDefaults, ViewerUrlState } from "./selection";
