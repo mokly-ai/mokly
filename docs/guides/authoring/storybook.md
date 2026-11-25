@@ -225,7 +225,9 @@ Before each story render, Mokly runs the story's loaders and `beforeEach`
 hooks. They get the same args as the render. These are the story's own
 non-data args and exactly the data props the preview shows. When you edit a
 prop in `mokly serve`, the loaders and hooks see the new value. When you unset
-an optional prop, Mokly leaves it out of the args.
+an optional prop, Mokly leaves it out of the args. If a loader or a
+`beforeEach` hook changes the story's args, the decorators and the render
+get the updated args, as in Storybook's preview.
 
 The render receives the loader results through `loaded`. This story uses
 `Button` and `meta` from the first example.

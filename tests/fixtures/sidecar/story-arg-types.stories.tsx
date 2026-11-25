@@ -61,3 +61,53 @@ export const Conditional: StoryObj<ConditionalArgs> = {
     <output>{`loader=${loaded.loader} hook=${loaded.hook} render=${visibleArgs(args)}`}</output>
   ),
 };
+
+let mappingReads = 0;
+
+export const ChangingMapping: StoryObj<{ value: string }> = {
+  args: { value: "selected" },
+  argTypes: {
+    value: {
+      options: ["selected"],
+      mapping: {
+        get selected() {
+          return `m${++mappingReads}`;
+        },
+      },
+    },
+  },
+  loaders: [({ args }) => ({ loader: args.value })],
+  beforeEach: ({ args, loaded }) => {
+    loaded.hook = args.value;
+  },
+  decorators: [
+    (Story, { args }) => (
+      <section data-value={args.value}>
+        <Story />
+      </section>
+    ),
+  ],
+  render: ({ value }, { loaded }) => (
+    <output>{`loader=${loaded.loader} hook=${loaded.hook} render=${value}`}</output>
+  ),
+};
+
+export const WrittenArgs: StoryObj<{ label: string }> = {
+  args: { label: "Saved" },
+  loaders: [
+    ({ args }) => {
+      args.label = "Loaded";
+    },
+  ],
+  beforeEach: ({ args }) => {
+    args.label += " and hooked";
+  },
+  decorators: [
+    (Story, { args }) => (
+      <section data-label={args.label}>
+        <Story />
+      </section>
+    ),
+  ],
+  render: ({ label }) => <output>{label}</output>,
+};

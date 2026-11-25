@@ -74,3 +74,21 @@ test("story arg conditions omit hidden keys and use mapped args and view globals
     ],
   );
 });
+
+test("story mapping is read once for setup, decorators, and markup", async (context) => {
+  const { props, render } = await prepareStory(context, "ChangingMapping");
+  const { html } = await render(props);
+  assert.equal(
+    html,
+    '<section data-value="m1"><output>loader=m1 hook=m1 render=m1</output></section>',
+  );
+});
+
+test("story decorators and markup retain args written during setup", async (context) => {
+  const { props, render } = await prepareStory(context, "WrittenArgs");
+  const { html } = await render(props);
+  assert.equal(
+    html,
+    '<section data-label="Loaded and hooked"><output>Loaded and hooked</output></section>',
+  );
+});

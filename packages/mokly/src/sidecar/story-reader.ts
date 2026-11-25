@@ -2,22 +2,24 @@ import { createRequire } from "node:module";
 
 import type * as Storybook from "@storybook/react";
 import type * as Csf from "storybook/internal/csf";
-import type * as PreviewApi from "storybook/preview-api";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
-import { wrapStoryArgs } from "./story-render.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 
 type ProjectAnnotations = ReturnType<typeof Storybook.setProjectAnnotations>;
 type BeforeEach = NonNullable<ProjectAnnotations["beforeEach"]>;
-type CsfModule = Omit<typeof Csf, "includeConditionalArg"> &
-  Partial<Pick<typeof Csf, "includeConditionalArg">>;
+type CaptureContext = (
+  context: Csf.StoryContext<Storybook.ReactRenderer>,
+) => void;
 
 export interface StoredStory {
-  compose: (cleanups: Csf.CleanupCallback[]) => PortableStory;
+  compose: (
+    cleanups: Csf.CleanupCallback[],
+    captureContext: CaptureContext,
+  ) => PortableStory;
   beforeAll: ProjectAnnotations["beforeAll"];
   dataKeys: readonly string[];
 }
@@ -25,6 +27,7 @@ export interface StoredStory {
 interface RenderComposition {
   exportName: string;
   cleanups: Csf.CleanupCallback[];
+  captureContext: CaptureContext;
 }
 
 interface ReadStory {
@@ -44,21 +47,21 @@ interface ReadStories {
 
 export function readStories(
   generation: Generation,
-  exports: BundleExports,
   file: string,
   module: Record<string, unknown>,
+  preview: BundleExports["preview"],
   cache: ExportNameCache,
 ): ReadStories {
   const storybook = generation.require("@storybook/react") as typeof Storybook;
   const require = createRequire(generation.require.resolve("@storybook/react"));
-  const csf = require("storybook/internal/csf") as CsfModule;
+  const csf = require("storybook/internal/csf") as typeof Csf;
   const factory = Object.values(module).find(csf.isStory);
   const meta = record(module.default ?? factory?.meta.input);
-  const preview =
-    factory?.meta.preview ?? exports.preview?.default ?? exports.preview ?? {};
-  const annotations = csf.isPreview(preview)
-    ? preview.composed
-    : record(preview);
+  const factoryPreview = factory?.meta.preview;
+  const previewConfig = factoryPreview ?? preview?.default;
+  const annotations = csf.isPreview(previewConfig)
+    ? previewConfig.composed
+    : record(factoryPreview ?? preview);
   const title = entryTitle(meta, file, factory !== undefined);
   // Storybook's runtime also accepts factory modules without a default export.
   const composeStories = storybook.composeStories as (
@@ -71,7 +74,7 @@ export function readStories(
       { tags: ["mokly"] },
       annotations,
     ]);
-    const { beforeAll, beforeEach, applyDecorators, loaders } = project;
+    const { beforeAll, beforeEach, loaders } = project;
     const wrap = (value: unknown) =>
       render ? wrapStoryHooks(value, render.cleanups) : value;
     try {
@@ -79,11 +82,7 @@ export function readStories(
         // The combined project hooks include core and addon hooks.
         if (beforeEach)
           project.beforeEach = wrapBeforeEach(beforeEach, render.cleanups);
-        const decorate =
-          applyDecorators ??
-          (require("storybook/preview-api") as typeof PreviewApi)
-            .defaultDecorateStory;
-        wrapStoryArgs(project, decorate, csf.includeConditionalArg);
+        project.loaders = [render.captureContext, ...(loaders ?? [])];
       }
       const copied = Object.fromEntries(
         Object.entries(module)
@@ -112,8 +111,7 @@ export function readStories(
       if (!factory && !Object.hasOwn(copied, "default")) copied.default = {};
       return { stories: composeStories(copied), beforeAll };
     } finally {
-      if (render)
-        Object.assign(project, { beforeEach, applyDecorators, loaders });
+      if (render) Object.assign(project, { beforeEach, loaders });
     }
   };
   const { stories: composed, beforeAll } = compose();
@@ -141,8 +139,13 @@ export function readStories(
           csf.storyNameFromExport(exportName),
         tags: customTags(composed[exportName]!.tags),
         story: composed[exportName]!,
-        compose: (cleanups: Csf.CleanupCallback[]) =>
-          compose({ exportName, cleanups }).stories[exportName]!,
+        compose: (
+          cleanups: Csf.CleanupCallback[],
+          captureContext: CaptureContext,
+        ) =>
+          compose({ exportName, cleanups, captureContext }).stories[
+            exportName
+          ]!,
       };
     });
   const docs = record(stories[0]?.story.parameters.docs);

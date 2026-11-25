@@ -139,7 +139,8 @@ Before each story render, the sidecar runs the story's loaders and
 `beforeEach` hooks, as Storybook's portable stories do. The render receives
 the loaded data. Loaders and `beforeEach` hooks get the same args as
 [the render](#the-entry-and-its-variants). A data arg that the render request
-leaves out is not in their args.
+leaves out is not in their args. A change that a loader or a hook makes to the
+args reaches the decorators and the render, as in Storybook's own preview.
 
 Decision: loaders, `beforeEach` hooks, and the render get the same args, so
 that loaded data and hook state match the props of the render. Running loaders

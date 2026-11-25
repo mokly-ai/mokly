@@ -52,23 +52,37 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `encodeResponse` encodes each response with `jsonText` from
   [`src/sidecar/json.ts`](./json.ts), which sorts object keys in UTF-16
   order and keeps negative zero.
+- [`src/sidecar/describe.ts`](./describe.ts) holds `describe`, which
+  evaluates the bundle and collects the definitions of the entry modules and
+  the stories files. It walks each stories file once. Its local `withSource`
+  helper turns the error of one step into `bundle-failed` that names the
+  failing source, else the entry and stories files.
 - [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
   which restores source order with parsed names from the `ExportNameCache` of
   [`src/sidecar/export-name-cache.ts`](./export-name-cache.ts) that its caller
   passes. `describe` keeps one bounded cache for the process and passes it to
-  `orderedExports` and `describeStories`. Each call reads the current
+  `orderedExports` and `describeStoryFile`. Each call reads the current
   namespace values.
 - [`src/sidecar/story-reader.ts`](./story-reader.ts) holds
-  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It selects
-  stories by their tags and keeps Storybook names, tags, descriptions, and the
-  preview's composed `beforeAll` hook. It passes the cache from
-  `describeStories` to `orderedExports`. For a render, it wraps the
-  `beforeEach` hooks of the project, the meta, and the story, so that each
-  returned cleanup goes to the cleanup list of that render.
-- [`src/sidecar/stories.ts`](./stories.ts) holds `describeStories`,
-  which makes the first included story the parent and the other stories its
-  variants. It records each story's data args and control hints, and omits
+  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It gives
+  Storybook the whole preview module, so that Storybook reads each preview
+  setting from the default export and then from the named exports, or the
+  composed settings of a `definePreview` preview. It selects stories by their
+  tags and keeps Storybook names, tags, descriptions, and the preview's
+  composed `beforeAll` hook. It passes the cache from `describeStoryFile` to
+  `orderedExports`. For a render, it wraps the `beforeEach` hooks of the
+  project, the meta, and the story, so that each returned cleanup goes to the
+  cleanup list of that render. It also adds a first project loader that gives
+  the render the context that `load()` prepares.
+- [`src/sidecar/stories.ts`](./stories.ts) holds `describeStoryFile`,
+  which collects one stories file. It makes the first included story the
+  parent and the other stories its variants. It records each story's data
+  args, control hints, and ignored `mokly` parameter values, and omits
   function and React element args without warnings.
+- [`src/sidecar/story-parameters.ts`](./story-parameters.ts) holds
+  `readStoryParameters`, which reads a story's `mokly` parameter into the
+  globals of each viewport and colour scheme, and into the ignored values with
+  their paths and reasons.
 - [`src/sidecar/story-setup.ts`](./story-setup.ts) holds
   `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
   a generation switch, and remembers setup failures.
@@ -76,10 +90,14 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   renders entries to static markup, and sends each story render to
   `renderStory`.
 - [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
-  It puts the requested data props on a fresh portable story's args and
-  removes each data arg that the request leaves out, before `load()`. It
-  awaits story setup and `load()`, renders the markup, and then runs the
-  render's `beforeEach` cleanups in reverse order in a `finally` block.
+  Before story setup, it puts the requested data props on a fresh portable
+  story's args, removes each data arg that the request leaves out, and sets
+  the view globals from the story's `mokly` parameter and the view. It awaits
+  story setup and `load()`, and renders the story's `unboundStoryFn` on the
+  context that `load()` prepared, so that the loaders, the hooks, the
+  decorators, and the markup share one context. A Storybook without that
+  function keeps the portable story call. Then it runs the render's
+  `beforeEach` cleanups in reverse order in a `finally` block.
 
 ### esbuild Compilation and Reuse
 

@@ -117,8 +117,13 @@ export const Alternate = { args: { name: "Ada" } };
 test("malformed Storybook parameters warn per included page and fail strict builds", async (context) => {
   const root = await consumer(context, {
     ".storybook/preview.ts": String.raw`
-export default {
-  parameters: { mokly: { "colourSchemes\ud800": {} } },
+export default { initialGlobals: { density: "default" } };
+export const initialGlobals = { density: "named" };
+export const parameters = {
+  mokly: {
+    "colourSchemes\ud800": {},
+    viewports: { mobile: { density: "compact" } },
+  },
 };
 `,
     "specs/nested/Globals.stories.tsx": String.raw`
@@ -130,7 +135,6 @@ export default {
   parameters: {
     mokly: {
       viewports: {
-        mobile: { density: "compact" },
         desktop: [],
         ['tablet"\\\n\u0085\ud800']: {},
       },
@@ -186,6 +190,7 @@ export const InvalidRoot = { parameters: { mokly: [] } };
   for (const [entry, markup] of [
     [parent, "<output>light/compact</output>"],
     [`${parent}/InvalidMap`, "<output>undefined/compact</output>"],
+    [`${parent}/InvalidRoot`, "<output>undefined/default</output>"],
   ] as const) {
     const document = await fs.readFile(
       path.join(

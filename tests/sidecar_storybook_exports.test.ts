@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
@@ -8,15 +9,25 @@ import type { RenderResult } from "../packages/mokly/src/generated/sidecar/Rende
 import {
   bundleParams,
   installBindings,
+  sidecarFixture,
   startSidecar,
 } from "./helpers/sidecar.js";
 
-async function describeStoryFile(context: TestContext, file: string) {
+async function describeStoryFile(
+  context: TestContext,
+  file: string,
+  directory = ".",
+) {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const { generation } = await sidecar.call<BundleResult>(
     "bundle",
-    bundleParams({ entryFiles: [], renderer: null, storiesFiles: [file] }),
+    bundleParams({
+      sourceRoot: path.join(sidecarFixture, directory),
+      entryFiles: [],
+      renderer: null,
+      storiesFiles: [file],
+    }),
   );
   await sidecar.call("cssModules", { generation, classMaps: {} });
   const definitions = await sidecar.call<Definitions>("describe", {
@@ -58,6 +69,27 @@ test("CSF Factories omit helper objects and functions after a story", async (con
   assert.deepEqual(
     definitions.stories.map(({ id }) => id),
     [`${file}#Primary`],
+  );
+});
+
+test("CSF 3 stories use the composed definePreview settings", async (context) => {
+  const file = "ordinary.stories.tsx";
+  const { sidecar, generation } = await describeStoryFile(
+    context,
+    file,
+    "factories",
+  );
+  await installBindings(sidecar, generation);
+  const story = await sidecar.call<RenderResult>("renderStory", {
+    generation,
+    storyId: `${file}#Primary`,
+    props: {},
+    viewport: "mobile",
+    colorScheme: "light",
+  });
+  assert.equal(
+    story.html,
+    '<section data-preview="factory"><button>Ordinary story</button></section>',
   );
 });
 
