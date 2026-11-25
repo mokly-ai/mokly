@@ -2,8 +2,8 @@
 
 Status: Active. On branch `calummoore/preview-password-sign-in-jofl`, no pull
 request yet. The pull request that completes the work deletes this plan, as
-the `plans` skill says. The plan waits for Cal's answers to the decisions
-below. No product code changes before Cal approves the plan.
+the `plans` skill says. Every decision has its answer. Implementation starts
+when Cal approves the plan.
 
 A PR preview is a temporary deployment of one pull request at
 `https://pr-N.preview.mokly.ai`, with its own namespace `mkc-preview-pr-N` and
@@ -31,12 +31,14 @@ shared password in every preview (option B); and a sign-in link, or an
 expiring link, in the public PR comment.
 
 The options check of 2026-11-24 found that a value derived from the password
-and the preview's name is the same after every label cycle. If that value also
-opened the preview, a leaked Open preview link could no longer be retired by a
-label cycle. The recommended options therefore keep today's random link value
-as it is and add the derived value beside it as a verifier, which opens
-nothing by itself. This changes two sentences of Cal's decision, so decisions
-1 and 3 ask Cal.
+and the preview's name is the same after every label cycle. So the stored
+value is a verifier, which checks a typed password and opens nothing by
+itself. On 2026-11-24 Cal said "I don't care about backwards compat" and
+approved the password-only design ("ok, sounds good"). On 2026-11-25 he said
+"stop asking me so many questions". The plan reads that as the answer to every
+decision: each takes its recommended option, as the section Decisions records.
+So the random link value, the Open preview link and the `{secret}` exchange
+go, and the password is the one preview credential.
 
 The change does not add a password to stable environments, does not change
 the sessions that a sign-in issues, and does not change the email sign-in of
@@ -45,6 +47,7 @@ other addresses.
 Contract owners:
 
 - [Authentication and sessions](../docs/protocol/cloud/auth-sessions.md#preview-sign-in).
+- [Authentication callbacks](../docs/protocol/cloud/auth-callbacks.md).
 - [Preview seed](../docs/protocol/cloud/preview-seed.md).
 - [Preview scripts](../docs/protocol/cloud/preview-scripts.md).
 - [PR preview environments](../docs/protocol/cloud/pr-preview-environments.md).
@@ -55,9 +58,32 @@ Contract owners:
   [environment](../docs/ops/environment.md) and
   [secrets](../docs/ops/secrets.md) runbooks.
 
-The recommended options replace no old way: the random link value, its
-Secret and its setting stay. If Cal picks option A or B of decision 3, the
-random value is replaced, and this plan then gets a `Replaced ways` list.
+Replaced ways:
+
+- The random link value and its `{secret}` exchange → the typed password and
+  its verifier. Consumers, each moved or deleted in the milestone named:
+  - Configuration and API: `MKC_PREVIEW_SIGN_IN_SECRET` in `mkc-config`, the
+    `{secret}` body and its check in `mkc-auth` and `mkc-api`, their tests,
+    `docs/api/openapi.json`, and the generated app types. Milestone 3.
+  - Deploy: the random value of Secret `preview-sign-in` in
+    `preview-lifecycle.py`, `preview-common.sh` and `preview-deploy.sh`, and
+    their tests. Milestone 5.
+  - Comment: the Open preview link, `--secret-file` and the
+    `repository_private` input that only the link uses, in
+    `preview-comment.py`, `preview-event.py`, `preview.yml`, and their tests.
+    Milestone 5.
+  - Local and smoke: `scripts/cloud/dev-api.sh`, `smoke_api.py`,
+    `smoke_desktop_origins.py` and `smoke_preview_plan.py`, which then make a
+    verifier from a known test password. Milestone 5.
+  - App: the page `/auth/preview/callback`, its route and input code, and
+    `preview-callback.spec.ts` and `callback-address.spec.ts`. Milestone 6.
+  - Mockups: `product/account/callback/preview-invalid` and its callback
+    landing tests. Milestone 1.
+  - Docs: `auth-callbacks.md`, `preview-seed.md`, `preview-scripts.md`,
+    `pr-preview-environments.md`, `preview-seed-local.md`,
+    `product-navigation.md`, `web-app.md`, `web-api-client.md`,
+    `docs/ops/preview.md`, `docs/development/cloud.md`, and the crate and
+    chart READMEs. Milestone 2.
 
 ## Terms
 
@@ -70,15 +96,11 @@ random value is replaced, and this plan then gets a `Replaced ways` list.
   Operator values such as `mkc-catalogue-dns-token` live there.
 - **Log reader:** `infra/scripts/preview-link.py`, which reads an emailed
   sign-in link for one address from the API logs with `kubectl`.
-- **Open preview link:** the link
-  `https://pr-N.preview.mokly.ai/auth/preview/callback#secret=…` that the PR
-  comment carries only for a private repository.
 
 ## Design
 
-This design follows the recommended option of each decision. Each item marked
-**my call** is a design call that I made on 2026-11-24, with its reason.
-Cal's answers can change any of them.
+Each item marked **my call** is a design call that I made on 2026-11-24 or
+2026-11-25, with its reason.
 
 - **Verifier.** The verifier is a standard self-describing scrypt string,
   `$scrypt$ln=14,r=8,p=5$<salt>$<hash>`, with a random 16-byte salt and a
@@ -93,22 +115,25 @@ Cal's answers can change any of them.
   these bounds fails startup with a typed configuration error. Reason: the
   verifier comes from an operator, but a typing error must not take the API's
   memory.
-- **Settings.** `MKC_PREVIEW_SIGN_IN_SECRET`, `MKC_PREVIEW_SIGN_IN_EMAIL`,
-  `MKC_PREVIEW_SIGN_IN_PLAN`, Secret `preview-sign-in` and the Open preview
-  link stay as they are (decision 3, D). A new optional setting,
-  `MKC_PREVIEW_SIGN_IN_VERIFIER`, comes from a new optional Secret,
-  `preview-password`. It requires the existing pair and the same
-  `preview_sign_in` capability, like the plan setting. Without it, the API
-  accepts no password.
-- **Exchange.** `POST /v1/auth/preview` accepts a typed password beside
-  today's `secret`, as decision 9 defines. The API checks the password
-  against the verifier in constant time and never logs it. The gate, the
-  Origin check, the body check, the admission of 20 attempts per peer IP per
-  60 seconds, and the session issue stay as today. A `secret` never matches
-  the verifier, and a password never matches the link value.
+- **Settings, my call.** `MKC_PREVIEW_SIGN_IN_SECRET` goes (decision 3, E).
+  `MKC_PREVIEW_SIGN_IN_EMAIL` alone configures the shared account, and
+  `MKC_PREVIEW_SIGN_IN_PLAN` keeps its rules. A new optional setting,
+  `MKC_PREVIEW_SIGN_IN_VERIFIER`, requires the email and the same
+  `preview_sign_in` capability. Without it, the API accepts no password, and
+  the seed still runs. Secret `preview-sign-in` keeps its name and mount, and
+  holds the verifier. Reason: a preview without a verifier must still deploy
+  and seed, and the existing Secret name keeps the chart change small.
+- **Exchange.** `POST /v1/auth/preview` accepts `{password, returnTo}`, with
+  `returnTo` optional (decision 9, A, without `secret` under decision 3, E). A
+  password has 1 to 1024 bytes. A longer or missing password fails with
+  `validation-failed` and uses no admission. A wrong password, or any password
+  without a verifier, answers `magic-link-invalid`. The API checks the
+  password against the verifier in constant time and never logs it. The gate,
+  the Origin check, the admission of 20 attempts per peer IP per 60 seconds,
+  and the session issue stay as today.
 - **Bounded hashing, my call.** One API process checks at most two passwords
   at once. Further attempts wait. Reason: each check uses about 16 MiB with
-  the recommended parameters, and the API's memory limit is 1 GiB.
+  the chosen parameters, and the API's memory limit is 1 GiB.
 - **Field discovery.** `GET /v1/auth/methods` answers whether this API accepts
   a password, and for which account (decision 4, C, and decision 8, D). Sign
   in waits for the answer in its waiting form, so the panel does not move.
@@ -116,8 +141,8 @@ Cal's answers can change any of them.
 - **Screens, my call.** The section shows on Sign in only. Sign up and the
   desktop window do not draw it. Reason: the password signs in the shared
   account, which already exists, and the desktop window signs in through the
-  browser. The proposed layout puts a second `or` rule under Continue with
-  email, then a **Password** field and a `secondary` action, **Continue as
+  browser. The layout puts a second `or` rule under Continue with email, then
+  a **Password** field and a `secondary` action, **Continue as
   preview@mokly.ai**. The account entry allows one `primary` action, which
   stays Continue with email. A refused password marks the field with "This
   password isn't valid.", in the voice of "This link isn't valid". Other
@@ -127,35 +152,34 @@ Cal's answers can change any of them.
   layout and copy.
 - **Deploy.** The release job reads the verifier with
   `gcloud secrets versions access` into a private mode-0600 runner-temporary
-  file, as it reads the DNS token. It writes Secret `preview-password` when
-  the value differs, before the Helm upgrade. When Helm did not roll the API
-  pod, for example on a rerun with the same image, the deploy restarts the
-  API Deployment and waits for the rollout. Reason, my call: the API reads
-  its settings at startup, and the API pod uses the `Recreate` strategy, so a
+  file, as it reads the DNS token. It writes Secret `preview-sign-in` when the
+  value differs, before the Helm upgrade. When Helm did not roll the API pod,
+  for example on a rerun with the same image, the deploy restarts the API
+  Deployment and waits for the rollout. Reason, my call: the API reads its
+  settings at startup, and the API pod uses the `Recreate` strategy, so a
   second roll after Helm's roll costs downtime.
 - **Missing verifier.** A missing or malformed verifier gives a warning
   annotation on the workflow run, and the deploy writes no verifier (decision
-  5, D). An existing Secret `preview-password` is then deleted, so that a
-  preview never keeps a verifier that the store no longer holds. Reason, my
-  call: the store is the one source of the verifier. The discovery answer is
-  then false, and Sign in draws no section.
+  5, D). An existing verifier in Secret `preview-sign-in` is then deleted, so
+  that a preview never keeps a verifier that the store no longer holds.
+  Reason, my call: the store is the one source of the verifier. The discovery
+  answer then says that no password is accepted, and Sign in draws no section.
 - **Rotation.** An operator makes a new verifier from a new password and adds
   it as a new version. Each preview picks it up on its next deploy. A running
   preview accepts the old password until then. A rerun of the workflow
   deploys again.
-- **Comment and seed.** The comment and its Open preview link do not change.
-  The seed keeps its steps and its status. The release job never passes the
-  verifier to the seed. The seed reads the same settings as `serve`, so the
-  verifier rules apply to it too.
+- **Comment and seed.** The comment loses its Open preview link and every
+  input that only the link uses. The seed keeps its steps. Its `signIn` status
+  says whether the shared account is configured. The release job never passes
+  the verifier to the seed.
 - **Same derivation.** One fixture file under `infra/tests/fixtures/` holds a
   fixed password and a verifier made from it by hand with Python's
   `hashlib.scrypt`. Both the Rust tests and the Python tests read it
   (decision 7, C).
 - **Local stack, my call.** `scripts/cloud/dev-api.sh` keeps a random local
-  password in `.context/preview-password` (mode 0600), created once, and its
-  verifier in `.context/preview-verifier`. Reason: a developer can test the
-  section with the same tools as a preview. The local Open preview link stays
-  as it is.
+  password in `.context/preview-password` (mode 0600), created once, and
+  derives its verifier for the API. A developer signs in by typing that
+  password. Reason: the local stack then tests the same section as a preview.
 - **Password, my call.** The runbook creates the password with
   `python3 -c 'import secrets; print(secrets.token_urlsafe(24))'`: 32
   characters and 192 random bits. Reason: with a long random password, a
@@ -170,52 +194,34 @@ Cal's answers can change any of them.
   branch could capture a typed password. Only repository writers can deploy a
   preview, and the protocol treats previews as trusted code. A leaked
   verifier, from logs, namespace read access or the store, opens no preview.
-  The slow hash keeps a long random password hard to recover from it. A
-  leaked Open preview link opens only its own preview until a label cycle.
-
-## Removals under option E of decision 3
-
-This section applies only when Cal confirms option E of decision 3. Then the
-plan gets a `Replaced ways` list with these consumers, and the milestones get
-a TODO for each. Nothing is removed before that answer.
-
-- The random link value → the password verifier. Consumers:
-  - Configuration and API: `MKC_PREVIEW_SIGN_IN_SECRET` in `mkc-config`, the
-    `{secret}` body and its check in `mkc-auth` and `mkc-api`, their tests,
-    `docs/api/openapi.json`, and the generated app types.
-  - Deploy: Secret `preview-sign-in` in `preview-lifecycle.py`,
-    `preview-common.sh`, `preview-deploy.sh`, the chart's PR mount,
-    `infra/docker/entrypoint.sh`, the Helm golden file, and their tests.
-  - Comment: the Open preview link, `--secret-file` and the
-    `repository_private` input that only the link uses, in
-    `preview-comment.py`, `preview-event.py`, `preview.yml`, and their tests.
-  - App: the page `/auth/preview/callback`, its route and input code, and
-    `preview-callback.spec.ts` and `callback-address.spec.ts`.
-  - Mockups: `product/account/callback/preview-invalid` and its callback
-    landing tests.
-  - Local and smoke: `scripts/cloud/dev-api.sh`, `smoke_api.py`,
-    `smoke_desktop_origins.py` and `smoke_preview_plan.py`, which then make a
-    verifier from a known test password.
-  - Docs: `auth-callbacks.md`, `preview-seed.md`, `preview-scripts.md`,
-    `pr-preview-environments.md`, `preview-seed-local.md`,
-    `product-navigation.md`, `web-app.md`, `web-api-client.md`,
-    `docs/ops/preview.md`, `docs/development/cloud.md`, and the crate and
-    chart READMEs.
+  The slow hash keeps a long random password hard to recover from it.
 
 ## Decisions
 
-Each decision waits for Cal. The options check of 2026-11-24 ran over the
-first draft and added options. Its report is in
-`.context/preview-password-sign-in/options-check-report.md`. The decisions
-were then numbered by severity again. The recommended options of decisions 1,
-2 and 5 need option D or E of decision 3.
+Cal answered every decision on 2026-11-25 with "stop asking me so many
+questions", after "I don't care about backwards compat" and "ok, sounds good"
+for the password-only design on 2026-11-24. Each decision takes its
+recommended option:
 
-On 2026-11-24, in a side thread about decision 3, Cal said: "I don't care
-about backwards compat". After the password-only option, now option E of
-decision 3, and an explanation of Secret Manager and the verifier, Cal said:
-"ok, sounds good - pass this back to the main thread". Option E deletes
-functionality on `origin/main`, so decision 3 stays open until Cal confirms E
-in so many words.
+1. Where the password lives: **D**, a verifier in the Secret Manager ID
+   `mkc-preview-sign-in-password`, made once by an operator.
+2. The slow hash: **E**, a self-describing scrypt string,
+   `ln=14, r=8, p=5`, with a random salt.
+3. The credential: **E**, password only. The random link value, the Open
+   preview link and the `{secret}` body go. This deletes functionality on
+   `origin/main`, which Cal approved in the words above.
+4. Field discovery: **C**, `GET /v1/auth/methods`.
+5. A missing or malformed verifier: **D**, warn and accept no password.
+6. Email link and log reader: **A**, both stay for every address.
+7. Same derivation: **C**, one fixture file for both test suites.
+8. The section's text: **D**, **Password** and **Continue as
+   preview@mokly.ai**.
+9. The request body: **A** without `secret`, as the design says.
+
+The items below are the record of each decision as Cal saw it: the options,
+the alternatives and the reasons. The options check of 2026-11-24 ran over
+the first draft and added options. Its report is in
+`.context/preview-password-sign-in/options-check-report.md`.
 
 ### 1. Where the preview password lives
 
@@ -437,6 +443,9 @@ under `docs/mockups`. Each page draws its mobile and desktop variants.
       five screens or fewer.
 - [ ] Link the new pages from the Sign-in page, so that a reader reaches them
       from the existing account pages.
+- [ ] Delete the mockup `product/account/callback/preview-invalid` and its
+      cases in the callback landing tests, because the page
+      `/auth/preview/callback` goes.
 - [ ] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test the
       changed pages in a browser, and save screenshots under
       `.context/preview-password-sign-in/`.
@@ -453,16 +462,22 @@ below. History stays in this plan.
 - [ ] Create `docs/protocol/cloud/preview-sign-in.md` from the Preview
       Sign-In section of `auth-sessions.md`. Add the verifier, its setting
       and its bounds, the exchange of decision 9, the discovery answer of
-      decision 4, the security statement, and rotation. Leave a short section
-      with a link in `auth-sessions.md`.
+      decision 4, the security statement, and rotation. Remove the `{secret}`
+      exchange and its setting. Leave a short section with a link in
+      `auth-sessions.md`.
 - [ ] Narrow the sentence "Human passwords are not accepted" in
       `auth-sessions.md` to name the preview password as the one exception.
 - [ ] Update `rest-api.md` and `rest-api-surface.md` for the exchange body and
       the discovery endpoint.
-- [ ] Update `preview-seed.md`: the Secret rows, and the verifier format in
-      Contract With Main, because `main` makes it and the PR's API reads it.
+- [ ] Remove the preview callback from `auth-callbacks.md`,
+      `product-navigation.md`, `web-app.md` and `web-api-client.md`.
+- [ ] Update `preview-seed.md`: the Secret rows, the verifier format in
+      Contract With Main, because `main` makes it and the PR's API reads it,
+      the `signIn` status, and the outcome table without its Open preview
+      column. Remove the exposure paragraph of the link.
 - [ ] Update `preview-scripts.md`: deploy step 2, the verifier read, the
-      missing-verifier warning, and the Sign-In Log Reader introduction.
+      missing-verifier warning, the comment without the link and its inputs,
+      and the Sign-In Log Reader introduction.
 - [ ] Update `pr-preview-environments.md`: the resource table, the Secret
       Manager ID, and the API mount paragraph.
 - [ ] Update `preview-seed-local.md` for the local password.
@@ -478,36 +493,38 @@ below. History stays in this plan.
 - [ ] Check every changed protocol page against the 250-line cap.
 - [ ] Update `plans/follow-ups/preview-sample-project-needs-log-access.md`:
       the password removes its need for log access to sign in, and its
-      private Changes limit stays. Under option E of decision 3, drop its
-      option B.
+      private Changes limit stays. Drop its option B, which used the random
+      link value.
 
 ## Milestone 3: API password exchange
 
 Depends on: 2
 
-The API checks a typed password against an optional verifier and keeps
-today's secret exchange.
+The API checks a typed password against an optional verifier. The `{secret}`
+exchange and its setting go.
 
-- [ ] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the pair,
-      capability and bound rules of the design.
+- [ ] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the email,
+      capability and bound rules of the design. Remove
+      `MKC_PREVIEW_SIGN_IN_SECRET`, and let the email alone configure the
+      shared account and the seed.
 - [ ] Add the `scrypt` crate to `mkc-auth` with `cargo add`, on the `digest`
       generation of the locked `sha2` and `hmac` crates.
-- [ ] Accept the request body of decision 9 in `POST /v1/auth/preview`, with
-      bounded hashing. Keep the order of the gate, Origin, body and admission
+- [ ] Accept `{password, returnTo}` in `POST /v1/auth/preview`, with bounded
+      hashing, and remove the `{secret}` body and its check. Keep the order of the gate, Origin, body and admission
       checks.
 - [ ] Regenerate `docs/api/openapi.json` and
       `packages/app/src/api/generated/schema.ts`.
 - [ ] Tests, each at the lowest level that fails without the change:
-  - [ ] Configuration: a verifier without the pair, without the capability,
+  - [ ] Configuration: a verifier without the email, without the capability,
         malformed, or outside the bounds fails startup with a typed error
         that names the key.
   - [ ] The shared fixture: its password matches its verifier, and another
         password does not.
   - [ ] The exchange signs in with the right password, refuses a wrong one
-        with `magic-link-invalid`, refuses a password without a verifier,
-        still accepts the link value as `secret`, and refuses the verifier
-        sent as `secret`.
-  - [ ] A body that decision 9 calls invalid fails with `validation-failed`
+        with `magic-link-invalid`, and refuses a password without a
+        verifier.
+  - [ ] A body without a password, with a `secret`, or with a password over
+        1024 bytes fails with `validation-failed`
         and uses no admission. A wrong password uses admission, and the 21st
         attempt in the window is refused.
 
@@ -522,12 +539,14 @@ The API tells the app whether it accepts a password, and for which account.
 - [ ] Tests: the answer names the account with a verifier configured, and
       says that no password is accepted without one.
 
-## Milestone 5: Store, deploy and local stack
+## Milestone 5: Store, deploy, comment and local stack
 
-Depends on: 2
+Depends on: 3
 
-The release job copies the verifier into each preview. This works with API
-images from before Milestone 3, because they ignore the new Secret.
+The release job copies the verifier into each preview, and the comment loses
+its link. A branch that has not merged this change gets a verifier that its
+older API refuses at startup, so it must merge `main` to deploy. Cal accepted
+this on 2026-11-24: "I don't care about backwards compat".
 
 - [ ] Declare the Secret Manager ID `mkc-preview-sign-in-password` in
       `infra/terraform/foundation/preview.tf`, with read access for the
@@ -535,13 +554,19 @@ images from before Milestone 3, because they ignore the new Secret.
 - [ ] Add the `preview-verifier` command to
       `infra/scripts/preview-lifecycle.py`, with Python's `hashlib`.
 - [ ] Change `preview-common.sh` and `preview-deploy.sh`: read the verifier
-      privately, validate it, write or delete Secret `preview-password`,
-      restart the API only when Helm did not roll it, and warn on a missing
-      or malformed verifier.
-- [ ] Mount `preview-password` as an optional Secret in the chart's PR
-      overlay, and map it to `MKC_PREVIEW_SIGN_IN_VERIFIER` in the API
-      entrypoint. Update the Helm golden file.
+      privately, validate it, write or delete the verifier in Secret
+      `preview-sign-in`, restart the API only when Helm did not roll it, and
+      warn on a missing or malformed verifier. Remove the random value.
+- [ ] Mount Secret `preview-sign-in` as optional in the chart's PR overlay,
+      and map it to `MKC_PREVIEW_SIGN_IN_VERIFIER` in
+      `infra/docker/entrypoint.sh`. Update the Helm golden file.
+- [ ] Remove the Open preview link, `--secret-file` and the
+      `repository_private` input from `preview-comment.py`,
+      `preview-event.py` and `preview.yml`, with their tests.
 - [ ] Change `scripts/cloud/dev-api.sh` to the local password of the design.
+      Change `smoke_api.py`, `smoke_desktop_origins.py` and
+      `smoke_preview_plan.py` to sign in with a known test password and its
+      verifier.
 - [ ] Tests: the Python command makes a verifier that the shared fixture's
       check accepts, and it warns on a short password. Shell tests in
       `infra/tests/` cover the write, the unchanged value, the restart rule,
@@ -556,7 +581,9 @@ Depends on: 1, 4
 The app draws the section as the mockups show and sends the password.
 
 - [ ] Add the password call and the discovery read to
-      `packages/app/src/data/auth.ts`.
+      `packages/app/src/data/auth.ts`, and remove `verifyPreviewSignIn`.
+- [ ] Remove the page `/auth/preview/callback`, its route and input code, and
+      its cases in `preview-callback.spec.ts` and `callback-address.spec.ts`.
 - [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
       from the `@firna/ui` and app components, as the mockups show. Keep the
       file under 300 lines.
