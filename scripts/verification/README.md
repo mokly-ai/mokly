@@ -37,11 +37,16 @@ Public test commands and strict evidence rules live in the
   that a commit has every CI suite report for each runtime profile.
 - [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
   job runs. It reads the jobs of the run, compares each run time with
-  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, and lists
-  the slowest tests of the downloaded reports, under the
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, lists
+  the slowest tests of the downloaded reports, and compares the Actions cache
+  total with its budget, under the
   [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
-  Run it locally on a saved API response with
-  `node scripts/verification/ci-timing.mjs --jobs-file {file} --reports {directory}`.
+  [`ci-timing-cache.mjs`](./ci-timing-cache.mjs) reads and reports the cache
+  list. Run the report locally on saved API responses with
+  `node scripts/verification/ci-timing.mjs --jobs-file {file} --caches-file {file} --reports {directory}`.
+  Save the complete cache list with
+  `gh api --paginate --slurp "repos/{owner}/{repo}/actions/caches?per_page=100"`.
+  Without `--caches-file`, a local run does not read the cache.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.

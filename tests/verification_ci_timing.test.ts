@@ -8,6 +8,7 @@ import {
   matchBudget,
   parseBudgets,
 } from "../scripts/verification/ci-timing-budgets.mjs";
+import { parseCacheBudget } from "../scripts/verification/ci-timing-cache.mjs";
 import { parseJobs } from "../scripts/verification/ci-timing-jobs.mjs";
 import { criticalPath } from "../scripts/verification/ci-timing-path.mjs";
 import { slowestTests } from "../scripts/verification/ci-timing-tests.mjs";
@@ -264,5 +265,6 @@ test("the committed budget file parses", async () => {
     path.join(repositoryRoot, "scripts/verification/ci-budgets.json"),
     "utf8",
   );
-  assert.doesNotThrow(() => parseBudgets(JSON.parse(source)));
+  const committed = parseBudgets(JSON.parse(source));
+  assert.doesNotThrow(() => parseCacheBudget(committed.cache));
 });
