@@ -1,0 +1,46 @@
+# Valid client events can miss remote replicas
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 4. Its finding check added options D and E, and it changed the recommendation from A to B.
+- **Location:** `crates/mkc-live/src/connection.rs:76-109` (`submit_text` and `submit`), `crates/mkc-live/src/state.rs:64-83` (`finish_tick`), `crates/mkc-live-pg/src/payload.rs:41-57` (`encode`), `crates/mkc-live/src/limits.rs:10`, `crates/mkc-api/src/live/socket.rs:137`, and the "Client Events" and "Limits" sections of `docs/protocol/cloud/live-channel.md`.
+- **Reason:** The recommended option adds a rejection of client input to the protocol, and the user must also choose how the server answers it.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Client event:** a message from one live socket that the server passes to the other sockets of its project, on every replica.
+  - **Tick:** the 50-millisecond period in which the hub of a replica collects client events before it sends them.
+  - **Live relay:** `PostgresRelay` in `crates/mkc-live-pg`. It passes the client events of each tick to the other replicas through the Postgres channel `mkc_live_relay`.
+  - **Admission:** the step in which `Connection::submit` in `crates/mkc-live/src/connection.rs` accepts a client message and queues it for the next tick.
+- **Background:**
+  - The "Limits" section of `docs/protocol/cloud/live-channel.md` accepts a client message of at most 4,096 bytes. The server closes a socket that sends a larger message with code 1009.
+  - The "Client Events" section says that a client event goes to every other socket of its project, on every replica. A relay message stays under 7,900 bytes, because Postgres refuses a payload of 8,000 bytes or more.
+  - `submit_text` checks the size of the received text (`crates/mkc-live/src/connection.rs:76-79`). `submit` then parses the text into `ClientEvent`, whose fields are `serde_json` values (`crates/mkc-live-interface/src/messages.rs:40-49`).
+  - At the end of a tick, `finish_tick` sends each event to the local sockets of the project. Then it hands the tick to the relay (`crates/mkc-live/src/state.rs:64-83`). Each socket serializes the event again (`crates/mkc-api/src/live/socket.rs:137`).
+  - The relay serializes each event again to measure it. It drops an event whose payload would reach 7,900 bytes, with one warning (`crates/mkc-live-pg/src/payload.rs:41-57`).
+  - `serde_json` writes some numbers longer than a client sent them. For example, `1e15` becomes `1000000000000000.0`, so an array of such numbers grows about 3.8 times. The output of `JSON.stringify` does not grow when `serde_json` writes it again.
+  - A recorded probe on the branch that found this sent a frame of 4,031 bytes. It serialized as a `ClientEvent` of 14,431 bytes and a relay message of 14,542 bytes.
+  - No client event kind exists yet. The API starts its hub with an empty kind list (`crates/mkc-api/src/live/handler.rs:57`), so the server ignores every client message today. The presence plan, `plans/live-presence-cursors.md`, adds the first kinds, `cursor` and `view`.
+- **Problem:** The size check counts the received bytes, but the relay and each socket count the bytes after `serde_json` writes the event again. A crafted event that passes the 4,096-byte limit can reach the local sockets at about 3.5 times that limit. The relay drops it, so the readers on other replicas never get it.
+- **Impact if no action:** Once a client event kind exists, two readers of one project can see different events, depending on the replica that serves them.
+- **Root question:** How can every replica deliver the same events that pass the public size limit?
+- **Options:**
+  - **A.** Keep the validated JSON text in the event type, and use that text for local delivery and for the relay. Cover the recorded size case in the two-replica test. Cost: a type change in `mkc-live-interface` and in the relay encoder. Effort: Medium.
+  - **B.** At admission, in `Connection::submit`, measure the size of the event after `serde_json` writes it again, and apply the 4,096-byte limit to that size. The answer also chooses the reply to such an event. Either the server closes the socket with code 1009, as for a large message, or it ignores the event with one warning. Cost: the protocol refuses crafted input that it accepts today, and no `JSON.stringify` client sends such input. Effort: Small.
+  - **C.** Split each oversized event across relay messages, and join the parts before delivery. Cost: a new relay format and rollout compatibility work. Effort: Large.
+  - **D.** Serialize each event once at admission, keep that server-written text with the event, and apply the 4,096-byte limit to that text. Send the same text to the local sockets and in the relay messages, so each socket sends the stored text and serializes nothing again. Cost: the type change of A plus the limit change of B, and it refuses the same crafted input as B. Effort: Medium.
+  - **E.** Move the client event limit from `crates/mkc-live/src/limits.rs:10` into `mkc-live-interface`, next to `ClientEvent`. Add a relay test that encodes an event at that limit, with the full relay envelope, into one payload. Use it with A, B, or D. Effort: Small.
+- **Left out:**
+  - A higher Postgres payload limit does not exist, because Postgres refuses payloads of 8,000 bytes or more.
+  - A documented split, alone or in the best-effort rule of `plans/follow-ups/busy-relay-drops-whole-ticks.md`, fails the goal.
+  - The `arbitrary_precision` feature of `serde_json` breaks `crates/mkc-mokly-contract/src/json_integer.rs`, which relies on `visit_f64`.
+  - A frame limit of about 2 KiB is worse than B on every point.
+  - Local delivery of only the events that the relay accepts gives the same result as B, which decides at admission.
+  - A table for large events gives no gain.
+  - The relay transport is not a real choice, because the decision of 2026-11-24 by Cal sets the Postgres relay. The encoding of the client is not a real choice either, because the server cannot trust a client.
+- **Wider fix:** D, with E. One server-written text then serves admission, local delivery, and the relay, and one owner holds the byte budget that admission and the relay share.
+- **Previous examples:** `plans/follow-ups/bundle-response-single-encoding.md` records another path that must measure and send the same encoding.
+- **Related:** `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same code and the same protocol section, with a separate cause. Both items lose relayed client events in `crates/mkc-live-pg`, and the options of both edit the "Client Events" section. The gap mark of option D there also covers the oversized event here. If its best-effort text lists the size drop as an accepted discard, it quietly documents the split that this item leaves out. Make the protocol edits of both items in one change.
+- **Recommendation:** B. One check at admission closes the split, and it refuses only crafted input that no `JSON.stringify` client sends. D, with E, best protects the codebase.
+- **Action:** ask the user, because B adds a rejection of client input, and the answer must also choose a close with code 1009 or an ignore. If the user wants no new rejection, apply A.

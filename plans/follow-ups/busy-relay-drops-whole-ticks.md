@@ -1,0 +1,42 @@
+# A busy relay drops whole ticks
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 5. Its finding check widened the root question to failed sends and added options D and E. It kept the recommendation A and changed the wider fix from C to D.
+- **Location:** `crates/mkc-live-pg/src/relay.rs:16` (`PENDING_TICKS`) and `:65-77` (`publish`), `crates/mkc-live-pg/src/sender.rs:28-35` and `:49-64`, `crates/mkc-live/src/hub.rs:103-109`, and the "Client Events" and "Resync" sections of `docs/protocol/cloud/live-channel.md`.
+- **Reason:** The recommended option narrows the delivery promise that the protocol gives for client events, and no recorded decision of the user covers that change.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Client event:** a message from one live socket that the server passes to the other sockets of its project, on every replica.
+  - **Tick:** the 50-millisecond period in which the hub of a replica collects client events before it sends them.
+  - **Live relay:** `PostgresRelay` in `crates/mkc-live-pg`. It passes the client events of each tick to the other replicas through the Postgres channel `mkc_live_relay`.
+  - **`resync`:** a server message that tells the app to read again each kind that it shows, because the server can have missed notices.
+- **Background:**
+  - The "Client Events" section of `docs/protocol/cloud/live-channel.md` says that a client event goes to every other socket of its project, on every replica. At the end of each tick, the server sends the kept events to its own sockets and to the relay. The server stores no client event.
+  - The hub sends a tick to its local sockets first, and then it calls `publish` on the relay (`crates/mkc-live/src/state.rs:64-83`, `crates/mkc-live/src/hub.rs:103-109`). A failed `publish` only logs the warning "live relay could not publish a tick".
+  - The relay sends each tick in one Postgres transaction, and its queue holds one waiting tick (`PENDING_TICKS` at `crates/mkc-live-pg/src/relay.rs:16`). `publish` uses `try_send`, so a full queue returns an error at once (`crates/mkc-live-pg/src/relay.rs:65-77`).
+  - The sender drops a whole tick when its transaction or its connection fails, with the warning "live relay dropped a tick" (`crates/mkc-live-pg/src/sender.rs:28-35`). The encoder drops each event whose payload would reach 7,900 bytes (`crates/mkc-live-pg/src/payload.rs:41-57`).
+  - The hub already sends `resync` to its sockets after its relay subscription lags or closes (`crates/mkc-live/src/hub.rs:111-121`). It also sends `resync` to a socket after the queue of 256 messages of that socket fills (`crates/mkc-live/src/outbound.rs:55-64`). For a slow socket, the hub follows the rule that a reader never misses a notice without a `resync`.
+  - No client event kind exists yet. The API starts its hub with an empty kind list (`crates/mkc-api/src/live/handler.rs:57`). The presence plan, `plans/live-presence-cursors.md`, adds the first kinds, `cursor` and `view`, which coalesce on the tick. Its presence heartbeat repeats every 10 seconds, and each `resync` also sends a sync request.
+  - The scope decision of 2026-11-24 by Cal says that Postgres stays the record of every durable feature. It also says that a loss of presence and cursor state is harmless.
+- **Problem:** When one tick is still writing and another waits, the next tick finds a full queue, and the relay discards it. The hub has already delivered that tick to its own sockets, so only the readers on other replicas lose it. A failed send drops a whole tick in the same way, and no `resync` follows either drop.
+- **Impact if no action:** Future client event kinds can assume that remote readers got events that the relay discarded, while their sockets stayed open.
+- **Root question:** What does the protocol promise for a client event that a replica delivers locally but does not relay, and do remote readers learn of it?
+- **Options:**
+  - **A.** Document best-effort delivery of client events in the "Client Events" section of `docs/protocol/cloud/live-channel.md`. Name every relay drop: a full queue, a failed send, and an oversized event, until `plans/follow-ups/client-events-can-miss-remote-replicas.md` removes that case. Say that no `resync` follows such a drop. Keep the recovery rules of stored notices as they are. Effort: Small.
+  - **B.** Wait for relay capacity before the hub accepts more events for peer delivery. Keep notice delivery and socket control frames independent of that wait. Effort: Medium.
+  - **C.** Give replaceable events a bounded buffer that keeps the latest value. Use stored changes and notices for events that readers must recover. Effort: Large.
+  - **D.** Signal relay loss. When the relay drops events of a tick, it records their projects. Its next transaction carries a gap mark for each project, as an optional field of the relay message. Each other replica then sends `resync` to its sockets of that project, and the protocol states best-effort delivery and this rule. Cost: the affected sockets read their kinds again, the mark arrives only when the sender recovers, and older replicas ignore the field. Effort: Medium.
+  - **E.** Merge waiting ticks. When the sender falls behind, `publish` merges the new tick into the waiting tick, up to a byte cap, and sends both in one transaction. A drop at the cap still needs the text of A or the signal of D. Cost: `TickBatch` has no connection ID or coalesce key, so events cannot coalesce across ticks without an interface change. Effort: Medium.
+- **Left out:** A longer queue alone does not help, because a longer database stall still fills it, and E is the merge form of that idea. A drop of the tick for local sockets too, and a rule that waits for the presence plan, are not real choices. Events sent straight between replicas break the decision of 2026-11-24 by Cal to relay through Postgres.
+- **Wider fix:** D. It covers every drop at the sending replica, also the oversized event of `plans/follow-ups/client-events-can-miss-remote-replicas.md`, and it reuses the existing `resync` rule of the hub.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/client-events-can-miss-remote-replicas.md`: the same code and the same protocol section, with a separate cause. Both items lose relayed client events in `crates/mkc-live-pg`, and the options of both edit the "Client Events" section. D here also covers the oversized event there. If A here lists the size drop as an accepted discard, it quietly documents the split that the other item leaves out. Make the protocol edits of both items in one change.
+  - `plans/follow-ups/tls-required-databases-prevent-api-startup.md`: the same code. Its option B rewrites the sender on libpq. Build any code option here on the sender that the other item leaves.
+  - `plans/follow-ups/live-relay-exceeds-connection-budget.md`: the same code. Its option E puts the sends on the listening session, where a slow send delays inbound notices. E here sends fewer transactions.
+  - `plans/follow-ups/build-notice-rule-overstates-pull-request-updates.md`: the same document. Its option D adds a rule to the "Notices" section of `docs/protocol/cloud/live-channel.md`, so one doc change can carry both items.
+- **Recommendation:** A. No client event kind exists yet, and the scope decision of 2026-11-24 calls a loss of presence and cursor state harmless. D best protects the codebase.
+- **Action:** ask the user, because A changes the delivery promise for client events that the "Client Events" section of `docs/protocol/cloud/live-channel.md` gives.

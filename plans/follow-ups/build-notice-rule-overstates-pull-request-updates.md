@@ -1,0 +1,42 @@
+# Build notice rule overstates pull request updates
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 9. Its finding check widened the root question to every field of `Build` that comes from another record. It added option D, and it changed the recommendation from A to D.
+- **Location:** `docs/protocol/cloud/cloud-build-api.md:151`, the `build` row of the table under "Live Notices". Also the "Notices" section of `docs/protocol/cloud/live-channel.md`, `crates/mkc-db/migrations/202611251201_build_live_notices/up.sql:15-30`, `crates/mkc-store-pg/src/viewer/build_history.rs:76-91`, and `crates/mkc-api/src/builds/projection.rs:22-27`.
+- **Reason:** The recommended option narrows the build notice rule that Cal approved with the protocol docs of the live channel, so the user decides.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Notice:** a live socket message `{kind, id, sequence}` that says that a stored record of the project changed, with none of its content. A database trigger sends it.
+  - **`Build`:** the REST shape that `getBuild` returns. "Build Shapes" in `docs/protocol/cloud/cloud-build-api.md` defines it.
+  - **Build card:** the viewer panel that shows the state, the steps, and the output of a build, and its Cancel action.
+- **Background:**
+  - The decision of 2026-11-24 by Cal, "notices without content", says that a trigger on each stored table calls `pg_notify` inside the write transaction. So every writer notifies, and only after the commit. The reader then reads the change through the REST read of that kind. Notices sent by the code of each writer were left out, because a writer can forget its notice.
+  - The `build` row under "Live Notices" in `docs/protocol/cloud/cloud-build-api.md` says when a `build` notice goes out. It names "an insert into `builds` or a change to a field of `Build` or the stored log completion flag". Cal approved this rule with the protocol docs of the live channel work.
+  - The trigger `builds_live_notice_update` fires only when a listed column of the `builds` row changes, or when the `repository_id` of a pull request build changes (`crates/mkc-db/migrations/202611251201_build_live_notices/up.sql:15-30`).
+  - `getBuild` reads the build row. It joins the pull request title and author from `github_pull_requests`, and the repository name for `pullRequest.url` from `github_repositories` (`crates/mkc-store-pg/src/viewer/build_history.rs:76-91`). The pull request rules of `docs/protocol/cloud/viewer-read-model.md` show the last stored provider observation, not a frozen copy.
+  - Two paths write the pull request row, and neither writes the build row: the GitHub worker (`crates/mkc-api/src/github_worker/apply.rs:28-30`) and a requested build (`crates/mkc-api/src/builds/scheduling.rs:77-81`).
+  - `canCancel` comes from the current role of the caller (`crates/mkc-api/src/builds/reads.rs:112`, `crates/mkc-api/src/builds/projection.rs:25-27`). The build card shows Cancel from it (`packages/app/src/viewer/build-action.ts:36-38`).
+  - The card reads `getBuild` on each notice of its build, also on each `build-log` notice. It also polls every 30 seconds while its socket is open.
+- **Problem:** A GitHub edit of a pull request title updates the pull request row, not the build row, so the edit sends no `build` notice. A role change alters `canCancel` with no notice either. So the rule promises a notice for changes that send none.
+- **Screenshot:** None, because nobody took a picture before this item was written. A queued or quiet build card keeps the old pull request title after a title edit on GitHub, until its next read.
+- **Impact if no action:** A reader of a queued or quiet build sees the old title until the 30-second safety poll. A reader whose role drops to reviewer can see Cancel for up to 30 seconds, and then gets `permission-denied`.
+- **Root question:** Which changes to the `Build` that `getBuild` returns must send a `build` notice, when some of its fields come from other records?
+- **Options:**
+  - **A.** Narrow the `build` row: build notices cover changes to the fields stored on the build row and to its log completion flag. Leave the joined pull request fields to the existing reads. Effort: Small.
+  - **B.** Send build notices when a change to a pull request row or a repository row affects a build response. Cost: database work for each affected build, and `canCancel` still needs the words of A. Effort: Medium.
+  - **C.** Give pull request details their own notice kind, and let open views read them again by reference. Cost: a notice kind and a client subscription, and `canCancel` still needs the words of A. The browser test of the build card in `packages/app/src/_tests_/build-api.spec.ts` must then cover the new kind. Effort: Large.
+  - **D.** Write the rule once in the "Notices" section of `docs/protocol/cloud/live-channel.md`:
+    - The notices of a kind come from the writes that its doc names.
+    - A field that its read takes from another record changes on the next read, unless the doc of the kind names that write.
+    - The doc of each kind lists those fields.
+    - For `build`, narrow the row as A does, and keep the `repository_id` case that the trigger already watches. List `pullRequest` and `canCancel` as fields that change on the next read.
+    - Cost: one more rule in a shared protocol doc. Effort: Small.
+- **Left out:** A higher poll rate shortens the delay but still breaks the promise. The card already reads on every notice of its build, so a running build with output shows the new title at its next log chunk. A frozen copy of the pull request details on the build row breaks the read model rule of the last stored observation. A copy that each observation refreshes is B with a second copy. A notice from the code of each writer breaks the decision of 2026-11-24 on notices without content.
+- **Wider fix:** D. The doc of every notice kind then names the fields of its read that change only on the next read. The comment, agent, and presence kinds will add reads with fields from other records.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same document, only under D. D here adds a rule to the "Notices" section of `docs/protocol/cloud/live-channel.md`. That item edits the "Client Events" section of the same doc, so one doc change can carry both.
+- **Recommendation:** D. It costs the same as A, and it sets the rule before the comment, agent, and presence kinds add reads with such fields.
+- **Action:** ask the user, because A and D narrow the build notice rule that Cal approved, and no recorded decision of the user covers that change.

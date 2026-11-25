@@ -1,0 +1,41 @@
+# Authentication records activity for every caller
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`: the wider fix of finding 7, which the finding check named option F. That branch applies the direct fix, route tests of the idle deadline.
+- **Location:** `crates/mkc-auth/src/service.rs:110-111` (`Authenticator::authenticate`), `crates/mkc-auth/src/sessions.rs:66-84`, `crates/mkc-api/src/dispatch.rs:181`, `crates/mkc-api/src/billing_dispatch.rs:32`, `crates/mkc-api/src/github_dispatch.rs:71` and `:137`, `crates/mkc-api/src/desktop_grant_dispatch.rs:15`, and `crates/mkc-api/src/live/access.rs:46-48` and `:61-75`.
+- **Reason:** The fix changes the shared `Authenticator` interface of `mkc-auth` and each request dispatcher of `mkc-api`, outside the live channel work.
+
+- **Source:** Review.
+- **Category:** Code structure.
+- **Terms:**
+  - **Session activity:** the `last_seen_at` time of a stored session. The idle deadline of a session is this time plus seven days.
+  - **Request dispatcher:** a function in `crates/mkc-api` that authenticates an API request and passes it to its service, such as `ApiDispatcher::authenticated` in `dispatch.rs`.
+  - **Live socket:** the WebSocket that the app opens for each project that a member reads. `docs/protocol/cloud/live-channel.md` defines it.
+- **Background:**
+  - The "Sessions" section of `docs/protocol/cloud/auth-sessions.md` says that a successful authentication writes nothing unless the last recorded activity is older than five minutes. Then it records the new activity. A session expires seven days after its last recorded activity, and 30 days after it starts.
+  - The doc comment of `Authenticator::authenticate` (`crates/mkc-auth/src/service.rs:110-111`) says "Authenticate, enforce idle/absolute expiry, and update activity." Its implementation (`crates/mkc-auth/src/sessions.rs:66-84`) reads the session in a read-only transaction. When `last_seen_at` is older than five minutes, it then writes the new activity with `touch` in a separate autocommit.
+  - Six places call it:
+    - `ApiDispatcher::authenticated` at `crates/mkc-api/src/dispatch.rs:181`, for most REST operations that carry the session cookie.
+    - The billing dispatcher at `crates/mkc-api/src/billing_dispatch.rs:32`.
+    - The GitHub dispatcher at `crates/mkc-api/src/github_dispatch.rs:71`, and `optional_github_identity` at `:137`.
+    - The desktop grant dispatcher at `crates/mkc-api/src/desktop_grant_dispatch.rs:15`.
+    - The live socket upgrade at `crates/mkc-api/src/live/access.rs:46-48`.
+  - The "Access Checks" section of `docs/protocol/cloud/live-channel.md` makes the server check each open live socket every 30 seconds. It says that a check records no session activity, so an open socket does not extend the idle deadline of its session.
+  - The 30-second check, `recheck` at `crates/mkc-api/src/live/access.rs:61-75`, does not call `authenticate`. It reads the session row itself and calls `session_policy::expired`. So it records no activity only because its author did not call `authenticate`.
+  - The live socket upgrade calls `authenticate`, so it records activity. Each member viewer holds a socket (`packages/app/src/screens/viewer/viewer-build.ts:54-57`), and the app opens it again after every close (`packages/app/src/data/live-client.ts:117-123`). In stable environments the load balancer ends each socket after 3,600 seconds (`infra/helm/mokly-cloud/templates/services.yaml:35`). So an open member tab opens its socket again at least once an hour, and each upgrade can record activity.
+  - Before the review, the route tests of the live socket covered four cases. These were an expired cookie at the upgrade, a sign-out, a session rotation, and a membership removal. A recheck without its expiry check, or a recheck that records activity, still passed them. The branch that found this adds route tests under `crates/mkc-api/tests/live/`. They check that an early recheck leaves the activity time alone, and that a recheck at the idle deadline closes the socket with code 4403.
+- **Problem:** `authenticate` records session activity as a side effect for every caller. Some callers must not extend a session, such as a periodic or automatic check. Such a caller stays safe only when its author avoids `authenticate` and copies the session read.
+- **Impact if no action:** A later periodic caller, for example of the presence or the agent features, can call `authenticate` and extend sessions with no request from the reader. The new route tests catch this only for the 30-second socket check.
+- **Root question:** How does every session check stay free of activity writes, unless the caller is a request that the protocol says records activity?
+- **Options:**
+  - **A.** Change nothing. The new route tests keep the 30-second check free of activity writes. Each new caller must still avoid `authenticate` on its own. Effort: Small.
+  - **B.** Give the socket checker a store handle that has only `read`, so `recheck` cannot write. Postgres already rejects a write inside the READ ONLY transaction of `read` (`crates/mkc-store-pg/src/transaction.rs:25-26`). Cost: it guards one caller, and the upgrade keeps its write. Effort: Small.
+  - **C.** Give periodic callers a separate read-only authentication method that cannot record activity, and use it in the live route. Cost: each new periodic caller, and the upgrade, must still choose the read-only method. Effort: Large.
+  - **D.** Make `authenticate` a read for every caller. Add one explicit step that records activity under the five-minute rule, and call it from each request dispatcher after a successful authentication. The live upgrade keeps the activity rule that `docs/protocol/cloud/live-channel.md` gives it when the work starts. The 30-second check keeps only the session hash, so it can then share the session read of `authenticate`. Cost: the shared interface and its tests in `crates/mkc-auth`, six callers in `crates/mkc-api`, and four mocks in `crates/mkc-api/src/_tests_/cookie_tests.rs` and `dispatch_tests.rs` change. Effort: Large.
+- **Left out:** More expired-cookie cases test the upgrade, not the periodic check. A lint that bans session writes under `crates/mkc-api/src/live/` is a new check, and B enforces the same rule by type. A browser test cannot move the server clock.
+- **Wider fix:** D. A read becomes the default, so a new caller records activity only when it calls the explicit step. C still needs each new caller to choose the right method.
+- **Previous examples:** None found before the live channel. The 30-second check at `crates/mkc-api/src/live/access.rs:61-75` is the first caller that copies the session read to avoid the write.
+- **Related:** `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: the same code. Both items change `recheck` in `crates/mkc-api/src/live/access.rs`, this item the session half and that item the role half. One branch can do both, or one rebases on the other.
+- **Recommendation:** D. It makes the safe case the default for every caller, and each request keeps its activity rule.
+- **Action:** fix after merge, apply D, because it changes the shared authentication interface and its request callers.

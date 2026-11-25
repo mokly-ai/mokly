@@ -1,0 +1,48 @@
+# Live relay exceeds the rollout connection budget
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 1. Its finding check added options D to G, and it changed the recommendation from A to D.
+- **Location:** `crates/mkc-live-pg/src/relay.rs:46-62` (`PostgresRelay::connect`), `infra/terraform/modules/sql/main.tf:38-47`, `infra/helm/mokly-cloud/templates/workloads.yaml:22` and `:29`, and `infra/helm/mokly-cloud/values.yaml:100-102`.
+- **Reason:** Every option trades query capacity, rollout time, peak capacity, money, or a database restart, so the user chooses.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Replica:** one running pod of the `api` or the `catalogue` workload.
+  - **Surge replica:** the extra pod that Kubernetes starts in a rollout step, under `maxSurge: 1`.
+  - **Outgoing replica:** an old pod that a rollout step deletes. It drains its requests and holds its connections until its process exits.
+  - **Live relay:** `PostgresRelay` in `crates/mkc-live-pg`. Each API replica runs one, to pass live notices and client events between replicas over Postgres `LISTEN` and `NOTIFY`.
+  - **`max_connections`:** the Postgres limit on simultaneous client sessions.
+- **Background:**
+  - Both stable Cloud SQL instances, production and main-preview, use the tier `db-custom-1-3840`, with 1 vCPU and 3.75 GB. The user chose this tier on 2026-11-24. Its default limit is 100.
+  - On 2026-11-24 the user chose to raise `max_connections` to 160 on both instances (`infra/terraform/modules/sql/main.tf:44-47`). Postgres keeps 3 connections for superusers, so the workloads get about 157.
+  - The chart scales `api` and `catalogue` from 2 to 6 replicas (`infra/helm/mokly-cloud/values.yaml:100-102`). Production runs 2 replicas today. Rollouts use `maxSurge: 1` and `maxUnavailable: 0`, with a 30-second termination grace period (`infra/helm/mokly-cloud/templates/workloads.yaml:22` and `:29`).
+  - Each API replica holds a store pool of up to 8 connections and 1 readiness connection. Each catalogue replica holds a store pool of up to 8 connections. Three maintenance jobs can hold 1 connection each. In a rare case, a late `auth-prune` job overlaps `github-prune`, which adds 1.
+  - The budget comment at `infra/terraform/modules/sql/main.tf:38-43` counts about 139 connections at 6 replicas in a rollout step. That step has one surge and one outgoing replica of each workload. A second outgoing replica of each workload, when a drain outlasts a step, gives about 156. `plans/follow-ups/database-connection-budget.md` holds the full count, which does not include the relay.
+  - The live relay opens two dedicated `tokio-postgres` sessions on each API replica, one that listens and one that sends (`crates/mkc-live-pg/src/relay.rs:46-62`). The design keeps dedicated sessions because Diesel cannot wait for a notice in async code. That reason needs one `tokio-postgres` session, not two.
+  - On SIGTERM an outgoing replica stops its hub at once, which closes both relay sessions (`crates/mkc-api/src/application_server.rs:80-83`, `crates/mkc-live/src/hub.rs:81-84`).
+  - `plans/follow-ups/database-connection-budget.md` keeps the replica ceilings at 6, because the raised limit covered them. With the relay, that reason no longer holds.
+- **Problem:** The relay adds two sessions to each API replica, and the budget does not count them. In the documented rollout case with two outgoing replicas of each workload, the seven serving API replicas add 14 sessions, for a total of 170. This count assumes that each outgoing replica has already closed its relay sessions.
+- **Impact if no action:** In that rollout case, Postgres can refuse the connections that API startup, catalogue reads, or the one-attempt migration hook of a deploy need.
+- **Root question:** How can the stable environments fit the relay sessions within their database limit, at the replica ceilings and the rollout overlap that the budget covers?
+- **Options:**
+  - **A.** Raise `max_connections` to cover the new rollout count and a reserve, to at least 173. First confirm what the 1 vCPU, 3.75 GB tier supports. A change of `max_connections` restarts both stable databases. Effort: Medium.
+  - **B.** Reserve two slots for the relay from the store pool of each API replica, so the pool holds up to 6. The documented case then needs 152 connections, or 153 in the rare job overlap. Cost: fewer concurrent REST queries, build operations, and socket access checks on each replica. Effort: Medium.
+  - **C.** Derive the pool sizes, the relay sessions, and the database limit from one deployment budget. Include the outgoing replicas and the maintenance jobs. Effort: Large.
+  - **D.** Set `minReadySeconds: 35` on the `api` and `catalogue` Deployments in Cloud SQL mode, longer than the 30-second grace period.
+    - A rollout step then has at most one outgoing replica of each workload. With the relay, that case uses 153 of the 157 connections, or 154 in the rare job overlap.
+    - Recount the Terraform comment and `plans/follow-ups/database-connection-budget.md`, which already chose this setting as its option C.
+    - Cost: each rollout step waits 35 seconds longer, about 70 seconds more at 2 replicas and 3.5 minutes at 6. That stays within the 15-minute Helm wait of `infra/scripts/rollout.sh:90`. An eviction or an autoscaler change during a rollout can still reach 170. Effort: Small.
+  - **E.** Use one relay session on each replica for both `LISTEN` and `NOTIFY`, and lower the API store pool from 8 to 7. That gives 154 in the documented case. Without the pool change it gives 163, and with D it gives 146. Cost: one query connection less, a slow tick send delays inbound notices, and one session failure stops both directions. Effort: Medium.
+  - **F.** Lower `scaling.maxReplicas` from 6 to 5, which gives 151, or 152 in the rare job overlap. Cost: one sixth less peak capacity for each workload. Effort: Small.
+  - **G.** Run PgBouncer in transaction mode in front of Cloud SQL. The relay `LISTEN` session and the migration hook connect directly. Cost: a new component in each stable environment. It is option B of `plans/follow-ups/database-connection-budget.md`. Effort: Large.
+- **Left out:** A sender session that opens on demand keeps the worst case at 170, and the listeners alone add 7 sessions. A larger database tier breaks the tier decision of 2026-11-24. Per-role connection limits only choose which workload fails. Two relay slots from the catalogue pool are B in another binary, with 152 at a catalogue pool of 6. Another message bus, or one central relay process, breaks the decision of 2026-11-24 by Cal to keep the channel in `mkc-api` with a Postgres relay.
+- **Wider fix:** C. Every session that a binary opens, the relay's included, then takes its allocation from one budget. Option A of `plans/follow-ups/database-connection-budget.md` proposes that budget for the pools and the jobs, and it must count the relay sessions too. A Postgres test that counts the sessions of one replica against its allocation is the detection form.
+- **Previous examples:** PR #495 set the limit of 160 and recorded the shared budget in `plans/follow-ups/database-connection-budget.md`.
+- **Related:**
+  - `plans/follow-ups/database-connection-budget.md`: a shared wider fix and the same limit. Its option C is option D here, and its option A is the wider fix here. Its counts predate the relay.
+  - `plans/follow-ups/tls-required-databases-prevent-api-startup.md`: the same code. Both items change how `PostgresRelay::connect` opens its sessions. Under E here, the TLS connector of that item opens one session, not two. Its option D keeps REST serving when Postgres refuses the relay sessions at the rollout peak, but it does not lower the count.
+  - `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same code. E here puts the sends on the listening session. Postgres gives notices to a session only between its transactions, so a slow tick send delays inbound notices. Choose E together with the delivery rule of that item.
+- **Recommendation:** D. It keeps the decided limit of 160 and full query pools, needs no database restart, and costs one setting. C best protects the codebase.
+- **Action:** ask the user, because each option costs capacity, rollout time, money, or a restart, and D still lets a rollout eviction pass the limit.

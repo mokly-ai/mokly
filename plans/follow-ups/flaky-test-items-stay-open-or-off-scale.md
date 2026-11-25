@@ -1,0 +1,36 @@
+# Flaky test items stay open or off scale
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`: two problems outside the scope that the finding check of finding 3 found.
+- **Location:** `plans/follow-ups/flaky-viewer-readiness-hover-after-navigation.md` (the whole item, and its **Action** at line 49), `plans/follow-ups/readiness-spec-sees-late-cross-origin-hover.md` (the whole item), `plans/follow-ups/flaky-comparison-pane-titles-teardown.md` (its grades at line 3, its **Category** at line 13, and its **Action**), and `plans/follow-ups/flaky-serve-comparison-edit-readiness.md:3`.
+- **Reason:** The items lie outside the live channel work, and two fixes delete items on `main`, which needs the approval of the user.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Fix pull request:** a pull request that fixes a CI failure. It first claims the failure with an empty commit on a `ci-fix/` branch, as `skills/finish-work/references/ci.md` of `Firna-AI/skills` says.
+  - **Priority score:** the score from 0 to 10 that `scripts/follow-ups.sh` of the shared `plans` skill gives each open item, from the grades on its first line.
+  - **Complete gate:** `cargo xtask check`, which runs every test suite of the repository, the `viewer` and `browser` suites included.
+- **Background:**
+  - Two open items record one browser test flake in `tests/browser/viewer_readiness.spec.ts`. The flaky cases are "pending sibling keeps navigation without automatic inspection" and "unavailable sibling keeps navigation without automatic inspection". Each runs in the same-origin and the postMessage mode. They sometimes got a late `hover` event with `instance: null` and `entryPath: "action"`.
+  - `plans/follow-ups/flaky-viewer-readiness-hover-after-navigation.md` came from `calummoore/cloud-sign-up-uadj` and merged with PR #500 on 2026-11-25 at 09:57 UTC. Its **Action** says `fix after merge, apply A`, and its option A moves the pointer off the canvas after the click on **Open Action**.
+  - `plans/follow-ups/readiness-spec-sees-late-cross-origin-hover.md` came from `calummoore/e2b-build-enabling-vbbo` and merged with PR #510 on 2026-11-25 at 09:55 UTC. Its recommended option A moves the pointer outside the frames before **Open Action** and keeps the assertion. Its option B stops the viewer from reporting a hover with no instance after a navigation.
+  - PR #507, "fix(ci): flaky viewer readiness test sees a late hover", claimed the flake at 05:02 UTC on 2026-11-25, when neither item was on `main`. It merged at 11:48 UTC as commit `894f5f4dd`, and it deleted neither item.
+  - PR #507 moves the pointer to the top-left corner of the page, opens the link with Enter, and keeps every assertion. Its description records that a diagnostic copy of the spec failed 6 of 8 runs before the fix and passed 40 of 40 after it.
+  - PR #507 left one product question in its description only. The frame probe reports a hover exit, a hover with no instance, also when no hover came before it. An example is a new document that loads under a resting pointer while the canvas moves the frame. `docs/protocol/mokly-viewer-selection.md` says that a hover exit uses null and empty boxes, but not whether an exit needs an earlier hover.
+  - `plans/follow-ups/flaky-comparison-pane-titles-teardown.md` records a flaky test of the `viewer` suite. Its first line grades it `Severity: Low`, and its **Category** is `Flaky test`. Its **Action** is `fix after merge.`, with no option letter and no reason.
+  - `plans/follow-ups/flaky-serve-comparison-edit-readiness.md` records a flaky spec of the `browser` suite, and its first line also grades it `Severity: Low`.
+  - The `decisions-and-findings` skill grades a flaky test in the gate Medium. Its categories are product bug, security, docs or spec, mockup, repository rule, test, performance, code structure, dead code, UX wording, and process. Each **Action** names the option to apply and gives a reason.
+  - On 2026-11-25, `scripts/follow-ups.sh` scored the comparison item 3 of 10. At the severity Medium it scores 5, like the two readiness items.
+- **Problem:** Two open items record a flake that a merged fix removed, so the list shows done work as open. Two other flake items grade a gate flake Low, and one of them has a category off the scale and an **Action** with no option.
+- **Impact if no action:** A fix branch can redo the readiness fix, and the hover exit question of PR #507 stays only in a merged pull request. The priority list ranks two gate flakes below the other flaky gate tests.
+- **Root question:** How do the follow-up items of these flakes show only open work, graded on the scales that the item layout and the priority script read?
+- **Options:**
+  - **A.** Correct the records in one branch. Delete both readiness items, because PR #507 applied their fix. Record the hover exit question of PR #507 in one new item, or rewrite `readiness-spec-sees-late-cross-origin-hover.md` to hold only that question. In `flaky-comparison-pane-titles-teardown.md`, set the severity to Medium and the category to Test, and write `fix after merge, apply B, because` with its reason. Set the severity of `flaky-serve-comparison-edit-readiness.md` to Medium. Effort: Small.
+  - **B.** Do A, and change the steps of a fix pull request in `skills/finish-work/references/ci.md` of `Firna-AI/skills`. Before its merge, a fix pull request searches `plans/follow-ups/` on `origin/main` again, and it deletes each item that records its failure. A branch that adds an item for a flaky test searches again for a fix pull request of that failure before its own merge. Cost: a change of the shared skills, which every repository that uses them reads. Effort: Small.
+- **Left out:** Change nothing keeps done work in the list and two flakes at a low rank. A check that rejects off-scale grades is a new gate. Fewer than three approaches are real, because each record is either right or wrong, and only the rule of B prevents the next case.
+- **Wider fix:** B. The fix pull request then closes each item that records its failure, also an item that merged after its claim.
+- **Previous examples:** `plans/follow-ups/follow-up-text-errors-2026-11-22.md` and `plans/follow-ups/follow-up-effort-grade-mismatch.md` record earlier errors in the fields of items.
+- **Recommendation:** B. A corrects the four records, and the rule of B keeps the next fix pull request from leaving its item open.
+- **Action:** ask the user, because A and B delete two items on `main` that this work does not fix, and B changes shared skills.

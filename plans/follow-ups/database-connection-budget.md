@@ -38,6 +38,7 @@
 - **Left out:** A larger tier breaks the user decision of 2026-11-24. Cloud SQL Managed Connection Pooling needs Enterprise Plus, which also breaks that decision. Lower replica ceilings cut peak capacity, and the raised limit already covers the current ceilings. A retry in the migration hook does not help, because a pool whose call queued a connection keeps retrying it, so a freed connection goes back to the old pools. A check that only detects an overrun is a new gate, and A prevents the case.
 - **Wider fix:** A, with C to pace the outgoing pods of rollout steps, E to bound the jobs, and D for limit decreases. A tier change or a ceiling change then resizes the pools, so the mismatch cannot return.
 - **Related:** `plans/follow-ups/r2d2-connect-races-openssl-exit.md`: the owned-connection form of option E also removes the maintenance commands' part of that exit race.
+  `plans/follow-ups/live-relay-exceeds-connection-budget.md`: the live channel relay adds two dedicated connections per API pod, so the second-outgoing-pod case reaches 170. That item decides the relay case. Option A here must count the relay sessions.
 - **Previous examples:** Main-preview has used this tier with the same ceilings and pools since PR #350, with no recorded incident.
 - **Recommendation:** A with C and E. They keep the decided tier and the ceilings, and they remove the class. D waits for the user, because it changes the promotion sequence.
 - **Action:** fix after merge, apply A, C and E, because they reach Terraform, the chart, and three binaries, outside the tier change.

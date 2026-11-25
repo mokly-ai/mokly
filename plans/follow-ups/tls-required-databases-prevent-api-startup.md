@@ -1,0 +1,44 @@
+# TLS-required databases prevent API startup
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 2. Its finding check widened the root question to every URL that the store accepts. It added options D and E, and it changed the recommendation from A to D.
+- **Location:** `crates/mkc-live-pg/src/relay.rs:46-52`, `crates/mkc-live-pg/src/listener.rs:30-33`, `crates/mkc-live-pg/src/sender.rs:23-26`, `crates/mkc-api/src/live/handler.rs:46-56`, `crates/mkc-api/src/application_server.rs:22-31`, and `crates/mkc-config/src/settings.rs:139-142`.
+- **Reason:** The recommended option adds a refusal to the live socket upgrade, and option E removes direct TLS, so the user chooses.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **`MKC_DATABASE_URL`:** the Postgres connection URL that the API, the catalogue server, and the maintenance jobs read.
+  - **Live relay:** `PostgresRelay` in `crates/mkc-live-pg`. Each API replica runs one, to pass live notices and client events between replicas over Postgres `LISTEN` and `NOTIFY`.
+  - **libpq:** the C client library of Postgres. The Diesel connections of the store use it.
+  - **`sslmode`:** the URL key that sets whether a Postgres connection uses TLS, for example `disable`, `prefer`, `require`, or `verify-full`.
+- **Background:**
+  - The API accepts any `MKC_DATABASE_URL` that starts with `postgres://` or `postgresql://` (`crates/mkc-config/src/settings.rs:139-142`). The store connects through libpq, which honours every libpq URL key, the `PG*` environment variables, `.pgpass`, and every `sslmode`.
+  - The live relay parses the same URL with `tokio-postgres` 0.7.18 (`crates/mkc-live-pg/src/relay.rs:47-49`). That parser accepts only `disable`, `prefer`, and `require` for `sslmode`. It refuses libpq-only keys such as `sslrootcert`, `passfile`, `service`, and `fallback_application_name`, and it reads no `PG*` variable and no `.pgpass`.
+  - Both relay sessions connect with `NoTls` (`crates/mkc-live-pg/src/listener.rs:31`, `crates/mkc-live-pg/src/sender.rs:24`), so `sslmode=require` fails at the connect.
+  - The API connects the relay before it binds its port (`crates/mkc-api/src/application_server.rs:24-28`, `crates/mkc-api/src/live/handler.rs:52-54`). A relay that cannot connect stops `serve`, so REST stops too.
+  - The checked-in deployments use `sslmode=disable` on a local leg. Stable environments connect to the Cloud SQL proxy sidecar on `127.0.0.1` (`infra/helm/mokly-cloud/templates/_runtime.tpl:134`). PR previews connect to a namespace database (`docs/protocol/cloud/pr-preview-environments.md:101`). `docs/ops/environment.md` does not require that form.
+  - After startup, the listener already recovers from a lost connection. It connects again after a wait from 0.5 seconds up to 15 seconds, and the hub then sends `resync` to its sockets (`crates/mkc-live-pg/src/listener.rs:54-83`). While a reader has no open socket, the build card polls every 3 seconds.
+  - The relay keeps dedicated sessions, because Diesel cannot wait for a notice in async code. The decision of 2026-11-24 by Cal keeps the live channel in Rust and Postgres, with a Postgres relay between the API replicas.
+- **Problem:** A URL that the store accepts can stop the relay, and with it the whole API. `sslmode=require` fails at the relay connect, and `sslmode=verify-full` and the libpq-only keys fail at the URL parse. With the default `sslmode=prefer`, the relay sessions never ask for TLS, so they go in plain text where libpq encrypts.
+- **Impact if no action:** An installation with a TLS-required or libpq-only database URL loses REST and live service when it upgrades to the live channel. No documented deployment uses such a URL today.
+- **Root question:** How can the API keep REST service, and give live service, for every `MKC_DATABASE_URL` that its store accepts?
+- **Options:**
+  - **A.** Use a TLS-capable relay connector that honours the URL modes and the certificate settings. It must also translate the `sslmode` values and the keys that `tokio-postgres` refuses. Cover startup against a database that requires TLS. Cost: the CI and local test databases accept plain connections, so the test needs a new database setup. A covers only the modes that it translates, and no documented deployment needs it. Effort: Medium.
+  - **B.** Run the relay through libpq on dedicated workers. The listener must poll `notifications_iter`, because Diesel cannot wait for a notice and the workspace forbids unsafe code. Cost: worker lifecycle code, and a rewrite of the sender and the listener. Effort: Large.
+  - **C.** Give the store and the relay one connection configuration that owns the TLS mode and the trust settings, and translate it for each driver. Effort: Large.
+  - **D.** Keep REST serving when the relay cannot connect.
+    - Move the first relay connect into the reconnect loop of the listener.
+    - Answer live upgrades with 503 `operation-unavailable` until the first subscription, and add that refusal to the upgrade checks of `docs/protocol/cloud/live-channel.md`.
+    - Log each failure with its cause, and report a URL that does not parse once, with no retries.
+    - Cost: a TLS-required URL keeps REST, and its readers poll every 3 seconds. A broken relay no longer stops a rollout, and no smoke check opens a live socket, so only the log shows the fault. A `prefer` URL still gives plain relay sessions. Effort: Medium.
+  - **E.** Make the plain local leg the documented contract in `docs/ops/environment.md` and `crates/mkc-live-pg/README.md`. `MKC_DATABASE_URL` then reaches Postgres through the Cloud SQL proxy sidecar or a namespace database, with TLS off on that leg. Keep the startup failure. Cost: it removes the direct TLS that libpq gives the API today. Effort: Small.
+- **Left out:** A URL with TLS turned off sends the credentials in plain text. A required new proxy for existing installations comes back as E. A move of the store to the async driver fails the goal and rewrites every query path. A poll of a stored event table breaks the decisions of 2026-11-24 by Cal on notices without content and on the Postgres relay. A separate relay URL, and a sender session alone, are not real choices.
+- **Wider fix:** B, for the URL class, because one driver keeps every libpq key, `PG*` variable, and TLS mode the same for the store and the relay. D is the wider fix for the outage, because REST then no longer depends on the relay at startup.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/live-relay-exceeds-connection-budget.md`: the same code and a shared fix. Both items change how `PostgresRelay::connect` opens its sessions. Under its option E, one session per replica, the TLS connector of A here secures one session, not two. D here keeps REST serving when Postgres refuses the relay sessions at the rollout peak, but it does not lower the count. C here and C there can share one connection configuration.
+  - `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same code. B here rewrites the sender, and the options of that item change the queue that feeds the sender. Do them together, or one after the other.
+- **Recommendation:** D. It keeps REST for every URL that the store accepts, and also when Postgres refuses relay sessions at a rollout peak. B best protects the codebase against differences between the two drivers.
+- **Action:** ask the user, because D adds a 503 refusal to the live upgrade checks, and E removes direct TLS, which needs approval.
