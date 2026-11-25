@@ -35,5 +35,6 @@ test("CI job limits keep the measured three-times timing contract", async () => 
     plan: 5,
     "site-lighthouse": 60,
     required: 30,
+    timing: 10,
   });
 });

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "suite": "viewer",
+  "commit": "827f2652facb85ef10bd7b69d742da6b755e4ed4",
+  "runtime": "node-22.15.0",
+  "shard": null,
+  "outcome": {
+    "exitCode": 0,
+    "signal": null,
+    "status": "passed"
+  },
+  "durationMs": 562753.5887140001,
+  "observedFiles": [
+    {
+      "file": "tests/static_base_manager_ci.test.ts",
+      "durationMs": 64185.379184,
+      "tests": 1
+    },
+    {
+      "file": "tests/static_base_managers.test.ts",
+      "durationMs": 59763.881197,
+      "tests": 17
+    },
+    {
+      "file": "tests/design_catalogue.test.ts",
+      "durationMs": 52935.44275,
+      "tests": 14
+    }
+  ]
+}
