@@ -133,7 +133,6 @@ export class Session {
                     return this.kept.compile(options);
                   },
                 );
-          this.generations.set(generation.id, generation);
           const reply: BundleReply =
             source &&
             this.restored.has(source) &&
@@ -141,6 +140,8 @@ export class Session {
             result.plan === undefined
               ? { generation: generation.id, restoredGeneration: source.id }
               : result;
+          this.generations.set(generation.id, generation);
+          this.restored.delete(generation);
           return reply;
         } catch (error) {
           if (preparation)
