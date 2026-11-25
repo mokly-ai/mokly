@@ -27,7 +27,9 @@ other workspace crate.
 `Locks` uses the standard library's OS-backed shared and exclusive locks.
 Shared leases coexist. Exclusive mutation and eviction fail while a lease
 is held. Dropping its
-guard releases the lock and leaves the lock file intact.
+guard releases the lock and leaves the lock file intact. The guard unlocks
+before it closes the file, so a child process that another thread starts at
+that moment cannot keep the lock until its exec.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership
 guard immediately after spawn. The caller retains the child and its pipes.

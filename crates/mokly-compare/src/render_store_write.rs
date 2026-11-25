@@ -27,13 +27,14 @@ impl CachedDocuments {
                 if let Ok(_maintenance) = self.maintenance.try_lock() {
                     fault = match self.initialize() {
                         Ok(Some(fault)) => fault,
-                        Ok(None) => false,
+                        Ok(None) | Err(Error::Cancelled) => false,
                         Err(_) => true,
                     };
                     let publication = match self.cache.inspect(&segment) {
                         Ok(RawRead::Entry(entry)) if entry.bytes == bytes.len() as u64 => {
                             Some(entry.token)
                         }
+                        Err(Error::Cancelled) => None,
                         Err(_) => {
                             fault = true;
                             None

@@ -29,7 +29,11 @@ impl ProcessTable for SystemTable {
         };
         let mut children = Vec::new();
         for entry in tasks {
-            let entry = entry?;
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(error) if gone(&error) => break,
+                Err(error) => return Err(error),
+            };
             let path = entry.path().join("children");
             match fs::read_to_string(path) {
                 Ok(text) => {
@@ -48,6 +52,7 @@ impl ProcessTable for SystemTable {
                 Err(error) if error.raw_os_error() == Some(libc::ENOENT) => {
                     missing_children_files = true;
                 }
+                Err(error) if error.raw_os_error() == Some(libc::ESRCH) => {}
                 Err(error) => return Err(error),
             }
         }
@@ -75,7 +80,7 @@ impl ProcessTable for SystemTable {
             Err(error) if error.raw_os_error() == Some(libc::ENOSYS) => {
                 kill(self, identity, signal)
             }
-            Err(error) if gone(&error) => Ok(()),
+            Err(error) if gone(&error) || error.raw_os_error() == Some(libc::EINVAL) => Ok(()),
             Err(error) => Err(error),
         }
     }
@@ -157,6 +162,7 @@ fn kill(table: &dyn ProcessTable, identity: ProcessIdentity, signal: i32) -> io:
 }
 
 /// Open before checking start time, so PID reuse cannot retarget the signal.
+/// A PID whose process was reaped while the PID stays referenced gives EINVAL.
 fn open_pidfd(pid: i32) -> io::Result<OwnedFd> {
     // SAFETY: pidfd_open receives a valid PID and zero flags. The returned
     // descriptor is owned only after the syscall reports a nonnegative value.
