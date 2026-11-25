@@ -11,16 +11,20 @@ use mkc_store_interface::publication::PublicationFailure;
 use crate::error::{ErrorResultExt, Result};
 use crate::transaction::Transactions;
 
-use super::outcome::{finish, infrastructure, terminal};
+use super::outcome::{Ending, finish, terminal};
+use super::reason::InfrastructureWarning;
 
 pub(super) enum AttemptResult {
     Runner(BuildOutcome),
     RepositoryUnavailable,
-    Infrastructure,
+    /// The attempt could not reach the runner; the safe reason says why.
+    Infrastructure(String),
 }
 
 pub(super) trait AttemptFinalizer: Send + Sync {
-    fn finish(&self, build: &Build, result: AttemptResult) -> Result<()>;
+    /// Commit the attempt's ending; returns the warning of a committed infrastructure ending.
+    fn finish(&self, build: &Build, result: AttemptResult)
+    -> Result<Option<InfrastructureWarning>>;
 }
 
 pub(super) struct Finalizer {
@@ -29,9 +33,15 @@ pub(super) struct Finalizer {
 }
 
 impl AttemptFinalizer for Finalizer {
-    fn finish(&self, build: &Build, result: AttemptResult) -> Result<()> {
+    fn finish(
+        &self,
+        build: &Build,
+        result: AttemptResult,
+    ) -> Result<Option<InfrastructureWarning>> {
         let at = self.runtime.now();
+        let mut settled = None;
         self.transactions.run(false, &mut |queries| {
+            settled = None;
             let Some(current) = queries
                 .build(build.project_id, build.id)
                 .context("read build finalization fence")?
@@ -41,30 +51,26 @@ impl AttemptFinalizer for Finalizer {
             if current.state != BuildState::Running || current.lease_token != build.lease_token {
                 return Ok(());
             }
-            let value = if current.publication_id.is_some() {
-                terminal(BuildState::Published, None, None, at)
+            let ending = if current.publication_id.is_some() {
+                Ending::Settled(terminal(BuildState::Published, None, None, at))
             } else {
                 match &result {
                     AttemptResult::Runner(outcome) => {
                         let grant = queries
                             .build_attempt_grant(build.id, current.attempt)
                             .context("read attempt upload outcome")?;
-                        finish(
-                            outcome,
-                            grant.and_then(|value| value.outcome),
-                            current.attempt,
-                            at,
-                        )
+                        finish(outcome, grant.and_then(|value| value.outcome), at)
                     }
-                    AttemptResult::RepositoryUnavailable => terminal(
+                    AttemptResult::RepositoryUnavailable => Ending::Settled(terminal(
                         BuildState::Failed,
                         Some(BuildFailure::RepositoryUnavailable),
                         None,
                         at,
-                    ),
-                    AttemptResult::Infrastructure => infrastructure(current.attempt, at),
+                    )),
+                    AttemptResult::Infrastructure(reason) => Ending::Infrastructure(reason.clone()),
                 }
             };
+            let (value, warning) = ending.resolve(current.attempt, at);
             let finished = queries
                 .finish_build(current.id, build.lease_token, &value)
                 .context("finalize owned build attempt")?;
@@ -73,7 +79,11 @@ impl AttemptFinalizer for Finalizer {
                     .fail_build_uploads(current.id, started, PublicationFailure::Expired, at)
                     .context("expire finalized build uploads")?;
             }
+            if finished {
+                settled = warning;
+            }
             Ok(())
-        })
+        })?;
+        Ok(settled)
     }
 }

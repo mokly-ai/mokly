@@ -74,15 +74,23 @@ migrations and every assertion.
 
 ## App Shards
 
-CI runs the `cloud-app` suite as four jobs. Job `n` runs shard `n/4`, and its
-name shows the shard, as in App checks 2/4. Each job runs on its own fresh
+CI runs the `cloud-app` suite as eight jobs. Job `n` runs shard `n/8`, and its
+name shows the shard, as in App checks 2/8. Each job runs on its own fresh
 runner with its own Postgres. It builds the web app itself and starts its own
 API. No job depends on the build of another job.
 
-Each browser test belongs to exactly one shard. Together, the four jobs run
-the whole browser suite. For one commit, a shard holds the same tests in CI
-and on a developer machine. Shard 1 also runs the app logic tests, and the
+Each browser spec file belongs to exactly one shard, and together the shards
+run the whole browser suite. For one commit, a shard holds the same tests in
+CI and on a developer machine. Shard 1 also runs the app logic tests, and the
 other shards do not.
+
+Shards balance measured duration, not file count. The suite places whole spec
+files from committed per-file durations, measured from the CI logs of one
+complete run. A spec file without a measurement counts as the median measured
+file, so a new or renamed spec still runs. Stale measurements can unbalance
+the shards, but they never drop a test. Playwright's count-based shards were
+rejected because the spec files differ in duration by up to a hundred times,
+and one shard then took twice as long as another.
 
 Each job runs its browser tests one at a time. Parallel runs come only from
 the shard jobs. The suite does not add Playwright workers, because the tests
@@ -94,6 +102,30 @@ suite removes an inherited value and runs the whole browser suite. An empty
 value selects no shard. The value is `<n>/<total>`, where `n` is a whole
 number from 1 to `total`. Any other value fails the run with a message,
 because a wrong shard would skip tests in silence.
+
+## Mockup and Site Shards
+
+CI runs the `cloud-mockups` suite as six jobs, Mockup checks 1/6 to 6/6, and
+the `cloud-site` suite as two jobs, Site checks 1/2 and 2/2. Each job builds
+the workspace and the catalogue or the site itself. No job depends on the
+output of another job, and together the jobs of a suite run every check of
+the unsharded suite once.
+
+With `N` shards, where `N` is at least 3 for the mockups and at least 2 for
+the site, the shards hold these checks:
+
+| Shard                     | Checks                                               |
+| ------------------------- | ---------------------------------------------------- |
+| Mockup 1                  | Determinism and types, without a browser             |
+| Mockup 2                  | Policy tests and the served browser suite            |
+| Mockup `n`, from 3 to `N` | Shard `n - 2` of `N - 2` of the disk browser suite   |
+| Site 1                    | Types, unit tests, links, and browser shard 1 of `N` |
+| Site `n`, from 2 to `N`   | Browser shard `n` of `N`                             |
+
+With two mockup shards, shard 1 runs the checks without a browser and shard 2
+runs both browser suites. One shard runs the complete suite. The mockup and
+site browser suites run their tests in parallel mode, so a browser shard is
+Playwright's even split by test count.
 
 ## CI Jobs
 

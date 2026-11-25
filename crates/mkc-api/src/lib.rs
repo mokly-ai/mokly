@@ -44,6 +44,7 @@ mod route_contract;
 mod router;
 mod viewer;
 mod views;
+pub mod worker_intervals;
 
 #[cfg(test)]
 #[path = "_tests_/endpoint_fixture.rs"]

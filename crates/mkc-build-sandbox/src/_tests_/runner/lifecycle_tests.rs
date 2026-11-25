@@ -8,7 +8,7 @@ use mkc_build_interface::error::Error;
 use mkc_build_interface::log::{BuildLogSink, BuildLogSinkMock};
 use mkc_build_interface::outcome::{BuildBudget, BuildOutcome, BuildStep};
 use mkc_build_interface::runner::BuildRunner;
-use sandbox_interface::{Error as SandboxError, SandboxBackend, SandboxBackendMock};
+use sandbox_interface::{Error as SandboxError, SandboxFilesMock, SandboxLifecycleMock};
 use tokio::runtime::Handle;
 use tokio::task::yield_now;
 use tracing::instrument::WithSubscriber;
@@ -22,7 +22,7 @@ use crate::runner::SandboxBuildRunner;
 use super::fixtures::{INSTALLATION, UPLOAD, create, now, provider, request, sandbox};
 use super::logging::Warnings;
 use super::script::{Call, checkout, complete, locks};
-use super::support::Harness;
+use super::support::{Harness, capabilities};
 
 fn clock() -> Arc<dyn BuildClock> {
     Arc::new(Unimock::new(
@@ -42,7 +42,7 @@ async fn unavailable_create_recovers_the_same_request_without_a_second_create() 
         let destroyed = Arc::new(AtomicUsize::new(0));
         let count = destroyed.clone();
         let common = (
-            SandboxBackendMock::create_sandbox
+            SandboxLifecycleMock::create_sandbox
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, actual| {
                     assert_eq!(actual, expected);
@@ -50,7 +50,7 @@ async fn unavailable_create_recovers_the_same_request_without_a_second_create() 
                         backend_id: "e2b".into(),
                     })
                 })),
-            SandboxBackendMock::recover_sandbox_create
+            SandboxLifecycleMock::recover_sandbox_create
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, actual| {
                     assert_eq!(actual, recovery);
@@ -61,13 +61,13 @@ async fn unavailable_create_recovers_the_same_request_without_a_second_create() 
                     }
                 })),
         );
-        let backend: Arc<dyn SandboxBackend> = if recovered {
+        let backend: Arc<Unimock> = if recovered {
             Arc::new(Unimock::new((
                 common,
-                SandboxBackendMock::write_file
+                SandboxFilesMock::write_file
                     .next_call(matching!(_))
                     .returns(Err(SandboxError::internal_message(INSTALLATION))),
-                SandboxBackendMock::destroy_sandbox
+                SandboxLifecycleMock::destroy_sandbox
                     .next_call(matching!(_))
                     .answers_arc(Arc::new(move |_, actual| {
                         assert_eq!(actual, provider());
@@ -79,7 +79,7 @@ async fn unavailable_create_recovers_the_same_request_without_a_second_create() 
             Arc::new(Unimock::new(common))
         };
         let runner: &dyn BuildRunner =
-            &SandboxBuildRunner::new(backend, clock(), "test-builds".into()).unwrap();
+            &SandboxBuildRunner::new(capabilities(backend), clock(), "test-builds".into()).unwrap();
         let outcome = runner.run(request, sink()).await;
         assert!(matches!(outcome, BuildOutcome::Infrastructure(_)));
         assert!(!format!("{outcome:?}").contains(INSTALLATION));
@@ -89,13 +89,13 @@ async fn unavailable_create_recovers_the_same_request_without_a_second_create() 
 
 #[tokio::test]
 async fn definitive_create_failure_does_not_recover_or_write() {
-    let backend: Arc<dyn SandboxBackend> = Arc::new(Unimock::new(
-        SandboxBackendMock::create_sandbox
+    let backend: Arc<Unimock> = Arc::new(Unimock::new(
+        SandboxLifecycleMock::create_sandbox
             .next_call(matching!(_))
             .returns(Err(SandboxError::internal_message(UPLOAD))),
     ));
     let runner: &dyn BuildRunner =
-        &SandboxBuildRunner::new(backend, clock(), "test-builds".into()).unwrap();
+        &SandboxBuildRunner::new(capabilities(backend), clock(), "test-builds".into()).unwrap();
     let outcome = runner.run(request(), sink()).await;
     assert!(matches!(outcome, BuildOutcome::Infrastructure(_)));
     assert!(!format!("{outcome:?}").contains(UPLOAD));
@@ -138,9 +138,9 @@ async fn destroy_failure_keeps_the_failed_install_outcome() {
 
 #[tokio::test]
 async fn an_already_expired_attempt_allocates_no_sandbox() {
-    let backend: Arc<dyn SandboxBackend> = Arc::new(Unimock::new(()));
+    let backend: Arc<Unimock> = Arc::new(Unimock::new(()));
     let runner: &dyn BuildRunner =
-        &SandboxBuildRunner::new(backend, clock(), "test-builds".into()).unwrap();
+        &SandboxBuildRunner::new(capabilities(backend), clock(), "test-builds".into()).unwrap();
     let mut request = request();
     request.deadline_at = now();
     assert!(matches!(
@@ -194,7 +194,7 @@ async fn dropping_the_run_drops_the_stream_and_destroys_its_sandbox() {
     ));
     let harness = Harness::with_sink(request(), vec![call], Some(sink));
     let runner: &dyn BuildRunner = &SandboxBuildRunner::new(
-        harness.backend.clone(),
+        capabilities(harness.backend.clone()),
         harness.clock.clone(),
         "test-builds".into(),
     )
@@ -213,14 +213,14 @@ async fn dropping_during_an_ambiguous_create_recovers_then_destroys() {
     let expected = original.clone();
     let destroyed = Arc::new(AtomicUsize::new(0));
     let count = destroyed.clone();
-    let backend: Arc<dyn SandboxBackend> = Arc::new(Unimock::new((
-        SandboxBackendMock::recover_sandbox_create
+    let backend: Arc<Unimock> = Arc::new(Unimock::new((
+        SandboxLifecycleMock::recover_sandbox_create
             .next_call(matching!(_))
             .answers_arc(Arc::new(move |_, actual| {
                 assert_eq!(actual, expected);
                 Ok(Some(sandbox()))
             })),
-        SandboxBackendMock::destroy_sandbox
+        SandboxLifecycleMock::destroy_sandbox
             .next_call(matching!(_))
             .answers_arc(Arc::new(move |_, actual| {
                 assert_eq!(actual, provider());

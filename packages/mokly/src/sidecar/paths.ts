@@ -6,7 +6,11 @@ import type { Plugin, PluginBuild } from "esbuild";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { detail } from "./errors.js";
-import { resolveImport, sideRequire } from "./importer-resolution.js";
+import {
+  importPath,
+  resolveImport,
+  sideRequire,
+} from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 
@@ -58,7 +62,7 @@ export async function consumerRequire(
           );
         else {
           try {
-            peers.set(name, await paths.resolve(resolved.path));
+            peers.set(name, await importPath(paths, name, resolved));
           } catch (error) {
             peers.set(name, new Error(detail(error)));
           }

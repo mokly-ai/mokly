@@ -3,12 +3,12 @@
 use std::collections::BTreeMap;
 use std::future::{Future, poll_fn};
 use std::pin::Pin;
-use std::sync::Arc;
 use std::time::Duration;
 
+use mkc_build_sandbox::runner::BuildSandboxCapabilities;
 use sandbox_interface::{
     BackendCreateSandboxRequest, BackendStreamProcessRequest, BackendWriteFileRequest,
-    ProcessStreamEvent, ProcessStreamOutcome, SandboxBackend,
+    ProcessStreamEvent, ProcessStreamOutcome,
 };
 use thiserror::Error;
 use tokio::time::timeout;
@@ -52,7 +52,7 @@ pub(super) trait TemplateProbe {
 }
 
 pub(super) struct StreamTemplateProbe {
-    pub(super) backend: Arc<dyn SandboxBackend>,
+    pub(super) sandbox: BuildSandboxCapabilities,
 }
 
 impl TemplateProbe for StreamTemplateProbe {
@@ -61,17 +61,27 @@ impl TemplateProbe for StreamTemplateProbe {
         request: BackendCreateSandboxRequest,
     ) -> Pin<Box<dyn Future<Output = Result<(), ProbeError>> + Send + '_>> {
         Box::pin(async move {
-            let sandbox = match timeout(BUDGET, self.backend.create_sandbox(request.clone())).await
+            let sandbox = match timeout(
+                BUDGET,
+                self.sandbox.lifecycle.create_sandbox(request.clone()),
+            )
+            .await
             {
                 Ok(Ok(sandbox)) => sandbox,
-                _ => match timeout(BUDGET, self.backend.recover_sandbox_create(request)).await {
+                _ => match timeout(
+                    BUDGET,
+                    self.sandbox.lifecycle.recover_sandbox_create(request),
+                )
+                .await
+                {
                     Ok(Ok(Some(sandbox))) => sandbox,
                     _ => return Err(ProbeError::Create),
                 },
             };
             let result = timeout(BUDGET, async {
                 if self
-                    .backend
+                    .sandbox
+                    .files
                     .write_file(BackendWriteFileRequest {
                         sandbox_provider_ref: sandbox.provider_ref.clone(),
                         root: "/workspace".into(),
@@ -84,7 +94,8 @@ impl TemplateProbe for StreamTemplateProbe {
                     return Err(ProbeError::Write);
                 }
                 let Ok(mut stream) = self
-                    .backend
+                    .sandbox
+                    .processes
                     .stream_process(BackendStreamProcessRequest {
                         sandbox_provider_ref: sandbox.provider_ref.clone(),
                         command: "python3".into(),
@@ -138,7 +149,11 @@ impl TemplateProbe for StreamTemplateProbe {
             })
             .await;
             if !matches!(
-                timeout(BUDGET, self.backend.destroy_sandbox(sandbox.provider_ref)).await,
+                timeout(
+                    BUDGET,
+                    self.sandbox.lifecycle.destroy_sandbox(sandbox.provider_ref)
+                )
+                .await,
                 Ok(Ok(()))
             ) {
                 return Err(ProbeError::Destroy);

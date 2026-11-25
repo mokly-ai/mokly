@@ -8,22 +8,22 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::clients::outcome::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
-use crate::remote::plan::COMMAND_COUNT;
 use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
 
 impl DefaultRemoteRunner {
-    /// Collect every recoverable box even when another warmup fails or is interrupted.
+    /// Warm `count` boxes and collect every recoverable box even when another warmup fails.
     pub(super) fn warmup(
         &self,
+        count: usize,
         reference: &str,
         boxes: &mut Vec<String>,
         cleanup: &dyn BoxCleanup,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let results = thread::scope(|scope| {
-            let workers: Vec<_> = (0..COMMAND_COUNT)
+            let workers: Vec<_> = (0..count)
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {

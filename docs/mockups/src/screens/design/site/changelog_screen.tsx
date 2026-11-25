@@ -8,6 +8,9 @@
  * has no panel.
  */
 
+import "./styles/shared.js";
+import "./styles/changelog.js";
+
 import { ChangelogEarlier } from "./parts/changelog-earlier.js";
 import { FULL_FRAMES } from "./parts/changelog-facts.js";
 import { ChangelogFilter } from "./parts/changelog-filter.js";

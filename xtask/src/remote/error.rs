@@ -162,6 +162,9 @@ pub(crate) enum Error {
         /// Required identity value.
         expected: String,
     },
+    /// The embedded CI shard file does not hold exactly a viewer and a browser total from 1 to 255.
+    #[error("[xtask/remote] invalid scripts/verification/ci-shards.json: {0}")]
+    ShardTotals(#[from] serde_json::Error),
     /// A worker panicked instead of producing a result.
     #[error("[xtask/remote] verification worker did not return a result")]
     Worker,

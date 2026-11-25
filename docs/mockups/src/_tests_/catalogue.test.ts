@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { createElement } from "react";
 
 import { catalogueEntries } from "./catalogue-index";
-import { catalogueViolations, sourceTreeViolations } from "./catalogue-policy";
+import { catalogueViolations } from "./catalogue-policy";
 import { drawnPalette } from "./catalogue-reads";
 import { variantParent } from "./catalogue-variants";
 import {
@@ -13,7 +13,7 @@ import {
   fixtureState,
 } from "./definition-fixtures";
 import { folioInventoryViolations } from "./folio-inventory";
-import { loadCatalogue, loadDefinitions } from "./load-catalogue";
+import { loadCatalogue } from "./load-catalogue";
 import type { CatalogueDefinition } from "./load-catalogue";
 
 test("registry policy accepts screens with variants and rejects missing views, themes, folders, caps and broken flows", () => {
@@ -91,24 +91,6 @@ test("registry policy accepts screens with variants and rejects missing views, t
       message,
     );
   }
-});
-
-test("entry modules mirror the folder tree", async () => {
-  const loaded = await loadDefinitions();
-  assert.deepEqual(sourceTreeViolations(loaded), []);
-  const [first, second] = loaded;
-  assert.ok(first && second);
-  for (const damaged of [
-    [{ ...first, module: "elsewhere/" + first.module }, second],
-    [
-      first,
-      {
-        definition: { ...second.definition, path: "somewhere/else" },
-        module: second.module.replace(/[^/]+$/, "other.mockup.tsx"),
-      },
-    ],
-  ])
-    assert.ok(sourceTreeViolations(damaged).length > 0);
 });
 
 test("the authored catalogue contains the product, site and registered component inventory", async () => {

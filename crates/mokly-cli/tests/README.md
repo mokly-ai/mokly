@@ -56,6 +56,11 @@ writes no stdout, and the listening line is the first line that they parse.
 [`process_support/html.rs`](./process_support/html.rs) holds the shared HTML
 fixture writes and the complete native-process shutdown.
 
+A test that publishes only to reach the upload step uses
+`rejecting_endpoint()` in [`publish_support`](./publish_support/mod.rs). Its
+loopback receiver answers each request with 404, which is not retryable, so the
+publish fails at once with `upload-failed` and spends no retries or backoff.
+
 Some `mokly-cli` Rust tests use debug-only hooks, such as the allocator probe
 and `MOKLY_TEST_STATIC_COLUMNS`, so they need the dev profile and fail under
 `cargo test --release`.

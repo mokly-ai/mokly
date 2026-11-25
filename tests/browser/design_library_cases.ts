@@ -5,15 +5,14 @@ import { expect, type Browser, type Page } from "@playwright/test";
 import { viewHref, viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
 import {
   assertDesignResource,
-  designFileUrl as servedDesignFileUrl,
+  designFileUrl,
   designResourceExists,
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 import { openCatalogueSheet } from "./workspace_actions.js";
 
 /**
@@ -21,18 +20,12 @@ import { openCatalogueSheet } from "./workspace_actions.js";
  * has its own spec file, because Playwright gives a whole spec file to one
  * browser shard and the shard balance limit bounds each shard's share.
  */
-export function registerDesignLibrary(
-  viewport: "desktop" | "mobile",
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignLibrary(viewport: "desktop" | "mobile") {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
-  const manifest = { entries: designCatalogue(test) };
+  const manifest = { entries: designCatalogue() };
   const fileUrl = (route: string) =>
     designFileUrl(path.join(generated, route)).href;
   const size =

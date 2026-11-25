@@ -26,6 +26,9 @@ async function assertStructure(page: Page, heading: string): Promise<void> {
   await expect(page.getByRole("contentinfo")).toBeVisible();
 }
 
+/** A developer asks for the full-page captures; a CI run writes none. */
+const capturesRequested = process.env["MKC_SITE_CAPTURES"] === "1";
+
 for (const { route, title, heading } of PAGES) {
   test(`${route} renders one heading inside the shared chrome`, async ({
     page,
@@ -35,10 +38,11 @@ for (const { route, title, heading } of PAGES) {
     expect(response?.status()).toBe(200);
     await expect(page).toHaveTitle(title);
     await assertStructure(page, heading);
-    await page.screenshot({
-      path: testInfo.outputPath(`${route.replace(/\//g, "_")}.png`),
-      fullPage: true,
-    });
+    if (capturesRequested)
+      await page.screenshot({
+        path: testInfo.outputPath(`${route.replace(/\//g, "_")}.png`),
+        fullPage: true,
+      });
     expect(errors).toEqual([]);
   });
 

@@ -10,6 +10,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Module } from "../generated/sidecar/Module.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
+import { previewCandidates } from "./bundle-entry.js";
 import type { Generation } from "./bundle.js";
 import { currentFileInputs, everyInput } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
@@ -65,7 +66,14 @@ export function restore(
       );
     if (compiled.peers[name] !== undefined) return compiled.peers[name]!;
     if (isBuiltin(name)) return native.resolve(name, options);
-    fallback ??= sideRequire(ModulePaths.createSync(params), file);
+    if (!fallback) {
+      const paths = ModulePaths.createSync(params);
+      const preview = previewCandidates.find(
+        (file) => compiled.metadataInputs[file],
+      );
+      if (preview) paths.addConfigured(preview);
+      fallback = sideRequire(paths, file);
+    }
     return fallback.resolve(name, options);
   };
   const require = ((name: string) => native(resolve(name))) as NodeJS.Require;

@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import {
   canvasFrame,
   chooseViewport,
@@ -8,7 +8,7 @@ import {
   NARROW_WINDOW,
 } from "./workspace_actions.js";
 
-export function registerPhoneChrome(test = baseTest) {
+export function registerPhoneChrome() {
   // Below the layout breakpoint the compact layout shows the one frame, and
   // from it up the canvas shows every frame; neither draws a phone.
   for (const width of [390, NARROW_WINDOW.width, 1280]) {

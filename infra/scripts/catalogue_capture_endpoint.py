@@ -18,6 +18,9 @@ from catalogue_capture_state import ExchangeState
 MAX_PLAN_BYTES = 100 * 1024 * 1024
 BODY_CHUNK_BYTES = 1024 * 1024
 BODY_TIMEOUT_SECONDS = 60
+# How often a loopback server checks for shutdown. The 0.5 s default of
+# serve_forever makes each shutdown wait up to half a second.
+SHUTDOWN_POLL_SECONDS = 0.05
 LENGTH = re.compile(r"0|[1-9][0-9]*")
 POSITIVE_LENGTH = re.compile(r"[1-9][0-9]*")
 UNEXPECTED = "capture receiver refused an unexpected request"
@@ -265,7 +268,11 @@ class CaptureEndpoint:
         self.state.blobs.mkdir()
         self.server = ReceiverServer(("127.0.0.1", 0), handler_for(self.state))
         self.state.origin = f"http://127.0.0.1:{self.server.server_address[1]}"
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread = threading.Thread(
+            target=self.server.serve_forever,
+            kwargs={"poll_interval": SHUTDOWN_POLL_SECONDS},
+            daemon=True,
+        )
 
     def __enter__(self):
         self.thread.start()

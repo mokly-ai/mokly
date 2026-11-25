@@ -7,17 +7,24 @@ PR previews always keep builds disabled. The contract is
 
 ## Release Prerequisites
 
-Use an authorized operator shell with Docker running and Linux amd64 builds
-available. Install the repository's Node and npm pins. This procedure uses
-`@e2b/cli@2.7.0`, whose Dockerfile build command publishes the candidate to E2B.
+Use an authorized operator shell. Install the repository's Node and npm pins.
+This procedure uses the `e2b@2.64.0` SDK through
+`infra/e2b/build/build-template.mjs`. E2B builds the Dockerfile remotely, so
+the shell needs no Docker. The SDK build needs only the team key. The script
+sends that key only to `https://api.e2b.dev`, the API base of the runtime. It
+ignores the SDK's `E2B_API_URL`, `E2B_SANDBOX_URL`, `E2B_DOMAIN` and
+`E2B_DEBUG` settings, so a shell set up for another E2B host cannot redirect
+the key. The
+`@e2b/cli` Dockerfile build uses E2B's deprecated build system and also needs
+a personal access token, so this procedure does not use it.
 Keep the team key in a mode-0600 file outside the checkout, such as
 `/secure/e2b-api-key`. Never put it in build arguments, a Dockerfile, TOML,
 Helm values, logs or a release report. Disable shell tracing.
 
 `infra/e2b/build/e2b.toml` is the release definition. It declares
 `mokly-build-v<N>`, 2 vCPU and 4096 MiB. It has no provider ID. The first build
-creates an operator-local `e2b.toml` with the real ID. Do not pass the checked-in
-definition to the CLI as an existing provider configuration.
+writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
+definition as a provider configuration.
 
 The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template).
 The pin was resolved from Docker Hub's `e2bdev/base:latest` tag on 2026-10-10:
@@ -29,8 +36,8 @@ tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
 It enables corepack and supplies npm, git, curl, coreutils, Python 3 and CA
 certificates. The image must keep glibc 2.28 or newer, because the pinned
 CLI's native binary has no musl build and no JavaScript fallback.
-Workload `user` owns `/workspace`. Its `HOME` is `/home/user`;
-its `PATH` is `/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin`.
+Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
+The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
 is baked into the image.
 
@@ -43,8 +50,11 @@ reject an unpinned base before release.
 ## Build And Publish A Candidate
 
 For a new release, increment `template_name` in the checked-in definition.
-Use a new candidate directory. Never rebuild a template ID that a deployed
-environment uses; a rebuild would change what that ID starts.
+Use a new candidate directory. A build of an existing name keeps its
+template ID, and a bare template ID starts the newest ready build of that
+name. So a release is always deployed, verified and rolled back by its build
+reference, `TEMPLATE_ID:BUILD_ID`, which starts only the build that passed
+verification.
 
 Run from the repository root:
 
@@ -55,27 +65,29 @@ TEMPLATE_RELEASE=$(sed -n 's/^template_name = "\(.*\)"$/\1/p' infra/e2b/build/e2
 TEMPLATE_DIRECTORY=".context/e2b/$TEMPLATE_RELEASE"
 test ! -e "$TEMPLATE_DIRECTORY/e2b.toml"
 install -d -m 0700 "$TEMPLATE_DIRECTORY"
-cp infra/e2b/build/e2b.Dockerfile infra/e2b/build/.dockerignore "$TEMPLATE_DIRECTORY/"
+cp infra/e2b/build/e2b.Dockerfile "$TEMPLATE_DIRECTORY/"
+npm install --prefix "$TEMPLATE_DIRECTORY/sdk" --no-save --ignore-scripts e2b@2.64.0
 export E2B_API_KEY="$(cat /secure/e2b-api-key)"
-npm exec --yes --package=@e2b/cli@2.7.0 -- e2b template build \
-  --path "$TEMPLATE_DIRECTORY" --dockerfile e2b.Dockerfile \
-  --name "$TEMPLATE_RELEASE" \
-  --cpu-count "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
-  --memory-mb "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
+node infra/e2b/build/build-template.mjs "$TEMPLATE_DIRECTORY/sdk" \
+  "$TEMPLATE_DIRECTORY" "$TEMPLATE_RELEASE" \
+  "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
+  "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
 unset E2B_API_KEY
 ```
 
-The command must exit zero and report the candidate ready. Read `template_id`
-from the generated `$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name,
-template ID, E2B team, source commit, Node version, checksum, CPU, memory and
-UTC time in the deployment change. Keep the generated provider configuration
-under `.context/`; put only the verified template ID in environment app-config.
+The command must exit zero and report the candidate ready with its build
+reference. Read `build_reference` from the generated
+`$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name, build reference,
+template ID, build ID, E2B team, source commit, Node version, checksum, CPU,
+memory and UTC time in the deployment change. Keep the generated provider
+configuration under `.context/`; put only the verified build reference in
+environment app-config.
 Include the base-image digest in that release record.
 
 ## Verify The Streaming Boundary
 
 Verify a fresh candidate before enabling it. The API integration probe uses
-the same pinned `SandboxBackend` adapter and public-egress build profile as
+the same pinned adapter capabilities and public-egress build profile as
 the runner. Its deployment ID is `mokly-build-template-probe`, separate from
 all environment build inventories. It creates a one-shot sandbox, writes
 `infra/e2b/tests/assert_build_template.py` below `/workspace` and calls
@@ -87,21 +99,23 @@ python3 /workspace/assert_build_template.py --node-version <.nvmrc release>
 
 The process has exactly one added environment entry:
 `MKC_TEMPLATE_PROBE=stream-process-added-env`. The caller does not supply
-`PATH` or `HOME`. The script requires the added entry and the exact template
-values, so an environment replacement fails. It also checks the tools,
+`PATH` or `HOME`. The script requires the added entry, `HOME=/home/user` and
+each tool on the process `PATH`. It does not compare the exact `PATH` value.
+E2B's process service supplies `HOME` and `PATH` itself, so a pass does not
+prove that a value set only by the template reaches the process. It also checks the tools,
 `/bin/sh`, user identity, `/workspace` ownership and writes, known credential
 environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer.
 The E2B team key stays in the operator process.
 
-Set the candidate ID from the generated configuration:
+Set the candidate build reference from the generated configuration:
 
 ```sh
 set -eu
-CANDIDATE_TEMPLATE_ID=$(sed -n 's/^template_id = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
-test -n "$CANDIDATE_TEMPLATE_ID"
+CANDIDATE_REFERENCE=$(sed -n 's/^build_reference = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
+test -n "$CANDIDATE_REFERENCE"
 export MKC_E2B_API_KEY="$(cat /secure/e2b-api-key)"
-export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_TEMPLATE_ID"
+export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_REFERENCE"
 cargo test -p mkc-api --features live-build-template \
   --test build_template_tests live_template -- --nocapture
 unset MKC_E2B_API_KEY MKC_E2B_BUILD_TEMPLATE
@@ -149,13 +163,14 @@ gcloud secrets versions add "mkc-$ENVIRONMENT-e2b-api-key" \
 ```
 
 Update `MKC_MAIN_PREVIEW_APP_CONFIG` or `MKC_PRODUCTION_APP_CONFIG` beside its
-complete `github` object. Use the verified ID, not a mutable template alias:
+complete `github` object. Use the verified build reference, not a bare
+template ID or a mutable template alias:
 
 ```json
 {
   "builds": {
     "enabled": true,
-    "template": "RELEASED_TEMPLATE_ID",
+    "template": "RELEASED_TEMPLATE_ID:RELEASED_BUILD_ID",
     "deploymentId": "main-preview-builds",
     "perProcess": 4,
     "deniedDestinations": ["203.0.113.0/24"]
@@ -212,7 +227,7 @@ proof is separate from the repository's local checks.
 ## Rotate, Roll Back And Disable
 
 For a template rotation, publish and verify `mokly-build-v<N+1>`, change only
-the reviewed template ID, and roll the API. Keep the previous release ready
+the reviewed build reference, and roll the API. Keep the previous release ready
 for rollback. Do not change the environment deployment ID during rotation;
 the new worker must reconcile sandboxes made by the previous worker.
 
@@ -228,7 +243,7 @@ template or add a key version through Terraform.
 A provider failure retries under the build lifecycle. It does not make API
 health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
-Restore the previous verified template ID or key version and restart the API
+Restore the previous verified build reference or key version and restart the API
 if verification fails. Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
@@ -246,8 +261,30 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 
 ## Live Evidence
 
-No E2B candidate has been published or verified by
-[Milestone 9](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/cloud-builds.md#milestone-9-infrastructure-and-operations--complete)
-of the archived cloud builds plan. No cloud resource or key has been
-provisioned. Record the first main-preview and production proofs here after
-the authorized operator run.
+### Template Releases
+
+- `mokly-build-v1`, template ID `agmlidt65d7s6oo23rkb`, E2B team `firna`,
+  built 2026-11-06T11:01:33Z with the deprecated `@e2b/cli@2.7.0` build
+  system. It failed the probe on 2026-11-24 on the exact `PATH` check, which
+  the contract no longer has: the process had `/usr/local/sbin` before
+  `/usr/local/bin`, unlike the template's `ENV PATH`. The cause is unknown. It
+  is not a release.
+- `mokly-build-v2`, build reference
+  `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` (template ID
+  `f1x5cj2fgwv20p42qxnn`, build ID `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`),
+  E2B team `firna`. It was built
+  2026-11-24T13:44:01Z with `e2b@2.64.0` from the Dockerfile of the change that
+  removed `ENV PATH`, on base commit `c0328d917`. Node 24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  The probe printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  2026-11-24T13:46Z with the bare template ID, and again on 2026-11-25 with
+  the build reference through the adapter pinned at `5d856db`.
+
+### Environments
+
+No environment has builds enabled yet. On 2026-11-24, main-preview had one
+enabled `mkc-main-preview-e2b-api-key` version, and production had no
+version. Record the first main-preview and production build proofs here.

@@ -39,22 +39,27 @@ test(
   },
 );
 
+// Each test sets its own width, so the 390px projects would only repeat it.
 for (const width of [1200, 1440, 1920]) {
-  test(`at ${String(width)}px Version history has the place and the width of the docs Layers panel`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ height: 900, width });
-    await page.goto(SITE_PATHS.docs);
-    const layers = await page
-      .getByRole("navigation", { name: "Documentation" })
-      .boundingBox();
-    await page.goto(SITE_PATHS.changelog);
-    const panel = await history(page).boundingBox();
-    if (!layers || !panel) throw new Error("a panel has no box");
-    expect(panel.x).toBeCloseTo(layers.x, 0);
-    expect(panel.y).toBeCloseTo(layers.y, 0);
-    expect(panel.width).toBeCloseTo(layers.width, 0);
-  });
+  test(
+    `at ${String(width)}px Version history has the place and the width of the docs Layers panel`,
+    {
+      tag: "@desktop",
+    },
+    async ({ page }) => {
+      await page.setViewportSize({ height: 900, width });
+      await page.goto(SITE_PATHS.docs);
+      const layers = await page
+        .getByRole("navigation", { name: "Documentation" })
+        .boundingBox();
+      await page.goto(SITE_PATHS.changelog);
+      const panel = await history(page).boundingBox();
+      if (!layers || !panel) throw new Error("a panel has no box");
+      expect(panel.x).toBeCloseTo(layers.x, 0);
+      expect(panel.y).toBeCloseTo(layers.y, 0);
+      expect(panel.width).toBeCloseTo(layers.width, 0);
+    },
+  );
 }
 
 /** Each width from `from` to `to`, `step` apart. */

@@ -54,10 +54,6 @@ struct Parameters {
     fetch_depth: Option<u16>,
     #[serde(rename = "node-version-file")]
     node_version_file: Option<String>,
-    #[serde(rename = "cache-dependency-path")]
-    cache_dependency_path: Option<String>,
-    toolchain: Option<String>,
-    components: Option<String>,
     key: Option<String>,
 }
 
@@ -71,7 +67,6 @@ pub(super) enum Violation {
     Toolchains,
     CheckCommand,
     NpmCachePath,
-    Chromium,
     Postgres,
 }
 
@@ -105,19 +100,6 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
                     && run.contains("pg_isready")
             })
     });
-    let chromium = check.steps.iter().position(|step| {
-        step.condition.as_deref() == Some("matrix.browser_workspace != ''")
-            && step.run.as_deref()
-                == Some(
-                    "npm exec --workspace \"$BROWSER_WORKSPACE\" -- playwright install --with-deps chromium",
-                )
-            && step.env.get("BROWSER_WORKSPACE").map(String::as_str)
-                == Some("${{ matrix.browser_workspace }}")
-    });
-    let dependencies = check.steps.iter().position(|step| {
-        step.condition.as_deref() == Some("matrix.install_dependencies")
-            && step.run.as_deref() == Some("npm ci")
-    });
     let verify = check.steps.iter().position(|step| {
         step.run
             .as_deref()
@@ -130,18 +112,15 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
     {
         violations.push(Violation::Postgres);
     }
-    if !matches!(
-        (dependencies, chromium, verify),
-        (Some(dependencies), Some(browser), Some(check))
-            if dependencies < browser && browser < check
-    ) {
-        violations.push(Violation::Chromium);
-    }
     if !check.steps.iter().any(|step| {
         step.uses
             .as_deref()
-            .is_some_and(|action| action.starts_with("actions/setup-node@"))
-            && step.with.cache_dependency_path.as_deref() == Some("package-lock.json")
+            .is_some_and(|action| action.starts_with("actions/cache/restore@"))
+            && step
+                .with
+                .key
+                .as_deref()
+                .is_some_and(|key| key.ends_with("-${{ hashFiles('package-lock.json') }}"))
     }) {
         violations.push(Violation::NpmCachePath);
     }
@@ -204,10 +183,10 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
             .steps
             .iter()
             .any(|step| step.with.node_version_file.as_deref() == Some(".nvmrc"))
-        || !check.steps.iter().any(|step| {
-            step.with.toolchain.as_deref() == Some("1.98.1")
-                && step.with.components.as_deref() == Some("rustfmt, clippy")
-        })
+        || !check
+            .steps
+            .iter()
+            .any(|step| step.run.as_deref() == Some("rustup toolchain install"))
         || !check
             .steps
             .iter()
@@ -215,8 +194,7 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
         || !check.steps.iter().any(|step| {
             step.condition.as_deref() == Some("matrix.rust_cache")
                 && step.uses.as_deref()
-                    == Some("Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6")
-                && step.with.key.as_deref() == Some("${{ matrix.command }}")
+                    == Some("Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0")
         })
     {
         violations.push(Violation::Toolchains);

@@ -187,9 +187,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("every promised changelog control changes more than color on hover", () => {
-  assertHoverChangesMoreThanColor(hoverClasses);
+  assertHoverChangesMoreThanColor(hoverClasses, "design/site/changelog");
 });
 
 test("split site styles own the changelog compositions", () => {
-  assert.ok(siteStyles().includes(".site-release {"), ".site-release");
+  assert.ok(
+    siteStyles("design/site/changelog").includes(".site-release {"),
+    ".site-release",
+  );
 });

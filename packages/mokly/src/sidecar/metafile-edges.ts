@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { Metafile } from "esbuild";
 
+import { virtualEntry } from "./bundle-entry.js";
 import { resolutionRequest } from "./resolution-request.js";
 import type { LookupRequest } from "./resolution-request.js";
 import { bareSpecifier } from "./specifier.js";
@@ -48,7 +49,7 @@ export class MetafileEdges {
     private readonly metafile: Metafile,
     private readonly sourceRoot: string,
   ) {
-    this.entry = path.join(sourceRoot, "mokly-entry");
+    this.entry = path.join(sourceRoot, virtualEntry);
   }
 
   own(file: string): boolean {
@@ -56,9 +57,9 @@ export class MetafileEdges {
       file.startsWith("mokly-authoring:") ||
       file.startsWith("mokly-jsx:") ||
       file.startsWith("mokly-style:") ||
-      file === "mokly-entry" ||
+      file === virtualEntry ||
       file === this.entry ||
-      (file.includes("mokly-entry") && path.normalize(file) === this.entry)
+      (file.includes(virtualEntry) && path.normalize(file) === this.entry)
     );
   }
 

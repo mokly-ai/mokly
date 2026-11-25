@@ -1,0 +1,31 @@
+# Rust weight refresh undercounts a missing shard
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from branch `calummoore/ci-speed-last-mile-fixed-costs-and-9n1q`, review finding 5.
+- **Location:** `scripts/verification/rust-test-weights.mjs`, the functions `testSeconds` and `runSamples`; `scripts/verification/README.md`, section "Rust test weights".
+- **Reason:** The fallback for a unit that no given run measured completely is a choice of the refresh contract, so it waits for the user.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Test unit:** one Cargo target selection, such as `--test integration_tests`. `xtask` gives each unit, or each nextest slice of a split unit, to one Rust test shard by its weight.
+  - **Split unit:** a unit that `splits` in `scripts/verification/rust-test-weights.json` runs as several nextest slices on separate shards. Today only `--test integration_tests` is split, in three.
+  - **Weight refresh:** `node scripts/verification/rust-test-weights.mjs --run {id}` reads the logs of the passed Repository and native test jobs of each given CI run and replaces `testSeconds`.
+- **Background:** `testSeconds` takes the median of each test over the given runs that passed it, then sums the tests of a unit on one host, then takes the mean over the Linux, macOS, and Windows hosts. A run with a failed or unfinished shard therefore only lowers the sample count of that shard's tests. Each job name carries `shard k/N`, and the jobs list of a run holds every job, also failed and unfinished ones.
+- **Problem:**
+  - When no given run passed a shard of a split unit on a host, that shard's tests have no sample. The host total of the unit then covers only the other slices, and the mean over the hosts understates the unit. A read-only example lost one 90-second Windows test and cut the unit from 120 to 90 seconds.
+  - A test that was removed or renamed between the given runs still adds its median to the host total, which overstates the unit a little.
+  - The README now says to give runs in which every test shard passed. The script does not check it.
+- **Impact if no action:** A refresh from runs with the same failed shard saves a weight that is too low for a heavy unit. The shards of that host then go out of balance until the next refresh. No test is lost: a weight changes only the balance.
+- **Root question:** How does the refresh know that a host total covers every test of a unit on that host, and what does it write when no given run covers them?
+- **Options:**
+  - **A.** Use a host only when at least one given run passed every `shard k/N` job of that host. Keep the previous weights when no host qualifies. It drops good samples of unaffected units. Effort: Small.
+  - **B.** Take the expected test list of each unit and host from the newest run in which every test shard of that host passed. Sum only those tests, so removed tests drop out. Keep the previous weight of a unit when an expected test has no sample, and print a warning that names the unit and the host. Effort: Small.
+  - **C.** Stop the refresh and write nothing, and name each split unit and host that no given run covers. This adds a new rejection, so it needs the user's approval. Effort: Small.
+  - **D.** Have CI publish the assigned tests and their times as structured records, and read those instead of logs. It adds artifact storage and a format to keep. Effort: Large.
+- **Left out:** Filling a missing test with another host's time, because a test can run only on some hosts. Dropping the host from the mean, because Windows is the heaviest host of the integration tests, so the drop would understate the unit more than the gap does. Scaling a partial total by the slice shares of other hosts, because the script cannot map a test to its slice.
+- **Wider fix:** B. The expected test list from a complete run gives complete host totals whatever the split layout is.
+- **Previous examples:** Review finding 3 of the same branch: one run lacked a slice, fixed by the per-test median.
+- **Recommendation:** B. It protects each affected unit, keeps the samples of the other units, and drops removed tests.
+- **Action:** ask the user, because the refresh contract leaves the fallback open when no given run measures an expected test.

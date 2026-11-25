@@ -1,13 +1,12 @@
-//! Concurrent suite execution, progress logs and five-report downloads.
+//! Concurrent suite execution, progress logs and report downloads.
 
 use std::path::{Path, PathBuf};
 use std::thread;
 
-use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::error::Error;
 use crate::remote::identity::RunIdentity;
-use crate::remote::plan::{RunCommand, commands};
+use crate::remote::plan::RunCommand;
 use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
@@ -27,20 +26,21 @@ pub(super) struct Completion {
 }
 
 impl DefaultRemoteRunner {
-    /// Execute all assigned commands concurrently while keeping each stream separate.
+    /// Execute each planned command on its box concurrently while keeping each stream separate.
     pub(super) fn execute(
         &self,
+        plan: &[RunCommand],
         boxes: &[String],
         identity: &RunIdentity,
         snapshot: &Path,
         cleanup: &dyn BoxCleanup,
-        dependency_audit: DependencyAudit,
     ) -> Vec<Completion> {
         let dependencies = &self.dependencies;
         let run = identity.run().as_str();
         thread::scope(|scope| {
-            let workers: Vec<_> = commands(dependency_audit)
-                .into_iter()
+            let workers: Vec<_> = plan
+                .iter()
+                .cloned()
                 .zip(boxes)
                 .map(|(command, id)| {
                     scope.spawn(move || {

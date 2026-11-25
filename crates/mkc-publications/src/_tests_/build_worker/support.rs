@@ -17,6 +17,7 @@ use crate::build_worker::service::{
     DatabaseBuildWorkerFactory,
 };
 use crate::tests::build_fixtures::*;
+use crate::transaction::Transactions;
 
 pub(super) fn worker(
     queries: Unimock,
@@ -25,8 +26,18 @@ pub(super) fn worker(
     clock: Arc<dyn BuildLeaseClock>,
     limit: usize,
 ) -> Arc<dyn BuildWorker> {
+    worker_with(transactions(queries), credentials, runner, clock, limit)
+}
+
+pub(super) fn worker_with(
+    transactions: Arc<dyn Transactions>,
+    credentials: Arc<dyn Tokens>,
+    runner: Arc<dyn BuildRunner>,
+    clock: Arc<dyn BuildLeaseClock>,
+    limit: usize,
+) -> Arc<dyn BuildWorker> {
     DatabaseBuildWorkerFactory {
-        transactions: transactions(queries),
+        transactions,
         runtime: runtime(),
         credentials,
         runner,

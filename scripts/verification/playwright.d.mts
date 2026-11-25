@@ -22,6 +22,8 @@ export interface BrowserTestInventory {
 
 export interface BrowserDiscoveryOptions {
   project?: string;
+  /** Spec filters and title flags that narrow the list, as a run receives them. */
+  filters?: readonly string[];
   shard?: VerificationShard;
   weights?: BrowserShardWeights;
 }

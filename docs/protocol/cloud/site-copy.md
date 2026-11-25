@@ -29,11 +29,11 @@ hero reaches search results and shared links in the same edit.
 
 **Spread** (under the hero copy): the demo app on the canvas, zoomed out. A
 Specs box labelled `acme/storefront · main · 24 screens` holds phone and
-desktop artboards of its screens in both schemes. On desktop a Components box
-beside it holds the app's component sets and the quiet `works with Storybook`
-label with the official Storybook icon; the
+desktop artboards of its screens in both schemes. A Components box beside it,
+or under it on a narrow window or a phone, holds the app's component sets and
+the quiet `works with Storybook` label with the official Storybook icon; the
 [Storybook guide](../../guides/authoring/storybook.md) backs that claim. On a
-phone the spread is three phones. The cursors of the people and agents in the
+phone Specs shows three phones. The cursors of the people and agents in the
 file rest on it.
 
 **Specs panel** (desktop only): the panel `Specs` lists the page's sections as
@@ -68,7 +68,7 @@ motion shows it at once.
 the second line `Your building blocks.`; body `Author locally with the
 open-source Mokly CLI. Keep your screens in Git and host the catalogue
 anywhere. The cloud adds hosting, review and the agent; it never owns the
-source.` Then **Get started →** and **View on GitHub**. The open-foundation
+source.` Then **Docs →** and **View on GitHub**. The open-foundation
 frame wires a demo screen's mockup source to the screen it renders, with the
 build in a terminal under the source. Four facts follow: `@mokly/mokly`,
 `MIT license`, `The CLI runs locally` and `Host the catalogue anywhere`. The

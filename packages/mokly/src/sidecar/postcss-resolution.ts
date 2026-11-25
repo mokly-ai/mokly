@@ -5,10 +5,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, transformSync } from "esbuild";
 
 import { detail } from "./errors.js";
-import { importerDirectory, resolveImport } from "./importer-resolution.js";
+import {
+  importPath,
+  missingModule,
+  requireSource,
+  resolveImport,
+} from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
+import { importerDirectory } from "./package-directory.js";
 import { moduleBytes } from "./postcss-evidence.js";
+import { postcssScriptLoaders } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
 
 let sources: ModulePaths;
@@ -54,7 +61,7 @@ export async function resolvePlugin(
             });
             if (resolved.errors.length) return { errors: resolved.errors };
             try {
-              resolvedPath = await sources.resolve(resolved.path);
+              resolvedPath = await importPath(sources, name, resolved);
               await sources.dependencyUsage.resolved(
                 name,
                 path.dirname(file),
@@ -96,46 +103,36 @@ function nativePath(
     .sort((a, b) => b.length - a.length)
     .find((key) => name === key || name.startsWith(key + "/"));
   if (alias) name = sources.settings.aliases[alias] + name.slice(alias.length);
-  const native = createRequire(
-    path.join(
-      importerDirectory(sources, name, path.dirname(file)),
-      path.basename(file),
-    ),
-  );
-  let resolved: string;
-  try {
-    resolved = native.resolve(name, options);
-  } catch (error) {
-    if (
-      !error ||
-      typeof error !== "object" ||
-      !("code" in error) ||
-      error.code !== "MODULE_NOT_FOUND"
-    )
-      throw error;
-    let found: string | undefined;
-    for (const root of sources.dependencyRoots) {
-      try {
-        found = createRequire(
-          path.join(path.dirname(root), "package.json"),
-        ).resolve(name, options);
-        break;
-      } catch (next) {
-        if (
-          !next ||
-          typeof next !== "object" ||
-          !("code" in next) ||
-          next.code !== "MODULE_NOT_FOUND"
-        )
-          throw next;
-      }
-    }
-    if (!found) throw error;
-    resolved = found;
-  }
-  const mapped = sources.resolveSync(resolved);
+  const mapped = requireTarget(name, file, options);
   sources.dependencyUsage.resolvedSync(authored, path.dirname(file), mapped);
   return mapped;
+}
+
+function requireTarget(
+  name: string,
+  file: string,
+  options?: { paths?: string[] },
+): string {
+  const directory = importerDirectory(sources, name, path.dirname(file));
+  const native = createRequire(path.join(directory, path.basename(file)));
+  const resolvers = [native];
+  try {
+    return sources.resolveSync(native.resolve(name, options), name);
+  } catch (error) {
+    if (!missingModule(error)) throw error;
+    for (const root of sources.dependencyRoots) {
+      const resolver = createRequire(
+        path.join(path.dirname(root), "package.json"),
+      );
+      resolvers.push(resolver);
+      try {
+        return sources.resolveSync(resolver.resolve(name, options), name);
+      } catch (next) {
+        if (!missingModule(next)) throw next;
+      }
+    }
+    return requireSource(sources, name, directory, resolvers, error, options);
+  }
 }
 
 function requireLocal(file: string): unknown {
@@ -150,7 +147,7 @@ function requireLocal(file: string): unknown {
   dynamicFiles.add(file);
   try {
     const code = transformSync(moduleBytes(file).toString(), {
-      loader: /\.[cm]?tsx?$/.test(file) ? "ts" : "js",
+      loader: postcssScriptLoaders[path.extname(file)] ?? "js",
       format: "cjs",
       sourcefile: file,
       define: {

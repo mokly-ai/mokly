@@ -2,7 +2,7 @@
 
 This document supplements the [CI verification contract](./ci-verification.md)
 with process ownership, test concurrency, failure cleanup, browser errors, and
-browser shard balance for the viewer and browser suites. Test timing follows
+shard balance for the viewer and browser suites. Test timing follows
 [CI Test Timing](./ci-test-timing.md).
 
 ## Fixture Lifetime And Cleanup
@@ -73,7 +73,9 @@ tests start. Both runners print the value they use.
 
 Each Playwright worker owns one example server. Global setup starts and readies
 the workers concurrently. It starts the shim
-with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 1`.
+with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 2`.
+Decision: two sidecars, because they cut the cold readiness of the example
+from about 40 to about 27 seconds. More sidecars saved less than 5 more seconds.
 The shared example does not test Changes. Its intentionally unresolved base
 produces `unavailable` and one `git-failed` diagnostic. Real Changes specs
 own separate Git fixtures. Serve binds a free loopback port and
@@ -84,12 +86,17 @@ existing server. Each server keeps its own render cache.
 Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
 rejects a worker count above the number of servers.
 
-Global setup starts Serve readiness and both copied builds concurrently under
+A strict browser shard builds the copied example only when one of its specs
+imports its accessor module, directly or through helpers. A developer browser
+run follows the same rule when spec filters select its specs and its other
+arguments are only title filters; Playwright's own list of the selection names
+the specs. Any other developer run builds the copied example. Global setup starts
+Serve readiness and both copied builds concurrently under
 one cancellation signal and setup budget. It builds the example with
 `mokly build --no-changes`. It builds native Changes from a separate temporary
 Git repository with two commits, independent of checkout depth. It copies only
 build output, removes the original build and fixture sources, and serves each
-copy through an exact-file host inside the same four shards. A shard shares
+copy through an exact-file host inside each browser shard. A shard shares
 its immutable copies; different runs own different directories. A setup
 failure cancels sibling work, waits for every task to settle, then drains all
 created hosts before removing output. Teardown attempts every cleanup and
@@ -106,10 +113,13 @@ explicit directory is also the input of the suite's isolated current-only copy.
 Its index must have `changesStatus: "disabled"`; otherwise setup rejects it with
 an instruction to build with `--no-changes`. The comparison fixture always
 owns a fresh build. CI and the complete local gate check both static HTTP and
-direct `file://` delivery against a fresh example build. Remote verification
+direct `file://` delivery against a fresh example build. CI checks each mode in
+its own job, against that job's own build. Decision: one job per mode, because
+both modes in one job took about 8 minutes, above the
+[browser shard target](#shard-totals). Remote verification
 runs these checks as its separate
 [static-delivery command](./remote-verification-testbox.md#remote-commands).
-The four-shard inventory stays unchanged. Selected delivery reports cannot
+The sharded browser inventory stays unchanged. Selected delivery reports cannot
 replace complete browser evidence. Each mode requires a nonempty inventory and
 exactly one passing result per assigned test.
 Fixtures that test private inputs still own their own hosts.
@@ -165,10 +175,25 @@ URL. Sandbox denials, synthetic console sentinels, and page errors can omit the
 URL when their location is unstable or absent; their exact message must
 identify the expected failure. No sleep synchronizes an assertion.
 
+## Shard Totals
+
+`scripts/verification/ci-shards.json` holds the viewer and browser shard
+totals. The runtime profile job reads this file and publishes the shard matrices.
+The report aggregate and [remote verification](./remote-verification.md) read
+the same file, so a shard count change is one edit. Decision: shard the viewer
+and browser suites until each job takes about 7 minutes or less, including
+setup. The viewer jobs took 5.3 to 9 minutes with two shards. GitHub-hosted
+runners for this public repository cost nothing, so a shard adds no cost;
+each shard repeats about 4 minutes of setup, build, and browser global setup. The [worker count](#test-concurrency)
+of a shard does not change.
+
 ## Browser Shard Balance
 
-Hosted CI and remote verification assign whole spec files to four `chromium`
-shards using measured per-test costs. The evidence aggregate requires file
+Hosted CI and remote verification assign whole spec files to the
+[browser shard total](#shard-totals) of `chromium`
+shards using measured per-test costs. A spec's per-test cost includes the
+hooks and fixtures that run before its tests, because they take a large part
+of a shard's time. The evidence aggregate requires file
 assignments to be pairwise disjoint; every browser spec therefore stays whole,
 and no spec uses parallel mode.
 
@@ -181,7 +206,10 @@ exceeds that limit, with this message:
 browser shard <index>/<total> holds <count> of <inventory> tests, above the limit of <limit>; split a large spec into smaller spec files
 ```
 
-Scheduling keeps this count bound while balancing estimated work. Every
+Scheduling keeps this count bound while balancing estimated work. It places
+the specs that need the copied example on the fewest shards that keep the
+longest shard shortest, and it charges that build once to each such shard.
+The other shards skip the build. Every
 discovered test must run, including tests without a prior duration sample.
 Rebalancing targets shard durations within 15 percent of each other.
 Durations stay observations, not passing conditions for tests.
@@ -191,6 +219,19 @@ evidence validation, where a shard above the limit makes the evidence invalid
 and stops the publish. The local sequential gate runs unsharded and does not
 apply it. The [verification script reference](../../scripts/verification/README.md#browser-partitioning)
 describes the scheduling inputs and discovery boundary.
+
+## Viewer Shard Balance
+
+Hosted CI and remote verification assign whole Node test files to the
+[viewer shard total](#shard-totals) of shards using
+measured per-file durations. The aggregate requires the file assignments of
+the viewer shards to be pairwise disjoint and their union to equal
+independent discovery. A file without a duration sample also runs. Each
+shard runs its files with the same
+[file concurrency](#test-concurrency) as an unsharded run. Only shard 1 runs
+the [required type check](./developer-type-checks.md#required-type-check),
+so each runtime type checks once. The viewer suite has no test-count bound.
+Rebalancing targets shard durations within 15 percent of each other.
 
 Coverage, assertion deadlines, worker limits, audits, and zero-retry behavior
 are never relaxed to meet a timing target. Job hang guards follow the

@@ -11,6 +11,7 @@ use mkc_build_interface::log::{BuildLogChunk, BuildLogSink, BuildStream};
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_build_interface::request::{BuildRequest, Comparison};
 use mkc_build_interface::runner::BuildRunner;
+use mkc_build_sandbox::runner::BuildSandboxCapabilities;
 use mkc_config::builds::BuildSettings;
 use tokio::sync::Notify;
 use unimock::Unimock;
@@ -53,7 +54,14 @@ impl BuildProviderFactory for RecordedBuildProviders {
                 runs: self.runs.clone(),
                 publish_signals: self.publish_signals.clone(),
             }),
-            backend: Arc::new(self.backend.clone()),
+            sandbox: {
+                let backend = Arc::new(self.backend.clone());
+                BuildSandboxCapabilities {
+                    lifecycle: backend.clone(),
+                    files: backend.clone(),
+                    processes: backend,
+                }
+            },
         })
     }
 }

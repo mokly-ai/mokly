@@ -8,7 +8,6 @@ import {
 
 import { NARROW_WIDTH, openLargeText } from "./large-text.js";
 import { headerDestinations, narrow, openMenu } from "./menu.js";
-import { HEADINGS } from "./routes.js";
 
 const HEADER_LINKS = [
   SITE_PATHS.home,
@@ -81,42 +80,26 @@ function anchors(page: Page, region: "banner" | "contentinfo"): Locator {
     : page.getByRole("contentinfo").locator("a");
 }
 
-/** Follow a site route and assert the heading it publishes. */
-async function walk(page: Page, href: string): Promise<void> {
-  const heading = HEADINGS.get(href);
-  expect(heading, `no published heading for ${href}`).toBeDefined();
-  const response = await page.goto(href);
-  expect(response?.status(), href).toBe(200);
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText(heading ?? "");
-}
-
+// Every site route these links name answers with its published heading in
+// `pages.spec.ts`, so this test checks only the inventory of the links.
 for (const region of ["banner", "contentinfo"] as const) {
   const expected = region === "banner" ? HEADER_LINKS : FOOTER_LINKS;
-  test(`the ${region} links match the inventory and site routes resolve`, async ({
-    page,
-  }) => {
+  test(`the ${region} links match the inventory`, async ({ page }) => {
     await page.goto(SITE_PATHS.home);
-    const found = await hrefs(anchors(page, region));
-    expect(found).toEqual(expected);
-    for (const href of new Set(found)) {
-      if (href === EXTERNAL_LINKS.github || href === GET_STARTED_PATH) continue;
-      await walk(page, href);
-    }
+    expect(await hrefs(anchors(page, region))).toEqual(expected);
   });
 }
 
-test("Get started opens the first Getting started guide", async ({ page }) => {
+test("Get started opens the app's sign-up", async ({ page }) => {
+  // The app serves the sign-up route, so the site preview checks that the
+  // press reaches the address, not the app's page.
   await page.goto(SITE_PATHS.home);
-  await page
+  const action = page
     .getByRole("banner")
-    .getByRole("link", { name: "Get started" })
-    .click();
+    .getByRole("link", { name: "Get started" });
+  await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
+  await action.click();
   await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Install");
 });
 
 test("the header composition follows the viewport", async ({ page }) => {

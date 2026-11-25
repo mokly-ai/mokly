@@ -15,6 +15,9 @@ automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.
 
 Global setup starts the worker Serve hosts and two copied builds together.
+A strict shard sets `MOKLY_PLAYWRIGHT_COPIED_HOST=skip` when none of its specs
+imports `static_test.ts`, directly or through helpers. Setup then skips the
+copied example build. Read the copied example only through `static_test.ts`.
 The shared Serve example uses the unresolved base `refs/mokly/browser-suite-no-base`.
 It waits for settled usage and unavailable Changes, with one Git diagnostic.
 Real Changes specs use their own Git fixtures.
@@ -68,13 +71,16 @@ The directory holds an isolated build of `examples/basic` with Changes
 disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`. Most `static_*.spec.ts` specs,
-`stage_centring.spec.ts`, `review_snapshot_links.spec.ts`, and the shared
-`*_cases.ts` modules of the design journeys use this copy. The comparison
-specs use the two-commit copies of the
+`stage_centring.spec.ts`, and `review_snapshot_links.spec.ts` use this copy.
+The portable design journeys do not: this suite runs them on Serve, and the
+static delivery check below runs them on built output. The comparison specs
+use the two-commit copies of the
 [comparison fixture reference](comparison/README.md).
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
 It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
+`-- --mode static-http` or `-- --mode file` selects one mode, and CI runs
+each mode in its own job.
 The private slot and saved-variant fixture builds its own output, removes its
 source, and checks every viewport and scheme through standalone links. Disk
 mode requires `file://` navigation without HTTP requests. The delivery reporter
@@ -89,7 +95,10 @@ A zero Playwright exit cannot hide a missing or invalid report.
 The `testMatch` list of
 [`playwright.delivery.config.ts`](../../playwright.delivery.config.ts) names
 the portable design journeys that run in both delivery modes, including
-`component_fragments.spec.ts`.
+`component_fragments.spec.ts`. A check that does not depend on the delivery,
+such as the width of each Canvas artboard, runs on Serve only.
+`builtCatalogueDelivery()` in `design_fixture.ts` tells a case module that it
+runs on built output.
 
 ## Deployment replacement
 

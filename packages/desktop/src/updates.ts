@@ -91,7 +91,7 @@ export interface Updates {
 
 type Outcome = keyof typeof manualAnswers | "release";
 
-/** Use the public pre-release feed; an app with the updater off never reaches the network. */
+/** Follow GitHub's latest release. Only an enabled updater reaches the network. */
 export function startUpdates(
   dependencies: UpdateDependencies,
   mode: UpdateMode,
@@ -104,7 +104,7 @@ export function startUpdates(
     owner: "mokly-ai",
     repo: "mokly-desktop",
   });
-  updater.allowPrerelease = true;
+  updater.allowPrerelease = false;
   updater.autoDownload = mode === "install";
   updater.autoInstallOnAppQuit = mode === "install";
   let checking: Promise<Outcome> | undefined;

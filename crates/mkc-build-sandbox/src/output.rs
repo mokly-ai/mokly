@@ -13,7 +13,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use tokio::time::{Instant, MissedTickBehavior, interval_at, sleep_until};
 
 use crate::buffer::{CliError, OutputBuffer};
-use crate::command::OUTPUT_LIMIT;
 use crate::failure::Failure;
 
 /// Facts required by probes and step failure handling, with redacted stdout.
@@ -38,6 +37,8 @@ pub(crate) trait OutputReader: Send + Sync {
 pub(crate) struct StreamReader<'a> {
     pub(crate) request: &'a BuildRequest,
     pub(crate) step: BuildStep,
+    /// Byte cap of each stream; a stream past it ends the step.
+    pub(crate) output_limit: usize,
 }
 
 #[async_trait]
@@ -99,7 +100,7 @@ impl OutputReader for StreamReader<'_> {
                     continue;
                 }
             };
-            let remaining = OUTPUT_LIMIT.saturating_sub(counts[index]);
+            let remaining = self.output_limit.saturating_sub(counts[index]);
             let redacted = buffers[index].push(&bytes[..bytes.len().min(remaining)], false);
             if index == 0 && capture {
                 result.stdout.extend_from_slice(&redacted);
@@ -109,7 +110,7 @@ impl OutputReader for StreamReader<'_> {
             }
             counts[index] = counts[index].saturating_add(bytes.len());
             self.stage(sender, channel(index), buffers[index].cut(false, false))?;
-            if counts[index] > OUTPUT_LIMIT {
+            if counts[index] > self.output_limit {
                 terminal = Some(if index == 0 {
                     ProcessStreamOutcome::StdoutOverflow
                 } else {

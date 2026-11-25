@@ -24,10 +24,6 @@ test("Lighthouse uses the workspace tools and retains a failing report", async (
     "npm install --global npm@11.21.0",
   );
   assert.equal(workflowStep(job, "Install dependencies").run, "npm ci");
-  assert.equal(
-    workflowStep(job, "Install Chromium").run,
-    "npm exec --workspace @mokly-cloud/site -- playwright install --with-deps chromium",
-  );
   const selection = await runRepositoryWorkflowShell(
     workflowStep(job, "Select Chromium for Lighthouse"),
   );

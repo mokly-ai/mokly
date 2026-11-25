@@ -18,8 +18,9 @@ chrome and delivery. Product and account routes remain in `packages/app`.
 - Render Mokly Cloud and Review documentation from this repository's Markdown.
 - Draw the home page's spread and demos of a fictional demo app as static
   components at build time.
-- Link every page's shared header to the public Mokly GitHub repository, and
-  the Pricing page's plan actions to the app's `/sign-up`.
+- Link every page's shared header to the public Mokly GitHub repository.
+  Link Get started in the header, the menu and the home hero, and the
+  Pricing page's cloud plan actions, to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
   scripts. The footer's scheme control keeps the reader's choice in
   `localStorage`, and each page applies a kept choice before it first
@@ -85,7 +86,10 @@ static components at build time: the hero's heading as a selected text
 layer, the spread of the app's screens and component sets, and the depicted
 product in the Browse, Review and Edit frames and the open foundation. The
 home demos island plays each frame's demo once when it comes into view, and
-marks the section in view in the Specs panel. The built page draws each demo
+marks the section in view in the Specs panel. A reader's pointer that moves
+over the Browse frame's compared screens pauses its sweep, and a grab slides
+the Swipe divider.
+The built page draws each demo
 in its finished state, so a reader without script or with reduced motion
 sees that state.
 
@@ -100,7 +104,9 @@ the page's own origin. Astro preview serves the production CSP so the browser
 suite exercises that boundary. The development server sends the same CSP but
 keeps those scripts inline, so the browser blocks them there: under
 `npm run dev` the scheme control and the hydrated islands do not run. Preview
-a build to see them.
+a build to see them. The two hydrated islands, Copy and search, start in the
+browser's first idle moment, and at the latest one second after the page
+reaches them, because a busy page can give the browser no idle moment.
 
 Every deployment publishes transparent brand assets for external consumers:
 
@@ -146,10 +152,12 @@ environment and are read once:
 | `SITE_ORIGIN` | `http://localhost:4321` | Canonical metadata, sitemap and feed origin |
 
 The origin must be an absolute HTTP(S) origin without credentials, path, query or
-fragment. Explicit empty values fail the build. Get started uses the relative
-path `/docs/start/install/`. The Pricing page's Create an account and Start a
-7-day trial use the app's relative path `/sign-up`, and the link check accepts
-that app path.
+fragment. Explicit empty values fail the build. Get started in the header,
+the menu and the home hero uses the app's relative path `/sign-up`, as do the
+Pricing page's Create an account and Start a 7-day trial. The link check
+accepts that app path. Docs in the home's open foundation and the Pricing
+page's Open source plan uses the relative path `/docs/`, as the header's Docs
+does.
 [Marketing site](../../docs/protocol/cloud/marketing-site.md) names every link
 from the site to the app.
 
@@ -193,7 +201,12 @@ Root Prettier includes this package, and its Astro plugin formats `.astro`
 files. Root ESLint lints the TypeScript but does not parse `.astro` files;
 `npm run site:typecheck` checks them with `astro check`.
 `cargo xtask check` installs the single `package-lock.json`,
-builds and verifies mockups, then runs the complete site gate. Lighthouse is a
+builds and verifies mockups, then runs the complete site gate. CI runs the
+`cloud-site` suite as two shards, as the
+[site shards](../../docs/protocol/cloud/repository-verification.md#mockup-and-site-shards)
+define: each shard builds the site and runs half of the browser tests, and
+shard 1 also runs the type, unit, and link checks. To repeat one shard, run
+`cargo xtask check --suite cloud-site --shard 2/2` from the repository root. Lighthouse is a
 separate visible CI job and does not block the required aggregate. Workflow
 tests record reviewed immutable action pins, including the Electron download
 cache used by the desktop job.
@@ -309,7 +322,7 @@ Pages project and attach the domain are in the
 
 ### Key Code
 
-- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the Install guide that Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
+- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the app's `/sign-up`, which Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
 - `scripts/generate-site-segments.ts` — derives the site's first segments from `src/navigation.ts` and writes or checks the Worker's committed `site-segments.ts` module (`site:routes` and `routes:check`).
 - `src/settings.ts` — reads `SITE_ORIGIN` once from the process environment and validates it.
 - `src/mokly-package.ts` — locates the installed `@mokly/mokly`, verifies its name and version, and keeps every package file read inside that root.
@@ -364,7 +377,7 @@ Pages project and attach the domain are in the
 - `tests/changelog.test.ts`, `tests/changelog_notes.test.ts`, `tests/browser/changelog.spec.ts` and `changelog-layout.spec.ts` — the releases, notes, upgrade notes, anchors, links and feed that the changelog model reads, and in a browser the frames, the filter, the release in view, a link into a closed disclosure, Version history under the tool bar and in the place and the width of the docs Layers panel, the widths without sideways scroll, 200% text in a 320px window, the words of each filter option inside the option and the bar at 320px with 100% and 200% text, the checked filter option in forced colours and the page without script.
 - `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes, sticky plan heads, the phone sizes of the group heads and the Mokly CLI box, and 200% text in a 320px window.
 - `tests/lighthouse.test.ts`, `tests/site_workflows.test.ts` and `tests/site_cleanup.test.ts` — the budget against the delivery contract, the site workflow policy, and the Pages cleanup script.
-- `tests/browser/` — the Playwright suite over every built route. `large-text.ts` opens a route in a 320px window at 200% text, where the chrome, footer, home, changelog, pricing, tree sheet and sample specs check their parts.
+- `tests/browser/` — the Playwright suite over every built route. `pages.spec.ts` writes a full-page capture of each route only when `MKC_SITE_CAPTURES=1` asks for it. `large-text.ts` opens a route in a 320px window at 200% text, where the chrome, footer, home, changelog, pricing, tree sheet and sample specs check their parts.
 
 ### Related Docs
 

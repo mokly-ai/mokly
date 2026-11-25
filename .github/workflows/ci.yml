@@ -24,7 +24,27 @@ jobs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
+      viewer-shards: ${{ steps.shards.outputs.viewer }}
+      viewer-shard-total: ${{ steps.shards.outputs.viewer-total }}
+      browser-shards: ${{ steps.shards.outputs.browser }}
+      browser-shard-total: ${{ steps.shards.outputs.browser-total }}
     steps:
+      - name: Check out shard totals
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/verification/ci-shards.json
+          sparse-checkout-cone-mode: false
+      # The viewer and browser matrices, the aggregate, and remote
+      # verification all read the shard totals from this one file.
+      - name: Read shard totals
+        id: shards
+        run: |
+          for suite in viewer browser; do
+            total=$(jq --exit-status --arg suite "$suite" '.[$suite] | select(type == "number" and . >= 1 and . == floor)' scripts/verification/ci-shards.json)
+            echo "$suite-total=$total" >> "$GITHUB_OUTPUT"
+            echo "$suite=$(jq --compact-output --null-input --argjson total "$total" '[range(1; $total + 1)]')" >> "$GITHUB_OUTPUT"
+          done
       - name: Select Node verification profile
         id: profile
         env:
@@ -59,11 +79,18 @@ jobs:
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
   repository:
-    name: Repository
+    name: Repository (shard ${{ matrix.shard }})
     needs:
       - profile
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        # Shard 1 runs every check except the Mokly Rust tests. Shards 2 to 5
+        # each build and run one weighted share of the Rust test targets, and
+        # shard 2 also runs the doc tests.
+        shard: [1/5, 2/5, 3/5, 4/5, 5/5]
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -75,23 +102,42 @@ jobs:
         with:
           node-version: ${{ needs.profile.outputs.node-24-version }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      # The checks shard builds Clippy metadata and installs the audit tool. The
+      # test shards build full Mokly test builds. Each keeps its own entry.
       - name: Restore Rust build cache
+        if: startsWith(matrix.shard, '1/')
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
+          key: checks-audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - name: Install dependencies
-        run: npm ci
-      - name: Build native artifacts
-        run: cargo xtask build-native
+      # The test shards also build xtask and the native binary, so every Linux
+      # job that builds only those two restores this entry and never saves it.
+      # Of the test shards, only the first saves: its library unit tests and
+      # doc tests build every crates.io dependency of the Rust tests.
+      - name: Restore Rust build cache
+        if: ${{ !startsWith(matrix.shard, '1/') }}
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: mokly-tests
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Run repository verification
         env:
           DEPENDENCY_AUDIT: |-
@@ -105,9 +151,10 @@ jobs:
                 contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
               ) && 'strict' || 'baseline'
             }}
-        run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
+          REPOSITORY_SHARD: ${{ matrix.shard }}
+        run: cargo xtask check --suite repository --shard "$REPOSITORY_SHARD" --dependency-audit "$DEPENDENCY_AUDIT"
   viewer:
-    name: Viewer (Node ${{ matrix.node }})
+    name: Viewer (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }})
     needs:
       - profile
     runs-on: ubuntu-24.04
@@ -116,9 +163,10 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        shard: ${{ fromJSON(needs.profile.outputs.viewer-shards) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-full.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.viewer-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -130,8 +178,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -139,30 +185,45 @@ jobs:
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          shared-key: native-binary
+          # The Repository test shards build these crates and save the entry.
+          shared-key: mokly-tests
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: false
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
+      - name: Save npm download cache
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version-file: .bun-version
           no-cache: true
-      - name: Run viewer verification
-        run: cargo xtask check --suite viewer
+      - name: Run viewer shard
+        env:
+          VIEWER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }}
+        run: cargo xtask check --suite viewer --shard "$VIEWER_SHARD"
       - name: Retain viewer inventory and timings
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: verification-viewer-node-${{ matrix.node }}
+          name: verification-viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}
           path: ${{ env.MOKLY_VERIFICATION_REPORT }}
           if-no-files-found: error
           include-hidden-files: true
           overwrite: true
           retention-days: 14
   browser:
-    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
+    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }})
     needs: [profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -170,11 +231,11 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
-        shard: [1, 2, 3, 4]
+        shard: ${{ fromJSON(needs.profile.outputs.browser-shards) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.browser-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -186,8 +247,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -195,16 +254,81 @@ jobs:
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          shared-key: native-binary
+          # The Repository test shards build these crates and save the entry.
+          shared-key: mokly-tests
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: false
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      # The packages of `playwright install-deps` follow the Playwright version
+      # and the Ubuntu release of the image.
+      - &chromium-packages-key
+        name: Name the Chromium package cache
+        id: chromium-packages
+        run: &chromium-packages-names |
+          playwright=$(jq --raw-output --exit-status '.packages["node_modules/playwright-core"].version' package-lock.json)
+          echo "key=chromium-packages-$RUNNER_OS-$RUNNER_ARCH-$ImageOS-playwright-$playwright" >> "$GITHUB_OUTPUT"
+          echo "path=$HOME/.cache/mokly-chromium-packages" >> "$GITHUB_OUTPUT"
+      - &chromium-packages-restore
+        name: Restore Chromium package downloads
+        id: chromium-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
+      # apt adds only the packages that the image lacks and upgrades none, so
+      # the downloads are one set on every image. It takes a restored package
+      # from its archive folder instead of the mirror. The install runs in the
+      # background while the next step builds. It holds a lock until it ends,
+      # so the wait step blocks on the lock instead of polling.
+      - &chromium-install-start
+        name: Start Chromium install
+        env:
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: |
+          echo 'APT::Get::Upgrade "false";' | sudo tee /etc/apt/apt.conf.d/90-mokly-no-upgrade > /dev/null
+          if compgen -G "$PACKAGES/*.deb" > /dev/null; then
+            sudo cp "$PACKAGES"/*.deb /var/cache/apt/archives/
+          fi
+          exec 9> "$RUNNER_TEMP/chromium-install.lock"
+          flock 9
+          nohup bash -c 'npx playwright install --with-deps chromium > "$RUNNER_TEMP/chromium-install.log" 2>&1 9>&-; echo "$?" > "$RUNNER_TEMP/chromium-install.status"' < /dev/null > /dev/null 2>&1 &
+      - name: Build native and JavaScript packages
+        run: npm run build
+      # A missing status means that the install stopped before it ended.
+      - &chromium-install-wait
+        name: Wait for Chromium install
+        run: |
+          flock "$RUNNER_TEMP/chromium-install.lock" true
+          cat "$RUNNER_TEMP/chromium-install.log"
+          test "$(cat "$RUNNER_TEMP/chromium-install.status")" = 0
+      - name: Collect Chromium package downloads
+        id: chromium-downloads
+        if: github.ref == 'refs/heads/main' && matrix.shard == 1 && matrix.node == '22.15.0' && steps.chromium-cache.outputs.cache-hit != 'true'
+        env:
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: |
+          if compgen -G "/var/cache/apt/archives/*.deb" > /dev/null; then
+            mkdir -p "$PACKAGES"
+            cp /var/cache/apt/archives/*.deb "$PACKAGES"/
+            du -sh "$PACKAGES"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Save Chromium package downloads
+        if: steps.chromium-downloads.outputs.found == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
       - name: Run browser shard
         env:
-          BROWSER_SHARD: ${{ matrix.shard }}/4
+          BROWSER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }}
         run: cargo xtask check --suite browser --shard "$BROWSER_SHARD"
       - name: Retain browser inventory and timings
         if: ${{ always() }}
@@ -225,7 +349,7 @@ jobs:
           include-hidden-files: true
           retention-days: 14
   native:
-    name: Native (${{ matrix.runner }})
+    name: Native (${{ matrix.runner }}, shard ${{ matrix.shard }})
     needs:
       - profile
     runs-on: ${{ matrix.runner }}
@@ -233,9 +357,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner:
-          - macos-26
-          - windows-2025
+        # Shard 1 checks formatting and Clippy. Each later shard builds and
+        # runs one weighted share of the Rust test targets: five on macOS and
+        # six on Windows. Shard 2 also runs the doc tests.
+        include:
+          - runner: macos-26
+            shard: 1/6
+          - runner: macos-26
+            shard: 2/6
+          - runner: macos-26
+            shard: 3/6
+          - runner: macos-26
+            shard: 4/6
+          - runner: macos-26
+            shard: 5/6
+          - runner: macos-26
+            shard: 6/6
+          - runner: windows-2025
+            shard: 1/7
+          - runner: windows-2025
+            shard: 2/7
+          - runner: windows-2025
+            shard: 3/7
+          - runner: windows-2025
+            shard: 4/7
+          - runner: windows-2025
+            shard: 5/7
+          - runner: windows-2025
+            shard: 6/7
+          - runner: windows-2025
+            shard: 7/7
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -247,19 +398,43 @@ jobs:
         with:
           node-version: 22.15.0
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      # Every shard restores the test build entry of its host. Only the first
+      # test shard saves it: its library unit tests and doc tests build every
+      # crates.io dependency of the Rust tests. The lint shard never saves, and
+      # Clippy reuses the build scripts and procedural macros of the entry.
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: ${{ github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
+      # The Windows runner image moves npm's cache out of the home folder.
+      - name: Locate npm download cache
+        id: npm-cache-path
+        shell: bash
+        run: echo "path=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.npm-cache-path.outputs.path }}
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
+      - name: Save npm download cache
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.npm-cache-path.outputs.path }}
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Build UI package
         run: npm run build --workspace @mokly/ui
       - name: Build model package
@@ -271,9 +446,12 @@ jobs:
       - name: Build sidecar package
         run: npm run build --workspace @mokly/mokly
       - name: Run native verification
-        run: cargo xtask check --suite native
+        shell: bash
+        env:
+          NATIVE_SHARD: ${{ matrix.shard }}
+        run: cargo xtask check --suite native --shard "$NATIVE_SHARD"
   static-delivery:
-    name: Static delivery (Node ${{ matrix.node }})
+    name: Static delivery (Node ${{ matrix.node }}, ${{ matrix.mode }})
     needs: [profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -281,6 +459,8 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Each delivery mode runs in its own job on its own fresh build.
+        mode: [static-http, file]
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -295,8 +475,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -304,22 +482,34 @@ jobs:
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          shared-key: native-binary
+          # The Repository test shards build these crates and save the entry.
+          shared-key: mokly-tests
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: false
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      # The browser job defines these steps, so both jobs use one cache key.
+      - *chromium-packages-key
+      - *chromium-packages-restore
+      - *chromium-install-start
       - name: Build native and JavaScript packages
         run: npm run build
-      - name: Check example static HTTP and file delivery
-        run: npm run test:delivery:prepared
+      - *chromium-install-wait
+      - name: Check example delivery
+        env:
+          DELIVERY_MODE: ${{ matrix.mode }}
+        run: npm run test:delivery:prepared -- --mode "$DELIVERY_MODE"
       - name: Retain static delivery evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: static-delivery-node-${{ matrix.node }}
+          name: static-delivery-node-${{ matrix.node }}-${{ matrix.mode }}
           path: .context/static-delivery/*.json
           if-no-files-found: error
           include-hidden-files: true
@@ -329,7 +519,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: static-delivery-failures-node-${{ matrix.node }}-attempt-${{ github.run_attempt }}
+          name: static-delivery-failures-node-${{ matrix.node }}-${{ matrix.mode }}-attempt-${{ github.run_attempt }}
           path: .context/playwright-results/
           include-hidden-files: true
           retention-days: 14
@@ -342,14 +532,39 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Workspace checks
+          # The workspace suites run in three rows, grouped by what they need:
+          # the cloud Rust tests with Postgres, the suites that use the
+          # workspace build, and the infrastructure and policy suites. A row
+          # with rust_cache_key restores the entry of that key and never saves
+          # it, so the row adds no cache entry.
+          - name: Workspace checks (Rust)
             command: cloud-rust
-            additional_suites: cloud-migrations cloud-typecheck cloud-openapi cloud-fixtures cloud-emails cloud-openapi-lint cloud-terraform cloud-origin-router cloud-helm cloud-toolchain-pins
             install_dependencies: true
             browser_workspace: ""
             postgres: true
-            infrastructure: true
+            infrastructure: false
+            nextest: true
             rust_cache: true
+          - name: Workspace checks (contracts)
+            command: cloud-typecheck
+            additional_suites: cloud-openapi cloud-fixtures cloud-emails cloud-origin-router
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            libpq: true
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: cloud-rust
+          - name: Workspace checks (infrastructure)
+            command: cloud-migrations
+            additional_suites: cloud-openapi-lint cloud-terraform cloud-helm cloud-toolchain-pins
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            infrastructure: true
+            nextest: true
+            rust_cache: true
+            rust_cache_key: mokly-tests
           - name: Desktop checks
             command: cloud-desktop
             install_dependencies: true
@@ -357,52 +572,145 @@ jobs:
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 1/4
+            rust_cache_key: cloud-app
+          - name: App checks 1/8
             command: cloud-app
-            app_shard: "1/4"
+            shard: "1/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 2/4
+          - name: App checks 2/8
             command: cloud-app
-            app_shard: "2/4"
+            shard: "2/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 3/4
+          - name: App checks 3/8
             command: cloud-app
-            app_shard: "3/4"
+            shard: "3/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 4/4
+          - name: App checks 4/8
             command: cloud-app
-            app_shard: "4/4"
+            shard: "4/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: Mockup checks
+          - name: App checks 5/8
+            command: cloud-app
+            shard: "5/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 6/8
+            command: cloud-app
+            shard: "6/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 7/8
+            command: cloud-app
+            shard: "7/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 8/8
+            command: cloud-app
+            shard: "8/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          # Mockup shard 1 runs the checks without a browser, shard 2 the policy
+          # and served suites, and shards 3 to 6 split the disk browser suite.
+          - name: Mockup checks 1/6
             command: cloud-mockups
+            shard: "1/6"
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Mockup checks 2/6
+            command: cloud-mockups
+            shard: "2/6"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
-          - name: Site checks
+            rust_cache_key: mokly-tests
+          - name: Mockup checks 3/6
+            command: cloud-mockups
+            shard: "3/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Mockup checks 4/6
+            command: cloud-mockups
+            shard: "4/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Mockup checks 5/6
+            command: cloud-mockups
+            shard: "5/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Mockup checks 6/6
+            command: cloud-mockups
+            shard: "6/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Site checks 1/2
             command: cloud-site
+            shard: "1/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false
             infrastructure: false
             rust_cache: true
+            rust_cache_key: mokly-tests
+          - name: Site checks 2/2
+            command: cloud-site
+            shard: "2/2"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/site"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: mokly-tests
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ matrix.command != 'cloud-desktop' && '1' || '' }}
       # Database-backed partitions provision Postgres below. GitHub HTTP fixtures
@@ -414,70 +722,92 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Install npm
         run: npm install --global npm@11.21.0
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: 1.98.1
-          components: rustfmt, clippy
       - name: Set up Rust
         run: rustup toolchain install
       - name: Restore Rust dependencies
         if: matrix.rust_cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          # One cache per partition, so caches produced at the same time by
-          # different partitions cannot replace one another.
-          key: ${{ matrix.command }}
+          # The Rust and App partitions build mkc- crates and save an entry
+          # each. Every other partition restores the entry of rust_cache_key.
+          shared-key: ${{ matrix.rust_cache_key || matrix.command }}
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-      - name: Cache Electron download
+          save-if: ${{ github.ref == 'refs/heads/main' && !matrix.rust_cache_key }}
+      - name: Install cargo-nextest
+        if: matrix.nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
+      - name: Restore Electron download
         if: matrix.command == 'cloud-desktop'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        id: electron-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/electron
           key: electron-${{ runner.os }}-${{ runner.arch }}-44.11.3
+      - name: Restore npm download cache
+        if: matrix.install_dependencies
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         if: matrix.install_dependencies
         run: npm ci
-      - name: Prepare the Playwright package cache
+      # A browser row restores the Chromium package entry that the browser job
+      # saves, and installs as the browser job does. It never saves.
+      - name: Name the Chromium package cache
         if: matrix.browser_workspace != ''
-        id: playwright_packages
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh prepare
-      - name: Cache Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        id: chromium-packages
+        run: *chromium-packages-names
+      - name: Restore Chromium package downloads
+        if: matrix.browser_workspace != ''
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ${{ runner.temp }}/playwright-apt-archives
-          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
-      - name: Restore Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh restore
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
       - name: Install Chromium
         if: matrix.browser_workspace != ''
         env:
           BROWSER_WORKSPACE: ${{ matrix.browser_workspace }}
-        run: npm exec --workspace "$BROWSER_WORKSPACE" -- playwright install --with-deps chromium
-      - name: Retain Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh stage
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: &chromium-workspace-install |
+          echo 'APT::Get::Upgrade "false";' | sudo tee /etc/apt/apt.conf.d/90-mokly-no-upgrade > /dev/null
+          if compgen -G "$PACKAGES/*.deb" > /dev/null; then
+            sudo cp "$PACKAGES"/*.deb /var/cache/apt/archives/
+          fi
+          npm exec --workspace "$BROWSER_WORKSPACE" -- playwright install --with-deps chromium
       - name: Install virtual display
         if: matrix.command == 'cloud-desktop'
         run: sudo apt-get install -y xvfb
+      # A partition that builds mkc- crates without database tests needs only
+      # libpq. The runner image ships it; install it only when it is missing.
+      - name: Install libpq
+        if: matrix.libpq
+        run: |
+          dpkg-query --show --showformat='${db:Status-Status}' libpq-dev 2>/dev/null |
+            grep -qx installed || { sudo apt-get update && sudo apt-get install -y libpq-dev; }
       - name: Start Postgres 16 for integration tests
         if: matrix.postgres
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16 libpq-dev e2fsprogs
+          # The runner image ships these packages. Install only the missing ones.
+          missing=()
+          for package in postgresql-16 libpq-dev e2fsprogs; do
+            dpkg-query --show --showformat='${db:Status-Status}' "$package" 2>/dev/null |
+              grep -qx installed || missing+=("$package")
+          done
+          if (( ${#missing[@]} )); then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
           sudo -u postgres createdb mkc_test
@@ -489,15 +819,22 @@ jobs:
       - name: Verify the partition
         env:
           XTASK_COMMAND: ${{ matrix.command }}
-          APP_SHARD: ${{ matrix.app_shard }}
+          SHARD: ${{ matrix.shard }}
           ADDITIONAL_SUITES: ${{ matrix.additional_suites }}
         run: |
           shard=()
-          [[ -z "$APP_SHARD" ]] || shard=(--shard "$APP_SHARD")
+          [[ -z "$SHARD" ]] || shard=(--shard "$SHARD")
           cargo xtask check --suite "$XTASK_COMMAND" "${shard[@]}"
           for suite in $ADDITIONAL_SUITES; do
             cargo xtask check --suite "$suite"
           done
+      # Electron downloads its binary when the desktop tests first start it.
+      - name: Save Electron download
+        if: matrix.command == 'cloud-desktop' && github.ref == 'refs/heads/main' && steps.electron-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/electron
+          key: ${{ steps.electron-cache.outputs.cache-primary-key }}
 
   images:
     name: Workload image checks
@@ -511,30 +848,42 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Install Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install npm and dependencies
         run: |
           npm install --global npm@11.21.0
           npm ci
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: 1.98.1
       - name: Set up Rust
         run: rustup toolchain install
+      # The App partitions build xtask and mkc-catalogue-server, the host
+      # builds of this job, and save the entry.
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
+          shared-key: cloud-app
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: false
       - name: Install bounded-storage host tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y e2fsprogs postgresql-16 libpq-dev
+          # The runner image ships these packages. Install only the missing ones.
+          missing=()
+          for package in postgresql-16 libpq-dev e2fsprogs; do
+            dpkg-query --show --showformat='${db:Status-Status}' "$package" 2>/dev/null |
+              grep -qx installed || missing+=("$package")
+          done
+          if (( ${#missing[@]} )); then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
           sudo -u postgres createdb mkc_test
@@ -640,35 +989,33 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Prepare the Playwright package cache
-        id: playwright_packages
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh prepare
-      - name: Cache Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - name: Name the Chromium package cache
+        id: chromium-packages
+        run: *chromium-packages-names
+      - name: Restore Chromium package downloads
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ${{ runner.temp }}/playwright-apt-archives
-          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
-      - name: Restore Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh restore
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
       - name: Install Chromium
-        run: npm exec --workspace @mokly-cloud/site -- playwright install --with-deps chromium
-      - name: Retain Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh stage
+        env:
+          BROWSER_WORKSPACE: "@mokly-cloud/site"
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: *chromium-workspace-install
       - name: Select Chromium for Lighthouse
         working-directory: apps/site
         run: |
@@ -679,9 +1026,10 @@ jobs:
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          shared-key: native-binary
+          # The Repository test shards build these crates and save the entry.
+          shared-key: mokly-tests
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: false
       - name: Build workspace packages
         run: npm run build
       - name: Build site
@@ -756,3 +1104,39 @@ jobs:
         env:
           EXPECTED_RUNTIMES: ${{ needs.profile.outputs.verification-runtimes }}
         run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"
+
+  timing:
+    name: CI timing
+    # Report only: Required CI does not need this job, so it never delays or
+    # gates the branch rule. It runs after every other job, also after a failure.
+    # A failure of this job never fails the run, so release evidence keeps it.
+    if: ${{ always() }}
+    continue-on-error: true
+    needs:
+      - required
+      - site-lighthouse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the timing report
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Download suite evidence
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: verification-*
+          path: .context/downloaded-verification
+      - name: Report job durations against their budgets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verification/ci-timing.mjs --reports .context/downloaded-verification --self "CI timing"
