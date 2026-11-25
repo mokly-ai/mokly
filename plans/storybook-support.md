@@ -1835,13 +1835,19 @@ Existing theme decorators follow Mokly's views, as decision 8 says.
 
 Depends on: 2, 3, 4, 5, 6, 7
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
+- [x] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
       7 build, in new small projects, and save the result under
       `.context/storybook-support/`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+
+Evidence: `.context/storybook-support/track-b-matrix.md` in the workspace of
+`calummoore/storybook-track-b-finish-ekj1` holds the matrix check of
+2026-11-25.
 
 Pull request #492 merged Milestones 2 to 6 into this branch on 2026-11-24,
 before Milestone 7, at the user's request. Its description holds the
