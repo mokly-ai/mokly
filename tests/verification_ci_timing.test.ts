@@ -110,7 +110,7 @@ test("a rerun keeps the durations of reused jobs and skips skipped jobs", async 
     jobs.map((job) => [job.name, job.reused]),
     [
       ["Runtime profile", true],
-      ["Credential-gated infrastructure plan", true],
+      ["Credential-gated infrastructure plan", false],
       ["Viewer (Node 22.15.0)", false],
       ["Native (windows-2025)", true],
       ["Required CI", false],
@@ -149,12 +149,33 @@ test("the critical path of a first attempt follows the blocking jobs", async () 
   );
 });
 
+test("a skipped job of a first attempt is not reused, so the wall-clock budget applies", async () => {
+  const body = (await fixture("jobs-first-attempt.json")) as {
+    jobs: unknown[];
+  };
+  const { jobs } = parseJobs([
+    ...body.jobs,
+    {
+      id: 9,
+      name: "Credential-gated infrastructure plan",
+      run_attempt: 1,
+      status: "completed",
+      conclusion: "skipped",
+      created_at: "2026-11-24T23:33:56Z",
+      started_at: "2026-11-24T23:33:56Z",
+      completed_at: "2026-11-24T23:33:49Z",
+    },
+  ]);
+  const found = criticalPath(jobs);
+  assert.deepEqual([found?.wallSeconds, found?.reusedJobs], [1742, 0]);
+});
+
 test("the critical path of a rerun covers only the jobs that ran again", async () => {
   const found = criticalPath(await fixtureJobs("jobs-rerun.json"));
   assert.ok(found);
   assert.deepEqual(
     [found.wallSeconds, found.ranJobs, found.reusedJobs],
-    [677, 2, 3],
+    [677, 2, 2],
   );
   assert.deepEqual(
     found.segments.map((segment) => [

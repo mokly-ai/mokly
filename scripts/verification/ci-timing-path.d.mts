@@ -13,6 +13,7 @@ export interface CriticalPath {
   startMs: number;
   endMs: number;
   wallSeconds: number;
+  /** Jobs of this attempt that ran and were not skipped. */
   ranJobs: number;
   reusedJobs: number;
   segments: PathSegment[];

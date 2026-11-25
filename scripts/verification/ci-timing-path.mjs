@@ -44,7 +44,7 @@ export function criticalPath(jobs) {
     startMs,
     endMs: last.completedMs,
     wallSeconds: spanSeconds(startMs, last.completedMs),
-    ranJobs: ran.length,
+    ranJobs: blockers.length,
     reusedJobs: reused,
     segments,
   };

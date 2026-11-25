@@ -79,7 +79,7 @@ function wallClockLines({ path, wallClockMinutes, wallOverSeconds, attempt }) {
   if (path.reusedJobs > 0)
     return [
       `${wall}. This attempt reran ${path.ranJobs} jobs and reused ${path.reusedJobs} jobs from an earlier attempt.`,
-      "The wall clock and the critical path cover the rerun jobs only. The wall-clock budget applies to a first attempt only.",
+      "The wall clock and the critical path cover the rerun jobs only. The wall-clock budget applies only to an attempt that reused no job.",
     ];
   const over =
     wallOverSeconds === null

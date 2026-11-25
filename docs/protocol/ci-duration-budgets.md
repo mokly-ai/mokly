@@ -31,7 +31,7 @@ fields:
 | Field              | Meaning                                                                                    |
 | ------------------ | ------------------------------------------------------------------------------------------ |
 | `mode`             | `warn` or `fail`, as [Warnings And The Failing Mode](#warnings-and-the-failing-mode) says. |
-| `wallClockMinutes` | The budget of the wall clock of a first attempt.                                           |
+| `wallClockMinutes` | The budget of the wall clock of an attempt that reused no job.                             |
 | `slowestTests`     | The number of rows in each slowest-test table.                                             |
 | `jobs`             | An ordered list of `pattern` and `minutes` pairs.                                          |
 
@@ -73,17 +73,19 @@ so an npm install in the report job. The times give the same chain.
 A rerun of failed jobs starts a new attempt. The API lists every job under
 the new attempt, and the jobs that did not run again keep the times of their
 earlier attempt. The report marks these jobs as reused from an earlier
-attempt and keeps their run times and budget checks. The wall clock and the
+attempt and keeps their run times and budget checks. A skipped job, and
+every job of a first attempt, is never reused. The wall clock and the
 critical path cover only the jobs that ran in the new attempt. The wall-clock
-budget applies only to a first attempt. A complete rerun is a first attempt
-of all jobs again, so every check applies.
+budget applies only to an attempt that reused no job, such as a first attempt
+or a complete rerun.
 
 ## Job Summary
 
 The report writes these parts to the job summary, in this order:
 
 1. The mode.
-2. The wall clock of the attempt and, for a first attempt, its budget.
+2. The wall clock of the attempt and, when the attempt reused no job, its
+   budget.
 3. The critical path.
 4. A table of every completed job, the longest first: result, run time,
    budget and its pattern, status, and slowest step.

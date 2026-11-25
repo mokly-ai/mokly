@@ -64,19 +64,27 @@ function parseJob(entry) {
     return null;
   const startedMs = time(entry.started_at);
   const completedMs = time(entry.completed_at);
+  const attempt = typeof entry.run_attempt === "number" ? entry.run_attempt : 1;
+  const conclusion =
+    typeof entry.conclusion === "string" ? entry.conclusion : null;
   return {
     id: entry.id,
     name: entry.name,
-    attempt: typeof entry.run_attempt === "number" ? entry.run_attempt : 1,
+    attempt,
     status: typeof entry.status === "string" ? entry.status : "unknown",
-    conclusion: typeof entry.conclusion === "string" ? entry.conclusion : null,
+    conclusion,
     createdMs,
     startedMs,
     completedMs,
     url: typeof entry.html_url === "string" ? entry.html_url : null,
     // A job that an earlier attempt ran keeps its old completion time, which
-    // comes before its creation in the current attempt.
-    reused: completedMs !== null && completedMs < createdMs,
+    // comes before its creation in the current attempt. A skipped job can
+    // also complete before its creation, so it never counts as reused.
+    reused:
+      attempt > 1 &&
+      conclusion !== "skipped" &&
+      completedMs !== null &&
+      completedMs < createdMs,
     steps: Array.isArray(entry.steps) ? entry.steps.flatMap(parseStep) : [],
   };
 }
