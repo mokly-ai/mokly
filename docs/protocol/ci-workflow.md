@@ -99,16 +99,24 @@ integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
 before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
-in the checkout.
+in the checkout. No CI job installs Rust a second way, such as with a
+toolchain action.
 Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
 failing test binary.
 
+Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
+runner image. They refresh the package index and install a package only when
+the image lacks it.
+
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
-version in `package.json`, and runs `npm ci`. The scheduled audit installs no
+version in `package.json`, and runs `npm ci`. The repository job runs it inside
+its suite, after the lockfile-only audit, and not a second time before. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
 caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
-download cache from the checked-out `package-lock.json`. Only the repository
+download cache from the checked-out `package-lock.json`. Every CI job sets up
+Node.js with the same `actions/setup-node` release and without its built-in
+package cache. Only the repository
 audit reads a comparison-commit lockfile, for baseline evaluation rather than a
 cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
@@ -190,6 +198,14 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## CI Timing Report
+
+The `CI timing` job reports each job's run time against its budget, the
+critical path, and the slowest tests in the job summary of every run. It runs
+after every other job and is not a prerequisite of `Required CI`. The
+[CI duration budgets](./ci-duration-budgets.md) contract defines its budgets,
+its warnings, and its failing mode.
+
 ## Cloud Jobs And Workflows
 
 The [cloud CI contract](./ci-workflow-cloud.md) defines the cloud jobs of this
@@ -228,6 +244,7 @@ hosted CI graph and its release profile keep their required jobs.
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [CI duration budgets](./ci-duration-budgets.md)
 - [CI workflow: cloud jobs](./ci-workflow-cloud.md)
 - [Repository layout](./repository-layout.md)
 - [Remote verification](./remote-verification.md)

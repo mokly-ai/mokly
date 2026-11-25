@@ -46,7 +46,10 @@ pub(super) fn allowed_permission(
         ("pull-requests", Some("write")) => {
             workflow == "preview" && matches!(job, "release" | "deploy-pr" | "close-pr")
         }
-        ("actions", Some("read")) => workflow == "deploy" && job == "foundation-gate",
+        ("actions", Some("read")) => {
+            (workflow == "deploy" && job == "foundation-gate")
+                || (workflow == "ci" && job == "timing")
+        }
         ("id-token", Some("write")) => {
             ID_TOKEN_JOBS.contains(&job) || (workflow == "foundation" && job == "apply")
         }
