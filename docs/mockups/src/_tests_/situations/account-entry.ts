@@ -116,14 +116,15 @@ export const accountEntrySituations = [
     states: ["default"],
   },
   // Sign in's password section, where the configuration answer names a shared
-  // account: a screen beside sign in. Its refused password and its refused
-  // write are its variants, and its write is a screen beside it.
+  // account: a screen beside sign in. Its empty state before the reader types,
+  // its refused password and its refused write are its variants, and its
+  // write is a screen beside it.
   {
     path: "product/account/sign-in/preview-password",
     family: "account",
     screen: "sign-in",
     name: "preview-password",
-    states: ["default"],
+    states: ["default", "empty"],
   },
   {
     path: "product/account/sign-in/preview-password/password-refused",

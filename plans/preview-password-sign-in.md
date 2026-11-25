@@ -157,11 +157,13 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   the page does. The app trims leading and trailing white space before it
   sends the password, as it trims the email. The mockups settle the final
   layout and copy.
-- **Mockup pages.** The mockups draw the section on four pages under
+- **Mockup pages.** The mockups draw the section on five pages under
   `product/account/sign-in/preview-password`: the section at rest, its
-  `password-refused` and `failure` variants, and `signing-in` beside them.
-  Sign in's other pages, Sign up and the desktop window draw no section. On
-  each page the email form stays at rest with Cal's address, as the GitHub
+  `empty`, `password-refused` and `failure` variants, and `signing-in` beside
+  them. Sign in's other pages, Sign up and the desktop window draw no
+  section. The `empty` page draws both fields empty and both actions
+  disabled. On every other page the email form stays at rest with Cal's
+  address, as the GitHub
   pages draw it. While it signs in, the action reads "Signing in…" with the
   busy spinner, screen readers hear "Signing you in", and the Password field
   waits disabled. A refused password keeps the action's label, and the
@@ -774,14 +776,33 @@ an empty Password field with **Continue as preview@mokly.ai** disabled. Every
 reviewer sees this state first. The email form's empty state has its own
 drawing, `product/account/sign-in/empty`.
 
-- [ ] Add an `empty` variant to the page
+- [x] Add an `empty` variant to the page
       `product/account/sign-in/preview-password`, with its screen component,
       owner entry and inventory rows. The page then draws four screens.
-- [ ] Change the related doc of the section's pages from `auth-sessions.md`
+- [x] Change the related doc of the section's pages from `auth-sessions.md`
       to `docs/protocol/cloud/preview-sign-in.md`.
-- [ ] Run the mockup check that `docs/mockups/README.md` gives, and compare
+- [x] Run the mockup check that `docs/mockups/README.md` gives, and compare
       the new page with the app's empty section in
       `.context/preview-password-sign-in/m6/sign-in-desktop.png`.
+
+**My calls on 2026-11-25.**
+
+- The empty page draws the Email field empty too, with Continue with email
+  disabled, as the app first draws Sign in and as
+  `product/account/sign-in/empty` draws its form. Reason: the page shows what
+  a reviewer sees before typing anything. The section's other pages keep the
+  email form at rest.
+- The page is the `empty` state of the section's inventory row, and the
+  section's owner answers for it. Reason: the disk spec accepts a disabled
+  control only on an empty or loading state, and the owner table names
+  screens, not states, as for `product/account/sign-in/empty`.
+- The `signing-in` page names `preview-sign-in.md` too, so every page of the
+  section names the section's contract.
+- A test in `account-writes.test.ts` reads the new page: both fields empty,
+  both of their actions disabled and Continue with GitHub ready. Reason: no
+  other test checks what this page shows.
+
+The check logs and screenshots are in `.context/preview-password-sign-in/m7/`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

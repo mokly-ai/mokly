@@ -69,8 +69,8 @@ the screen stays within four, and otherwise a screen beside it in its folder:
 the entry screens' `github-refused`, `github-opens-soon` and
 `address-refused`, and the desktop app's window entry, `desktop`, with its
 `waiting` variant, each drawn on both sign in and sign up, sign in's password
-section, `preview-password`, with its refused password and its failure as
-variants and its write as a screen beside it, the populated
+section, `preview-password`, with its empty state, its refused password and
+its failure as variants and its write as a screen beside it, the populated
 workspace and repository forms while their address suggestions load,
 Create workspace's write, the workspace and project address editors,
 `product/settings/project/visibility`, `product/settings/members/identity`,

@@ -46,6 +46,14 @@ export function SignInPasswordScreen(_props: { viewport: Viewport }) {
   return <EntryPage mode="sign-in" password="default" />;
 }
 
+/**
+ * The section before the reader types: the Email and Password fields are
+ * empty, so both of their actions wait disabled.
+ */
+export function SignInPasswordEmptyScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="empty" />;
+}
+
 /** The password the API refused, marked on the Password field. */
 export function SignInPasswordRefusedScreen(_props: { viewport: Viewport }) {
   return <EntryPage mode="sign-in" password="password-refused" />;

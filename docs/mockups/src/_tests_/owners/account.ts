@@ -4,7 +4,9 @@ import type { Owner } from "../app-regions";
  * Sign in's password section, which the application draws from a module of
  * its own once it reads its configuration answer. The entry screen writes the
  * rest of the panel: the GitHub action and the email form, which stay at rest
- * on every page of the section.
+ * on every page of the section but its empty state, where the email form is
+ * empty too. That state answers to the section, as every state answers to its
+ * screen.
  */
 const passwordSection = {
   region: "panelled",

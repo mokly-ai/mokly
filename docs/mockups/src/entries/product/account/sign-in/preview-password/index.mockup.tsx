@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import {
+  SignInPasswordEmptyScreen,
   SignInPasswordFailureScreen,
   SignInPasswordRefusedScreen,
   SignInPasswordScreen,
@@ -9,6 +10,7 @@ import {
 /** The named screen component that each state draws. */
 const screens = {
   default: SignInPasswordScreen,
+  empty: SignInPasswordEmptyScreen,
   "password-refused": SignInPasswordRefusedScreen,
   failure: SignInPasswordFailureScreen,
 };
@@ -20,7 +22,7 @@ export default defineScreen({
   relatedDocs: [
     "docs/protocol/cloud/product-mockups-account.md",
     "docs/protocol/cloud/folio-chrome-account.md",
-    "docs/protocol/cloud/auth-sessions.md",
+    "docs/protocol/cloud/preview-sign-in.md",
   ],
   tags: ["product", "folio", "account", "preview-password"],
   propSchema: {
@@ -28,7 +30,7 @@ export default defineScreen({
     additionalProperties: false,
     required: ["state"],
     properties: {
-      state: { enum: ["default", "password-refused", "failure"] },
+      state: { enum: ["default", "empty", "password-refused", "failure"] },
     },
   } as const,
   props: { state: "default" },
@@ -37,6 +39,14 @@ export default defineScreen({
     return <Screen viewport={viewport} />;
   },
   variants: [
+    {
+      slug: "empty",
+      title: "Sign in · Preview password · Empty",
+      description:
+        "Sign in with the section before the reader types: the Email and Password fields are empty, so Continue with email and Continue as preview@mokly.ai wait disabled until their own field holds more than white space, while Continue with GitHub is ready. Static controls depict the documented action; no live writes occur.",
+      tags: ["product", "folio", "account", "empty"],
+      props: { state: "empty" },
+    },
     {
       slug: "password-refused",
       title: "Sign in · Preview password · Password refused",

@@ -51,7 +51,9 @@ GitHub write while it runs: the form with **Continue with GitHub** busy with
 
 `product/account/sign-in/preview-password` draws the
 [password section](./preview-sign-in.md#sign-in-section) under the email
-form, which stays at rest. The field asks for `current-password` and renders
+form, which stays at rest on every page but `empty`. The `empty` variant
+draws Sign in before the reader types: the Email and Password fields are
+empty, and both of their actions are disabled. The field asks for `current-password` and renders
 without automatic capitalization, correction or spellcheck. The
 `password-refused` variant marks the field with "This password isn’t
 valid.", keeps the action's label and leaves only the **Details** disclosure

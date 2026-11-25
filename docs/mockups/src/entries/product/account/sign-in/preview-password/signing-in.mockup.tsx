@@ -10,6 +10,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups-account.md",
     "docs/protocol/cloud/folio-chrome.md",
     "docs/protocol/cloud/folio-chrome-account.md",
+    "docs/protocol/cloud/preview-sign-in.md",
   ],
   tags: ["product", "folio", "account", "loading"],
   render: (_props, { viewport }) => (

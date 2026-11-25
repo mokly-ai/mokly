@@ -10,11 +10,12 @@ import {
 import { Action } from "../page-parts";
 
 /**
- * What became of the password section's one control: at rest, its password
- * refused on the field, its write running, or its write refused beside it.
+ * What became of the password section's one control: at rest, waiting for a
+ * password before the reader types, its password refused on the field, its
+ * write running, or its write refused beside it.
  */
 export type PasswordSituation =
-  "default" | "password-refused" | "signing-in" | "failure";
+  "default" | "empty" | "password-refused" | "signing-in" | "failure";
 
 /** The page that draws the section at rest; every other situation is beneath it. */
 const sectionPath = "product/account/sign-in/preview-password";
@@ -37,6 +38,7 @@ export function PasswordSection({
 }: {
   situation: PasswordSituation;
 }) {
+  const empty = situation === "empty";
   const signingIn = situation === "signing-in";
   const refusedPassword = situation === "password-refused";
   // Sending the same password again would be refused again, so the way back
@@ -54,6 +56,9 @@ export function PasswordSection({
       label={label}
       tone="secondary"
       block
+      // An empty password cannot match, so the control waits disabled until
+      // the reader types one, as Continue with email waits for an address.
+      disabled={empty}
       busy={signingIn ? "Signing you in" : undefined}
     />
   );
@@ -67,7 +72,7 @@ export function PasswordSection({
         label="Password"
         name="sign-in-password"
         type="password"
-        value={previewPassword.typed}
+        value={empty ? "" : previewPassword.typed}
         disabled={signingIn}
         // A registered wrapper refuses an `undefined` prop, so every other
         // situation leaves the error out.

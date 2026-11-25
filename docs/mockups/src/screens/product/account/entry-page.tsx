@@ -12,6 +12,8 @@ import type { PasswordSituation } from "./preview-password";
 /**
  * What one artboard draws: a situation of the GitHub and email form, or, on
  * sign in only, a situation of its password section with that form at rest.
+ * The section's empty page draws the form empty too, because the reader has
+ * typed nothing yet.
  */
 type EntryDrawing =
   | { mode: EntryMode; situation: EntrySituation; password?: undefined }
@@ -24,6 +26,7 @@ export function EntryPage({
   password,
 }: EntryDrawing) {
   const copy = entryCopy[mode];
+  const form = password === "empty" ? "empty" : situation;
   return (
     <AccountShell
       id={
@@ -40,7 +43,7 @@ export function EntryPage({
         </p>
       }
     >
-      <AccountEntry mode={mode} situation={situation} password={password} />
+      <AccountEntry mode={mode} situation={form} password={password} />
     </AccountShell>
   );
 }

@@ -5,6 +5,7 @@
  * workspace, create a project with the CLI, install the App and connect an
  * installation. While a write runs, the pressed control carries the wait, as
  * Write in progress in `folio-chrome.md` defines. The form inserts nothing.
+ * Before the reader types, a control that sends typed text waits disabled.
  */
 
 import assert from "node:assert/strict";
@@ -19,7 +20,13 @@ import {
   elements,
   label,
 } from "./design-site-test-helpers";
-import { actions, busyActions, drawnPage, pendingLabels } from "./drawn-page";
+import {
+  actions,
+  busyActions,
+  controlStates,
+  drawnPage,
+  pendingLabels,
+} from "./drawn-page";
 import type { DrawnPage } from "./drawn-page";
 
 const viewports: readonly Viewport[] = ["desktop", "mobile"];
@@ -174,4 +181,38 @@ test("an account write keeps its form and holds only the pressed control busy", 
         where,
       );
     }
+});
+
+test("before the reader types, sign in's email and password actions wait disabled", () => {
+  for (const viewport of viewports) {
+    const where = "product/account/sign-in/preview-password/empty " + viewport;
+    const [form] = byClass(
+      drawnPage("product/account/sign-in/preview-password/empty", viewport)
+        .main,
+      "fo-account-form",
+    );
+    assert.ok(form, where);
+    assert.deepEqual(
+      elements(form, (element) => element.tagName === "input").map((input) => [
+        attribute(input, "type"),
+        attribute(input, "value"),
+      ]),
+      [
+        ["email", ""],
+        ["password", ""],
+      ],
+      where,
+    );
+    // Neither field holds text to send, so each control that sends it waits
+    // disabled, while Continue with GitHub needs nothing typed.
+    assert.deepEqual(
+      controlStates(form),
+      [
+        ["Continue with GitHub", false],
+        ["Continue with email", true],
+        ["Continue as preview@mokly.ai", true],
+      ],
+      where,
+    );
+  }
 });
