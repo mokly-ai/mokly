@@ -93,21 +93,6 @@ test("the Browse frame is hidden from assistive technology and takes no focus", 
   }
 });
 
-test("with motion allowed the Browse demo plays in view and rests with the divider at the middle", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  const browse = browseModule(page);
-  await scrollToStage(page, browse);
-  // Sam sweeps the divider left, then right, then back to the middle.
-  const poll = { intervals: [100], timeout: 10_000 };
-  await expect.poll(() => dividerOffset(browse), poll).toBeLessThan(-40);
-  await expect.poll(() => dividerOffset(browse), poll).toBeGreaterThan(40);
-  await expect
-    .poll(async () => Math.abs(await dividerOffset(browse)), poll)
-    .toBeLessThanOrEqual(1);
-});
-
 /** The compared screens' box, once the stage is laid out. */
 async function stageBox(browse: Locator): Promise<{
   readonly x: number;

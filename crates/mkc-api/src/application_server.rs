@@ -63,10 +63,12 @@ impl ApiApplication {
         });
         let worker = GitHubWorkerLoop {
             worker: self.github_worker.clone(),
+            interval: self.intervals.github_delivery,
         };
         let worker: &dyn WorkerLoop = &worker;
         let billing_worker = BillingWorkerLoop {
             worker: self.billing_worker.clone(),
+            interval: self.intervals.billing_delivery,
         };
         let billing_worker: &dyn WorkerLoop = &billing_worker;
         let seat_worker = SeatWorkerLoop {

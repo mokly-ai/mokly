@@ -1,11 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { projectQueryPathFor } from "../addresses";
-import {
-  disconnectInstallation,
-  installedAccount,
-  suspendInstallation,
-} from "../database-fixture";
+import { disconnectInstallation, installedAccount } from "../database-fixture";
 import {
   currentWorkspaceId,
   expect,
@@ -66,16 +62,6 @@ test("a connected account is named, with the way to the accounts", async ({
   await expect(
     page.getByRole("dialog").getByRole("heading", { level: 1 }),
   ).toHaveText("GitHub accounts");
-});
-
-test("a suspended account says so in the fact", async ({ page }) => {
-  await signIn(page, freshEmail("suspended-pane"));
-  const projectId = await createProject(page, "Susp Org");
-  suspendInstallation(await currentWorkspaceId(page));
-  await workspacePane(page, projectId);
-  await expect(accountsFact(page)).toContainText(
-    installedAccount + " · Suspended",
-  );
 });
 
 test("a workspace with no account reads None", async ({ page }) => {

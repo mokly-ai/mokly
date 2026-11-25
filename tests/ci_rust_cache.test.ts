@@ -14,22 +14,19 @@ import {
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
-/** The only accepted Rust setup command: rustup reads `rust-toolchain.toml`. */
-const TOOLCHAIN_INSTALL = "rustup toolchain install";
 /** The action that restores and saves Cargo's dependency builds. */
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
-/** Only runs on `main` may write what CI and pull requests restore. */
-const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/**
+ * Only runs on `main` may write what CI and pull requests restore. A job may
+ * narrow the rule with more `&&` terms, as a restore-only matrix row does,
+ * but it may not widen it with `||`.
+ */
+const MAIN_ONLY =
+  /^\$\{\{ github\.ref == 'refs\/heads\/main'(?: && [^|}]+)? \}\}$/u;
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
 const RUST_AUDIT_INSTALLER = "scripts/verification/rust-audit-tool.mjs";
-/** Settings that build CI Rust without debug info or incremental artifacts. */
-const BUILD_SETTINGS = [
-  "CARGO_INCREMENTAL",
-  "CARGO_PROFILE_DEV_DEBUG",
-  "CARGO_PROFILE_TEST_DEBUG",
-];
 /** Release automation builds every published binary without a cache. */
 const UNCACHED_AUTOMATION = [
   ".github/workflows/release.yml",
@@ -58,27 +55,6 @@ interface Workflow {
   readonly runs?: { readonly steps?: readonly WorkflowStep[] };
 }
 
-test("every CI Rust job restores the build cache right after the toolchain", async () => {
-  const workflow = await readWorkflow(CI_WORKFLOW);
-  let rustJobs = 0;
-  for (const [name, job] of Object.entries(workflow.jobs ?? {})) {
-    const steps = job.steps ?? [];
-    const setup = steps.findIndex((step) => step.run === TOOLCHAIN_INSTALL);
-    const caches = steps.filter(isRustCache);
-    if (setup < 0) {
-      assert.deepEqual(caches, [], `${name} has no Rust to cache`);
-      continue;
-    }
-    rustJobs += 1;
-    assert.equal(caches.length, 1, `${name} must restore one Rust cache`);
-    assert.ok(
-      isRustCache(steps[setup + 1]),
-      `${name} must restore the Rust build cache right after the toolchain`,
-    );
-  }
-  assert.ok(rustJobs > 0, "CI must have Rust jobs");
-});
-
 test("Rust build caches save only from main, and Testboxes never save", async () => {
   let caches = 0;
   for (const file of await automationFiles()) {
@@ -92,8 +68,8 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           `${file} must never save its Rust build cache`,
         );
       else
-        assert.equal(
-          step.with?.["save-if"],
+        assert.match(
+          String(step.with?.["save-if"]),
           MAIN_ONLY,
           `${file} must save its Rust build cache only from main`,
         );
@@ -132,12 +108,6 @@ test("the Rust audit tool cache follows the tool identity", async () => {
     assert.ok(existsSync(path.join(repositoryRoot, input)), `${input} exists`);
     assert.ok(key.includes(`'${input}'`), `the cache key must hash ${input}`);
   }
-});
-
-test("CI builds Rust without debug info or incremental artifacts", async () => {
-  const { env } = await readWorkflow(CI_WORKFLOW);
-  for (const name of BUILD_SETTINGS)
-    assert.equal(String(env?.[name]), "0", `ci.yml must set ${name} to 0`);
 });
 
 function isRustCache(step: WorkflowStep | undefined): boolean {

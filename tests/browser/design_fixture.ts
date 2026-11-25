@@ -60,10 +60,17 @@ export async function assertDesignResource(
   }
 }
 
+/** The Static delivery job serves an already-built catalogue, not Serve. */
+export function builtCatalogueDelivery(): boolean {
+  return Boolean(
+    process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ||
+    process.env["MOKLY_PLAYWRIGHT_FILE_DIR"],
+  );
+}
+
 /** Static output publishes an inspector; Serve design documents have no script. */
 export function unexpectedDesignScripts(): string {
-  return process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ||
-    process.env["MOKLY_PLAYWRIGHT_FILE_DIR"]
+  return builtCatalogueDelivery()
     ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
     : "script";
 }

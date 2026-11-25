@@ -44,7 +44,7 @@ therefore adds no cache to CI. Release preparation stays uncached.
 
 The [Rust build cache](#rust-build-cache) section gives the rules for Rust.
 
-The live lockfile-only workspace audit runs first in the CI repository job and
+The live lockfile-only workspace audit runs first in the CI repository checks shard and
 does not depend on cache state. Complete local and release commands keep
 audit-first ordering. The
 [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
@@ -70,15 +70,23 @@ balance follow the separate [suite evidence contract](./ci-suite-evidence.md).
 Every CI job that runs cargo restores a Rust build cache after it installs the
 toolchain and before cargo runs. The cache holds the Cargo registry and the
 builds of crates.io dependencies. It holds no build of a workspace crate. The
-Repository job's cache also holds the installed Rust audit tool. Each key
+cache of the Repository checks shard also holds the installed Rust audit tool. Each key
 covers the runner platform, the toolchain, the Cargo environment, the
-lockfile, and the workspace manifests. The Repository job's key also covers
+lockfile, and the workspace manifests. The Repository keys also cover
 the audit tool lockfile and installer. Jobs that build the same artifacts
 share one cache. Every Linux CI job that builds only `xtask` and the native
 binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
-job, and each native host keep their own cache. The four app shards share one
-cache. The two Stripe catalogue jobs of the deploy workflow share one cache.
+checks shard, the Repository test shards, and the test shards of each native
+host keep their own cache. The Workspace checks (contracts) partition restores
+the cache of the cloud Rust partition and never saves it, and the Workspace
+checks (infrastructure) partition does the same with the Linux `xtask` cache.
+Only the partition that owns a cache saves it. A separate saved cache for these
+two partitions was rejected, because the total already passes the 10 GB limit.
+The app shards share one cache. The native
+lint shard of each host caches the Cargo registry alone. A Clippy build entry
+for each host was rejected, because it would bring the total close to the
+10 GB limit, and the lint shard is not the slowest shard. The two Stripe catalogue jobs of the deploy workflow share one cache.
 A separate cache for the mockup and site partitions was rejected: they held
 the same build as the Mokly jobs, and the total passed the 10 GB limit.
 

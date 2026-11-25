@@ -81,20 +81,48 @@ checkout.
 Every xtask subprocess starts at the workspace root, even when xtask starts
 elsewhere.
 
+## Suite Shards
+
+The repository and native suites accept `--shard INDEX/TOTAL`. No shard, or
+one shard of one, runs the complete suite. With two or more shards, shard 1
+runs the checks and each later shard runs Rust tests:
+
+- Repository shard 1 runs every item of the
+  [repository list](#repository-boundary) except the cargo-nextest
+  preflight, the builds of item 10, and the Rust tests of item 11.
+- Native shard 1 checks Rust formatting and runs Clippy.
+- Each later shard runs the cargo-nextest preflight and the builds of item 10.
+  Then it runs nextest partition `slice:{INDEX-1}/{TOTAL-1}` of the Mokly
+  Rust tests. The first test shard, shard 2, also runs the doc tests. A
+  repository test shard first installs the root npm lockfile.
+
+The shards of a suite together run every check and every test of the
+complete suite exactly once. Only the npm install, the preflight, and the
+builds repeat on each test shard. A native test shard keeps the
+`--no-fail-fast` behaviour of the complete native suite.
+
+Decision: the checks run on their own shard, so no test shard waits for them.
+Rejected: one test build per platform in a `cargo nextest archive` that the
+test shards download. The test shards would start only after that build job,
+so the build, the upload, and the download all stay on the critical path.
+
 ## Rust Test Runner
 
 The Repository, Native, and cloud Rust suites run their Rust tests with
 [cargo-nextest](https://nexte.st). Nextest runs each test in its own process
 and runs the test binaries of all selected crates in parallel. Then
 `cargo test --doc` runs the doc tests of the same crates, because nextest
-does not run doc tests. Native passes `--no-fail-fast` to both commands.
+does not run doc tests. A test shard runs one nextest partition under the
+[shard rule](#suite-shards). Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 
-The repository, native, Workspace checks, and Testbox jobs install the
+The repository, native, and Testbox jobs, and the Workspace checks
+partitions that run cloud Rust or the toolchain pins, install the
 pinned nextest version as a prebuilt binary with `taiki-e/install-action`,
 right after the Rust build cache restore.
-`.config/nextest.toml` requires at least that version. Each of these suites
-runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
+`.config/nextest.toml` requires at least that version. The Repository, Native,
+and cloud Rust suites run `xtask/scripts/require-nextest.mjs` before their Rust
+builds. When
 `cargo nextest` is missing or older than the requirement, the preflight fails
 and prints `cargo install cargo-nextest --locked --version {version}` and the
 prebuilt binary page. In Native, the doc tests also run after failed nextest

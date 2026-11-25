@@ -5,6 +5,7 @@ mod cloud_shards;
 mod commands;
 pub(crate) mod request;
 pub(crate) mod runner;
+mod rust_commands;
 pub(crate) mod tasks;
 
 #[cfg(test)]
@@ -20,6 +21,10 @@ mod repository_tests;
 #[cfg(test)]
 #[path = "_tests_/native_tests.rs"]
 mod native_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rust_shard_tests.rs"]
+mod rust_shard_tests;
 
 #[cfg(test)]
 #[path = "_tests_/cloud_tests.rs"]

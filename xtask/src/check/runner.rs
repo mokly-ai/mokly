@@ -9,6 +9,7 @@ use crate::rust_file_length::RustFileLengthAuditor;
 
 use super::commands::{Step, browser_test_command, commands_for, steps_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::rust_commands::RustPart;
 use super::tasks::{Task, task_commands};
 
 /// Runs complete or selected repository verification.
@@ -45,9 +46,9 @@ impl DefaultCheckRunner {
 
     /// Runs the suite's steps in order. A failed command stops the suite
     /// unless it keeps going; the suite then fails with the first failure
-    /// after its later steps ran. The repository suite then runs the
-    /// Rust file-length audit in this process, not as a subprocess; a failed
-    /// audit fails the suite like a failed command.
+    /// after its later steps ran. A repository selection that runs the checks
+    /// then runs the Rust file-length audit in this process, not as a
+    /// subprocess; a failed audit fails the suite like a failed command.
     fn run_suite(
         &self,
         suite: VerificationSuite,
@@ -91,7 +92,7 @@ impl DefaultCheckRunner {
         if let Some(error) = first_failure {
             return Err(error);
         }
-        if suite == VerificationSuite::Repository {
+        if suite == VerificationSuite::Repository && RustPart::of(shard).runs_checks() {
             self.rust_file_length_auditor.run(&self.workspace)?;
         }
         Ok(())

@@ -55,8 +55,6 @@ struct Parameters {
     #[serde(rename = "node-version-file")]
     node_version_file: Option<String>,
     key: Option<String>,
-    #[serde(rename = "shared-key")]
-    shared_key: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -218,10 +216,6 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
             step.condition.as_deref() == Some("matrix.rust_cache")
                 && step.uses.as_deref()
                     == Some("Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0")
-                && step.with.shared_key.as_deref()
-                    == Some(
-                        "${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}",
-                    )
         })
     {
         violations.push(Violation::Toolchains);

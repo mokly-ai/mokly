@@ -31,6 +31,9 @@ import { settingsDocumentViolations } from "./settings-document-policy";
 
 const screenshots = resolve(catalogueRoot, "../../.context/mockups-smoke");
 
+/** A developer asks for the full-page captures; a CI run writes none. */
+const capturesRequested = process.env.MKC_MOCKUP_CAPTURES === "1";
+
 /** One generated document: its output-relative file and the view it draws. */
 interface GeneratedView {
   file: string;
@@ -233,13 +236,15 @@ for (const { file, path, viewport, scheme } of views) {
         frames.and(page.locator('[data-canvas-frame="mobile"]')),
       ).toHaveCount(shown);
     expect(errors).toEqual([]);
-    const screenshot = resolve(screenshots, file + ".png");
-    mkdirSync(dirname(screenshot), { recursive: true });
-    await page.screenshot({
-      path: screenshot,
-      fullPage: true,
-      animations: "disabled",
-    });
+    if (capturesRequested) {
+      const screenshot = resolve(screenshots, file + ".png");
+      mkdirSync(dirname(screenshot), { recursive: true });
+      await page.screenshot({
+        path: screenshot,
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
     // Check focus outlines after the capture, so their focus rings stay out of it.
     expect(await focusPolicyViolations(page, scheme)).toEqual([]);
   });
