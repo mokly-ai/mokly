@@ -179,11 +179,11 @@
 
 /* Narrower compact frames. Where the row cannot hold the version, the date,
    up to seven chips, the link and Show notes, below 1156px and from 1200px
-   to 1395px beside Version history, the link takes a second row. Below
+   to 1439px beside Version history, the link takes a second row. Below
    934px the chips take a row of their own too. */
 
 @media (min-width: 768px) and (max-width: 1155px),
-  (min-width: 1200px) and (max-width: 1395px) {
+  (min-width: 1200px) and (max-width: 1439px) {
   .site-release--compact {
     grid-template-columns: 84px 140px minmax(0, 1fr);
   }

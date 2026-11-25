@@ -2,10 +2,13 @@
  * The spread under the hero: the whole acme/storefront app on the canvas,
  * zoomed out. On the desktop composition a Specs box holds eight artboards
  * of phones and desktops in both schemes, and a Components box beside it
- * holds the component sets; both bleed off the right edge. Claude edits
- * the pricing page, Codex has the Button set selected and Sam is on
- * checkout. On the mobile composition the spread is three phones with the
- * middle one centred. The whole spread is a depiction.
+ * holds the component sets. Claude edits the pricing page, Codex has the
+ * Button set selected and Sam is on checkout. Where the window cannot hold
+ * all of it, the Specs box first drops its right column, the roomy parts,
+ * and then the Components box folds under it; the 1280px desktop frame
+ * draws the first step. On the mobile composition the spread is three
+ * phones with the middle one centred, and the Components box under them
+ * with its sets at 70 percent. The whole spread is a depiction.
  */
 
 import type { ReactNode } from "react";
@@ -30,6 +33,8 @@ interface SpreadBoard {
   mobile?: CanvasSpot;
   name: string;
   overlay?: ReactNode;
+  /** Drawn only where the window holds the whole spread. */
+  roomy?: boolean;
   screen: ReactNode;
   /** The spot on the desktop composition, in the Specs box. */
   wide: CanvasSpot;
@@ -70,6 +75,7 @@ const BOARDS: readonly SpreadBoard[] = [
         tag="Claude is editing"
       />
     ),
+    roomy: true,
     screen: <AcmePricingDesktop />,
     wide: { x: 534, y: 78 },
   },
@@ -83,6 +89,7 @@ const BOARDS: readonly SpreadBoard[] = [
   {
     device: "phone",
     name: "pricing",
+    roomy: true,
     screen: <AcmePricingPhone />,
     wide: { x: 519, y: 462 },
   },
@@ -90,6 +97,7 @@ const BOARDS: readonly SpreadBoard[] = [
     dark: true,
     device: "phone",
     name: "pricing",
+    roomy: true,
     screen: <AcmePricingPhone dark />,
     wide: { x: 687, y: 462 },
   },
@@ -97,6 +105,7 @@ const BOARDS: readonly SpreadBoard[] = [
     dark: true,
     device: "phone",
     name: "checkout/payment",
+    roomy: true,
     screen: <AcmePaymentPhone dark />,
     wide: { x: 855, y: 462 },
   },
@@ -119,6 +128,7 @@ export function Spread({ viewport }: { viewport: "mobile" | "desktop" }) {
           {boards.map((board, index) => (
             <Artboard
               at={wide ? board.wide : board.mobile}
+              className={board.roomy ? "site-home-spread-roomy" : undefined}
               dark={board.dark}
               device={board.device}
               key={index}
@@ -129,29 +139,28 @@ export function Spread({ viewport }: { viewport: "mobile" | "desktop" }) {
             </Artboard>
           ))}
         </SiteSectionBox>
-        {wide ? (
-          <SiteSectionBox
-            className="site-home-spread-components"
-            meta={
-              <span className="site-home-works">
-                works with
-                <StorybookMark />
-                <b>Storybook</b>
-              </span>
-            }
-            tag="Components"
-          >
-            <SpreadSets />
-          </SiteSectionBox>
-        ) : null}
+        <SiteSectionBox
+          className="site-home-spread-components"
+          meta={
+            <span className="site-home-works">
+              works with
+              <StorybookMark />
+              <b>Storybook</b>
+            </span>
+          }
+          tag="Components"
+        >
+          <SpreadSets />
+        </SiteSectionBox>
         {/* status: "ahead" (Claude) */}
-        <SiteCursor className="site-home-spread-claude" person="claude" />
+        <SiteCursor
+          className="site-home-spread-claude site-home-spread-roomy"
+          person="claude"
+        />
+        {/* status: "ahead" (Codex) */}
+        <SiteCursor className="site-home-spread-codex" person="codex" />
         {wide ? (
-          <>
-            {/* status: "ahead" (Codex) */}
-            <SiteCursor className="site-home-spread-codex" person="codex" />
-            <SiteCursor className="site-home-spread-sam" person="sam" />
-          </>
+          <SiteCursor className="site-home-spread-sam" person="sam" />
         ) : null}
       </div>
     </div>

@@ -22,8 +22,7 @@ export const app = {
 /**
  * The public GitHub destinations: the open-source repository linked from
  * every site header, and the releases of the desktop app, which the home's
- * Download for Mac opens because every desktop release is still a
- * pre-release.
+ * Download for Mac opens.
  */
 export const openSource = {
   github: "https://github.com/mokly-ai/mokly",

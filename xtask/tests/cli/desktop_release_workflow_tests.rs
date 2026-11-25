@@ -27,6 +27,13 @@ fn command_index(job: &Value, command: &str) -> usize {
         .unwrap()
 }
 
+fn step_index(job: &Value, name: &str) -> usize {
+    steps(job)
+        .iter()
+        .position(|step| step["name"] == name)
+        .unwrap()
+}
+
 fn action_pins_valid(source: &Value) -> bool {
     source["jobs"].as_object().unwrap().values().all(|job| {
         steps(job).iter().all(|step| {
@@ -71,6 +78,7 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
     assert_eq!(source["permissions"], json!({"contents": "read"}));
     let package = &source["jobs"]["package"];
     let release = &source["jobs"]["release"];
+    let promote = &source["jobs"]["promote"];
     assert_eq!(
         package["if"],
         "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')))"
@@ -82,8 +90,19 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
     assert_eq!(package["env"]["MKC_BUILD_SHA"], "${{ github.sha }}");
     assert_eq!(release["env"]["MKC_BUILD_SHA"], "${{ inputs.ref }}");
     assert_eq!(release["strategy"]["max-parallel"], 1);
-    for job in [package, release] {
+    for job in [package, release, promote] {
         assert_eq!(job["permissions"], json!({"contents": "read"}));
+        for step in steps(job) {
+            if step["uses"]
+                .as_str()
+                .is_some_and(|action| action.contains("checkout@"))
+            {
+                assert_eq!(step["with"]["persist-credentials"], false);
+            }
+            assert!(!step["run"].as_str().unwrap_or_default().contains("${{"));
+        }
+    }
+    for job in [package, release] {
         assert_eq!(job["runs-on"], "${{ matrix.runner }}");
         assert_eq!(job["strategy"]["fail-fast"], false);
         assert_eq!(
@@ -104,15 +123,6 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
             .unwrap();
         assert_eq!(node["with"]["node-version-file"], ".nvmrc");
         assert_eq!(node["with"]["cache-dependency-path"], "package-lock.json");
-        for step in steps(job) {
-            if step["uses"]
-                .as_str()
-                .is_some_and(|action| action.contains("checkout@"))
-            {
-                assert_eq!(step["with"]["persist-credentials"], false);
-            }
-            assert!(!step["run"].as_str().unwrap_or_default().contains("${{"));
-        }
         assert!(
             command_index(job, "npm install --global npm@11.21.0") < command_index(job, "npm ci")
         );
@@ -139,7 +149,7 @@ fn desktop_release_publisher_uses_the_updaters_public_version_tag() {
             "provider": "github",
             "owner": "mokly-ai",
             "repo": "mokly-desktop",
-            "releaseType": "prerelease",
+            "releaseType": "draft",
             "tagNamePrefix": "v"
         })
     );
@@ -181,34 +191,61 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
     let release = &source["jobs"]["release"];
     let tag = command_index(release, "production --tag \"$RELEASE_TAG\"");
     assert!(tag < command_index(release, "npm ci"));
-    let mac = steps(release)
-        .iter()
-        .find(|step| step["name"] == "Sign, notarize and publish macOS packages")
-        .unwrap();
-    assert_eq!(mac["if"], "runner.os == 'macOS'");
-    for secret in [
-        "CSC_LINK",
-        "CSC_KEY_PASSWORD",
-        "APPLE_API_KEY",
-        "APPLE_API_KEY_ID",
-        "APPLE_API_ISSUER",
+    let mac_build = step_index(release, "Sign and notarize macOS packages");
+    let linux_build = step_index(release, "Build Linux packages");
+    assert_eq!(
+        steps(release)[mac_build]["env"],
+        json!({
+            "CSC_LINK": "${{ secrets.CSC_LINK }}",
+            "CSC_KEY_PASSWORD": "${{ secrets.CSC_KEY_PASSWORD }}",
+            "APPLE_API_KEY": "${{ secrets.APPLE_API_KEY }}",
+            "APPLE_API_KEY_ID": "${{ secrets.APPLE_API_KEY_ID }}",
+            "APPLE_API_ISSUER": "${{ secrets.APPLE_API_ISSUER }}"
+        })
+    );
+    assert!(steps(release)[linux_build]["env"].is_null());
+    let record_upload = step_index(release, "Upload the build record");
+    let record_download = step_index(release, "Download earlier build records");
+    let manifest_upload = step_index(release, "Upload the verified release manifest");
+    for (build, publish_name, condition) in [
+        (mac_build, "Publish macOS packages", "runner.os == 'macOS'"),
+        (
+            linux_build,
+            "Publish Linux packages",
+            "runner.os == 'Linux'",
+        ),
     ] {
-        assert_eq!(mac["env"][secret], format!("${{{{ secrets.{secret} }}}}"));
-    }
-    let linux = steps(release)
-        .iter()
-        .find(|step| step["name"] == "Publish Linux packages")
-        .unwrap();
-    assert_eq!(linux["if"], "runner.os == 'Linux'");
-    assert_eq!(linux["env"].as_object().unwrap().len(), 1);
-    for step in [mac, linux] {
+        let publish = step_index(release, publish_name);
+        assert!(build < record_upload && record_upload < record_download);
+        assert!(record_download < publish && publish < manifest_upload);
+        assert_eq!(steps(release)[build]["if"], condition);
+        assert_eq!(steps(release)[publish]["if"], condition);
         assert_eq!(
-            step["env"]["GH_TOKEN"],
-            "${{ secrets.DESKTOP_RELEASES_TOKEN }}"
+            steps(release)[build]["run"],
+            "node packages/desktop/scripts/package.mjs release-build"
         );
         assert_eq!(
-            step["run"],
-            "node packages/desktop/scripts/package.mjs release"
+            steps(release)[publish]["env"],
+            json!({
+                "GH_TOKEN": "${{ secrets.DESKTOP_RELEASES_TOKEN }}",
+                "RECORDS": "${{ runner.temp }}/build-records"
+            })
+        );
+        assert_eq!(
+            steps(release)[publish]["run"],
+            "node packages/desktop/scripts/package.mjs release-publish \"$RECORDS\""
         );
     }
+    let promote = &source["jobs"]["promote"];
+    for job in [release, promote] {
+        assert_eq!(job["environment"], "desktop-release");
+    }
+    let promotion = command_index(promote, "scripts/release-promote.mjs");
+    let mut promote = promote.clone();
+    let token = promote["steps"][promotion]["env"]
+        .as_object_mut()
+        .unwrap()
+        .remove("GH_TOKEN");
+    assert_eq!(token, Some(json!("${{ secrets.DESKTOP_RELEASES_TOKEN }}")));
+    assert!(!promote.to_string().contains("secrets."));
 }

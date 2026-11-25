@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
 
 import { detail } from "./errors.js";
-import { resolveImport } from "./importer-resolution.js";
+import { importPath, resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { moduleContext } from "./postcss-context.js";
 import { postcssSource } from "./postcss-source.js";
@@ -46,7 +46,7 @@ export async function importPostcssModule(
             });
             if (resolved.errors.length) return { errors: resolved.errors };
             try {
-              const target = await paths.resolve(resolved.path);
+              const target = await importPath(paths, args.path, resolved);
               await paths.dependencyUsage.resolved(
                 args.path,
                 args.resolveDir,

@@ -28,12 +28,9 @@ input set. A changed file or path set differs. Clean normalization is for
 dependency identity. Checkout conversion supplies the base render and
 resource bytes before dependency selection.
 
-Repository-owned workspace and local directory packages always resolve from
-the side's own sources, in every tier. During bundling, a resolved real path
-inside a repository root and outside every `node_modules` directory maps to
-the same relative path under the side's source root. A missing mapped file
-fails closed with `bundle-failed`. This covers repository packages for npm,
-pnpm, Yarn and Bun without a package manifest inventory. Nested
+The [repository mapping](./mokly-sidecar-modules.md#source-and-dependency-files)
+applies to workspace and local directory packages in every dependency tier.
+It applies to repository packages for npm, pnpm, Yarn and Bun. Nested
 `node_modules` directories retain the selected third-party dependencies.
 
 Equal dependency identities reuse working third-party dependencies without

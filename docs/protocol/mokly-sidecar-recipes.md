@@ -11,10 +11,10 @@ captured entry text, resolved peers, physical input digests, logical metadata
 digests, reuse evidence, the toolchain identity, and the compilation identity.
 A compilation with complete reuse evidence also carries the optional
 `metadataIdentity`. It digests the compilation identity files that no render
-input key covers: the `jsconfig.json` candidates, the `extends` targets, the
-resolved peer manifests, and the `tsconfig.json` and `package.json` candidates
-above the source root. Each file counts by its path relative to the source
-root and by its content or its absence. The
+input key covers, including `jsconfig.json` candidates, `extends` targets,
+workspace layout inputs, resolved peer manifests, and `tsconfig.json` and
+`package.json` candidates above the source root. Each file counts by its
+path relative to the source root and by its content or its absence. The
 [render store](./mokly-render-store.md#identity) uses `metadataIdentity` with
 the toolchain identity, and only when the reuse evidence is also stable and the
 toolchain identity is known. Without them, the render store neither reads nor
@@ -35,11 +35,10 @@ the default, or `serveEdit`. The value is not a bundle setting. The sidecar
 removes it before it compares settings, computes the compilation identity,
 restores a recipe, or checks the recipe size. A `full` request records the
 reuse evidence of the next section. A `serveEdit` request records no capture
-witnesses, and no reuse evidence except the
-[private folder files](./mokly-sidecar-folder-reuse.md#private-folder-files)
-of a marked compilation. Every request still records the consumed source
-digests, the module graph, the metadata digests, the directory lists, and the
-preview selection.
+witnesses. A marked compilation keeps the
+[private lookup files](./mokly-sidecar-folder-reuse.md#private-folder-files).
+Every request still records consumed source digests, the module graph,
+metadata digests, directory lists, and the preview selection.
 
 Serve switches its head to `serveEdit` after it publishes its first state,
 before it reports readiness. Each head preparation that starts after the
@@ -48,7 +47,7 @@ preparations, the base side of Serve, `build`, and `publish` send `full`.
 
 A `serveEdit` compilation with a known toolchain identity carries the marker
 `uncaptured: "serveEdit"` in its reuse evidence, with `complete` and `durable`
-false and no inputs except its private folder files, unless a rule below or a
+false and only its private lookup files, unless a rule below or a
 [package folder rule](./mokly-sidecar-folder-reuse.md) withholds it. Only this
 marker marks a deliberate omission. Evidence that is incomplete for any other
 reason carries no marker, also evidence that the sidecar drops to fit the
@@ -66,8 +65,8 @@ later request compiles again instead of reusing a stale `paths` selection. A
 capture of the mapped targets in the `serveEdit` mode was rejected, because it
 adds capture reads to each such edit compile.
 
-Decision: a Serve edit compile captures nothing and stores nothing. This
-removes the capture cost from every edit without new cancellation or
+Decision: a Serve edit compile keeps its live reuse checks and stores nothing.
+This avoids a full capture on each edit without new cancellation or
 scheduling rules, and restarts keep the base hit and the hit of an unchanged
 head. A capture at each graceful stop was rejected, because it delays every
 graceful stop and gives nothing on a forced stop. Capture on every edit was
@@ -130,7 +129,7 @@ own comparison.
 A marked compilation is reused only by a `serveEdit` request. Its reuse
 checks are the live checks alone: equal settings, equal resolved roots, an
 equal toolchain identity, the unchanged inputs and directory membership of
-the first paragraph of this section, and its unchanged private folder files.
+the first paragraph of this section, and its unchanged private lookup files.
 Its reuse evidence needs `complete` and `durable` false and no recorded
 entries except these files, and the compilation needs a known toolchain
 identity. A `full` request never reuses a marked compilation.

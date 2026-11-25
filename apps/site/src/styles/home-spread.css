@@ -1,19 +1,23 @@
 /* The home spread: the whole acme/storefront app on the canvas, zoomed out
-   to 36 percent. Its canvas starts at the heading's left edge, the Specs and
-   Components boxes bleed off the right edge, and the spread clips them so
-   the page never scrolls sideways. Each artboard and component set sits at
-   its own spot. A phone draws three phones at 42 percent, the middle one
-   centred under the copy, in the Specs box without its wash.
+   to 36 percent. Its canvas starts at the heading's left edge, with the
+   Components box beside the Specs box, and the spread clips them so the
+   page never scrolls sideways. A narrower window drops parts of the spread
+   and then folds it, as the end of this sheet says. Each artboard and
+   component set sits at its own spot. A phone draws three phones at 42
+   percent, the middle one centred under the copy, in the Specs box without
+   its wash, and the Components box under them.
 
    The class names and the rules match docs/mockups/styles/site/home-spread.css
    and the spread rules of home-responsive.css, mobile first, as
    home-hero.css says. The mockup passes each artboard's spot inline. The
    site sends one page to every width, so this sheet sets the spots of both
-   compositions, and site-home-spread-wide marks the parts that only the
-   desktop composition draws. */
+   compositions, site-home-spread-wide marks the parts that only the desktop
+   composition draws, and site-home-spread-roomy marks the parts that only a
+   window wide enough for the whole spread draws. The Components box's own
+   rules are in home-spread-sets.css. */
 
 .site-home-spread {
-  height: 460px;
+  height: 826px;
   margin-top: 56px;
   overflow-x: clip;
   position: relative;
@@ -44,46 +48,26 @@
   padding: 0;
 }
 
+/* On a phone the Components box sits under the three phones, as wide as
+   the Specs line, and its sets shrink to 70 percent. */
+
 .site-home-spread-canvas .site-home-spread-components {
-  height: 520px;
-  left: 1028px;
+  height: 364px;
+  left: -175px;
   position: absolute;
-  top: 0;
-  width: 500px;
+  top: 438px;
+  width: 350px;
 }
 
-/* The parts that only the desktop composition draws: five artboards, the
-   Components box and the cursors of Codex and Sam */
+.site-home-spread .site-home-sets {
+  transform: scale(0.7);
+}
+
+/* The parts that only the desktop composition draws: five artboards and
+   Sam's cursor */
 
 .site-home-spread-wide {
   display: none;
-}
-
-/* The quiet works with Storybook label beside the Components tag */
-
-.site-home-spread-components .site-section-box-meta {
-  font-family: var(--mk-font-sans);
-  overflow: visible;
-}
-
-.site-home-works {
-  align-items: center;
-  display: inline-flex;
-  font-weight: var(--mk-font-medium);
-  gap: 6px;
-}
-
-.site-home-works b {
-  color: var(--mk-color-text-secondary);
-  font-weight: 560;
-}
-
-.site-home-storybook-shape {
-  fill: var(--mk-color-people-pink-fill);
-}
-
-.site-home-storybook-letter {
-  fill: var(--mk-color-on-signal-fill);
 }
 
 .site-home-spread .site-home-board {
@@ -127,57 +111,6 @@
   inset: -4px;
 }
 
-/* The component sets at half size, on a light backing in both schemes */
-
-.site-home-set {
-  position: absolute;
-}
-
-.site-home-set-label {
-  align-items: center;
-  color: var(--mk-color-text-secondary);
-  display: flex;
-  font-family: var(--mk-font-mono);
-  font-size: 11px;
-  font-weight: var(--mk-font-medium);
-  gap: 5px;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-
-.site-home-set-box {
-  background: color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
-  outline: 1px dashed color-mix(in srgb, var(--mk-color-text) 22%, transparent);
-  outline-offset: 3px;
-  padding: 10px;
-}
-
-/* A dark backing is the text role. The mockups key it on the pinned scheme;
-   the site is dark through the scheme choice or, without a choice, through
-   the system scheme. */
-
-:root[data-color-scheme="dark"] .site-home-set-box {
-  background: var(--mk-color-text);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-color-scheme="light"]) .site-home-set-box {
-    background: var(--mk-color-text);
-  }
-}
-
-.site-home-set-inner {
-  zoom: 0.5;
-}
-
-.site-home-set .site-home-set-peer {
-  border-radius: 3px;
-  inset: 13px -7px -7px;
-}
-
 /* The people at work in the spread. The page loads this sheet before the
    shared cursor rules, so each selector takes the canvas's class too, to
    outweigh the cursor's own place. */
@@ -188,8 +121,8 @@
 }
 
 .site-home-spread-canvas .site-home-spread-codex {
-  left: 1116px;
-  top: 116px;
+  left: -150px;
+  top: 511px;
 }
 
 .site-home-spread-canvas .site-home-spread-sam {
@@ -199,7 +132,7 @@
 
 /* The desktop composition from the 768px breakpoint upward: the Specs box
    draws its wash again, with the section box's own values, and holds all
-   eight artboards. */
+   eight artboards, with the Components box at full size beside it. */
 
 @media (min-width: 768px) {
   .site-home-spread {
@@ -277,17 +210,74 @@
     top: 462px;
   }
 
+  .site-home-spread-canvas .site-home-spread-components {
+    height: 520px;
+    left: 1028px;
+    top: 0;
+    width: 500px;
+  }
+
+  .site-home-spread .site-home-sets {
+    transform: none;
+  }
+
   .site-home-spread-canvas .site-home-spread-claude {
     left: 692px;
     top: 270px;
   }
+
+  .site-home-spread-canvas .site-home-spread-codex {
+    left: 1116px;
+    top: 116px;
+  }
 }
 
-/* Below 1440px the canvas starts at the narrower gutter of the heading and
-   keeps bleeding off the right edge, clipped by the spread. */
+/* Below 1440px the canvas starts at the narrower gutter of the heading. */
 
 @media (min-width: 768px) and (max-width: 1439px) {
   .site-home-spread-canvas {
     left: clamp(20px, 5.4vw, 80px);
+  }
+}
+
+/* Where the window cannot hold the whole spread, the spread gives up room
+   in two steps. Below 1860px the Specs box drops its right column, the
+   pricing desktop with Claude and the three phones under it, and the
+   Components box moves in beside it. Below 1152px the Components box also
+   folds under the Specs box. */
+
+@media (min-width: 768px) and (max-width: 1859px) {
+  .site-home-spread-canvas .site-home-spread-roomy {
+    display: none;
+  }
+
+  .site-home-spread-canvas .site-home-spread-specs {
+    width: 536px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-components {
+    left: 538px;
+    top: 0;
+  }
+
+  .site-home-spread-canvas .site-home-spread-codex {
+    left: 626px;
+    top: 116px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1151px) {
+  .site-home-spread {
+    height: 1382px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-components {
+    left: -30px;
+    top: 838px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-codex {
+    left: 58px;
+    top: 954px;
   }
 }

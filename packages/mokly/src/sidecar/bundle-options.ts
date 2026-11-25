@@ -4,6 +4,7 @@ import type { build, Loader } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import { virtualEntry } from "./bundle-entry.js";
 import { configuredFiles } from "./configured-files.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeLogOverride } from "./native-resolution.js";
@@ -48,6 +49,8 @@ export function bundleOptions({
   handledImports,
 }: BundleBuild) {
   const settings = params.moduleResolution;
+  if (preview) paths.addConfigured(preview);
+  if (evidence) paths.workspaceLookups.recordInto(evidence.physical);
   const loaders = Object.fromEntries(
     Object.entries(settings.loaders).filter(
       ([extension]) => extension !== ".css" && extension !== ".module.css",
@@ -62,7 +65,7 @@ export function bundleOptions({
     stdin: {
       contents,
       resolveDir: params.sourceRoot,
-      sourcefile: path.resolve(params.sourceRoot, "mokly-entry"),
+      sourcefile: path.resolve(params.sourceRoot, virtualEntry),
     },
     bundle: true,
     write: false,
@@ -78,7 +81,7 @@ export function bundleOptions({
     logLevel: "silent",
     ...(resolution.mode === "native" ? { logOverride: nativeLogOverride } : {}),
     plugins: [
-      configuredFiles(params, paths, preview, resolution),
+      configuredFiles(paths, resolution),
       ...(evidence ? [evidence.plugin] : []),
       ...(editImports ? [editImports.plugin] : []),
       ...consumerPlugins(
