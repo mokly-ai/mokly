@@ -7,6 +7,7 @@ import type { RenderComponentParams } from "../generated/sidecar/RenderComponent
 import type { RenderParams } from "../generated/sidecar/RenderParams.js";
 import type { RenderResult } from "../generated/sidecar/RenderResult.js";
 import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
+import type { RenderStoryResult } from "../generated/sidecar/RenderStoryResult.js";
 
 import type { Generation } from "./bundle.js";
 import { componentOutput } from "./component-output.js";
@@ -14,7 +15,7 @@ import { SidecarError, detail, handleLocation } from "./errors.js";
 import { HtmlInput } from "./html_input.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
-import type { StoredStory } from "./story-reader.js";
+import { storyReason } from "./story-reason.js";
 import { renderStory } from "./story-render.js";
 import { collectStyles } from "./styles.js";
 
@@ -22,7 +23,7 @@ export async function render(
   generation: Generation,
   kind: "screen" | "component" | "story",
   params: RenderParams | RenderComponentParams | RenderStoryParams,
-): Promise<RenderResult> {
+): Promise<RenderStoryResult> {
   const name = "handle" in params ? params.handle : params.storyId;
   try {
     const React = generation.runtime.react;
@@ -36,8 +37,18 @@ export async function render(
         kind === "story" ||
         (kind === "component" && generation.stories.has(name))
       ) {
-        const stored = generation.stories.get(name) as StoredStory;
-        return renderStory(generation, stored, params, renderMarkup);
+        const stored = generation.stories.get(name);
+        try {
+          return await renderStory(generation, stored!, params, renderMarkup);
+        } catch (error) {
+          if (kind !== "story" || !stored || error instanceof SidecarError)
+            throw error;
+          return {
+            storyId: stored.id,
+            name: stored.name,
+            reason: storyReason(generation, error),
+          };
+        }
       }
 
       const props: Record<string, unknown> = structuredClone(params.props);

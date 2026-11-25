@@ -1,80 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
-import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
-import type { RenderStoryParams } from "../packages/mokly/src/generated/sidecar/RenderStoryParams.js";
-
+import { startSidecar } from "./helpers/sidecar.js";
 import {
-  bundleParams,
-  installBindings,
-  startSidecar,
-} from "./helpers/sidecar.js";
+  callStory,
+  prepare,
+  renderFirstStoryPage,
+  renderScreen,
+  renderStory,
+} from "./helpers/storybook_setup.js";
 
-async function prepare(
-  sidecar: ReturnType<typeof startSidecar>,
-  directory: string,
-  entryFiles: string[] = [],
-) {
-  const { generation } = await sidecar.call<BundleResult>(
-    "bundle",
-    bundleParams({
-      sourceRoot: new URL(`./fixtures/sidecar/${directory}/`, import.meta.url)
-        .pathname,
-      entryFiles,
-      renderer: null,
-      storiesFiles: ["entry.stories.tsx"],
-    }),
-  );
-  await sidecar.call("cssModules", { generation, classMaps: {} });
-  await installBindings(sidecar, generation);
-  return generation;
-}
-
-function renderStory(
+async function assertStoryFailure(
   sidecar: ReturnType<typeof startSidecar>,
   generation: string,
-  name = "Prepared",
-  props: RenderStoryParams["props"] = {},
-  viewport = "mobile",
-  colorScheme = "light",
+  exportName: string,
+  name: string,
+  reason: string,
 ) {
-  return sidecar.call<RenderResult>("renderStory", {
-    generation,
-    storyId: `entry.stories.tsx#${name}`,
-    props,
-    viewport,
-    colorScheme,
-  });
-}
-
-function renderFirstStoryPage(
-  sidecar: ReturnType<typeof startSidecar>,
-  generation: string,
-) {
-  return sidecar.call<RenderResult>("renderComponent", {
-    generation,
-    handle: "entry.stories.tsx#default",
-    entry: { path: "entry", title: "Setup" },
-    slots: {},
-    ignoreScope: "enabled",
-    props: {},
-    viewport: "mobile",
-    colorScheme: "light",
-  });
-}
-
-function renderScreen(
-  sidecar: ReturnType<typeof startSidecar>,
-  generation: string,
-) {
-  return sidecar.call<RenderResult>("renderScreen", {
-    generation,
-    handle: "screen.mockup.tsx#screen",
-    entry: { path: "screen", title: "Setup State" },
-    props: {},
-    viewport: "mobile",
-    colorScheme: "light",
+  const render = callStory(sidecar, generation, exportName);
+  await assert.doesNotReject(render);
+  assert.deepEqual(await render, {
+    storyId: `entry.stories.tsx#${exportName}`,
+    name,
+    reason,
   });
 }
 
@@ -167,10 +115,13 @@ test("a throwing beforeAll fails every story render with its first error and run
   await sidecar.call("hello");
   const generation = await prepare(sidecar, "story-setup-failure");
   for (const name of ["Prepared", "Next", "Prepared"]) {
-    await assert.rejects(renderStory(sidecar, generation, name), {
-      code: "render-failed",
-      message: /beforeAll failed on attempt 1/,
-    });
+    await assertStoryFailure(
+      sidecar,
+      generation,
+      name,
+      name,
+      "beforeAll failed on attempt 1",
+    );
   }
   const healthy = await prepare(sidecar, "story-setup-failure/healthy");
   assert.equal(
@@ -226,15 +177,12 @@ test("loader, beforeEach, and markup errors fail the render and release complete
   const generation = await prepare(sidecar, "story-setup-errors", [
     "screen.mockup.tsx",
   ]);
-  for (const [name, message] of [
-    ["LoaderFailure", "loader failed"],
-    ["BeforeEachFailure", "beforeEach failed"],
-    ["RenderFailure", "render failed"],
+  for (const [exportName, name, message] of [
+    ["LoaderFailure", "Loader Failure", "loader failed"],
+    ["BeforeEachFailure", "Before Each Failure", "beforeEach failed"],
+    ["RenderFailure", "Render Failure", "render failed"],
   ] as const) {
-    await assert.rejects(renderStory(sidecar, generation, name), {
-      code: "render-failed",
-      message: `entry.stories.tsx export ${name} (mobile, light): ${message}`,
-    });
+    await assertStoryFailure(sidecar, generation, exportName, name, message);
   }
   assert.equal(
     (await renderScreen(sidecar, generation)).html,
@@ -249,11 +197,13 @@ test("throwing beforeEach cleanups fail their own render and each cleanup runs o
     "screen.mockup.tsx",
   ]);
   const next = await prepare(sidecar, "story-setup-failure/healthy");
-  await assert.rejects(renderStory(sidecar, generation, "CleanupFailure"), {
-    code: "render-failed",
-    message:
-      "entry.stories.tsx export CleanupFailure (mobile, light): beforeEach cleanup failed",
-  });
+  await assertStoryFailure(
+    sidecar,
+    generation,
+    "CleanupFailure",
+    "Cleanup Failure",
+    "beforeEach cleanup failed",
+  );
   const trace =
     "setup:meta,setup:earlier,setup:later,render,cleanup:later,cleanup:earlier,cleanup:meta";
   assert.equal(
@@ -283,10 +233,13 @@ test("a throwing beforeAll cleanup fails one render and runs once before the nex
     (await renderStory(sidecar, first)).html,
     "<button>Ready</button>",
   );
-  await assert.rejects(renderStory(sidecar, second), {
-    code: "render-failed",
-    message: /beforeAll cleanup failed/,
-  });
+  await assertStoryFailure(
+    sidecar,
+    second,
+    "Prepared",
+    "Prepared",
+    "beforeAll cleanup failed",
+  );
   assert.equal(
     (await renderStory(sidecar, second)).html,
     "<button>Next setup</button>",

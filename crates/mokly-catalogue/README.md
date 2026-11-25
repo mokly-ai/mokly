@@ -277,7 +277,7 @@ The property test of the source maps over the vendored HTML corpus lives in
   [`src/error.rs`](./src/error.rs) define the `Code`, `Issue`, and `Warning`
   records and `CatalogueError`. `diagnostic::json_quoted` is the one JSON
   quoting helper for catalogue warning messages, with the escapes of the build
-  warnings contract.
+  warnings contract. `STORY_RENDER_FAILED` identifies a saved story error document.
 
 ### Related Docs
 

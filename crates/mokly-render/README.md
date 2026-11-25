@@ -436,7 +436,8 @@ view after the edit and counts real process starts and hello calls.
   `ServeEdit` mode. Without the reference, it calls
   `RenderKeys::build_with_workers`, which keeps no facts.
 - [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
-  adapter over the pool. Its `record_served` passes a store-served request to
+  adapter over the pool. It passes a story render failure to the composer as
+  a fragment result. Its `record_served` passes a store-served request to
   `SidecarPool::record_served_render`.
   [`src/render_call.rs`](./src/render_call.rs) builds the wire call once, for a
   render and for a record.

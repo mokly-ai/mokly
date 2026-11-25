@@ -90,7 +90,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   a generation switch, and remembers setup failures.
 - [`src/sidecar/render.ts`](./render.ts) holds `render`, which
   renders entries to static markup, and sends each story render to
-  `renderStory`.
+  `renderStory`. Its story result carries the export ID, display name, and
+  reason in logical source space when story work throws.
 - [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
   It first awaits `setupStories`, so that the generation's `beforeAll` setup is
   active before it composes a fresh portable story. Then it puts the requested

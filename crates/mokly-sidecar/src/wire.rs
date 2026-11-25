@@ -107,6 +107,8 @@ pub enum MethodResult {
     Definitions(Definitions),
     /// Fragment render.
     Render(results::Render),
+    /// Story fragment or failure in the story's own work.
+    StoryRender(results::StoryRender),
     /// Complete page render.
     Page(results::Page),
     /// Consumer stylesheet transformation.
@@ -154,9 +156,10 @@ impl Response {
                 &result
             )?)?)),
             Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
-            Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
+            Call::RenderScreen(_) | Call::RenderComponent(_) => {
                 Ok(MethodResult::Render(decode(&result)?))
             }
+            Call::RenderStory(_) => Ok(MethodResult::StoryRender(decode(&result)?)),
             Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
             Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
             Call::TransformViteCss(_) => Ok(MethodResult::ViteCss(decode(&result)?)),

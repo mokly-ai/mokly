@@ -184,12 +184,9 @@ impl Engine<'_> {
                 nested.source.path = template.source_path.clone();
                 Expansion::native(source_locations::template(template)?, Arc::new(nested))
             } else {
-                self.javascript_expansion(
-                    &component.path,
-                    RenderKind::Component,
-                    Arc::new(nested),
-                    None,
-                )?
+                let fragment =
+                    self.javascript_fragment(&component.path, RenderKind::Component, &nested)?;
+                self.javascript_expansion(&component.path, Arc::new(nested), fragment)?
             };
         expansion.after.push(After::Component {
             region: Region {

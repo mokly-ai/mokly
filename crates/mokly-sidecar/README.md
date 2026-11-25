@@ -602,7 +602,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   16 KiB of buffer capacity.
 - [`src/methods.rs`](./src/methods.rs), [`src/results.rs`](./src/results.rs),
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
-  payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
+  payloads, and the envelopes of the wire protocol. `StoryRender` carries
+  the rendered fragment or the story's export ID, display name, and failure reason.
+  `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only
