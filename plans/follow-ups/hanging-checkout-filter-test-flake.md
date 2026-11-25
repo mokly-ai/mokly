@@ -1,6 +1,6 @@
 # Hanging checkout filter test flakes on macOS
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/ci-speed-fix-rust-flaky-tests-3snr`, flake analysis.
 - **Location:** `crates/mokly-git/tests/checkout_tests.rs:145-166`, `crates/mokly-git/src/system.rs:159-198`, and `crates/mokly-git/src/checkout_output.rs:153-169`.
