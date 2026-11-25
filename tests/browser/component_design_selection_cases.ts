@@ -1,22 +1,15 @@
 import { expect } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentDesignSelection(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentDesignSelection() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   // A phone draws no catalogue, so the desktop artboard shows the membership.
   test("desktop: a removed variant keeps its own Changes row under its changed parent", async ({

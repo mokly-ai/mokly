@@ -4,22 +4,16 @@ import { expect } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { test } from "./browser_test.js";
+import { designFileUrl } from "./design_fixture.js";
 import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComparisonDesign(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComparisonDesign() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   const design = (entryPath: string, viewport: string): string =>
     designFileUrl(
       path.join(

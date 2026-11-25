@@ -14,7 +14,7 @@ fn layout_title_keeps_the_suppliers_own_changed_view() {
     let base = consumer("'black'");
     let head = consumer("'black'");
     for (consumer, color) in [(&base, "red"), (&head, "blue")] {
-        for (file, source) in supplier_fixture::sources("title", color) {
+        for (file, source) in supplier_fixture::sources(color) {
             fs::write(consumer.root().join("owned").join(file), source).unwrap();
         }
     }

@@ -1,5 +1,6 @@
 //! Later preparations reuse every unchanged stylesheet, also when each result carries the
-//! read evidence of many PostCSS modules.
+//! read evidence of PostCSS modules. The unit tests in `src/_tests_/stylesheet_reuse_tests.rs`
+//! check that the shared evidence of many modules keeps every record in one bounded store.
 
 use std::fs;
 
@@ -7,8 +8,8 @@ use mokly_sidecar::methods::Call;
 
 use super::support::Consumer;
 
-const ROOTS: usize = 64;
-const MODULES: usize = 1_000;
+const ROOTS: usize = 3;
+const MODULES: usize = 2;
 
 /// The source paths of the PostCSS requests so far.
 pub(super) fn requests(consumer: &Consumer) -> Vec<String> {

@@ -1,4 +1,4 @@
-//! Component and screen parents for decision 110, shared by CLI and render checks.
+//! Component and screen parents for decision 110, for the render checks.
 
 #[derive(Clone, Copy, Debug)]
 pub enum Edit {
