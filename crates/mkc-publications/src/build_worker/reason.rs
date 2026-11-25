@@ -1,63 +1,70 @@
-//! Safe, log-ready reasons for attempts that settle as infrastructure failures.
+//! Safe reasons and the warning line for attempts that end as infrastructure.
 //!
-//! A reason holds only fixed error text, typed field names, exit codes and
-//! stored outcome names. It never holds a credential, a request value or
-//! provider response text.
+//! A reason holds only fixed error text, typed field names, exit codes, step
+//! names and stored outcome names. It never holds a credential, a request
+//! value or provider response text.
 
 use internal_error::InternalError;
-use mkc_build_interface::cli_code::MoklyCliCode;
-use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
+use mkc_domain::ids::BuildId;
 use mkc_github_interface::error::Error as ProviderError;
-use mkc_store_interface::build_state::UploadOutcome;
+use mkc_store_interface::build_state::{BuildStep, UploadOutcome};
 
 use crate::error::Error;
 
-/// Reason for a runner outcome that `finish` maps to an infrastructure failure.
-///
-/// Returns `None` for every outcome that `finish` maps to another result.
-pub(super) fn infrastructure_reason(
-    outcome: &BuildOutcome,
-    upload: Option<UploadOutcome>,
-) -> Option<String> {
-    match outcome {
-        BuildOutcome::Completed => Some(format!(
-            "runner completed without a publication; upload grant outcome: {}",
-            upload.map_or("none", UploadOutcome::as_str)
-        )),
-        BuildOutcome::Infrastructure(error) => {
-            Some(format!("runner infrastructure failure: {}", chain(error)))
-        }
-        BuildOutcome::StepFailed {
-            step: BuildStep::Checkout,
-            exit_code,
-            ..
-        } => Some(format!("checkout step failed {}", exit(*exit_code))),
-        BuildOutcome::StepFailed {
-            step: BuildStep::Publish,
-            exit_code,
-            cli_error,
-        } => match (upload, cli_error) {
-            (Some(grant @ (UploadOutcome::Unavailable | UploadOutcome::Accepted)), _) => {
-                Some(format!(
-                    "publish step failed {}; upload grant outcome: {}",
-                    exit(*exit_code),
-                    grant.as_str()
-                ))
-            }
-            (None, Some(MoklyCliCode::UploadFailed)) => Some(format!(
-                "publish step failed {}; Mokly CLI code: upload-failed",
-                exit(*exit_code)
-            )),
-            _ => None,
-        },
-        BuildOutcome::StepFailed {
-            step: BuildStep::Install,
-            ..
-        }
-        | BuildOutcome::UnsupportedLockfile
-        | BuildOutcome::UnsupportedMoklyVersion
-        | BuildOutcome::TimedOut { .. }
-        | BuildOutcome::OutputOverflow { .. } => None,
+/// Facts of one committed infrastructure retry or exhaustion.
+#[derive(Debug, Eq, PartialEq)]
+pub(super) struct InfrastructureWarning {
+    pub(super) attempt: i32,
+    pub(super) terminal: bool,
+    pub(super) reason: String,
+}
+
+/// Write the one warning line for a committed infrastructure ending.
+pub(super) fn log(build: BuildId, warning: &InfrastructureWarning) {
+    tracing::warn!(
+        build_id = %build,
+        attempt = warning.attempt,
+        terminal = warning.terminal,
+        reason = %warning.reason,
+        "build attempt ended as infrastructure"
+    );
+}
+
+pub(super) fn completed(upload: Option<UploadOutcome>) -> String {
+    format!(
+        "runner completed without a publication; upload grant outcome: {}",
+        upload.map_or("none", UploadOutcome::as_str)
+    )
+}
+
+pub(super) fn runner(error: &InternalError) -> String {
+    format!("runner infrastructure failure: {}", chain(error))
+}
+
+pub(super) fn checkout(exit_code: Option<i32>) -> String {
+    format!("checkout step failed {}", exit(exit_code))
+}
+
+pub(super) fn publish_grant(exit_code: Option<i32>, grant: UploadOutcome) -> String {
+    format!(
+        "publish step failed {}; upload grant outcome: {}",
+        exit(exit_code),
+        grant.as_str()
+    )
+}
+
+pub(super) fn publish_upload_failed(exit_code: Option<i32>) -> String {
+    format!(
+        "publish step failed {}; Mokly CLI code: upload-failed",
+        exit(exit_code)
+    )
+}
+
+/// Reason for lease recovery of an attempt that no worker finalized.
+pub(super) fn lease_expired(step: Option<BuildStep>) -> String {
+    match step {
+        Some(step) => format!("attempt lease expired during the {} step", step.as_str()),
+        None => "attempt lease expired before any step started".to_owned(),
     }
 }
 
@@ -65,7 +72,7 @@ pub(super) fn infrastructure_reason(
 ///
 /// Handled variants display fixed text. The internal variant's source chain
 /// can hold provider transport or response text, so it is never included.
-pub(super) fn mint_reason(error: &ProviderError) -> String {
+pub(super) fn mint(error: &ProviderError) -> String {
     match error {
         ProviderError::Internal(_) => {
             "repository token mint failed: [mkc-github-interface/error] internal".to_owned()
@@ -75,7 +82,7 @@ pub(super) fn mint_reason(error: &ProviderError) -> String {
 }
 
 /// Reason for an invalid build request, naming the field and never its value.
-pub(super) fn request_reason(error: &Error) -> String {
+pub(super) fn request(error: &Error) -> String {
     match error {
         Error::Internal(internal) => format!("build request invalid: {}", chain(internal)),
         handled => format!("build request invalid: {handled}"),
@@ -96,7 +103,3 @@ fn chain(error: &InternalError) -> String {
         .collect::<Vec<_>>()
         .join(": ")
 }
-
-#[cfg(test)]
-#[path = "../_tests_/build_worker/reason_tests.rs"]
-mod tests;

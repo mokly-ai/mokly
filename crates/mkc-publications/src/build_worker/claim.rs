@@ -11,7 +11,8 @@ use sha2::{Digest, Sha256};
 use crate::build_eligibility::BuildEligibility;
 use crate::error::{Error, ErrorResultExt, Result};
 
-use super::outcome::{infrastructure, terminal};
+use super::outcome::{Ending, terminal};
+use super::reason::{self, log};
 use super::service::{BuildClaim, ClaimedBuild, DatabaseBuildWorker};
 
 impl BuildEligibility for DatabaseBuildWorker {
@@ -42,9 +43,11 @@ impl DatabaseBuildWorker {
         let upload_token = Secret::new(raw).context("validate build upload credential")?;
         let mut claimed = None;
         let mut handled = false;
+        let mut recovered = None;
         self.transactions.run(false, &mut |queries| {
             claimed = None;
             handled = false;
+            recovered = None;
             let Some(build) = queries
                 .claim_build(&|| self.runtime.now())
                 .context("claim durable build")?
@@ -54,11 +57,12 @@ impl DatabaseBuildWorker {
             let now = self.runtime.now();
             handled = true;
             if build.state == BuildState::Running {
-                let finish = if build.publication_id.is_some() {
-                    terminal(BuildState::Published, None, None, now)
+                let ending = if build.publication_id.is_some() {
+                    Ending::Settled(terminal(BuildState::Published, None, None, now))
                 } else {
-                    infrastructure(build.attempt, now)
+                    Ending::Infrastructure(reason::lease_expired(build.step))
                 };
+                let (finish, warning) = ending.resolve(build.attempt, now);
                 let finished = queries
                     .finish_build(build.id, build.lease_token, &finish)
                     .context("recover expired build lease")?;
@@ -66,6 +70,9 @@ impl DatabaseBuildWorker {
                     queries
                         .fail_build_uploads(build.id, started, PublicationFailure::Expired, now)
                         .context("expire recovered build uploads")?;
+                }
+                if finished {
+                    recovered = warning.map(|warning| (build.id, warning));
                 }
                 return Ok(());
             }
@@ -134,6 +141,9 @@ impl DatabaseBuildWorker {
             claimed = Some((started, access));
             Ok(())
         })?;
+        if let Some((build, warning)) = recovered {
+            log(build, &warning);
+        }
         match claimed {
             Some((build, access)) => Ok(BuildClaim::Attempt(Box::new(ClaimedBuild {
                 build,

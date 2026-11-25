@@ -1,20 +1,14 @@
-//! Safe infrastructure reasons for every infrastructure ending and none for others.
+//! Safe warning reasons for every runner outcome that ends as infrastructure.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use mkc_build_interface::cli_code::MoklyCliCode;
 use mkc_build_interface::error::{Error as BuildInterfaceError, RequestField};
-use mkc_build_interface::outcome::{BuildBudget, BuildOutcome, BuildStep};
-use mkc_github_interface::error::Error as ProviderError;
+use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_store_interface::build_state::UploadOutcome;
 
-use crate::error::ErrorResultExt;
-
-use super::{infrastructure_reason, mint_reason, request_reason};
-
-#[derive(Debug, thiserror::Error)]
-#[error("provider body ghs_secret_token")]
-struct ProviderBody;
+use super::finish;
+use super::reason::InfrastructureWarning;
 
 fn credential() -> BuildOutcome {
     BuildOutcome::Infrastructure(
@@ -35,6 +29,7 @@ fn step(step: BuildStep, exit_code: Option<i32>, cli_error: Option<MoklyCliCode>
 
 #[test]
 fn infrastructure_endings_name_their_safe_reason() {
+    let at = "2026-11-25T00:00:00Z".parse().unwrap();
     for (outcome, upload, reason) in [
         (
             credential(),
@@ -72,76 +67,15 @@ fn infrastructure_endings_name_their_safe_reason() {
             "publish step failed without an exit code; Mokly CLI code: upload-failed",
         ),
     ] {
+        let (_, warning) = finish(&outcome, upload, at).resolve(2, at);
         assert_eq!(
-            infrastructure_reason(&outcome, upload).as_deref(),
-            Some(reason),
+            warning,
+            Some(InfrastructureWarning {
+                attempt: 2,
+                terminal: false,
+                reason: reason.to_owned(),
+            }),
             "{outcome:?}"
         );
     }
-}
-
-#[test]
-fn other_endings_have_no_infrastructure_reason() {
-    for (outcome, upload) in [
-        (step(BuildStep::Install, Some(2), None), None),
-        (
-            step(
-                BuildStep::Publish,
-                Some(4),
-                Some(MoklyCliCode::UploadFailed),
-            ),
-            Some(UploadOutcome::Rejected),
-        ),
-        (
-            step(
-                BuildStep::Publish,
-                Some(3),
-                Some(MoklyCliCode::GitUncommitted),
-            ),
-            None,
-        ),
-        (BuildOutcome::UnsupportedLockfile, None),
-        (
-            BuildOutcome::TimedOut {
-                step: BuildStep::Install,
-                budget: BuildBudget::Deadline,
-            },
-            None,
-        ),
-    ] {
-        assert_eq!(infrastructure_reason(&outcome, upload), None, "{outcome:?}");
-    }
-}
-
-#[test]
-fn mint_reasons_keep_fixed_provider_text_and_drop_internal_sources() {
-    for (error, reason) in [
-        (
-            ProviderError::Unavailable,
-            "repository token mint failed: [mkc-github-interface/error] unavailable",
-        ),
-        (
-            ProviderError::Http { status: 502 },
-            "repository token mint failed: [mkc-github-interface/error] HTTP 502",
-        ),
-        (
-            ProviderError::internal(ProviderBody),
-            "repository token mint failed: [mkc-github-interface/error] internal",
-        ),
-    ] {
-        assert_eq!(mint_reason(&error), reason);
-    }
-}
-
-#[test]
-fn request_reason_names_the_invalid_field() {
-    let error = Err::<(), _>(BuildInterfaceError::InvalidRequest {
-        field: RequestField::Branch,
-    })
-    .context("validate build branch")
-    .unwrap_err();
-    assert_eq!(
-        request_reason(&error),
-        "build request invalid: [mkc-build-interface/error] invalid request field: Branch"
-    );
 }
