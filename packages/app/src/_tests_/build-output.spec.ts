@@ -1,4 +1,4 @@
-import { holdPolls, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll } from "./build-clock";
 import { write } from "./build-double";
 import {
   boxOutline,
@@ -28,7 +28,7 @@ test("the output follows its newest line until the reader scrolls back", async (
   const id = buildId(90);
   double.builds.set(id, build({ id, projectId }));
   write(double, id, numbered(1, 60));
-  await holdPolls(page);
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   const output = page.getByRole("region", { name: "Output" });
   await expect(output).toContainText("line 60");

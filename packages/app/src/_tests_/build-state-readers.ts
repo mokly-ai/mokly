@@ -1,4 +1,4 @@
-import { holdPolls, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll } from "./build-clock";
 import { advance } from "./build-double";
 import {
   expectWaitingWithNoAction,
@@ -106,7 +106,7 @@ export const reviewerBuild: BuildStateRow = {
     await readAsReviewer(page);
     const id = buildId(12);
     double.builds.set(id, queuedForReviewer(id, projectId));
-    await holdPolls(page);
+    await installPollClock(page);
     await open(page, scenario.buildAt(id));
     await expectWaitingWithNoAction(page);
     await expect(slotState(page)).toContainText("Publishing now");

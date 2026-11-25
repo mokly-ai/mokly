@@ -4,8 +4,8 @@ use std::time::Duration;
 
 /// How long each webhook delivery loop waits after a poll that finds no work.
 ///
-/// Production uses [`WorkerIntervals::default`], the one second of the protocol
-/// docs. An embedded composition, such as an integration test, may set a
+/// Production uses [`WorkerIntervals::default`], a one-second pause for each
+/// loop. An embedded composition, such as an integration test, may set a
 /// shorter pause, so it does not wait a second for a delivery that the loop
 /// would start at once.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

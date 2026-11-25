@@ -1,4 +1,4 @@
-import { holdPolls, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll } from "./build-clock";
 import { write } from "./build-double";
 import {
   boxOutline,
@@ -25,7 +25,7 @@ test("a phone's output follows its newest line until the reader scrolls back", a
   const id = buildId(490);
   double.builds.set(id, build({ id, projectId }));
   write(double, id, numbered(1, 60));
-  await holdPolls(page);
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   await expect(page.locator("html")).toHaveAttribute(
     "data-color-scheme",

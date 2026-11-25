@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { holdPolls, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll, settledReads } from "./build-clock";
 import { advance, write } from "./build-double";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
@@ -29,7 +29,7 @@ test("Publish this branch follows its build to the published catalogue", async (
     startedAt: null,
   });
 
-  await holdPolls(page);
+  await installPollClock(page);
   await open(page, scenario.branchAt("topic"));
   const card = page.locator(".fo-stage-card");
   await expect(
@@ -101,19 +101,20 @@ test("Publish this branch follows its build to the published catalogue", async (
     await expect(steps(page, step)).toContainText("Done");
   }
   await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
-  // A terminal transition never navigates, and the card stops reading. The
-  // last line shows once its log read has landed; then more than three poll
-  // intervals pass on the page with no read.
+  // A terminal transition never navigates, and the card stops reading: once
+  // no read is in flight, more than three poll intervals pass on the page and
+  // the card starts no read.
   await expect(page).toHaveURL((url) => url.pathname === scenario.buildAt(id));
-  await expect(output).toContainText("Published");
+  const started = await settledReads(page);
   const settled = double.reads.length;
   await page.clock.runFor(10_500);
+  expect(await settledReads(page), "no read after the log is complete").toBe(
+    started,
+  );
   expect(double.reads.length, "no read after the log is complete").toBe(
     settled,
   );
 
-  // The published viewer keeps its own time again.
-  await page.clock.resume();
   await page.getByTestId("build-open-catalogue").click();
   await page.waitForURL(
     (url) =>
@@ -133,13 +134,9 @@ test("a hidden tab stops reading and a visible one reads at once", async ({
     id,
     build({ id, projectId: scenario.projectId, state: "running" }),
   );
-  await holdPolls(page);
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   await expect(page.locator(".fo-build")).toBeVisible();
-  // The first read ends with the log, so wait for that read to land.
-  await expect
-    .poll(() => scenario.double.reads.includes("log:" + id))
-    .toBe(true);
   await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
@@ -147,9 +144,11 @@ test("a hidden tab stops reading and a visible one reads at once", async ({
     });
     document.dispatchEvent(new Event("visibilitychange"));
   });
+  const started = await settledReads(page);
   const hidden = scenario.double.reads.length;
   write(scenario.double, id, [{ text: "while hidden\n" }]);
   await page.clock.runFor(7_000);
+  expect(await settledReads(page), "a hidden tab reads nothing").toBe(started);
   expect(scenario.double.reads.length, "a hidden tab reads nothing").toBe(
     hidden,
   );
@@ -173,7 +172,7 @@ test("a poll that fails keeps the card and the output as they are", async ({
   const id = buildId(3);
   double.builds.set(id, build({ id, projectId: scenario.projectId }));
   write(double, id, [{ text: "installing\n", step: "install" }]);
-  await holdPolls(page);
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   const output = page.getByTestId("build-output");
   await expect(output).toContainText("installing");

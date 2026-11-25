@@ -1,4 +1,4 @@
-import { holdPolls, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll } from "./build-clock";
 import { advance, write } from "./build-double";
 import {
   buildCard,
@@ -39,7 +39,7 @@ export const follow: BuildStateRow = {
       step: null,
       startedAt: null,
     });
-    await holdPolls(page);
+    await installPollClock(page);
     await open(page, scenario.branchAt("topic"));
     const stage = page.locator(".fo-stage-card");
     await expect(

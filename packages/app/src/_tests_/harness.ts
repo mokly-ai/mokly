@@ -169,9 +169,9 @@ export async function unloadGuard(page: Page): Promise<boolean> {
 
 /**
  * Drive an exit the page cannot intercept and report the browser's own prompts.
- * A dismissed prompt cancels the navigation, so `go` then never settles: the
- * dismissed prompt is the signal to return. A navigation that needs no prompt
- * settles `go` instead, and the list stays empty.
+ * A dismissed prompt cancels the navigation, so `go` does not settle before its
+ * own timeout: the dismissed prompt is the signal to return. A navigation that
+ * needs no prompt settles `go` instead, and the list stays empty.
  */
 export async function leaveDocument(
   page: Page,
