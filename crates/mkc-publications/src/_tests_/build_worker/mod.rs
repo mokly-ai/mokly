@@ -11,5 +11,6 @@ mod retry_tests;
 mod sink_tests;
 mod support;
 mod validation_tests;
+mod warning_replay_tests;
 mod warning_tests;
 mod warnings;

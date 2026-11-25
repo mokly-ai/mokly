@@ -1,7 +1,7 @@
 //! One safe warning for each committed infrastructure ending, and none otherwise.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_build_interface::runner::{BuildRunner, BuildRunnerMock};
@@ -104,7 +104,7 @@ async fn execute(case: Attempt) -> Vec<BTreeMap<String, String>> {
     );
     let runner: Arc<dyn BuildRunner> = match case.outcome {
         Some(outcome) => {
-            let outcome = std::sync::Mutex::new(Some(outcome));
+            let outcome = Mutex::new(Some(outcome));
             Arc::new(Unimock::new(
                 BuildRunnerMock::run
                     .some_call(matching!(_, _))
@@ -147,6 +147,22 @@ async fn committed_infrastructure_endings_warn_once_with_attempt_and_reason() {
                 1,
                 false,
                 "repository token mint failed: [mkc-github-interface/error] unavailable",
+            ),
+        ),
+        (
+            Attempt::token(Err(Error::RateLimited { retry_after: 321 })),
+            warning(
+                1,
+                false,
+                "repository token mint failed: [mkc-github-interface/error] rate limited",
+            ),
+        ),
+        (
+            Attempt::token(Err(Error::Http { status: 422 })),
+            warning(
+                1,
+                false,
+                "repository token mint failed: [mkc-github-interface/error] HTTP 422",
             ),
         ),
         (

@@ -147,8 +147,8 @@ with `infrastructure`. Every transition bumps the check outbox.
 After each committed infrastructure retry or exhaustion, including one from
 lease recovery, the worker logs one warning. The warning holds the build ID,
 the attempt number, whether the build ended, and a safe reason. The reason
-holds only fixed failure text, rejected field names, exit codes, step names
-and recorded upload outcomes. It never holds a credential, a request value or
+holds only fixed failure text, rejected field names, exit codes, HTTP status
+codes, step names and recorded upload outcomes. It never holds a credential, a request value or
 provider response text.
 
 Finalization, including infrastructure requeue, follows the

@@ -1,8 +1,8 @@
 //! Safe reasons and the warning line for attempts that end as infrastructure.
 //!
-//! A reason holds only fixed error text, typed field names, exit codes, step
-//! names and stored outcome names. It never holds a credential, a request
-//! value or provider response text.
+//! A reason holds only fixed error text, typed field names, exit codes, HTTP
+//! status codes, step names and stored outcome names. It never holds a
+//! credential, a request value or provider response text.
 
 use internal_error::InternalError;
 use mkc_domain::ids::BuildId;
@@ -70,14 +70,24 @@ pub(super) fn lease_expired(step: Option<BuildStep>) -> String {
 
 /// Reason for a repository credential mint failure, without provider details.
 ///
-/// Handled variants display fixed text. The internal variant's source chain
-/// can hold provider transport or response text, so it is never included.
+/// Every variant is named, so a new one needs its own choice of text. The
+/// rate-limit delay comes from a response header and the internal source
+/// chain can hold provider text, so neither is included.
 pub(super) fn mint(error: &ProviderError) -> String {
     match error {
+        ProviderError::InvalidRequest
+        | ProviderError::Unauthorized
+        | ProviderError::Forbidden
+        | ProviderError::NotFound
+        | ProviderError::InvalidCode
+        | ProviderError::Unavailable
+        | ProviderError::Http { .. } => format!("repository token mint failed: {error}"),
+        ProviderError::RateLimited { .. } => {
+            "repository token mint failed: [mkc-github-interface/error] rate limited".to_owned()
+        }
         ProviderError::Internal(_) => {
             "repository token mint failed: [mkc-github-interface/error] internal".to_owned()
         }
-        handled => format!("repository token mint failed: {handled}"),
     }
 }
 
