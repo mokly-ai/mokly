@@ -1,6 +1,6 @@
 //! Imported media types do not broaden CSS url() extension validation.
 
-use crate::imported_assets;
+use super::{imported_content_type, stylesheet_content_type};
 
 #[test]
 fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets() {
@@ -27,23 +27,12 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
         ("txt", "text/plain; charset=utf-8"),
     ] {
         let file = format!("assets/file.{extension}");
-        assert_eq!(
-            imported_assets::content_type(&file),
-            Some(expected),
-            "{file}"
-        );
-        assert_eq!(
-            imported_assets::stylesheet_content_type(&file),
-            None,
-            "{file}"
-        );
+        assert_eq!(imported_content_type(&file), Some(expected), "{file}");
+        assert_eq!(stylesheet_content_type(&file), None, "{file}");
     }
+    assert_eq!(imported_content_type("assets/file.png"), Some("image/png"));
     assert_eq!(
-        imported_assets::content_type("assets/file.png"),
-        Some("image/png")
-    );
-    assert_eq!(
-        imported_assets::content_type("assets/file.svg"),
+        imported_content_type("assets/file.svg"),
         Some("image/svg+xml")
     );
     for file in [
@@ -53,6 +42,6 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
         "image",
         "image.unknown",
     ] {
-        assert_eq!(imported_assets::content_type(file), None, "{file}");
+        assert_eq!(imported_content_type(file), None, "{file}");
     }
 }

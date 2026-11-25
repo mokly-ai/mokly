@@ -7,9 +7,10 @@ use std::sync::Arc;
 use cap_fs_ext::{DirExt, FollowSymlinks, OpenOptionsFollowExt};
 use cap_std::ambient_authority;
 use cap_std::fs::{Dir, OpenOptions};
+use mokly_content_types::delivered_content_type;
 use mokly_graph::policy::PublicPolicy;
 
-use crate::assets::{File, content_type};
+use crate::assets::File;
 use crate::error::{Result, ServerError};
 
 /// Read-time public eligibility and confinement boundary.
@@ -62,7 +63,7 @@ impl PublicReader for ConfinedReader {
             return Some(OpenedFile {
                 file: file.into_std(),
                 length: metadata.len(),
-                content_type: content_type(path),
+                content_type: delivered_content_type(path),
             });
         }
         None

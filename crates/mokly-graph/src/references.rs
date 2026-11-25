@@ -10,6 +10,8 @@ use mokly_html::tree::{self, Element, Node, RegionKind};
 use mokly_model::evidence::EvidenceOwner;
 use mokly_model::usage::ComponentInputOwner;
 
+use crate::reference_positions::{self, ReferenceKind};
+
 /// One resource reference and its material owner.
 #[derive(Clone, Debug)]
 pub struct ResourceReference {
@@ -176,20 +178,14 @@ fn element_references(
         })
     };
     for attribute in &element.attributes {
-        if element.name == "base" && attribute.name == "href" {
-            continue;
-        }
-        match attribute.name.as_str() {
-            "src" | "href" | "xlink:href" | "data-nav-href" | "poster" | "data" => {
+        match reference_positions::kind(&element.name, &attribute.name) {
+            Some(ReferenceKind::Url) => {
                 output.push(reference(attribute.value.clone()));
             }
-            "srcset" => output.extend(srcset(&attribute.value).into_iter().map(reference)),
-            "style" => output.extend(
-                styles(&format!("x{{{}}}", attribute.value))
-                    .iter()
-                    .map(|value| reference(value.value.clone())),
-            ),
-            "srcdoc" => output.extend(
+            Some(ReferenceKind::Srcset) => {
+                output.extend(srcset(&attribute.value).into_iter().map(reference));
+            }
+            Some(ReferenceKind::EmbeddedDocument) => output.extend(
                 parse::html(DeliveredHtml::document(&attribute.value))
                     .into_iter()
                     .map(|node| {
@@ -201,7 +197,12 @@ fn element_references(
                         )
                     }),
             ),
-            _ => {}
+            None if attribute.name == "style" => output.extend(
+                styles(&format!("x{{{}}}", attribute.value))
+                    .iter()
+                    .map(|value| reference(value.value.clone())),
+            ),
+            None => {}
         }
     }
     if element.name == "style" {

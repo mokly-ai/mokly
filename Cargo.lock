@@ -2970,7 +2970,6 @@ dependencies = [
  "hex",
  "hmac",
  "internal-error",
- "mime_guess",
  "mkc-auth",
  "mkc-build-interface",
  "mkc-db",
@@ -2983,6 +2982,7 @@ dependencies = [
  "mkc-store-pg",
  "mkc-test-pg",
  "mkc-upload-memory",
+ "mokly-content-types",
  "sandbox-interface",
  "serde",
  "serde_json",
@@ -3157,6 +3157,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mokly-content-types"
+version = "0.14.0"
+dependencies = [
+ "mime_guess",
+]
+
+[[package]]
 name = "mokly-css"
 version = "0.14.0"
 dependencies = [
@@ -3165,6 +3172,7 @@ dependencies = [
  "insta",
  "jsonc-parser",
  "lightningcss",
+ "mokly-content-types",
  "mokly-css",
  "mokly-model",
  "mokly-source-interface",
@@ -3199,6 +3207,7 @@ dependencies = [
  "globset",
  "insta",
  "mokly-catalogue",
+ "mokly-content-types",
  "mokly-css",
  "mokly-html",
  "mokly-model",
@@ -3215,6 +3224,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "unimock",
+ "url",
 ]
 
 [[package]]
@@ -3335,9 +3345,9 @@ dependencies = [
  "hyper",
  "hyper-util",
  "insta",
- "mime_guess",
  "mokly-catalogue",
  "mokly-compare",
+ "mokly-content-types",
  "mokly-css",
  "mokly-graph",
  "mokly-html",

@@ -134,7 +134,7 @@ async fn get_and_head_keep_identical_file_headers() {
                     status: 200,
                     body: (!head).then(|| FileBody::Ready(stream(b"body"))),
                     framing: FileFraming::Full(4),
-                    content_type: "text/html".into(),
+                    content_type: "text/html; charset=utf-8".into(),
                     cache: "no-cache",
                     etag: "W/\"hash\"".into(),
                 })
@@ -152,7 +152,10 @@ async fn get_and_head_keep_identical_file_headers() {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.headers()["content-type"], "text/html");
+        assert_eq!(
+            response.headers()["content-type"],
+            "text/html; charset=utf-8"
+        );
         assert_eq!(response.headers()["content-length"], "4");
         assert_eq!(response.headers()["cache-control"], "no-cache");
         assert_eq!(response.headers()["etag"], "W/\"hash\"");

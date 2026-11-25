@@ -3,6 +3,7 @@
 use std::thread;
 
 use mokly_html::tree::{self, Node, Region, RegionKind};
+use mokly_model::namespace::generated;
 use mokly_model::usage::ComponentInputOwner;
 
 use crate::material_traits::fingerprint;
@@ -25,6 +26,48 @@ fn wrap(mut nodes: Vec<Node>) -> Vec<Node> {
         nodes = vec![tree::element("span", &[], nodes)];
     }
     nodes
+}
+
+#[test]
+fn canonical_material_normalizes_data_only_on_objects() {
+    let nodes = [
+        tree::element("object", &[("data", "../static/a.pdf")], vec![]),
+        tree::element("p", &[("data", "../static/a.pdf")], vec![]),
+    ];
+    let projection = Projection {
+        route: "screen/index.html".into(),
+        ..Projection::default()
+    };
+    let material = canonical(&nodes, &projection);
+    let [
+        Material::Element(_, _, object, _),
+        Material::Element(_, _, paragraph, _),
+    ] = material.as_slice()
+    else {
+        panic!("expected two canonical elements");
+    };
+    assert_eq!(object, &[("data".into(), "static/a.pdf".into())]);
+    assert_eq!(paragraph, &[("data".into(), "../static/a.pdf".into())]);
+}
+
+#[test]
+fn canonical_material_keeps_base_href_as_authored_after_a_move() {
+    let nodes = [tree::element("base", &[("href", "index.html")], vec![])];
+    for route in ["home/index.html", "nested/home/index.html"] {
+        let projection = Projection {
+            route: generated(route),
+            ..Projection::default()
+        };
+        let material = canonical(&nodes, &projection);
+        let [Material::Element(_, _, attributes, _)] = material.as_slice() else {
+            panic!("expected a canonical base element");
+        };
+        assert_eq!(
+            attributes,
+            &[("href".into(), "index.html".into())],
+            "{route}"
+        );
+    }
 }
 
 #[test]
