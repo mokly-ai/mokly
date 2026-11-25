@@ -1302,9 +1302,10 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   source root reads relative to it. A path inside a selected dependency root
   reads as its logical name, such as `node_modules/pkg/index.js`. Each other
   absolute path or `file:` URL becomes `…`. Reason: design call 26.
-- F5. The warning message is `story <JSON-quoted-story-id> could not render;
-  add the "!mokly" tag to leave it out: <reason>`, with the line breaks of the
-  reason joined by spaces. Reason: design call 9 names these parts, the route
+- F5. The warning message gives the JSON-quoted story id, then "could not
+  render; add the "!mokly" tag to leave it out:", then the reason, with the
+  line breaks of the reason joined by spaces. The failure page gives the
+  exact form. Reason: design call 9 names these parts, the route
   names the view, and the reason comes last because its length varies.
 - F6. The error document keeps the head of a story document without any
   stylesheet: no configured, component, renderer, entry-module, collected, or
@@ -2907,23 +2908,29 @@ Depends on: 1, 8, and the answer to decision 26
 
 Track F. The protocol states the failure rules of decision 5.
 
-- [ ] Add the render failure rules to a new page,
+- [x] Add the render failure rules to a new page,
       `docs/protocol/mokly-storybook-failures.md`, which
       `docs/protocol/mokly-storybook.md` links, as track F design call F7
       says.
-- [ ] State there the reason rule of design call 26, the usage rule of
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] State there the reason rule of design call 26, the usage rule of
       design call 27, and the answer to decision 26.
-- [ ] State the sentence rule of design call 29 in
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] State the sentence rule of design call 29 in
       `docs/protocol/mokly-component-controls-design.md`: after a failed or
       invalid edit, the Props tab names the preview that it shows.
-- [ ] Update `docs/protocol/mokly-build-warnings.md` with
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/protocol/mokly-build-warnings.md` with
       `story-render-failed`. In `docs/protocol/mokly-sidecar.md`, update the
       `render-failed` row and the rule that there is no fallback render, for
       stories.
-- [ ] Update `docs/protocol/mokly-component-design.md` with the failed story
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/protocol/mokly-component-design.md` with the failed story
       state of Milestone 1.
-- [ ] Add the status lines, and run `npm run format:check` and
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 24: Story render failures
 
