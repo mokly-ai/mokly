@@ -17,6 +17,7 @@ pub(super) struct Pins {
     pub(super) tar: String,
     pub(super) terraform: String,
     pub(super) helm: String,
+    pub(super) nextest: String,
 }
 
 #[derive(Deserialize)]
@@ -41,7 +42,15 @@ struct PackagePin {
 pub(super) fn protocol(text: &str) -> result::Result<Pins, Vec<Violation>> {
     let mut versions = Vec::new();
     let mut violations = Vec::new();
-    for tool in ["Rust", "Node", "npm", "tar", "Terraform", "Helm"] {
+    for tool in [
+        "Rust",
+        "Node",
+        "npm",
+        "tar",
+        "Terraform",
+        "Helm",
+        "cargo-nextest",
+    ] {
         let rows: Vec<_> = text
             .lines()
             .filter_map(|line| {
@@ -69,7 +78,44 @@ pub(super) fn protocol(text: &str) -> result::Result<Pins, Vec<Violation>> {
         tar: versions[3].clone(),
         terraform: versions[4].clone(),
         helm: versions[5].clone(),
+        nextest: versions[6].clone(),
     })
+}
+
+#[derive(Deserialize)]
+struct NextestConfig {
+    #[serde(rename = "nextest-version")]
+    version: NextestVersion,
+}
+
+#[derive(Deserialize)]
+struct NextestVersion {
+    required: String,
+}
+
+/// The nextest configuration requires exactly the pinned version.
+pub(super) fn nextest_config(text: &str, pins: &Pins) -> Result<Vec<Violation>> {
+    let config: NextestConfig = toml::from_str(text).context("parse .config/nextest.toml")?;
+    Ok(compare(
+        ".config/nextest.toml",
+        "nextest-version.required",
+        &pins.nextest,
+        &config.version.required,
+    ))
+}
+
+/// Every `cargo-nextest@VERSION` install in a workflow names the pinned version.
+pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Vec<Violation> {
+    const TOOL: &str = "cargo-nextest@";
+    text.match_indices(TOOL)
+        .flat_map(|(start, _)| {
+            let version = text[start + TOOL.len()..]
+                .split(|character: char| character.is_whitespace() || character == ',')
+                .next()
+                .unwrap_or_default();
+            compare(path, "cargo-nextest install", &pins.nextest, version)
+        })
+        .collect()
 }
 
 #[derive(Deserialize)]

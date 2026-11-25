@@ -38,7 +38,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         .unwrap();
     let commands = observed.lock().unwrap();
     for required in [
-        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+        "cargo test --locked -p \"mokly-*\" -p xtask --doc",
         "npm run test:viewer:prepared",
         "npm run test:browser:prepared",
         "npm run test:delivery:prepared",
@@ -119,6 +120,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             "npm run dependencies:check -- --baseline",
             "npm ci",
             "npm run dependencies:check:rust",
+            "node xtask/scripts/require-nextest.mjs",
             "cargo xtask boundary",
             "cargo xtask whitespace",
             "cargo xtask check-generated-types",
@@ -139,7 +141,8 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             "npm run build --workspace \"@mokly/frame\"",
             "npm run build --workspace \"@mokly/viewer\"",
             "npm run build --workspace \"@mokly/mokly\"",
-            "cargo test --locked -p \"mokly-*\" -p xtask",
+            "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+            "cargo test --locked -p \"mokly-*\" -p xtask --doc",
         ]
     );
 }
@@ -237,7 +240,6 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Viewer),
-        Some(VerificationSuite::Native),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard), None),

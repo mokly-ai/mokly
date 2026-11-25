@@ -46,13 +46,25 @@ fn clippy_stage_rejects_a_real_warning() {
 fn test_stage_rejects_a_failing_rust_test() {
     let fixture = TemporaryFixtures.create();
     prepare(fixture.as_ref());
-    success(fixture.run("cargo", &["test", "--locked", "-p", "mokly-*"]));
+    let tests = [
+        "nextest",
+        "run",
+        "--locked",
+        "-p",
+        "mokly-*",
+        "--no-tests=pass",
+    ];
+    let docs = ["test", "--locked", "-p", "mokly-*", "--doc"];
+    success(fixture.run("cargo", &tests));
+    success(fixture.run("cargo", &docs));
     fixture.write(
         "tests/failure.rs",
         "#[test]\nfn rejected() { assert_eq!(1, 2); }\n",
     );
-    failure(
-        fixture.run("cargo", &["test", "--locked", "-p", "mokly-*"]),
-        "test result: FAILED",
+    failure(fixture.run("cargo", &tests), "1 failed");
+    fixture.write(
+        "src/lib.rs",
+        "//! Fixture crate.\n//!\n//! ```\n//! assert_eq!(1, 2);\n//! ```\n",
     );
+    failure(fixture.run("cargo", &docs), "test result: FAILED");
 }

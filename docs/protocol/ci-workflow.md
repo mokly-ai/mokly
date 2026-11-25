@@ -42,7 +42,9 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one viewer job on Node 22.15.0;
 - four browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
-- native jobs on macOS and Windows at Node 22.15.0.
+- one native job on macOS and three Windows native shards at Node 22.15.0.
+  Each Windows shard runs one third of the Rust tests. Shard 1 also checks
+  formatting and Clippy and runs the doc tests.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 
@@ -101,7 +103,10 @@ before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout.
 Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
-failing test binary.
+failing test. The repository, native, and Workspace checks jobs, and the
+Testbox job, install the pinned prebuilt
+[Rust test runner](./ci-verification-repository.md#rust-test-runner) with
+`taiki-e/install-action` after `rustup toolchain install`.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no

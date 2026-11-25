@@ -80,7 +80,11 @@ fn clippy_stage_rejects_a_real_warning() {
 fn test_stage_rejects_a_failing_rust_test() {
     reject(
         VerificationSuite::Repository,
-        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+    );
+    reject(
+        VerificationSuite::Repository,
+        "cargo test --locked -p \"mokly-*\" -p xtask --doc",
     );
 }
 
