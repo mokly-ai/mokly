@@ -29,6 +29,7 @@ const budgets = parseBudgets({
   mode: "warn",
   wallClockMinutes: 13,
   slowestTests: 2,
+  cache: { gigabytes: 8.5, largestEntries: 3 },
   jobs: [
     { pattern: "Browser *", minutes: 10 },
     { pattern: "Browser (Node 24*", minutes: 5 },
@@ -69,6 +70,11 @@ test("an invalid budget file names the field it rejects", () => {
     () =>
       parseBudgets({ ...budgets, jobs: [{ pattern: "Viewer *", minutes: 0 }] }),
     /jobs\[0\]\.minutes must be a positive number of minutes/,
+  );
+  assert.throws(
+    () =>
+      parseBudgets({ ...budgets, cache: { gigabytes: 0, largestEntries: 3 } }),
+    /cache\.gigabytes must be a positive number/,
   );
 });
 

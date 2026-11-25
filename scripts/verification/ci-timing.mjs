@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 
 import { readReports } from "./aggregate.mjs";
 import { evaluateJobs, parseBudgets } from "./ci-timing-budgets.mjs";
+import { evaluateCache, fetchCaches } from "./ci-timing-cache.mjs";
 import { fetchRunJobs, parseJobs } from "./ci-timing-jobs.mjs";
 import { criticalPath } from "./ci-timing-path.mjs";
 import { annotationLines, renderSummary } from "./ci-timing-summary.mjs";
@@ -11,11 +12,11 @@ import { slowestTests } from "./ci-timing-tests.mjs";
 
 const DEFAULT_BUDGETS = path.join(import.meta.dirname, "ci-budgets.json");
 const USAGE =
-  "usage: ci-timing.mjs [--budgets {file}] [--reports {directory}] [--self {job name}] [--jobs-file {file}]";
+  "usage: ci-timing.mjs [--budgets {file}] [--reports {directory}] [--self {job name}] [--jobs-file {file}] [--caches-file {file}]";
 
 /**
- * Report each job's run time against its budget, the critical path, and the
- * slowest tests. It writes the Markdown to `GITHUB_STEP_SUMMARY`, or to
+ * Report each job's run time against its budget, the critical path, the
+ * slowest tests, and the Actions cache usage. It writes the Markdown to `GITHUB_STEP_SUMMARY`, or to
  * standard output when that is unset, and prints one workflow annotation for
  * each finding. It returns 1 only in `fail` mode, for an overrun or for a
  * report that could not run. In `warn` mode it always returns 0.
@@ -32,7 +33,20 @@ export async function runCiTiming({ argv, env, fetch, write }) {
     const entries = options.jobsFile
       ? jobEntries(await readJson(options.jobsFile))
       : await fetchRunJobs(apiOptions(env, fetch));
-    const report = await buildReport(entries, budgets, options, env);
+    // A saved jobs response runs offline, so it reads the cache only from a
+    // saved cache list.
+    const loadCaches = options.cachesFile
+      ? () => readJson(options.cachesFile)
+      : options.jobsFile
+        ? null
+        : () => fetchCaches(apiOptions(env, fetch));
+    const report = await buildReport(
+      entries,
+      budgets,
+      options,
+      env,
+      loadCaches,
+    );
     await publish(renderSummary(report), env, write);
     for (const line of annotationLines(report)) write.stdout(`${line}\n`);
     const overrun =
@@ -54,7 +68,7 @@ export async function runCiTiming({ argv, env, fetch, write }) {
   }
 }
 
-async function buildReport(entries, budgets, options, env) {
+async function buildReport(entries, budgets, options, env, loadCaches) {
   const parsed = parseJobs(entries);
   const issues = [...parsed.issues];
   const pending = parsed.jobs.filter(
@@ -86,8 +100,23 @@ async function buildReport(entries, budgets, options, env) {
       await reports(options.reports, issues),
       budgets.slowestTests,
     ),
+    cache: await readCache(loadCaches, budgets.cache, issues),
     issues,
   };
+}
+
+/** The cache usage, or null. A cache that cannot be read adds an issue only. */
+async function readCache(loadCaches, budget, issues) {
+  if (!loadCaches) return null;
+  try {
+    const cache = evaluateCache(await loadCaches(), budget);
+    issues.push(...cache.issues);
+    return cache;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push(`The Actions cache could not be read: ${message}`);
+    return null;
+  }
 }
 
 async function reports(directory, issues) {
@@ -113,6 +142,7 @@ function parseOptions(argv) {
       reports: { type: "string" },
       self: { type: "string" },
       "jobs-file": { type: "string" },
+      "caches-file": { type: "string" },
     },
     strict: true,
     allowPositionals: false,
@@ -122,6 +152,7 @@ function parseOptions(argv) {
     reports: values.reports ?? null,
     self: values.self ?? null,
     jobsFile: values["jobs-file"] ?? null,
+    cachesFile: values["caches-file"] ?? null,
   };
 }
 

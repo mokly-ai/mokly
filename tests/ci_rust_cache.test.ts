@@ -67,7 +67,8 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           false,
           `${file} must never save its Rust build cache`,
         );
-      else
+      // A step that restores the entry of another job never saves.
+      else if (step.with?.["save-if"] !== false)
         assert.match(
           String(step.with?.["save-if"]),
           MAIN_ONLY,

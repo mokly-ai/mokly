@@ -1,3 +1,4 @@
+import type { CacheBudget } from "./ci-timing-cache.mjs";
 import type { TimedJob, TimedStep } from "./ci-timing-jobs.mjs";
 
 /** `warn` reports budget overruns as warnings; `fail` also fails the step. */
@@ -13,6 +14,7 @@ export interface Budgets {
   wallClockMinutes: number;
   slowestTests: number;
   jobs: JobBudget[];
+  cache: CacheBudget;
 }
 
 export type BudgetState = "within" | "over" | "no-budget" | "not-run";

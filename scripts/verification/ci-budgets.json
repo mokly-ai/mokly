@@ -2,6 +2,7 @@
   "mode": "warn",
   "wallClockMinutes": 13,
   "slowestTests": 10,
+  "cache": { "gigabytes": 8.5, "largestEntries": 10 },
   "jobs": [
     { "pattern": "Runtime profile", "minutes": 2 },
     { "pattern": "Required CI", "minutes": 3 },

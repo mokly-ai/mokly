@@ -72,23 +72,36 @@ toolchain and before cargo runs. The cache holds the Cargo registry and the
 builds of crates.io dependencies. It holds no build of a workspace crate. The
 cache of the Repository checks shard also holds the installed Rust audit tool. Each key
 covers the runner platform, the toolchain, the Cargo environment, the
-lockfile, and the workspace manifests. The Repository keys also cover
-the audit tool lockfile and installer. Jobs that build the same artifacts
-share one cache. Every Linux CI job that builds only `xtask` and the native
-binary shares one cache, the cloud mockup and site partitions included. The
-cloud partitions that also build `mkc-` crates, the image job, the Repository
-checks shard, the Repository test shards, and the test shards of each native
-host keep their own cache. The Workspace checks (contracts) partition restores
-the cache of the cloud Rust partition and never saves it, and the Workspace
-checks (infrastructure) partition does the same with the Linux `xtask` cache.
-Only the partition that owns a cache saves it. A separate saved cache for these
-two partitions was rejected, because the total already passes the 10 GB limit.
-The app shards share one cache. The native
-lint shard of each host caches the Cargo registry alone. A Clippy build entry
-for each host was rejected, because it would bring the total close to the
-10 GB limit, and the lint shard is not the slowest shard. The two Stripe catalogue jobs of the deploy workflow share one cache.
-A separate cache for the mockup and site partitions was rejected: they held
-the same build as the Mokly jobs, and the total passed the 10 GB limit.
+lockfile, and the workspace manifests. The Repository checks key also covers
+the audit tool lockfile and installer.
+
+These jobs own a cache entry and save it: the Repository checks shard, the
+Repository test shards, the cloud Rust partition, the app shards, the test
+shards of each native host, the native lint shard of each host, and the two
+Stripe catalogue jobs of the deploy workflow. Jobs that build the same
+artifacts, such as the app shards, share one entry. The native lint shard of
+each host caches the Cargo registry alone. A Clippy build entry for each host
+was rejected, because it would bring the total close to the 10 GB limit, and
+the lint shard is not the slowest shard.
+
+A job whose dependency builds are all in the entry of an owner restores that
+entry and never saves. Every other Linux CI job that builds only `xtask` and
+the native binary restores the Repository test entry, the cloud mockup, site,
+and Workspace checks (infrastructure) partitions included. The desktop
+partition and the image job restore the app entry. The Workspace checks
+(contracts) partition restores the cloud Rust entry. Only the owner saves its
+entry: a cache key cannot change after its first save, so an entry that a
+reader saved first would lack the builds of the owner until the key changes. A
+separate saved entry for a reader was rejected, because it adds the size of
+its builds to the total and saves no build time. One entry for the app shards
+and the cloud Rust partition was rejected, because they resolve different
+features of shared dependencies, so most of their dependency builds differ.
+One entry for the Repository checks and test shards was rejected, because
+Clippy builds dependency metadata only, so the two share no dependency build.
+
+The entries that `main` saves stay below the cache budget of the
+[CI timing report](./ci-duration-budgets.md#actions-cache), which keeps
+headroom under the 10 GB limit.
 
 The Rust build cache follows the `main`-only save rule above. Testboxes restore with
 the cache options of the CI viewer, browser, and static-delivery jobs and never

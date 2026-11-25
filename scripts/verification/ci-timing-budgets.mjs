@@ -1,3 +1,4 @@
+import { parseCacheBudget } from "./ci-timing-cache.mjs";
 import { jobSeconds } from "./ci-timing-jobs.mjs";
 
 /** `warn` reports budget overruns as warnings; `fail` also fails the step. */
@@ -29,7 +30,8 @@ export function parseBudgets(value) {
       minutes: positive(budget.minutes, `jobs[${index}].minutes`),
     };
   });
-  return { mode: value.mode, wallClockMinutes, slowestTests, jobs };
+  const cache = parseCacheBudget(value.cache);
+  return { mode: value.mode, wallClockMinutes, slowestTests, jobs, cache };
 }
 
 /** The first budget whose pattern matches the whole job name, or null. */
