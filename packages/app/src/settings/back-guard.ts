@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { gateTraversal } from "../navigation/traversal";
+
 import type { Drafts } from "./drafts";
 import { gestureHome, guardSurface, judgeGesture } from "./gestures";
 import type { SurfaceGuard } from "./gestures";
@@ -143,17 +145,15 @@ function restore(attemptsLeft: number) {
 }
 
 /**
- * The router installs its own `popstate` listener when it mounts, so this one
- * is installed as the module loads: the first listener holds the right to stop
- * the event before the router resets the screen under the reader.
+ * The guard is the first gate of the one listener that runs before the
+ * router, so it judges every gesture before the router can reset the screen
+ * under the reader.
  */
-function onPopState(event: PopStateEvent) {
+function onPopState(): boolean {
   const verdict = judgeGesture(window.location.href);
-  if (!verdict.stop) return;
-  event.stopImmediatePropagation();
+  if (!verdict.stop) return false;
   if (verdict.restore) restore(settleAttempts);
+  return true;
 }
 
-if (typeof window !== "undefined") {
-  window.addEventListener("popstate", onPopState);
-}
+gateTraversal(onPopState);

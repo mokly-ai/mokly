@@ -83,14 +83,16 @@ fail when the build output is missing. Native builds the host binary through
 sources into the render cache, and the tests read nothing back from the
 repository. Every suite rejects skips and todos.
 
-`--shard INDEX/TOTAL` is valid with `browser` and `cloud-app`. It uses one-based
-integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
+`--shard INDEX/TOTAL` is valid with `browser`, `native`, `cloud-app`,
+`cloud-mockups`, and `cloud-site`. It uses one-based integers with
+`INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts.
 
 The [cloud suite table](../docs/protocol/ci-verification.md#cloud-suites)
 names all 16 cloud suites and their required checks. Each suite can run with
-`--suite`. The app suite accepts `--shard INDEX/TOTAL`. Shard 1 runs logic tests;
-each shard builds its web export and runs its browser partition. Cloud suites
+`--suite`. The app, mockup, and site suites accept `--shard INDEX/TOTAL`, as
+the [cloud shards](../docs/protocol/cloud/repository-verification.md#app-shards)
+define. Cloud suites
 fail when a tool is missing or a runner reports skipped, ignored, pending, or
 todo tests. Cloud Rust, app, and desktop tests need Postgres; cloud Rust also
 needs `libpq`. The PostgreSQL connection defaults to
@@ -124,6 +126,14 @@ checks once. Rust formatting and file length cover every crate. Repository
 Clippy and Rust tests select only `mokly-*` and `xtask`. Cloud Rust covers
 `mkc-*`. Cloud Rust builds workspace Mokly before its publication smokes.
 The Native suite selects only Mokly crates and xtask on every host.
+Repository, Native, and Cloud Rust run their Rust tests with cargo-nextest,
+then their doc tests with `cargo test --doc`, under the
+[Rust test runner](../docs/protocol/ci-verification-repository.md#rust-test-runner)
+contract. Each first runs `xtask/scripts/require-nextest.mjs`, which fails
+with install commands when `cargo nextest` is missing or older than the
+requirement. Install the version
+that `.config/nextest.toml` requires, for example with
+`cargo install cargo-nextest --locked --version 0.9.152`.
 Seven remote cloud workers cover Rust and desktop, four app shards, web,
 and infrastructure. Each worker attempts every assigned suite and reports
 each failure. The [remote guide](remote/README.md#remote-runs) lists the groups.

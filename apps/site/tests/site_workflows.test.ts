@@ -40,6 +40,7 @@ test("site and CI actions use immutable reviewed pins and isolate secrets", () =
     "Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6",
     "google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093",
     "google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db",
+    "taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c",
   ]);
   for (const workflow of [site, ci, desktop]) {
     for (const job of Object.values(workflow.jobs)) {
