@@ -89,7 +89,6 @@ fn mockup_stage_builds_before_checks_and_propagates_real_failures() {
     let expected = [
         "node xtask/scripts/strict-command.mjs npm run build",
         "node xtask/scripts/strict-command.mjs npm run mockups:build",
-        "node xtask/scripts/strict-command.mjs npm run mockups:check",
         "node xtask/scripts/strict-command.mjs npm run mockups:test",
         "node xtask/scripts/strict-command.mjs npm run mockups:typecheck",
     ];

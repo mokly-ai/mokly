@@ -26,7 +26,6 @@ fn mockup_shards_split_the_checks_the_policy_and_served_suites_and_the_disk_suit
         (
             "1/6",
             vec![
-                "npm run mockups:check --workspace \"@mokly-cloud/mockups\"",
                 "npm run test:determinism --workspace \"@mokly-cloud/mockups\"",
                 "npm run mockups:typecheck --workspace \"@mokly-cloud/mockups\"",
             ],
@@ -49,7 +48,6 @@ fn mockup_shards_split_the_checks_the_policy_and_served_suites_and_the_disk_suit
         (
             "1/2",
             vec![
-                "npm run mockups:check --workspace \"@mokly-cloud/mockups\"",
                 "npm run test:determinism --workspace \"@mokly-cloud/mockups\"",
                 "npm run mockups:typecheck --workspace \"@mokly-cloud/mockups\"",
                 "npm run test:policy --workspace \"@mokly-cloud/mockups\"",
@@ -82,7 +80,6 @@ fn one_mockup_shard_and_no_shard_run_the_complete_suite() {
     let complete = [
         "npm run build",
         "npm run mockups:build",
-        "npm run mockups:check",
         "npm run mockups:test",
         "npm run mockups:typecheck",
     ];

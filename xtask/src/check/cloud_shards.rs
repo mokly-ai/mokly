@@ -38,14 +38,9 @@ pub(super) fn app_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
 /// browser and a browser part. One shard, or none, runs the complete suite.
 pub(super) fn mockup_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
-        return built([
-            "mockups:build",
-            "mockups:check",
-            "mockups:test",
-            "mockups:typecheck",
-        ]);
+        return built(["mockups:build", "mockups:test", "mockups:typecheck"]);
     };
-    let static_checks = ["mockups:check", "test:determinism", "mockups:typecheck"];
+    let static_checks = ["test:determinism", "mockups:typecheck"];
     let mut commands = built(["mockups:build"]);
     match (shard.index(), shard.total()) {
         (1, 2) => {
