@@ -30,6 +30,10 @@
   - CI run 44386980398 of the next branch commit, `6704dc72`, passed the test.
   - CI run 44392544275 of branch commit `091b90a7` failed it on both tries. A rerun of the failed jobs failed it the same way.
   - Locally, with `--repeat-each 30 --retries 0 --project desktop --workers 1`, it failed 15 of 30 runs on `origin/main` at `55972c86` and 14 of 30 on the branch. An earlier set of 10 runs failed 2 on `main` and 4 on the branch. So the branch does not change the rate.
+  - On 2026-11-25 the `cloud-app` suite failed the test on the first try and
+    on the retry, with the same failure text, at commit `a0bd8cc99` of the
+    branch `calummoore/live-channel-foundation-implementation-n1hi`, which does
+    not change the settings screens. The other 452 app browser tests passed.
 
 - **Impact if no action:** The test fails about half of its local runs, on `main` too, and the one retry of CI often fails as well. So the required app checks fail and block pull requests until a rerun passes. If the race is in the product, a reader who quickly resizes a window across the breakpoint loses the open settings dialog.
 - **Root question:** How does a quick series of surface changes always leave the address of the newest surface?
