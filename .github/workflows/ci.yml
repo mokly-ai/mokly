@@ -75,8 +75,6 @@ jobs:
         with:
           node-version: ${{ needs.profile.outputs.node-24-version }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -88,8 +86,12 @@ jobs:
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Build native artifacts
         run: cargo xtask build-native
       - name: Run repository verification
@@ -130,8 +132,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -142,8 +142,20 @@ jobs:
           shared-key: native-binary
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
+      - name: Save npm download cache
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -186,8 +198,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -198,6 +208,12 @@ jobs:
           shared-key: native-binary
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -247,8 +263,6 @@ jobs:
         with:
           node-version: 22.15.0
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -258,8 +272,25 @@ jobs:
         with:
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      # The Windows runner image moves npm's cache out of the home folder.
+      - name: Locate npm download cache
+        id: npm-cache-path
+        shell: bash
+        run: echo "path=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.npm-cache-path.outputs.path }}
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
+      - name: Save npm download cache
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.npm-cache-path.outputs.path }}
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Build UI package
         run: npm run build --workspace @mokly/ui
       - name: Build model package
@@ -295,8 +326,6 @@ jobs:
         with:
           node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -307,6 +336,12 @@ jobs:
           shared-key: native-binary
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -414,70 +449,62 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Install npm
         run: npm install --global npm@11.21.0
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: 1.98.1
-          components: rustfmt, clippy
       - name: Set up Rust
         run: rustup toolchain install
       - name: Restore Rust dependencies
         if: matrix.rust_cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          # One cache per partition, so caches produced at the same time by
-          # different partitions cannot replace one another.
-          key: ${{ matrix.command }}
+          # The mockup and site partitions build only xtask and the native
+          # binary, as the Mokly jobs do, so they share their cache. The other
+          # partitions also build mkc- crates and keep a cache each.
+          shared-key: ${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - name: Cache Electron download
+      - name: Restore Electron download
         if: matrix.command == 'cloud-desktop'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        id: electron-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/electron
           key: electron-${{ runner.os }}-${{ runner.arch }}-44.11.3
+      - name: Restore npm download cache
+        if: matrix.install_dependencies
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         if: matrix.install_dependencies
         run: npm ci
-      - name: Prepare the Playwright package cache
-        if: matrix.browser_workspace != ''
-        id: playwright_packages
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh prepare
-      - name: Cache Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ runner.temp }}/playwright-apt-archives
-          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
-      - name: Restore Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh restore
       - name: Install Chromium
         if: matrix.browser_workspace != ''
         env:
           BROWSER_WORKSPACE: ${{ matrix.browser_workspace }}
         run: npm exec --workspace "$BROWSER_WORKSPACE" -- playwright install --with-deps chromium
-      - name: Retain Playwright package downloads
-        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh stage
       - name: Install virtual display
         if: matrix.command == 'cloud-desktop'
         run: sudo apt-get install -y xvfb
       - name: Start Postgres 16 for integration tests
         if: matrix.postgres
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16 libpq-dev e2fsprogs
+          # The runner image ships these packages. Install only the missing ones.
+          missing=()
+          for package in postgresql-16 libpq-dev e2fsprogs; do
+            dpkg-query --show --showformat='${db:Status-Status}' "$package" 2>/dev/null |
+              grep -qx installed || missing+=("$package")
+          done
+          if (( ${#missing[@]} )); then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
           sudo -u postgres createdb mkc_test
@@ -498,6 +525,13 @@ jobs:
           for suite in $ADDITIONAL_SUITES; do
             cargo xtask check --suite "$suite"
           done
+      # Electron downloads its binary when the desktop tests first start it.
+      - name: Save Electron download
+        if: matrix.command == 'cloud-desktop' && github.ref == 'refs/heads/main' && steps.electron-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/electron
+          key: ${{ steps.electron-cache.outputs.cache-primary-key }}
 
   images:
     name: Workload image checks
@@ -511,19 +545,20 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Install Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install npm and dependencies
         run: |
           npm install --global npm@11.21.0
           npm ci
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: 1.98.1
       - name: Set up Rust
         run: rustup toolchain install
       - name: Restore Rust build cache
@@ -533,8 +568,16 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install bounded-storage host tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y e2fsprogs postgresql-16 libpq-dev
+          # The runner image ships these packages. Install only the missing ones.
+          missing=()
+          for package in postgresql-16 libpq-dev e2fsprogs; do
+            dpkg-query --show --showformat='${db:Status-Status}' "$package" 2>/dev/null |
+              grep -qx installed || missing+=("$package")
+          done
+          if (( ${#missing[@]} )); then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
           sudo -u postgres createdb mkc_test
@@ -640,35 +683,22 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
+      - name: Restore npm download cache
+        id: npm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Prepare the Playwright package cache
-        id: playwright_packages
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh prepare
-      - name: Cache Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ runner.temp }}/playwright-apt-archives
-          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
-      - name: Restore Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh restore
       - name: Install Chromium
         run: npm exec --workspace @mokly-cloud/site -- playwright install --with-deps chromium
-      - name: Retain Playwright package downloads
-        if: steps.playwright_packages.outputs.state != ''
-        continue-on-error: true
-        run: bash scripts/cloud/playwright-package-cache.sh stage
       - name: Select Chromium for Lighthouse
         working-directory: apps/site
         run: |
