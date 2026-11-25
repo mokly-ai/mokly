@@ -76,7 +76,7 @@ test("development permits only the local catalogue wildcard and explicit bundle 
 
 test("production CSP matches the app server, while development changes only the catalogue source", () => {
   const expected =
-    "default-src 'self'; frame-src 'self' https://mokly.example https://api.mokly.example https://*.catalogue.example; connect-src 'self' https://mokly.example https://api.mokly.example https://*.catalogue.example; img-src 'self' data: https://*.catalogue.example; font-src 'self' https://*.catalogue.example; style-src 'self' 'unsafe-inline' https://*.catalogue.example; frame-ancestors 'none'";
+    "default-src 'self'; frame-src 'self' https://mokly.example https://api.mokly.example https://*.catalogue.example; connect-src 'self' https://mokly.example https://api.mokly.example wss://api.mokly.example https://*.catalogue.example; img-src 'self' data: https://*.catalogue.example; font-src 'self' https://*.catalogue.example; style-src 'self' 'unsafe-inline' https://*.catalogue.example; frame-ancestors 'none'";
   assert.equal(
     contentSecurityPolicy(config, "https://*.catalogue.example"),
     expected,

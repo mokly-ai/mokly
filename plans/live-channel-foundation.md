@@ -51,6 +51,14 @@ sessions build on this channel in their own plans.
     jumps.
 - **Split, 2026-11-24, Cal.** The shared foundation merges into `main` first,
   so that comments, agents and presence can build on it in parallel.
+- **Desktop live socket, 2026-11-25, Cal: the desktop CSP gets the API's
+  WebSocket origin.** The desktop shell's `connect-src` names the API origin
+  with `https` mapped to `wss`, the same as the app server, so the desktop
+  app gets live build updates and its CSP stays equal to the web CSP.
+  Alternative:
+  - Keep the desktop CSP without the WebSocket origin, so the desktop polls
+    every 3 seconds, and let the contract test allow the difference. Left
+    out: it breaks the rule that the desktop serves the app server's CSP.
 
 ### Design calls
 
