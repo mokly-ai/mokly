@@ -75,11 +75,13 @@ and runs the test binaries of all selected crates in parallel. Then
 does not run doc tests. Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 
-`.config/nextest.toml` requires the exact nextest version that CI installs
-as a pinned prebuilt binary. Each of these suites first runs
-`xtask/scripts/require-nextest.mjs`. Without `cargo nextest`, it fails before
-any build and prints `cargo install cargo-nextest --locked --version {version}`
-and the prebuilt binary page.
+CI installs the pinned nextest version as a prebuilt binary.
+`.config/nextest.toml` requires at least that version. Each of these suites
+runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
+`cargo nextest` is missing or older than the requirement, the preflight fails
+and prints `cargo install cargo-nextest --locked --version {version}` and the
+prebuilt binary page. In Native, the doc tests also run after failed nextest
+tests, so one job reports both kinds of failure.
 
 An in-process lock reaches no other test process. Tests that share a fixed
 fixture parent or a database budget therefore run in a one-thread nextest

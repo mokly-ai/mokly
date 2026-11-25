@@ -35,7 +35,8 @@ pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
 
 /// Build the host binary, then run the Rust tests or one nextest partition of
 /// them. The unsharded suite and shard 1 also check formatting and Clippy and
-/// run the doc tests, so a sharded run checks each of them once.
+/// run the doc tests, so a sharded run checks each of them once. The doc tests
+/// also run after failed tests, so one job reports both kinds of failure.
 fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     let first = shard.is_none_or(Shard::is_first);
     let mut commands = vec![require_nextest(), cargo(&["xtask", "build-native"])];
@@ -56,7 +57,7 @@ fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     if let Some(shard) = shard {
         tests = tests.args(["--partition".to_owned(), format!("slice:{shard}")]);
     }
-    commands.push(tests);
+    commands.push(tests.keep_going());
     if first {
         commands.push(doc);
     }

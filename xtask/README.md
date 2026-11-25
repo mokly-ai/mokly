@@ -128,7 +128,8 @@ Repository, Native, and Cloud Rust run their Rust tests with cargo-nextest,
 then their doc tests with `cargo test --doc`, under the
 [Rust test runner](../docs/protocol/ci-verification-repository.md#rust-test-runner)
 contract. Each first runs `xtask/scripts/require-nextest.mjs`, which fails
-with install commands when `cargo nextest` is missing. Install the version
+with install commands when `cargo nextest` is missing or older than the
+requirement. Install the version
 that `.config/nextest.toml` requires, for example with
 `cargo install cargo-nextest --locked --version 0.9.152`.
 Seven remote cloud workers cover Rust and desktop, four app shards, web,

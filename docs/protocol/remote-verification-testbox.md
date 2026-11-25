@@ -34,11 +34,11 @@ Run the steps in this order:
    11.21.0 with the root lockfile cache and `package-manager-cache: false`.
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.98.1 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
-   toolchain for every command in the checkout. Then install the pinned
-   cargo-nextest with the CI install step.
+   toolchain for every command in the checkout.
 5. Restore the Rust build cache with the action and options that the CI viewer,
    browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
-   unreviewed local trees, so they never save.
+   unreviewed local trees, so they never save. Then install the pinned
+   cargo-nextest with the CI install step.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`

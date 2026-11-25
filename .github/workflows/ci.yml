@@ -81,11 +81,6 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
-        with:
-          tool: cargo-nextest@0.9.152
-          fallback: none
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
@@ -93,6 +88,11 @@ jobs:
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Install dependencies
         run: npm ci
       - name: Build native artifacts
@@ -238,23 +238,41 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows runs its Rust tests in three nextest partitions. Shard 1
+        # Windows runs its Rust tests in four nextest partitions. Shard 1
         # also checks formatting and Clippy and runs the doc tests.
         include:
           - runner: macos-26
             shard: ""
           - runner: windows-2025
-            shard: 1/3
+            shard: 1/4
           - runner: windows-2025
-            shard: 2/3
+            shard: 2/4
           - runner: windows-2025
-            shard: 3/3
+            shard: 3/4
+          - runner: windows-2025
+            shard: 4/4
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false
+      # Windows tests write many temporary files. A trusted ReFS Dev Drive
+      # avoids the real-time scan and the NTFS cost of the default disk.
+      - name: Put temporary files on a Dev Drive
+        if: runner.os == 'Windows'
+        uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
+        with:
+          drive-size: 20GB
+          drive-format: ReFS
+          drive-type: Dynamic
+          trusted-dev-drive: true
+          env-mapping: |
+            TMP,{{ DEV_DRIVE }}\tmp
+            TEMP,{{ DEV_DRIVE }}\tmp
+      - name: Create the temporary directory
+        if: runner.os == 'Windows'
+        run: New-Item -ItemType Directory -Force -Path "$env:TMP"
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -266,16 +284,16 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
-        with:
-          tool: cargo-nextest@0.9.152
-          fallback: none
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Install dependencies
         run: npm ci
       - name: Build UI package
@@ -451,12 +469,6 @@ jobs:
           components: rustfmt, clippy
       - name: Set up Rust
         run: rustup toolchain install
-      - name: Install cargo-nextest
-        if: matrix.command == 'cloud-rust'
-        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
-        with:
-          tool: cargo-nextest@0.9.152
-          fallback: none
       - name: Restore Rust dependencies
         if: matrix.rust_cache
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
@@ -466,6 +478,12 @@ jobs:
           key: ${{ matrix.command }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        if: matrix.command == 'cloud-rust'
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Cache Electron download
         if: matrix.command == 'cloud-desktop'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0

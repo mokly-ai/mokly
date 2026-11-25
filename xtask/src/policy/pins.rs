@@ -104,15 +104,17 @@ pub(super) fn nextest_config(text: &str, pins: &Pins) -> Result<Vec<Violation>> 
     ))
 }
 
-/// Every `cargo-nextest@VERSION` install in a workflow names the pinned version.
+/// Every `cargo-nextest` tool input of a workflow names exactly the pinned version.
 pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Vec<Violation> {
-    const TOOL: &str = "cargo-nextest@";
-    text.match_indices(TOOL)
-        .flat_map(|(start, _)| {
-            let version = text[start + TOOL.len()..]
-                .split(|character: char| character.is_whitespace() || character == ',')
-                .next()
-                .unwrap_or_default();
+    text.lines()
+        .filter_map(|line| line.trim().strip_prefix("tool:"))
+        .flat_map(|tools| tools.split(','))
+        .map(str::trim)
+        .filter(|tool| tool.split('@').next() == Some("cargo-nextest"))
+        .flat_map(|tool| {
+            let version = tool
+                .split_once('@')
+                .map_or("floating", |(_, version)| version);
             compare(path, "cargo-nextest install", &pins.nextest, version)
         })
         .collect()

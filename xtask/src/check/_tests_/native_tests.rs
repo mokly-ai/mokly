@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
@@ -22,18 +22,18 @@ fn every_native_command_stays_covered_by_the_local_gate() {
         local.push(CommandSpec::new("cargo").args(["xtask", "build-native"]));
     }
     let mokly = ["--locked", "-p", "mokly-*", "-p", "xtask"];
-    for tests in [
-        CommandSpec::new("cargo")
-            .args(["nextest", "run"])
-            .args(mokly),
-        CommandSpec::new("cargo")
-            .args(["test"])
-            .args(mokly)
-            .args(["--doc"]),
-    ] {
-        if local.contains(&tests) {
-            local.push(tests.args(["--no-fail-fast"]));
-        }
+    let nextest = CommandSpec::new("cargo")
+        .args(["nextest", "run"])
+        .args(mokly);
+    if local.contains(&nextest) {
+        local.push(nextest.args(["--no-fail-fast"]).keep_going());
+    }
+    let doc = CommandSpec::new("cargo")
+        .args(["test"])
+        .args(mokly)
+        .args(["--doc"]);
+    if local.contains(&doc) {
+        local.push(doc.args(["--no-fail-fast"]));
     }
     for command in commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline) {
         assert!(
@@ -165,4 +165,39 @@ fn native_shards_split_the_tests_and_run_lints_and_doc_tests_once() {
         "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --partition slice:3/3",
     );
     assert_eq!(display("3/3"), later);
+}
+
+#[test]
+fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
+    let observed = Arc::new(Mutex::new(Vec::new()));
+    let captured = observed.clone();
+    let nextest = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
+    let runner = DefaultCheckRunner::new(
+        Arc::new(Unimock::new(
+            CommandRunnerRunMock
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+                    let command = command.display();
+                    captured.lock().unwrap().push(command.clone());
+                    if command == nextest {
+                        Err(Error::CommandFailed {
+                            command,
+                            status: "100".into(),
+                        })
+                    } else {
+                        Ok(())
+                    }
+                })),
+        )),
+        Arc::new(Unimock::new(())),
+        PathBuf::from("/workspace"),
+    );
+    assert!(matches!(
+        runner.run(CheckRequest::new(Some(VerificationSuite::Native), None, None).unwrap()),
+        Err(Error::CommandFailed { command, status }) if command == nextest && status == "100"
+    ));
+    assert_eq!(
+        observed.lock().unwrap().last().map(String::as_str),
+        Some("cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast")
+    );
 }

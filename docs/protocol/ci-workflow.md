@@ -42,9 +42,10 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one viewer job on Node 22.15.0;
 - four browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
-- one native job on macOS and three Windows native shards at Node 22.15.0.
-  Each Windows shard runs one third of the Rust tests. Shard 1 also checks
-  formatting and Clippy and runs the doc tests.
+- one native job on macOS and four Windows native shards at Node 22.15.0.
+  Each Windows shard runs one quarter of the Rust tests. Shard 1 also checks
+  formatting and Clippy and runs the doc tests. The Windows shards keep their
+  temporary files on a trusted ReFS Dev Drive.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 
@@ -106,7 +107,7 @@ Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
 failing test. The repository, native, and Workspace checks jobs, and the
 Testbox job, install the pinned prebuilt
 [Rust test runner](./ci-verification-repository.md#rust-test-runner) with
-`taiki-e/install-action` after `rustup toolchain install`.
+`taiki-e/install-action` right after the Rust build cache restore.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no

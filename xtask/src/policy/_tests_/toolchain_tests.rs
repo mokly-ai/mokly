@@ -126,6 +126,12 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
             "cargo-nextest install",
             "0.9.152",
         ),
+        (
+            ".github/workflows/ci.yml",
+            WORKFLOW.replace("@0.9.152", ""),
+            "cargo-nextest install",
+            "0.9.152",
+        ),
     ];
     for (path, text, expected_field, expected_value) in changes {
         let Err(Error::Violations(violations)) = check(Some((path, &text))) else {
