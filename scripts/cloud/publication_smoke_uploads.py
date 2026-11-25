@@ -147,7 +147,7 @@ def idempotency(api, project, token, files):
     assert api.sql("SELECT count(*) FROM publication_files f JOIN publications p ON p.id=f.publication_id WHERE p.project_id='" + project["id"] + "' AND p.state='failed'") == "0"
     assert api.sql("SELECT count(*) FROM blobs b WHERE b.ref_count<>(SELECT count(*) FROM publication_files f WHERE f.project_id=b.project_id AND f.blob_hash=b.hash)") == "0"
     connections = int(api.sql("SELECT count(*) FROM pg_stat_activity WHERE application_name='mkc_api_smoke' AND pid<>pg_backend_pid()"))
-    assert connections <= 9
-    print("MEASURE concurrent publication writes: retained_api_database_connections=" + str(connections) + " pool_capacity=8 health_capacity=1")
+    assert connections <= 11, connections
+    print("MEASURE concurrent publication writes: retained_api_database_connections=" + str(connections) + " pool_capacity=8 health_capacity=1 relay_capacity=2")
     print("PASS keep-first completion: one 201, superseded 200, repeated completion statuses, empty replay plans and reference counts")
     return first
