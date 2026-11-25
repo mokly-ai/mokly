@@ -1,14 +1,18 @@
 # Storybook Stories
 
+Status: The `storybook` root field, Storybook's full order of preview extensions, and the reading of `main.*` are not available yet. The [Storybook folder milestone](../../plans/storybook-support.md#milestone-19-a-storybook-folder-for-each-root) adds them. Roots without `dir` are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
+
 ## Stories Files
 
 A stories file is a `*.stories.{ts,tsx,js,jsx}` file that a root matches. The
 [render sidecar](./mokly-sidecar.md) reads each story through Storybook's own
 story composition from `@storybook/react`, and it renders the story to static
-markup. The sidecar applies the consumer's `.storybook/preview` annotations
-once to each story. Mokly reads the composed args, argTypes, parameters, and
-tags of each story. A consumer without `@storybook/react` fails `bundle` with
-`bundle-failed` that names the missing package.
+markup. The sidecar applies the preview annotations of the story's
+[Storybook folder](#storybook-folders) once to each story. Mokly reads the
+composed args, argTypes, parameters, and tags of each story. When
+`@storybook/react` does not resolve under the
+[resolution rule](#storybook-folders), `bundle` fails with `bundle-failed` that
+names the missing package.
 
 Mokly reads these forms of stories files:
 
@@ -18,6 +22,49 @@ Mokly reads these forms of stories files:
 - CSF Factories: stories from `meta.story()` on a meta from `preview.meta()`,
   without a default export. Mokly takes the meta and the preview of such a
   file from its stories.
+
+## Storybook Folders
+
+Each root has at most one Storybook folder. The root's `storybook` field names
+it, as a config-relative folder path, or as an object whose `config` field
+holds that path. Without the field, the root's Storybook folder is `.storybook`
+in the repository root, when that folder exists. The
+[configuration contract](./mokly-configuration.md#validation) validates a named
+folder. Decision: a root names its Storybook folder, so a monorepo keeps the
+preview of each package's own Storybook. `mokly init --storybook` was rejected,
+and so was composition with the framework package and its preview annotations.
+
+The preview file of a Storybook folder is the first file of `preview` with
+one of these extensions that exists in the folder, in this order: `.js`, `.ts`,
+`.jsx`, `.tsx`, `.mjs`, `.mts`, `.mtsx`, `.cjs`, `.cts`, and `.ctsx`. This is
+Storybook's own order. A root without a Storybook folder, and a folder without
+a preview file, give their stories no preview annotations, and Mokly gives no
+warning. The stories of a root get the preview of that root's folder, so two
+roots with different folders give their stories different previews. Mokly
+gives Storybook each preview module in the form that Storybook reads. So Storybook reads the same default and named
+settings from an ES module and from a CommonJS file.
+
+Mokly finds the `main.*` file of a Storybook folder as Storybook does. It reads
+the file with Storybook's own loader from the project's installed `storybook`
+package. Mokly reads two fields of it: `stories` and `framework`. A root that
+names a Storybook folder and has no `dir` takes its directories from
+`stories`, under the
+[roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
+
+`@storybook/react` resolves from the configuration directory first. When it
+does not resolve there, it resolves through the framework package that
+`main.*` of the story's Storybook folder names. For a root with `dir`, Mokly
+reads `main.*` only when the configuration directory does not resolve
+`@storybook/react`. Decision: projects that install only a framework package,
+such as `@storybook/react-vite`, work without a direct `@storybook/react`
+dependency. A required direct dependency was rejected.
+
+When Storybook's loader fails on a `main.*` file during `bundle`, `bundle`
+fails with `bundle-failed`. Its message names the file, the installed
+Storybook version, and the Storybook range that Mokly's tests cover. Decision:
+Mokly reads `main.*` with Storybook's own loader, which reads every form of
+`main.*`, and adds no version check. A version check was rejected, because it
+adds a new error.
 
 ## Included Stories
 
@@ -142,6 +189,8 @@ They also define the globals that each view gives a story.
 ## Related Docs
 
 - [Storybook story setup](./mokly-storybook-setup.md)
+- [Root discovery](./mokly-root-discovery.md) and
+  [configuration](./mokly-configuration.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Entry props and variants](./mokly-entry-props.md)
 - [Variants](./mokly-variants.md)

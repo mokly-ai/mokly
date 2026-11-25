@@ -1,5 +1,7 @@
 # Imported Stylesheet Delivery
 
+Status: Preview files are not delivery roots yet. The [preview CSS milestone](../../plans/storybook-support.md#milestone-21-preview-css-in-story-documents) adds them.
+
 ## Delivery
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,
@@ -64,7 +66,9 @@ on every platform.
 ## Roots, Collection And Deduplication
 
 The delivery roots are each configured or component-declared local stylesheet,
-the configured renderer module, and every entry module and stories file that reaches CSS,
+the configured renderer module, each
+[preview file](./mokly-storybook.md#storybook-folders) that reaches CSS, and
+every entry module and stories file that reaches CSS,
 sorted by repository-relative POSIX path within each kind. There are no
 other delivery roots. A local stylesheet root has that file as its only
 direct stylesheet; nothing is pruned from it or by it. A module that exports
@@ -87,19 +91,26 @@ allowed roots fails at the authored importer. A diagnostic names the logical
 module and never shows a virtual module or an absolute path.
 
 The core then resolves nested local `@import`s, quoted and `url()` forms, to
-form each root's complete stylesheet closure. The renderer's closure includes
-its top-level stylesheets. Before an entry root is bundled, every file of the
-renderer's closure is removed from the entry's direct list and from every
-depth of its `@import` tree, and an excluded nested `@import` is removed
-before PostCSS runs; nothing is pruned by selector or by emitted text. Thus a
-renderer that imports `tokens.css` and `dark-theme.css` never sees
-`tokens.css` reappear through an entry's component CSS. The first linked root
-wins across renderer and entry; within one root, JavaScript first
-reachability wins, and a repeated CSS `@import` keeps CSS's last-position
-rule. A file shared by two entry roots is not suppressed. Remote `@import`s,
-`"https://..."` and `url("https://...")`, stay external: never fetched, never
-inventoried. Prelude imports are placed at the start of the bundle in their
-order; a local `@import` after a style rule fails at its authored file.
+form each root's complete stylesheet closure. The closure of the renderer or
+of a preview file includes its top-level stylesheets. Before a preview root or
+an entry root is bundled, every file of the renderer's closure is removed from
+the root's direct list and from every depth of its `@import` tree, and an
+excluded nested `@import` is removed before PostCSS runs; nothing is pruned by
+selector or by emitted text. A stories file root also drops every file of its
+preview's closure in the same way. Thus a renderer that imports `tokens.css`
+and `dark-theme.css` never sees `tokens.css` reappear through an entry's
+component CSS. The first linked root wins across the renderer, the preview,
+and the entry; within one root, JavaScript first reachability wins, and a
+repeated CSS `@import` keeps CSS's last-position rule. A file shared by two
+entry roots is not suppressed. Decision: a stories file root drops the files
+that its preview delivers, because Storybook loads each CSS module once, and
+the renderer rule does the same. A second copy in the stories file's
+stylesheet was rejected.
+
+Remote `@import`s, `"https://..."` and `url("https://...")`, stay external:
+never fetched, never inventoried. Prelude imports are placed at the start of
+the bundle in their order; a local `@import` after a style rule fails at its
+authored file.
 
 Under the Vite adapter, the
 [import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets)

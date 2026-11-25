@@ -2780,14 +2780,97 @@ Depends on: 8
 
 Track E. The protocol states the rules of decisions 4 and 9.
 
-- [ ] Add the rules for Storybook folders and `main.*` to
+- [x] Add the rules for Storybook folders and `main.*` to
       `docs/protocol/mokly-storybook.md`, with the answer to decision 20.
-- [ ] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
-      field.
-- [ ] Update `docs/protocol/mokly-rendering.md`: a story document links the
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
+      field. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Update `docs/protocol/mokly-rendering.md`: a story document links the
       preview file's bundled stylesheet directly after the renderer's.
-- [ ] Add the status lines, and run `npm run format:check` and
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+
+Design calls of track E. These calls are the track E orchestrator's, made on
+2026-11-25. They stay in this milestone so that the track changes only its
+own lines of this plan.
+
+- E1. Track E adds the `storybook` field as a folder path or as an object
+  with `config` only. Milestone 27 adds `url` with its behaviour. Reason: a
+  field that Mokly accepts and ignores misleads users.
+- E2. A story's stylesheet drops every file that its preview stylesheet
+  already delivers, as an entry's stylesheet drops the renderer's files. This
+  answers the question that track D raised on 2026-11-23 in Milestone 21.
+  Reason: the existing rule says that the first linked root wins, and
+  Storybook also loads each CSS module once. A second copy has no benefit, so
+  the question needs no user decision.
+- E3. A named Storybook folder must exist inside `repoRoot`, with the path
+  checks of `dir`. A root without `dir` that sets `files` fails, because
+  `files` needs a directory. Reason: the configuration rejected any
+  `storybook` field and any root without `dir` before, so no accepted
+  configuration fails now, and the checks match every other path field.
+- E4. A root from `main.*` selects only stories files, so `.mdx` files stay
+  out without a warning. A file or a folder record that two entries of one
+  configured root reach belongs to the first entry, without an error.
+  Reason: Storybook's default template has two entries in one directory, and
+  a warning or an error would fail it.
+- E5. A `stories` string without a glob character reads as in Storybook: a
+  directory gets the default files glob, and a file splits into its
+  directory and its name. An extglob other than `@(...)` and `?(...)` fails
+  with the `main.*` configuration error. Reason: decision 20 chose to read
+  every form of `stories`, and Mokly's globs have no form for the others.
+- E6. The empty-root message of a root without `dir` names its Storybook
+  folder. Reason: the user fixes the cause in that folder's `main.*`.
+- E7. For a root with `dir`, the sidecar reads `main.*` only when the
+  configuration directory does not resolve `@storybook/react`. Reason: a
+  project with a direct dependency then never fails on a broken `main.*`,
+  and design call 14 needs `main.*` only for the fallback.
+- E8. Track E updates each protocol page that its code would contradict, also
+  pages that the milestones do not name, such as the watch, path, sidecar
+  recipe, and eager base pages. Reason: a doc changes with the behaviour.
+
+#### Track E decision 1: The route of a preview in a dot folder
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-imported-styles.md:30-40`, the route
+  rule. `crates/mokly-css/src/paths.rs:20-40`, the portable path check.
+- **Background:**
+  - Decision 4 makes each preview file that imports CSS a delivery root.
+  - The route of a module root is `styles/{module path}.css`.
+  - Each segment of a route must start with a letter, a digit, `_`, or `-`.
+  - The default Storybook folder is `.storybook`, so its preview's route
+    starts with a dot segment.
+- **Problem:** A `.storybook/preview.tsx` that imports CSS fails the build
+  with "the module path is not URL-safe".
+- **Impact if no action:** After Milestone 21, most Storybook projects whose
+  preview imports CSS fail the build.
+- **Root question:** Where does Mokly deliver the CSS of a preview whose path
+  has a segment that starts with a dot?
+- **Options:**
+  - **A.** Keep the route rule. Such a build fails, and this is a new build
+    error. Effort: Small.
+  - **B.** Allow a leading dot in stylesheet routes. Some static hosts, such
+    as Jekyll on GitHub Pages, do not serve dot folders. Effort: Small.
+  - **C.** Write a leading dot in a portable form in the route of every
+    module root, such as `_storybook` for `.storybook`. The existing route
+    collision error catches a clash with a real folder of that name.
+    Effort: Medium.
+  - **D.** Give previews their own route, from a digest of the folder path.
+    A reader cannot tell from the route which file it is. Effort: Medium.
+  - **E.** Put the preview CSS into each stories file's bundle. This changes
+    decision 4 and repeats the CSS in each bundle. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** C, because it also covers a renderer or an entry module in a
+  dot folder.
+- **Previous examples:** None found.
+- **Recommendation:** C. The default layout then works, with one route rule
+  for every module root.
+- **Action:** ask the user, because each option changes a route requirement,
+  adds a build error, or changes decision 4. Milestone 21 waits for the
+  answer.
 
 ## Milestone 19: A Storybook folder for each root
 

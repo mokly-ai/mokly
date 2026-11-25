@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite.config` field is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
+Status: The `vite.config` and `roots[].storybook` fields and roots without `dir` are not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds `vite.config`, the [Storybook folder milestone](../../plans/storybook-support.md#milestone-19-a-storybook-folder-for-each-root) adds `roots[].storybook`, and the [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds roots without `dir`.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
@@ -11,8 +11,9 @@ resolves, and the validation that rejects an unsafe configuration.
 Mokly searches upward from the current working directory for
 `mokly.config.json`, unless `--config` names another JSON file. Discovery
 stops at the filesystem root and reports every directory it searched when
-none is found. The configuration is data: the core reads it without Node.js,
-and no sidecar starts for it.
+none is found. The configuration is data: the core reads it without Node.js.
+No sidecar starts for it, except to read the `main.*` of a root without `dir`
+under the [roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
 
 The config's filesystem paths resolve relative to the config file, never
 relative to the installed package or a transient npx cache.
@@ -24,8 +25,9 @@ following contract:
 
 - `roots`: the directories Mokly scans for HTML screens, components, pages,
   use cases, Markdown documents, entry modules, and stories files, each with
-  optional file globs, a path prefix, and transparent directory names,
-  defaulting to one `specs` root;
+  optional file globs, a path prefix, transparent directory names, and a
+  [Storybook folder](./mokly-storybook.md#storybook-folders), defaulting to
+  one `specs` root;
 - `repoRoot`: the repository root, defaulting to the config file's directory;
 - `colorSchemes`: a light-only or light-and-dark rendering set;
 - `renderer`: the optional module that wraps React screen and component
@@ -65,9 +67,9 @@ The shipped [configuration schema](../../packages/mokly/config.schema.json)
 defines the normative shape: every field, its type, and its accepted values.
 The rules below define how Mokly resolves and applies the fields.
 
-Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`,
-`vite.config`, module resolution package roots, and local stylesheet paths)
-are config-relative.
+Filesystem fields (`repoRoot`, `roots[].dir`, `roots[].storybook`,
+`renderer`, `postcss`, `vite.config`, module resolution package roots, and
+local stylesheet paths) are config-relative.
 Each one names the path that it reaches from the configuration file's
 directory after `.` segments, `..` segments, and empty segments are removed,
 in the working tree and in the base tree of a comparison. A symbolic link
@@ -125,9 +127,12 @@ Configuration accepts only the declared fields. An undeclared field fails with
 has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
-- path traversal: a `dir`, `renderer`, `postcss`, `vite.config`, package
-  root, or local stylesheet whose lexical path or real path is outside the
-  real path of `repoRoot`; `..` segments that resolve inside it are accepted;
+- path traversal: a `dir`, Storybook folder, `renderer`, `postcss`,
+  `vite.config`, package root, or local stylesheet whose lexical path or real
+  path is outside the real path of `repoRoot`; `..` segments that resolve
+  inside it are accepted;
+- a named Storybook folder that is not an existing directory, naming
+  `roots[<index>].storybook`, as for `dir`;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
@@ -179,7 +184,10 @@ globs select; the file kinds are those of the
 ## Roots
 
 The [root field contract](./mokly-root-discovery.md#root-fields) defines the
-strict `dir`, `files`, `path`, and `transparent` fields and their defaults.
+strict `dir`, `files`, `path`, `transparent`, and `storybook` fields and their
+defaults. A root needs `dir` unless it names a Storybook folder. A root
+without `dir` takes its directories from `main.*` under the
+[roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
 The [root discovery contract](./mokly-root-discovery.md#traversal-and-ownership)
 defines traversal, folder-record ownership, filesystem races, and the source
 inventory.

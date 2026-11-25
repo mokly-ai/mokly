@@ -1,5 +1,7 @@
 # Rendering And Document Assembly
 
+Status: Story documents link no preview stylesheet yet. The [preview CSS milestone](../../plans/storybook-support.md#milestone-21-preview-css-in-story-documents) adds it.
+
 This contract defines how the Rust core turns one view of an entry into a
 document: the boundary between the core and the sidecar, the renderer module,
 the stylesheet list of a document and its order, and document assembly. The
@@ -131,8 +133,18 @@ hrefs, in this order:
 2. That rule's scheme-specific list for the view's colour scheme, in the
    same form.
 3. The renderer module's bundled stylesheet, when the renderer imports CSS.
-4. The entry's bundled stylesheet, when the entry module or stories file
+4. In a story document only, the bundled stylesheet of the story's
+   [preview file](./mokly-storybook.md#storybook-folders), when that preview
+   file imports CSS. Screens, other components, and pages link no preview
+   stylesheet.
+5. The entry's bundled stylesheet, when the entry module or stories file
    imports CSS.
+
+Decision: a story document links its preview file's bundled stylesheet,
+because the preview file is the stories' version of the renderer.
+Documentation alone was rejected, and so was `preview-head.html` in addition
+to the preview CSS. A story document still links the renderer's stylesheet,
+because its removal would change existing catalogues.
 
 A configured local stylesheet is bundled like an imported one, and bundled
 stylesheets exist without a configured rule. The
