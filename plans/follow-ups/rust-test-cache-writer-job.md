@@ -1,10 +1,10 @@
 # Rust test cache depends on the shard assignment
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the review of branch `calummoore/ci-speed-native-fixed-costs-and-luqv`.
 - **Location:** `.github/workflows/ci.yml`, the `save-if` inputs of the `repository` and `native` jobs, and `xtask/src/check/rust_partition.rs`.
-- **Reason:** The branch fixes the direct problem: only the first test shard saves, and it holds `--lib` and the doc tests. The wider fix adds a job, so it needs its own timing comparison.
+- **Reason:** The branch fixes the direct problem: only the first test shard saves, and it holds `--lib` and the doc tests. The recommended fix adds a complete test build on a cache miss on `main`, so it needs its own timing comparison.
 - **Category:** Performance.
 
 - **Background:** The Repository and native test shards each build only their own Rust test targets, and they share one Rust build cache entry for each job and host. On `main`, only the first test shard saves the entry. That shard runs `--lib`, the unit tests of every Mokly library, and the doc tests. Their builds need every crates.io dependency of the Rust tests, because Cargo builds all dev-dependencies of a package for its library unit tests.

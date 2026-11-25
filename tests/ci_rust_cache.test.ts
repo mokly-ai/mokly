@@ -112,7 +112,8 @@ test("the Rust audit tool cache follows the tool identity", async () => {
 
 /**
  * The condition is `main` alone, or `main` and a condition with no `||`
- * outside parentheses, so every saving run is a run on `main`.
+ * outside parentheses and quoted strings, so every saving run is a run on
+ * `main`.
  */
 function savesOnlyFromMain(condition: unknown): boolean {
   if (condition === MAIN_ONLY) return true;
@@ -123,14 +124,18 @@ function savesOnlyFromMain(condition: unknown): boolean {
   )
     return false;
   let depth = 0;
+  let quoted = false;
   const rest = condition.slice(MAIN_AND.length, -" }}".length);
   for (const [index, character] of [...rest].entries()) {
+    // A quoted string is text; `''` inside it closes and reopens it.
+    if (character === "'") quoted = !quoted;
+    if (quoted) continue;
     if (character === "(") depth += 1;
     if (character === ")") depth -= 1;
     if (depth < 0) return false;
     if (depth === 0 && rest.startsWith("||", index)) return false;
   }
-  return depth === 0;
+  return depth === 0 && !quoted;
 }
 
 function isRustCache(step: WorkflowStep | undefined): boolean {

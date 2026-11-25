@@ -123,8 +123,12 @@ build cache of its job. The other units go to the test shards by weight, the
 heaviest first, each to the shard with the least weight so far. `scripts/verification/rust-test-weights.json`
 holds the measured compile and test seconds of each unit, a default for a
 unit that it does not name, and the doc test weight of the first test shard.
-Every host computes the same partition. A weight changes only the balance,
-never the set of tests. A shard without units runs no nextest command.
+The weight file can split a heavy unit other than `--lib` into nextest
+slices, `--partition slice:{k}/{n}` of that unit alone. Each slice goes to a
+shard like a unit, and the shard runs it in its own nextest command, so every
+test of the unit runs exactly once. Every host computes the same partition. A
+weight changes only the balance, never the set of tests. A shard without
+units runs no nextest command.
 
 Each test shard selects `-p "mokly-*" -p xtask` and adds the target
 arguments of its units, so it compiles only the test binaries of its units.

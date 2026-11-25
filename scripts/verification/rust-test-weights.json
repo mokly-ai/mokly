@@ -187,5 +187,8 @@
     "--test unsafe_html_warning_tests": 1,
     "--test url_tests": 3,
     "--test working_inputs_tests": 3
+  },
+  "splits": {
+    "--test integration_tests": 2
   }
 }

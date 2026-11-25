@@ -78,6 +78,15 @@ struct Resolve {
 struct Node {
     id: String,
     features: BTreeSet<String>,
+    #[serde(default)]
+    deps: Vec<NodeDependency>,
+}
+
+/// One resolved dependency, by its crate name in the depending package.
+#[derive(Deserialize)]
+struct NodeDependency {
+    name: String,
+    pkg: String,
 }
 
 /// Whether the package belongs to the `-p "mokly-*" -p xtask` selection.
@@ -87,29 +96,28 @@ pub(super) fn is_mokly_package(name: &str) -> bool {
 
 /// Read the units of the targets that `cargo nextest run` selects by default
 /// for the Mokly workspace packages: each target that has tests and whose
-/// required features Cargo's resolved features enable. The resolved features
-/// include features that a dependency or a dev-dependency enables. Build
-/// scripts have no tests.
+/// required features Cargo's resolved features enable, also a required
+/// `dependency/feature`. The resolved features include features that a
+/// dependency or a dev-dependency enables. Build scripts have no tests.
 pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
     let metadata: Metadata =
         serde_json::from_str(metadata).context("parse Cargo test target metadata")?;
-    let resolved: BTreeMap<&str, &BTreeSet<String>> = metadata
+    let resolved: BTreeMap<&str, &Node> = metadata
         .resolve
         .nodes
         .iter()
-        .map(|node| (node.id.as_str(), &node.features))
+        .map(|node| (node.id.as_str(), node))
         .collect();
     let mut units = BTreeSet::new();
     for package in &metadata.packages {
         if !metadata.workspace_members.contains(&package.id) || !is_mokly_package(&package.name) {
             continue;
         }
-        let enabled = resolved.get(package.id.as_str());
         for target in &package.targets {
             let available = target
                 .required_features
                 .iter()
-                .all(|feature| enabled.is_some_and(|features| features.contains(feature)));
+                .all(|feature| enables(&resolved, &package.id, feature));
             if !target.test || !available {
                 continue;
             }
@@ -119,6 +127,23 @@ pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
         }
     }
     Ok(units)
+}
+
+/// Whether Cargo enables a required feature of one package: a feature of
+/// the package itself, or `dependency/feature` of one of its dependencies.
+fn enables(resolved: &BTreeMap<&str, &Node>, package: &str, required: &str) -> bool {
+    let Some(node) = resolved.get(package) else {
+        return false;
+    };
+    let Some((dependency, feature)) = required.split_once('/') else {
+        return node.features.contains(required);
+    };
+    let crate_name = dependency.trim_end_matches('?').replace('-', "_");
+    node.deps
+        .iter()
+        .find(|dependency| dependency.name == crate_name)
+        .and_then(|dependency| resolved.get(dependency.pkg.as_str()))
+        .is_some_and(|dependency| dependency.features.contains(feature))
 }
 
 fn unit(target: &Target) -> Option<TestUnit> {

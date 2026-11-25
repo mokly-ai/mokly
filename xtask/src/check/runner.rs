@@ -10,7 +10,7 @@ use crate::rust_file_length::RustFileLengthAuditor;
 use super::commands::{Step, browser_test_command, commands_for, steps_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{RustPart, cargo_metadata, nextest};
-use super::rust_partition::{Weights, shard_units};
+use super::rust_partition::{Piece, Weights, shard_pieces};
 use super::rust_targets::test_units;
 use super::tasks::{Task, task_commands};
 
@@ -128,19 +128,39 @@ impl CheckRunner for DefaultCheckRunner {
         Ok(())
     }
 
-    /// Reads the test units from Cargo metadata, selects the units of the
-    /// shard, and runs them with nextest. A shard without units runs nothing.
+    /// Reads the test units from Cargo metadata and selects the pieces of the
+    /// shard. One nextest command runs its whole units, and one more command
+    /// runs each slice of a split unit. A shard without pieces runs nothing.
+    /// With `no_fail_fast`, every command runs and the first failure returns.
     fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool) -> Result<()> {
         let metadata = self
             .command_runner
             .output(&cargo_metadata().in_directory(self.workspace.clone()))?;
-        let units = shard_units(&test_units(&metadata)?, &Weights::embedded()?, partition);
-        if units.is_empty() {
+        let pieces = shard_pieces(&test_units(&metadata)?, &Weights::embedded()?, partition);
+        if pieces.is_empty() {
             eprintln!("Rust test shard {partition} has no test units");
             return Ok(());
         }
-        let targets: Vec<String> = units.iter().flat_map(|unit| unit.args()).collect();
-        self.run_command(nextest(&targets, no_fail_fast))
+        let whole: Vec<String> = pieces
+            .iter()
+            .filter(|piece| piece.slice.is_none())
+            .flat_map(|piece| piece.unit.args())
+            .collect();
+        let commands = (!whole.is_empty())
+            .then_some(whole)
+            .into_iter()
+            .chain(pieces.iter().filter_map(Piece::slice_args))
+            .map(|targets| nextest(&targets, no_fail_fast));
+        let mut first_failure = None;
+        for command in commands {
+            if let Err(error) = self.run_command(command) {
+                if !no_fail_fast {
+                    return Err(error);
+                }
+                first_failure.get_or_insert(error);
+            }
+        }
+        first_failure.map_or(Ok(()), Err)
     }
 
     fn source_file_length(&self, all: bool) -> Result<()> {

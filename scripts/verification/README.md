@@ -182,7 +182,9 @@ Rust test unit, such as `--test cli`, in seconds: its compile CPU time from
 on the three CI hosts. `xtask` embeds the file and assigns the units of the
 repository and native test shards by these weights, as the
 [test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
-says. A unit that the file does not name gets `defaultSeconds`. A stale
+says. A unit that the file does not name gets `defaultSeconds`. `splits` runs
+a heavy unit, such as the render integration tests, as nextest slices on
+separate shards. A stale
 weight changes only the balance of the shards, never the set of tests.
 
 ## Shard totals and weight refresh
