@@ -42,7 +42,7 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - five repository shards on Node 24;
 - two viewer shards and ten browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
-- five native shards on macOS and seven on Windows at Node 22.15.0.
+- six native shards on macOS and seven on Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
