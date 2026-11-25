@@ -9,11 +9,11 @@
 /**
  * Each plan frame in reading order: its name, its prices with the words
  * under them, and its one action with the kind of button and the mockup it
- * opens. The cloud plans start at sign-up; Get started opens the docs.
+ * opens. The cloud plans start at sign-up; the CLI's Docs opens the docs.
  */
 export const plans = [
   {
-    action: ["Get started →", "site-button--secondary", "design/site/docs"],
+    action: ["Docs →", "site-button--secondary", "design/site/docs"],
     amounts: ["$0"],
     name: "Open source",
     notes: ["MIT license"],
