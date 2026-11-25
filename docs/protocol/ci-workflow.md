@@ -42,9 +42,7 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one viewer job on Node 22.15.0;
 - four browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
-- one native job on macOS and four Windows native shards at Node 22.15.0.
-  Each Windows shard runs one quarter of the Rust tests. Shard 1 also checks
-  formatting and Clippy and runs the doc tests.
+- native jobs on macOS and Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 
@@ -104,10 +102,7 @@ rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout. No CI job installs Rust a second way, such as with a
 toolchain action.
 Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
-failing test. The repository, native, and Workspace checks jobs, and the
-Testbox job, install the pinned prebuilt
-[Rust test runner](./ci-verification-repository.md#rust-test-runner) with
-`taiki-e/install-action` right after the Rust build cache restore.
+failing test binary.
 
 Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
 runner image. They refresh the package index and install a package only when

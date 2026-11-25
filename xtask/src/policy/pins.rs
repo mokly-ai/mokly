@@ -104,12 +104,44 @@ pub(super) fn nextest_config(text: &str, pins: &Pins) -> Result<Vec<Violation>> 
     ))
 }
 
+#[derive(Deserialize)]
+struct Workflow {
+    #[serde(default)]
+    jobs: BTreeMap<String, WorkflowJob>,
+}
+
+#[derive(Deserialize)]
+struct WorkflowJob {
+    #[serde(default)]
+    steps: Vec<WorkflowStep>,
+}
+
+#[derive(Deserialize)]
+struct WorkflowStep {
+    #[serde(default)]
+    with: Option<StepInputs>,
+}
+
+#[derive(Deserialize)]
+struct StepInputs {
+    tool: Option<String>,
+}
+
 /// Every `cargo-nextest` tool input of a workflow names exactly the pinned version.
-pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Vec<Violation> {
-    text.lines()
-        .filter_map(|line| line.trim().strip_prefix("tool:"))
-        .flat_map(|tools| tools.split(','))
-        .map(str::trim)
+pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Result<Vec<Violation>> {
+    let workflow: Workflow =
+        serde_saphyr::from_str(text).context("parse a cargo-nextest workflow")?;
+    Ok(workflow
+        .jobs
+        .into_values()
+        .flat_map(|job| job.steps)
+        .filter_map(|step| step.with.and_then(|inputs| inputs.tool))
+        .flat_map(|tools| {
+            tools
+                .split(',')
+                .map(|tool| tool.trim().to_owned())
+                .collect::<Vec<_>>()
+        })
         .filter(|tool| tool.split('@').next() == Some("cargo-nextest"))
         .flat_map(|tool| {
             let version = tool
@@ -117,7 +149,7 @@ pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Vec<Viola
                 .map_or("floating", |(_, version)| version);
             compare(path, "cargo-nextest install", &pins.nextest, version)
         })
-        .collect()
+        .collect())
 }
 
 #[derive(Deserialize)]

@@ -73,7 +73,7 @@ impl ToolchainCheck {
                 path,
                 &text(environment, path)?,
                 &pins,
-            ));
+            )?);
         }
         let nextest =
             environment.output(&CommandSpec::new("cargo").args(["nextest", "--version"]))?;

@@ -15,7 +15,7 @@ use super::ToolchainCheck;
 
 const DOCKERFILE: &str = "FROM e2bdev/base:2026@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nARG NODE_VERSION=24.21.0\n";
 const NEXTEST: &str = "nextest-version = { required = \"0.9.152\" }\n";
-const WORKFLOW: &str = "        with:\n          tool: cargo-nextest@0.9.152\n";
+const WORKFLOW: &str = "jobs:\n  test:\n    steps:\n      - uses: taiki-e/install-action@fixture # v2\n        with:\n          tool: cargo-nextest@0.9.152 # pinned\n";
 const VERSIONS: &str = "pub const MIN_MOKLY_VERSION: &str = \"0.18.0\";\n";
 const SENTENCE: &str =
     "unsupported-mokly-version: Update `@mokly/mokly` to 0.18.0 or later to publish.\n";
@@ -129,6 +129,12 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
         (
             ".github/workflows/ci.yml",
             WORKFLOW.replace("@0.9.152", ""),
+            "cargo-nextest install",
+            "0.9.152",
+        ),
+        (
+            ".github/workflows/ci.yml",
+            WORKFLOW.replace("cargo-nextest@0.9.152", "\"cargo-nextest@0.9.150\""),
             "cargo-nextest install",
             "0.9.152",
         ),

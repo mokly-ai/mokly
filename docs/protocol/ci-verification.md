@@ -30,7 +30,8 @@ positive integers no larger than JavaScript's maximum safe integer, and
 partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
 not Playwright's count-based `--shard` selection. A native shard runs the
 nextest `slice:INDEX/TOTAL` partition of the Rust tests; shard 1 also checks
-formatting and Clippy and runs the doc tests. Omitting `--shard` runs the
+formatting and Clippy and runs the doc tests. CI runs two macOS and four
+Windows native shards. Omitting `--shard` runs the
 complete selected suite. Unknown suites, malformed shards, missing values, and
 attempts to shard the repository or viewer suite fail before any subprocess
 starts.

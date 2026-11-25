@@ -90,7 +90,9 @@ and runs the test binaries of all selected crates in parallel. Then
 does not run doc tests. Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 
-CI installs the pinned nextest version as a prebuilt binary.
+The repository, native, Workspace checks, and Testbox jobs install the
+pinned nextest version as a prebuilt binary with `taiki-e/install-action`,
+right after the Rust build cache restore.
 `.config/nextest.toml` requires at least that version. Each of these suites
 runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
 `cargo nextest` is missing or older than the requirement, the preflight fails

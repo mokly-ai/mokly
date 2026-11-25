@@ -254,11 +254,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows runs its Rust tests in four nextest partitions. Shard 1
-        # also checks formatting and Clippy and runs the doc tests.
+        # macOS runs its Rust tests in two nextest partitions and Windows in
+        # four. Shard 1 also checks formatting and Clippy and runs the doc tests.
         include:
           - runner: macos-26
-            shard: ""
+            shard: 1/2
+          - runner: macos-26
+            shard: 2/2
           - runner: windows-2025
             shard: 1/4
           - runner: windows-2025

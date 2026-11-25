@@ -1,12 +1,17 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-/** Read the nextest version that `.config/nextest.toml` requires. */
+/**
+ * Read the required nextest version for the install hint. Nextest itself
+ * evaluates the requirement, so an unread spelling only shortens the hint.
+ */
 function requiredVersion() {
   const config = readFileSync(".config/nextest.toml", "utf8");
-  const match = /^nextest-version\s*=.*required\s*=\s*"([^"]+)"/m.exec(config);
-  if (!match) throw new Error(".config/nextest.toml names no required nextest");
-  return match[1];
+  const match =
+    /^nextest-version\s*=\s*(?:"([^"]+)"|\{[^}]*required\s*=\s*"([^"]+)")/m.exec(
+      config,
+    ) ?? /^\[nextest-version\][^[]*?^required\s*=\s*"([^"]+)"/ms.exec(config);
+  return match?.slice(1).find(Boolean) ?? null;
 }
 
 /** Run one nextest command and keep its output. */
@@ -15,11 +20,12 @@ function nextest(args) {
 }
 
 function installSteps(version, problem) {
+  const pin = version ?? "{version}";
   return [
     `${problem} The Rust tests of cargo xtask check run with it.`,
-    `Install cargo-nextest ${version} with one of these commands:`,
-    `  cargo install cargo-nextest --locked --version ${version}`,
-    `  cargo binstall cargo-nextest@${version}`,
+    `Install the cargo-nextest version that .config/nextest.toml requires:`,
+    `  cargo install cargo-nextest --locked --version ${pin}`,
+    `  cargo binstall cargo-nextest@${pin}`,
     "Prebuilt binaries: https://nexte.st/docs/installation/pre-built-binaries/",
     "",
   ].join("\n");
