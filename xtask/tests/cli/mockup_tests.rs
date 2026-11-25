@@ -43,7 +43,10 @@ fn mockup_stage_builds_before_checks_and_propagates_real_failures() {
     );
     fixture.write("mokly.config.json", r#"{"repoRoot":".","roots":[{"dir":"entries","files":["**/*.mockup.{ts,tsx}"]}],"moduleResolution":{"packageRoots":["."]}}"#);
     fixture.write("entries/screen.mockup.tsx", "import { defineScreen } from '@mokly/mokly';\nexport const screen = defineScreen({ title: 'Screen', description: 'Fixture', relatedDocs: [], render: (_, context) => <main>{context.viewport}</main> });\n");
-    fixture.write("tsconfig.json", r#"{"compilerOptions":{"strict":true,"noEmit":true,"types":[],"ignoreDeprecations":"6.0"},"files":["fixture.ts"]}"#);
+    fixture.write(
+        "tsconfig.json",
+        r#"{"compilerOptions":{"strict":true,"noEmit":true,"types":[],"lib":["ES5"],"skipLibCheck":true,"ignoreDeprecations":"6.0"},"files":["fixture.ts"]}"#,
+    );
     fixture.write("fixture.ts", "export const value: number = 1;\n");
     let policy = "import { readFileSync } from 'node:fs';\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\ntest('policy', () => assert.equal(1, 1));\ntest('fresh output', () => assert.ok(!readFileSync(new URL('../mokly-static/static/mokly-generated/screen/index.mobile.html', import.meta.url), 'utf8').includes('stale')));\n";
     fixture.write("tests/policy.test.mjs", policy);
