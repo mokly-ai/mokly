@@ -17,7 +17,10 @@ class InlineStylesheet {
   readonly urls: ViteCssUrls;
   readonly reports = new Set<string>();
   readonly imports = new Map<string, string>();
-  classMap: Record<string, string> = {};
+  bindings: Pick<ViteCssResult, "classMap" | "namedExports"> = {
+    classMap: {},
+    namedExports: {},
+  };
   text: string | undefined;
 
   constructor(
@@ -128,7 +131,7 @@ export class ViteCssTransform {
         reports,
         result: {
           text: active.text,
-          classMap: active.classMap,
+          ...active.bindings,
           sourceDigest,
           dependencies,
           importedBy,

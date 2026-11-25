@@ -48,6 +48,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
                     route: String::new(),
                     css: String::new(),
                     assets: Default::default(),
+                    css_module_named_exports: Default::default(),
                     css_modules: uncovered.clone(),
                     inputs: Default::default(),
                     imported_by: Default::default(),

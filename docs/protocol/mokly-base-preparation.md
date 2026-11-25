@@ -40,8 +40,8 @@ content manifest in the cache entry, because it changes the cache format. A
 complete cache entry is trusted when the process first leases it, as the
 sidecar trusts it. Before it loads the base
 configuration, a preparation leases an existing complete extraction when the
-working configuration names a renderer or a PostCSS module. Under the Vite
-adapter, a local stylesheet that the working configuration names also selects
+working configuration names a renderer, or a PostCSS module on the default
+compiler. Under the Vite adapter, a local stylesheet that the working configuration names also selects
 that lease. That lookup never builds an extraction. Decision: lease only an
 existing extraction before the configuration loads. Rejected: a build at that
 point, because a base that needs no sidecar would then get an extraction.

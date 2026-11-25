@@ -2286,8 +2286,11 @@ own lines of this plan.
   `"empty"` opt-outs under the adapter, so they still have an effect.
 - D29. Made on 2026-11-25 by the same orchestrator. A replaced field counts
   as set when the configuration holds it, also when its list or map is
-  empty. `loaders` is the exception: D28 judges it key by key. Reason: an empty `conditions` list changes the esbuild path, so its
-  presence is a setting, and one rule then covers every field.
+  empty. `loaders` is the exception: D28 judges it key by key. Reason: the
+  warning reports the field that the author wrote, not what a compiler does
+  with its value. The warnings contract reports each ignored input so that
+  the author can decide. An empty field that the author wrote is such an
+  input, and one rule then covers every field.
 - D30. Made on 2026-11-25 by the same orchestrator. For the answer C to track
   D decision 3, an env file is tracked when the working tree's Git index
   holds it. A candidate that the base commit holds comes from the base

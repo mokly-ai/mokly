@@ -107,6 +107,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
     let generation = bundled.generation;
     pool.request(Call::CssModules(CssModules {
         generation: generation.clone(),
+        named_exports: None,
         class_maps: BTreeMap::from([(
             "control.module.css".into(),
             BTreeMap::from([("control".into(), "smoke-control".into())]),

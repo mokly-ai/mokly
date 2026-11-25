@@ -257,7 +257,7 @@ before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
 `damaged`, or `unavailable` when that removal finds the store unusable. A
-worker records the count of `esbuild` operation events of each `bundle`
+worker records the count of `esbuild` and `vite` events of each `bundle`
 request in a result field that never crosses the wire. After a successful
 `bundle` call, the pool uses that count to set the `cache` field of the
 result, which also never crosses the wire. A count of zero gives `hit` when
@@ -528,8 +528,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   seed, sets the `cache` outcome of its result, and offers the served recipe
   of each `Full` call to the store. The provenance keeps the loaded recipe of
   a restored stored compilation, with its runtime key and plan. A result with
-  that runtime key carries that plan. It reports `hit` when its count of
-  `esbuild` events is zero. `BundleAttempt` also holds the request pins of the
+  that runtime key carries that plan. It reports `hit` when the compile event
+  count is zero. `BundleAttempt` also holds the request pins of the
   live slot generations and the restored seeds. `install_live` and `install_released`
   pin each live or released seed before they restore it in the slot.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with

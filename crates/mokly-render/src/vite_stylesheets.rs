@@ -95,6 +95,7 @@ impl Transform for ViteStylesheets {
         let result = Arc::new(Stylesheet {
             text: result.text,
             class_map: result.class_map,
+            named_exports: result.named_exports,
             source_digest: result.source_digest,
             dependencies: result.dependencies,
             imported_by: result.imported_by,

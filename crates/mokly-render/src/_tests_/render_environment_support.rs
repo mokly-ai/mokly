@@ -27,6 +27,7 @@ pub(super) fn derive(
         params,
         result,
         maps,
+        &ClassMaps::new(),
         Path::new(&physical("/work/repo")),
         None,
     )
@@ -45,6 +46,7 @@ pub(super) fn derive_at(
         params,
         result,
         maps,
+        &ClassMaps::new(),
         Path::new(&working_root),
         cache_namespace.as_deref().map(Path::new),
     )

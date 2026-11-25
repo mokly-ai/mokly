@@ -15,6 +15,8 @@ importedAsset?: boolean,
  */
 path: string,
 /**
- * Resolved logical paths in source order.
+ * Resolved logical paths in metafile record order on the esbuild path.
+ * Vite lists static imports and re-exports first, then dynamic imports.
+ * Vite keeps source order within each group.
  */
 imports: Array<string>, };

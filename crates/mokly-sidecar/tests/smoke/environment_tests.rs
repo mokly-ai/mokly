@@ -84,6 +84,7 @@ fn child_checks_environment() {
     sidecars
         .request(Call::CssModules(CssModules {
             generation: generation.clone(),
+            named_exports: None,
             class_maps: BTreeMap::new(),
         }))
         .unwrap();

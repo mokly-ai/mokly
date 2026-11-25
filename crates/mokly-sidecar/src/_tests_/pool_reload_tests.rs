@@ -101,6 +101,7 @@ fn bundle() -> Bundle {
 fn maps(value: &str) -> CssModules {
     CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::from([(
             "card.module.css".into(),
             BTreeMap::from([("card".into(), value.into())]),

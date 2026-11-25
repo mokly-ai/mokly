@@ -53,6 +53,7 @@ fn negative_zero_survives_definitions_and_render_requests() {
     let generation = bundled.generation;
     pool.request(Call::CssModules(CssModules {
         generation: generation.clone(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     }))
     .unwrap();

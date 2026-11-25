@@ -57,6 +57,7 @@ impl StylesheetWorker for Threads {
             assets: BTreeMap::new(),
             resolution_files: Default::default(),
             resolution_roots: Default::default(),
+            css_module_named_exports: Default::default(),
             css_modules: BTreeMap::new(),
             inputs: BTreeMap::new(),
             imported_by: BTreeMap::new(),

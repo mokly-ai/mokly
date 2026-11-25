@@ -7,9 +7,13 @@ export type ViteCssResult = {
  */
 text: string,
 /**
- * Vite's original local-to-scoped exports.
+ * Vite's default map from local class names to scoped names.
  */
 classMap: { [key in string]: string },
+/**
+ * Named bindings in Vite's stylesheet module.
+ */
+namedExports: { [key in string]: string },
 /**
  * Digest of the selected stylesheet bytes.
  */

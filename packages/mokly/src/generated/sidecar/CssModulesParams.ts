@@ -9,4 +9,8 @@ generation: string,
 /**
  * Logical stylesheet path to original-name/scoped-name map.
  */
-classMaps: { [key in string]: { [key in string]: string } }, };
+classMaps: { [key in string]: { [key in string]: string } },
+/**
+ * Vite's named CSS Module bindings, grouped by logical stylesheet path.
+ */
+namedExports?: { [key in string]: { [key in string]: string } }, };

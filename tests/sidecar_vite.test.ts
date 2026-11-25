@@ -20,6 +20,15 @@ test("Vite graphs retain source digests, query files, and static then dynamic im
     (line) => context.diagnostic(line),
     async () => {
       const fixture = await viteFixture(context);
+      const screen = path.join(fixture.root, "src/screen.mockup.tsx");
+      const consumed =
+        'export const early = () => import("./early.js");\n' +
+        (await fs.readFile(screen, "utf8"));
+      await fs.writeFile(screen, consumed);
+      await fs.writeFile(
+        path.join(fixture.root, "src/early.ts"),
+        'export const early = "early dynamic import";\n',
+      );
       const sidecar = startSidecar(context, fixture.root);
       await sidecar.call("hello");
       const result = await sidecar.call<BundleResult>("bundle", fixture.params);
@@ -35,11 +44,9 @@ test("Vite graphs retain source digests, query files, and static then dynamic im
           "src/message.txt",
           "src/screen.css",
           "src/screen.module.css",
+          "src/early.ts",
           "src/lazy.ts",
         ],
-      );
-      const consumed = await fs.readFile(
-        path.join(fixture.root, "src/screen.mockup.tsx"),
       );
       assert.equal(
         source.digest,

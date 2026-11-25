@@ -7,10 +7,12 @@ use tempfile::TempDir;
 mod definitions;
 mod support;
 
-fn prepare_warnings(settings: &str) -> Vec<Warning> {
+const CONFIG: &str = "tools/mokly.json";
+
+fn fixture(settings: &str) -> TempDir {
     let directory = TempDir::new().unwrap();
     let config = format!(r#"{{"repoRoot":"..", "roots":[{{"dir":"../specs"}}], {settings}}}"#);
-    support::write(directory.path(), "tools/mokly.json", &config);
+    support::write(directory.path(), CONFIG, &config);
     support::write(directory.path(), "tools/postcss.js", "export default {};");
     support::write(directory.path(), "consumer/package.json", "{}");
     support::write(
@@ -18,9 +20,24 @@ fn prepare_warnings(settings: &str) -> Vec<Warning> {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<h1>Home</h1>",
     );
-    support::prepare(directory.path(), Some("tools/mokly.json"))
+    directory
+}
+
+fn prepare_warnings(settings: &str) -> Vec<Warning> {
+    let directory = fixture(settings);
+    support::prepare(directory.path(), Some(CONFIG))
         .unwrap()
         .warnings
+}
+
+fn replaced_warning(field: &str) -> Warning {
+    Warning {
+        code: "vite-replaced-setting",
+        subject: WarningSubject::Configuration(CONFIG.into()),
+        message: format!(
+            "setting \"{field}\" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup."
+        ),
+    }
 }
 
 #[test]
@@ -45,14 +62,28 @@ fn explicit_replaced_settings_warn_once_per_field_with_vite() {
         "moduleResolution.resolveExtensions",
         "postcss",
     ]
-    .map(|field| Warning {
-        code: "vite-replaced-setting",
-        subject: WarningSubject::Configuration("tools/mokly.json".into()),
-        message: format!(
-            "setting \"{field}\" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup."
-        ),
-    });
+    .map(replaced_warning);
     assert_eq!(warnings, expected);
+}
+
+#[test]
+fn vite_warns_about_postcss_without_resolving_its_file() {
+    for path in ["missing.mjs", "postcss.js", "postcss.json", "directory.mjs"] {
+        let directory = fixture(&format!(r#""vite": true, "postcss": "{path}""#));
+        support::write(directory.path(), "tools/directory.mjs/plugin.js", "");
+        let loaded = support::load(directory.path(), Some(CONFIG));
+        assert!(loaded.is_ok(), "{path}: {loaded:?}");
+        let config = loaded.unwrap();
+        assert_eq!(config.postcss(), None, "{path}");
+        assert_eq!(config.authored_inputs.len(), 0, "{path}");
+        assert_eq!(
+            support::prepare(directory.path(), Some(CONFIG))
+                .unwrap()
+                .warnings,
+            [replaced_warning("postcss")],
+            "{path}"
+        );
+    }
 }
 
 #[test]
@@ -88,7 +119,7 @@ fn vite_accepts_empty_loader_maps_and_stylesheet_opt_outs_without_warnings() {
 #[test]
 fn esbuild_does_not_warn_about_settings_that_vite_replaces() {
     for (scenario, vite) in [("vite absent", ""), ("vite false", r#""vite": false,"#)] {
-        let warnings = prepare_warnings(&format!(
+        let directory = fixture(&format!(
             r#"
             {vite}
             "postcss": "postcss.js",
@@ -101,6 +132,16 @@ fn esbuild_does_not_warn_about_settings_that_vite_replaces() {
             }}
             "#,
         ));
+        let config = support::load(directory.path(), Some(CONFIG)).unwrap();
+        assert_eq!(config.postcss().as_deref(), Some("tools/postcss.js"));
+        assert!(
+            config
+                .authored_inputs
+                .contains(&config.repo_root.join("tools/postcss.js"))
+        );
+        let warnings = support::prepare(directory.path(), Some(CONFIG))
+            .unwrap()
+            .warnings;
         assert!(warnings.is_empty(), "{scenario}: {warnings:?}");
     }
 }

@@ -41,6 +41,7 @@ pub(super) fn bundle(root: &str) -> Bundle {
 pub(super) fn maps() -> CssModules {
     CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     }
 }

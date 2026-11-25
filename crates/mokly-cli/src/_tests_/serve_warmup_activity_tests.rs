@@ -153,6 +153,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
     .unwrap();
     head.request(Call::CssModules(CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     }))
     .unwrap();

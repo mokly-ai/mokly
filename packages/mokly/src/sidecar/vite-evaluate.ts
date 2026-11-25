@@ -8,7 +8,7 @@ import { createAuthoring } from "../authoring/definitions.js";
 import { AuthoringRuntime } from "../authoring/runtime.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
-import { cssModulePrefix, namedClasses } from "./css-modules.js";
+import { cssModulePrefix } from "./css-modules.js";
 import { SidecarError } from "./errors.js";
 import { inside, logical } from "./path-scope.js";
 import { viteFailure } from "./vite-errors.js";
@@ -43,8 +43,12 @@ async function replay(generation: Generation): Promise<void> {
   };
   try {
     const runnerPath = generation.require.resolve("vite/module-runner");
-    const { ESModulesEvaluator, ModuleRunner }: typeof ViteRunner =
-      await import(pathToFileURL(runnerPath).href);
+    const {
+      ESModulesEvaluator,
+      ModuleRunner,
+      ssrExportAllKey,
+      ssrExportNameKey,
+    }: typeof ViteRunner = await import(pathToFileURL(runnerPath).href);
     let react: typeof React | undefined;
     try {
       react = generation.require("react");
@@ -63,13 +67,29 @@ async function replay(generation: Generation): Promise<void> {
         styleAdapters[name] = adapter;
       },
     };
-    const classes = new Map(
-      [...generation.cssModules].map((file) => [
-        generation.runtimeKey + cssModulePrefix + file,
-        namedClasses(generation.maps![file]!),
-      ]),
-    );
+    const classes = new Map<string, Record<string, string>>();
+    const cssNamespaces = new Map<unknown, Record<string, string>>();
+    for (const file of generation.cssModules) {
+      const bindings = generation.viteNamedExports?.[file] ?? {};
+      classes.set(generation.runtimeKey + cssModulePrefix + file, bindings);
+      cssNamespaces.set(bindings, bindings);
+    }
     class Evaluator extends ESModulesEvaluator {
+      override async runInlinedModule(
+        context: ViteRunner.ModuleRunnerContext,
+        code: string,
+      ): Promise<unknown> {
+        const exportAll = context[ssrExportAllKey];
+        context[ssrExportAllKey] = (source: unknown) => {
+          const bindings = cssNamespaces.get(source);
+          if (!bindings) return exportAll(source);
+          // The runner treats __esModule as an interop marker in export *.
+          for (const [name, value] of Object.entries(bindings))
+            context[ssrExportNameKey](name, () => value);
+        };
+        return super.runInlinedModule(context, code);
+      }
+
       override async runExternalModule(file: string): Promise<unknown> {
         if (file === generation.runtimeKey) return { default: runtime };
         if (classes.has(file)) return classes.get(file);

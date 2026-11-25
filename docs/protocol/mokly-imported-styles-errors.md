@@ -13,21 +13,25 @@ raw tool text.
 
 ## Configuration (`config-invalid`)
 
-| Failure                                                    | Exact message                                                                                                                             |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`                     |
-| Consumer `css` loader on another extension                 | `moduleResolution.loaders[{extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`                   |
-| `postcss` empty, non-string, or escaping path              | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file`         |
-| `postcss` missing, non-file, or unsupported suffix         | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                             |
-| `postcss` module load or default export failure            | `could not load postcss module {module}: {detail}; default-export an object with plugins`                                                 |
-| Unsupported module object key                              | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                                    |
-| Invalid or missing `plugins`                               | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                               |
-| Invalid plugin array element                               | `postcss plugins[{index}] is not a PostCSS 8 plugin: {detail}; use a plugin instance, creator, function or object with a postcss factory` |
-| Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
-| Plugin name resolution or factory failure                  | `could not load PostCSS plugin {plugin} from {module}: {detail}; install and configure it in the consumer repository`                     |
+| Failure                                                              | Exact message                                                                                                                             |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Consumer `.css` or `.module.css` loader other than `empty`           | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`                     |
+| Consumer `css` loader on another extension                           | `moduleResolution.loaders[{extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`                   |
+| `postcss` empty, non-string, or escaping path                        | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file`         |
+| `postcss` missing, non-file, or unsupported suffix, default compiler | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                             |
+| `postcss` module load or default export failure                      | `could not load postcss module {module}: {detail}; default-export an object with plugins`                                                 |
+| Unsupported module object key                                        | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                                    |
+| Invalid or missing `plugins`                                         | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                               |
+| Invalid plugin array element                                         | `postcss plugins[{index}] is not a PostCSS 8 plugin: {detail}; use a plugin instance, creator, function or object with a postcss factory` |
+| Invalid plugin options                                               | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
+| Plugin name resolution or factory failure                            | `could not load PostCSS plugin {plugin} from {module}: {detail}; install and configure it in the consumer repository`                     |
 
 `{index}` is zero-based. Configuration validation checks the module suffix,
-path, and file before any sidecar starts. Other configuration errors keep their messages under the
+path, and file before any sidecar starts. Under the
+[Vite adapter](./mokly-vite-adapter.md#replaced-settings), validation keeps
+only the empty, text, and lexical path checks of `postcss`: a lexical escape
+gives the escaping-path row, and the real-path, suffix, and file checks do not
+apply, because the setup replaces the module. Other configuration errors keep their messages under the
 [configuration contract](./mokly-configuration.md).
 
 ## Build (`build-invalid`)

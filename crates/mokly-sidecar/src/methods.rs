@@ -197,6 +197,10 @@ pub struct CssModules {
     pub generation: String,
     /// Logical stylesheet path to original-name/scoped-name map.
     pub class_maps: BTreeMap<String, BTreeMap<String, String>>,
+    /// Vite's named CSS Module bindings, grouped by logical stylesheet path.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub named_exports: Option<BTreeMap<String, BTreeMap<String, String>>>,
 }
 
 /// Optional process diagnostics selected by the core during hello.

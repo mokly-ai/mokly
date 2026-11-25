@@ -118,7 +118,7 @@ export function hookViteCss(plugins: Plugin[], css: ViteCssTransform): void {
           const result = await transform.call(this, code, active.file, options);
           const exports = typeof result === "string" ? result : result?.code;
           if (exports)
-            active.classMap = await nativeClassMap(exports.toString());
+            active.bindings = await nativeBindings(exports.toString());
         }
         return transform.call(this, code, id, options);
       },
@@ -150,16 +150,21 @@ function hook(
       : { ...transform, handler: wrap(transform.handler) };
 }
 
-async function nativeClassMap(code: string): Promise<Record<string, string>> {
-  const module: { default?: unknown } = await import(
+async function nativeBindings(code: string) {
+  const module: Record<string, unknown> = await import(
     `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
   );
-  const map = module.default;
-  return map && typeof map === "object"
-    ? Object.fromEntries(
-        Object.entries(map).filter(
-          (entry): entry is [string, string] => typeof entry[1] === "string",
-        ),
-      )
-    : {};
+  const { default: map, ...named } = module;
+  return {
+    classMap: map && typeof map === "object" ? stringBindings(map) : {},
+    namedExports: stringBindings(named),
+  };
+}
+
+function stringBindings(bindings: object): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(bindings).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
 }

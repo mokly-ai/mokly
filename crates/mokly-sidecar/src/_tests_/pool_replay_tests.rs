@@ -96,6 +96,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
             "g".into(),
             CssModules {
                 generation: "g".into(),
+                named_exports: None,
                 class_maps: BTreeMap::new(),
             },
         );

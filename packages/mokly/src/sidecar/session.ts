@@ -165,6 +165,7 @@ export class Session {
             Object.fromEntries(Object.entries(map)),
           ]),
         );
+        generation.viteNamedExports = request.params.namedExports;
         return null;
       }
       case "bindings": {

@@ -34,6 +34,7 @@ pub(super) fn bundle(generation: &str) -> Call {
 pub(super) fn maps(generation: &str) -> Call {
     Call::CssModules(CssModules {
         generation: generation.into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     })
 }

@@ -33,7 +33,11 @@ pub(crate) fn bundle(value: &Bundle) -> usize {
     {
         bytes += size_of::<String>() + path.capacity();
     }
-    for (path, names) in &value.css_modules {
+    for (path, names) in value
+        .css_modules
+        .iter()
+        .chain(&value.css_module_named_exports)
+    {
         bytes += path.capacity() + size_of_val(names);
         for (name, value) in names {
             bytes += size_of::<(String, String)>() + name.capacity() + value.capacity();

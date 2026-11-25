@@ -38,7 +38,9 @@ pub struct Module {
     pub imported_asset: Option<bool>,
     /// Repository-relative source path.
     pub path: String,
-    /// Resolved logical paths in source order.
+    /// Resolved logical paths in metafile record order on the esbuild path.
+    /// Vite lists static imports and re-exports first, then dynamic imports.
+    /// Vite keeps source order within each group.
     pub imports: Vec<String>,
 }
 
@@ -66,7 +68,7 @@ pub struct Bundle {
     #[serde(skip)]
     #[ts(skip)]
     pub cache: Option<CacheOutcome>,
-    /// Worker-observed esbuild operations for this request; never crosses the wire.
+    /// Compile events observed by the worker for this request. This count stays off the wire.
     #[serde(skip)]
     #[ts(skip)]
     pub compile_count: u64,
@@ -113,8 +115,10 @@ pub struct Page {
 pub struct ViteCss {
     /// Transformed CSS, before Mokly's asset rewriting and delivery.
     pub text: String,
-    /// Vite's original local-to-scoped exports.
+    /// Vite's default map from local class names to scoped names.
     pub class_map: BTreeMap<String, String>,
+    /// Named bindings in Vite's stylesheet module.
+    pub named_exports: BTreeMap<String, String>,
     /// Digest of the selected stylesheet bytes.
     pub source_digest: String,
     /// Files reached by this transform, including files read by `composes`.

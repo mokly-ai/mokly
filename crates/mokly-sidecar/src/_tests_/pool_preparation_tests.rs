@@ -71,6 +71,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         CssModules {
             generation: "g".into(),
+            named_exports: None,
             class_maps: BTreeMap::from([(
                 "entry.module.css".into(),
                 BTreeMap::from([("class".into(), "scoped".into())]),

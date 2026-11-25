@@ -102,6 +102,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
     assert!(pool.lock().bundles.contains_key("g"));
     pool.request(Call::CssModules(CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     }))
     .unwrap();
