@@ -7,6 +7,7 @@ import {
   parseAppShard,
   readShardWeights,
   selectShardFiles,
+  specDirectory,
 } from "./src/_tests_/browser-shards";
 import { appOrigin, appServerCommand } from "./src/_tests_/origins";
 
@@ -42,7 +43,13 @@ const shardMatch = shardFiles?.map(
  * for that reason, and everything around it is still real.
  */
 export default defineConfig({
-  testDir: "src/_tests_",
+  // The shard patterns and the discovered files share this absolute base, also
+  // when the config is opened through a linked path.
+  testDir: join(__dirname, specDirectory),
+  // In weighted mode Playwright runs all of its single native shard, which
+  // lets a valid shard without files pass with no tests, as Playwright's own
+  // shards do.
+  shard: shard && { current: 1, total: 1 },
   testMatch: "**/*.spec.ts",
   fullyParallel: false,
   workers: 1,

@@ -11,6 +11,7 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, sep } from "node:path";
+import { stripVTControlCharacters } from "node:util";
 
 /** One-based shard of the browser suite. */
 export type AppShard = { readonly current: number; readonly total: number };
@@ -104,13 +105,13 @@ export function selectShardFiles(
 
 /**
  * Sum the seconds per spec file that Playwright's `list` reporter printed,
- * for example in the CI logs of the browser shards.
+ * for example in the CI logs of the browser shards, with or without colour.
  */
 export function measuredSeconds(log: string): Record<string, number> {
   const line =
     /\] › (\S+?\.spec\.ts):\d+:\d+ › .*\((\d+(?:\.\d+)?)(ms|s|m)\)\s*$/;
   const seconds: Record<string, number> = {};
-  for (const text of log.split("\n")) {
+  for (const text of stripVTControlCharacters(log).split("\n")) {
     const match = line.exec(text);
     if (!match) continue;
     const scale = match[3] === "ms" ? 0.001 : match[3] === "m" ? 60 : 1;

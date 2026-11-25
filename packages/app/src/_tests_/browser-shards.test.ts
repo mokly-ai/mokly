@@ -59,11 +59,11 @@ test("weights accept only seconds per file", () => {
     assert.throws(() => parseShardWeights(value), /browser-shard-weights/);
 });
 
-test("list reporter lines give seconds per spec file", () => {
+test("list reporter lines, coloured or plain, give seconds per spec file", () => {
   const log = [
     "2026-11-24T23:38:32Z   ✓    1 [desktop] › src/_tests_/a.spec.ts:93:5 › signs in (1.9s)",
     "2026-11-24T23:38:33Z   ✓    2 [desktop] › src/_tests_/a.spec.ts:122:5 › refuses (978ms)",
-    "2026-11-24T23:38:35Z   ✘    3 [mobile] › src/_tests_/b-mobile.spec.ts:4:7 › waits (1.5m)",
+    "2026-11-24T23:38:35Z   ✘    3 [mobile] › src/_tests_/b-mobile.spec.ts:4:7 › waits \u001b[2m(1.5m)\u001b[22m",
     "2026-11-24T23:38:36Z Running 113 tests using 1 worker",
   ].join("\n");
   const seconds = measuredSeconds(log);
