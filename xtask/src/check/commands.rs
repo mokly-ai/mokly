@@ -85,8 +85,8 @@ fn sharded(test: CommandSpec, shard: Option<Shard>) -> CommandSpec {
 }
 
 /// The complete repository suite runs its checks, then the builds and the Rust
-/// tests. A sharded suite runs the checks on shard 1 and one nextest partition
-/// of the Rust tests on each later shard. Each test shard installs the npm
+/// tests. A sharded suite runs the checks on shard 1 and one weighted share of
+/// the Rust test units on each later shard. Each test shard installs the npm
 /// lockfile first, because its job installs nothing before the suite.
 fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> Vec<Step> {
     match RustPart::of(shard) {
@@ -95,7 +95,7 @@ fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> 
             steps.extend(
                 test_builds()
                     .into_iter()
-                    .chain(rust_tests(None, false))
+                    .chain(rust_tests(false))
                     .map(Step::Run),
             );
             steps

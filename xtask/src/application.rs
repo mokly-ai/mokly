@@ -61,6 +61,10 @@ impl Xtask for Application {
             Command::StripeCatalogue { args } => {
                 self.check_runner.task(Task::StripeCatalogue { args })
             }
+            Command::RustTestShard {
+                partition,
+                no_fail_fast,
+            } => self.check_runner.rust_test_shard(partition, no_fail_fast),
             Command::BuildNative => self.artifacts.build_native(),
             Command::GenerateTypes => self.artifacts.generate_types(),
             Command::CheckGeneratedTypes => self.artifacts.check_generated_types(),
