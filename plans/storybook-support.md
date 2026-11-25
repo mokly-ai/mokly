@@ -3006,12 +3006,9 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
 Depends on: 18, 19, 20, 21
 
 - [ ] Remove each status line whose page this track completes.
-- [x] Run the targeted tests and `cargo xtask check`. Branch:
-      `calummoore/storybook-track-d-finish-nkpi`.
-- [x] Commit, push, review against this branch, give the findings to the
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
-      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
-      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 23: Failed stories documentation
 
@@ -3074,12 +3071,9 @@ invalid edit, as design call 29 says.
 Depends on: 23, 24, 24a
 
 - [ ] Remove each status line whose page this track completes.
-- [x] Run the targeted tests and `cargo xtask check`. Branch:
-      `calummoore/storybook-track-d-finish-nkpi`.
-- [x] Commit, push, review against this branch, give the findings to the
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
-      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
-      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 26: Storybook links documentation
 
@@ -3135,12 +3129,9 @@ Depends on: 27
 Depends on: 26, 27, 28
 
 - [ ] Remove each status line whose page this track completes.
-- [x] Run the targeted tests and `cargo xtask check`. Branch:
-      `calummoore/storybook-track-d-finish-nkpi`.
-- [x] Commit, push, review against this branch, give the findings to the
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
-      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
-      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 30: Storybook setup on Vite documentation
 
@@ -3251,12 +3242,9 @@ Depends on: 30
 Depends on: 30, 31, 32
 
 - [ ] Remove each status line whose page this track completes.
-- [x] Run the targeted tests and `cargo xtask check`. Branch:
-      `calummoore/storybook-track-d-finish-nkpi`.
-- [x] Commit, push, review against this branch, give the findings to the
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
-      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
-      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 34: Story component usage documentation
 
@@ -3303,12 +3291,9 @@ Screens that render a story component record its use, as decision 13 says.
 Depends on: 34, 35
 
 - [ ] Remove each status line whose page this track completes.
-- [x] Run the targeted tests and `cargo xtask check`. Branch:
-      `calummoore/storybook-track-d-finish-nkpi`.
-- [x] Commit, push, review against this branch, give the findings to the
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
-      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
-      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 37: Spike for several Storybook folders
 
