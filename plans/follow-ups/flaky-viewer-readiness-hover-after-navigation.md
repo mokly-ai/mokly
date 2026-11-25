@@ -44,6 +44,6 @@
   - **C.** Activate **Open Action** with the keyboard after a focus, so no pointer rests over the frame. Effort: Small.
 - **Left out:** A retry or a longer wait, because the `deterministic-tests` skill forbids both as a fix.
 - **Wider fix:** A shared browser-test helper that ends each pointer action inside a frame by moving the pointer off the canvas. It is a structural fix for tests that read hover events after a click.
-- **Previous examples:** `plans/follow-ups/flaky-component-design-removed-preview.md`, another viewer browser flake that a local complete gate found.
+- **Previous examples:** None found.
 - **Recommendation:** A. It removes the pointer from the race and keeps every assertion.
 - **Action:** fix after merge, apply A.

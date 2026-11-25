@@ -29,6 +29,7 @@ import {
   response,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 /** The routed screen of the fixture catalogue, whose two views changed. */
@@ -119,7 +120,7 @@ function Workspace({
 
 test("a change of the shown frames renews the row before its documents load, and a lost generation is selected again", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const first = generationRoot("home-1");
   const second = generationRoot("home-2");
