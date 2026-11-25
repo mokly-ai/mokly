@@ -16,7 +16,9 @@ cannot redirect installation. `publish` builds into its own private directory
 outside the repository; every other rule on this page applies to that
 directory too.
 
-Output must neither contain nor be contained by a configured root, and must
+Output must neither contain nor be contained by a root directory: the `dir`
+of a configured root or the directory of a
+[root from `main.*`](./mokly-root-discovery.md#roots-from-main). It must
 not contain any resolved entry module or document,
 or the directory holding one. It must not contain [inventoried](./mokly-source-protection.md#complete-source-inventory) authoring inputs, the
 config, renderer module, or a consumer package's `package.json`. Reject

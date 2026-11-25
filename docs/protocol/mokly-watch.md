@@ -10,7 +10,7 @@ reference. Each input maps to the render graph node it feeds:
 
 | Input                                                                                                                                                              | Node                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| the configuration file                                                                                                                                             | config                            |
+| the configuration file and the [configuration inputs](./mokly-root-discovery.md#roots-from-main) of a root without `dir`                                           | config                            |
 | HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root                                                   | entry source                      |
 | entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports                                                                 | bundle generation, render inputs  |
 | the [inputs of a Vite compile](./mokly-vite-adapter-inputs.md#inputs-and-serve) under the Vite adapter                                                             | bundle generation, render inputs  |

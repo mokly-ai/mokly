@@ -128,7 +128,15 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   returns the files that the read resolved or read, with their digests. A
   loader failure names the file, the installed Storybook version, and the
   tested range. The result gives the `@storybook/react` entry of each folder,
-  which the compiled recipe keeps as `storybookReact`.
+  which the compiled recipe keeps as `storybookReact`. The same file holds
+  `readStorybook`, which `Session` runs for a `readStorybook` request before
+  discovery. It finds the `main.*` of one folder and resolves the `storybook`
+  package from the configuration directory, else from the parent of the
+  folder. The worker then loads `main.*` with the module lookup of the
+  request's side and passes each `stories` entry to Storybook's
+  `normalizeStoriesEntry`. The result keeps the entries in order and the
+  dependency directories that the read used. It also keeps the digests of the
+  repository files outside `node_modules` that the read used.
 - [`src/sidecar/storybook-inputs.ts`](./storybook-inputs.ts) holds
   `recordStorybookInputs`, which `bundleRecipe` and `viteMetadata` call. It
   adds the files that `storybookFrameworks` read to the physical inputs, and

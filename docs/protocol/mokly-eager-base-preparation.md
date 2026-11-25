@@ -20,9 +20,13 @@ checkout settings, the base sources, the lease of an existing complete
 extraction, the base configuration, discovery, and the clean dependency
 identities of both sides. It builds an extraction only when discovery shows
 that the base needs a sidecar, under the
-[source rules](./mokly-base-preparation.md#sources). So an HTML base without a
-renderer, PostCSS, or a local stylesheet under the Vite adapter builds no
-extraction and starts no sidecar.
+[source rules](./mokly-base-preparation.md#sources). A base configuration with
+a root without `dir` also builds one. So an HTML base without a renderer,
+PostCSS, or a local stylesheet under the Vite adapter builds no extraction and
+starts no sidecar. For a base configuration with a root without `dir`,
+discovery is not part of this work. It follows the load of the base `main.*`,
+which uses the selected base dependencies under the
+[roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
 
 The configured size is the exact size from `--sidecars` or `MOKLY_SIDECARS`,
 or the core count that bounds a
@@ -60,7 +64,8 @@ preparation used. The
 select the base dependencies with it. Dependency selection, installation, the
 validation of the base catalogue, the base graph, and the freshness record
 wait until Serve adopts the head preparation of the state, after any watch
-recheck.
+recheck. For a root without `dir`, the load of the base `main.*` and base
+discovery wait too.
 
 Eager preparation starts no work of the comparison: it lists no views for
 [early renders](./mokly-base-preparation.md#shared-render-runtime), starts no

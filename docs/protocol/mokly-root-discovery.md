@@ -1,14 +1,12 @@
 # Root Discovery And Source Membership
 
-Status: Roots without `dir` are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
-
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and
 Changes share. Discovery walks a source tree: the working tree for Serve,
 `build`, `publish`, and the head side of a comparison, and the base commit's
 Git tree for the base side under the
-[comparison contract](./mokly-comparison.md#sides). The same roots, globs,
-and diagnostics apply to both trees. In a Git tree a symbolic link entry is
+[comparison contract](./mokly-comparison.md#sides). The same root rules,
+globs, and diagnostics apply to both trees. In a Git tree a symbolic link entry is
 not a file and never matches. The base Git tree does not resolve symbolic links.
 After [lexical normalization](./mokly-configuration.md#shape), a
 root or package root that is a link in the base commit, or lies below one,
@@ -34,11 +32,13 @@ dropped and listed under `not searched` when its root is then empty.
 ## Traversal And Ownership
 
 Discovery walks each root without following symlinks and keeps every regular
-file that matches a `files` glob. Below the root, walks skip directories named
-`.git`, `node_modules`, `dist`, `coverage`, `target`, `test-results`,
-`playwright-report`, or `.context`, and the output directory that `--out`
-names; an explicit root inside such a directory is still scanned, because the
-rule applies below the root only. Regular file basenames are not denied.
+file that matches a `files` glob. The
+[roots from `main.*` rules](#roots-from-main) give the exceptions. Below the
+root, walks skip directories named `.git`, `node_modules`, `dist`, `coverage`,
+`target`, `test-results`, `playwright-report`, or `.context`, and the output
+directory that `--out` names; an explicit root inside such a directory is
+still scanned, because the rule applies below the root only. Regular file
+basenames are not denied.
 `_folder.json` files are read as [folder records](./mokly-folders.md) and
 never as entries, and a folder record's `exclude` globs remove matched files
 from that directory before derivation.
@@ -56,15 +56,15 @@ a module. Entry modules and stories files are bundled and described by the
 [sidecar](./mokly-sidecar.md); HTML, YAML, and Markdown files never are.
 
 Every `_folder.json` inside a walked root is also owned by exactly one root,
-independently of `files`. Overlapping roots that encounter that record fail
-with the [root overlap error](#glob-validation) of a matched file.
+independently of `files`. Overlapping configured roots that encounter that
+record fail with the [root overlap error](#glob-validation) of a matched file.
 
-Every root must keep at least one file; otherwise `root matches no file: <dir>`
-lists denied and vanished paths, including dropped files, sorted under
-`; not searched: <repository-relative paths>`. The union across roots is
-sorted by repository-relative path. Discovery records that ownership, so a
-file derives from the root that selected it rather than from the deepest
-directory that happens to contain it.
+Every configured root must keep at least one file; otherwise
+`root matches no file: <dir>` lists denied and vanished paths, including
+dropped files, sorted under `; not searched: <repository-relative paths>`.
+The union across roots is sorted by repository-relative path. Discovery
+records that ownership, so a file derives from the root that selected it
+rather than from the deepest directory that happens to contain it.
 
 ## Source Membership
 
@@ -114,10 +114,10 @@ empty, `.` or `..` segments. Validation adds no public-file defaults. Root
 diagnostics name `roots[<index>].files`; folder diagnostics name the owning
 folder record.
 
-When a file matches two roots before exclusions, fail `config-invalid` with
-`file <path> is matched by roots[<n>] and roots[<m>]`. The path is
-repository-relative and the root indices are zero-based. Physical aliases
-participate in this check.
+When a file matches two configured roots before exclusions, fail
+`config-invalid` with `file <path> is matched by roots[<n>] and roots[<m>]`.
+The path is repository-relative, and the indices are the zero-based indices
+of the configured roots. Physical aliases participate in this check.
 
 ## Root Fields
 
@@ -207,7 +207,8 @@ dependencies that the
 select for the base, and it runs before base discovery. So for such a root, the
 base extraction and any base install run before base discovery.
 
-In Serve, `main.*` and each local file that it imports are configuration
-inputs. An edit of one of them runs discovery again, as an edit of the
+`main.*`, each other candidate name of `main.*`, and each local file that the
+load of `main.*` reads are configuration inputs. In
+Serve, an edit of one of them runs discovery again, as an edit of the
 configuration file does under the
 [configuration change rules](./mokly-watch-runtime.md#configuration-changes).

@@ -2938,8 +2938,9 @@ Monorepos keep the preview file of their own Storybook, as decision 9 says.
 - [x] Update `plans/follow-ups/fallback-keys-checkout-folder.md` for the new
       preview inputs.
       Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Update `docs/guides/authoring/storybook.md` and
+- [x] Update `docs/guides/authoring/storybook.md` and
       `docs/guides/authoring/config.md`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 
 ## Milestone 20: Roots from the `stories` field of `main.*`
 
@@ -2959,12 +2960,14 @@ Depends on: 19
       names the file. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [x] Keep configuration and discovery free of Node for every other root and
       catalogue. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Update `docs/protocol/mokly-storybook.md`,
+- [x] Update `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-configuration.md`, and
       `docs/protocol/mokly-root-discovery.md` with that answer.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [x] Test a root with `storybook` and without `dir`, on the head and the
       base side. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Update `docs/guides/authoring/config.md`.
+- [x] Update `docs/guides/authoring/config.md`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 
 ## Milestone 21: Preview CSS in story documents
 

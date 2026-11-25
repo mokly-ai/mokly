@@ -24,12 +24,12 @@ inheritance and validation.
 `roots` in the [configuration](./mokly-configuration.md#roots) lists the
 directories Mokly scans. Each root has:
 
-| Field         | Meaning                                                     | Default                                                    |
-| ------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
-| `dir`         | Config-relative directory inside `repoRoot`                 | required                                                   |
-| `files`       | Globs relative to `dir` selecting the files to read         | the [default globs](./mokly-root-discovery.md#root-fields) |
-| `path`        | Path prefix placed before every derived path from this root | none                                                       |
-| `transparent` | Directory names removed from derived paths                  | `[]`                                                       |
+| Field         | Meaning                                                     | Default                                                                   |
+| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `dir`         | Config-relative directory inside `repoRoot`                 | required without [`storybook`](./mokly-root-discovery.md#roots-from-main) |
+| `files`       | Globs relative to `dir` selecting the files to read         | the [default globs](./mokly-root-discovery.md#root-fields)                |
+| `path`        | Path prefix placed before every derived path from this root | none                                                                      |
+| `transparent` | Directory names removed from derived paths                  | `[]`                                                                      |
 
 A matched `.md` file is a document; a matched `.screen.html`,
 `.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
@@ -37,11 +37,11 @@ entry of the [HTML screens contract](./mokly-html-screens.md); a
 `.stories.{ts,tsx,js,jsx}` file gives its entry under the
 [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants);
 every other matched file is an
-entry module. A root that does not exist, or whose globs match no file, fails with
+entry module. A configured root that does not exist, or whose globs match no file, fails with
 `config-invalid`. Several roots merge into one catalogue; the same path from two distinct files
 is a [duplicate path](#diagnostics). Each matched file belongs to exactly one
 root; the [roots validation contract](./mokly-configuration.md#roots) rejects a
-file matched by two roots and permits disjoint file sets in overlapping trees. A root `path` is validated as a
+file matched by two configured roots and permits disjoint file sets in overlapping trees. A root `path` is validated as a
 path; each `transparent` name is validated as a segment.
 
 ## Derivation

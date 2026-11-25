@@ -8,8 +8,12 @@ order: 12
 ## Add a stories file
 
 A root can match `*.stories.ts`, `*.stories.tsx`, `*.stories.js`, or
-`*.stories.jsx`. Default root patterns include them. Install `@storybook/react`
-in the consumer repository when you use this form.
+`*.stories.jsx`. Default root patterns include them.
+
+Mokly first tries to resolve `@storybook/react` from the configuration
+directory. If that fails, Mokly looks for it through the framework package
+named in `main.*` in the root's Storybook folder. For example, Mokly can use
+the copy of `@storybook/react` that `@storybook/react-vite` provides.
 
 ```tsx
 // specs/components/Button.stories.tsx
@@ -52,6 +56,28 @@ without the stories extension.
 Each variant's title is its story's `name`, else its `storyName`, else
 Storybook's start case of the export name. For example, `LargeButton` shows as
 `Large Button`. Its slug stays `LargeButton`.
+
+## Choose a Storybook folder
+
+Set `storybook` on a root to select its Storybook folder. Give a folder path
+or an object such as `{ "config": "packages/ui/.storybook" }`. Mokly resolves
+the path from the directory that contains the configuration file. The default
+folder is `.storybook` in the repository root.
+
+This monorepo example selects the UI package's Storybook folder.
+
+```json
+{
+  "roots": [{ "dir": "packages/ui/src", "storybook": "packages/ui/.storybook" }]
+}
+```
+
+Mokly selects the first `preview.*` file in the folder using Storybook's
+extension order. It checks `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.mts`,
+`.mtsx`, `.cjs`, `.cts`, then `.ctsx`.
+
+To select files from Storybook's `stories` list, see
+[Read stories from `main.*`](/docs/authoring/config/#read-stories-from-main).
 
 ## Story formats
 
@@ -162,10 +188,10 @@ and `argTypes.if` omits args whose conditions are false.
 
 ## Decorators and themes
 
-Mokly loads the consumer's `.storybook/preview` annotations and uses
-Storybook's portable story composition. Storybook decorators wrap the story.
-The configured Mokly renderer wraps React mockup screens and components.
-Stories use their Storybook providers.
+Mokly uses Storybook's portable story composition. It applies each root's
+preview annotations to its CSF 2 and CSF 3 stories. Storybook decorators wrap
+the story. The configured Mokly renderer wraps React mockup screens and
+components. Stories use their Storybook providers.
 
 A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
 select a layout or product theme. Each story renders for the catalogue's
@@ -246,18 +272,20 @@ even if a loader, a hook, or the render fails. A cleanup that throws fails
 only that story's render. Storybook's own preview runs a story's cleanups when
 the next story loads.
 
-The preview's `beforeAll` hook runs before the first story render of a
-build. Each render process keeps one active setup. When rebuilt stories render
-in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
-again. This can happen in `mokly serve` after an edit.
+Each render process keeps one active `beforeAll` setup at a time. The setup
+belongs to a Storybook folder and a bundle generation, which is a compiled
+set of stories. Mokly runs the preview's hook before the first story render
+for that setup. Mokly runs the active setup's cleanup only when a story render
+switches folders or bundle generations. It runs the cleanup before the
+story's preview hook.
 
 Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
 run. Loaders and `beforeEach` hooks can read them from `context.globals`.
 
 A loader, hook, `beforeAll` cleanup, or render that throws fails the current
-render. If `beforeAll` throws, Mokly does not retry it for that build. Each
-story render of that build fails with its error. Mokly runs no `play` function
-or `afterEach` hook.
+render. If `beforeAll` throws, later story renders fail with the same error
+only for that folder and generation. Mokly runs no `play` function or
+`afterEach` hook.
 
 Loaders and hooks run in Node during the static render. A hook that needs a
 browser API, such as `window` or `document`, does not work.

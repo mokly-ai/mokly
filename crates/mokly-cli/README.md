@@ -170,8 +170,9 @@ Serve composes one `comparison_reuse::MemoryComparisons` service for its
 lifetime, with the fixed bound of the
 [reuse rules](../../docs/protocol/mokly-comparison-serving.md#view-comparison-reuse).
 `Source::comparison_attempt` begins each classification's `ReuseAttempt` with
-a `ReuseFence` over the adopted configuration, its roots, and the
-install-scripts mode. A view whose kept proof still holds is not prepared.
+a `ReuseFence` over the adopted configuration, its roots, the digests of its
+local Storybook configuration inputs, and the install-scripts mode. A view
+whose kept proof still holds is not prepared.
 `Source::finished` accepts the attempt after the Ready publication and
 discards it after a failure. When an execution ends without `finished`,
 `Source::discarded` discards the staging.
@@ -237,13 +238,16 @@ shutdown end the work with `PendingChanges::cancel_and_join`. That call joins
 the thread before it releases the sources and leases. The source phase pins
 the base, samples the checkout, loads the base configuration, discovers the
 base sources, and reads both clean dependency identities with the extraction
-that a sidecar base needs. A complete extraction lease bypasses the cold
+that a sidecar base needs. A base configuration with a root without `dir`
+discovers nothing in the source phase, because its `main.*` needs the
+selected base dependencies. A complete extraction lease bypasses the cold
 source wait. Otherwise discovery, the extraction, and the identity reads wait
 through `SourceAdmission` until `ServeServices::head_published` reports the
 first successful readiness. The attempts after that readiness do not wait. The
 source phase stops after the pin when the key matches the kept base. The
 adopted head, after any watch recheck, starts the validation
-phase: dependency selection, the install, and graph validation. With a kept
+phase: dependency selection, the install, the load of the base `main.*` and
+the deferred discovery, and graph validation. With a kept
 base of another key, that phase also waits for the classification.
 `ProvenValidation` holds graph validation until adoption when it cannot prove
 the working installation. The work keeps its statuses, steps, cache notices, warnings, and the sidecar text of its base
@@ -260,7 +264,11 @@ work.
 cache, and captures the head once during the build check under its separate
 256 MiB bound. It computes Changes unless `--no-changes` is set. After output
 admission, it pins the selected base before catalogue validation and
-rendering. Changes, the static index, the generation writer, and publication
+rendering. Between the pin and catalogue validation, a configuration with a
+root without `dir` loads its `main.*` through
+`Runtime::expand_storybook_roots`. `Transaction::protect_roots` then checks
+the output boundary again against the roots from `main.*` and the authored
+inputs. Changes, the static index, the generation writer, and publication
 metadata read the captured head and the same comparison result.
 Viewer modules are validated before consumer rendering. Invalid package
 scripts retain their path and parser position in a viewer-package failure.
@@ -382,7 +390,9 @@ changed.
   the first successful publication and the readiness timing span. That call
   also ends the cold source wait of eager base preparation. Its
   `AttemptPreparation` starts, adopts, and discards the eager base
-  preparation of each head attempt through `EagerStarts`.
+  preparation of each head attempt through `EagerStarts`. Each attempt runs
+  `Runtime::expand_storybook_roots` before that start, so eager preparation,
+  discovery, and the watch plan use the roots from `main.*`.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
   base caches of Serve Changes. Its `states` composes the `NativeEagerFactory`
   and gives it to `EagerStarts::configure` with the configured sidecar size.
@@ -464,10 +474,16 @@ changed.
   `NativePhases::validate` prepares the graph without document work, and
   `NativePhases::admit` admits that work after head usage.
   `configured_sidecar` in the source phase tells whether one configuration
-  needs a sidecar. A renderer, a `postcss` module, or a local stylesheet under
-  the Vite adapter makes it true. On the working configuration, it selects the
-  early lease of an existing extraction. On the base configuration, it selects
-  the dependency step, as a discovered entry module or stories file does.
+  needs a sidecar. A renderer, a `postcss` module, a local stylesheet under
+  the Vite adapter, or a root without `dir` whose `main.*` has not loaded
+  makes it true. On the working configuration, it selects the early lease of
+  an existing extraction. The working configuration already holds its roots
+  from `main.*`, so only a base configuration meets the last condition. On the
+  base configuration, it selects the dependency step, as a discovered entry
+  module or stories file does. For a base configuration with a root without
+  `dir`, the source phase returns no inventory. `validate_sources` then runs
+  `Runtime::expand_storybook_roots` with the base runtime after the install,
+  and it discovers after that.
   [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
   defines `SourceAdmission`, and
   [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)
@@ -523,8 +539,8 @@ changed.
   detaches at the keep.
 - [`src/serve_base_key.rs`](./src/serve_base_key.rs) defines `BaseKey`: the
   merge-base commit, a digest of the adopted configuration with its file,
-  repository root, roots, and authored inputs, and the effective
-  install-scripts setting.
+  repository root, roots, authored inputs, and the digests of its local
+  Storybook configuration inputs, and the effective install-scripts setting.
 - [`src/serve_eager.rs`](./src/serve_eager.rs) defines `EagerStarts`, the
   attempt hooks of eager base preparation, and `PendingBase`, the pending
   result of one head attempt until its classification adopts it.

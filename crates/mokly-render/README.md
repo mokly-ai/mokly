@@ -16,7 +16,12 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 
 ## What This Crate Does
 
-`Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
+`Runtime` implements `DefinitionProvider`, `GraphFactory`, and the
+catalogue's `StorybookReader`. `Runtime::expand_storybook_roots` expands the
+roots without `dir` before discovery. It sends one `readStorybook` request
+for each Storybook folder, with the source root and the resolution settings
+of its side. It records the dependency directories that the read used. Each
+failure of that request becomes `config-invalid`. The CLI injects
 its source readers, physical input reader, sidecar pool, worker scheduler, and
 byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
 runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has

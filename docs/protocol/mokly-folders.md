@@ -66,9 +66,12 @@ top level and may contain only `order` and `exclude`. The file is never an
 entry and never a public file.
 
 A directory record must belong to exactly one root. A `_folder.json` found
-inside two root directories fails with the same `config-invalid` overlap
-message as other files, even when their entry globs are disjoint; see
-[roots validation](./mokly-configuration.md#roots). No root is selected silently.
+inside the directories of two configured roots fails with the same
+`config-invalid` overlap message as other files, even when their entry globs
+are disjoint; see [roots validation](./mokly-configuration.md#roots). No root
+is selected silently, except among the
+[roots from `main.*`](./mokly-root-discovery.md#roots-from-main) of one
+configured root.
 A vanished record does not discard its directory's entries. Other filesystem
 failures follow [root discovery](./mokly-root-discovery.md#traversal-and-races).
 

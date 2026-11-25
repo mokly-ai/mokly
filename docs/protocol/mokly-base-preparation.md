@@ -16,7 +16,9 @@ rules. Every base read returns checkout-converted bytes.
 HTML, Markdown, YAML and CSS need no extraction. A base that needs
 JavaScript, a renderer module, consumer PostCSS, or the
 [Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
-extracts its sources. A
+extracts its sources. A base with a root without `dir` extracts them before
+discovery, because its `main.*` loads from them under the
+[roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main). A
 source archive copies checkout-converted regular files
 with the pinned commit's attributes, including line endings, smudge filters,
 and Git LFS downloads. Network access is allowed within the preparation

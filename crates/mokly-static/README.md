@@ -60,7 +60,13 @@ Input capture and final verification use digest reads for hash-only inputs.
 The snapshot keeps bytes only for actual parsing and delivery.
 Capture walks each configured root with its own discovery file patterns. It
 records matching regular files and folder records, then hashes those files and
-the configured inputs through `CapturedTree`. Inventoried sidecar modules retain the digests of the exact bundled bytes.
+the configured inputs through `CapturedTree`. For a root without `dir`, it
+walks the roots from `main.*` instead. Before that walk, `CapturedTree::begin`
+compares each local Storybook configuration input with the digest that the
+`main.*` read recorded, and a difference returns `InputsChanged`.
+After the CLI expands the roots, `Transaction::protect_roots` adds the roots
+from `main.*` and the authored inputs to the output boundary and checks the
+output again. Inventoried sidecar modules retain the digests of the exact bundled bytes.
 Capture rejects a different digest before document callbacks. PostCSS witnesses
 retain every observed whole-file version and byte range through cache reuse and worker replacement.
 The [evidence verifier](./src/fingerprint_evidence.rs) checks them before callbacks

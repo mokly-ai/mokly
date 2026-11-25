@@ -1,7 +1,5 @@
 # Storybook Stories
 
-Status: Roots without `dir`, which take their directories from the `stories` field of `main.*`, are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
-
 ## Stories Files
 
 A stories file is a `*.stories.{ts,tsx,js,jsx}` file that a root matches. The

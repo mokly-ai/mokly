@@ -18,7 +18,10 @@ its events with manual rebuild requests. `mokly-graph` owns render keys and
 `Plan` classifies events and exposes effective targets. Source roots and
 PostCSS directory recipes observe additions and removals. Required file
 ancestors keep atomic saves and missing resources observable. The deepest
-explicit root defines the denial boundary.
+explicit root defines the denial boundary. The configuration file and each
+local Storybook configuration input of `ResolvedConfig::storybook_inputs` are
+exact inputs with the `config` action. A root from `main.*` matches only
+stories files.
 An ancestor move schedules the strongest action of its required descendants.
 The native observer watches each confined ancestor so repaired directories
 remain observable.
@@ -106,6 +109,9 @@ third-party watcher, so it runs once, outside the test suite.
 
 - [`src/plan.rs`](./src/plan.rs) defines `Plan`, which compiles the watch
   inputs, applies the denial rules, and classifies each event into an action.
+  [`src/plan/setup.rs`](./src/plan/setup.rs) holds `Plan::new`, which
+  compiles the source roots, the exact configuration inputs, and the watch
+  rules of one resolved configuration.
 - [`src/observer.rs`](./src/observer.rs) defines `Observer`, the boundary that
   callers use to replace plans, rescan, wait, drain events, and close.
 - [`src/native.rs`](./src/native.rs) defines `NativeObserver`, the `Observer`

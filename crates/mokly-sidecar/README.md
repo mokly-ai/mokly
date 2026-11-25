@@ -642,6 +642,11 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `ViteCssResult.importedBy` on the wire, maps each input that the stylesheet
   resolver resolved without a plugin report to the logical path of its direct
   importer.
+- [`src/storybook.rs`](./src/storybook.rs) defines `ReadStorybookParams` and
+  `ReadStorybookResult`, the params and the result of a `readStorybook` call,
+  which reads the `stories` entries of one Storybook folder before discovery.
+  [`src/request_timeout.rs`](./src/request_timeout.rs) gives
+  `Call::timeout_ms`, the default deadline of each request.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns. It lists each included story, including
   the story that supplies the component parent.

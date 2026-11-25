@@ -34,11 +34,14 @@ are dropped.
 
 ## Configuration Changes
 
-On a configuration file change, Serve loads and validates the candidate
-configuration, re-runs discovery, builds a replacement watcher over the new
-watch set and waits for its readiness, and validates the candidate catalogue
-model. It then adopts the configuration, the watcher, and the model in one
-step, closes the old watcher, and publishes a revision. A load, readiness, or
+A configuration change is a change of the configuration file or of the
+[configuration inputs](./mokly-root-discovery.md#roots-from-main) of a root
+without `dir`. On a configuration change, Serve loads and validates the
+candidate configuration, loads the `main.*` of each root without `dir` again,
+re-runs discovery, builds a replacement watcher over the new watch set and
+waits for its readiness, and validates the candidate catalogue model. It then
+adopts the configuration, the watcher, and the model in one step, closes the
+old watcher, and publishes a revision. A load, readiness, or
 validation failure keeps the old configuration, watcher, and model. A changed
 renderer module or module resolution setting produces a new bundle
 generation; the old generation is disposed after adoption. An explicit CLI

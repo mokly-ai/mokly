@@ -59,6 +59,7 @@ both sides were rejected, because the copies drift and increase the code size.
 | Method              | Params                                                                                                                                                                                                                                                                                                            | Result                                                                                             |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                                                                                                                                                                                                                          | `{ version }`                                                                                      |
+| `readStorybook`     | source root, configuration directory, [Storybook folder](./mokly-storybook.md#storybook-folders), repository roots, resolution settings                                                                                                                                                                           | `{ main, entries, inputs, dependencyDirectories }`                                                 |
 | `bundle`            | entry files, renderer, stories files, the [Storybook folder](./mokly-storybook.md#storybook-folders) of each stories file, resolution settings, source root, configuration directory, repository roots, optional `vite` and `capture`, and optional [`preparation`](./mokly-sidecar-postcss.md#prepared-contexts) | `{ generation, modules, compiled }` or a [short result](./mokly-sidecar-recipes.md#restored-reuse) |
 | `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                                                                                                                                                                                                                       | nothing                                                                                            |
 | `describe`          | generation                                                                                                                                                                                                                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics }`                          |
@@ -181,6 +182,16 @@ The [Storybook stories contract](./mokly-storybook.md) defines how the
 sidecar reads stories files, which stories `describe` lists, and how
 `renderStory` prepares and renders a story.
 
+`readStorybook` loads the `main.*` of one Storybook folder before discovery,
+under the [roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
+It resolves the `storybook` package and the imports of `main.*` with the
+resolution settings of its side. `main` is the repository-relative path of
+that `main.*`. `entries` holds each `stories` entry in authored order, as a
+`directory` relative to the source root and a `files` pattern relative to that
+directory. `inputs` maps the repository-relative path of each repository file
+outside `node_modules` that the load read to the digest of its bytes.
+`dependencyDirectories` lists the dependency directories that the load used.
+
 ## Consumer PostCSS
 
 The [PostCSS context and evidence contract](./mokly-sidecar-postcss.md) defines
@@ -203,8 +214,14 @@ define deadlines, process replacement, and shutdown grace.
 | `render-failed`       | a render throws or returns a non-string                                                         | `build-invalid` with the entry and, for a view render, the viewport and scheme |
 | `render-timeout`      | a deadline passed twice                                                                         | `build-invalid` with the entry and the deadline                                |
 
-There is no fallback render and no partial output. Commands that need neither
-JavaScript, PostCSS, nor a [Vite stylesheet transform](./mokly-vite-adapter-styles.md#catalogues-without-javascript) never start a sidecar or fail for these reasons.
+There is no fallback render and no partial output. When `readStorybook`
+reports that `main.*` is missing, fails to load, or gives invalid `stories`,
+discovery fails with `config-invalid`, in place of the presentation above.
+Its message names the `main.*` file and the failure. Every other
+`readStorybook` failure keeps its code and presentation from the table above. Commands that need
+neither JavaScript, PostCSS, nor a [Vite stylesheet transform](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
+never start a sidecar or fail for these reasons. The `main.*` of a root
+without `dir` counts as JavaScript.
 
 ## Security
 
