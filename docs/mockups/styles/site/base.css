@@ -2,13 +2,15 @@
    the dot-grid canvas behind every page, the type defaults, the focus glow,
    the shared text, links and badges.
 
-   The site stylesheets are split by owner. The shared files come first in
-   the site rule of mokly.config.json: this file, then the buttons, the
-   Canvas parts, the labels, the people, the panels, the code panel, the
-   document typography, the chrome, the menu, the footer with the home's
-   zoom pill and the legal pages. The area files follow, one group each
-   for the home, the documentation, the changelog and pricing, and each
-   area file holds only rules that its own area uses.
+   The site stylesheets are split by owner, and the site screens import
+   them through the style modules in src/screens/design/site/styles/. Each
+   site screen imports the shared module first, then the module of its own
+   area. The shared module holds this file, then the buttons, the Canvas
+   parts, the labels, the people, the panels, the code panel, the document
+   typography, the chrome, the menu and the footer with the home's zoom
+   pill. One area module each holds the files of the legal pages, the home,
+   the documentation, the changelog and pricing. Each area file holds only
+   rules that its own area uses.
 
    Site documents draw in the canvas palette, so the --mk-* roles hold the
    Canvas values and the sans and mono families are Geist and Geist Mono.

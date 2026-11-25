@@ -16,19 +16,19 @@ a measured size tag, type badge or redline value does not show. Every island
 honours reduced motion: nothing moves, and each part shows its finished
 state.
 
-| Island          | Pages                          | Behaviour                                                          |
-| --------------- | ------------------------------ | ------------------------------------------------------------------ |
-| Scheme          | every page                     | Applies the scheme choice before the first paint; runs the control |
-| Menu            | every page                     | Opens and closes the mobile menu                                   |
-| Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines        |
-| Home demos      | home                           | Plays each demo in view; marks the section in view in Specs        |
-| Home zoom       | home                           | Scales the home's content and footer frame with the zoom pill      |
-| Search          | docs                           | The search dialog and its keys                                     |
-| Copy            | docs                           | The copy control of each code panel                                |
-| Tree            | docs                           | The tree scroll memory and the tree sheet                          |
-| Docs scroll spy | docs                           | Marks the section in view and shows the reading progress           |
-| Sample          | docs                           | Runs the controls, the lit lines and the wire of a sample band     |
-| Changelog       | changelog                      | Runs the filter; marks the release in view in Version history      |
+| Island          | Pages                          | Behaviour                                                                           |
+| --------------- | ------------------------------ | ----------------------------------------------------------------------------------- |
+| Scheme          | every page                     | Applies the scheme choice before the first paint; runs the control                  |
+| Menu            | every page                     | Opens and closes the mobile menu                                                    |
+| Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines                         |
+| Home demos      | home                           | Plays each demo in view; runs the Swipe divider; marks the section in view in Specs |
+| Home zoom       | home                           | Scales the home's content and footer frame with the zoom pill                       |
+| Search          | docs                           | The search dialog and its keys                                                      |
+| Copy            | docs                           | The copy control of each code panel                                                 |
+| Tree            | docs                           | The tree scroll memory and the tree sheet                                           |
+| Docs scroll spy | docs                           | Marks the section in view and shows the reading progress                            |
+| Sample          | docs                           | Runs the controls, the lit lines and the wire of a sample band                      |
+| Changelog       | changelog                      | Runs the filter; marks the release in view in Version history                       |
 
 - The scheme island loads in the page head as a blocking, content-hashed,
   same-origin script, so it sets the scheme from the choice of
@@ -41,6 +41,15 @@ state.
   hydration.
 - A home demo plays once when it comes into view and rests in its finished
   state, which the built page draws.
+- A mouse or a pen that moves over the compared screens of the Browse demo
+  pauses its sweep, and the sweep resumes when the pointer leaves. A scroll
+  alone does not pause it.
+- A press grabs the Swipe divider: the divider and the branch screen's clip
+  follow the pointer until the release. A touch grabs it when it moves across
+  the screens, and a tap puts it under the finger. A touch that moves up or
+  down scrolls the page. After a grab the sweep does not play again, and the
+  divider stays where the reader leaves it until the page loads again. The
+  divider takes no focus. Without script the divider rests at 50%.
 - The home zoom island runs the zoom pill of
   [Site chrome](./site-chrome.md#home-zoom). It shows the control in the box
   of the depicted pill, so the page does not shift. After each press, the

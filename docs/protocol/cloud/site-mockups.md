@@ -35,8 +35,10 @@ sources.
 
 Every site entry records the shared related documents, declared once for all of
 them. The pricing entry adds [Billing](./billing.md) and
-[Billing plan gates](./billing-plan-gates.md), which hold its facts. One
-configuration rule gives every site document the same stylesheet files.
+[Billing plan gates](./billing-plan-gates.md), which hold its facts. Each site
+document takes the font sheets from the site's stylesheet rule, and the shared
+site sheets and those of its own area from its screen's imports, as
+[Mockup tooling](./mockup-tooling.md#imported-site-styles) requires.
 File-derived paths place entries in Site; slug-derived folder titles suffice
 without a `_folder.json` record. The tour is registered from
 `docs/mockups/src/entries/design/site/tour.mockup.tsx`. Each screen is one

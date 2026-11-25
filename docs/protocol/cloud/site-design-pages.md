@@ -25,18 +25,20 @@ owns the islands that make the parts below move.
   section boxes. Specs holds the app's screens as phone and desktop artboards
   at 36% zoom. Components holds its component sets and the quiet
   `works with Storybook` label with the Storybook mark. Depicted people and
-  agents select and edit artboards. The spread is 830px tall on desktop and
-  shows three phone artboards on mobile, and it never scrolls the page
-  sideways. The demo app keeps its own warm palette, mixed from the `people`
-  and signal roles, in both schemes, and it sets its titles and prices in
-  Instrument Serif.
+  agents select and edit artboards. The spread is 830px tall on desktop and shows three
+  phone artboards with Components under them on mobile, and it never scrolls
+  the page sideways. A desktop window that cannot hold the whole spread first
+  drops the right column of Specs, then folds Components under Specs. The demo
+  app keeps its own warm palette, mixed from the `people` and signal roles, in
+  both schemes, and it sets its titles and prices in Instrument Serif.
 - Features: a section heading and its lead, then the Browse, Review and Edit
   modules, 158px apart. Each module has a kicker with its index, a heading,
   body copy in `textSecondary` at most 44ch wide, and a depicted demo:
   - Browse: a pull request's check card with a filled View changes button,
     joined by a `signal` connector to a depicted viewer window. Its compare
     toolbar lists the product's five compare modes in the product's order,
-    and its stage shows the Swipe mode with the divider.
+    and its stage shows the Swipe mode with the divider, which pauses under the
+    reader's pointer and slides when the reader grabs it.
   - Review: a wash of artboards, where a selected component carries a name
     tag and a padding redline, beside a pinned comment and a thread card with
     a filled Approve button.

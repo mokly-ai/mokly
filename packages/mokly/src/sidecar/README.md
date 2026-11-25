@@ -318,14 +318,19 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/resolution-request.ts`](./resolution-request.ts)
   applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./config-inputs.ts) records
-  each `tsconfig.json` or `jsconfig.json` and its `extends` chain. Its
-  `readConfig` resolves a relative `extends` or `baseUrl` from the canonical
-  folder of the configuration that defines it, through
-  `PhysicalInputs.canonicalFile`. That folder is also the base of the `paths`
-  targets when no `baseUrl` applies. Its `configuration` then expands a
+  each `tsconfig.json` or `jsconfig.json` and its `extends` chain.
+  `ConfigChain` resolves relative `extends` from the canonical folder of
+  the configuration that declares it. That folder is also the base for
+  `baseUrl` and for `paths` targets without a `baseUrl`. `ConfigInputs`
+  expands a
   `${configDir}` prefix from the folder of the top-level configuration, as
   found. [`src/sidecar/config-json.ts`](./config-json.ts) parses JSON
   with comments and trailing commas.
+- [`module-paths.ts`](./module-paths.ts) maps resolved paths to the selected
+  source tree. [`workspace-sources.ts`](./workspace-sources.ts) finds matching
+  source files for workspace build targets. It uses `ConfigChain` to read
+  `rootDir` and `outDir`. [`workspace-lookups.ts`](./workspace-lookups.ts)
+  records the candidate files and directories that can change that choice.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`

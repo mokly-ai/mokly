@@ -7,6 +7,8 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import { logical } from "./path-scope.js";
 import { confinedFile } from "./paths.js";
 
+export const virtualEntry = "mokly-entry";
+
 /** Storybook preview candidates, also absent ones, which the recipe hashes. */
 export const previewCandidates = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
   (extension) => `.storybook/preview.${extension}`,

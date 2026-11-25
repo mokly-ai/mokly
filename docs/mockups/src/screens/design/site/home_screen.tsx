@@ -7,6 +7,9 @@
  * and the Specs panel keeps its size and its place.
  */
 
+import "./styles/shared.js";
+import "./styles/home.js";
+
 import { HomeHero } from "./home/hero.js";
 import { HomeWorkspace } from "./home/workspace.js";
 import { SiteLayout } from "./parts/chrome.js";

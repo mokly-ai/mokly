@@ -271,7 +271,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("a breaking callout is a ringed, tinted box without an edge accent", () => {
-  const own = cssRules(siteStyles()).filter((rule) =>
+  const own = cssRules(siteStyles("design/site/changelog")).filter((rule) =>
     rule.selector
       .split(",")
       .some((part) => /\.site-release-group--breaking\S*$/.test(part.trim())),
