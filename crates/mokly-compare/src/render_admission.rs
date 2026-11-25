@@ -19,6 +19,8 @@ struct State {
     first: bool,
     closed: bool,
     readiness: Option<Arc<dyn WriteReadiness>>,
+    /// Writer threads that wait for a new epoch and so hold no pending lock.
+    waiting: usize,
 }
 
 impl Admission {
@@ -31,6 +33,7 @@ impl Admission {
                     first: !paused,
                     closed: false,
                     readiness: None,
+                    waiting: 0,
                 }),
                 changed: Condvar::new(),
             }),
@@ -113,6 +116,8 @@ impl Admission {
             .state
             .lock()
             .unwrap_or_else(|error| error.into_inner());
+        state.waiting += 1;
+        self.inner.changed.notify_all();
         while !state.closed && state.epoch == epoch {
             state = self
                 .inner
@@ -120,6 +125,7 @@ impl Admission {
                 .wait(state)
                 .unwrap_or_else(|error| error.into_inner());
         }
+        state.waiting -= 1;
     }
 
     pub(crate) fn ready(&self) -> bool {
@@ -168,3 +174,7 @@ impl Drop for Lease {
 #[cfg(test)]
 #[path = "_tests_/render_admission_tests.rs"]
 mod render_admission_tests;
+
+#[cfg(test)]
+#[path = "_tests_/idle_writer.rs"]
+pub(crate) mod idle_writer;

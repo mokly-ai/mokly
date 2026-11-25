@@ -10,6 +10,7 @@ use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::render_admission::idle_writer::offer_when_idle;
 use crate::render_image::{ImageIdentity, ImageSourceMock};
 use crate::render_pending::TraceStoreObserver;
 use crate::render_store::{DocumentBackendMock, WriteOutcome};
@@ -105,7 +106,7 @@ fn prepared_writer_reads_while_writes_wait_for_completed_changes() {
     );
     let key = StoreKey::new(&NodeKey("document".into()), &store.identity().unwrap());
     assert_eq!(
-        store.offer(key.clone(), NodeKey("document".into())),
+        offer_when_idle(&store, key.clone(), NodeKey("document".into())),
         OfferOutcome::Queued
     );
     assert_eq!((store.stats().queued, store.stats().active), (1, 0));

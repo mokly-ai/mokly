@@ -10,6 +10,7 @@ use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::render_admission::idle_writer::offer_when_idle;
 use crate::render_pending::{StoreObserverMock, StoreWarning};
 use crate::render_segment_buffer::BuiltSegment;
 use crate::render_store::{DocumentBackendMock, WriteOutcome};
@@ -76,7 +77,8 @@ fn a_full_key_queue_returns_the_render_while_disk_publication_is_blocked() {
     ));
     let mut release_on_failure = Release(None);
     assert_eq!(
-        store.offer(
+        offer_when_idle(
+            &store,
             StoreKey::new(&NodeKey("a".into()), "build"),
             NodeKey("a".into())
         ),
