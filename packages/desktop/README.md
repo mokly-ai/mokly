@@ -127,10 +127,6 @@ The suite reuses the app's real API/catalogue harness. It first opens the
 shell with the API stopped, then starts its isolated stack. It tests the
 Origin header, persistent session cookie, desktop grant handoff, viewer limit, catalogue
 admission, navigation and the share action's write to the system clipboard.
-It checks that the whole account control takes clicks in the Mac window. The
-app's browser suite cannot check this: the shell's Chromium passes the bar's
-drag region down to the avatar over the control, and the suite's Chromium
-does not.
 It presses **Continue in browser**, captures the connect address, issues a grant
 through the real browser page and API, and delivers it through a second launch.
 It also opens a used grant, then a valid grant on the same callback route, and

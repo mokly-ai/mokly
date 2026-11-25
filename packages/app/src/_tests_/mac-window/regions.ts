@@ -83,16 +83,25 @@ export async function expectBarRegions(bar: Locator, label: string) {
 /**
  * What the Mac app's window does at one point, as Electron collects the
  * page's regions: the region of the last element in document order whose box
- * holds the point and that sets `drag` or `no-drag`, else `none`. An element
- * that sets no region, such as a control's hit area drawn past its box,
- * takes no click away from the region beneath it.
+ * holds the point and that has `drag` or `no-drag`, else `none`. The shell's
+ * Chromium passes a region down to each element that sets none, and the
+ * browser suite's Chromium does not, so an element here takes the region of
+ * its nearest element, itself or an ancestor, that sets one.
  */
 export function regionAt(page: Page, x: number, y: number): Promise<string> {
   return page.evaluate(
     ([pointX, pointY, property]) => {
       let region = "none";
       for (const element of document.querySelectorAll("*")) {
-        const value = getComputedStyle(element).getPropertyValue(property);
+        let value = "";
+        for (
+          let node: Element | null = element;
+          node;
+          node = node.parentElement
+        ) {
+          value = getComputedStyle(node).getPropertyValue(property);
+          if (value === "drag" || value === "no-drag") break;
+        }
         if (value !== "drag" && value !== "no-drag") continue;
         const box = element.getBoundingClientRect();
         if (
