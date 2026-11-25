@@ -15,7 +15,7 @@ mkc-mokly-contract = { workspace = true }
 mkc-github-interface = { workspace = true }
 mkc-auth = { workspace = true }
 mkc-build-interface = { workspace = true }
-mokly-model = { workspace = true }
+mokly-content-types = { workspace = true }
 sandbox-interface = { workspace = true }
 internal-error = { workspace = true }
 thiserror = "2.0.20"

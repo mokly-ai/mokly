@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use axum::body::Bytes;
 use axum::http::HeaderValue;
-use mokly_model::content_types::delivered_content_type;
+use mokly_content_types::delivered_content_type;
 use mokly_model::namespace::{FONT_FACES, viewer};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;

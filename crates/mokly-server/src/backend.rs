@@ -6,9 +6,9 @@ use std::sync::{Arc, Mutex, Weak};
 use axum::body::Bytes;
 use axum::http::HeaderValue;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_content_types::delivered_content_type;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
-use mokly_model::content_types::delivered_content_type;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 

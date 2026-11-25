@@ -3,9 +3,9 @@
 use std::collections::BTreeMap;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_content_types::imported_content_type;
 use mokly_css::paths;
 use mokly_css::types::{OpaqueAsset, StylesheetRoot};
-use mokly_model::content_types::imported_content_type;
 
 use crate::delivery_inputs::ImportedAsset;
 use crate::dependency_inputs;

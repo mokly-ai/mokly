@@ -12,6 +12,7 @@ mock = []
 [dependencies]
 mokly-css = { workspace = true }
 mokly-compare = { workspace = true }
+mokly-content-types = { workspace = true }
 mokly-model = { workspace = true }
 mokly-catalogue = { workspace = true }
 mokly-graph = { workspace = true }

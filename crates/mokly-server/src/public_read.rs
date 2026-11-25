@@ -7,8 +7,8 @@ use std::sync::Arc;
 use cap_fs_ext::{DirExt, FollowSymlinks, OpenOptionsFollowExt};
 use cap_std::ambient_authority;
 use cap_std::fs::{Dir, OpenOptions};
+use mokly_content_types::delivered_content_type;
 use mokly_graph::policy::PublicPolicy;
-use mokly_model::content_types::delivered_content_type;
 
 use crate::assets::File;
 use crate::error::{Result, ServerError};

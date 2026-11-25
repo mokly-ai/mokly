@@ -1,13 +1,16 @@
 //! File extensions select the same delivered types on all public paths.
 
-use crate::namespace::{GENERATED_DIRECTORY, generated};
-use crate::review_affected::ReviewSide;
-use crate::routes::{comparison_generation, comparison_snapshot};
-
 use super::{
     FILE_LOADER_ONLY_TYPES, IMPORT_ONLY_TYPES, STYLESHEET_TYPES, delivered_content_type,
     stylesheet_content_type,
 };
+
+fn live_and_snapshot_paths(asset: &str) -> [String; 2] {
+    [
+        format!("static/mokly-generated/{asset}"),
+        format!("mokly-viewer/diffs/generations/1/snapshots/after/mokly-generated/{asset}"),
+    ]
+}
 
 #[test]
 fn stylesheet_types_use_extensions_of_file_names() {
@@ -32,14 +35,8 @@ fn delivered_types_match_literal_values_on_each_asset_path() {
         ("file.webmanifest", "application/manifest+json"),
     ] {
         let asset = format!("assets/{file}");
-        let snapshot =
-            comparison_snapshot(ReviewSide::After, &format!("{GENERATED_DIRECTORY}/{asset}"));
-        for path in [
-            generated(&asset),
-            asset,
-            format!("static/authored/{file}"),
-            format!("{}{snapshot}", comparison_generation("1")),
-        ] {
+        let [live, snapshot] = live_and_snapshot_paths(&asset);
+        for path in [live, asset, format!("static/authored/{file}"), snapshot] {
             assert_eq!(delivered_content_type(&path), expected, "{path}");
         }
     }
@@ -53,13 +50,8 @@ fn delivered_types_follow_file_extensions_on_each_public_path() {
         .chain(FILE_LOADER_ONLY_TYPES)
     {
         let asset = format!("assets/file{extension}");
-        let snapshot =
-            comparison_snapshot(ReviewSide::After, &format!("{GENERATED_DIRECTORY}/{asset}"));
-        for path in [
-            generated(&asset),
-            format!("static/file{extension}"),
-            format!("{}{snapshot}", comparison_generation("1")),
-        ] {
+        let [live, snapshot] = live_and_snapshot_paths(&asset);
+        for path in [live, format!("static/file{extension}"), snapshot] {
             assert_eq!(delivered_content_type(&path), *expected, "{path}");
         }
     }

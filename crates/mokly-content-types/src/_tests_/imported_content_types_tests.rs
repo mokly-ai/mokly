@@ -1,6 +1,6 @@
 //! Imported media types do not broaden CSS url() extension validation.
 
-use crate::content_types::{imported_content_type, stylesheet_content_type};
+use super::{imported_content_type, stylesheet_content_type};
 
 #[test]
 fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets() {

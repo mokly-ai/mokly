@@ -3,9 +3,9 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_content_types::delivered_content_type;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::axes::EntryKind;
-use mokly_model::content_types::delivered_content_type;
 use mokly_model::review::{ReviewEntry, ReviewKind};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{namespace, routes};

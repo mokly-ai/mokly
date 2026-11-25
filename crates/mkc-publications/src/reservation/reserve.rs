@@ -11,7 +11,7 @@ use mkc_store_interface::blob::{Blob, PublicationFile};
 use mkc_store_interface::publication::{Publication, PublicationFailure};
 use mkc_store_interface::publication_event::{EventKind, PublicationEvent};
 use mkc_store_interface::store::Queries;
-use mokly_model::content_types::delivered_content_type;
+use mokly_content_types::delivered_content_type;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::ingest::{PublicationIngest, UploadAuthorization};

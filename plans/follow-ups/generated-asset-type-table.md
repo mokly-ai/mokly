@@ -5,7 +5,7 @@
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: the wider fix of review finding 8 of round 2.
-- **Location:** `crates/mokly-model/src/content_types.rs`,
+- **Location:** `crates/mokly-content-types/src/lib.rs`,
   `packages/mokly/src/sidecar/asset-imports.ts:3`, and
   `tests/sidecar_imported_assets.test.ts`.
 - **Reason:** The fix adds the table to the shared code generation, outside
@@ -21,11 +21,11 @@
     `packages/mokly/src/sidecar/asset-imports.ts` decides there which imports
     give an asset token.
 - **Background:**
-  - The Rust tables in `crates/mokly-model/src/content_types.rs` hold the
+  - The Rust tables in `crates/mokly-content-types/src/lib.rs` hold the
     stylesheet asset types, the import-only types, and the `.txt` type once
-    each. Since 2026-11-25 they are a documented export of `mokly-model`, and
+    each. They are a documented export of `mokly-content-types`, and
     `mokly-css`, `mokly-graph`, `mokly-server`, and the Mokly Cloud crate
-    `mkc-publications` read them. `xtask` already depends on `mokly-model`.
+    `mkc-publications` read them.
   - The sidecar keeps its own TypeScript list of the same extensions.
   - A Node test reads the Rust rows with a regular expression and compares
     them with the TypeScript list.
@@ -42,9 +42,9 @@
   - **C.** Generate the TypeScript list from the Rust table with
     `cargo xtask generate-types`, and let the generated-file check replace
     the text match. Effort: Medium.
-  - **E.** C, with the table moved to `crates/mokly-model` as a documented
-    export. The move is done since 2026-11-25, when the content type rule
-    moved the table there, so E is now the same work as C. Effort: Medium.
+  - **E.** C, with the table in `crates/mokly-content-types` as a documented
+    export. The export is in place, so E now has the same work as C.
+    Effort: Medium.
 - **Left out:** A parity test of two lists keeps the copy. Sending the list in
   each bundle request changes the persisted bundle settings in about 30 Rust
   files.

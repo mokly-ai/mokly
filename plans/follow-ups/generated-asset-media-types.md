@@ -9,7 +9,7 @@
   `calummoore/storybook-asset-follow-ups-cibm`, whose content type rule fixed
   the media types that this item first named.
 - **Location:** `crates/mokly-server/src/backend_assets.rs` (`Request::verify`),
-  `crates/mokly-model/src/content_types.rs` (`delivered_content_type`),
+  `crates/mokly-content-types/src/lib.rs` (`delivered_content_type`),
   `crates/mokly-css/src/types.rs` (`OpaqueAsset`),
   `crates/mokly-graph/src/asset_delivery.rs` (`AssetRead`), and
   `crates/mokly-compare/src/base_reader.rs` (`ReaderAsset`).
@@ -23,7 +23,7 @@
     compiler or a JavaScript import registers for delivery through the graph.
     Serve answers it under `/static/mokly-generated/assets/`.
   - **Content type rule:** `delivered_content_type` in
-    `crates/mokly-model/src/content_types.rs`, which
+    `crates/mokly-content-types/src/lib.rs`, which
     `docs/protocol/mokly-content-types.md` states. It gives each delivered file
     the type of its extension: the asset tables first, then `mime_guess`.
 - **Background:**

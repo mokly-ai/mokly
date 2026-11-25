@@ -37,7 +37,7 @@
     `mime_guess`. Mokly Cloud applies the same rule when it accepts a
     publication, records the type of each path, and sends that recorded
     type. The rule is `delivered_content_type` in
-    `crates/mokly-model/src/content_types.rs`, and
+    `crates/mokly-content-types/src/lib.rs`, and
     `docs/protocol/mokly-content-types.md` states it. Each Serve route that
     sends a file calls it directly. Serve has no content type lookup of its
     own. The Cloud reservation calls it in
@@ -71,7 +71,7 @@
 - **Previous examples:** Commit `d935e6a6` used the same plan shape for
   stylesheet bundles and stylesheet assets.
 - **Related:** The content type rule of 2026-11-25, in
-  `crates/mokly-model/src/content_types.rs`, gives each asset its type from
+  `crates/mokly-content-types/src/lib.rs`, gives each asset its type from
   its extension. D drops the plan's copy of the type, so delivery keeps
   that rule. Each option must keep it.
 - **Recommendation:** D. It removes the leftover fields without a second

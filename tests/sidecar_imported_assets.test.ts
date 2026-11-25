@@ -131,7 +131,7 @@ test("asset path sets belong to one compile and keep readable closed tokens", ()
 
 test("Rust and TypeScript recognize the same case-sensitive JavaScript asset types", async () => {
   const rust = await fs.readFile(
-    "crates/mokly-model/src/content_types.rs",
+    "crates/mokly-content-types/src/lib.rs",
     "utf8",
   );
   const [defaults = "", fileOnly = ""] = rust.split(

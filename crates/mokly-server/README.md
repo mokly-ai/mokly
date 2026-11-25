@@ -103,7 +103,7 @@ generated and authored assets, the cache headers, JSON compression, the
 comparison generations, and the temporary previews.
 Every route that sends a file, generated or authored, gives it the type of the
 [content type rule](../../docs/protocol/mokly-content-types.md),
-through `delivered_content_type` in `mokly-model`.
+through `delivered_content_type` in `mokly-content-types`.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
 Serve attempt. Saved and temporary renders deliver private composition

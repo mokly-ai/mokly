@@ -1,6 +1,6 @@
 //! Confined CSS assets and physical alias inventory.
 
-use mokly_model::content_types::{stylesheet_content_type, stylesheet_extensions};
+use mokly_content_types::{stylesheet_content_type, stylesheet_extensions};
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, Node};
 

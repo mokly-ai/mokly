@@ -2,8 +2,8 @@
 
 use std::sync::{Arc, Weak};
 
+use mokly_content_types::delivered_content_type;
 use mokly_graph::types::RenderGeneration;
-use mokly_model::content_types::delivered_content_type;
 use mokly_model::namespace::generated;
 
 use crate::asset_streams::{
