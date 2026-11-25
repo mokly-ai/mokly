@@ -19,6 +19,9 @@ pub struct Config {
     pub repo_root: Option<String>,
     /// Light-first effective scheme set.
     pub color_schemes: Option<Vec<ColorScheme>>,
+    /// Ordered prop names that can name a story component use after its key.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance_name_props: Option<Vec<String>>,
     /// Optional consumer React provider module.
     pub renderer: Option<String>,
     /// Optional consumer PostCSS module.

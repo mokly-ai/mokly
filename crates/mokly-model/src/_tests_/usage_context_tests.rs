@@ -109,6 +109,52 @@ fn derived_instance_ids_keep_the_component_path_spelling() {
 }
 
 #[test]
+fn story_uses_keep_the_path_segment_and_verify_props_without_the_story_schema() {
+    let (mut usage, mut components) = fixture();
+    let props = serde_json::from_value(serde_json::json!({"outsideStory": true})).unwrap();
+    let CatalogueUsage::Ready { instances, .. } = &mut usage else {
+        unreachable!()
+    };
+    instances[0].props = crate::wire_props::encode(&props);
+    instances[0].props_key = material::props_key(&props);
+    assert!(matches!(
+        validate(&usage, EntryKind::Screen, &components),
+        Err(crate::readers::ReadError::Contract {
+            message: crate::read_contract::ContractViolation::UsageProps,
+            ..
+        })
+    ));
+
+    components[0].story = true;
+    components[0].entry.path = "components/Action_Button".into();
+    let CatalogueUsage::Ready {
+        instances, ranges, ..
+    } = &mut usage
+    else {
+        unreachable!()
+    };
+    let instance = &mut instances[0];
+    instance.component_id = components[0].entry.path.clone();
+    instance.id = "Action_Button-save-2".into();
+    instance.key = material::instance_key(&instance.owner, None, &instance.id);
+    ranges[0].target = ComponentRangeTarget::Instance {
+        instance_key: instance.key.clone(),
+    };
+    validate(&usage, EntryKind::Screen, &components).unwrap();
+    let CatalogueUsage::Ready { instances, .. } = &mut usage else {
+        unreachable!()
+    };
+    instances[0].props.clear();
+    assert!(matches!(
+        validate(&usage, EntryKind::Screen, &components),
+        Err(crate::readers::ReadError::Contract {
+            message: crate::read_contract::ContractViolation::UsageKey,
+            ..
+        })
+    ));
+}
+
+#[test]
 fn recorded_material_requires_matching_keys_schema_and_complete_regions() {
     let (usage, components) = fixture();
     validate(&usage, EntryKind::Screen, &components).unwrap();

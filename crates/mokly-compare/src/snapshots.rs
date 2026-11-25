@@ -143,6 +143,7 @@ fn record(entry: &ModelEntry) -> Option<EntryRecord> {
             element,
             slots,
             supplied_slots,
+            ..
         } => EntryRecord::Component {
             metadata,
             visual: visual_record(entry, visual),

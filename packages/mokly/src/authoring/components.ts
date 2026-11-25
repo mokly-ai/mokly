@@ -2,15 +2,20 @@ import type { ReactNode } from "react";
 
 import { validatePropValues } from "@mokly/viewer/data";
 
-import type { InstanceDraft } from "../generated/sidecar/InstanceDraft.js";
 import type { SlotDraft } from "../generated/sidecar/SlotDraft.js";
 import { SidecarError, detail } from "../sidecar/errors.js";
 
-import { copyData, digest, encodeData, reviewMaterialKey } from "./data.js";
+import { copyData, digest } from "./data.js";
 import { validateDestination } from "./links.js";
 import type { AuthoringRuntime, DefinitionData, Owner } from "./runtime.js";
 import { wrapperBrand } from "./runtime.js";
-import { inputOwner, invocationSource } from "./usage.js";
+import {
+  inputOwner,
+  instancePlacement,
+  instanceProps,
+  invocationSource,
+  renderInstance,
+} from "./usage.js";
 
 const slots = new WeakMap<object, { owner: Owner; key: string }>();
 
@@ -39,27 +44,7 @@ export function componentWrapper(definition: object, data: DefinitionData) {
     )
       throw new Error("moklyInstance must be lowercase kebab-case");
     if (parent.seen.has(id)) throw new Error(`duplicate instance ${id}`);
-    parent.seen.add(id);
-    const scope = JSON.stringify([
-      parent.kind,
-      parent.instanceKey ?? null,
-      parent.slotKey ?? null,
-    ]);
-    let orders = session.inputOrders.get(scope);
-    if (!orders) {
-      orders = new Map();
-      session.inputOrders.set(scope, orders);
-    }
-    const order = orders.get(id) ?? orders.size;
-    orders.set(id, order);
-    const key = digest([
-      "mokly-instance-v1",
-      parent.kind,
-      parent.instanceKey ?? null,
-      parent.slotKey ?? null,
-      id,
-    ]);
-    const region = session.nextRegion();
+    const placement = instancePlacement(session, parent, id);
     const props: Record<string, unknown> = {};
     const slotProps: Record<string, ReactNode> = {};
     const names = (data.input.slots ?? []) as string[];
@@ -69,8 +54,8 @@ export function componentWrapper(definition: object, data: DefinitionData) {
           runtime,
           value as ReactNode,
           parent,
-          key,
-          region,
+          placement.key,
+          placement.regionId,
           name,
         );
       else props[name] = value;
@@ -93,23 +78,12 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       session.sourceRoot,
       session.dependencyRoots,
     );
-    session.instances.push({
-      regionId: region,
-      key,
-      id,
+    const draft = {
+      ...placement,
       componentPath: registered.path,
-      owner: inputOwner(parent),
-      ...(parent.slotKey ? { slotKey: parent.slotKey } : {}),
-      order,
-      props: Object.fromEntries(
-        Object.entries(normalized).map(([name, value]) => [
-          name,
-          encodeData(value),
-        ]),
-      ) as InstanceDraft["props"],
-      propsKey: reviewMaterialKey(normalized),
+      ...instanceProps(normalized),
       ...(source ? { source } : {}),
-    });
+    };
     const render = data.input.render as (
       props: Record<string, unknown>,
       context: unknown,
@@ -120,26 +94,13 @@ export function componentWrapper(definition: object, data: DefinitionData) {
         session.context,
       );
     }
-    const owner: Owner = {
-      kind: "instance",
-      instanceKey: key,
-      seen: new Set(),
-    };
     const capture = React.useContext(runtime.contexts.styles);
-    const output = React.createElement(Adapter);
-    const owned = capture?.wrap(registered.path, output) ?? output;
-    return React.createElement(
-      React.Fragment,
-      null,
-      session.boundary(
-        `mokly-instance:start id="${region}" path="${registered.path}" instance="${key}" props="${reviewMaterialKey(normalized)}"`,
-      ),
-      React.createElement(
-        runtime.contexts.owner.Provider,
-        { value: owner },
-        owned,
-      ),
-      session.boundary(`mokly-instance:end id="${region}"`),
+    return renderInstance(
+      runtime,
+      session,
+      draft,
+      React.createElement(Adapter),
+      capture,
     );
   }
   Object.defineProperty(Component, wrapperBrand, { value: true });

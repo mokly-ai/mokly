@@ -30,6 +30,7 @@ pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
         evaluation: Some(evaluation.into()),
         entry_files: vec![entry.into()],
         stories_files: Vec::new(),
+        instance_name_props: None,
         renderer: None,
         source_root: "/repo".into(),
         configuration_directory: ".".into(),

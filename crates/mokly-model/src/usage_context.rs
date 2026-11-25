@@ -51,12 +51,13 @@ pub fn validate_with(
             .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
         let default_id = component.entry.path.rsplit('/').next().unwrap_or("");
         if instance.id != default_id
-            && !instance.id.split('-').all(|part| {
-                !part.is_empty()
-                    && part
-                        .bytes()
-                        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
-            })
+            && !is_kebab_id(&instance.id)
+            && !(component.story
+                && instance
+                    .id
+                    .strip_prefix(default_id)
+                    .and_then(|suffix| suffix.strip_prefix('-'))
+                    .is_some_and(is_kebab_id))
         {
             return Err(invalid(ContractViolation::UsageKey));
         }
@@ -72,7 +73,9 @@ pub fn validate_with(
         if material::props_key(&props) != instance.props_key {
             return Err(invalid(ContractViolation::UsageKey));
         }
-        schemas.validate(&instance.component_id, &props)?;
+        if !component.story {
+            schemas.validate(&instance.component_id, &props)?;
+        }
         if instance.source.as_ref().is_some_and(|source| {
             !safe_path(&source.path)
                 || source.line == 0
@@ -110,6 +113,15 @@ pub fn validate_with(
         previous = Some(slot.key.as_str());
     }
     usage_references::validate(instances, slots, ranges, kind, schemas.components)
+}
+
+fn is_kebab_id(id: &str) -> bool {
+    id.split('-').all(|part| {
+        !part.is_empty()
+            && part
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+    })
 }
 
 fn safe_path(path: &str) -> bool {

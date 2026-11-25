@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { ComponentWireValue } from "../generated/sidecar/ComponentWireValue.js";
+
 export class DataError extends Error {
   constructor(
     readonly path: string,
@@ -77,12 +79,12 @@ export function copyData(value: unknown, allowReservedKeys = false): unknown {
 }
 
 /** Canonical tagged values preserve negative zero and UTF-16 key ordering. */
-export function encodeData(value: unknown): unknown {
+export function encodeData(value: unknown): ComponentWireValue {
   if (value === null) return ["null"];
   if (typeof value === "number")
     return ["number", Object.is(value, -0) ? "-0" : String(value)];
-  if (typeof value === "string" || typeof value === "boolean")
-    return [typeof value, value];
+  if (typeof value === "string") return ["string", value];
+  if (typeof value === "boolean") return ["boolean", value];
   if (Array.isArray(value)) return ["array", value.map(encodeData)];
   const data = value as Record<string, unknown>;
   return [

@@ -106,7 +106,10 @@ validates recorded props against the serialized schema before it accepts a
 props key or a usage record. The viewer trusts the recorded props of a
 document of its version. The wrapper, the viewer, and the core apply the same
 profile. The core validates every instance that a render returns against the
-registered schema of its component.
+registered schema of its component. Neither the receiver nor the core
+validates the props of a [story component use](./mokly-story-component-uses.md)
+against the schema of its stories entry, under the
+[attribution rules](./mokly-component-changes.md#normalization-and-input-ownership).
 
 ## Canonical Wire Props
 

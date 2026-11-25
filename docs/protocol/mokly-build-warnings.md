@@ -1,5 +1,7 @@
 # Build Warnings
 
+Status: Mokly does not raise the `instance-numbered` warning yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds it.
+
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
@@ -54,6 +56,7 @@ order, the operating system, or the absolute checkout path.
 | `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                               |
 | `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                                                  |
 | `html-ignore-attribute`          | An unknown attribute on an ignore wrapper in an authored body, a saved variant slot, or a page callback document ([HTML screens](./mokly-html-screens.md#links-and-markers))                                                                        |
+| `instance-numbered`              | A story component use that takes a number for a repeated id ([story component uses](./mokly-story-component-uses.md#numbered-ids))                                                                                                                  |
 | `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                                                                                                                                                    |
 | `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                                                                                                                                              |
 | `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                                                                                                                                                        |

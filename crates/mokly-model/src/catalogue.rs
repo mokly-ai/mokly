@@ -121,6 +121,10 @@ pub enum EntryContent {
         /// Supplied slot names on a variant, empty on a parent.
         #[serde(rename = "suppliedSlots")]
         supplied_slots: Vec<String>,
+        /// Whether this component entry comes from a stories file.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[ts(optional, as = "Option<bool>")]
+        story: bool,
     },
     /// Authored complete page.
     Page,

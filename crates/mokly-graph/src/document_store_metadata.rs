@@ -79,6 +79,7 @@ fn warning_code(code: &str) -> Option<&'static str> {
         "html-foster-parented" => Some("html-foster-parented"),
         "html-ignore-attribute" => Some("html-ignore-attribute"),
         "html-unused-props" => Some("html-unused-props"),
+        "instance-numbered" => Some("instance-numbered"),
         "link-control-ancestor" => Some("link-control-ancestor"),
         "link-control-descendant" => Some("link-control-descendant"),
         "marker-in-raw-text" => Some("marker-in-raw-text"),

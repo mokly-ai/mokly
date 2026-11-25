@@ -16,6 +16,7 @@ import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
+import type { BundleExports } from "./bundle-exports.js";
 import { bundleOptions } from "./bundle-options.js";
 import { bundleRecipe } from "./bundle-recipe.js";
 import type { CaptureDurability } from "./capture-durability.js";
@@ -32,6 +33,7 @@ import { PlannedRelative } from "./planned-relative.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
 import { PlanLookup } from "./resolution-plan.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
+import type { StoryComponents } from "./story-components.js";
 
 export interface Generation {
   modules: Module[];
@@ -53,14 +55,8 @@ export interface Generation {
   savedSlots: Map<string, unknown>;
   sources: Map<string, string>;
   stories: Map<string, unknown>;
+  storyComponents: StoryComponents;
   require: NodeJS.Require;
-}
-export interface BundleExports {
-  entries: Record<string, Record<string, unknown>>;
-  stories: Record<string, Record<string, unknown>>;
-  renderer?: { default?: unknown };
-  preview?: Record<string, unknown>;
-  styleAdapters?: { styled?: unknown; native?: unknown; emotion?: unknown };
 }
 
 export interface Bundled {

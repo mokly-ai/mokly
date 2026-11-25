@@ -6,6 +6,8 @@ use mokly_model::wire_props::ComponentWireValue;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::methods::disabled;
+
 /// Original input owner, independent of physical placement.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -55,6 +57,10 @@ pub struct InstanceDraft {
     pub props: BTreeMap<String, ComponentWireValue>,
     /// Canonical props digest.
     pub props_key: String,
+    /// The resolved id has a numeric collision suffix.
+    #[serde(default, skip_serializing_if = "disabled")]
+    #[ts(optional, as = "Option<bool>")]
+    pub numbered: bool,
     /// Invocation source when the JSX development shim supplies it.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

@@ -3,7 +3,8 @@ import { createRequire } from "node:module";
 import type * as Storybook from "@storybook/react";
 import type * as Csf from "storybook/internal/csf";
 
-import type { BundleExports, Generation } from "./bundle.js";
+import type { BundleExports } from "./bundle-exports.js";
+import type { Generation } from "./bundle.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
 
@@ -16,6 +17,7 @@ type CaptureContext = (
 ) => void;
 
 export interface StoredStory {
+  componentHandle: string;
   compose: (
     cleanups: Csf.CleanupCallback[],
     captureContext: CaptureContext,
@@ -39,6 +41,7 @@ interface ReadStory {
 }
 
 interface ReadStories {
+  component: unknown;
   title: string;
   description: string;
   beforeAll: StoredStory["beforeAll"];
@@ -152,6 +155,7 @@ export function readStories(
   const docs = record(stories[0]?.story.parameters.docs);
   const description = record(docs.description).component;
   return {
+    component: meta.component,
     title,
     description: typeof description === "string" ? description : "",
     beforeAll,

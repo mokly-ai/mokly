@@ -33,7 +33,7 @@ pub(crate) fn entry(path: &str, kind: EntryKind, parent: Option<&str>) -> ModelE
         metadata: serde_json::from_value(json!({"path":path,"title":path,"description":"","tags":[],"relatedDocs":[],"variantOf":parent,"isIndex":false,"source":{"path":"specs/input.html","line":1,"column":1},"rootIndex":0})).unwrap(),
         content: match kind {
             EntryKind::Screen => EntryContent::Screen { visual, address: None, use_case_paths: vec![] },
-            EntryKind::Component => EntryContent::Component { visual, element: None, slots: vec![], supplied_slots: vec![] },
+            EntryKind::Component => EntryContent::Component { visual, element: None, slots: vec![], supplied_slots: vec![], story: false },
             EntryKind::Document => EntryContent::Document { color_schemes: vec![ColorScheme::Light], resources: vec![] },
             EntryKind::Page => EntryContent::Page,
             EntryKind::UseCase => EntryContent::UseCase { steps: vec![] },

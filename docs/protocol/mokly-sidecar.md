@@ -1,5 +1,7 @@
 # Render Sidecar
 
+Status: The JSX development shim does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them.
+
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -126,6 +128,8 @@ installation under the [comparison tiers](./mokly-comparison.md#sides).
 React and React DOM resolve from that side's configuration directory through
 its settings, with one React runtime. The JSX development shim forwards to
 the consumer runtime and attaches invocation source only to Mokly wrappers.
+It also records each [story component use](./mokly-story-component-uses.md)
+and its invocation source.
 
 `bundle` evaluates nothing. `cssModules` must install all maps before
 `describe` evaluates the generation. A bundle or evaluation failure returns

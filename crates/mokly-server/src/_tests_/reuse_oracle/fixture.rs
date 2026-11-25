@@ -253,7 +253,7 @@ fn entry(path: &str) -> ModelEntry {
         controls: Default::default(),
         control_order: vec![],
     };
-    ModelEntry { metadata: serde_json::from_value(json!({"path":path,"title":path,"description":"","tags":[],"relatedDocs":[],"isIndex":false,"source":{"path":format!("specs/{path}.tsx"),"line":1,"column":1},"rootIndex":0})).unwrap(), content: if path == "badge" { EntryContent::Component { visual, element: None, slots: vec![], supplied_slots: vec![] } } else { EntryContent::Screen { visual, address: Some(format!("/{path}")), use_case_paths: vec![] } } }
+    ModelEntry { metadata: serde_json::from_value(json!({"path":path,"title":path,"description":"","tags":[],"relatedDocs":[],"isIndex":false,"source":{"path":format!("specs/{path}.tsx"),"line":1,"column":1},"rootIndex":0})).unwrap(), content: if path == "badge" { EntryContent::Component { visual, element: None, slots: vec![], supplied_slots: vec![], story: false } } else { EntryContent::Screen { visual, address: Some(format!("/{path}")), use_case_paths: vec![] } } }
 }
 fn warning(code: &'static str, message: &str) -> Warning {
     Warning {

@@ -45,6 +45,10 @@ renderer: string | null,
  */
 storiesFiles: Array<string>,
 /**
+ * Authored story use naming props. Omission selects the default order.
+ */
+instanceNameProps?: Array<string>,
+/**
  * Consumer resolution policy.
  */
 moduleResolution: ModuleResolution,

@@ -64,6 +64,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         entry_files: vec!["entry.ts".into()],
         renderer: None,
         stories_files: vec![],
+        instance_name_props: None,
         source_root: "/repo".into(),
         configuration_directory: ".".into(),
         repository_roots: vec![],

@@ -29,6 +29,10 @@ slots: Array<string>,
  */
 suppliedSlots: Array<string>,
 /**
+ * Whether this component entry comes from a stories file.
+ */
+story?: boolean,
+/**
  * Component comparison eligibility.
  */
 comparison: ComparisonSelection,

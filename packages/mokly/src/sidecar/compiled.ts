@@ -21,6 +21,7 @@ import {
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
+import { StoryComponents } from "./story-components.js";
 import { toolchainIdentity } from "./toolchain.js";
 import { setupCandidate } from "./vite-setup-input.js";
 import { currentViteToolchain } from "./vite-toolchain.js";
@@ -100,6 +101,7 @@ export function restore(
     registrations: new Map(),
     savedSlots: new Map(),
     stories: new Map(),
+    storyComponents: new StoryComponents(),
     require,
   };
 }

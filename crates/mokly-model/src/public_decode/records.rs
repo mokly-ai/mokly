@@ -72,6 +72,7 @@ impl<'de> Deserialize<'de> for CatalogueComponent {
             variant_of: raw.optional("variantOf")?,
             slots: raw.required("slots")?,
             supplied_slots: raw.required("suppliedSlots")?,
+            story: raw.optional("story")?.unwrap_or_default(),
             comparison: raw.required("comparison")?,
         })
     }

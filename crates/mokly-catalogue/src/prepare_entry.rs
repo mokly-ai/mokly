@@ -14,7 +14,7 @@ use crate::config_types::ResolvedRoot;
 use crate::diagnostic::{Code, Issue, Warning};
 use crate::discovery::{SourceFile, SourceKind};
 use crate::identity::{derive, segment};
-use crate::input::ParsedEntry;
+use crate::input::{EntryInput, ParsedEntry};
 use crate::parsing::issue;
 use crate::{declared_controls, numeric_warnings, prepare_parent, props, variants};
 
@@ -35,6 +35,7 @@ pub(crate) fn prepare(
     configured_schemes: &[ColorScheme],
 ) -> Result<PreparedEntries, Issue> {
     let input = &parsed.input;
+    let story = file.kind == SourceKind::Stories;
     let path_source = parsed.document.positions.get("/path").unwrap_or(&source);
     let (path, is_index) = derive(input, file, root, path_source)?;
     let metadata = EntryMetadata {
@@ -71,7 +72,7 @@ pub(crate) fn prepare(
         });
     }
     let mut candidates = variants::parse(parsed, kind, &file.path, &path);
-    if file.kind != SourceKind::Stories {
+    if !story {
         for variant in candidates.iter_mut().flatten() {
             variant.props = merge_props(&input.props, &variant.props);
         }
@@ -91,11 +92,11 @@ pub(crate) fn prepare(
     let content = visual_content(
         kind,
         visual,
-        input.element.clone(),
-        input.slots.clone(),
+        input,
         Vec::new(),
         input.address.clone(),
         input.use_case_paths.clone(),
+        story,
     );
     let parent = ModelEntry { metadata, content };
     let warnings = input.controls.as_ref().map_or_else(Vec::new, |controls| {
@@ -211,11 +212,11 @@ pub(crate) fn prepare(
         entry.content = visual_content(
             kind,
             visual,
-            input.element.clone(),
-            input.slots.clone(),
+            input,
             supplied,
             variant.address.clone().or_else(|| input.address.clone()),
             variant.use_case_paths.clone(),
+            story,
         );
         entries.push(entry);
     }
@@ -231,18 +232,19 @@ pub(crate) fn prepare(
 fn visual_content(
     kind: EntryKind,
     visual: VisualEntry,
-    element: Option<String>,
-    slots: Vec<String>,
+    input: &EntryInput,
     supplied_slots: Vec<String>,
     address: Option<String>,
     use_case_paths: Vec<String>,
+    story: bool,
 ) -> EntryContent {
     if kind == EntryKind::Component {
         EntryContent::Component {
             visual,
-            element,
-            slots,
+            element: input.element.clone(),
+            slots: input.slots.clone(),
             supplied_slots,
+            story,
         }
     } else {
         EntryContent::Screen {

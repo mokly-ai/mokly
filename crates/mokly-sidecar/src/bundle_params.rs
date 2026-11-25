@@ -31,6 +31,10 @@ pub struct Bundle {
     pub renderer: Option<String>,
     /// Storybook files.
     pub stories_files: Vec<String>,
+    /// Authored story use naming props. Omission selects the default order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub instance_name_props: Option<Vec<String>>,
     /// Consumer resolution policy.
     pub module_resolution: ModuleResolution,
     /// Source checkout or extracted base root.

@@ -55,14 +55,14 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
         let component = catalogue.model.entries.iter().find(|entry| {
             entry.metadata.path == instance.component_id && entry.metadata.variant_of.is_none()
         });
-        let schema = component.and_then(|component| {
-            if let EntryContent::Component { visual, .. } = &component.content {
-                Some(&visual.prop_schema)
+        let story = component.and_then(|component| {
+            if let EntryContent::Component { story, .. } = &component.content {
+                Some(*story)
             } else {
                 None
             }
         });
-        if schema.is_none()
+        if story.is_none()
             || instance_key(&instance.owner, instance.slot_key.as_deref(), &instance.id)
                 != instance.key
             || props.as_ref().map(props_key).as_ref() != Some(&instance.props_key)
@@ -72,7 +72,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 "forged fragment instance metadata",
             ));
         }
-        if let (Some(_), Some(values)) = (schema, props.as_ref()) {
+        if let (Some(false), Some(values)) = (story, props.as_ref()) {
             let validator = catalogue
                 .prop_validators
                 .get(&instance.component_id)

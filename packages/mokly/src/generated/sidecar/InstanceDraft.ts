@@ -43,6 +43,10 @@ props: { [key in string]: ComponentWireValue },
  */
 propsKey: string,
 /**
+ * The resolved id has a numeric collision suffix.
+ */
+numbered?: boolean,
+/**
  * Invocation source when the JSX development shim supplies it.
  */
 source?: InvocationSource, };

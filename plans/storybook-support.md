@@ -3257,11 +3257,319 @@ answers to decisions 19 and 21.
       `docs/protocol/mokly-component-changes.md` with those answers. Under
       decision 19, option L: names from `moklyInstance`, `key`, and the
       naming props, numbers as the fallback, and the changed stability rule.
-- [ ] Add the warning for numbered uses to
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Add the warning for numbered uses to
       `docs/protocol/mokly-build-warnings.md`, and the naming props field to
       `docs/protocol/mokly-configuration.md`.
-- [ ] Add the status lines, and run `npm run format:check` and
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+
+Design calls of track I. These calls are the track I orchestrator's, made on
+2026-11-25. They stay in this milestone so that the track changes only its
+own lines of this plan.
+
+- I1. A story component is the `component` of the meta of a stories entry,
+  in CSF 2, CSF 3, and CSF Factories. A JSX element records a use when its
+  type is that component, or when one side is a `memo` or `forwardRef` object
+  whose inner component is the other side. When several stories entries name
+  one component, the use records the entry whose path sorts first. A
+  `defineComponent` wrapper keeps its own rule, also when a meta names it.
+  Reason: both sides of a comparison choose the same entry, and a wrapper
+  already records its own instance.
+- I2. Only JSX that Mokly compiles records a use: the JSX development shim
+  sees each `jsxDEV` call of the modules that Mokly compiles, with esbuild and
+  under the Vite adapter. `createElement` calls and the compiled JSX of
+  installed packages record none. esbuild and Babel compile an element whose
+  `key` follows a spread, such as `<Card {...item} key={item.id} />`, to
+  `createElement`, so such a use records none. The guide asks authors to put
+  `key` before the spread. Reason: the shim is the one place that sees JSX on
+  both compile paths. A Mokly facade for `react` that also sees
+  `createElement` is a larger change, and
+  [story-uses-after-spread-keys.md](follow-ups/story-uses-after-spread-keys.md)
+  records it.
+- I3. On the pages of a stories entry, a use of its own component records no
+  instance. Uses of other story components there record instances as in a
+  screen. Reason: such a page compares the component itself, and an instance
+  region would hide the component's own render edits from Changes.
+- I4. The id of a story component use comes from `key`, then from the first
+  naming prop with a value: the final segment of the entry's resolved path, a
+  hyphen, and the value in lowercase kebab-case, such as `button-save`. A
+  string or a finite number gives a value. Letters lose their accents first,
+  so `Café` gives `cafe`. Then each run of characters other than `a` to `z`
+  and `0` to `9` becomes one hyphen, and the ends lose their hyphens. An
+  empty result goes on to the next prop. Without a value, the id is the
+  segment alone. Track I decision 1 settles whether a story component use
+  also takes `moklyInstance`. Reason: the segment keeps uses of two
+  components with one key apart, every value becomes a valid id, and
+  translated labels keep their letters.
+- I5. An id that its input scope already holds gets the first free number
+  from 2, such as `button-2`. The first use keeps the id without a number.
+  Each numbered use raises the warning of I6. A later named use whose id
+  equals an earlier number also gets a number. Reason: keys repeat across two
+  lists of one screen, and a warning keeps the build going where an error
+  would stop it.
+- I6. The warning has the code `instance-numbered` and the subject of the
+  rendered entry, so that the views of one entry give one warning for each
+  use. Its message names the id, the component path, the invocation site
+  when the record has one, and asks for a `key` that is unique in the input
+  scope. `--strict` counts it. An unnamed repeat inside a product component
+  gives one warning in each entry that renders that component. Reason:
+  decision 19 lets strict CI fail on a repeated use without a name, and the
+  `props-unsafe-integer` invocation warning already uses the rendered entry.
+- I7. The top-level configuration field `instanceNameProps` lists the
+  naming props, by default `id`, `name`, `data-testid`, and `aria-label`. An
+  empty list leaves `key` and the numbers. `key` always comes first, and a
+  `key` item in the list changes nothing. Reason: the naming props are
+  product-wide, the warning always asks for `key`, and a harmless item needs
+  no new configuration error.
+- I8. The props digest of a use holds each prop whose value is data under
+  the entry props contract. Function props stay out of it, as decision 21
+  says. Track I decision 2 settles the other values that are not data.
+  Track I decision 3 settles how the content of a use stays in Changes. The
+  stories entry's prop schema does not validate a use. Reason: the schema
+  describes the stories' args, not every prop of the component, and a product
+  use cannot change its props for Mokly.
+- I9. One field of the public component record marks a stories entry. It
+  makes usage validation accept a slot of a use that the entry does not
+  declare, when track I decision 3 keeps slots, and it turns off the prop
+  schema check of I8 in both validators. Every other component keeps both
+  checks. Track G adds story fields to the same record in Milestone 27, so
+  the merge of the two tracks keeps one sign of a stories entry. Reason: a
+  forged record keeps failing validation, and one field carries both rules.
+- I10. Track I decision 3 settles how a use renders its content.
+
+The options check of 2026-11-25 for these calls and for track I decision 1
+added options D and E to decision 1, changed I2, I4, I5, I6, I7, and I9, and
+raised track I decisions 2 and 3. Its second run added options D and E to
+decision 2 and options E to H to decision 3. The reports are under
+`.context/storybook-support/track-i/` in the track I workspace.
+
+#### Track I decision 1: Numbered ids for `defineComponent` wrappers
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design, with options D and E from the options check.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-instances.md:83-86`,
+  `packages/mokly/src/authoring/components.ts:41`,
+  `crates/mokly-html/src/components.rs:130-135`.
+- **Background:**
+  - Today two `defineComponent` wrappers with one id in one input scope fail
+    the render with "duplicate instance". The id is `moklyInstance`, or else
+    the final segment of the component's path. HTML component elements fail
+    the same way with "duplicate component instance id".
+  - Decision 19 chose L for story component uses: `key`, naming props, and
+    numbers as the fallback, with a warning. L says that the warning names "a
+    `key` on a product component, or `moklyInstance` on a Mokly wrapper".
+  - Decision 19 and its problem statement name only story component uses.
+  - The instance key holds no component path. So a wrapper and a story
+    component use with one id in one scope collide too.
+  - React never passes `key` to a component, but the JSX shim receives it.
+  - `examples/basic/specs/design/library/composition.tsx` adds a prefix to
+    `moklyInstance` names, so that repeated frames avoid the duplicate error.
+- **Problem:** A wrapper use gets a number only when wrappers also take the
+  fallback, and that removes a build error that `origin/main` has.
+- **Impact if no action:** The `moklyInstance` hint of the warning never
+  shows, two repeated wrappers keep failing the build, and a wrapper next to a
+  story component use with one id fails or warns by render order.
+- **Root question:** When a wrapper or an HTML component element repeats an
+  id in one input scope, who gives the use a distinct id: the author before
+  the build goes on, or Mokly with a number and the warning?
+- **Options:**
+  - **A.** Only story component uses get numbers. A repeated wrapper id still
+    fails the build. The warning always asks for `key`. Effort: Small.
+  - **B.** Wrappers also get numbers. A repeated wrapper id gets the first
+    free number and the warning, which asks for `moklyInstance`. Effort:
+    Small.
+  - **C.** Do A. A story component use in a catalogue file also takes
+    `moklyInstance`, which the shim removes, and the warning asks for it
+    there. TypeScript rejects the prop on a product component's props.
+    Effort: Medium.
+  - **D.** Do B. A wrapper also takes its name from `key`, after
+    `moklyInstance` and before the numbers, such as `card-intro`. The shim
+    passes the key to the wrapper, which removes it. A current wrapper use
+    with a `key` and no `moklyInstance` gets a new id. Effort: Small.
+  - **E.** Do D. HTML component elements get the same fallback, and the
+    warning asks for `mokly-instance`. It changes the core HTML renderer and
+    its replay check, for a small gain, because an HTML body cannot loop.
+    Effort: Medium.
+- **Left out:** Naming props for wrappers: an edit of a wrapper's data props
+  must keep its id, and decision 19 changed that rule only for story
+  component uses.
+- **Wider fix:** E. One fallback rule covers every instance.
+- **Previous examples:** The `DesignInstances` helper in
+  `examples/basic/specs/design/library/composition.tsx`.
+- **Related:** Decision 19, whose text names the `moklyInstance` hint.
+  Design call I4 waits for this answer on `moklyInstance`.
+- **Recommendation:** D, changed from B by the options check. It keeps one
+  fallback for both kinds of React use, and the `key` that a list of wrappers
+  already has names each wrapper without a warning.
+- **Action:** ask the user, because B, D, and E remove the duplicate-id
+  build error of wrappers on `origin/main`, and decision 19 names only story
+  component uses.
+
+#### Track I decision 2: Values that are neither data nor functions
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the options check, with options D and E from its
+  second run.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-component-changes.md:127-132`,
+  `packages/mokly/src/authoring/data.ts`.
+- **Background:**
+  - Changes compares a use in a screen by its id, its component path, and its
+    props digest, not by its rendered content.
+  - Decision 21 keeps function props out of that digest.
+  - Mokly's copy of data props rejects `undefined`, `NaN`, a `Date`, a cycle,
+    data past 10,000 nodes or a depth of 64, and an array of objects that
+    hold a function, such as `items={[{ label: "Save", onClick }]}`. A check
+    on 2026-11-25 confirmed each case.
+  - Product props hold these values often, and a product use cannot change
+    its props for Mokly.
+  - The Changes contract says that missing input evidence never means
+    unchanged inputs.
+  - The core computes the props digest again from the recorded props, so a
+    recorded value must be data.
+- **Problem:** No rule says what such a value gives to the record. Without
+  one, the render of a screen that works today fails when Mokly records its
+  use, or an edit of the value drops out of Changes.
+- **Impact if no action:** Milestone 35 has no rule, and screens that render
+  today fail.
+- **Root question:** How does a use record a prop value that is not data, so
+  that no render fails and an edit of the value stays in Changes?
+- **Options:**
+  - **A.** Leave each such value out of the record, as functions. An edit of
+    a `Date` or of `label` inside `items` drops out of Changes. Effort:
+    Small.
+  - **B.** Keep the data parts. A function or an element inside an object or
+    an array becomes a fixed placeholder, and a `Date` becomes its ISO text.
+    An edit of `label` inside `items` stays in Changes. An edit of an icon
+    element inside `items` does not. Effort: Medium.
+  - **C.** Record no projected region for a use with such a value. The use
+    stays in the usage lists, and its rendered output stays in the screen's
+    own comparison. Effort: Medium.
+  - **D.** Do B. An element anywhere inside a value follows track I decision
+    3, as a top-level element prop does. Effort: Medium.
+  - **E.** Do D, and record every other value without a failure. `undefined`
+    is a missing key in an object and `null` in an array. `NaN`, the
+    infinities, and `BigInt` give tagged text. A `Date` gives its ISO text. A
+    `Map`, a `Set`, another class instance, a cycle, or data past the bounds
+    gives a text that holds the digest of its canonical form: the constructor
+    name and the own enumerable fields. A value that changes on each run,
+    such as `new Date()`, then shows a change in each comparison. Effort:
+    Medium.
+- **Left out:**
+  - Fail the build on such a value: a product use cannot change its props for
+    Mokly, and it adds a new error.
+  - A warning for each such value: `--strict` would fail on ordinary props
+    such as `items` with an `onClick`.
+  - A digest of the source text of each prop expression: it misses values
+    from a variable or an import.
+- **Wider fix:** C. Only a comparison of the output also shows edits of
+  functions.
+- **Previous examples:** Design call 4 and decision 7 for story args.
+- **Related:** Track I decision 3. Option D here uses its answer. Option C
+  here matches its option D.
+- **Recommendation:** E, changed from B by the second options check. No prop
+  value can then fail the render, and only function edits, which decision 21
+  accepts, drop out of Changes.
+- **Action:** ask the user, because decision 21 names only function props,
+  and A, B, D, and E weaken the rule that missing input evidence never means
+  unchanged inputs.
+
+#### Track I decision 3: The content of a use and faithful rendering
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the options check, with options E to H from its
+  second run.
+- **Category:** Docs or spec.
+- **Location:** `packages/mokly/src/authoring/components.ts:178-205`,
+  `docs/protocol/mokly-component-changes.md:99-122`,
+  `crates/mokly-compare/src/material_nodes.rs:70-94`.
+- **Background:**
+  - Decision 21 chose A: `children` and each prop that holds React content
+    become implicit slots of the use.
+  - A slot keeps its supplier's ownership through `mokly-slot` markers around
+    the content. Inside a paired instance region, the comparison keeps only
+    the slot regions.
+  - `defineComponent` wrappers place these markers with one Mokly slot
+    element in place of the whole content.
+  - Product components often read their children. On 2026-11-25 a test with
+    React 19.2.3 showed that one slot element for the whole content breaks
+    Radix `asChild`, merges `Children.toArray` items, and breaks a
+    `typeof children === "string"` check. A Mokly "mirror" element for each
+    supplied element, with the same key and props, rendered all three as
+    without Mokly.
+  - To place the instance markers, the shim gives each recorded use a Mokly
+    type. Under every option, a parent that keeps only children of one type,
+    such as a `Tabs` that keeps only `Tab`, and a `child.type === X` check on
+    the content render differently. A `useId` value inside the content also
+    changes.
+  - Decision 13 records uses with no change to screens.
+- **Problem:** The content of a use needs markers to stay in Changes, and the
+  markers change what a product component receives.
+- **Impact if no action:** Milestone 35 cannot keep both decision 21 and
+  faithful rendering. Screens with such components break or render wrong.
+- **Root question:** How does Changes keep every edit of the content that a
+  screen passes into a story component, with the screen as its owner, while
+  the use renders as in the product?
+- **Options:**
+  - **A.** Wrap the whole content in one slot element, as `defineComponent`
+    wrappers do, and state the limit. Effort: Medium.
+  - **B.** Keep text `children` in the digest as data, and wrap only element
+    content in one slot element. Radix `asChild` and `Children.only` still
+    break. Effort: Medium.
+  - **C.** Add no slot markers. A canonical form of the content joins the
+    digest of the use. Every edit inside a component element of the content,
+    such as a screen's own form inside a modal, drops out of Changes, and the
+    screen's own CSS on the content goes to the story component. Effort:
+    Medium.
+  - **D.** Record no projected region for a use with React content. The use
+    stays in the usage lists, and its whole output stays in the screen's
+    comparison. This is option C of decision 21, which the user rejected.
+    Effort: Small.
+  - **E.** Replace each element that the screen supplies with a Mokly mirror
+    element with the same key and props. The mirror renders the original
+    type inside its own slot markers, and reads of static fields on its type
+    reach the original type. Text stays as it is and joins the digest in
+    order. Each element is its own slot, named by its prop and its key or
+    position. An insertion without a key renames the slots after it.
+    `child.type` checks still differ. Effort: Medium.
+  - **F.** Do E, and render each view again with the original content.
+    Compare the two outputs without the markers. A use whose output differs
+    then follows D. It adds render time and false differences from counters
+    at module level. Effort: Large.
+  - **G.** Do E, and add a field to the `mokly` parameter of a stories meta
+    that turns off use recording for its component. Its uses then render
+    unchanged and stay in the screen's own comparison. The author must see
+    the wrong render first. Effort: Medium.
+  - **H.** Render through React's reconciler in place of `react-dom/server`.
+    The sidecar finds the use and its content in React's own tree and writes
+    every marker itself, so no Mokly element enters the product's tree. Mokly
+    then writes the HTML itself, and layout effects, `useId`, and Suspense act
+    as on the client. Effort: Large.
+- **Left out:**
+  - Clone each child with a hidden prop: component children and text get no
+    marker, so it fails the goal. E is the working form of the idea.
+  - Place markers by matching a separate render of the content: it fails on
+    components that clone, repeat, or move their content.
+  - Slots declared in each meta: E covers the same content with no edit, and
+    G keeps an opt-out.
+- **Wider fix:** H. No product component then sees a Mokly element.
+- **Previous examples:** Emotion's `css` prop swaps element types the same
+  way as E.
+- **Related:** Decision 21, whose slots A, B, E, F, and G keep and C drops. Track I
+  decision 2, whose option D uses this answer. Content that a function prop
+  returns, such as `renderItem`, renders inside the use under every option,
+  and decision 21 keeps its edits out of Changes.
+- **Recommendation:** G, changed from C by the second options check. E
+  renders the patterns that break under A and B as in the product and keeps
+  the slots of decision 21, and the switch covers `child.type` checks. H
+  protects the codebase best, at Large effort.
+- **Action:** ask the user, because G adds a field to the `mokly` parameter
+  that no requirement covers, A and B break the faithful rendering that
+  decision 13 assumes, and no option is clearly best.
 
 ## Milestone 35: Story component usage
 

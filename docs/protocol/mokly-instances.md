@@ -1,10 +1,14 @@
 # Component Instance Identity
 
+Status: Mokly does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them, with their ids and numbers.
+
 ## Identity And Scope
 
 An instance is one logical use of a registered component inside an entry's
-render: a component element in an HTML screen, component, or page body, or a
-`defineComponent` wrapper in a React render or a Storybook story. Its
+render: a component element in an HTML screen, component, or page body, a
+`defineComponent` wrapper in a React render or a Storybook story, or a
+[story component use](./mokly-story-component-uses.md): a JSX element that
+renders the `component` of a stories entry's meta. Its
 `ComponentInstanceRecord` belongs to one view of one screen or component entry
 under the [usage records contract](./mokly-component-usage-records.md). The
 component root of its own entry's page is the entry owner, not a used
@@ -31,10 +35,14 @@ including its spelling. `id` is the validated local instance id: the
 `mokly-instance` attribute of a component element, or the `moklyInstance`
 prop of a wrapper, defaulting to the final segment of the registered
 component's resolved path, including after index collapse or a declared path
-override. Explicit values use lowercase kebab-case grammar; inferred defaults
-follow the component path's segment grammar. `owner` is `{ kind: "entry" }`
-or `{ kind: "instance", instanceKey }`. The receiving-slot key is the same
-digest operation over `["mokly-slot-v1", instanceKey, name]`.
+override. A story component use takes its id from its `key`, a naming prop,
+or the same default segment, under the
+[story component id rules](./mokly-story-component-uses.md#ids).
+Explicit values use lowercase kebab-case grammar; inferred defaults and the
+ids of story component uses follow the component path's segment grammar.
+`owner` is `{ kind: "entry" }` or `{ kind: "instance", instanceKey }`. The
+receiving-slot key is the same digest operation over
+`["mokly-slot-v1", instanceKey, name]`.
 
 The containing entry path, viewport, colour scheme, `componentId`, props, and
 source location are **not** in the instance preimage. In particular, moving an
@@ -56,7 +64,12 @@ A digest changes if and only if its serialized preimage changes, subject to the
 usual SHA-256 collision assumption. Edits that change it are:
 
 - Changing the effective instance id, including changing the final component
-  path segment when it supplies the default.
+  path segment when it supplies the default or starts the id of a story
+  component use.
+- For a story component use, changing the value that gives its id: its `key`,
+  or else its first naming prop that has a value. A numbered id also changes
+  when a use with the same id is inserted or removed before it in render order
+  in its input scope.
 - Changing input ownership between entry and instance, or moving the use to a
   parent with a different instance key.
 - Changing the original receiving slot key, including entering or leaving a
@@ -80,10 +93,12 @@ Edits that keep it, provided those inputs stay the same, are:
 - Replacing the registered component while keeping an explicit local id;
   `componentId` is recorded separately and Changes can still be material.
 
-Duplicate local ids in the same input scope and placement are build errors.
-Repeated placement comes only from slot content that a component renders more
-than once with the same logical inputs. Never repair collisions with
-positional suffixes: that would break stability under reordering.
+Duplicate local ids in the same input scope and placement are build errors
+for component elements and wrappers. Repeated placement comes only from slot
+content that a component renders more than once with the same logical inputs.
+A story component use whose id its input scope already holds takes a number
+instead, with the `instance-numbered` warning, under the
+[numbered id rules](./mokly-story-component-uses.md#numbered-ids).
 
 ## Record-Only Resolution
 
@@ -155,7 +170,10 @@ reserved `__moklySource` prop. The wrapper strips `__moklySource` before prop an
 the consumer render, exactly as it strips `moklyInstance`. The name is
 reserved from authored props and slots, and no development runtime or
 attribute reaches the fragment. Programmatic `createElement` calls and
-transformed modules without invocation information omit `source`.
+transformed modules without invocation information omit `source`. The shim
+also supplies the location of a
+[story component use](./mokly-story-component-uses.md) to its record, and the
+story component receives no location prop.
 
 `source` is excluded from instance and slot keys, `propsKey`, direct-input
 comparison, and every Changes projection. Line shifts and source moves alone
@@ -205,6 +223,7 @@ a missing logical instance and unavailable geometry are separate states.
 - [Tree comparison and Changes](./mokly-comparison.md)
 - [Component usage records](./mokly-component-usage-records.md)
 - [Registered components](./mokly-components.md)
+- [Story component uses](./mokly-story-component-uses.md)
 - [HTML components](./mokly-html-components.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Frame adapter](./mokly-frame-adapter.md)

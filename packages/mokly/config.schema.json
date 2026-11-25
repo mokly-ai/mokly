@@ -74,6 +74,11 @@
         "const": "light"
       }
     },
+    "instanceNameProps": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["id", "name", "data-testid", "aria-label"]
+    },
     "renderer": {
       "type": "string",
       "minLength": 1,

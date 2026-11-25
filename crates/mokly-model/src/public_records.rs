@@ -102,6 +102,10 @@ pub struct CatalogueComponent {
     pub slots: Vec<String>,
     /// Supplied slot names; empty on a parent.
     pub supplied_slots: Vec<String>,
+    /// Whether this component entry comes from a stories file.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    #[ts(optional, as = "Option<bool>")]
+    pub story: bool,
     /// Component comparison eligibility.
     pub comparison: ComparisonSelection,
 }

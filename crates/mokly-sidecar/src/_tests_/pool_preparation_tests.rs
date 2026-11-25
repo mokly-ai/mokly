@@ -25,6 +25,7 @@ fn fixture() -> (State, Slot) {
             entry_files: vec!["entry.ts".into()],
             renderer: None,
             stories_files: Vec::new(),
+            instance_name_props: None,
             module_resolution: ModuleResolution::default(),
             source_root: "/repo".into(),
             configuration_directory: ".".into(),

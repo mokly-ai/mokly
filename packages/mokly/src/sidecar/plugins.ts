@@ -132,17 +132,18 @@ export function consumerPlugins(
             };
           return { path: runtimeKey + args.path, external: true };
         });
-        // The development JSX runtime is a shim: `jsxDEV` forwards to the
-        // consumer's `react/jsx-runtime` and passes the call site as
-        // `__moklySource` only to `defineComponent` wrappers, which strip it.
-        build.onResolve({ filter: /^react\/jsx-dev-runtime$/ }, () => ({
-          path: "jsx",
+        build.onResolve({ filter: /^react\/jsx-dev-runtime$/ }, (args) => ({
+          path:
+            !params.storiesFiles.length || paths.repositoryOwned(args.importer)
+              ? "jsx"
+              : "dependency",
           namespace: "mokly-jsx",
         }));
-        build.onLoad({ filter: /.*/, namespace: "mokly-jsx" }, () => ({
+        build.onLoad({ filter: /.*/, namespace: "mokly-jsx" }, (args) => ({
           contents: jsxDevelopmentModuleSource(
             root,
             params.configurationDirectory,
+            args.path === "jsx" && params.storiesFiles.length > 0,
           ),
           resolveDir: root,
           loader: "js",

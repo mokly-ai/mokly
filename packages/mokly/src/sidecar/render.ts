@@ -37,6 +37,7 @@ export async function render(
         (kind === "component" && generation.stories.has(name))
       ) {
         const stored = generation.stories.get(name) as StoredStory;
+        session.storyComponentHandle = stored?.componentHandle;
         return renderStory(generation, stored, params, renderMarkup);
       }
 

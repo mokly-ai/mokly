@@ -85,6 +85,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
                 ],
                 renderer: Some("renderer.tsx".into()),
                 stories_files: vec!["button.stories.tsx".into()],
+                instance_name_props: None,
                 module_resolution: ModuleResolution {
                     package_roots: vec![
                         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

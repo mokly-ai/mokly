@@ -103,6 +103,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                 entry_files: vec![],
                 renderer: None,
                 stories_files: vec![],
+                instance_name_props: None,
                 module_resolution: Default::default(),
                 source_root: "/repo".into(),
                 configuration_directory: ".".into(),

@@ -99,3 +99,26 @@ fn unknown_nested_fields_keep_their_exact_key_location() {
     assert_eq!(issue.message, "unknown configuration field: extra");
     assert_eq!(issue.location.unwrap().line, 2);
 }
+
+#[test]
+fn instance_name_props_preserve_an_authored_list_and_distinguish_omission() {
+    for (input, expected) in [
+        (json!({}), None),
+        (json!({"instanceNameProps": []}), Some(vec![])),
+        (
+            json!({"instanceNameProps": ["qa", "name"]}),
+            Some(vec!["qa", "name"]),
+        ),
+        (
+            json!({"instanceNameProps": ["key", "", "id", "id"]}),
+            Some(vec!["key", "", "id", "id"]),
+        ),
+    ] {
+        let config = parse(&input.to_string(), "mokly.config.json").unwrap();
+        assert_eq!(
+            config.instance_name_props,
+            expected.map(|names| names.into_iter().map(str::to_owned).collect()),
+            "{input}"
+        );
+    }
+}

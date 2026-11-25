@@ -134,6 +134,7 @@ pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> C
                 visual,
                 slots,
                 supplied_slots,
+                story,
                 ..
             } => result.components.push(CatalogueComponent {
                 kind: CatalogueComponentKind::Value,
@@ -142,6 +143,7 @@ pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> C
                 variant_of: entry.metadata.variant_of.clone(),
                 slots: slots.clone(),
                 supplied_slots: supplied_slots.clone(),
+                story: *story,
                 comparison: projection_records::comparison(state.changes_status),
             }),
             EntryContent::Page => result.pages.push(CataloguePage {

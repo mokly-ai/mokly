@@ -4,7 +4,7 @@ import path from "node:path";
 import { missingFile } from "./file-digests.js";
 import { viteExternal } from "./vite-external.js";
 import type { ViteLookup } from "./vite-resolution.js";
-import { viteFile, viteJsx } from "./vite-urls.js";
+import { viteDependencyJsx, viteFile, viteJsx } from "./vite-urls.js";
 
 export type VitePeers = Record<string, string | null>;
 const reactImport = /^(react|react-dom)(?:\/.*)?$/;
@@ -13,9 +13,11 @@ const reactImport = /^(react|react-dom)(?:\/.*)?$/;
 export function viteReactImport(
   source: string,
   peers: VitePeers,
+  repositoryOwned: boolean,
 ): string | undefined {
   if (!reactImport.test(source)) return;
-  if (source === "react/jsx-dev-runtime") return viteJsx;
+  if (source === "react/jsx-dev-runtime")
+    return repositoryOwned ? viteJsx : viteDependencyJsx;
   const file = peers[source];
   if (typeof file !== "string") throw missingPeer(source);
   return viteExternal(file);

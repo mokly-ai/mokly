@@ -23,6 +23,7 @@ pub(super) fn bundle(generation: &str) -> Call {
             entry_files: vec![generation.into()],
             renderer: None,
             stories_files: vec![],
+            instance_name_props: None,
             repository_roots: vec![],
             module_resolution: Default::default(),
             evaluation: None,

@@ -88,8 +88,9 @@ for saved props names that entry or variant. Its message is
 `prop <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`,
 with a JSON pointer relative to those props, such as `"/count"` or
 `"/user/count"`.
-A component invocation is a component element in HTML or a component wrapper
-in React. A warning for an invocation names the rendered entry, including a
+A component invocation is a component element in HTML, a component wrapper
+in React, or a [story component use](./mokly-story-component-uses.md). A
+warning for an invocation names the rendered entry, including a
 variant. Its message is
 `component <JSON-quoted-path> instance <JSON-quoted-id> prop <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`,
 with the invoked component's resolved path, the instance id under the

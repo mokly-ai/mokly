@@ -32,6 +32,8 @@ pub(crate) struct RenderEnvironment {
 #[derive(Serialize)]
 struct Settings {
     renderer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    instance_name_props: Option<Vec<String>>,
     module_resolution: ModuleResolution,
     configuration_directory: String,
     repository_roots: Vec<String>,
@@ -166,6 +168,7 @@ fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_
         .collect();
     Settings {
         renderer: params.renderer.as_deref().map(|path| paths.map(path)),
+        instance_name_props: params.instance_name_props.clone(),
         module_resolution,
         configuration_directory: paths.map(&params.configuration_directory),
         repository_roots: params

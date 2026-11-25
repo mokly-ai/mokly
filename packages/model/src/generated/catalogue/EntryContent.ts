@@ -33,7 +33,11 @@ slots: Array<string>,
 /**
  * Supplied slot names on a variant, empty on a parent.
  */
-suppliedSlots: Array<string>, } | { "kind": "page" } | { "kind": "document",
+suppliedSlots: Array<string>,
+/**
+ * Whether this component entry comes from a stories file.
+ */
+story?: boolean, } | { "kind": "page" } | { "kind": "document",
 /**
  * Effective document schemes.
  */

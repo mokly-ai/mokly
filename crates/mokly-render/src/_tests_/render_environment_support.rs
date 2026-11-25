@@ -60,6 +60,7 @@ pub(super) fn params(source_root: &str) -> Bundle {
         entry_files: vec![format!("{source_root}-entries")],
         renderer: Some("renderer.tsx".into()),
         stories_files: Vec::new(),
+        instance_name_props: None,
         module_resolution: ModuleResolution {
             dependency_root: Some(physical("/work/repo")),
             package_roots: vec![physical("/work/repo")],
@@ -80,6 +81,7 @@ pub(super) fn params_at(root: &str) -> Bundle {
         entry_files: vec![format!("{root}/specs/entries")],
         renderer: Some("renderer.tsx".into()),
         stories_files: Vec::new(),
+        instance_name_props: None,
         module_resolution: ModuleResolution {
             dependency_root: Some(root.clone()),
             package_roots: vec![format!("{root}/examples/basic"), root.clone()],
@@ -138,6 +140,7 @@ pub(super) fn cache_params(root: &str, namespace: &str) -> Bundle {
         entry_files: vec!["specs/entries".into()],
         renderer: Some("renderer.tsx".into()),
         stories_files: Vec::new(),
+        instance_name_props: None,
         module_resolution: ModuleResolution {
             dependency_root: Some(dependency_root.clone()),
             package_roots: vec![format!("{dependency_root}/node_modules")],

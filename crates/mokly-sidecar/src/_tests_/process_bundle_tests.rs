@@ -118,6 +118,7 @@ fn bundle_compile_counts_reset_and_include_each_compiler_event() {
                             entry_files: vec!["entry.ts".into()],
                             renderer: None,
                             stories_files: vec![],
+                            instance_name_props: None,
                             source_root: "/repo".into(),
                             configuration_directory: ".".into(),
                             repository_roots: vec![],

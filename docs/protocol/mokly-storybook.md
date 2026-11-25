@@ -70,6 +70,10 @@ that a control unsets then keeps the story's value. Inheritance from a parent
 with only the args that every story shares was rejected, and so was one schema
 for each story, because some args then have no control.
 
+The [story component use rules](./mokly-story-component-uses.md) define how a
+screen, a component, or a story of another entry that renders the meta's
+`component` records an instance of this entry.
+
 ## Args And Props
 
 Mokly classifies the args of a story by the composed argTypes of that story.

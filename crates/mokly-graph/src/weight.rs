@@ -68,6 +68,11 @@ pub(crate) fn fragment(fragment: &Fragment) -> usize {
             })
             .sum::<usize>()
         + instances
+        + fragment
+            .numbered_instances
+            .iter()
+            .map(|key| mem::size_of::<String>() + key.capacity())
+            .sum::<usize>()
         + slots
         + fragment
             .styles

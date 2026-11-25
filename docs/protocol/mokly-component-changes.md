@@ -1,5 +1,7 @@
 # Component Change Attribution
 
+Status: Mokly does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them. How Changes keeps the content that a screen passes into a story component use is not settled yet: [track I decision 3](../../plans/storybook-support.md#track-i-decision-3-the-content-of-a-use-and-faithful-rendering) waits for the user.
+
 ## Changes Membership
 
 Changes counts directly changed entries, components and component variants
@@ -14,6 +16,7 @@ owns the membership list. This page states how a component edit is attributed.
 | ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
 | Component render, or the styles its render returns      | Component                                                 | Its consuming screens and components                          |
 | Screen supplies different props to an instance          | Screen                                                    | None from this edit alone                                     |
+| Screen changes a function prop of a story component use | None                                                      | None                                                          |
 | Screen changes the slot content it supplies             | Screen                                                    | None from this edit alone                                     |
 | Screen adds, removes, replaces, or reorders an instance | Screen                                                    | Usage links update                                            |
 | Screen changes surrounding content or layout            | Screen                                                    | The ordinary screen and use case rules                        |
@@ -130,6 +133,19 @@ key order is immaterial; array order, primitive types, `null`, and an absent
 optional prop are explicit. Missing input evidence never means unchanged
 inputs; an incomplete region fails validation instead of granting blanket
 ignore behaviour.
+
+A [story component use](./mokly-story-component-uses.md) pairs and compares
+like any other instance. Its props digest uses the same canonical JSON for
+each of its props whose value is data under the
+[prop schema profile](./mokly-entry-props.md#prop-schema-profile). Function
+props stay out of the digest, so an edit of a function prop alone changes no
+input of the use. Neither the core nor a reader validates the props of a use
+against the prop schema of its stories entry. The catalogue record of a
+stories entry marks it as one, and the instances of every other component
+keep the schema check. Decision: function props stay out, because Mokly never
+fingerprints a callback's source or a function's identity. The schema does
+not validate a use, because it describes the stories' args, not every prop of
+the component, and a product use cannot change its props for Mokly.
 
 Review-ignore regions keep their id, material key, and one-sided adoption
 rules. An ignore region may lie inside a component's render, but it may not

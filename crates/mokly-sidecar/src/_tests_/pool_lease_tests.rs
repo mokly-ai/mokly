@@ -23,6 +23,7 @@ fn bundle() -> Call {
             evaluation: None,
             entry_files: vec![],
             stories_files: vec![],
+            instance_name_props: None,
             renderer: None,
             source_root: "/repo".into(),
             configuration_directory: ".".into(),

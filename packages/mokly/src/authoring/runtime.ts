@@ -32,6 +32,7 @@ export interface Owner {
 }
 export interface RenderSession {
   componentOutput?: boolean;
+  storyComponentHandle?: string;
   context: RenderContext;
   sourceRoot: string;
   dependencyRoots: readonly string[];

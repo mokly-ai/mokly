@@ -1,6 +1,6 @@
 //! JavaScript fragment seam; only the adapter talks to the sidecar.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_catalogue::diagnostic::Warning;
 use mokly_model::axes::{ColorScheme, Viewport};
@@ -62,6 +62,8 @@ pub struct Fragment {
     pub warnings: Vec<Warning>,
     /// Adapter-validated logical instances referenced by the markers.
     pub instances: Vec<ComponentInstanceRecord>,
+    /// Logical instance keys whose ids received collision suffixes.
+    pub numbered_instances: BTreeSet<String>,
     /// Adapter-validated supplied slots referenced by the markers.
     pub slots: Vec<ComponentSlotRecord>,
 }

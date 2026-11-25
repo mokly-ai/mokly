@@ -39,21 +39,37 @@ export function runtimeImportAllowed(
   return specifier.startsWith(cssModulePrefix)
     ? namespace === "mokly-css"
     : specifier === "mokly:runtime" &&
-        ["mokly-authoring", "mokly-css", "mokly-style"].includes(namespace);
+        ["mokly-authoring", "mokly-css", "mokly-style", "mokly-jsx"].includes(
+          namespace,
+        );
 }
 
 /** Build the JSX shim with call-site paths resolved from the configuration. */
 export function jsxDevelopmentModuleSource(
   root: string,
   configurationDirectory: string,
+  recordStoryUses: boolean,
 ): string {
   return `import { jsx, jsxs, Fragment } from "react/jsx-runtime";
         import { resolve } from "node:path";
+        ${recordStoryUses ? 'import runtime from "mokly:runtime";' : ""}
         export { Fragment };
+        const locate = source => ({...source, fileName: resolve(${JSON.stringify(path.resolve(root, configurationDirectory))}, source.fileName)});
         export function jsxDEV(type, props, key, staticChildren, source) {
-          if (type && type[Symbol.for("mokly.component")] && source)
-            props = {...props, __moklySource: {...source, fileName: resolve(${JSON.stringify(path.resolve(root, configurationDirectory))}, source.fileName)}};
-          return (staticChildren ? jsxs : jsx)(type, props, key);
+          const create = staticChildren ? jsxs : jsx;
+          if (type && type[Symbol.for("mokly.component")])
+            return create(type, source ? {...props, __moklySource: locate(source)} : props, key);
+          ${
+            recordStoryUses
+              ? `
+          if (typeof type === "function" || (type && typeof type === "object")) {
+            const spreadKey = Object.getOwnPropertyDescriptor(props, "key")?.value;
+            return runtime.storyUse(create(type, props, key), spreadKey === undefined ? key : spreadKey,
+              source && typeof source.fileName === "string" ? locate(source) : undefined, jsx);
+          }`
+              : ""
+          }
+          return create(type, props, key);
         }`;
 }
 

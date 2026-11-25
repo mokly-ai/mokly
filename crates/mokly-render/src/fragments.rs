@@ -1,6 +1,6 @@
 //! Render sidecar calls into the authenticated fragment contract.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -71,6 +71,7 @@ impl Fragments {
 
 pub(crate) fn fragment(result: Render) -> Result<Fragment> {
     let mut instances: BTreeMap<String, ComponentInstanceRecord> = BTreeMap::new();
+    let mut numbered_instances = BTreeSet::new();
     for instance in &result.instances {
         let record = ComponentInstanceRecord {
             key: instance.key.clone(),
@@ -89,6 +90,9 @@ pub(crate) fn fragment(result: Render) -> Result<Fragment> {
             return Err(RenderError::Input {
                 key: instance.key.clone(),
             });
+        }
+        if instance.numbered {
+            numbered_instances.insert(instance.key.clone());
         }
         instances.insert(instance.key.clone(), record);
     }
@@ -129,6 +133,7 @@ pub(crate) fn fragment(result: Render) -> Result<Fragment> {
         html: result.html,
         markers,
         instances: instances.into_values().collect(),
+        numbered_instances,
         slots: slots.into_values().collect(),
         styles: result
             .styles

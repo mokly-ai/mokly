@@ -143,6 +143,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
             entry_files: vec!["entry.tsx".into()],
             renderer: None,
             stories_files: vec![],
+            instance_name_props: None,
             module_resolution: Default::default(),
             repository_roots: vec![],
             evaluation: None,

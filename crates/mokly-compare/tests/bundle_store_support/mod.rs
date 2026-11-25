@@ -59,6 +59,7 @@ pub fn params(entry: &str) -> Bundle {
         entry_files: vec![entry.into()],
         renderer: None,
         stories_files: vec![],
+        instance_name_props: None,
         module_resolution: Default::default(),
         source_root: "/repo".into(),
         configuration_directory: ".".into(),

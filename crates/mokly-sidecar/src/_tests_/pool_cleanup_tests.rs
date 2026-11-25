@@ -24,6 +24,7 @@ fn state(epoch: Option<u64>, bundle: bool) -> State {
                 entry_files: vec![],
                 renderer: None,
                 stories_files: vec![],
+                instance_name_props: None,
                 module_resolution: Default::default(),
                 repository_roots: vec![],
                 vite: false,

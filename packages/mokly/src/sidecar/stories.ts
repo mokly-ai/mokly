@@ -1,7 +1,8 @@
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { Story } from "../generated/sidecar/Story.js";
 
-import type { BundleExports, Generation } from "./bundle.js";
+import type { BundleExports } from "./bundle-exports.js";
+import type { Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { storyHints } from "./story-hints.js";
@@ -17,6 +18,7 @@ export function describeStoryFile(
   cache: ExportNameCache,
 ): void {
   const read = readStories(generation, file, module, preview, cache);
+  const handle = `${file}#default`;
   const stories = read.stories.map((entry) => {
     const excludedProps: string[] = [];
     const props = storyProps(
@@ -37,6 +39,7 @@ export function describeStoryFile(
           .map(([key, value]) => [key, storyHints(value)]),
       );
       const stored: StoredStory = {
+        componentHandle: handle,
         compose,
         beforeAll: read.beforeAll,
         dataKeys: Object.keys(props),
@@ -59,7 +62,7 @@ export function describeStoryFile(
     },
   );
   if (!first) return;
-  const handle = `${file}#default`;
+  generation.storyComponents.register(read.component, handle);
   generation.stories.set(handle, first.stored);
   result.components.push({
     excludedProps: first.saved.excludedProps,
