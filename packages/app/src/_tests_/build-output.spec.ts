@@ -1,3 +1,4 @@
+import { holdPolls, nextPoll } from "./build-clock";
 import { write } from "./build-double";
 import {
   boxOutline,
@@ -27,6 +28,7 @@ test("the output follows its newest line until the reader scrolls back", async (
   const id = buildId(90);
   double.builds.set(id, build({ id, projectId }));
   write(double, id, numbered(1, 60));
+  await holdPolls(page);
   await open(page, scenario.buildAt(id));
   const output = page.getByRole("region", { name: "Output" });
   await expect(output).toContainText("line 60");
@@ -44,6 +46,7 @@ test("the output follows its newest line until the reader scrolls back", async (
 
   // New output at the end is followed.
   write(double, id, numbered(61, 64));
+  await nextPoll(page);
   await expect(output).toContainText("line 64");
   expect(await output.evaluate(outputView)).toMatchObject({
     newest: "line 64",
@@ -59,6 +62,7 @@ test("the output follows its newest line until the reader scrolls back", async (
   await scrollSettled(output);
   const back = await output.evaluate(outputView);
   write(double, id, numbered(65, 68));
+  await nextPoll(page);
   await expect(output).toContainText("line 68");
   expect(await output.evaluate(outputView)).toEqual({
     newest: "line 68",
@@ -73,6 +77,7 @@ test("the output follows its newest line until the reader scrolls back", async (
     .toBe(true);
   await scrollSettled(output);
   write(double, id, numbered(69, 72));
+  await nextPoll(page);
   await expect(output).toContainText("line 72");
   expect(await output.evaluate(outputView)).toMatchObject({
     newest: "line 72",

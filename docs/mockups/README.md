@@ -188,7 +188,9 @@ with an independent strict build, and a mismatch lists the sorted missing,
 extra and changed paths.
 
 The browser suites write every full-page capture under `.context/mockups-smoke`,
-mirroring the output path, with the served journeys under `served/`. Mobile
+mirroring the output path, with the served journeys under `served/`. The disk
+suite writes its captures only when `MKC_MOCKUP_CAPTURES=1` asks for them,
+because a CI run keeps none. Mobile
 journey captures come from the served fragment at 390px in both themes, so
 they include content below Browse's iframe viewport; compose journey sheets
 from those ordered captures. Stop an interactive Serve session before the

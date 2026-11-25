@@ -169,20 +169,23 @@ export async function unloadGuard(page: Page): Promise<boolean> {
 
 /**
  * Drive an exit the page cannot intercept and report the browser's own prompts.
- * The navigation is expected not to complete: the prompt is the point.
+ * A dismissed prompt cancels the navigation, so `go` then never settles: the
+ * dismissed prompt is the signal to return. A navigation that needs no prompt
+ * settles `go` instead, and the list stays empty.
  */
 export async function leaveDocument(
   page: Page,
   go: () => Promise<unknown>,
 ): Promise<string[]> {
   const prompts: string[] = [];
+  let dismissed = (): void => undefined;
+  const prompted = new Promise<void>((resolve) => (dismissed = resolve));
   const seen = (dialog: Dialog) => {
     prompts.push(dialog.type());
-    void dialog.dismiss();
+    void dialog.dismiss().then(dismissed);
   };
   page.on("dialog", seen);
-  await go().catch(() => undefined);
-  await page.waitForTimeout(500);
+  await Promise.race([go().catch(() => undefined), prompted]);
   page.off("dialog", seen);
   return prompts;
 }

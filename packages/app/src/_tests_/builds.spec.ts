@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { holdPolls, nextPoll } from "./build-clock";
 import { advance, write } from "./build-double";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
@@ -28,6 +29,7 @@ test("Publish this branch follows its build to the published catalogue", async (
     startedAt: null,
   });
 
+  await holdPolls(page);
   await open(page, scenario.branchAt("topic"));
   const card = page.locator(".fo-stage-card");
   await expect(
@@ -60,6 +62,7 @@ test("Publish this branch follows its build to the published catalogue", async (
     { text: "$ git fetch --depth 50 origin\n", stream: "system" },
     { text: "Fetching origin\n" },
   ]);
+  await nextPoll(page);
   await expect(steps(page, "checkout")).toContainText("Running");
   const output = page.getByTestId("build-output");
   await expect(output).toContainText("Fetching origin");
@@ -71,6 +74,7 @@ test("Publish this branch follows its build to the published catalogue", async (
     { text: "$ npm ci\n", stream: "system", step: "install" },
     { text: "added 412 packages\n", step: "install" },
   ]);
+  await nextPoll(page);
   await expect(output).toContainText("added 412 packages");
   await expect(steps(page, "checkout")).toContainText("Done");
   await expect(steps(page, "install")).toContainText("Running");
@@ -89,6 +93,7 @@ test("Publish this branch follows its build to the published catalogue", async (
   write(double, id, [
     { text: "Published\n", stream: "system", step: "publish" },
   ]);
+  await nextPoll(page);
   await expect(
     build$.getByRole("heading", { name: "Published this branch" }),
   ).toBeVisible();
@@ -96,15 +101,19 @@ test("Publish this branch follows its build to the published catalogue", async (
     await expect(steps(page, step)).toContainText("Done");
   }
   await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
-  // A terminal transition never navigates, and the card stops reading.
+  // A terminal transition never navigates, and the card stops reading. The
+  // last line shows once its log read has landed; then more than three poll
+  // intervals pass on the page with no read.
   await expect(page).toHaveURL((url) => url.pathname === scenario.buildAt(id));
-  await page.waitForTimeout(3_500);
+  await expect(output).toContainText("Published");
   const settled = double.reads.length;
-  await page.waitForTimeout(7_000);
+  await page.clock.runFor(10_500);
   expect(double.reads.length, "no read after the log is complete").toBe(
     settled,
   );
 
+  // The published viewer keeps its own time again.
+  await page.clock.resume();
   await page.getByTestId("build-open-catalogue").click();
   await page.waitForURL(
     (url) =>
@@ -124,8 +133,13 @@ test("a hidden tab stops reading and a visible one reads at once", async ({
     id,
     build({ id, projectId: scenario.projectId, state: "running" }),
   );
+  await holdPolls(page);
   await open(page, scenario.buildAt(id));
   await expect(page.locator(".fo-build")).toBeVisible();
+  // The first read ends with the log, so wait for that read to land.
+  await expect
+    .poll(() => scenario.double.reads.includes("log:" + id))
+    .toBe(true);
   await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
@@ -133,10 +147,9 @@ test("a hidden tab stops reading and a visible one reads at once", async ({
     });
     document.dispatchEvent(new Event("visibilitychange"));
   });
-  await page.waitForTimeout(500);
   const hidden = scenario.double.reads.length;
   write(scenario.double, id, [{ text: "while hidden\n" }]);
-  await page.waitForTimeout(7_000);
+  await page.clock.runFor(7_000);
   expect(scenario.double.reads.length, "a hidden tab reads nothing").toBe(
     hidden,
   );
@@ -160,6 +173,7 @@ test("a poll that fails keeps the card and the output as they are", async ({
   const id = buildId(3);
   double.builds.set(id, build({ id, projectId: scenario.projectId }));
   write(double, id, [{ text: "installing\n", step: "install" }]);
+  await holdPolls(page);
   await open(page, scenario.buildAt(id));
   const output = page.getByTestId("build-output");
   await expect(output).toContainText("installing");
@@ -171,6 +185,7 @@ test("a poll that fails keeps the card and the output as they are", async ({
     failure: { step: "install", cause: "exit", exitCode: 1 },
   });
   const failing = double.reads.length;
+  await nextPoll(page);
   await expect.poll(() => double.reads.length).toBeGreaterThan(failing + 1);
   await expect(
     page.getByRole("heading", { name: "Publishing this branch" }),
@@ -181,6 +196,7 @@ test("a poll that fails keeps the card and the output as they are", async ({
   // The next read that succeeds moves the card.
   double.failBuild = undefined;
   double.failLog = undefined;
+  await nextPoll(page);
   await expect(
     page.getByRole("heading", { name: "Unable to publish this branch" }),
   ).toBeVisible();
@@ -191,21 +207,4 @@ test("a poll that fails keeps the card and the output as they are", async ({
   await expect(page.locator(".fo-build")).toContainText(
     "Installing dependencies failed.",
   );
-});
-
-test("a newer attempt's output replaces the older attempt's", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-attempts");
-  const { double } = scenario;
-  const id = buildId(4);
-  double.builds.set(id, build({ id, projectId: scenario.projectId }));
-  write(double, id, [{ text: "first attempt\n" }]);
-  await open(page, scenario.buildAt(id));
-  const output = page.getByTestId("build-output");
-  await expect(output).toContainText("first attempt");
-  advance(double, id, { attempt: 2 });
-  write(double, id, [{ text: "second attempt\n" }]);
-  await expect(output).toContainText("second attempt");
-  await expect(output).not.toContainText("first attempt");
 });

@@ -40,7 +40,11 @@ pub(super) struct Harness {
     pub(super) steps: Arc<Mutex<Vec<BuildStep>>>,
     pub(super) destroys: Arc<AtomicUsize>,
     calls: Arc<Mutex<VecDeque<Call>>>,
+    output_limit: usize,
 }
+
+/// The byte cap of each process stream that the build runner spec gives.
+const SPEC_OUTPUT_LIMIT: usize = 64 * 1024 * 1024;
 
 impl Harness {
     pub(super) fn new(request: BuildRequest, calls: Vec<Call>) -> Self {
@@ -52,11 +56,21 @@ impl Harness {
         calls: Vec<Call>,
         sink: Option<Arc<dyn BuildLogSink>>,
     ) -> Self {
-        Self::with_cleanup(request, calls, sink, false)
+        Self::with_cleanup(request, calls, sink, false, SPEC_OUTPUT_LIMIT)
     }
 
     pub(super) fn with_destroy_failure(request: BuildRequest, calls: Vec<Call>) -> Self {
-        Self::with_cleanup(request, calls, None, true)
+        Self::with_cleanup(request, calls, None, true, SPEC_OUTPUT_LIMIT)
+    }
+
+    /// A harness whose runner caps each stream at `output_limit` bytes, so a
+    /// cap test need not push 64 MiB through redaction.
+    pub(super) fn with_output_limit(
+        request: BuildRequest,
+        calls: Vec<Call>,
+        output_limit: usize,
+    ) -> Self {
+        Self::with_cleanup(request, calls, None, false, output_limit)
     }
 
     fn with_cleanup(
@@ -64,6 +78,7 @@ impl Harness {
         calls: Vec<Call>,
         sink: Option<Arc<dyn BuildLogSink>>,
         destroy_fails: bool,
+        output_limit: usize,
     ) -> Self {
         let has_process = !calls.is_empty();
         let plans = Arc::new(Mutex::new(VecDeque::from(calls)));
@@ -142,8 +157,8 @@ impl Harness {
                     envs.insert("MOKLY_TOKEN".into(), UPLOAD.into());
                 }
                 assert_eq!(actual.envs, envs);
-                assert_eq!(actual.stdout_limit, 64 * 1024 * 1024);
-                assert_eq!(actual.stderr_limit, 64 * 1024 * 1024);
+                assert_eq!(actual.stdout_limit, output_limit);
+                assert_eq!(actual.stderr_limit, output_limit);
                 assert_eq!(actual.deadline, Duration::from_secs(call.budget));
                 let idle = match call.step {
                     BuildStep::Checkout => 120,
@@ -213,16 +228,20 @@ impl Harness {
             steps,
             destroys,
             calls: plans,
+            output_limit,
         }
     }
 
     pub(super) async fn run(&self) -> BuildOutcome {
-        let runner: &dyn BuildRunner = &SandboxBuildRunner::new(
-            capabilities(self.backend.clone()),
-            self.clock.clone(),
-            "test-builds".into(),
-        )
-        .unwrap();
+        let runner: &dyn BuildRunner = &SandboxBuildRunner {
+            output_limit: self.output_limit,
+            ..SandboxBuildRunner::new(
+                capabilities(self.backend.clone()),
+                self.clock.clone(),
+                "test-builds".into(),
+            )
+            .unwrap()
+        };
         let outcome = runner.run(self.request.clone(), self.sink.clone()).await;
         assert!(
             self.calls.lock().unwrap().is_empty(),

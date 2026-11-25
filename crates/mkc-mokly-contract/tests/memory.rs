@@ -3,7 +3,6 @@
 #![allow(clippy::unwrap_used)]
 
 use std::alloc::System;
-use std::fmt::Write;
 
 use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
 
@@ -107,9 +106,10 @@ fn many_files(size: usize, artifact: ArtifactKind) -> Vec<u8> {
         ArtifactKind::Index => br#"{"schemaVersion":9,"screens":["#.to_vec(),
         _ => br#"{"schemaVersion":3,"files":["#.to_vec(),
     };
-    while bytes.len() + 6 <= size {
-        bytes.extend_from_slice(br#""a","#);
-    }
+    let entry = br#""a","#;
+    let count =
+        size.saturating_sub(bytes.len() + 6) / entry.len() + usize::from(bytes.len() + 6 <= size);
+    bytes.extend_from_slice(&entry.repeat(count));
     bytes.pop();
     bytes.extend_from_slice(b"]}");
     bytes.resize(size, b' ');
@@ -117,27 +117,40 @@ fn many_files(size: usize, artifact: ArtifactKind) -> Vec<u8> {
 }
 
 /// Numeric unique keys reproduce the ignored-field attack; long keys expose String retention.
+///
+/// The keys are the decimal indexes from zero, padded to `width` digits. An
+/// ASCII counter writes them, because formatting millions of keys in a debug
+/// build takes seconds.
 fn many_keys(size: usize, width: usize, artifact: ArtifactKind) -> Vec<u8> {
-    let mut text = String::with_capacity(size);
-    text.push_str(match artifact {
-        ArtifactKind::Index => r#"{"schemaVersion":9,"screens":[],"extra":{"#,
-        _ => r#"{"schemaVersion":3,"files":[],"extra":{"#,
+    let mut bytes = Vec::with_capacity(size);
+    bytes.extend_from_slice(match artifact {
+        ArtifactKind::Index => br#"{"schemaVersion":9,"screens":[],"extra":{"#,
+        _ => br#"{"schemaVersion":3,"files":[],"extra":{"#,
     });
-    let mut index = 0;
-    loop {
-        let length = text.len();
-        write!(text, "\"{index:0width$}\":0,").unwrap();
-        if text.len() + 2 > size {
-            text.truncate(length);
-            break;
-        }
-        index += 1;
+    let mut digits = vec![b'0'; width.max(1)];
+    while bytes.len() + digits.len() + 5 + 2 <= size {
+        bytes.push(b'"');
+        bytes.extend_from_slice(&digits);
+        bytes.extend_from_slice(br#"":0,"#);
+        increment(&mut digits);
     }
-    text.pop();
-    text.push_str("}}");
-    let mut bytes = text.into_bytes();
+    bytes.pop();
+    bytes.extend_from_slice(b"}}");
     bytes.resize(size, b' ');
     bytes
+}
+
+/// Add one to a decimal number held as ASCII digits, growing it on overflow.
+fn increment(digits: &mut Vec<u8>) {
+    for digit in digits.iter_mut().rev() {
+        if *digit == b'9' {
+            *digit = b'0';
+        } else {
+            *digit += 1;
+            return;
+        }
+    }
+    digits.insert(0, b'1');
 }
 
 fn json_allocations() {

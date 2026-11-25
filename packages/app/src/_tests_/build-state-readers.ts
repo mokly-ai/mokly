@@ -1,3 +1,4 @@
+import { holdPolls, nextPoll } from "./build-clock";
 import { advance } from "./build-double";
 import {
   expectWaitingWithNoAction,
@@ -105,6 +106,7 @@ export const reviewerBuild: BuildStateRow = {
     await readAsReviewer(page);
     const id = buildId(12);
     double.builds.set(id, queuedForReviewer(id, projectId));
+    await holdPolls(page);
     await open(page, scenario.buildAt(id));
     await expectWaitingWithNoAction(page);
     await expect(slotState(page)).toContainText("Publishing now");
@@ -113,6 +115,7 @@ export const reviewerBuild: BuildStateRow = {
       step: "checkout",
       startedAt: "2026-09-15T16:31:00Z",
     });
+    await nextPoll(page);
     await expect(
       buildCard(page).locator('[data-mkc-build-step="checkout"]'),
     ).toContainText("Running");

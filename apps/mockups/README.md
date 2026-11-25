@@ -104,7 +104,8 @@ test runs in a fixture checkout also ignore the global and system Git
 configuration.
 Playwright failure traces stay under `.context/mockups-playwright` and its
 `-serve` sibling; full-page captures stay under `.context/mockups-smoke`, as
-the [authoring guide](../../docs/mockups/README.md) explains.
+the [authoring guide](../../docs/mockups/README.md) explains. Set
+`MKC_MOCKUP_CAPTURES=1` for the disk suite's captures.
 
 Typechecking covers the renderer, entries, screens, scripts and tests outside
 this npm workspace through the installed packages' public declaration
