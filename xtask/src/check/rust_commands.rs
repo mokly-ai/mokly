@@ -108,9 +108,10 @@ fn fail_fast_options(no_fail_fast: bool) -> &'static [&'static str] {
     }
 }
 
-/// Read the targets of every workspace package without building them.
+/// Read the targets and the resolved features of every workspace package
+/// without building them.
 pub(super) fn cargo_metadata() -> CommandSpec {
-    cargo(&["metadata", "--no-deps", "--format-version=1", "--locked"])
+    cargo(&["metadata", "--format-version=1", "--locked"])
 }
 
 /// Build the host binary, then run the Rust tests. A sharded suite runs the

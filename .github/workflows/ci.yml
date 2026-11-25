@@ -114,7 +114,9 @@ jobs:
           key: ${{ startsWith(matrix.shard, '1/') && 'checks' || 'tests' }}-audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
           cache-directories: .context/rust-audit-tool
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          # Of the test shards, only the first saves: its library unit tests
+          # and doc tests build every crates.io dependency of the Rust tests.
+          save-if: ${{ github.ref == 'refs/heads/main' && (startsWith(matrix.shard, '1/') || startsWith(matrix.shard, '2/')) }}
       - name: Install cargo-nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:
@@ -330,14 +332,15 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
-      # The lint shard restores the test build entry and never saves it: Clippy
-      # reuses its build scripts and procedural macros, and the cache holds no
-      # second entry for each host.
+      # Every shard restores the test build entry of its host. Only the first
+      # test shard saves it: its library unit tests and doc tests build every
+      # crates.io dependency of the Rust tests. The lint shard never saves, and
+      # Clippy reuses the build scripts and procedural macros of the entry.
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' && !startsWith(matrix.shard, '1/') }}
+          save-if: ${{ github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') }}
       - name: Install cargo-nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:

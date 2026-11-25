@@ -89,7 +89,7 @@ repository. Every suite rejects skips and todos.
 integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts. With two or more
 repository or native shards, shard 1 runs the checks and each later shard runs
-one nextest partition of the Rust tests, under the
+`cargo xtask rust-test-shard` for its share of the Rust test units, under the
 [suite shard rule](../docs/protocol/ci-verification-repository.md#suite-shards).
 
 The [cloud suite table](../docs/protocol/ci-verification.md#cloud-suites)

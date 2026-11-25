@@ -48,13 +48,15 @@ impl TestUnit {
 #[derive(Deserialize)]
 struct Metadata {
     packages: Vec<Package>,
+    workspace_members: BTreeSet<String>,
+    resolve: Resolve,
 }
 
 #[derive(Deserialize)]
 struct Package {
+    id: String,
     name: String,
     targets: Vec<Target>,
-    features: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -66,32 +68,52 @@ struct Target {
     required_features: Vec<String>,
 }
 
+#[derive(Deserialize)]
+struct Resolve {
+    nodes: Vec<Node>,
+}
+
+/// One resolved package with the features that Cargo enables for it.
+#[derive(Deserialize)]
+struct Node {
+    id: String,
+    features: BTreeSet<String>,
+}
+
 /// Whether the package belongs to the `-p "mokly-*" -p xtask` selection.
 pub(super) fn is_mokly_package(name: &str) -> bool {
     name == "xtask" || name.starts_with("mokly-")
 }
 
 /// Read the units of the targets that `cargo nextest run` selects by default
-/// for the Mokly packages: each target that has tests and whose required
-/// features the default features enable. Build scripts have no tests.
+/// for the Mokly workspace packages: each target that has tests and whose
+/// required features Cargo's resolved features enable. The resolved features
+/// include features that a dependency or a dev-dependency enables. Build
+/// scripts have no tests.
 pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
     let metadata: Metadata =
         serde_json::from_str(metadata).context("parse Cargo test target metadata")?;
+    let resolved: BTreeMap<&str, &BTreeSet<String>> = metadata
+        .resolve
+        .nodes
+        .iter()
+        .map(|node| (node.id.as_str(), &node.features))
+        .collect();
     let mut units = BTreeSet::new();
-    for package in metadata.packages {
-        if !is_mokly_package(&package.name) {
+    for package in &metadata.packages {
+        if !metadata.workspace_members.contains(&package.id) || !is_mokly_package(&package.name) {
             continue;
         }
-        let enabled = default_features(&package.features);
-        for target in package.targets {
+        let enabled = resolved.get(package.id.as_str());
+        for target in &package.targets {
             let available = target
                 .required_features
                 .iter()
-                .all(|feature| enabled.contains(feature.as_str()));
+                .all(|feature| enabled.is_some_and(|features| features.contains(feature)));
             if !target.test || !available {
                 continue;
             }
-            if let Some(unit) = unit(&target) {
+            if let Some(unit) = unit(target) {
                 units.insert(unit);
             }
         }
@@ -111,26 +133,4 @@ fn unit(target: &Target) -> Option<TestUnit> {
         "bench" => Some(TestUnit::Bench(name.clone())),
         _ => None,
     })
-}
-
-/// The features of one package that its `default` feature enables, directly
-/// or through other features of the same package.
-fn default_features(features: &BTreeMap<String, Vec<String>>) -> BTreeSet<&str> {
-    let mut enabled = BTreeSet::new();
-    let mut pending = vec!["default"];
-    while let Some(feature) = pending.pop() {
-        let Some(members) = features.get(feature) else {
-            continue;
-        };
-        if !enabled.insert(feature) {
-            continue;
-        }
-        pending.extend(
-            members
-                .iter()
-                .map(String::as_str)
-                .filter(|member| !member.contains(':') && !member.contains('/')),
-        );
-    }
-    enabled
 }

@@ -78,7 +78,10 @@ share one cache. Every Linux CI job that builds only `xtask` and the native
 binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
 checks shard, the Repository test shards, and the test shards of each native
-host keep their own cache. The app shards share one cache. The native
+host keep their own cache. The app shards share one cache. Of the Repository
+and native test shards, only the first saves, under the
+[test unit rule](./ci-verification-repository.md#test-units), because a
+smaller shard would save an entry that lacks dependencies of the others. The native
 lint shard of each host restores the entry of the test shards of its host
 and never saves, so Clippy reuses their build scripts and procedural macros.
 A Clippy build entry for each host was rejected, because the cache is already

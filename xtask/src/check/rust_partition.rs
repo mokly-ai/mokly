@@ -45,12 +45,15 @@ impl Weights {
 }
 
 /// Assign every unit to exactly one of `total` test shards and return the
-/// units of each nonempty shard, in shard order. With more shards than
-/// units, the shards after the last unit get no units.
+/// units of each shard, in shard order. With more shards than units, the
+/// shards after the last unit get no units.
 ///
-/// The heaviest unit goes first, each to the shard with the least weight so
-/// far; the lower shard wins a tie. The first shard starts with the doc test
-/// weight. The same units and weights give the same partition on every host.
+/// The first shard runs the doc tests and the unit tests of every library,
+/// `--lib`. Their builds need each crates.io dependency that any unit needs,
+/// so this shard alone can save a complete Rust build cache. Then the
+/// heaviest unit goes first, each to the shard with the least weight so far;
+/// the lower shard wins a tie. The same units and weights give the same
+/// partition on every host.
 pub(super) fn partition(
     units: &BTreeSet<TestUnit>,
     weights: &Weights,
@@ -58,17 +61,25 @@ pub(super) fn partition(
 ) -> Vec<Vec<TestUnit>> {
     let count = usize::try_from(total)
         .unwrap_or(usize::MAX)
-        .min(units.len())
+        .min(units.len().saturating_add(1))
         .max(1);
     let mut loads = vec![0_u64; count];
-    if let Some(first) = loads.first_mut() {
-        *first = weights.doc_seconds;
-    }
     let mut shards = vec![Vec::new(); count];
+    loads[0] = weights.doc_seconds;
     let mut ordered: Vec<_> = units.iter().collect();
-    ordered.sort_by_key(|unit| (Reverse(weights.of(unit)), unit.key()));
+    ordered.sort_by_key(|unit| {
+        (
+            **unit != TestUnit::Libraries,
+            Reverse(weights.of(unit)),
+            unit.key(),
+        )
+    });
     for unit in ordered {
-        let lightest = (0..count).min_by_key(|&index| loads[index]).unwrap_or(0);
+        let lightest = if *unit == TestUnit::Libraries {
+            0
+        } else {
+            (0..count).min_by_key(|&index| loads[index]).unwrap_or(0)
+        };
         loads[lightest] += weights.of(unit);
         shards[lightest].push(unit.clone());
     }

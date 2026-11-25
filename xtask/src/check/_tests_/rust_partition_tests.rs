@@ -20,34 +20,41 @@ fn target(kind: &str, name: &str) -> serde_json::Value {
     json!({ "name": name, "kind": [kind], "test": true })
 }
 
-/// Two Mokly packages and one cloud package, with every kind of target that
-/// the default nextest selection includes or leaves out.
+fn package(id: &str, name: &str, targets: Vec<serde_json::Value>) -> serde_json::Value {
+    json!({ "id": id, "name": name, "targets": targets })
+}
+
+/// Two Mokly workspace packages, one cloud package, and one crates.io package
+/// with a Mokly name, with every kind of target that the default nextest
+/// selection includes or leaves out. Cargo resolves `extra` for xtask, as a
+/// dependency or a dev-dependency can enable it, and leaves `matrix` off.
 fn metadata() -> String {
-    json!({ "packages": [
-        {
-            "name": "mokly-a",
-            "features": {},
-            "targets": [
+    json!({
+        "workspace_members": ["a", "x", "cloud"],
+        "packages": [
+            package("a", "mokly-a", vec![
                 target("lib", "mokly_a"),
                 target("bin", "a"),
                 target("test", "only_a"),
                 target("test", "shared"),
                 target("custom-build", "build-script-build"),
-            ],
-        },
-        {
-            "name": "xtask",
-            "features": { "default": ["extra"], "extra": ["dep:serde"], "matrix": [] },
-            "targets": [
+            ]),
+            package("x", "xtask", vec![
                 target("lib", "xtask"),
                 target("test", "shared"),
-                { "name": "gated", "kind": ["test"], "test": true, "required-features": ["matrix"] },
-                { "name": "enabled", "kind": ["test"], "test": true, "required-features": ["extra"] },
-                { "name": "untested", "kind": ["test"], "test": false },
-            ],
-        },
-        { "name": "mkc-cloud", "features": {}, "targets": [target("test", "cloud")] },
-    ]})
+                json!({ "name": "gated", "kind": ["test"], "test": true, "required-features": ["matrix"] }),
+                json!({ "name": "enabled", "kind": ["test"], "test": true, "required-features": ["extra"] }),
+                json!({ "name": "untested", "kind": ["test"], "test": false }),
+            ]),
+            package("cloud", "mkc-cloud", vec![target("test", "cloud")]),
+            package("registry", "mokly-registry", vec![target("test", "registry")]),
+        ],
+        "resolve": { "nodes": [
+            { "id": "a", "features": [] },
+            { "id": "x", "features": ["extra"] },
+            { "id": "cloud", "features": [] },
+        ]},
+    })
     .to_string()
 }
 
@@ -90,6 +97,33 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     );
 }
 
+/// The first shard runs `--lib` also when another shard is lighter, so its
+/// build holds every crates.io dependency that the cache must keep.
+#[test]
+fn the_library_unit_tests_run_on_the_first_shard() {
+    let weights = Weights::parse(
+        r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {"--test heavy": 10, "--lib": 1}}"#,
+    )
+    .unwrap();
+    let units: BTreeSet<_> = [test("heavy"), TestUnit::Libraries].into();
+    assert_eq!(
+        partition(&units, &weights, 2),
+        [vec![TestUnit::Libraries], vec![test("heavy")]]
+    );
+}
+
+/// The doc test weight of the first shard counts as work, so each unit can
+/// still get a shard of its own.
+#[test]
+fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
+    let weights = Weights::parse(r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {}}"#).unwrap();
+    let units: BTreeSet<_> = [test("a"), test("b")].into();
+    assert_eq!(
+        partition(&units, &weights, 3),
+        [vec![], vec![test("a")], vec![test("b")]]
+    );
+}
+
 #[test]
 fn every_unit_runs_on_exactly_one_shard_for_every_total() {
     let weights = Weights::embedded().unwrap();
@@ -106,42 +140,46 @@ fn every_unit_runs_on_exactly_one_shard_for_every_total() {
     }
 }
 
-/// The nextest command of one shard that holds every unit of the fixture.
-const ALL_UNITS: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --lib --bin a --test enabled --test only_a --test shared";
-
-fn runner(runs: bool) -> DefaultCheckRunner {
+fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
     let output = CommandRunnerOutputMock
-        .next_call(matching!((spec) if spec.display() == "cargo metadata --no-deps --format-version=1 --locked"))
+        .next_call(
+            matching!((spec) if spec.display() == "cargo metadata --format-version=1 --locked"),
+        )
         .answers(&|_, _| Ok(metadata()));
-    let mocks = if runs {
-        Unimock::new((
-            output,
-            CommandRunnerRunMock
-                .next_call(matching!((spec) if spec.display() == ALL_UNITS && spec.working_directory() == Some(Path::new("/workspace"))))
-                .returns(Ok(())),
-        ))
-    } else {
-        Unimock::new(output)
-    };
     DefaultCheckRunner::new(
-        Arc::new(mocks),
+        Arc::new(Unimock::new((output, run))),
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     )
 }
 
+/// The first of two shards runs `--lib` with the doc tests, and the second
+/// runs every other unit; each adds only its own targets to nextest.
 #[test]
-fn a_test_shard_runs_its_units_beside_the_complete_package_selection() {
-    runner(true)
-        .rust_test_shard(Shard::from_str("1/1").unwrap(), true)
-        .unwrap();
+fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
+    const FIRST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --lib";
+    const SECOND: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --bin a --test enabled --test only_a --test shared";
+    runner(
+        CommandRunnerRunMock
+            .next_call(matching!((spec) if spec.display() == FIRST && spec.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
+    )
+    .rust_test_shard(Shard::from_str("1/2").unwrap(), true)
+    .unwrap();
+    runner(
+        CommandRunnerRunMock
+            .next_call(matching!((spec) if spec.display() == SECOND))
+            .returns(Ok(())),
+    )
+    .rust_test_shard(Shard::from_str("2/2").unwrap(), true)
+    .unwrap();
 }
 
 /// With more shards than units, a shard without units runs no command, so
 /// nextest never runs every test of an empty selection.
 #[test]
 fn a_test_shard_without_units_runs_nothing() {
-    runner(false)
+    runner(())
         .rust_test_shard(Shard::from_str("6/6").unwrap(), false)
         .unwrap();
 }

@@ -113,12 +113,14 @@ A test unit is one Cargo target selection: `--lib` for the unit tests of
 every library, `--bin {name}`, or `--test {name}`. A unit holds every
 selected target with that kind and name. The units cover each target of
 `mokly-*` and `xtask` that the complete nextest run selects: each target
-with tests whose required features the default features enable. The test
-shards read the targets from `cargo metadata`, so a new crate or a new test
-lands on a shard without an edit.
+with tests whose required features Cargo's resolved features enable. The
+test shards read the targets and the features from `cargo metadata`, so a
+new crate or a new test lands on a shard without an edit.
 
-The units go to the test shards by weight, the heaviest first, each to the
-shard with the least weight so far. `scripts/verification/rust-test-weights.json`
+The first test shard runs `--lib` with the doc tests. Their builds need every
+crates.io dependency of the Rust tests, so only this shard saves the Rust
+build cache of its job. The other units go to the test shards by weight, the
+heaviest first, each to the shard with the least weight so far. `scripts/verification/rust-test-weights.json`
 holds the measured compile and test seconds of each unit, a default for a
 unit that it does not name, and the doc test weight of the first test shard.
 Every host computes the same partition. A weight changes only the balance,
