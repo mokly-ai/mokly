@@ -112,9 +112,10 @@ export function useAddress(): { pathname: string; search: string } {
     };
     sync();
     listeners.add(sync);
-    // This listener is added after the router's, so a step the router acts on
-    // reaches the screens only once the router has started to replace them.
-    // A screen that heard the new address first could correct it back.
+    // A screen that mounts after the first render adds this listener after the
+    // router's, so a step the router acts on reaches that screen only once the
+    // router has started to replace it. Heard first, the new address could
+    // make the old screen correct it back. Keep this listener on the screen.
     window.addEventListener("popstate", traversed);
     return () => {
       listeners.delete(sync);

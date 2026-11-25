@@ -1,6 +1,6 @@
 /**
- * The one `popstate` listener that may stop a traversal before the router
- * acts on it.
+ * The `popstate` listener that may stop a traversal before the router acts
+ * on it. The settings back guard stops traversals only through it.
  *
  * The router installs its own listener when it mounts, so this one is
  * installed as the module loads and runs first. It asks every gate in the
