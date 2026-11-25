@@ -1,7 +1,5 @@
 # mkc-api
 
-Status: [Milestone 4](../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) adds `GET /v1/configuration`.
-
 The Mokly Cloud platform REST API: the `mkc-api` binary and the application
 factory behind it. The crate is the composition root of the platform. It wires
 the services (`mkc-auth`, `mkc-publications`, `mkc-billing` and the platform,
@@ -370,7 +368,9 @@ setting or test detection that selects the fake runner. The
 - [route_contract.rs](./src/route_contract.rs) — validates operation IDs, methods, duplicate routes and anonymous-read capabilities before registration.
 - [operation.rs](./src/operation.rs) — `Operation`, the typed operation identifiers shared by the OpenAPI contract and dispatch.
 - [operation_policy.rs](./src/operation_policy.rs) — implementation and authentication capabilities for the typed operation inventory; `Operation::anonymous_read()` names the reads that need no session, which the route contract compares with the document's GET security requirements.
-- [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher`; `dispatch_target` returns `operation-unavailable` for an unconfigured preview sign-in or GitHub operation and `dispatch_billing` in `billing_dispatch.rs` for unconfigured billing, both before Origin, CSRF or body validation; a deferred operation is refused by `Operation::implemented()`; `cookie` writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher` uses `Operation::implemented()` to refuse deferred operations. Its `cookie` helper writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [configuration.rs](./src/configuration.rs) — `dispatch_target` gates preview sign-in, GitHub and billing before handler validation. `GET /v1/configuration` reads from the same gate.
+- [contract/configuration.rs](./src/contract/configuration.rs) — the OpenAPI contract for the public configuration answer.
 - [desktop_grant_dispatch.rs](./src/desktop_grant_dispatch.rs) and [desktop_grant_input.rs](./src/desktop_grant_input.rs) — desktop request validation after session, Origin and CSRF admission, the grant response, and exchange cookies whose `Max-Age` follows the inherited deadline.
 - [desktop_grant_tests.rs](./tests/desktop_grant_tests.rs) — the auth service against Postgres, including issuer sign-out, a wrong verifier that leaves the grant unused, concurrent exchange and atomic session replacement.
 - [health.rs](./src/health.rs) — `DatabaseHealth`, the migration readiness read at startup and after a five-second cache expiry; concurrent callers share one refresh.

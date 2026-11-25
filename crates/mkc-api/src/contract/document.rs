@@ -6,8 +6,8 @@ use super::metadata::{DeferredOperations, Metadata};
 use super::responses::ErrorResponse;
 use super::session_cookie::SessionCookie;
 use super::{
-    account, approvals, billing, builds, catalogue_access, comments, github, grants, health,
-    members, projects, publications, tokens, uploads, workspaces,
+    account, approvals, billing, builds, catalogue_access, comments, configuration, github, grants,
+    health, members, projects, publications, tokens, uploads, workspaces,
 };
 
 /// Root metadata for the complete Rust-owned HTTP contract.
@@ -17,6 +17,7 @@ use super::{
     servers((url = "/")),
     tags(
         (name = "Health", description = "Public process identity and database readiness."),
+        (name = "Configuration", description = "Public configuration of optional operations."),
         (name = "Account", description = "Sessions, identity and installation selection."),
         (name = "Workspace", description = "Workspaces, projects, settings, billing and publications."),
         (name = "Review", description = "Screen threads and publication approvals."),
@@ -35,6 +36,7 @@ impl OpenApi for ApiDoc {
         let mut document = Root::openapi();
         for area in [
             health::Doc::openapi(),
+            configuration::Doc::openapi(),
             account::Doc::openapi(),
             github::Doc::openapi(),
             workspaces::Doc::openapi(),

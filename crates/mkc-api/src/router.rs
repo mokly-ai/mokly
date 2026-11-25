@@ -259,3 +259,7 @@ mod contract_tests;
 #[cfg(test)]
 #[path = "_tests_/router_inventory_tests.rs"]
 mod inventory_tests;
+
+#[cfg(test)]
+#[path = "_tests_/configuration_tests.rs"]
+mod configuration_tests;

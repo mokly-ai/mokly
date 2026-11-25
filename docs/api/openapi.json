@@ -102,6 +102,49 @@
         ]
       }
     },
+    "/v1/configuration": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Read which optional operations have runtime configuration",
+        "operationId": "getConfiguration",
+        "responses": {
+          "200": {
+            "description": "The optional configuration of this API.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [],
+        "x-reasons": [
+          "internal-error",
+          "payload-too-large",
+          "validation-failed"
+        ]
+      }
+    },
     "/v1/session": {
       "get": {
         "tags": [
@@ -6057,6 +6100,45 @@
         },
         "additionalProperties": false
       },
+      "Configuration": {
+        "type": "object",
+        "description": "The public configuration of optional API operations.",
+        "required": [
+          "github",
+          "billing",
+          "previewPassword"
+        ],
+        "properties": {
+          "github": {
+            "type": "boolean"
+          },
+          "billing": {
+            "type": "boolean"
+          },
+          "previewPassword": {
+            "oneOf": [
+              {
+                "type": "object",
+                "description": "The public identity of the shared account that accepts a preview password.",
+                "required": [
+                  "account"
+                ],
+                "properties": {
+                  "account": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "Connection": {
         "type": "object",
         "required": [
@@ -9096,6 +9178,10 @@
     {
       "name": "Health",
       "description": "Public process identity and database readiness."
+    },
+    {
+      "name": "Configuration",
+      "description": "Public configuration of optional operations."
     },
     {
       "name": "Account",

@@ -85,6 +85,8 @@ pub trait Authenticator: Send + Sync {
     fn verify(&self, token: &str, previous: Option<&str>) -> Result<LinkVerified>;
     /// Report whether the shared preview account has validated runtime configuration.
     fn preview_sign_in_available(&self) -> bool;
+    /// Report the configured account email when a preview password verifier is present.
+    fn preview_password_account(&self) -> Option<&str>;
     /// Find or create the configured preview account without issuing a session.
     fn preview_account(&self) -> Result<User>;
     /// Admit and verify a preview password, then issue a session.

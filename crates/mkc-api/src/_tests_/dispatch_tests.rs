@@ -34,7 +34,7 @@ fn unconfigured_optional_operations_precede_request_validation() {
     );
     let dispatcher = dispatcher(Arc::new(auth), None);
     let operations = optional_operations();
-    assert_eq!(operations.len(), 11);
+    assert_eq!(operations.len(), 15);
     for operation in operations {
         let valid_body = valid_body(operation);
         for (body, origin, csrf) in [

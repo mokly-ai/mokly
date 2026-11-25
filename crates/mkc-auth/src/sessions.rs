@@ -35,6 +35,12 @@ impl Authenticator for AuthService {
         self.preview_sign_in.is_some()
     }
 
+    fn preview_password_account(&self) -> Option<&str> {
+        let configured = self.preview_sign_in.as_ref()?;
+        configured.verifier.as_ref()?;
+        Some(&configured.email)
+    }
+
     fn preview_account(&self) -> Result<User> {
         self.configured_preview_account()
     }

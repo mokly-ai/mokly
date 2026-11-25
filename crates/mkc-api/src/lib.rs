@@ -14,6 +14,7 @@ pub mod build_providers;
 mod build_runtime;
 mod builds;
 mod check_runtime;
+mod configuration;
 pub mod contract;
 mod desktop_grant_dispatch;
 mod desktop_grant_input;

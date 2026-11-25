@@ -18,6 +18,8 @@ use crate::viewer::input::{self, Read};
 #[derive(Debug)]
 pub(crate) enum Endpoint {
     GetHealth,
+    /// Read the public API configuration.
+    GetConfiguration,
     GitHub,
     Billing,
     DesktopGrant,
@@ -57,6 +59,7 @@ pub(crate) fn action(
     }
     match operation {
         Operation::GetHealth => return Ok(Endpoint::GetHealth),
+        Operation::GetConfiguration => return Ok(Endpoint::GetConfiguration),
         Operation::SendMagicLink => return Ok(Endpoint::SendMagicLink(body(bytes)?)),
         Operation::VerifyMagicLink => return Ok(Endpoint::VerifyMagicLink(body(bytes)?)),
         Operation::VerifyPreviewSignIn => {

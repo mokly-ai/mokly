@@ -1,7 +1,5 @@
 # REST API Surface
 
-Status: [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) adds the configuration endpoint.
-
 This is the operation and response sub-contract of [REST API](./rest-api.md).
 
 ## Implemented Surface

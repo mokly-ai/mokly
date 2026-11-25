@@ -647,14 +647,20 @@ Depends on: 3
 The API tells the app which optional configuration it has, the preview
 password and its account included.
 
-- [ ] Add `GET /v1/configuration` and its contract, built from the list of
+- [x] Add `GET /v1/configuration` and its contract, built from the list of
       the operation gate. Regenerate the OpenAPI document and the generated
       types.
-- [ ] Tests: each field follows its configuration, the preview password
+- [x] Tests: each field follows its configuration, the preview password
       answer names the account only with a verifier, and production settings
       give no preview password.
-- [ ] Remove or narrow each status line that links this milestone: search
+- [x] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for `#milestone-4-configuration-answer`.
+
+**My call on 2026-11-25.** Put billing in the shared operation gate. Declare
+the optional configuration variants and their list together. This makes the
+compiler require a response case for each new variant.
+
+The check logs are in `.context/preview-password-sign-in/m4-checks/`.
 
 ## Milestone 5: Store, deploy, comment and local stack
 
@@ -736,7 +742,9 @@ Depends on: every other milestone
       once, and report.
 - [ ] Add a follow-up item: the GitHub sign-in notice, the App install
       screen and the Billing pane read `GET /v1/configuration` before a
-      press, in place of a refused request.
+      press, in place of a refused request. Note in it that `billing: true`
+      means the billing service is configured, while checkout can still
+      answer 503 until its prices are verified.
 - [ ] Update `plans/follow-ups/preview-proof-runs-not-recorded.md`: no
       comment carries an Open preview link, and the shared account signs in
       with the preview password.

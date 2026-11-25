@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read which optional operations have runtime configuration */
+        get: operations["getConfiguration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/session": {
         parameters: {
             query?: never;
@@ -1263,6 +1280,15 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        /** @description The public configuration of optional API operations. */
+        Configuration: {
+            github: boolean;
+            billing: boolean;
+            previewPassword: {
+                /** Format: email */
+                account: string;
+            } | null;
+        };
         Connection: {
             /** Format: uri */
             authorizeUrl: string;
@@ -2245,6 +2271,29 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+        };
+    };
+    getConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The optional configuration of this API. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Configuration"];
+                };
+            };
+            "4XX": components["responses"]["ErrorResponse"];
+            "5XX": components["responses"]["ErrorResponse"];
         };
     };
     getSession: {

@@ -13,11 +13,12 @@ use thiserror::Error;
 use crate::action::Action;
 use crate::billing::service::BillingService;
 use crate::builds::service::BuildsApi;
+use crate::configuration::DispatchTarget;
 use crate::endpoints::{self, Endpoint};
 use crate::error::{ApiError, Result};
 use crate::github::service::GitHubIntegration;
 use crate::health::HealthCheck;
-use crate::operation::{Operation, OptionalConfiguration};
+use crate::operation::Operation;
 use crate::pagination::Pagination;
 use crate::payload::{Payload, Reply};
 use crate::platform::service::Platform;
@@ -46,11 +47,10 @@ pub(crate) struct WebhookHeaders {
     pub(crate) signature: String,
 }
 
-/// The public health endpoint is answered before authentication; reaching the
-/// authenticated path means the two dispatch stages disagree.
+/// The health and configuration endpoints are answered before authentication.
 #[derive(Debug, Error)]
-#[error("[mkc-api/dispatch] health routed through authentication")]
-struct HealthRouting;
+#[error("[mkc-api/dispatch] public read routed through authentication")]
+struct PublicReadRouting;
 
 #[unimock::unimock(api = [DispatchMock])]
 pub(crate) trait Dispatcher: Send + Sync {
@@ -76,17 +76,16 @@ impl Dispatcher for ApiDispatcher {
         if request.operation.desktop_grant() {
             return self.dispatch_desktop_grant(request);
         }
-        if let DispatchTarget::GitHub(github) = self.dispatch_target(request.operation)? {
-            return self.dispatch_github(request, github);
+        match self.dispatch_target(request.operation.optional_configuration())? {
+            DispatchTarget::GitHub(github) => return self.dispatch_github(request, github),
+            DispatchTarget::Billing(billing) => return self.dispatch_billing(request, billing),
+            DispatchTarget::Standard => {}
         }
         let preview_client = if request.operation == Operation::VerifyPreviewSignIn {
             Some(self.auth.origin(request.origin.as_deref())?)
         } else {
             None
         };
-        if request.operation.billing() {
-            return self.dispatch_billing(request);
-        }
         let endpoint = endpoints::action(
             request.operation,
             &request.params,
@@ -95,6 +94,9 @@ impl Dispatcher for ApiDispatcher {
         )?;
         match endpoint {
             Endpoint::GetHealth => Ok(Reply::ok(Payload::Health(self.health.check()?))),
+            Endpoint::GetConfiguration => {
+                Ok(Reply::ok(Payload::Configuration(self.configuration())))
+            }
             Endpoint::SendMagicLink(input) => {
                 let client = self.auth.origin(request.origin.as_deref())?;
                 let result = self.auth.issue(
@@ -159,26 +161,6 @@ impl Dispatcher for ApiDispatcher {
 }
 
 impl ApiDispatcher {
-    /// Select the configured target after the `Operation::implemented()` availability check.
-    /// The router registers operations from the Rust-derived OpenAPI document.
-    /// This single gate covers preview sign-in and every GitHub operation before
-    /// their handlers perform Origin, CSRF, or body validation, so a malformed
-    /// request never masks absent configuration.
-    fn dispatch_target(&self, operation: Operation) -> Result<DispatchTarget<'_>> {
-        match operation.optional_configuration() {
-            None => Ok(DispatchTarget::Standard),
-            Some(OptionalConfiguration::PreviewSignIn) if self.auth.preview_sign_in_available() => {
-                Ok(DispatchTarget::Standard)
-            }
-            Some(OptionalConfiguration::PreviewSignIn) => Err(ApiError::OperationUnavailable),
-            Some(OptionalConfiguration::GitHub) => self
-                .github
-                .as_deref()
-                .map(DispatchTarget::GitHub)
-                .ok_or(ApiError::OperationUnavailable),
-        }
-    }
-
     fn authenticated(&self, request: Request, endpoint: Endpoint) -> Result<Reply> {
         let identity = match request.credential.as_deref() {
             Some(credential) => Some(self.auth.authenticate(credential)?),
@@ -195,7 +177,9 @@ impl ApiDispatcher {
             ClientOrigin::App
         };
         match endpoint {
-            Endpoint::GetHealth => Err(ApiError::internal(HealthRouting)),
+            Endpoint::GetHealth | Endpoint::GetConfiguration => {
+                Err(ApiError::internal(PublicReadRouting))
+            }
             Endpoint::CatalogueGrant(project, publication) => {
                 let actor = identity.as_ref().ok_or(ApiError::Unauthenticated)?.user.id;
                 let grant = match self.access.grant(actor, project, publication) {
@@ -277,11 +261,6 @@ impl ApiDispatcher {
             | Endpoint::Billing => Err(ApiError::OperationUnavailable),
         }
     }
-}
-
-enum DispatchTarget<'a> {
-    Standard,
-    GitHub(&'a dyn GitHubIntegration),
 }
 
 pub(crate) fn cookie(credential: &str, max_age: i64, client: ClientOrigin) -> String {
