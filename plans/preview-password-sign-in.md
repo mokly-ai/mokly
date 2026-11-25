@@ -74,9 +74,9 @@ Replaced ways:
     Milestone 5.
   - Local and smoke: `scripts/cloud/dev-api.sh`, `smoke_api.py`,
     `smoke_desktop_origins.py` and `smoke_preview_plan.py`, which then make a
-    verifier from a known test password. Milestone 5.
+    verifier from a known test password. Milestone 3.
   - App: the page `/auth/preview/callback`, its route and input code, and
-    `preview-callback.spec.ts` and `callback-address.spec.ts`. Milestone 6.
+    `preview-callback.spec.ts` and `callback-address.spec.ts`. Milestone 3.
   - Mockups: `product/account/callback/preview-invalid` and its callback
     landing tests. Milestone 1.
   - Docs: `auth-callbacks.md`, `preview-seed.md`, `preview-scripts.md`,
@@ -578,7 +578,11 @@ below. History stays in this plan.
 Depends on: 2
 
 The API checks a typed password against an optional verifier. The `{secret}`
-exchange and its setting go.
+exchange and its setting go. Every consumer of the `{secret}` body moves in
+the same milestone, so the app, the smoke scripts and the local stack keep
+building and passing. Reason, my call of 2026-11-25: the regenerated app
+types drop `secret`, so the preview callback page and the test servers stop
+compiling unless they move together.
 
 - [ ] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the email,
       capability and bound rules of the design. Remove
@@ -591,14 +595,40 @@ exchange and its setting go.
       checks.
 - [ ] Regenerate `docs/api/openapi.json` and
       `packages/app/src/api/generated/schema.ts`.
+- [ ] Add the `preview-verifier` command to
+      `infra/scripts/preview-lifecycle.py`, with Python's `hashlib`. It trims
+      the password, as Sign in does.
+- [ ] Add the shared fixture under `infra/tests/fixtures/`: a fixed password
+      and a verifier made from it by hand with `hashlib.scrypt`.
+- [ ] Map Secret `preview-sign-in` to `MKC_PREVIEW_SIGN_IN_VERIFIER` in
+      `infra/docker/entrypoint.sh`, and update
+      `infra/e2b/tests/assert_build_template.py` and
+      `infra/tests/test_preview_runtime.py`.
+- [ ] Change `scripts/cloud/dev-api.sh` to the local password of the design.
+      Change `smoke_api.py`, `smoke_desktop_origins.py` and
+      `smoke_preview_plan.py` to sign in with a known test password and its
+      verifier.
+- [ ] Change the app's test API server, `packages/app/src/_tests_/api-server.ts`
+      and `publication-runtime.ts`, to a known test password and its
+      verifier.
+- [ ] Remove the page `/auth/preview/callback`, its route and input code,
+      `verifyPreviewSignIn` in `packages/app/src/data/auth.ts`, and its
+      cases in `preview-callback.spec.ts`, `callback-address.spec.ts` and
+      `callback-input.test.ts`.
+- [ ] Remove `preview-callback.spec.ts` from the test list of the active plan
+      `plans/loading-states-match-content.md` when the spec goes.
 - [ ] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for `#milestone-3-api-password-exchange`.
+      Also narrow the status lines that name the preview callback page, which
+      this milestone removes.
 - [ ] Tests, each at the lowest level that fails without the change:
   - [ ] Configuration: a verifier without the email, without the capability,
         malformed, or outside the bounds fails startup with a typed error
         that names the key.
-  - [ ] The shared fixture: its password matches its verifier, and another
-        password does not.
+  - [ ] The shared fixture: its password matches its verifier in Rust and in
+        Python, and another password does not.
+  - [ ] The Python command makes a verifier that the Rust check accepts for
+        the trimmed password, and it warns on a short password.
   - [ ] The exchange signs in with the right password, refuses a wrong one
         with `magic-link-invalid`, and refuses a password without a
         verifier.
@@ -635,30 +665,20 @@ this on 2026-11-24: "I don't care about backwards compat".
 - [ ] Declare the Secret Manager ID `mkc-preview-sign-in-password` in
       `infra/terraform/foundation/preview.tf`, with read access for the
       deploy identity, and update its contract test.
-- [ ] Add the `preview-verifier` command to
-      `infra/scripts/preview-lifecycle.py`, with Python's `hashlib`.
 - [ ] Change `preview-common.sh` and `preview-deploy.sh`: read the verifier
       privately, validate it, write or delete the verifier in Secret
       `preview-sign-in`, restart the API only when Helm did not roll it, and
       warn on a missing or malformed verifier. Remove the random value.
-- [ ] Mount Secret `preview-sign-in` as optional in the chart's PR overlay,
-      and map it to `MKC_PREVIEW_SIGN_IN_VERIFIER` in
-      `infra/docker/entrypoint.sh`. Update the Helm golden file.
+- [ ] Mount Secret `preview-sign-in` as optional in the chart's PR overlay.
+      Update the Helm golden file.
 - [ ] Remove the Open preview link, `--secret-file` and the
       `repository_private` input from `preview-comment.py`,
       `preview-event.py` and `preview.yml`, with their tests.
-- [ ] Change `scripts/cloud/dev-api.sh` to the local password of the design.
-      Change `smoke_api.py`, `smoke_desktop_origins.py` and
-      `smoke_preview_plan.py` to sign in with a known test password and its
-      verifier.
-- [ ] Tests: the Python command makes a verifier that the shared fixture's
-      check accepts, and it warns on a short password. Shell tests in
+- [ ] Tests: shell tests in
       `infra/tests/` cover the write, the unchanged value, the restart rule,
       the deletion, and the missing and malformed verifier.
 - [ ] Build and test the two rules that the Deploy and Password And Rotation
-      sections of `docs/protocol/cloud/preview-sign-in.md` add: the command
-      removes leading and trailing white space from the password, as Sign in
-      does, and a read that fails for a cause other than a missing version
+      sections of `docs/protocol/cloud/preview-sign-in.md` add: a read that fails for a cause other than a missing version
       warns and leaves Secret `preview-sign-in` unchanged.
 - [ ] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for
@@ -673,9 +693,7 @@ Depends on: 1, 4
 The app draws the section as the mockups show and sends the password.
 
 - [ ] Add the password call and the configuration read to
-      `packages/app/src/data/auth.ts`, and remove `verifyPreviewSignIn`.
-- [ ] Remove the page `/auth/preview/callback`, its route and input code, and
-      its cases in `preview-callback.spec.ts` and `callback-address.spec.ts`.
+      `packages/app/src/data/auth.ts`.
 - [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
       from the `@firna/ui` and app components, as the mockups show. Keep the
       file under 300 lines.
@@ -698,8 +716,6 @@ The app draws the section as the mockups show and sends the password.
       `.context/preview-password-sign-in/`.
 - [ ] Update `packages/app/README.md`, whose Responsibilities still name the
       preview landing, for Sign in's password section.
-- [ ] Remove `preview-callback.spec.ts` from the test list of the active plan
-      `plans/loading-states-match-content.md` when the spec goes.
 - [ ] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for
       `#milestone-6-sign-in-password-section`.
