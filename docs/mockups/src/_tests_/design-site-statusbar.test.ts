@@ -17,9 +17,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   type Element,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 /** The home, whose status bar holds the one control of any status bar. */
 const home = "design/site/home";
