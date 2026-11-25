@@ -1,0 +1,51 @@
+# Automatic reconnects extend idle sessions
+
+- **Severity:** High. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2, finding 10. Its finding check added option D, and it changed the recommendation from A to D.
+- **Location:** `crates/mkc-api/src/live/access.rs:39-59` (`open`), `crates/mkc-auth/src/sessions.rs:66-84` (`authenticate`), `packages/app/src/data/live-client.ts:117-122`, `crates/mkc-api/tests/live/session_tests.rs:57-61` (`first_recheck`), the "Access Checks" section of `docs/protocol/cloud/live-channel.md`, and the "Sessions" section of `docs/protocol/cloud/auth-sessions.md`.
+- **Reason:** The recommended option adds an exception to the session activity rule of `docs/protocol/cloud/auth-sessions.md`, and no recorded decision of the user covers it.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Session activity:** the `last_seen_at` time of a stored session. The idle deadline of a session is this time plus seven days.
+  - **Live socket:** the WebSocket that the app opens for each project that a member reads, on `GET /v1/live/projects/{projectId}`. `docs/protocol/cloud/live-channel.md` defines it.
+  - **Upgrade:** the HTTP request that opens a live socket. The server checks its Origin, its session cookie, and the member access of its reader.
+  - **Recheck:** the check that the API runs on each open live socket every 30 seconds.
+- **Background:**
+  - The "Sessions" section of `docs/protocol/cloud/auth-sessions.md` gives each session a 30-day absolute deadline and a seven-day idle deadline. A successful authentication writes nothing unless the last recorded activity is older than five minutes. Then it records the new activity.
+  - The "Access Checks" section of `docs/protocol/cloud/live-channel.md` says that a recheck records no session activity, "so an open socket does not extend the idle deadline of its session". The live channel branch wrote that sentence as its own design call. No user decision covers it.
+  - `recheck` (`crates/mkc-api/src/live/access.rs:61-75`) reads the session row itself and calls `session_policy::expired`, so it records no activity.
+  - `open` (`crates/mkc-api/src/live/access.rs:39-59`) checks the Origin, then calls `Authenticator::authenticate`, and then reads the member role in a second read. `authenticate` (`crates/mkc-auth/src/sessions.rs:66-84`) reads the session, and it writes the new activity with `touch` when `last_seen_at` is older than five minutes.
+  - The app opens the socket again after every close and every failed open (`packages/app/src/data/live-client.ts:117-122`), as the "Shutdown And Reconnect" section of `docs/protocol/cloud/live-channel.md` requires. Each member viewer holds a socket for its project, also in a hidden tab (`packages/app/src/screens/viewer/viewer-build.ts:54-57`).
+  - In the stable environments the load balancer ends each live socket after 3,600 seconds (`timeoutSec` in `infra/helm/mokly-cloud/templates/services.yaml:35`). A replica that shuts down closes its sockets with code 1001. So an open member tab opens its socket again at least once an hour.
+  - The route tests of the recheck in `crates/mkc-api/tests/live/session_tests.rs` open the socket first, and then they move the wall clock (`first_recheck` at line 57). No test opens a socket after the clock moved.
+  - On `main`, a visible publication viewer already records activity every five minutes through its 60-second latest-publication poll (`packages/app/src/viewer/latest.ts:72`). `plans/follow-ups/latest-publication-poll-extends-idle-sessions.md` records that problem. So this item cannot make every open viewer expire. It can stop the live socket from extending a session.
+- **Problem:** Each reopen of the socket calls `authenticate`, so it records session activity when the last activity is older than five minutes. A member tab that nobody uses, also a hidden one, reopens at least hourly. So it extends its session again and again.
+- **Impact if no action:** A tab that nobody uses keeps its session valid until the 30-day absolute deadline, also after seven days without reader activity. The idle deadline then does not protect an unattended device.
+- **Root question:** How can socket traffic leave the idle deadline of a session unchanged, so that a member tab left open expires as it does on `main`?
+- **Options:**
+  - **A.** Use a read-only credential check for the upgrade. Add a route test that opens the socket again after six minutes and checks that the activity time did not change. Effort: Medium.
+  - **B.** Make each caller of authentication choose an activity policy explicitly. This changes the shared call signature, and the choice shows at each call site. Effort: Medium.
+  - **C.** Separate the credential check from the activity write. The check becomes read-only by default, and each request that counts as activity records it in an explicit step. This is option D of `plans/follow-ups/authentication-records-activity-for-every-caller.md`. Effort: Large.
+  - **D.** Give `open` the session read that `recheck` already does.
+    - One function in `crates/mkc-api/src/live/access.rs` hashes the cookie with `mkc_auth::runtime::hash`, reads the session, applies `session_policy::expired`, and calls `member_role`, all in one read transaction. `open` and `recheck` both use it.
+    - Keep the Origin check first, so that the refusal order of the upgrade table in `docs/protocol/cloud/live-channel.md` stays.
+    - Add the test of A to `crates/mkc-api/tests/live/session_tests.rs`. Set the wall time to the last activity plus six minutes, open a second socket, and check that `last_seen_at` did not change. The current code fails this test.
+    - State in the "Access Checks" section of `docs/protocol/cloud/live-channel.md` that the upgrade records no session activity. Name this exception in the "Sessions" section of `docs/protocol/cloud/auth-sessions.md`.
+    - Cost: the session lookup of `resolve` (`crates/mkc-auth/src/sessions.rs:204-217`) gets a second copy outside `mkc-auth`, until the work of C moves it back. Gain: one read for each upgrade, in place of two reads and a possible write. Effort: Small.
+- **Left out:**
+  - Closing the socket in a hidden tab, or after a time without input, fails the goal for a visible tab on a finished build address. That tab still reopens hourly. It stays a complement under `plans/follow-ups/hidden-viewers-keep-unused-live-sockets.md`.
+  - A protocol sentence that each upgrade records activity, as a request does, lets a hidden tab keep its session for 30 days.
+  - A client flag that skips the activity write gives the same result as D, with one more flag.
+  - The timeout of the load balancer is not a real choice.
+- **Wider fix:** C. New callers of authentication then get a read-only check by default. `plans/follow-ups/authentication-records-activity-for-every-caller.md` records it, with the action "fix after merge".
+- **Previous examples:** The 60-second latest-publication poll of `main` records activity through each REST read (`packages/app/src/viewer/latest.ts:72`), as `plans/follow-ups/latest-publication-poll-extends-idle-sessions.md` records.
+- **Related:**
+  - `plans/follow-ups/authentication-records-activity-for-every-caller.md`: a shared wider fix, and work that waits for this answer. C here is option D there. That item keeps for the upgrade the activity rule that `docs/protocol/cloud/live-channel.md` gives when its work starts, so the answer here sets that rule. The test of A and D reuses the wall clock `hold_wall_time` and the `last_seen_at` read of `crates/mkc-api/tests/live/session_tests.rs`.
+  - `plans/follow-ups/hidden-viewers-keep-unused-live-sockets.md`: the same code and part of the cause. A hidden tab turns each reopen into a renewal in the background. The options of that item remove the hidden-tab case, but a visible tab on a build address still reopens hourly, so they do not replace A or D. Decide the two items together.
+  - `plans/follow-ups/refused-live-sockets-keep-retrying.md`: the same code. A reader who lost member access still has a valid session, so each refused reopen calls `authenticate` and can record activity. D removes that write too.
+  - `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: the same code. D puts `open` and `recheck` on one read, so option B there then changes one call.
+- **Recommendation:** D. It stops the renewal for every client with no change to `mkc-auth`, and it loses no real activity, because each page that opens a socket also makes REST reads. C best protects the codebase.
+- **Action:** ask the user, because D adds an exception to the rule of `docs/protocol/cloud/auth-sessions.md` that a successful authentication records activity, and no recorded decision of the user covers it.

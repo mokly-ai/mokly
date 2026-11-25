@@ -36,6 +36,9 @@
 - **Left out:** More expired-cookie cases test the upgrade, not the periodic check. A lint that bans session writes under `crates/mkc-api/src/live/` is a new check, and B enforces the same rule by type. A browser test cannot move the server clock.
 - **Wider fix:** D. A read becomes the default, so a new caller records activity only when it calls the explicit step. C still needs each new caller to choose the right method.
 - **Previous examples:** None found before the live channel. The 30-second check at `crates/mkc-api/src/live/access.rs:61-75` is the first caller that copies the session read to avoid the write.
-- **Related:** `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: the same code. Both items change `recheck` in `crates/mkc-api/src/live/access.rs`, this item the session half and that item the role half. One branch can do both, or one rebases on the other.
+- **Related:**
+  - `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: the same code. Both items change `recheck` in `crates/mkc-api/src/live/access.rs`, this item the session half and that item the role half. One branch can do both, or one rebases on the other.
+  - `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md`: a shared wider fix, and work that waits. D here is option C there. That item decides the activity rule of the live upgrade, which D here keeps as `docs/protocol/cloud/live-channel.md` gives it when the work starts. Its recommended option D makes the upgrade read the session without an activity write, beside `recheck`.
+  - `plans/follow-ups/latest-publication-poll-extends-idle-sessions.md`: a shared wider fix. D here gives the read-only authentication that option B there needs for the automatic reads of the app.
 - **Recommendation:** D. It makes the safe case the default for every caller, and each request keeps its activity rule.
 - **Action:** fix after merge, apply D, because it changes the shared authentication interface and its request callers.

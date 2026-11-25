@@ -1,0 +1,54 @@
+# Hidden viewers keep unused live sockets
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2, finding 14. Its finding check added option D, and it changed the recommendation from A to C.
+- **Location:** `packages/app/src/data/live-client.ts:87-182` (`createLiveClient`), `packages/app/src/screens/viewer/viewer-build.ts:54-57`, `packages/app/src/viewer/build-watch.ts:92-100`, `packages/app/src/viewer/build-poll.ts:35-45`, `crates/mkc-api/src/live/socket.rs:86-90`, and the first paragraph and the "Shutdown And Reconnect" section of `docs/protocol/cloud/live-channel.md`.
+- **Reason:** Every option changes the rule of `docs/protocol/cloud/live-channel.md` that the client holds one socket for each project that the app shows, and no recorded decision of the user covers that change.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Live client:** the shared socket client of the app, `createLiveClient` in `packages/app/src/data/live-client.ts`. It holds one socket for each subscribed project, and it reconnects after every close.
+  - **Subscriber:** a caller of `liveClient.subscribe`. It names the notice kinds and the callbacks that it wants.
+  - **Recheck:** the database read that the API runs on each open live socket every 30 seconds. It reads the session and the member role of the reader.
+  - **Build card:** the viewer panel that shows the state, the steps, and the output of a build.
+- **Background:**
+  - The first paragraph and the "Shutdown And Reconnect" section of `docs/protocol/cloud/live-channel.md` give the socket rule. The client holds one socket for each project that the app shows to a reader with member access. The doc says nothing about hidden tabs.
+  - Two places subscribe. `useViewerBuild` subscribes each member viewer with an empty subscription, with no kinds and no callbacks (`packages/app/src/screens/viewer/viewer-build.ts:54-57`). `useBuildWatch` subscribes the build card for the `build` and `build-log` kinds (`packages/app/src/viewer/build-watch.ts:92-100`).
+  - The build card reads nothing while the tab is hidden. Its poll and its wake on a notice return early (`packages/app/src/viewer/build-poll.ts:35-45`), and a `visibilitychange` event wakes it when the tab shows again. The latest-publication poll also pauses in a hidden tab (`packages/app/src/viewer/latest.ts:6-18`).
+  - The live client keeps a socket while any subscriber stays, and it has no visibility logic. So a hidden member tab keeps its socket open, also when it shows a saved publication and uses no live message.
+  - The server rechecks each open socket every 30 seconds (`crates/mkc-api/src/live/socket.rs:86-90`), which is about 120 reads an hour. The reads use the store pool of the API replica, which REST requests and build work also use.
+  - The client reads again each kind that it shows each time its socket opens, as the "Resync" section of the doc says. So a socket that opens when the tab shows again catches up.
+  - The recheck every 30 seconds is a design call of 2026-11-24 of the live channel branch. A removed member, a private transition, and a sign-out take effect on the next request, and a socket is one long request.
+  - The real-API build spec `packages/app/src/_tests_/build-api.spec.ts` expects an open socket on a visible page, so the chosen option must keep it there. Its observer `observeLiveBuild` sees each upgrade, so it can also check a close and a reopen.
+  - The presence plan, `plans/live-presence-cursors.md`, adds the first client event kinds. Presence may want hidden readers to stay present, so the presence work must decide that.
+- **Problem:** A hidden member tab keeps its live socket open, although nothing in it uses live messages. The server still rechecks that socket every 30 seconds.
+- **Impact if no action:** Each hidden member tab costs about 120 database reads an hour, which compete with REST requests and builds for the store pool of each replica. Each hidden tab also reconnects at least hourly, which extends its session today.
+- **Root question:** What should a member tab cost the server while nothing in it uses live updates?
+- **Options:**
+  - **A.** Make both viewer subscriptions follow the visibility of the tab. Open the socket again when the tab shows, and use the existing catch-up read. Cost: the rule lives in two hooks, and their test needs a React render with a fake document and a fake `WebSocket`. Effort: Small.
+  - **B.** Subscribe only while a visible build card has more changes to follow. This also avoids a socket on a visible saved publication. Effort: Medium.
+  - **C.** Make the live client open a socket only for active subscribers.
+    - A subscriber with no kinds and no callbacks, like the empty subscription of the viewer, does not count.
+    - In a hidden tab, the client closes the socket after a short delay, and it opens the socket again when the tab shows.
+    - A later feature gets an explicit way to ask for delivery in the background.
+    - The test fits `packages/app/src/_tests_/data/live-client.test.ts`, which already injects the socket and the timers.
+    - Effort: Medium.
+  - **D.** Make an open socket cost no periodic database read.
+    - Triggers notify the replicas on a new channel on session deletes and on changes to `memberships`, `project_grants`, and `projects`.
+    - Each replica checks only the affected sockets at once, and it checks all its sockets after its listener subscribes again. It reads a session again only at its idle or absolute deadline.
+    - Cost: a migration, a new listener channel, routing in the hub by session, user, and project, and a new rule in the "Access Checks" section. The route tests of the idle deadline move to the deadline.
+    - Effort: Large.
+- **Left out:**
+  - Cheaper access queries lower the cost of each check, not the number of checks. `plans/follow-ups/socket-rechecks-load-every-membership-row.md` owns them.
+  - A client message that pauses a hidden socket on the server costs more work than C, for at most the same saved reads.
+  - A longer recheck interval, or a recheck only on traffic, fails the access limit of 30 seconds.
+- **Wider fix:** C. Subscriber demand then controls the connection in one place, also for comments, agents, and presence. C prevents the class only when a subscriber with no kinds and no callbacks does not count as demand.
+- **Previous examples:** The latest-publication poll and the build card poll already pause their API reads in a hidden tab (`packages/app/src/viewer/latest.ts:6-18`, `packages/app/src/viewer/build-poll.ts:35-45`).
+- **Related:**
+  - `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md`: the same code and part of its cause. A or C here also stops the hourly reconnects of hidden tabs. Visible tabs still reconnect, so that item still needs its read-only upgrade. Decide the two items together.
+  - `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: a shared wider fix. That item lowers the cost of each check, and this item lowers the number of checks. D here extends option E there, and it also removes the periodic session read.
+  - `plans/follow-ups/refused-live-sockets-keep-retrying.md`: the same code. A or C here also stops a hidden tab from retrying a refused upgrade.
+- **Recommendation:** C. It puts the rule in the one client that comments, agents, and presence will also use, and its test fits the existing test of the client. The opt-in for background delivery can wait for the first feature that needs it. Close the socket only after a short hidden delay, because each quick tab switch would otherwise cost an upgrade and a catch-up read.
+- **Action:** ask the user, because every option changes the socket rule of `docs/protocol/cloud/live-channel.md`, and no recorded decision of the user covers that change.

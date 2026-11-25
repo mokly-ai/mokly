@@ -1,0 +1,36 @@
+# Latest-publication poll extends idle sessions
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2: a problem on `main`, outside the scope, that the finding check of finding 10 found.
+- **Location:** `packages/app/src/viewer/latest.ts:64-79` (`useLatestPublication`), `crates/mkc-api/src/dispatch.rs:179-184` (`ApiDispatcher::authenticated`), `crates/mkc-auth/src/sessions.rs:66-84` (`authenticate`), and the "Sessions" section of `docs/protocol/cloud/auth-sessions.md`.
+- **Reason:** The poll and its activity write are on `main`, outside the live channel work, and every fix changes the session rule or the polls of the app.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Session activity:** the `last_seen_at` time of a stored session. The idle deadline of a session is this time plus seven days.
+  - **Latest-publication poll:** the read in `packages/app/src/viewer/latest.ts` that asks every 60 seconds whether the branch or pull request of the open publication has published again.
+- **Background:**
+  - The "Sessions" section of `docs/protocol/cloud/auth-sessions.md` gives each session a 30-day absolute deadline and a seven-day idle deadline. A successful authentication writes nothing unless the last recorded activity is older than five minutes. Then it records the new activity.
+  - The viewer runs the latest-publication poll while the tab is visible, and once on each `visibilitychange` (`packages/app/src/viewer/latest.ts:64-79`). Each poll reads `listBranches` or `listPullRequests` with the session cookie (`packages/app/src/data/publications.ts:143-161`).
+  - The REST dispatcher calls `authenticate` for each request that carries the cookie, also for a read that anonymous readers may make (`crates/mkc-api/src/dispatch.rs:179-184`). `authenticate` records activity when the last activity is older than five minutes (`crates/mkc-auth/src/sessions.rs:66-84`).
+  - So a visible publication viewer records activity every five minutes, and its session expires only at the 30-day absolute deadline.
+  - The build card poll does the same while a followed build runs. On `main` it reads every 3 seconds (`packages/app/src/viewer/build-watch.ts:72` there). The live channel branch reads every 3 seconds while its socket is down, and every 30 seconds while it is up (`packages/app/src/viewer/build-poll.ts:18`).
+  - Both polls pause in a hidden tab, so a hidden viewer makes no read and expires seven days after its last activity.
+  - The live channel branch keeps its 30-second socket recheck free of activity writes, so that an open socket does not extend the idle deadline. `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md` asks the same for the reopen of the socket.
+- **Problem:** The automatic reads of a visible tab count as reader activity, so they move the idle deadline. A visible tab that nobody uses keeps its session until the 30-day absolute deadline.
+- **Impact if no action:** The idle deadline does not protect a device that is left with the viewer visible, for example an unlocked desk computer. Each new poll, such as one for comments or agents, adds to this.
+- **Root question:** Which reads count as reader activity for the idle deadline, when an open tab reads by itself?
+- **Options:**
+  - **A.** Change nothing, and state in the "Sessions" section of `docs/protocol/cloud/auth-sessions.md` that every authenticated read counts as activity, the automatic reads of a visible tab included. Cost: a visible tab left open keeps its session for 30 days. Effort: Small.
+  - **B.** Mark the automatic reads of the app with a request header, and authenticate a marked request without an activity write. The latest-publication poll and the build card poll send the header. Cost: a new header in the REST contract, and a read-only authentication path, such as the one of `plans/follow-ups/authentication-records-activity-for-every-caller.md`. Effort: Medium.
+  - **C.** Pause the automatic reads of a tab after a time without reader input, such as 30 minutes, and wake them on the next input. Cost: idle detection in the app, and a reader who only watches the screen gets no new offer after that time. Effort: Medium.
+- **Left out:** A longer poll interval does not help, because one read in seven days keeps the session. A shorter idle deadline changes the session rule for every reader.
+- **Wider fix:** B, with the explicit activity step of option D of `plans/follow-ups/authentication-records-activity-for-every-caller.md`. A read then records activity only when its caller asks for it, so a new poll records none by default.
+- **Previous examples:** The live channel branch kept its 30-second socket recheck free of activity writes, as the "Access Checks" section of `docs/protocol/cloud/live-channel.md` says.
+- **Related:**
+  - `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md`: the same class, in the live socket. That item stops the reopen of a socket from extending the session, and this item asks the same for the REST polls of a visible tab.
+  - `plans/follow-ups/authentication-records-activity-for-every-caller.md`: a shared wider fix. Its option D gives the read-only authentication that B here needs.
+- **Recommendation:** B. Only an action of the reader then moves the idle deadline, which matches the rule that the live channel gives its socket.
+- **Action:** ask the user, because every option changes the session rule or the polls of the app, and the options have real trade-offs.

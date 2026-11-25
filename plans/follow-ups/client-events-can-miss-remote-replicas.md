@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 4. Its finding check added options D and E, and it changed the recommendation from A to B.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 4. Its finding check added options D and E, and it changed the recommendation from A to B. On the same day, round 2 of that review raised the same problem again as finding 12. That review recommended keeping the validated JSON text for local delivery and the relay, which is option A here.
 - **Location:** `crates/mkc-live/src/connection.rs:76-109` (`submit_text` and `submit`), `crates/mkc-live/src/state.rs:64-83` (`finish_tick`), `crates/mkc-live-pg/src/payload.rs:41-57` (`encode`), `crates/mkc-live/src/limits.rs:10`, `crates/mkc-api/src/live/socket.rs:137`, and the "Client Events" and "Limits" sections of `docs/protocol/cloud/live-channel.md`.
 - **Reason:** The recommended option adds a rejection of client input to the protocol, and the user must also choose how the server answers it.
 

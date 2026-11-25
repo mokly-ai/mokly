@@ -1,0 +1,49 @@
+# Resync documentation omits receive-side losses
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2, finding 16. Its finding check added options C and D, and it changed the recommendation from A to D.
+- **Location:** The "Resync" section of `docs/protocol/cloud/live-channel.md`, the `resync` row of its table of server messages, and its "Notices" section. Also `crates/mkc-live/src/hub.rs:111-121`, `crates/mkc-live/src/outbound.rs:54-68` and `:88-109`, and `crates/mkc-live/src/state.rs:64-114`.
+- **Reason:** Every option adds a delivery guarantee to the protocol that only a design call of an agent covers, and the recommended option also waits for the answer to `plans/follow-ups/busy-relay-drops-whole-ticks.md`.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **`resync`:** the server message that tells the client to read again each kind that it shows.
+  - **Notice:** a live socket message `{kind, id, sequence}` that says that a stored record of the project changed, with none of its content.
+  - **Client event:** a message from one live socket that the server passes to the other sockets of its project, on every replica. The server stores no client event.
+  - **Outbound queue:** the bounded queue of messages for one socket in `crates/mkc-live/src/outbound.rs`. It holds 256 messages.
+  - **Relay receiver:** the receiver from which the hub reads the notices and relay messages of its replica. It buffers 256 messages (`INBOUND_CAPACITY` in `crates/mkc-live-pg/src/relay.rs:15`).
+- **Background:**
+  - The "Resync" section of `docs/protocol/cloud/live-channel.md` names one cause of `resync`. A replica that loses its subscription to the two Postgres channels sends `resync` to each of its sockets after it subscribes again. On `resync`, the client reads again each kind that it shows, as it does each time its socket opens.
+  - The "Notices" section says that each replica sends each notice to every socket of its project. The table of server messages says that `resync` means "The server can have missed notices, so read again".
+  - The hub also sends `resync` in two more cases:
+    - When its relay receiver falls behind by more than 256 messages, the hub treats the lag as a gap. It sends `resync` to every socket of the replica (`crates/mkc-live/src/hub.rs:111-121`, `crates/mkc-live/src/state.rs:105-112`).
+    - When the outbound queue of one socket is full, the hub drops the message and marks the socket. When the socket next takes a message, the hub appends `resync`, so `resync` comes before every later message (`crates/mkc-live/src/outbound.rs:54-68` and `:88-109`).
+  - The outbound queue also carries client events (`crates/mkc-live/src/state.rs:64-83` and `:96-103`). A second read restores a lost notice, because the change is stored. It cannot restore a lost client event, because the server stores none, as the "Client Events" section says.
+  - The bounded queue is a design call of 2026-11-25 of the live channel branch. A slow socket gets `resync`, not an unbounded queue, so the hub never holds unbounded memory, and a reader never misses a notice without a `resync`. No user decision and no protocol requirement covers it.
+  - The presence plan, `plans/live-presence-cursors.md`, adds the first client event kinds. It says that a resync also sends a sync request, so that the other replicas answer with a presence heartbeat at once.
+- **Problem:** The protocol names only a lost subscription as a cause of `resync`, but the server also sends it after a lagged relay receiver and after a full outbound queue. The protocol also does not say that `resync` cannot restore a client event.
+- **Impact if no action:** A client developer can get `resync` under load and find no cause for it in the public contract. A new client event kind can assume that a second read restores its lost events.
+- **Root question:** What does the live channel promise an open socket when the server cannot deliver a notice or a client event to it, and how does the reader recover each?
+- **Options:**
+  - **A.** Document the three causes of `resync` on the receive side, and the same read-again answer for each. Effort: Small.
+  - **B.** Close the affected sockets after a full queue or a lagged receiver, and let the reconnect start the recovery. Cost: more reconnect work and a new close behaviour. Each forced reconnect upgrades again, which records session activity today. A lag closes every socket of the replica, and the reconnects burst full membership reads. Effort: Medium.
+  - **C.** State the notice guarantee once in the "Resync" section. An open socket gets every notice of its project, or a later `resync` when it can have missed one.
+    - Give the decision in force next to it: a bounded queue for each socket, not an unbounded queue and not a wait. Its reason: one slow reader then cannot hold unbounded memory or delay the others.
+    - Change the sentence of the "Notices" section that each replica sends each notice to every socket, and the meaning of `resync` in the table of server messages, to match.
+    - Keep the causes in code comments, crate READMEs, and tests.
+    - Effort: Small.
+  - **D.** Apply C, and add a rule for client events. The server does not restore a client event that a socket loses on the receive side, the same as for a closed socket. A kind that needs recovery defines its own answer to `resync`, such as the sync request of the presence plan. Write the rule together with the answer to `plans/follow-ups/busy-relay-drops-whole-ticks.md`. Effort: Small.
+- **Left out:** Silent drops leave the reader without a recovery signal. An unbounded queue, or a hub that waits for a slow socket, lets one slow reader hold unbounded memory or delay the others. A sequence number for each socket is worse than C on every point. A merge of queued notices by kind and ID fails the goal alone. No change leaves the "Notices" sentence in conflict with the queue drop.
+- **Wider fix:** None. The `documentation` skill is already in force, and C is the form that it asks for: one rule that stays true when a new loss path sends `resync`.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same cause, a shared fix, options that conflict, and work that waits. The protocol gives no delivery promise for an open socket. That item covers the losses on the sending side, and this item the losses on the receive side. One delivery rule in `docs/protocol/cloud/live-channel.md` can answer both, as D does. If that item takes its relay gap mark, the list of three causes of A here goes stale, but the single rule of C stays true.
+  - `plans/follow-ups/presence-resync-rule-omits-one-socket-resyncs.md`: the same rule, for one kind. Under D, each kind that needs recovery defines its own answer to `resync`, and that item gives the answer of presence to a `resync` of one socket.
+  - `plans/follow-ups/no-test-drives-a-lagged-relay-receiver.md`: the same code. That item adds the missing test of the lag path. Under B here, that test checks a close in place of a `resync`.
+  - `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md`: the same code, for B only. Each forced close makes the client upgrade again, which renews the session today, so B waits for that item.
+  - `plans/follow-ups/socket-rechecks-load-every-membership-row.md`: the same code, for B only. A lag closes every socket, and the reconnects burst full membership reads.
+  - `plans/follow-ups/build-notice-rule-overstates-pull-request-updates.md`: the same document. Its option D rewrites the "Notices" section, and C and D here change one sentence there, so write them together.
+- **Recommendation:** D. One guarantee stays true when a new loss path sends `resync`, and D also tells readers that `resync` does not restore client events. C is the part that does not wait for `plans/follow-ups/busy-relay-drops-whole-ticks.md`.
+- **Action:** ask the user, because every option adds a protocol guarantee that only a design call of an agent covers, and D waits for `plans/follow-ups/busy-relay-drops-whole-ticks.md`.

@@ -1,0 +1,32 @@
+# No test drives a lagged relay receiver
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2: a new problem inside the scope that the finding check of finding 16 found.
+- **Location:** `crates/mkc-live/src/hub.rs:111-121`, `crates/mkc-live/src/_tests_/delivery_tests.rs:59-72`, `crates/mkc-api/tests/live/route_tests.rs:43`, and `crates/mkc-live/src/memory.rs:12-18`.
+- **Reason:** The finding check of the second and last review round of the branch found the gap, and the branch runs no later round to review a new test.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Relay receiver:** the `tokio` broadcast receiver from which the hub of a replica reads the notices and relay messages of its relay. It buffers 256 messages, in `PostgresRelay` and in `MemoryRelay` alike.
+  - **Gap:** the inbound event `InboundEvent::Gap`, which makes the hub send `resync` to every socket of the replica.
+  - **`resync`:** the server message that tells the client to read again each kind that it shows.
+- **Background:**
+  - When the hub falls behind its relay receiver by more than the buffer, `recv` returns `Lagged`. The hub turns `Lagged` into a gap, and it sends `resync` to every socket of the replica (`crates/mkc-live/src/hub.rs:111-121`, `crates/mkc-live/src/state.rs:105-112`). The doc comment of `LiveRelay::subscribe` gives this rule (`crates/mkc-live-interface/src/relay.rs:72-76`).
+  - The gap tests inject the gap directly with `MemoryRelay::inject_gap`. They are `a_relay_gap_resyncs_every_project_on_each_replica` in `crates/mkc-live/src/_tests_/delivery_tests.rs:59-72` and the route test at `crates/mkc-api/tests/live/route_tests.rs:43`. No test reaches the `Lagged` arm.
+  - `ReplicaHub::start` subscribes to the relay before it starts its task (`crates/mkc-live/src/hub.rs:51-56`). `MemoryRelay::default` buffers 256 messages (`crates/mkc-live/src/memory.rs:12-18`), and `inject_notice` sends without a wait. Under a paused clock, the hub task runs only when the test waits. So a test can inject more than 256 notices before the hub reads one.
+  - A gap resyncs every socket of the replica, but a full outbound queue resyncs only its own socket. So a socket of another project, which gets no notice, gets `resync` only from the gap.
+- **Problem:** A change that ignores `Lagged`, or that treats it as the end of the subscription, passes every test. The readers on that replica then miss notices with no `resync`.
+- **Impact if no action:** Such a change can reach `main`. A build card then shows a stale build until its 30-second safety poll, and a later client event kind loses events with no signal.
+- **Root question:** How can the gate prove that a lagged relay receiver makes the hub send `resync` to every socket?
+- **Options:**
+  - **A.** Add a hub test to `crates/mkc-live/src/_tests_/delivery_tests.rs`. Register a socket of one project and a socket of another project. Under a paused clock, inject 300 notices for the first project before the hub reads, and assert that the socket of the other project gets `resync`. Effort: Small.
+  - **B.** Give `MemoryRelay` a constructor with a small buffer, such as one message, so that two notices make the receiver lag. Then add the test of A. Cost: a constructor in a public test relay that only one test uses. Effort: Small.
+  - **C.** Add a Postgres test to `crates/mkc-live-pg` that floods the listener past its buffer and checks the `resync`. Cost: a slow test that depends on timing. Effort: Medium.
+- **Left out:** A test that injects `Gap` repeats the existing tests, and it leaves the `Lagged` arm unreached. A browser spec cannot hold back the hub task.
+- **Wider fix:** None. The `testing` skill already requires a test at the entry point that can fail on the regression.
+- **Previous examples:** The route tests of the live socket did not cover the idle deadline of the recheck until commit `cea2b9ab0` of the live channel branch added them.
+- **Related:** `plans/follow-ups/resync-documentation-omits-receive-side-losses.md`: the same code. That item decides what the protocol promises after a lag. Under its option B, a lag closes the sockets, so this test then checks a close in place of a `resync`.
+- **Recommendation:** A. It drives the real `Lagged` arm through the existing in-memory relay, and the socket of the other project proves that the `resync` comes from the lag.
+- **Action:** fix after merge, apply A, because the second and last review round found the gap, and the branch runs no later round to review a new test.

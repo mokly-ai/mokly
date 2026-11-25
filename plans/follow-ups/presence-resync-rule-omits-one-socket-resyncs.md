@@ -1,0 +1,38 @@
+# Presence resync rule omits one-socket resyncs
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2: a new problem inside the scope that the finding check of finding 16 found.
+- **Location:** `plans/live-presence-cursors.md:72-76`, the design call "Presence expires by heartbeat".
+- **Reason:** The rule matters only when the presence work builds presence in the hub, and that work waits for the merge of the live channel foundation.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **`resync`:** the server message that tells the client to read again each kind that it shows. `docs/protocol/cloud/live-channel.md` defines it.
+  - **Heartbeat:** the presence message in which each replica sends the connections of each of its projects every 10 seconds, as the presence plan designs it.
+  - **Sync request:** the presence message that asks the other replicas for a heartbeat at once.
+  - **Outbound queue:** the bounded queue of messages for one socket in `crates/mkc-live/src/outbound.rs`. It holds 256 messages.
+- **Background:**
+  - The presence plan, `plans/live-presence-cursors.md`, adds presence, live cursors, following, and live selections on top of the live channel. Its design call "Presence expires by heartbeat", of 2026-11-24, has four rules:
+    - Each replica sends the connections of each of its projects every 10 seconds.
+    - A remote connection without a heartbeat for 30 seconds leaves.
+    - A replica that gets the first connection of a project sends a sync request, and the others answer with a heartbeat at once.
+    - "A resync also sends a sync request."
+  - The hub sends `resync` in two scopes. After its relay subscription gaps or lags, it sends `resync` to every socket of the replica, because the replica can have missed relay messages, heartbeats included (`crates/mkc-live/src/hub.rs:111-121`). After the outbound queue of one socket was full, it sends `resync` to that socket only, because only that socket lost messages (`crates/mkc-live/src/outbound.rs:54-68`).
+  - The rule does not say which `resync` sends a sync request, or who sends it. The live channel lets a client send only client events, so a sync request from a client would go through the relay to every replica.
+  - The scope decision of 2026-11-24 by Cal says that a loss of presence and cursor state is harmless.
+  - The presence plan is active and not started. Its milestone "Milestone 6: Presence in the hub" adds the heartbeat, the expiry, and the sync request to `mkc-live`. That milestone waits for the merge of the live channel foundation.
+- **Problem:** The rule "A resync also sends a sync request" does not say whether a `resync` of one socket, after its outbound queue was full, also sends one.
+- **Impact if no action:** The presence work can send a sync request for each slow socket. Every replica then sends a heartbeat for that project at once, and many slow sockets multiply the relay traffic just when the relay is busy.
+- **Root question:** How does the presence view of a socket recover after a `resync`, without load on every replica for one slow socket?
+- **Options:**
+  - **A.** The replica sends the sync request, and only for a `resync` that goes to all its sockets, after its relay subscription gaps or lags. A `resync` of one socket sends none, because the replica missed nothing. That socket waits for the next heartbeats. Cost: its view can stay stale for up to 10 seconds. That bound holds only when each heartbeat also reaches the local sockets. Effort: Small.
+  - **B.** Apply A, and let the replica also send that one socket a presence snapshot from its own state of local and remote connections, so that its view recovers at once. Cost: one more server message for presence, and its test. Effort: Small.
+  - **C.** The client sends a sync request on every `resync`, as a client event. Cost: one slow socket makes every replica send a heartbeat for its project at once. Effort: Small.
+- **Left out:** No change leaves the presence work to guess, and its reading can be C. A sync request on a timer, in place of one on `resync`, repeats the heartbeat of every 10 seconds.
+- **Wider fix:** None here. Option D of `plans/follow-ups/resync-documentation-omits-receive-side-losses.md` makes each client event kind define its own answer to `resync`, which covers the class.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/resync-documentation-omits-receive-side-losses.md`: the same rule, at the level of the channel. Under its option D, each kind that needs recovery defines its own answer to `resync`, and this item gives the answer of presence. Under its option B, a full queue closes the socket in place of a `resync` of one socket, and A here still holds.
+- **Recommendation:** A. It needs no new message and no relay traffic for one slow socket, and the scope decision of 2026-11-24 calls a loss of presence state harmless.
+- **Action:** fix after merge, apply A, because the rule matters only when the presence work builds presence in the hub, after this merge.

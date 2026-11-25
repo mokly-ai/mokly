@@ -1,0 +1,37 @@
+# Refused relay ticks flood the hub log
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2: a new problem inside the scope that the finding check of finding 15 found.
+- **Location:** `crates/mkc-live/src/hub.rs:103-110` (the tick arm of `run`), `crates/mkc-live-interface/src/relay.rs:67-70` (`LiveRelay::publish`), `crates/mkc-live-pg/src/relay.rs:65-77` (`PostgresRelay::publish`), and `crates/mkc-live/src/memory.rs:36-47` (`MemoryRelay::publish`).
+- **Reason:** No client event kind exists yet, so no tick carries an event that the relay can refuse before the presence work adds the first kind.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Tick:** the 50-millisecond period in which the hub of a replica collects client events before it sends them.
+  - **Hub:** `ReplicaHub` in `crates/mkc-live`, which serves the live sockets of one API replica.
+  - **Live relay:** `PostgresRelay` in `crates/mkc-live-pg`. It passes the client events of each tick to the other replicas through Postgres.
+- **Background:**
+  - At the end of each tick, the hub sends the kept client events to its own sockets, and then it calls `publish` on the relay (`crates/mkc-live/src/hub.rs:103-110`). When `publish` returns an error, the hub logs the warning "live relay could not publish a tick". So it can log up to 20 warnings a second on each replica.
+  - `PostgresRelay::publish` returns at once for a tick without events. Otherwise it hands the tick to the sender with `try_send`, on a queue that holds one waiting tick. It returns an error when that queue is full or the sender stopped (`crates/mkc-live-pg/src/relay.rs:65-77`).
+  - The queue is full while the sender still works on an earlier tick, for example in a slow transaction or a connect that hangs. `tokio-postgres` 0.7.18 applies `connect_timeout` only to the TCP connect, and the local Cloud SQL proxy accepts that connect at once. When the sender has stopped, every tick with events fails.
+  - Commit `e7c798589` of the live channel branch bounded the warnings of the sender itself. `run_sender` in `crates/mkc-live-pg/src/sender.rs` logs one warning when its connection fails, and it drops ticks without a connect until its next attempt time. When it reconnects, it logs one line with the count of dropped ticks. The warning of the hub has no such bound.
+  - The same `run_sender` still logs one warning for each tick that holds an oversized client event.
+  - `MemoryRelay::publish` never returns an error.
+  - No client event kind exists yet. The API starts its hub with an empty kind list (`crates/mkc-api/src/live/handler.rs:57`), so every tick is empty today. The presence plan, `plans/live-presence-cursors.md`, adds the first kinds, and their cursor events can fill most ticks.
+- **Problem:** The hub logs one warning for each tick that the relay refuses. While the sender is busy or stopped, a replica with steady client events logs up to 20 warnings a second.
+- **Impact if no action:** Once a client event kind exists, a slow or stopped relay floods the logs of each replica. The flood costs log storage, and it hides other warnings.
+- **Root question:** How can a replica report refused ticks at a rate that does not follow the tick rate?
+- **Options:**
+  - **A.** Bound the warning in the hub. Log one warning when `publish` starts to fail, and one line with the count of refused ticks when it succeeds again. Test it with a relay double that refuses. Effort: Small.
+  - **B.** Give tick loss one owner. `LiveRelay::publish` returns nothing, and the relay counts the ticks that it refuses or drops. `PostgresRelay` logs one warning when a run of refusals starts, and one line with the count when the run ends, as its sender does. The hub then has no error to log for each tick. Effort: Small.
+  - **C.** Add a shared helper for repeated warnings. It logs the first failure of a run, and then the count when the run ends. The hub, the sender, and the warning for oversized events use it. Cost: the helper needs a home that `mkc-live` and `mkc-live-pg` can both use, and the adapter may depend only on interface crates. Effort: Medium.
+- **Left out:** A larger tick queue changes how many ticks wait, not the rate of the warnings when the queue is full. A silent drop leaves the operator without a sign of the stall.
+- **Wider fix:** B. One owner of tick loss reports each run of refusals once, and the hub has nothing to log for each tick. C prevents the class for every repeated warning, but it needs a new shared home.
+- **Previous examples:** Before commit `e7c798589`, the sender logged one warning for each tick that it dropped. `run_sender` still logs one warning for each tick that holds an oversized client event.
+- **Related:**
+  - `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same code. That item decides what remote readers learn when the relay drops a tick. Its option D, a gap mark for each project, also needs the relay to record the ticks that it refuses, which B here gives the relay.
+  - `plans/follow-ups/tls-required-databases-prevent-api-startup.md`: the same driver difference. A sender connect that hangs past `connect_timeout` keeps the queue full, so the hub refuses each tick until the connect ends.
+- **Recommendation:** B. It takes the warning for each tick out of the hub for every relay. It puts the count in the relay, which already counts the ticks that its sender drops.
+- **Action:** fix after merge, apply B, because no client event kind exists yet, so no tick can be refused before the presence work adds the first kind.

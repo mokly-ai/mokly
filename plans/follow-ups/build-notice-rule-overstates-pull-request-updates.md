@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 9. Its finding check widened the root question to every field of `Build` that comes from another record. It added option D, and it changed the recommendation from A to D.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, finding 9. Its finding check widened the root question to every field of `Build` that comes from another record. It added option D, and it changed the recommendation from A to D. On the same day, round 2 of that review raised the same problem again as finding 13, for the stale Cancel action after a role change. That review recommended defining build notices by the writes that send them, as options A and D here do.
 - **Location:** `docs/protocol/cloud/cloud-build-api.md:151`, the `build` row of the table under "Live Notices". Also the "Notices" section of `docs/protocol/cloud/live-channel.md`, `crates/mkc-db/migrations/202611251201_build_live_notices/up.sql:15-30`, `crates/mkc-store-pg/src/viewer/build_history.rs:76-91`, and `crates/mkc-api/src/builds/projection.rs:22-27`.
 - **Reason:** The recommended option narrows the build notice rule that Cal approved with the protocol docs of the live channel, so the user decides.
 
@@ -37,6 +37,8 @@
 - **Left out:** A higher poll rate shortens the delay but still breaks the promise. The card already reads on every notice of its build, so a running build with output shows the new title at its next log chunk. A frozen copy of the pull request details on the build row breaks the read model rule of the last stored observation. A copy that each observation refreshes is B with a second copy. A notice from the code of each writer breaks the decision of 2026-11-24 on notices without content.
 - **Wider fix:** D. The doc of every notice kind then names the fields of its read that change only on the next read. The comment, agent, and presence kinds will add reads with fields from other records.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same document, only under D. D here adds a rule to the "Notices" section of `docs/protocol/cloud/live-channel.md`. That item edits the "Client Events" section of the same doc, so one doc change can carry both.
+- **Related:**
+  - `plans/follow-ups/busy-relay-drops-whole-ticks.md`: the same document, only under D. D here adds a rule to the "Notices" section of `docs/protocol/cloud/live-channel.md`. That item edits the "Client Events" section of the same doc, so one doc change can carry both.
+  - `plans/follow-ups/resync-documentation-omits-receive-side-losses.md`: the same document. Its options C and D change the sentence of the "Notices" section that each replica sends each notice to every socket, which D here rewrites, so write them together.
 - **Recommendation:** D. It costs the same as A, and it sets the rule before the comment, agent, and presence kinds add reads with such fields.
 - **Action:** ask the user, because A and D narrow the build notice rule that Cal approved, and no recorded decision of the user covers that change.

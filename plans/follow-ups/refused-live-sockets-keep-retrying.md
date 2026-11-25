@@ -1,0 +1,41 @@
+# Refused live sockets keep retrying
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the implementation review of the branch `calummoore/live-channel-foundation-implementation-n1hi`, round 2: a new problem inside the scope that the finding checks of findings 10 and 14 found.
+- **Location:** `packages/app/src/data/live-client.ts:95-102` (`retry`) and `:117-122` (`disconnected`), `crates/mkc-api/src/live/access.rs:39-59` (`open`), `crates/mkc-api/src/live/socket.rs:101-106`, and the "Authentication And Access" and "Shutdown And Reconnect" sections of `docs/protocol/cloud/live-channel.md`.
+- **Reason:** Each option that lowers the retries changes the reconnect rule of `docs/protocol/cloud/live-channel.md`, and no recorded decision of the user covers that change.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Live socket:** the WebSocket that the app opens for each project that a member reads, on `GET /v1/live/projects/{projectId}`. `docs/protocol/cloud/live-channel.md` defines it.
+  - **Upgrade:** the HTTP request that opens a live socket. A refused upgrade answers with an error status, such as 401 or 404, and no socket opens.
+  - **Recheck:** the check that the API runs on each open live socket every 30 seconds. A socket that lost access closes with code 4403.
+- **Background:**
+  - The "Shutdown And Reconnect" section of `docs/protocol/cloud/live-channel.md` says that the client opens the socket again after every close and every failed open. The first wait is 0.5 seconds. Each later wait doubles, up to 15 seconds, and each wait has a random jitter.
+  - The "Authentication And Access" section says that a page cannot see the status of a refused upgrade, so the client handles every failed open in the same way. The WebSocket API of the browser gives the page no HTTP status.
+  - The client follows that rule (`packages/app/src/data/live-client.ts:95-102` and `:117-122`). The jitter takes up to a fifth off each wait, so at the cap the client tries again every 12 to 15 seconds. It stops only when the view leaves, because the client has no other stop and no visibility logic.
+  - A recheck closes the socket with 4403 when the cookie no longer authenticates or the reader lost member access (`crates/mkc-api/src/live/socket.rs:101-106`). The reopen after 4403 then fails, and the waits grow to the cap. A session rotation also gives 4403, but there the reopen succeeds with the new cookie.
+  - Each refused upgrade reads the database in `open` (`crates/mkc-api/src/live/access.rs:39-59`). An expired or deleted session costs one read of the session. A valid session without member access costs a read of the session and a read of the role. For such a session, `authenticate` also records session activity every five minutes, as `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md` records.
+  - The app opens a socket only for a reader that it infers as a member, from the session and the project that it read for the view (`packages/app/src/screens/viewer/viewer-build.ts:34-57`).
+  - While the socket is down, the build card falls back to its 3-second poll, and that poll pauses in a hidden tab (`packages/app/src/viewer/build-poll.ts:35-45`). The socket retries do not pause.
+- **Problem:** After a 4403 close or a refused open, the client tries again every 12 to 15 seconds for as long as the view stays open. Each try reads the database, and no try can succeed until the access of the reader comes back.
+- **Impact if no action:** Each open tab that lost access costs 240 to 300 refused upgrades an hour, with one or two database reads each. The reads use the store pool that REST requests and builds also use.
+- **Root question:** How can a tab whose socket the server refuses stop loading the server, while a reader whose access comes back still gets live updates?
+- **Options:**
+  - **A.** Change nothing. Cost: the load of the impact above, for each open tab that lost access. Effort: Small.
+  - **B.** After a 4403 close, open the socket again once. When that open fails, keep the socket down until the view mounts again, and let the poll of each kind serve the reader. A failed open that follows no 4403 keeps the backoff, because a failure of the network or of a replica can cause it. Cost: a reader whose access comes back gets live updates again only after a navigation or a reload. Effort: Small.
+  - **C.** Raise the cap of the wait after a run of failed opens, for example to 5 minutes after ten failed opens in a row. Cost: after a long outage, a reader can wait up to 5 minutes for live updates, while the poll of each kind serves the reader. Effort: Small.
+  - **D.** Let a REST read decide. After a 4403 close, or after a run of failed opens, the client waits for a successful REST read of the project before it opens the socket again. A REST read gives the status that a refused upgrade hides. Cost: the live client then depends on the REST reads of the app. Effort: Medium.
+- **Left out:**
+  - A cache of refused upgrades on the server adds a second source of access state, and it can delay access that comes back.
+  - Closing the socket in a hidden tab, under `plans/follow-ups/hidden-viewers-keep-unused-live-sockets.md`, stops the retries of hidden tabs only.
+  - A status for the refused upgrade is not a real choice, because the browser hides it from the page.
+- **Wider fix:** D. The client then asks the server again only after a read that can see a status, for each cause of a refused open.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/hidden-viewers-keep-unused-live-sockets.md`: the same code, and a part of the fix. Its option C opens a socket only for an active subscriber and closes it in a hidden tab. That removes the retries of hidden tabs and of saved publications. Then only a visible build card retries, and its 3-second poll costs more than the retries. Decide the two items together.
+  - `plans/follow-ups/automatic-reconnects-extend-idle-sessions.md`: the same code. Its option D stops the activity write of a refused upgrade with a valid session.
+- **Recommendation:** B. It ends the retries in the common cases, a sign-out, an expiry, and a removed member, and it keeps the reopen after a session rotation. D best protects the codebase.
+- **Action:** ask the user, because B, C, and D change the reconnect rule of `docs/protocol/cloud/live-channel.md`, and the cost that stays depends on the answer to `plans/follow-ups/hidden-viewers-keep-unused-live-sockets.md`.
