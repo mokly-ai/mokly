@@ -47,6 +47,7 @@ export class ViteCompiler {
         const vite = await loadVite(require);
         version = vite.api.version;
         const entry = await entryModule(params, undefined, capture);
+        if (entry.preview) paths.addConfigured(entry.preview);
         const { setup, input, directory } = await this.context.open(
           vite.api,
           require,
@@ -60,6 +61,7 @@ export class ViteCompiler {
           input,
           imports,
           version,
+          setup.pluginReports,
           setup.snapshot?.files,
         );
         const { recipe, children } = await walkVite(
@@ -154,14 +156,14 @@ export class ViteCompiler {
           params,
           paths,
         );
-        const { result, reports } = await this.context.css.run(
+        const { result, snapshot } = await this.context.css.run(
           setup,
           input,
           request.stylesheet,
           request.file,
         );
         await verifySetup(setup, directory, paths);
-        setup.stylesheetReports.set(request.file, reports);
+        setup.stylesheets.set(request.file, snapshot);
         return result;
       });
     } catch (error) {

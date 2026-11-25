@@ -7,6 +7,7 @@ import test from "node:test";
 import type { ViteCssResult } from "../packages/mokly/src/generated/sidecar/ViteCssResult.js";
 
 import { viteFixture } from "./fixtures/vite/support.js";
+import { reviewFixture } from "./fixtures/vite_review.js";
 import { startSidecar } from "./helpers/sidecar.js";
 import { write } from "./helpers/static_changes.js";
 
@@ -30,6 +31,43 @@ test("Vite's default CSS Module map uses the core's scoped names", async (contex
   assert.deepEqual(result.classMap, { card: scoped });
   assert.match(result.text, new RegExp(`^\\.${scoped}\\s*\\{`));
   await sidecar.call("shutdown");
+});
+
+test("Vite keeps inline CSS when an ordered load reports a directory and an absent file", async (context) => {
+  const fixture = await reviewFixture(context);
+  const stylesheet = "styles/site.css";
+  await fixture.write(stylesheet, ".site { color: teal }");
+  await fixture.write("styles/tokens/palette.txt", "teal");
+  await fixture.write(
+    "vite.config.ts",
+    `import { resolve } from "node:path";
+     export default { plugins: [{ name: "watch-directory", load: { order: "pre", handler(id) {
+       if (!id.endsWith("/styles/site.css?inline")) return;
+       this.addWatchFile(resolve(import.meta.dirname, "styles/tokens"));
+       this.addWatchFile(resolve(import.meta.dirname, "styles/optional.txt"));
+     } } }] };`,
+  );
+  const transform = () =>
+    fixture.sidecar.call<ViteCssResult>("transformViteCss", {
+      setup: { ...fixture.params, entryFiles: [] },
+      stylesheet,
+      file: path.join(fixture.root, stylesheet),
+    });
+  const result = await transform();
+  assert.match(result.text, /\.site\s*\{[^}]*color:\s*teal/);
+  assert.deepEqual(result.dependencies, { "styles/optional.txt": null });
+  assert.equal(fixture.sidecar.diagnostics.length, 1);
+  assert.match(
+    fixture.sidecar.diagnostics[0]!,
+    /plugin input styles\/tokens .*Serve does not watch.*watch\.rules.*rebuild/,
+  );
+  await fs.mkdir(path.join(fixture.root, "styles/optional.txt"));
+  assert.deepEqual((await transform()).dependencies, {});
+  assert.match(
+    fixture.sidecar.diagnostics.at(-1)!,
+    /plugin input styles\/optional\.txt /,
+  );
+  await fixture.sidecar.call("shutdown");
 });
 
 test("Vite resolves a base stylesheet import through the selected package roots", async (context) => {

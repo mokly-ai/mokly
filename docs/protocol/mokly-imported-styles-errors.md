@@ -49,7 +49,9 @@ the row for a nested renderer-owned import does not apply either. Under the
 [inventory rule of the adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms),
 the rows for a malformed plugin dependency message and for a missing explicit
 plugin dependency do not apply. The row for a missing plugin directory
-dependency does not apply either, because the setup reports only files.
+dependency does not apply either. The adapter applies the same
+[plugin report rules](./mokly-vite-adapter-inputs.md#inputs-and-serve) to
+JavaScript and stylesheets.
 
 Under the adapter, a stylesheet that the setup cannot transform fails with the
 Vite setup row. This also holds for a CSS Module and for a syntax error. Under

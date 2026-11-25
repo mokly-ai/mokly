@@ -1,10 +1,16 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
 import { startServe } from "../scripts/verification/serve-process.mjs";
 
-import { component, stylesheetConfig } from "./fixtures/vite_stylesheets.js";
+import {
+  component,
+  htmlScreen,
+  stylesheetConfig,
+} from "./fixtures/vite_stylesheets.js";
 import { consumer, shim } from "./helpers/mokly_serve.js";
 import { write } from "./helpers/static_changes.js";
 
@@ -39,9 +45,9 @@ test("a Vite input reported by configured CSS rerenders JavaScript without a CSS
   const root = await consumer(context, {
     "mokly.config.json": stylesheetConfig(["styles/site.css"]),
     "vite.config.ts": `import { resolve } from 'node:path';
-export default { plugins: [{ name: 'report-copy', transform(_code, id) {
+export default { plugins: [{ name: 'report-copy', transform: { order: 'pre', handler(_code, id) {
   if (id.endsWith('/styles/site.css?inline')) this.addWatchFile(resolve('data/copy.txt'));
-} }] };`,
+} } }] };`,
     "src/card.mockup.tsx": component(
       'import { readFileSync } from "node:fs";',
       `<p>{readFileSync(new URL('../data/copy.txt', import.meta.url), 'utf8')}</p>`,
@@ -55,6 +61,37 @@ export default { plugins: [{ name: 'report-copy', transform(_code, id) {
     await publish(() => write(root, "data/copy.txt", "After"));
     assert.match(await render(), />After<\/p>/);
     assert.equal(await stylesheet("styles/site.css"), before);
+  });
+});
+
+test("Vite notifies plugins before recompiling CSS in a catalogue without JavaScript", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig(["styles/site.css"]),
+    "vite.config.ts": `import { appendFile } from "node:fs/promises";
+import { resolve } from "node:path";
+let cached;
+export default { plugins: [{ name: "cache-stylesheet", enforce: "pre",
+  transform(code, id) { if (id.endsWith("/styles/site.css?inline")) return cached ??= code; },
+  async watchChange(id, { event }) {
+    if (!id.endsWith("/styles/site.css")) return;
+    await appendFile(resolve(import.meta.dirname, ".context/events"), event + "\\n");
+    cached = undefined;
+  },
+}] };`,
+    ".context/events": "",
+    "src/home.screen.html": htmlScreen,
+    "styles/site.css": ".site { color: teal }",
+  });
+  await watch(root, context.signal, async ({ publish, stylesheet }) => {
+    assert.match(await stylesheet("styles/site.css"), /color:\s*teal/);
+    await publish(() =>
+      write(root, "styles/site.css", ".site { color: maroon }"),
+    );
+    assert.match(await stylesheet("styles/site.css"), /color:\s*maroon/);
+    assert.equal(
+      await fs.readFile(path.join(root, ".context/events"), "utf8"),
+      "update\n",
+    );
   });
 });
 

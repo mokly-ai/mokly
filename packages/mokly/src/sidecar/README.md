@@ -563,9 +563,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   peers other than React, then loads Vite and finds its real package path.
   [`vite-node-peers.ts`](./vite-node-peers.ts) scopes Node's resolve hook to each
   request so dependencies of a Vite generation load one React runtime.
-  [`vite-react-peers.ts`](./vite-react-peers.ts) builds that table after setup and
-  puts its alias rule first, so React and the JSX development shim reach the
-  table before a setup alias can rewrite their imports.
+  [`vite-react-peers.ts`](./vite-react-peers.ts) builds that table after setup
+  using the setup's aliases. Mokly's first resolver claims React imports and
+  uses the table to serve them and the JSX development shim.
 - [`vite-external.ts`](./vite-external.ts) uses `ViteLookup` to choose the package
   file Node loads, also for setup aliases. It uses the extension or nearest
   manifest `type` to choose ESM or CommonJS. [`vite-styles.ts`](./vite-styles.ts)
@@ -575,20 +575,24 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-graph.ts`](./vite-graph.ts) records every fetch from the virtual entry
   before evaluation and builds the module graph. [`vite-fetch.ts`](./vite-fetch.ts)
   confines files and records their bytes and imports at the fetch boundary.
-  [`vite-plugin.ts`](./vite-plugin.ts) handles virtual modules, React, style
-  wrappers, stylesheet stubs, and path confinement before the setup plugins.
-- [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) pairs plugin `this.load` with
-  `this.addWatchFile` in load and transform hooks. It emits a diagnostic instead
-  of recording paths outside the source and dependency roots. After a fetch it
-  retains each watched path that is not a code import of that module, even if
-  another edge already names the file.
+  [`vite-plugin.ts`](./vite-plugin.ts) resolves protected imports before
+  aliases and setup hooks. It serves the virtual modules and stylesheet stubs
+  and confines the remaining project resolutions.
+- [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) captures `this.load` and
+  `this.addWatchFile` before the setup's ordered hooks run. It retains each
+  module's report digests while Vite reuses its transform. Both JavaScript
+  fetches and inline stylesheet transforms use these reports, including files
+  the same module imports. Reports outside the selected roots or for existing
+  non-file paths emit a diagnostic.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
   builds digests for setup files, plugin inputs, React manifests, preview, package
   and TypeScript config candidates, and consumed files outside the graph.
   [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot
   with the disk. It invalidates virtual, changed, and unsnapshotted modules, or
-  all modules when a directory list changes.
+  all modules when a directory list changes. [`vite-watch-events.ts`](./vite-watch-events.ts)
+  passes each change to the setup's watcher listeners and to Vite's environment
+  containers before transforms run again.
 - [`vite-evaluate.ts`](./vite-evaluate.ts) runs the generation once through Vite's
   module runner. A restored recipe uses only its recorded fetches, without reads
   or transforms. [`vite-urls.ts`](./vite-urls.ts) converts URLs, IDs, query
@@ -611,9 +615,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   [`vite-css-transform.ts`](./vite-css-transform.ts) defines
   `ViteCssTransform`, whose `run` method runs that request. It returns the CSS,
   the class map of a CSS Module, and the digests of the inputs of the
-  transform. The `importedBy` field of the result maps each input that the
-  stylesheet resolver resolved without a plugin report to the logical path of
-  its direct importer.
+  transform. The retained server uses the source digest to report edits to a
+  stylesheet even when the catalogue has no JavaScript. The `importedBy` field
+  maps each stylesheet input with no plugin report to the logical path of its
+  direct importer.
 - [`vite-css-hooks.ts`](./vite-css-hooks.ts) holds the hooks that `viteSetup`
   installs. They set Mokly's scoped names on both CSS transformers. They route
   Vite's stylesheet resolver through `ViteLookup.stylesheet` during a transform.

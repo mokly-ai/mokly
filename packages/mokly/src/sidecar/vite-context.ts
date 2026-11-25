@@ -3,10 +3,10 @@ import path from "node:path";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { fileDigest } from "./file-digests.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
 import { ViteCssTransform } from "./vite-css-transform.js";
+import type { ViteStylesheetSnapshot } from "./vite-css-transform.js";
 import { viteExternalResolver } from "./vite-external.js";
 import {
   changedViteInputs,
@@ -14,7 +14,7 @@ import {
 } from "./vite-invalidation.js";
 import type { ViteSnapshot } from "./vite-invalidation.js";
 import type { loadVite } from "./vite-peers.js";
-import { moklyVitePlugin } from "./vite-plugin.js";
+import { currentViteReport } from "./vite-plugin-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { captureReactPeers } from "./vite-react-peers.js";
 import { ViteLookup } from "./vite-resolution.js";
@@ -27,7 +27,8 @@ interface Setup extends Awaited<ReturnType<typeof viteSetup>> {
   snapshot?: ViteSnapshot;
   styles: ViteStyles;
   lookup: ViteLookup;
-  stylesheetReports: Map<string, ReadonlyMap<string, string | null>>;
+  stylesheets: Map<string, ViteStylesheetSnapshot>;
+  observed: Map<string, string | null>;
 }
 
 export function viteModulePaths(params: BundleParams): Promise<ModulePaths> {
@@ -66,7 +67,7 @@ export class ViteContext {
       runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
       entry: entry ?? "",
       files: new Map(),
-      pluginInputs: new Set(),
+      pluginInputs: new Map(),
       diagnostic: this.diagnostic,
       cssModules: new Set(),
       styles: new ViteStyles(),
@@ -94,7 +95,11 @@ export class ViteContext {
     for (const name of ownedRebuildFiles)
       if (!requestedNames.has(name)) ownedRebuildFiles.delete(name);
     const rebuild = requested.filter((name) => !ownedRebuildFiles.has(name));
-    const changed = await changedViteInputs(previous?.snapshot);
+    const changed = await changedViteInputs(
+      previous?.snapshot,
+      previous?.stylesheets.values() ?? [],
+      previous?.observed ?? new Map(),
+    );
     if (
       this.setup &&
       (!previous ||
@@ -107,16 +112,15 @@ export class ViteContext {
               paths,
             )
           ).stamp ||
-        (await changedStylesheets(this.setup.stylesheetReports)))
+        (await changedStylesheets(previous.stylesheets)))
     )
       await this.dispose();
     if (!this.setup) {
       const setup = await viteSetup(
         vite,
         directory,
-        moklyVitePlugin(() => this.input!, this.css),
+        () => this.input!,
         input.lookup,
-        () => this.input!.peers,
         this.css,
         { ...params.viteInputs, rebuildFiles: rebuild },
         this.diagnostic,
@@ -127,7 +131,8 @@ export class ViteContext {
         ownedRebuildFiles,
         styles: input.styles,
         lookup: input.lookup,
-        stylesheetReports: new Map(),
+        stylesheets: new Map(),
+        observed: new Map(),
       };
     }
     const setup = this.setup;
@@ -138,9 +143,24 @@ export class ViteContext {
     if (entry !== undefined) {
       input.external = viteExternalResolver(vite, setup.server, input.lookup);
       input.peers = await captureReactPeers(input.lookup);
-      invalidateViteModules(setup.server, setup.snapshot, changed);
+    }
+    if (setup === previous) {
+      await setup.watchEvents.dispatch(setup.server, changed.events);
+      for (const [file, digest] of changed.files)
+        setup.observed.set(file, digest);
+      if (entry !== undefined || changed.files.size || changed.directories.size)
+        invalidateViteModules(setup.server, setup.snapshot, changed);
+      for (const [directory, names] of changed.directories)
+        setup.snapshot?.directories.set(directory, names);
+    } else if (entry !== undefined) {
+      invalidateViteModules(setup.server, undefined, changed);
+    }
+    if (entry !== undefined) {
       for (const [file, bytes] of setup.snapshot?.files ?? [])
-        if (setup.snapshot?.metadata[file] !== undefined)
+        if (
+          setup.snapshot?.metadata[file] !== undefined &&
+          !setup.snapshot.reports.has(file)
+        )
           input.files.set(file, bytes);
     }
     return { setup, input, directory };
@@ -154,10 +174,12 @@ export class ViteContext {
 }
 
 async function changedStylesheets(
-  reports: Setup["stylesheetReports"],
+  sheets: Setup["stylesheets"],
 ): Promise<boolean> {
-  const files = new Map([...reports.values()].flatMap((report) => [...report]));
+  const files = new Map(
+    [...sheets.values()].flatMap(({ dependencies }) => [...dependencies]),
+  );
   for (const [file, digest] of files)
-    if ((await fileDigest(file)) !== digest) return true;
+    if (!(await currentViteReport(file, digest))) return true;
   return false;
 }

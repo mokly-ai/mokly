@@ -8,9 +8,10 @@ import { loadViteConfig } from "./vite-config.js";
 import { configureViteCss, hookViteCss } from "./vite-css-hooks.js";
 import type { ViteCssTransform } from "./vite-css-transform.js";
 import type { loadVite } from "./vite-peers.js";
+import { VitePluginReports } from "./vite-plugin-inputs.js";
+import { moklyViteFirstPlugin, moklyVitePlugin } from "./vite-plugin.js";
+import type { ViteInputs } from "./vite-plugin.js";
 import { VitePostcssLookup } from "./vite-postcss-lookup.js";
-import { vitePeerPlugin } from "./vite-react-peers.js";
-import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
 import type { ConfigReads } from "./vite-setup-input.js";
 import {
@@ -21,6 +22,7 @@ import {
   verifyInputs,
 } from "./vite-setup-snapshot.js";
 import type { SetupFiles } from "./vite-setup-snapshot.js";
+import { ViteWatchEvents } from "./vite-watch-events.js";
 import { envFiles, ViteEnv } from "./vite-working-env.js";
 
 const mode = "development";
@@ -29,9 +31,8 @@ const mode = "development";
 export async function viteSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
-  plugin: Plugin,
+  current: () => ViteInputs,
   lookup: ViteLookup,
-  peers: () => VitePeers,
   css: ViteCssTransform,
   inputs: ViteSetupInputs | undefined,
   diagnostic: (line: string) => void,
@@ -41,13 +42,18 @@ export async function viteSetup(
   const watched = await rebuildInputs(rebuild, paths);
   const postcss = new VitePostcssLookup(paths, diagnostic);
   const env = new ViteEnv(inputs?.baseEnv, paths, mode);
+  const pluginReports = new VitePluginReports();
+  const watchEvents = new ViteWatchEvents(vite.normalizePath);
+  const first = {
+    ...moklyViteFirstPlugin(current, pluginReports, css),
+    configureServer: watchEvents.capture,
+  };
   const setup = await env.run(() =>
     loadSetup(
       vite,
       directory,
-      plugin,
+      [first, moklyVitePlugin(current, css)],
       lookup,
-      peers,
       css,
       postcss,
       env,
@@ -55,12 +61,19 @@ export async function viteSetup(
     ),
   );
   try {
+    watchEvents.configured(setup.server.watcher);
     const state = await setupSnapshot(setup.files, directory, paths);
     verifyConfigReads(setup.files.configuration, state, paths);
     verifyInputs(watched, state.rebuild);
     verifyInputs(await postcss.initial, state.postcss);
     env.verify(state.env);
-    return { ...setup, state, ownedRebuildFiles: new Set<string>() };
+    return {
+      ...setup,
+      state,
+      pluginReports,
+      watchEvents,
+      ownedRebuildFiles: new Set<string>(),
+    };
   } catch (error) {
     await setup.server.close();
     throw error;
@@ -70,9 +83,8 @@ export async function viteSetup(
 async function loadSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
-  plugin: Plugin,
+  plugins: Plugin[],
   lookup: ViteLookup,
-  peers: () => VitePeers,
   css: ViteCssTransform,
   postcss: VitePostcssLookup,
   env: ViteEnv,
@@ -96,10 +108,9 @@ async function loadSetup(
       ws: false,
     },
     plugins: [
-      plugin,
+      ...plugins,
       ...(config.plugins ?? []),
       noOptimizer(),
-      vitePeerPlugin(lookup, peers),
       css.capture(),
     ],
   };

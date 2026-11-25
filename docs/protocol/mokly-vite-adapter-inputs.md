@@ -55,8 +55,12 @@ only after Serve restarts.
 
 A plugin's report of a file outside the source root and the selected
 dependency roots is skipped with a sidecar
-[`diagnostic` event](./mokly-sidecar.md#transport). Each other file that the
-setup reports for a stylesheet is also a protected input under the
+[`diagnostic` event](./mokly-sidecar.md#transport). For a report inside those
+roots, Mokly keeps each regular file or absent path. It skips each other
+existing path, such as a directory, with a diagnostic event. Serve does not
+watch a skipped path. A `watch.rules` entry with the `rebuild` action can
+rebuild after edits below a reported directory. Each file that the setup
+reports for a stylesheet is also a protected input under the
 [stylesheet rules](./mokly-vite-adapter-styles.md#stylesheet-transforms).
 
 Each file that a `composes` of a CSS Module reads is an input of that CSS

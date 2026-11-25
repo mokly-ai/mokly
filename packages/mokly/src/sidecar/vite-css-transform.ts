@@ -11,11 +11,16 @@ import { excludeRebuildFiles } from "./vite-setup.js";
 import type { ViteSetup } from "./vite-setup.js";
 import { viteFile } from "./vite-urls.js";
 
+export interface ViteStylesheetSnapshot {
+  file: string;
+  digest: string;
+  dependencies: Map<string, string | null>;
+}
+
 class InlineStylesheet {
   readonly file: string;
   readonly id: string;
   readonly urls: ViteCssUrls;
-  readonly reports = new Set<string>();
   readonly imports = new Map<string, string>();
   bindings: Pick<ViteCssResult, "classMap" | "namedExports"> = {
     classMap: {},
@@ -33,10 +38,6 @@ class InlineStylesheet {
     this.id = `${this.file}?inline`;
     this.urls = new ViteCssUrls(config, input.paths, stylesheet);
   }
-
-  report = (file: string): void => {
-    if (viteCssPath(file) !== this.file) this.reports.add(file);
-  };
 
   async read(id: string, importer?: string): Promise<void> {
     const file = viteFile(id);
@@ -76,7 +77,7 @@ export class ViteCssTransform {
     input: ViteInputs,
     stylesheet: string,
     physical: string,
-  ): Promise<{ result: ViteCssResult; reports: Map<string, string | null> }> {
+  ): Promise<{ result: ViteCssResult; snapshot: ViteStylesheetSnapshot }> {
     const { server } = setup;
     const file = await input.paths.resolve(physical);
     const active = new InlineStylesheet(file, server.config, input, stylesheet);
@@ -91,18 +92,32 @@ export class ViteCssTransform {
       const dependencies: ViteCssResult["dependencies"] = {};
       const importedBy: ViteCssResult["importedBy"] = {};
       const reported = new Set<string>();
-      const reports = new Map<string, string | null>();
-      const inputs = new Set([...active.reports, ...active.imports.keys()]);
+      const dependencyDigests = new Map<string, string | null>();
+      const pluginReports = setup.pluginReports.forModule(
+        environment,
+        active.id,
+      );
+      const inputs = new Set([
+        ...pluginReports.keys(),
+        ...active.imports.keys(),
+      ]);
       for (const dependency of [...inputs].sort()) {
         if (active.urls.owns(dependency)) continue;
-        const file = await input.paths.metadata(dependency);
-        const digest = await metadataDigest(file, {}, input.files.get(file));
+        const report = pluginReports.get(dependency);
+        const file =
+          report === undefined
+            ? await input.paths.metadata(dependency)
+            : dependency;
+        const digest =
+          report === undefined
+            ? await metadataDigest(file, {}, input.files.get(file))
+            : report;
         const name = input.paths.name(file);
         dependencies[name] = digest;
         const importer = active.imports.get(dependency);
-        if (active.reports.has(dependency)) reported.add(name);
+        if (report !== undefined) reported.add(name);
         else if (importer) importedBy[name] = input.paths.name(importer);
-        reports.set(file, digest);
+        dependencyDigests.set(file, digest);
       }
       for (const name of reported) delete importedBy[name];
       excludeRebuildFiles(
@@ -128,7 +143,11 @@ export class ViteCssTransform {
           );
       }
       return {
-        reports,
+        snapshot: {
+          file,
+          digest: sourceDigest,
+          dependencies: dependencyDigests,
+        },
         result: {
           text: active.text,
           ...active.bindings,

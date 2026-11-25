@@ -25,8 +25,6 @@ export async function viteMetadata(
     if (!graphFiles.has(file))
       metadataInputs[paths.metadataName(file)] = inputs[file];
   }
-  for (const file of input.pluginInputs)
-    await record(file, input.files.get(file));
   for (const file of params.storiesFiles.length ? previewCandidates : [])
     await record(path.resolve(params.sourceRoot, file));
   for (const name of ["react/package.json", "react-dom/package.json"]) {
@@ -44,6 +42,8 @@ export async function viteMetadata(
     inputs,
     metadataInputs,
   );
+  for (const [file, digest] of input.pluginInputs)
+    metadataInputs[paths.metadataName(file)] = inputs[file] = digest;
   for (const { name, file, digest } of setup.inputs) {
     metadataInputs[name] = digest;
     if (file) inputs[file] = digest;

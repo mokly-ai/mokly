@@ -112,10 +112,10 @@ the setup keep the consumer build's trust, as consumer PostCSS does under the
 
 ## Mokly's Plugin
 
-Mokly adds its own Vite plugin, named `mokly`, to every setup. The plugin
-handles the items below. Each item keeps its rule from the esbuild path,
-except the class map of a CSS Module. The plugin handles each import in this
-list before every plugin of the setup:
+Mokly adds its own plugins to every Vite setup. These plugins handle the
+items below. Each item keeps its rule from the esbuild path, except the class
+map of a CSS Module. Mokly's plugins handle each import in this list before
+every plugin of the setup:
 
 - the virtual entry, which exports every entry module, stories file, the
   renderer, and the Storybook preview, under the

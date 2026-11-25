@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
+
+import type { ViteCssResult } from "../packages/mokly/src/generated/sidecar/ViteCssResult.js";
 
 import {
   incrementalConfig,
@@ -8,6 +12,77 @@ import {
 } from "./fixtures/vite_incremental.js";
 import { reviewFixture, reviewPage } from "./fixtures/vite_review.js";
 import { reportDuration } from "./helpers/durations.js";
+
+for (const callback of [
+  {
+    hook: "watchChange",
+    setup: `watchChange(file, { event }) { return changed(event, file, this.environment.name); },`,
+    events: [
+      "update:label.ts:client",
+      "create:probe.txt:client",
+      "delete:probe.txt:client",
+    ],
+  },
+  {
+    hook: "configureServer listener",
+    setup: `configureServer(server) {
+      server.watcher.on("change", (file) => changed("change", file));
+      server.watcher.on("all", (event, file) => {
+        if (event !== "change") return changed(event, file);
+      });
+    },`,
+    events: ["change:label.ts", "add:probe.txt", "unlink:probe.txt"],
+  },
+]) {
+  test(`Vite dispatches each watched change once to a ${callback.hook}`, async (context) => {
+    const fixture = await reviewFixture(context);
+    const stylesheet = "styles/site.css";
+    await fixture.write(".context/events", "");
+    await fixture.write(stylesheet, ".site { color: teal }");
+    await fixture.write("src/label.ts", 'export const label = "before";');
+    await fixture.write(
+      "src/review.mockup.ts",
+      reviewPage("label", 'import { label } from "./label.ts";'),
+    );
+    await fixture.write(
+      "vite.config.ts",
+      `import { appendFile } from "node:fs/promises";
+       import { basename, resolve } from "node:path";
+       let cached;
+       async function changed(event, file, environment) {
+         const name = basename(file);
+         if (name !== "label.ts" && name !== "probe.txt") return;
+         await appendFile(resolve(import.meta.dirname, ".context/events"),
+           [event, name, ...(environment ? [environment] : [])].join(":") + "\\n");
+         if (name === "label.ts") cached = undefined;
+       }
+       export default { plugins: [{ name: "cache-until-change",
+         ${callback.setup}
+         transform(code, id) { if (id.endsWith("/label.ts")) return cached ??= code; },
+       }] };`,
+    );
+    const render = async () =>
+      (await fixture.render(await fixture.compile())).html;
+    assert.match(await render(), /<body>before<\/body>/);
+    await fixture.write("src/label.ts", 'export const label = "after";');
+    await fixture.sidecar.call<ViteCssResult>("transformViteCss", {
+      setup: fixture.params,
+      stylesheet,
+      file: path.join(fixture.root, stylesheet),
+    });
+    assert.match(await render(), /<body>after<\/body>/);
+    await fixture.write("src/probe.txt", "created");
+    assert.match(await render(), /<body>after<\/body>/);
+    await fs.unlink(path.join(fixture.root, "src/probe.txt"));
+    assert.match(await render(), /<body>after<\/body>/);
+    assert.match(await render(), /<body>after<\/body>/);
+    assert.equal(
+      await fs.readFile(path.join(fixture.root, ".context/events"), "utf8"),
+      callback.events.join("\n") + "\n",
+    );
+    await fixture.sidecar.call("shutdown");
+  });
+}
 
 test("a Vite Serve edit transforms only the changed file and all of its query variants", async (context) => {
   await reportDuration(
