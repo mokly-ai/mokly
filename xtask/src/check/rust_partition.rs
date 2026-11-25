@@ -17,13 +17,15 @@ const WEIGHTS: &str = include_str!("../../../scripts/verification/rust-test-weig
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub(super) struct Weights {
-    /// The weight of a unit that `units` does not name, such as a new test.
+    /// The weight of a unit that neither map names, such as a new test.
     default_seconds: u64,
     /// The weight of the doc tests, which the first test shard also runs.
     doc_seconds: u64,
-    /// The weight of each unit, keyed by its Cargo target arguments.
-    units: BTreeMap<String, u64>,
-    /// The number of nextest slices of a heavy unit, keyed like `units`. Each
+    /// The compile seconds of each unit, keyed by its Cargo target arguments.
+    compile_seconds: BTreeMap<String, u64>,
+    /// The test seconds of each unit, keyed like `compile_seconds`.
+    test_seconds: BTreeMap<String, u64>,
+    /// The number of nextest slices of a heavy unit, keyed like `compile_seconds`. Each
     /// slice is one piece with an equal share of the unit's weight. `--lib`
     /// never splits.
     #[serde(default)]
@@ -41,11 +43,14 @@ impl Weights {
         Self::parse(WEIGHTS)
     }
 
+    /// The compile seconds plus the test seconds of a unit. A unit that only
+    /// one map names counts zero for the other part.
     fn of(&self, unit: &TestUnit) -> u64 {
-        self.units
-            .get(&unit.key())
-            .copied()
-            .unwrap_or(self.default_seconds)
+        let key = unit.key();
+        match (self.compile_seconds.get(&key), self.test_seconds.get(&key)) {
+            (None, None) => self.default_seconds,
+            (compile, test) => compile.copied().unwrap_or(0) + test.copied().unwrap_or(0),
+        }
     }
 
     /// The pieces of one unit and the weight of each piece.

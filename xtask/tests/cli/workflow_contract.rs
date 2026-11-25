@@ -101,12 +101,14 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
                     && run.contains("pg_isready")
             })
     });
+    // The install line follows the apt setup lines of the step.
     let chromium = check.steps.iter().position(|step| {
         step.condition.as_deref() == Some("matrix.browser_workspace != ''")
-            && step.run.as_deref()
-                == Some(
-                    "npm exec --workspace \"$BROWSER_WORKSPACE\" -- playwright install --with-deps chromium",
-                )
+            && step.run.as_deref().is_some_and(|run| {
+                run.lines().any(|line| {
+                    line == "npm exec --workspace \"$BROWSER_WORKSPACE\" -- playwright install --with-deps chromium"
+                })
+            })
             && step.env.get("BROWSER_WORKSPACE").map(String::as_str)
                 == Some("${{ matrix.browser_workspace }}")
     });

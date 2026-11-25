@@ -9,6 +9,7 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { mainHeading } from "./main_heading.js";
 import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import { DOCUMENT_FRAME, openInspectFold } from "./workspace_actions.js";
 
@@ -32,7 +33,7 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
   page,
 }) => {
   await page.goto("/view/example/components/toolbar/");
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Toolbar");
+  await expect(mainHeading(page, "Toolbar")).toBeVisible();
   await openInspectFold(page, "usage");
   // Record whether the zero-consumer state ever renders.
   await page.evaluate(() => {
@@ -53,7 +54,7 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
     )
     .click();
   await expect.poll(() => detail.held.length).toBe(1);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(mainHeading(page, "Action")).toBeVisible();
   const usage = await openInspectFold(page, "usage");
   await expect(usage).toHaveText("Loading usage…");
   await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
@@ -79,7 +80,7 @@ test("a variant Usage waits for its parent detail and reuses it for a sibling", 
 }) => {
   const detail = await holdDetail(page, "example/components/action");
   await page.goto("/view/example/components/action/default/");
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(mainHeading(page, "Action")).toBeVisible();
   const usage = await openInspectFold(page, "usage");
   await expect.poll(() => detail.held.length).toBe(1);
   await expect(usage).toHaveText("Loading usage…");
@@ -106,7 +107,7 @@ test("a variant Usage waits for its parent detail and reuses it for a sibling", 
   await expect(page).toHaveURL(
     /\/view\/example\/components\/action\/disabled\/$/u,
   );
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(mainHeading(page, "Action")).toBeVisible();
   await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
   expect(sibling.reads()).toBe(0);
   expect(detail.reads()).toBe(1);
@@ -161,7 +162,7 @@ test("use-case and page frames load and navigate while usage and resource eviden
     },
   );
   await page.goto("/view/example/tour/");
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Example tour");
+  await expect(mainHeading(page, "Example tour")).toBeVisible();
   await expect(useCaseSteps(page)).toHaveCount(2);
   for (const step of [1, 2])
     await expect(useCaseStepFrame(page, step)).toHaveAttribute(
@@ -175,7 +176,7 @@ test("use-case and page frames load and navigate while usage and resource eviden
   await expect(page).toHaveURL(
     /\/view\/example\/screens\/details\/\?fragment=details$/u,
   );
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Details");
+  await expect(mainHeading(page, "Details")).toBeVisible();
   await expect(await openInspectFold(page, "components")).toContainText(
     "Component inspection is unavailable for this view.",
   );
@@ -185,9 +186,7 @@ test("use-case and page frames load and navigate while usage and resource eviden
       'nav.mbk-nav a[data-nav-row][data-route="example/getting-started/index.html"]',
     )
     .click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Getting started",
-  );
+  await expect(mainHeading(page, "Getting started")).toBeVisible();
   const document = page.locator(DOCUMENT_FRAME);
   await expect(document).toHaveAttribute("data-mokly-frame-state", "ready");
   await page
@@ -195,5 +194,5 @@ test("use-case and page frames load and navigate while usage and resource eviden
     .getByRole("link", { name: "Open Welcome" })
     .click();
   await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/u);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Welcome");
+  await expect(mainHeading(page, "Welcome")).toBeVisible();
 });

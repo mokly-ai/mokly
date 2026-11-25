@@ -33,18 +33,23 @@ job that holds credentials.
 The desktop partition restores the Electron download that its tests start.
 Only a run on `main` saves it, after the tests.
 
-The cloud browser jobs keep no cache of the Playwright system packages. Its
-index refresh and restore took as long as the download that it saved, about
-25 seconds with the cache and without it.
+Every CI job that installs Chromium restores the system package downloads of
+its Chromium install: the Mokly browser and static-delivery jobs, the cloud
+partitions that run a browser, and Site Lighthouse. The key covers the runner
+platform, the image's Ubuntu release, and the Playwright version. The install
+adds only the packages that the image lacks and upgrades no package of the
+image, so the downloads are one set of about 21 MB on every image. After a
+miss, only browser shard 1 on Node 22.15.0 of a run on `main` saves the entry;
+every other job only restores it, so the cache holds one such entry. Decision:
+keep this cache, although it saves nothing on a fast mirror, because a slow
+regional mirror took up to 3.4 minutes for these downloads and set the run's
+wall clock. The cloud jobs took 23 to 25 seconds for their install on a fast
+mirror and up to 142 seconds on a slow one.
 
-The Mokly browser and static-delivery jobs restore the system package
-downloads of their Chromium install. The key covers the runner platform, the
-image's Ubuntu release, and the Playwright version. The install adds only the
-packages that the image lacks and upgrades no package of the image, so the
-downloads are one set of about 21 MB on every image. After a miss, only browser
-shard 1 on Node 22.15.0 of a run on `main` saves the entry. Decision: keep this
-cache, although it saves nothing on a fast mirror, because a slow regional
-mirror took up to 3.4 minutes for these downloads and set the run's wall clock.
+The Mokly browser and static-delivery jobs start the Chromium install in the
+background after `npm ci` and build the workspace while it runs. A step after
+the build waits for the install to end and fails when the install failed or
+stopped. Only then do the tests start.
 
 The Bun setup of the CI viewer jobs and of release preparation sets
 `no-cache: true`, so it neither restores nor saves a workflow cache. It can

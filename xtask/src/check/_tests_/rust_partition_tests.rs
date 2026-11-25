@@ -99,10 +99,12 @@ fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
     assert_eq!(test_units(&metadata()).unwrap(), expected);
 }
 
+/// A unit weighs its compile seconds plus its test seconds: here `heavy`
+/// weighs 10, `light` 4, and `--lib` 6.
 #[test]
 fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 2, "docSeconds": 5, "units": {"--test heavy": 10, "--test light": 4, "--lib": 6}}"#,
+        r#"{"defaultSeconds": 2, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"--test heavy": 4, "--test light": 4}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [
@@ -126,7 +128,7 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
 #[test]
 fn the_library_unit_tests_run_on_the_first_shard() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {"--test heavy": 10, "--lib": 1}}"#,
+        r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {"--test heavy": 10, "--lib": 1}, "testSeconds": {}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [test("heavy"), TestUnit::Libraries].into();
@@ -140,7 +142,10 @@ fn the_library_unit_tests_run_on_the_first_shard() {
 /// still get a shard of its own.
 #[test]
 fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
-    let weights = Weights::parse(r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {}}"#).unwrap();
+    let weights = Weights::parse(
+        r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {}, "testSeconds": {}}"#,
+    )
+    .unwrap();
     let units: BTreeSet<_> = [test("a"), test("b")].into();
     assert_eq!(
         whole(partition(&units, &weights, 3)),
@@ -153,7 +158,7 @@ fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
 #[test]
 fn a_split_unit_runs_each_slice_on_its_own_shard() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 0, "units": {"--test heavy": 10}, "splits": {"--test heavy": 2}}"#,
+        r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {}, "testSeconds": {"--test heavy": 10}, "splits": {"--test heavy": 2}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [test("heavy")].into();
