@@ -55,19 +55,54 @@ class PreviewRuntimeTests(unittest.TestCase):
         self.assertNotIn(password, result.stderr)
         self.assertNotIn(password, result.stdout)
 
-    def test_api_entrypoint_exports_each_mounted_file_without_printing_it(self):
-        entrypoint = (ROOT / "infra/docker/entrypoint.sh").read_text()
-        for path, setting in (
-            ("catalogue-signing-key", "MKC_CATALOGUE_SIGNING_KEY"),
-            ("preview-sign-in", "MKC_PREVIEW_SIGN_IN_VERIFIER"),
-        ):
-            with self.subTest(path=path):
-                self.assertIn(f"[ -f /var/run/mokly-secrets/{path} ]", entrypoint)
-                self.assertIn(
-                    f"{setting}=$(cat /var/run/mokly-secrets/{path})", entrypoint
+    def test_api_entrypoint_filters_and_loads_the_mounted_preview_verifier(self):
+        _, verifier = (ROOT / "infra/tests/fixtures/preview-verifier.txt").read_text().splitlines()
+        legacy = "a" * 64
+        signing_key = "b" * 64
+        cases = (
+            ("legacy credential", legacy, "unset", True),
+            ("scrypt verifier", verifier, verifier, False),
+            ("absent file", None, "unset", False),
+        )
+        for name, mounted, expected, warn in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                secrets = root / "mounted secrets"
+                secrets.mkdir()
+                (secrets / "catalogue-signing-key").write_text(signing_key)
+                mounted_file = secrets / "preview-sign-in"
+                if mounted is not None:
+                    mounted_file.write_text(mounted)
+                observed = root / "observed"
+                api = root / "fake API"
+                api.write_text(
+                    "#!/bin/sh\n"
+                    'printf "%s\\n%s\\n%s\\n" "$1" "$MKC_CATALOGUE_SIGNING_KEY" '
+                    '"${MKC_PREVIEW_SIGN_IN_VERIFIER-unset}" > "$MKC_TEST_OBSERVED"\n'
                 )
-                self.assertIn(f"export {setting}", entrypoint)
-        self.assertNotIn("set -x", entrypoint)
+                api.chmod(0o755)
+                variables = dict(
+                    os.environ,
+                    MKC_SECRETS_DIR=str(secrets),
+                    MKC_API_BIN=str(api),
+                    MKC_TEST_OBSERVED=str(observed),
+                )
+                variables.pop("MKC_PREVIEW_SIGN_IN_VERIFIER", None)
+                variables.pop("MKC_CATALOGUE_SIGNING_KEY", None)
+                result = subprocess.run(
+                    ["/bin/sh", str(ROOT / "infra/docker/entrypoint.sh"), "serve"],
+                    env=variables,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(observed.read_text().splitlines(), ["serve", signing_key, expected])
+                expected_stderr = (
+                    f"Warning: Ignoring {mounted_file}. Expected a scrypt verifier.\n" if warn else ""
+                )
+                self.assertEqual(result.stderr, expected_stderr)
+                self.assertEqual(result.stdout, "")
 
     def test_dev_api_creates_and_reuses_its_preview_password(self):
         for exported_signing_key in (False, True):

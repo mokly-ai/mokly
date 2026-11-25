@@ -137,7 +137,7 @@ returns `Option` for absence, and this crate decides what absence means.
 - [service.rs](./src/service.rs) — `Authenticator`, the trait the API calls; `AuthService`, its implementation with the injected store, mailer, runtime and admitted origins; `PreviewSignIn`, the preview configuration with its optional verifier; and the results `LinkIssued`, `LinkVerified`, `SessionIssued` and `Identity`.
 - [error.rs](./src/error.rs) — the authentication outcome contract: invalid, expired and used links, expired sessions, CSRF rejection and rate limits, with `Internal` keeping a query failure's source.
 - [links.rs](./src/links.rs) — magic-link issue and exchange with one public app landing for every admitted Origin; `LINK_LIFETIME_MINUTES` names the 15-minute lifetime once for the stored link and the email copy.
-- [preview.rs](./src/preview.rs) — preview sign-in and the seed account method; both reuse the account policy, and only sign-in admits a peer, checks the password and issues a session.
+- [preview.rs](./src/preview.rs) — preview sign-in commits peer admission and returns a password check. A match returns the session issue operation. The preview seed uses the same account policy.
 - [preview_verifier.rs](./src/preview_verifier.rs) — `PreviewVerifier` reads the scrypt parameters at startup and checks the password on a blocking worker.
 - [desktop_grant.rs](./src/desktop_grant.rs) — desktop grant issue and exchange, separate persistent peer admission for each endpoint, constant-time challenge comparison under the grant lock, and session replacement with the stored absolute deadline.
 - [desktop_grant_policy.rs](./src/desktop_grant_policy.rs) — desktop credential forms and the unpadded base64url S256 challenge of the verifier's text.

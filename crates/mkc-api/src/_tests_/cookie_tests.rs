@@ -20,8 +20,8 @@ use crate::operation::Operation;
 use crate::platform::service::PlatformSessionMock;
 use crate::views::account::{SessionView, UserView};
 
-#[test]
-fn all_five_cookie_responses_use_the_current_request_origin() {
+#[tokio::test]
+async fn all_five_cookie_responses_use_the_current_request_origin() {
     for (client, origin, same_site) in [
         (ClientOrigin::App, "https://app.example.com", "Lax"),
         (ClientOrigin::Desktop, DESKTOP_ORIGIN, "None"),
@@ -34,7 +34,12 @@ fn all_five_cookie_responses_use_the_current_request_origin() {
             Operation::SignOut,
         ] {
             let dispatcher = dispatcher(operation, client);
-            let reply = dispatcher.dispatch(request(operation, origin)).unwrap();
+            let reply = dispatcher
+                .dispatch(request(operation, origin))
+                .unwrap()
+                .finish()
+                .await
+                .unwrap();
             let (credential, max_age) = match operation {
                 Operation::SignOut => ("", 0),
                 Operation::RotateSession => ("fresh", 86_400),
@@ -68,8 +73,13 @@ fn dispatcher(operation: Operation, client: ClientOrigin) -> ApiDispatcher {
                 .returns(true),
             origin,
             AuthenticatorMock::preview
-                .next_call(matching!("preview password", Some("old"), _))
-                .answers(&|_, _, _, _| Ok(issued())),
+                .next_call(matching!((previous, _) if previous.as_deref() == Some("old")))
+                .answers(&|_, _, _| {
+                    Ok(Box::new(|password| {
+                        assert_eq!(password, "preview password");
+                        Ok(Box::new(|| Ok(issued())))
+                    }))
+                }),
         ))),
         Operation::VerifyGitHubSignIn => Arc::new(Unimock::new((
             origin,
@@ -137,6 +147,7 @@ fn dispatcher(operation: Operation, client: ClientOrigin) -> ApiDispatcher {
         health: Arc::new(Unimock::new(())),
         viewer: Arc::new(Unimock::new(())),
         access: Arc::new(Unimock::new(())),
+        preview_hash_slots: Default::default(),
     }
 }
 

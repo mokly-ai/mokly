@@ -1,11 +1,10 @@
-//! Authentication and command dispatch on a blocking worker.
+//! Authentication and command dispatch, with an async handoff for preview sign-in.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use mkc_auth::service::{Authenticator, Identity};
 use mkc_domain::client_origins::ClientOrigin;
-use mkc_domain::validation;
 use mkc_publications::access::CatalogueAccess;
 use mkc_publications::error;
 use thiserror::Error;
@@ -22,6 +21,7 @@ use crate::operation::Operation;
 use crate::pagination::Pagination;
 use crate::payload::{Payload, Reply};
 use crate::platform::service::Platform;
+use crate::preview_dispatch::{AdmittedPreview, PreviewHashSlots};
 use crate::publication_views::AccessGrantView;
 use crate::viewer::input::Query;
 use crate::viewer::service::Viewer;
@@ -54,7 +54,28 @@ struct PublicReadRouting;
 
 #[unimock::unimock(api = [DispatchMock])]
 pub(crate) trait Dispatcher: Send + Sync {
-    fn dispatch(&self, request: Request) -> Result<Reply>;
+    fn dispatch(&self, request: Request) -> Result<DispatchOutcome>;
+}
+
+/// The result of the first blocking phase of API dispatch.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Ordinary requests usually return a reply, which fits inline without a new allocation."
+)]
+pub(crate) enum DispatchOutcome {
+    /// A response ready to send.
+    Reply(Reply),
+    /// An admitted password exchange that needs a hash permit.
+    Preview(AdmittedPreview),
+}
+
+impl DispatchOutcome {
+    pub(crate) async fn finish(self) -> Result<Reply> {
+        match self {
+            Self::Reply(reply) => Ok(reply),
+            Self::Preview(preview) => preview.finish().await,
+        }
+    }
 }
 
 pub(crate) struct ApiDispatcher {
@@ -66,19 +87,30 @@ pub(crate) struct ApiDispatcher {
     pub(crate) github: Option<Arc<dyn GitHubIntegration>>,
     pub(crate) billing: Option<Arc<dyn BillingService>>,
     pub(crate) access: Arc<dyn CatalogueAccess>,
+    pub(crate) preview_hash_slots: PreviewHashSlots,
 }
 
 impl Dispatcher for ApiDispatcher {
-    fn dispatch(&self, request: Request) -> Result<Reply> {
+    fn dispatch(&self, request: Request) -> Result<DispatchOutcome> {
         if !request.operation.implemented() {
             return Err(ApiError::OperationUnavailable);
         }
         if request.operation.desktop_grant() {
-            return self.dispatch_desktop_grant(request);
+            return self
+                .dispatch_desktop_grant(request)
+                .map(DispatchOutcome::Reply);
         }
         match self.dispatch_target(request.operation.optional_configuration())? {
-            DispatchTarget::GitHub(github) => return self.dispatch_github(request, github),
-            DispatchTarget::Billing(billing) => return self.dispatch_billing(request, billing),
+            DispatchTarget::GitHub(github) => {
+                return self
+                    .dispatch_github(request, github)
+                    .map(DispatchOutcome::Reply);
+            }
+            DispatchTarget::Billing(billing) => {
+                return self
+                    .dispatch_billing(request, billing)
+                    .map(DispatchOutcome::Reply);
+            }
             DispatchTarget::Standard => {}
         }
         let preview_client = if request.operation == Operation::VerifyPreviewSignIn {
@@ -92,7 +124,13 @@ impl Dispatcher for ApiDispatcher {
             &request.body,
             &request.query,
         )?;
-        match endpoint {
+        let reply = match endpoint {
+            Endpoint::VerifyPreviewSignIn(input) => {
+                let client = preview_client.ok_or(ApiError::CsrfRejected)?;
+                return self
+                    .admit_preview(request, client, input)
+                    .map(DispatchOutcome::Preview);
+            }
             Endpoint::GetHealth => Ok(Reply::ok(Payload::Health(self.health.check()?))),
             Endpoint::GetConfiguration => {
                 Ok(Reply::ok(Payload::Configuration(self.configuration())))
@@ -131,32 +169,9 @@ impl Dispatcher for ApiDispatcher {
                     effects: Vec::new(),
                 })
             }
-            Endpoint::VerifyPreviewSignIn(input) => {
-                if !(1..=1024).contains(&input.password.len()) {
-                    return Err(ApiError::ValidationFailed);
-                }
-                let result = self.auth.preview(
-                    &input.password,
-                    request.credential.as_deref(),
-                    &request.peer,
-                )?;
-                let session = self.platform.session(&result.identity)?;
-                Ok(Reply {
-                    status: 200,
-                    payload: Payload::SessionIssued(SessionIssuedView {
-                        session,
-                        return_to: validation::return_to(input.return_to.as_deref()),
-                    }),
-                    cookie: Some(cookie(
-                        &result.credential,
-                        2_592_000,
-                        preview_client.ok_or(ApiError::CsrfRejected)?,
-                    )),
-                    effects: Vec::new(),
-                })
-            }
             endpoint => self.authenticated(request, endpoint),
-        }
+        }?;
+        Ok(DispatchOutcome::Reply(reply))
     }
 }
 

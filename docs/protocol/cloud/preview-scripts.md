@@ -94,11 +94,12 @@ assertions fail instead of copying secrets or silently choosing another origin.
    most five times with bounded backoff, then fail.
 5. Copy the verifier privately into Secret `preview-sign-in`, or warn and
    delete that copy when the verifier is missing or malformed, as
-   [Preview sign-in](./preview-sign-in.md#deploy) defines.
-6. Render values, then install or upgrade release `mokly-cloud` in
-   `mkc-preview-pr-N` from the chart's PR overlay and the rendered values,
-   waiting at most 15 minutes. When step 5 wrote or deleted the verifier and
-   the upgrade did not replace the API pod, restart the API and wait for it.
+   [Preview sign-in](./preview-sign-in.md#deploy) defines. Keep the existing
+   value and marker when the store read fails for another reason.
+6. Install or upgrade release `mokly-cloud` in `mkc-preview-pr-N` from the
+   chart's PR overlay and rendered values. Pass the verifier's nonsecret
+   rollout marker to Helm for the API pod template. A new marker replaces the
+   API pod as part of the upgrade. Wait at most 15 minutes for Helm.
 7. Wait at most 900s for `Certificate/catalogue-tls` Ready; never disable TLS
    validation or fall back to the Origin CA default on catalogue hosts.
 8. Run `python3 infra/scripts/smoke.py` with the derived app/API/catalogue

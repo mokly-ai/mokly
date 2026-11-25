@@ -86,9 +86,12 @@ and `MKC_CATALOGUE_ORIGIN=https://pr-N.preview.C`. The API log mailer requires
 cleanup removes both, while the shared bucket has no live-object age rule. The
 API's projected read-only secret volume combines the catalogue signing key with
 the API-only optional `preview-sign-in`, which holds the preview password's
-verifier when the deploy found one; the entrypoint exports it as
-`MKC_PREVIEW_SIGN_IN_VERIFIER` when the file exists, while the chart sets
+verifier. The entrypoint exports it as `MKC_PREVIEW_SIGN_IN_VERIFIER` when
+it starts with `$scrypt$`. The chart sets
 `MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and `MKC_PREVIEW_SIGN_IN_PLAN=team`.
+The chart applies `preview.signInRolloutMarker` to the API pod template so the
+Helm upgrade replaces the pod when the verifier changes. The default `none`
+omits the annotation.
 Stable renders include none of these settings. The plan is fixed by namespace
 mode, not a configurable chart value. It makes new workspaces created by
 the configured account start on Team. Projects default to private and private

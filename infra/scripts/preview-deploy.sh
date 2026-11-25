@@ -59,25 +59,11 @@ preview_sync_verifier
 chart=infra/helm/mokly-cloud
 if helm upgrade --install "$preview_release" "$chart" --namespace "$namespace" \
   -f "$chart/environments/preview-pr.yaml" -f .context/release-values.json \
+  --set-string "preview.signInRolloutMarker=$preview_sign_in_rollout_marker" \
   --wait --timeout 15m; then
   :
 else
   preview_rollback 'Preview Helm deployment failed.' "$?"
-fi
-if [[ -n "$preview_verifier_previous_pod_uid" ]]; then
-  if api_pod_uid=$(preview_api_pod_uid); then
-    :
-  else
-    preview_rollback 'Could not identify the API pod after the preview Helm deployment.' "$?"
-  fi
-  if [[ "$api_pod_uid" == "$preview_verifier_previous_pod_uid" ]]; then
-    if preview_kubectl --namespace "$namespace" rollout restart deployment/api &&
-      preview_kubectl --namespace "$namespace" rollout status deployment/api --timeout=15m; then
-      :
-    else
-      preview_rollback 'Preview API restart failed.' "$?"
-    fi
-  fi
 fi
 if preview_kubectl --namespace "$namespace" wait --for=condition=Ready \
   certificate/catalogue-tls --timeout=900s; then

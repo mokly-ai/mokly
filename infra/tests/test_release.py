@@ -307,18 +307,21 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn("wrangler deploy", preview)
 
     def test_images_include_real_build_and_runtime_contracts(self):
-        for workload, entry in [("mkc-api", "entrypoint.sh"), ("mkc-catalogue-server", "catalogue-entrypoint.sh")]:
+        for workload, entry, executable in (
+            ("mkc-api", "entrypoint.sh", '"${MKC_API_BIN:-/usr/local/bin/mkc-api}"'),
+            ("mkc-catalogue-server", "catalogue-entrypoint.sh", "/usr/local/bin/mkc-catalogue-server"),
+        ):
             docker = (ROOT / f"infra/docker/{workload}.Dockerfile").read_text()
             self.assertIn("ARG RUST_VERSION=1.98.1", docker)
             self.assertIn("USER 65532:65532", docker)
             self.assertIn("STOPSIGNAL SIGINT", docker)
             self.assertIn('CMD ["serve"]', docker)
-            self.assertIn(f'exec /usr/local/bin/{workload} "$@"', (ROOT / f"infra/docker/{entry}").read_text())
+            self.assertIn(f'exec {executable} "$@"', (ROOT / f"infra/docker/{entry}").read_text())
         entrypoint = (ROOT / "infra/docker/entrypoint.sh").read_text()
+        self.assertIn("secrets_dir=${MKC_SECRETS_DIR:-/var/run/mokly-secrets}", entrypoint)
         for secret, setting in (("stripe-secret-key", "MKC_STRIPE_SECRET_KEY"),
                                 ("stripe-webhook-secret", "MKC_STRIPE_WEBHOOK_SECRET")):
-            self.assertIn(f"/var/run/mokly-secrets/{secret}", entrypoint)
-            self.assertIn(setting, entrypoint)
+            self.assertIn(f'{setting}=$(cat "$secrets_dir/{secret}")', entrypoint)
         docker = (ROOT / "infra/docker/app.Dockerfile").read_text()
         for contract in ["npm ci", "build:web --workspace @mokly-cloud/app", "EXPO_PUBLIC_MKC_API_ORIGIN",
                          "EXPO_PUBLIC_MKC_APP_ORIGIN", "MKC_CATALOGUE_BASE_DOMAIN",

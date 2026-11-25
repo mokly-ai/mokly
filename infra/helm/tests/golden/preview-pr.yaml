@@ -224,6 +224,8 @@ spec:
   template:
     metadata:
       labels: { app.kubernetes.io/name: api }
+      annotations:
+        mokly.ai/preview-sign-in-rollout-marker: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     spec:
       serviceAccountName: api
       terminationGracePeriodSeconds: 30

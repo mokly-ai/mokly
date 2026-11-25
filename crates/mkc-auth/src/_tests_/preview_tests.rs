@@ -10,10 +10,10 @@ use mkc_store_interface::user::UsersMock;
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
-use crate::error::Error;
+use crate::error::{Error, Result};
 use crate::preview_verifier::PreviewVerifier;
 use crate::runtime::{RuntimeMock, hash};
-use crate::service::{AuthService, Authenticator, PreviewSignIn};
+use crate::service::{AuthService, Authenticator, PreviewSignIn, SessionIssued};
 
 use super::support::{identity, now, preview_fixture, pure, service};
 
@@ -25,6 +25,12 @@ fn configured(mut auth: AuthService, verifier: Option<&str>) -> AuthService {
     auth
 }
 
+fn exchange(auth: AuthService, password: &str, previous: Option<&str>) -> Result<SessionIssued> {
+    let check_password = Arc::new(auth).preview(previous.map(str::to_owned), "127.0.0.1")?;
+    let issue_session = check_password(password)?;
+    issue_session()
+}
+
 #[test]
 fn availability_reflects_validated_configuration() {
     assert!(!pure().preview_sign_in_available());
@@ -34,7 +40,7 @@ fn availability_reflects_validated_configuration() {
 #[test]
 fn absent_configuration_is_unavailable_before_dependencies_are_used() {
     assert!(matches!(
-        pure().preview("preview password", None, "127.0.0.1"),
+        exchange(pure(), "preview password", None),
         Err(Error::PreviewSignInUnavailable)
     ));
 }
@@ -70,7 +76,7 @@ fn wrong_password_and_missing_verifier_commit_their_admission_count() {
             RuntimeMock::now.next_call(matching!()).returns(now()),
         ));
         assert!(matches!(
-            auth.preview(&supplied, None, "127.0.0.1"),
+            exchange(auth, &supplied, None),
             Err(Error::InvalidLink)
         ));
     }
@@ -94,7 +100,7 @@ fn exhausted_admission_returns_a_positive_retry_without_verifying() {
         Unimock::new(RuntimeMock::now.next_call(matching!()).returns(now())),
     );
     assert!(matches!(
-        configured(auth, Some(verifier)).preview(password, None, "127.0.0.1"),
+        exchange(configured(auth, Some(verifier)), password, None),
         Err(Error::RateLimited(19))
     ));
 }
@@ -135,9 +141,7 @@ fn existing_account_replaces_a_supplied_session() {
             .returns(Uuid::from_u128(8)),
     ));
     let auth = service(queries, Arc::new(Unimock::new(())), runtime);
-    let result = configured(auth, Some(verifier))
-        .preview(password, Some("old"), "127.0.0.1")
-        .unwrap();
+    let result = exchange(configured(auth, Some(verifier)), password, Some("old")).unwrap();
     assert_eq!(result.credential, "new");
     assert_eq!(result.identity.user.id, user_id);
 }
@@ -175,8 +179,6 @@ fn absent_account_is_created_without_a_previous_session() {
             .returns(Uuid::from_u128(9)),
     ));
     let auth = service(queries, Arc::new(Unimock::new(())), runtime);
-    let result = configured(auth, Some(verifier))
-        .preview(password, None, "127.0.0.1")
-        .unwrap();
+    let result = exchange(configured(auth, Some(verifier)), password, None).unwrap();
     assert_eq!(result.identity.user.email, EMAIL);
 }

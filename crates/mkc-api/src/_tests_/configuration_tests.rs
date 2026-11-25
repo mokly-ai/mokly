@@ -92,6 +92,7 @@ fn router(
         health: Arc::new(Unimock::new(())),
         viewer: Arc::new(Unimock::new(())),
         access: Arc::new(Unimock::new(())),
+        preview_hash_slots: Default::default(),
         github,
         billing,
     });

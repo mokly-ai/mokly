@@ -13,6 +13,15 @@ SECURITY = {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True,
             "capabilities": {"drop": ["ALL"]}}
 
 
+def check_preview_sign_in_rollout_marker(documents, marker):
+    for name in ("api", "app", "catalogue"):
+        deployment = resource(documents, "Deployment", name)
+        pod_metadata = deployment["spec"]["template"]["metadata"]
+        actual = pod_metadata.get("annotations", {}).get("mokly.ai/preview-sign-in-rollout-marker")
+        expected = marker if name == "api" else None
+        assert actual == expected, f"{name} pod rollout marker: expected {expected!r}, got {actual!r}"
+
+
 def check_preview_seed(documents, environment_name):
     jobs = [doc for doc in documents if doc["kind"] == "CronJob"
             and doc["metadata"]["name"] == "preview-seed"]

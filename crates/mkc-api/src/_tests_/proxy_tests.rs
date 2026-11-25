@@ -43,6 +43,7 @@ async fn rate_limit_boundary_receives_only_the_verified_client() {
                 networks: vec!["10.0.0.0/8".parse().unwrap()],
             },
             dispatcher: Arc::new(ApiDispatcher {
+                preview_hash_slots: Default::default(),
                 builds: Arc::new(Unimock::new(())),
                 auth: Arc::new(auth),
                 platform: Arc::new(Unimock::new(())),

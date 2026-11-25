@@ -1,0 +1,44 @@
+# API operations share one blocking pool
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 1, "Password waits occupy shared API workers": the wider fix that the branch split off, option E of its check. Option A here is option D of that check.
+- **Location:** `crates/mkc-api/src/router.rs` (`RouterFactory::build_document`, the `tokio::task::spawn_blocking` call around `dispatcher.dispatch`), `crates/mkc-api/src/operation_policy.rs:123` and `:134` (`body_limit` and `required_single_headers`), `crates/mkc-api/src/cli.rs:133`, `crates/mkc-auth/src/links.rs:43-54`, `crates/mkc-email-postmark/src/transport.rs:66`, `crates/mkc-api/src/github/callback.rs:53-68`, `crates/mkc-github/src/transport.rs:36` and `:125-126`, `crates/mkc-api/src/billing/checkout.rs:67`, `crates/mkc-api/src/billing/portal.rs:48`, `crates/mkc-billing-stripe/src/transport.rs:21` and `:167-168`, and `docs/protocol/cloud/preview-sign-in.md`, section "Password Exchange".
+- **Reason:** The fix changes the request path of every JSON operation, while the branch that found the problem only needed the password wait off the pool.
+- **Category:** Performance.
+
+- **Terms:**
+  - **Blocking pool:** the Tokio thread pool for synchronous work in one API process. Each JSON request holds one of its workers while it runs.
+  - **Admission:** the API's persistent count of attempts per client address in a 60-second window. A full window answers 429 `rate-limited`.
+  - **Check slot:** one of the two places in which one API process checks a preview password at a time.
+- **Background:**
+  - The router in `crates/mkc-api/src/router.rs` runs `dispatcher.dispatch(request)` for every JSON operation with `tokio::task::spawn_blocking`. `GET /v1/health` and the public configuration answer, `GET /v1/configuration`, run there too.
+  - Uploads and the API's background workers for GitHub, builds, billing and checks use `spawn_blocking` on the same pool.
+  - `crates/mkc-api/src/cli.rs:133` builds the runtime without `max_blocking_threads`. So the pool has at most 512 threads, the default of the locked Tokio 1.53.3.
+  - The Kubernetes readiness probe of the API reads `/v1/health` every 10 seconds, with a 5-second timeout. The `readinessProbe` in `infra/helm/mokly-cloud/templates/workloads.yaml` sets it.
+  - Some operations wait for a provider while they hold a worker:
+    - Email sign-in sends its Postmark message inside the request, in `crates/mkc-auth/src/links.rs:43-54`. The Postmark client has a 10-second timeout, in `crates/mkc-email-postmark/src/transport.rs:66`.
+    - The GitHub sign-in callback makes three or four GitHub calls in one request, in `crates/mkc-api/src/github/callback.rs:53-68`. Each call has a 30-second timeout, in `crates/mkc-github/src/transport.rs:36`.
+    - After a rate-limited answer, the GitHub client sleeps up to 60 seconds and tries once more, in `crates/mkc-github/src/transport.rs:125-126`. So one call can hold its worker for about 120 seconds.
+    - Checkout and the billing portal call Stripe inside the request, in `crates/mkc-api/src/billing/checkout.rs:67` and `crates/mkc-api/src/billing/portal.rs:48`. The Stripe client has the same 30-second deadline and retry rule, in `crates/mkc-billing-stripe/src/transport.rs:21` and `:167-168`.
+  - The preview password exchange admits 20 attempts per client address per 60 seconds. Any client can send them without the password. Each admitted attempt waited for a check slot while it held a worker.
+  - On 2026-11-25 the branch `calummoore/preview-password-sign-in-jofl` moved that wait off the pool. An admitted attempt now waits for a check slot without a worker, and only the check runs on one.
+  - The section "Password Exchange" of `docs/protocol/cloud/preview-sign-in.md` says: "One API process checks at most two passwords at once, and further attempts wait". The plan of that branch recorded this rule as its own design call, not as a user decision.
+- **Problem:** Each request that waits for Postmark, GitHub or Stripe still holds a blocking worker until the provider answers or times out. Enough such requests fill the pool. Then health, sign-in and every other JSON request wait for a worker, because nothing reserves workers for any kind of operation.
+- **Impact if no action:** A slow provider can stop the API from answering its health check. Kubernetes then stops sending requests to that pod, so every kind of request fails there, not only the slow kind.
+- **Root question:** How can each kind of API operation use only a bounded share of the blocking workers, so that one slow kind never stops the others?
+- **Options:**
+  - **A.** Cap the password attempts that wait for a check slot, for example at 8. Refuse the next admitted attempt with 429 `rate-limited` and `Retry-After: 1`. It bounds the queue of password attempts, not the provider waits. It adds a refusal and changes the sentence "further attempts wait", so it needs the user. Effort: Small.
+  - **B.** Declare a share of the blocking pool for each operation in `crates/mkc-api/src/operation_policy.rs`, beside `body_limit` and `required_single_headers`. The router awaits a permit of the operation's share, without a worker, before `spawn_blocking`. Health and the configuration answer get their own share, so they always find a worker. The two check slots can become the share of the password exchange. Keep the sum of the shares below the pool size. Test with event order and no timers that health completes while every other share is full. Effort: Medium.
+  - **C.** Make the Postmark, GitHub and Stripe calls asynchronous, so that no request holds a worker while a provider answers. The auth, GitHub and billing services are synchronous and call their providers between database steps, so the change reaches each service. Effort: Large.
+- **Left out:**
+  - A larger pool, or an explicit `max_blocking_threads`. It only moves the point at which waiting requests fill the pool.
+  - A separate thread pool for each kind of operation. B gives the same bound with permits on the one pool, without a second worker lifecycle.
+  - Change nothing more. A slow provider still fills the pool, so it fails the goal.
+- **Wider fix:** B. One table gives every operation its share, so a new operation cannot hold workers without a bound.
+- **Previous examples:**
+  - The password wait above, which held a worker until the fix of 2026-11-25.
+  - In the Mokly server, authored-file requests held a render worker while they waited for the same route. `plans/follow-ups/same-route-waits-hold-workers.md` records that class.
+- **Related:** `plans/follow-ups/auth-admission-keys-full-ipv6-address.md`, same exposure: admission bounds how many password attempts one client can queue, and one IPv6 /64 counts there as many clients.
+- **Recommendation:** B. It bounds every kind of operation in one place and keeps a worker free for health. A also bounds the password queue, but its refusal needs the user's approval.
+- **Action:** fix after merge, apply B, because it changes the request path of every operation, and the branch already moved the password wait off the pool.

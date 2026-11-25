@@ -139,9 +139,6 @@ case "${1:-}" in
     ;;
   upgrade)
     [[ ${HELM_UPGRADE_STATUS:-0} == 0 ]] || exit "$HELM_UPGRADE_STATUS"
-    if [[ ! -f "$DOUBLE_STATE/release" || ${HELM_ROLLS_API:-false} == true ]]; then
-      printf '52345678-1234-4234-8234-123456789abc' > "$DOUBLE_STATE/api-pod"
-    fi
     : > "$DOUBLE_STATE/release"
     : > "$DOUBLE_STATE/pvc"
     cat "$LIFECYCLE_FIXTURES/helm-upgrade.stdout.txt"
@@ -199,21 +196,10 @@ if [[ "$arguments" == *" get secret preview-sign-in "* ]]; then
   [[ "$arguments" == *"--ignore-not-found"* ]] && exit 0
   exit 1
 fi
-if [[ "$arguments" == *" get pods "* ]]; then
-  [[ ! -f "$DOUBLE_STATE/api-pod" ]] || cat "$DOUBLE_STATE/api-pod"
-  exit 0
-fi
 if [[ "$arguments" == *" create -f "* || "$arguments" == *" replace -f "* ]]; then
   file=${!#}
   [[ "$file" == */preview-sign-in.json ]] || exit 93
   cp "$file" "$DOUBLE_STATE/preview-secret"
-  exit 0
-fi
-if [[ "$arguments" == *" rollout restart deployment/api "* || "$arguments" == *" rollout restart deployment/api" ]]; then
-  printf '62345678-1234-4234-8234-123456789abc' > "$DOUBLE_STATE/api-pod"
-  exit 0
-fi
-if [[ "$arguments" == *" rollout status deployment/api "* ]]; then
   exit 0
 fi
 if [[ "$arguments" == *" create secret generic "* ]]; then
@@ -295,8 +281,6 @@ exit 93
     def prime(self, *names):
         for name in names:
             (self.state / name).touch()
-        if "release" in names:
-            (self.state / "api-pod").write_text("42345678-1234-4234-8234-123456789abc")
         if "preview-secret" in names:
             (self.state / "preview-secret").write_bytes(
                 (LIFECYCLE_FIXTURES / "kubectl-preview-secret.json").read_bytes()
@@ -310,3 +294,13 @@ exit 93
 
     def calls(self):
         return self.log.read_text() if self.log.exists() else ""
+
+    def helm_rollout_markers(self):
+        key = "preview.signInRolloutMarker="
+        return [
+            argument.removeprefix(key)
+            for line in self.calls().splitlines()
+            if line.startswith("helm upgrade --install ")
+            for argument in line.split()
+            if argument.startswith(key)
+        ]

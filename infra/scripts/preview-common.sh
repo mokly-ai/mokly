@@ -113,11 +113,6 @@ preview_fetch_dns_token() {
   chmod 600 "$preview_dns_token"
 }
 
-preview_api_pod_uid() {
-  preview_kubectl --namespace "$namespace" get pods --selector=app.kubernetes.io/name=api \
-    --field-selector=status.phase=Running -o 'jsonpath={.items[*].metadata.uid}'
-}
-
 preview_sync_verifier() {
   local verifier="$preview_temporary/verifier"
   local diagnostic="$preview_temporary/verifier-access.stderr"
@@ -144,11 +139,9 @@ preview_sync_verifier() {
 
   preview_kubectl --namespace "$namespace" get secret preview-sign-in \
     --ignore-not-found -o json > "$current"
-  local api_pod_uid
-  api_pod_uid=$(preview_api_pod_uid)
-  preview_verifier_previous_pod_uid=$(
+  preview_sign_in_rollout_marker=$(
     python3 infra/scripts/preview-lifecycle.py prepare-preview-secret \
-      "$store_result" "$verifier" "$manifest" "$api_pod_uid" < "$current"
+      "$store_result" "$verifier" "$manifest" < "$current"
   )
   if [[ -s "$manifest" ]]; then
     local operation=create

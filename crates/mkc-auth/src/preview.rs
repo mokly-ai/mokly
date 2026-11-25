@@ -1,11 +1,14 @@
 //! Persistent admission and session issuance for preview sign-in.
 
+use std::sync::Arc;
+
+use chrono::{DateTime, Utc};
 use mkc_store_interface::user::User;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::links::admit;
 use crate::runtime::hash;
-use crate::service::{AuthService, Identity, SessionIssued};
+use crate::service::{AuthService, Identity, PreviewPasswordCheck, SessionIssued};
 
 impl AuthService {
     /// Reuse the configured preview identity without admission or session issuance.
@@ -24,13 +27,12 @@ impl AuthService {
         output.ok_or(Error::Unauthenticated)
     }
 
-    /// Commit peer admission before checking the preview password against its verifier.
+    /// Commit peer admission before returning the work that checks the password.
     pub(crate) fn preview_sign_in(
-        &self,
-        password: &str,
-        previous: Option<&str>,
+        self: Arc<Self>,
+        previous: Option<String>,
         peer: &str,
-    ) -> Result<SessionIssued> {
+    ) -> Result<PreviewPasswordCheck> {
         let configured = self
             .preview_sign_in
             .as_ref()
@@ -39,16 +41,30 @@ impl AuthService {
         self.transact(false, &mut |queries| {
             admit(queries, &hash(&format!("preview:{peer}")), now, 20)
         })?;
-        let verifier = configured.verifier.as_ref().ok_or(Error::InvalidLink)?;
-        if !verifier.matches(password) {
-            return Err(Error::InvalidLink);
-        }
+        let verifier = configured.verifier.clone().ok_or(Error::InvalidLink)?;
+        let email = configured.email.clone();
+        Ok(Box::new(move |password| {
+            if !verifier.matches(password) {
+                return Err(Error::InvalidLink);
+            }
+            Ok(Box::new(move || {
+                self.issue_preview_session(&email, previous.as_deref(), now)
+            }))
+        }))
+    }
+
+    fn issue_preview_session(
+        &self,
+        email: &str,
+        previous: Option<&str>,
+        now: DateTime<Utc>,
+    ) -> Result<SessionIssued> {
         let credential = self.runtime.secret().context("generate credential")?;
         let csrf_token = self.runtime.secret().context("generate credential")?;
         let user_id = self.runtime.id().into();
         let mut output = None;
         self.transact(false, &mut |queries| {
-            let user = self.find_or_create_user(queries, &configured.email, user_id, now)?;
+            let user = self.find_or_create_user(queries, email, user_id, now)?;
             let session =
                 self.replace_session(queries, user.id, &credential, &csrf_token, now, previous)?;
             output = Some(Identity { session, user });

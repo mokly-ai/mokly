@@ -92,15 +92,18 @@ catalogue DNS token, and removes the file after use. It never prints the
 value. Before the Helm upgrade, it writes a valid verifier with no newline to
 key `preview-sign-in` of the namespace Secret `preview-sign-in` when the
 stored value differs. The API mounts that Secret as optional and read-only at
-`/var/run/mokly-secrets/preview-sign-in`, and it reads
-`MKC_PREVIEW_SIGN_IN_VERIFIER` from it when the key exists. The release job
+`/var/run/mokly-secrets/preview-sign-in`. The entrypoint sets
+`MKC_PREVIEW_SIGN_IN_VERIFIER` from a mounted value that starts with
+`$scrypt$`. It ignores a mounted value without that prefix and warns with
+the file name, so the API starts and accepts no password. The release job
 never passes the verifier to the seed or to the comment.
 
-The API reads its settings at startup. When a deploy wrote or deleted the
-verifier and its Helm upgrade did not replace the API pod, as on a rerun with
-the same image, the deploy restarts the API and waits for the rollout. The
-API pod uses the `Recreate` strategy, so the deploy never restarts a pod that
-its upgrade has just replaced.
+The API reads its settings at startup. A deploy that changes or removes the
+verifier saves a fresh, nonsecret rollout marker in the same Secret update.
+Helm puts the marker in the API pod template, so an upgrade with a new marker
+replaces the pod and waits for the replacement. An unchanged verifier keeps
+its marker. Helm omits the annotation when the Secret has no marker. A rerun
+after a Helm rollback uses the marker from the Secret.
 
 When the store answers that the ID has no version, or the value is malformed
 or outside the bounds of the API, the deploy writes a warning annotation on

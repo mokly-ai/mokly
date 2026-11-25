@@ -17,7 +17,7 @@ from preview_lifecycle_gcp import change_iam, delete_objects
 
 
 PREVIEW_SECRET = "preview-sign-in"
-PREVIOUS_API_POD_UID = "mokly.ai/preview-sign-in-previous-pod"
+PREVIEW_ROLLOUT_MARKER = "mokly.ai/preview-sign-in-rollout-marker"
 PREVIEW_VERIFIER = re.compile(
     rb"\$scrypt\$ln=(?:[1-9]|1[0-6]),r=8,p=[1-8]\$([A-Za-z0-9+/]{22})\$([A-Za-z0-9+/]{43})"
 )
@@ -104,7 +104,7 @@ def valid_preview_verifier(value):
     return True
 
 
-def prepare_preview_secret(store_result, verifier_path, manifest_path, api_pod_uid):
+def prepare_preview_secret(store_result, verifier_path, manifest_path):
     current = sys.stdin.read()
     secret = json.loads(current) if current else {
         "apiVersion": "v1",
@@ -115,27 +115,26 @@ def prepare_preview_secret(store_result, verifier_path, manifest_path, api_pod_u
     if secret.get("kind") != "Secret" or secret["metadata"].get("name") != PREVIEW_SECRET:
         raise ValueError(f"expected Secret/{PREVIEW_SECRET}")
     annotations = secret["metadata"].setdefault("annotations", {})
-    if store_result == "unavailable":
-        print(annotations.get(PREVIOUS_API_POD_UID, ""))
-        return
+    data = secret.setdefault("data", {})
+    stored = data.get(PREVIEW_SECRET)
 
-    desired = None
+    desired = stored if store_result == "unavailable" else None
     if store_result == "read":
         verifier = Path(verifier_path).read_bytes()
         if valid_preview_verifier(verifier):
             desired = base64.b64encode(verifier).decode("ascii")
         else:
             print("::warning::mkc-preview-sign-in-password contains an invalid preview verifier.", file=sys.stderr)
-    data = secret.setdefault("data", {})
-    if data.get(PREVIEW_SECRET) != desired:
+    if stored != desired:
         if desired is None:
             del data[PREVIEW_SECRET]
         else:
             data[PREVIEW_SECRET] = desired
-        # Keep the pod UID with the Secret update so a rerun can complete the restart.
-        annotations[PREVIOUS_API_POD_UID] = api_pod_uid
+        annotations[PREVIEW_ROLLOUT_MARKER] = secrets.token_hex(32)
         write_private(Path(manifest_path), json.dumps(secret))
-    print(annotations.get(PREVIOUS_API_POD_UID, ""))
+
+    marker = annotations.get(PREVIEW_ROLLOUT_MARKER, "")
+    print(marker if re.fullmatch(r"[a-f0-9]{64}", marker) else "none")
 
 
 def helm_revision():
@@ -166,7 +165,7 @@ def run(arguments):
         generate_signing(values[0])
     elif command == "preview-verifier" and not values:
         preview_verifier()
-    elif command == "prepare-preview-secret" and len(values) == 4 and values[0] in ("read", "missing", "unavailable"):
+    elif command == "prepare-preview-secret" and len(values) == 3 and values[0] in ("read", "missing", "unavailable"):
         prepare_preview_secret(*values)
     elif command == "helm-revision" and not values:
         helm_revision()

@@ -92,8 +92,8 @@ fn configured_preview_checks_origin_before_decoding_the_body() {
     ));
 }
 
-#[test]
-fn configured_preview_passes_password_at_the_utf8_limit_unchanged() {
+#[tokio::test]
+async fn configured_preview_passes_password_at_the_utf8_limit_unchanged() {
     let password = format!(" {} ", "é".repeat(511));
     let body = serde_json::to_vec(&json!({"password": password})).unwrap();
     let auth = Unimock::new((
@@ -104,19 +104,26 @@ fn configured_preview_passes_password_at_the_utf8_limit_unchanged() {
             .each_call(matching!(Some(APP_ORIGIN)))
             .answers(&|_, _| Ok(ClientOrigin::App)),
         AuthenticatorMock::preview
-            .each_call(matching!(_, Some("session"), "127.0.0.1"))
-            .answers_arc(Arc::new(move |_, supplied, _, _| {
-                assert_eq!(supplied, password);
-                Err(Error::InvalidLink)
+            .each_call(matching!((previous, "127.0.0.1") if previous.as_deref() == Some("session")))
+            .answers_arc(Arc::new(move |_, _, _| {
+                let password = password.clone();
+                Ok(Box::new(move |supplied| {
+                    assert_eq!(supplied, password);
+                    Err(Error::InvalidLink)
+                }))
             })),
     ));
     let dispatcher = dispatcher(Arc::new(auth), None);
-    let result = dispatcher.dispatch(request(
-        Operation::VerifyPreviewSignIn,
-        body,
-        Some(APP_ORIGIN),
-        None,
-    ));
+    let result = dispatcher
+        .dispatch(request(
+            Operation::VerifyPreviewSignIn,
+            body,
+            Some(APP_ORIGIN),
+            None,
+        ))
+        .unwrap()
+        .finish()
+        .await;
     assert!(
         matches!(result, Err(ApiError::MagicLinkInvalid)),
         "{:?}",
@@ -217,6 +224,7 @@ fn dispatcher(
         github,
         billing: None,
         access: Arc::new(Unimock::new(())),
+        preview_hash_slots: Default::default(),
     }
 }
 

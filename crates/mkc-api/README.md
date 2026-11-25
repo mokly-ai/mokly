@@ -370,6 +370,7 @@ setting or test detection that selects the fake runner. The
 - [operation.rs](./src/operation.rs) — `Operation`, the typed operation identifiers shared by the OpenAPI contract and dispatch.
 - [operation_policy.rs](./src/operation_policy.rs) — implementation and authentication capabilities for the typed operation inventory; `Operation::anonymous_read()` names the reads that need no session, which the route contract compares with the document's GET security requirements.
 - [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher` uses `Operation::implemented()` to refuse deferred operations. Its `cookie` helper writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [preview_dispatch.rs](./src/preview_dispatch.rs) — preview password validation and admission. Admitted requests await one of two hash permits outside the blocking pool. The worker releases the permit when the password check ends.
 - [configuration.rs](./src/configuration.rs) — `dispatch_target` gates preview sign-in, GitHub and billing before handler validation. `GET /v1/configuration` reads from the same gate.
 - [contract/configuration.rs](./src/contract/configuration.rs) — the OpenAPI contract for the public configuration answer.
 - [desktop_grant_dispatch.rs](./src/desktop_grant_dispatch.rs) and [desktop_grant_input.rs](./src/desktop_grant_input.rs) — desktop request validation after session, Origin and CSRF admission, the grant response, and exchange cookies whose `Max-Age` follows the inherited deadline.

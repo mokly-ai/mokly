@@ -143,6 +143,7 @@ pub(super) fn router(
         billing_configured: false,
         upload: Arc::new(Unimock::new(())),
         dispatcher: Arc::new(ApiDispatcher {
+            preview_hash_slots: Default::default(),
             auth: Arc::new(auth),
             platform: Arc::new(platform),
             builds: Arc::new(Unimock::new(())),

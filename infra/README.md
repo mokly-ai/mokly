@@ -213,9 +213,9 @@ Terraform/rollout wrappers reject PR inputs. The main deploy runs
 platform values before planning main-preview; the installer inventories and
 authorizes every cluster-scoped chart object before its idempotent upgrades.
 `preview-deploy.sh` creates and validates generated Secrets and reconciles
-DNS and IAM. It copies the preview verifier before Helm and restarts the API
-when its running pod still uses the previous configuration. It waits for TLS
-and runs smoke checks. `preview-destroy.sh` deletes the namespace before
+DNS and IAM. It syncs the preview verifier before Helm and passes its rollout
+marker to the chart. Helm replaces the API pod when the marker changes. The
+deploy waits for TLS and runs smoke checks. `preview-destroy.sh` deletes the namespace before
 external state. `preview-link.py` reads exact-address links from API logs.
 The parallel, credential-free capture job checks out the
 PR with full history and runs the PR's own `capture-catalogue.py`,
@@ -249,7 +249,7 @@ the PR comment, evidence, costs and cleanup.
 ### Key Code
 
 - `toolchains.json` — the pinned versions of Terraform, Helm, BuildKit, crane, gcloud, the cert-manager and ingress-nginx charts and the Postgres image digest that every script and chart reads.
-- `docker/mkc-api.Dockerfile`, `docker/mkc-catalogue-server.Dockerfile` and `docker/app.Dockerfile` — the three workload images; the `MKC_BUILD_SHA` build argument bakes the revision, and `docker/entrypoint.sh` and `docker/catalogue-entrypoint.sh` export each mounted secret file as its environment variable before they exec the binary.
+- `docker/mkc-api.Dockerfile`, `docker/mkc-catalogue-server.Dockerfile` and `docker/app.Dockerfile` — the three workload images. The `MKC_BUILD_SHA` build argument bakes the revision. `docker/entrypoint.sh` and `docker/catalogue-entrypoint.sh` load mounted secrets before they exec the binary. The API entrypoint accepts a mounted preview verifier with the `$scrypt$` prefix and warns when it ignores another format.
 - `docker/app-server.mjs` and `docker/app-build-config.mjs` — the Node server for the Expo export, which asserts the baked origins, serves `/`, `/_health` and `/_config`, marks every document `noindex` and sends the Content Security Policy whose catalogue sources come from the `MKC_CATALOGUE_BASE_DOMAIN` that the build configuration records beside the baked origins.
 - `e2b/build/e2b.Dockerfile` and `e2b/build/e2b.toml` — the credential-free cloud build sandbox image and its versioned template definition.
 - [e2b/build/build-template.mjs](./e2b/build/build-template.mjs) — the operator script that builds one template release through the E2B SDK with the team key and writes its local `e2b.toml`.
@@ -270,7 +270,7 @@ the PR comment, evidence, costs and cleanup.
 - `scripts/preview-platform-helper.py` — validates the platform inputs, reads the Cloudflare CIDR list from the workload chart, inventories the rendered cluster-scoped objects and checks the Origin CA SANs. Its `tls-secret` command decodes the cluster TLS Secret into private files for the shared validator.
 - `helm/platform/cert-manager-values.yaml`, `helm/platform/ingress-nginx-values.yaml` and `helm/platform/cluster-issuer.yaml` — the static platform chart values and the issuer template with its one catalogue-domain placeholder.
 - `scripts/preview-common.sh`, `scripts/preview-deploy.sh` and `scripts/preview-destroy.sh` — the PR shell helpers for generated Secrets, the DNS token and the preview verifier, and the deploy and cleanup entry points.
-- `scripts/preview-lifecycle.py` — namespace Secret validation and cloud lifecycle commands. `preview-verifier` generates the verifier. `prepare-preview-secret` validates it and stages changes to the namespace Secret. `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`. `preview_lifecycle_cloud.py` updates and deletes the Cloudflare record. `preview_lifecycle_gcp.py` manages conditional bucket IAM with etag retries and removes objects in batches.
+- `scripts/preview-lifecycle.py` — namespace Secret validation and cloud lifecycle commands. `preview-verifier` generates the verifier. `prepare-preview-secret` validates it, stages changes to the namespace Secret and prints the rollout marker. `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`. `preview_lifecycle_cloud.py` updates and deletes the Cloudflare record. `preview_lifecycle_gcp.py` manages conditional bucket IAM with etag retries and removes objects in batches.
 - `scripts/preview-link.py` and `scripts/preview_link_sources.py` — the sign-in log reader and its kubectl pod-log source.
 - `scripts/capture-catalogue.py` — the unprivileged catalogue capture; `catalogue_capture_endpoint.py` is the loopback receiver, `catalogue_capture_plan.py` the gzip framing check and bounded plan reader, and `catalogue_capture_state.py` the exchange state.
 - `scripts/record-catalogue-capture.py` — rebuilds the isolated smoke fixture and records the real workspace CLI outcomes. Its `--check` mode compares raw streams while reading variable paths and timing values separately. `catalogue_recording_cases.py` owns the real receiver cases, and `catalogue_recording_streams.py` owns the comparison.

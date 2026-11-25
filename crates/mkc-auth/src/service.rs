@@ -39,6 +39,12 @@ pub struct SessionIssued {
     pub credential: String,
 }
 
+/// Verify one admitted preview password on a blocking worker.
+pub type PreviewPasswordCheck = Box<dyn FnOnce(&str) -> Result<PreviewSessionIssue> + Send>;
+
+/// Issue a session on a blocking worker after the preview password matches.
+pub type PreviewSessionIssue = Box<dyn FnOnce() -> Result<SessionIssued> + Send>;
+
 /// One-use sign-in exchange result with its validated navigation destination.
 pub struct LinkVerified {
     /// Issued session and credential.
@@ -89,8 +95,12 @@ pub trait Authenticator: Send + Sync {
     fn preview_password_account(&self) -> Option<&str>;
     /// Find or create the configured preview account without issuing a session.
     fn preview_account(&self) -> Result<User>;
-    /// Admit and verify a preview password, then issue a session.
-    fn preview(&self, password: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued>;
+    /// Commit peer admission and return the work for one password check.
+    fn preview(
+        self: Arc<Self>,
+        previous: Option<String>,
+        peer: &str,
+    ) -> Result<PreviewPasswordCheck>;
     /// Authorize a desktop window from an authenticated browser session.
     fn issue_desktop_grant(
         &self,

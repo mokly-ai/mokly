@@ -1,0 +1,45 @@
+# Password sign-in redirects after the reader left
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 5, "Password completion redirects after leaving Sign in", with the options and the protocol gap that its check added.
+- **Location:** `packages/app/src/screens/account/preview-password.tsx:41-52` (`submit`), `packages/app/src/screens/account/entry-screen.tsx:77-80` (the Sign up link), `packages/app/src/screens/account/github-callback-screen.tsx:159-161`, `packages/app/src/screens/account/desktop-callback-screen.tsx:102`, `packages/app/src/settings/write.ts:215`, `packages/app/src/navigation/leave-page.ts:74-76`, and `docs/protocol/cloud/folio-chrome.md:111-118`, the composition "Write in progress".
+- **Reason:** The bug needs a reader who leaves Sign in while a password answer is pending, and the fix rule defers a rare Medium product bug.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Password section:** the part of Sign in that sends the shared preview password to `POST /v1/auth/preview`. It shows only in a PR preview, from `packages/app/src/screens/account/preview-password.tsx`.
+  - **`useWrite`:** the shared hook in `packages/app/src/settings/write.ts` that runs the write of one control, then its `done` step.
+  - **`useLeavePage`:** the shared hook in `packages/app/src/navigation/leave-page.ts` that hands the tab to another site only while the asking screen is still shown.
+  - **Write in progress:** the composition in `docs/protocol/cloud/folio-chrome.md` that says what a control and its form draw while the control's write runs.
+- **Background:**
+  - The password section's action runs `exchangePreviewPassword` through `useWrite`. When the answer arrives, the same work adopts the session and replaces the route with the answer's `returnTo`, in `preview-password.tsx:43-50`.
+  - While the request runs, the Password field is disabled. The Sign up link under the panel, in `entry-screen.tsx:77-80`, and the browser's Back still work.
+  - The API's answer sets the session cookie itself, whatever the app then does with the answer.
+  - The email landing and the desktop landing check that their screen is still mounted before they adopt an answer, in `callback-screen.tsx` and `desktop-callback-screen.tsx:102`. The GitHub landing adopts the session and replaces the route with no such check, in `github-callback-screen.tsx:159-161`. That code is unchanged from `origin/main`.
+  - `useWrite` calls `done` after a successful write even when its screen is gone, in `write.ts:215`. `useLeavePage` leaves only while its screen is shown, in `leave-page.ts:76`.
+  - The entry screens do not read the session. So a session that the app adopts while the reader is on Sign up does not move the reader.
+  - Write in progress, at `folio-chrome.md:115-118`, binds a write to its screen only when it leaves for another site, such as GitHub or Stripe. It says: "It leaves only while its screen is still shown: a reader who followed Back or another link while it ran stays where they went." No sentence covers a write that ends by moving to another route of the app, such as password sign-in.
+- **Problem:** A reader who presses **Continue as preview@mokly.ai** and then follows Sign up or Back still moves when the answer arrives. The late answer adopts the session and replaces the route over the screen that the reader chose.
+- **Impact if no action:** A slow answer interrupts the reader on another screen and discards what the reader typed there.
+- **Root question:** How can a reader who leaves during password sign-in stay at the destination that the reader chose?
+- **Options:**
+  - **A.** In the password section, check that Sign in is still shown before the write applies the answer. Skip both the session adoption and the route change when it is gone. Test it with a held answer and a move to Sign up. Effort: Small.
+  - **B.** Give `useWrite` one completion step for session adoption and navigation, which runs only while the write's screen is shown. Move password sign-in to it, and gate `done` with the same check. That also closes `plans/follow-ups/write-done-runs-after-unmount.md`. Effort: Medium.
+  - **C.** Add one sign-in completion step beside `useSession` for the password section and the email, desktop and GitHub landings. It adopts the session and replaces the route only while the calling screen is shown. It also covers the GitHub landing, which has no check today. Effort: Medium.
+  - **D.** Add a screen-bound router hook that every screen uses to change the route, and a lint that rejects direct use of the router. Every late navigation then needs its screen, whatever started it. The lint is new, so it needs the user's approval. Effort: Large.
+  - **E.** As A, but always adopt the session, and bind only the route change to the screen. The app's session then matches the cookie that the answer already set, and the reader still does not move. Effort: Small.
+  - **F.** Apply A, and widen Write in progress. The new sentence says that a write which ends on another route of the app moves only while its screen is shown. It is a new requirement, so it needs the user's review. Effort: Small.
+- **Left out:**
+  - Disable the page's links while the request runs. It cannot stop the browser's Back.
+  - Abort the request when the reader leaves. An answer that already arrived can race with the abort, and the API sets the session cookie in either case.
+- **Wider fix:** D. A screen-bound router hook makes every late navigation depend on its screen, and the lint keeps new code on that hook. Without the lint, B covers today's writes, and C covers today's sign-in landings.
+- **Previous examples:**
+  - The email and desktop landings check that their screen is mounted before they adopt an answer.
+  - `useLeavePage` leaves only while its screen is shown, in `leave-page.ts:74-76`.
+- **Related:**
+  - `plans/follow-ups/write-done-runs-after-unmount.md`, same class: a write's `done` step moves a reader who already left. Options B and D here also stop a late `done` from moving the reader, so they can close that item.
+  - `plans/follow-ups/build-request-opens-after-leaving.md`, same class: a build request opens its build after the reader left its card.
+  - `plans/follow-ups/desktop-stripe-opens-after-leaving.md`, same class: a late Stripe answer opens the browser after the reader left Billing. Its option F widens Write in progress as option F here does, so one branch can write both sentences.
+- **Recommendation:** A. It protects the new flow with one check in its own file. D best protects the codebase, but its lint needs the user's approval. F settles the requirement when the user accepts its sentence.
+- **Action:** fix after merge, apply A, because the fix rule defers a rare Medium product bug.

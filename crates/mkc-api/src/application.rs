@@ -267,6 +267,7 @@ impl ConfiguredApplicationFactory {
                 billing,
                 access: publishing.access,
                 viewer: publishing.viewer,
+                preview_hash_slots: Default::default(),
             }),
             github_worker: integration.worker,
             check_worker: integration.checks,
