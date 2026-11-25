@@ -49,7 +49,9 @@ mirror and up to 142 seconds on a slow one.
 The Mokly browser and static-delivery jobs start the Chromium install in the
 background after `npm ci` and build the workspace while it runs. A step after
 the build waits for the install to end and fails when the install failed or
-stopped. Only then do the tests start.
+stopped. Only then do the tests start. Decision: install in the background,
+because the install, about 25 seconds, always ended within the build, and the
+install, build, and test steps of these jobs took 28 seconds less on average.
 
 The Bun setup of the CI viewer jobs and of release preparation sets
 `no-cache: true`, so it neither restores nor saves a workflow cache. It can

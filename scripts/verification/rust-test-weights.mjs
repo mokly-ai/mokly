@@ -115,9 +115,9 @@ function timingUnit(target) {
 // Cargo leaves a build that it reuses out of its timing report, so the
 // measurement builds every test target in a target directory of its own.
 async function measureCompile() {
-  const target = await fs.mkdtemp(
-    path.join(ROOT, ".context", "rust-test-weights-"),
-  );
+  const scratch = path.join(ROOT, ".context");
+  await fs.mkdir(scratch, { recursive: true });
+  const target = await fs.mkdtemp(path.join(scratch, "rust-test-weights-"));
   try {
     const build = spawnSync(
       "cargo",
@@ -144,6 +144,7 @@ async function measureCompile() {
         },
       },
     );
+    if (build.error) throw build.error;
     if (build.status !== 0)
       throw new Error(`cargo test --no-run failed with ${build.status}`);
     return compileSeconds(

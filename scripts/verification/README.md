@@ -210,8 +210,9 @@ node scripts/verification/rust-test-weights.mjs --compile
 
 `--run` reads the logs of the passed Repository and native jobs of each CI
 run and replaces `testSeconds`. Give the newest `main` runs. A run with a
-failed or unfinished test shard only gives fewer samples of that shard's
-tests. `--compile` builds every Rust test target in a new target directory
+failed or unfinished test shard gives fewer samples of that shard's tests.
+When no given run passed a shard, its tests are missing from their unit on
+that host, so give runs in which every test shard passed. `--compile` builds every Rust test target in a new target directory
 under `.context/`, so that Cargo reuses no build, and replaces
 `compileSeconds` from its timing report. Cargo leaves a reused build out of
 the report. The compile part changes only when the build of a unit changes.

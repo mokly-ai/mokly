@@ -99,12 +99,13 @@ fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
     assert_eq!(test_units(&metadata()).unwrap(), expected);
 }
 
-/// A unit weighs its compile seconds plus its test seconds: here `heavy`
-/// weighs 10, `light` 4, and `--lib` 6.
+/// A unit weighs its compile seconds plus its test seconds, and a part that
+/// only the other map names counts zero: here `heavy` weighs 10, `light` 4,
+/// and `--lib` 6. The unknown unit `new` takes the default weight of 5.
 #[test]
 fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 2, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"--test heavy": 4, "--test light": 4}}"#,
+        r#"{"defaultSeconds": 5, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"--test heavy": 4, "--test light": 4}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [
@@ -117,8 +118,8 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     assert_eq!(
         whole(partition(&units, &weights, 2)),
         [
-            vec![TestUnit::Libraries, test("new")],
-            vec![test("heavy"), test("light")]
+            vec![TestUnit::Libraries, test("light")],
+            vec![test("heavy"), test("new")]
         ]
     );
 }
