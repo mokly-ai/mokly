@@ -281,8 +281,9 @@ with `repositoryId`, then publish a real commit with its project token. Verify
 request, open the `Mokly` check and its Changes link. Press Re-run and verify
 that the same GitHub check ID gets the same result and its stored rerequest
 mark clears. Inspect failures with [Check recovery](./check-recovery.md).
-A live test remains unverified in this checkout because it has no registered
-App credentials or installed test repository.
+Use the test repository named in the
+[build template runbook](./build-template.md#provision-and-enable-one-environment) for
+this check. No live test is recorded in this checkout yet.
 
 The requested CSP contains exactly `frame-ancestors 'self' <app-origin>`:
 `'self'` lets the publication's standalone viewer frame its own documents, and

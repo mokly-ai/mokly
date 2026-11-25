@@ -189,8 +189,14 @@ without GitHub and PR enablement. Keep `scaling.minReplicas` at least two.
 Tune retention through the checked-in `maintenance.buildRetentionSeconds`
 chart value, default thirty days. Only prune receives that setting.
 
-The test repository must use Mokly 0.18.0 or later with a `mokly.config.json`
-configuration, and the project's config path must name that file.
+The test repository is the private
+[`mokly-ai/mokly-build-smoke`](https://github.com/mokly-ai/mokly-build-smoke).
+It holds one HTML screen with one variant, the published `@mokly/mokly` and a
+tracked `package-lock.json`, so a build runs `npm ci` and the repository's own
+`mokly` binary. Install each environment's GitHub App on it, and create the
+environment's project from it. Any test repository must use Mokly 0.18.0 or
+later with a `mokly.config.json` configuration, and the project's config path
+must name that file.
 Its install must keep optional dependencies, which hold the
 CLI's native binary. It publishes from a clean checkout. Ignore
 install files and every build output directory. A dirty checkout fails before
@@ -214,7 +220,8 @@ migration and maintenance must have no E2B key mount.
 The public API health route checks process, revision, database and migrations.
 It does not check E2B, the template or worker progress. Build availability
 means configuration and repository access are present, not provider readiness.
-On first enablement, request a build against a real installed test repository.
+On first enablement, request a build against the test repository with the
+environment's App installed.
 Require a published build, its ready publication on the catalogue origin,
 a completed GitHub check and removal of the attempt sandbox. Record the
 revision, build and publication IDs, check result, timings and UTC time.
@@ -285,6 +292,8 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 
 ### Environments
 
-No environment has builds enabled yet. On 2026-11-24, main-preview had one
-enabled `mkc-main-preview-e2b-api-key` version, and production had no
-version. Record the first main-preview and production build proofs here.
+On 2026-11-25, main-preview builds were enabled with the `mokly-build-v2`
+build reference and deployment ID `main-preview-builds`, in Deploy run
+45598059014 at revision `4abe21d10`. No main-preview build has run yet.
+Production has builds off and no `mkc-production-e2b-api-key` version. Record
+the first main-preview and production build proofs here.

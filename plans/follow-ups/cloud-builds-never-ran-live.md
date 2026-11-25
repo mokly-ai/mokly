@@ -17,8 +17,8 @@
   - The repository cannot show whether a resource, a key or a live build exists outside it.
   - Builds default to off, and PR previews cannot enable them. The preview seed of PR #81 starts no background worker, so a preview seed proves no sandbox build.
 - **Task:** Prove cloud builds live, first on `main-preview`, then on production.
-  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v2` build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
-  - With the installed App and a test repository, push to the default branch and open a pull request.
+  - Done on 2026-11-25: main-preview has the `builds` group with the `mokly-build-v2` build reference and deployment ID `main-preview-builds` (Deploy run 45598059014).
+  - Install the `mokly-main-preview` App on the test repository `mokly-ai/mokly-build-smoke` (created 2026-11-25), create its main-preview project, push to its default branch and open a pull request.
   - Watch the check move from queued to a Changes result, and press Re-run.
   - Record the result in the "Live Evidence" section of `docs/ops/build-template.md`.
   - Repeat the proof on production after promotion. First add a version to `mkc-production-e2b-api-key` and set `MKC_PRODUCTION_APP_CONFIG` with its own deployment ID. Record the timings of a cold install against the 15-minute budget.
