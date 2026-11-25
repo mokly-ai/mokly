@@ -25,11 +25,14 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/10
 ```
 
-`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, and `cloud-app`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, and `cloud-app`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
 `INDEX` must not exceed `TOTAL`. A Mokly viewer or browser shard runs one weighted whole-file
 partition under the [viewer](./ci-suite-evidence.md#viewer-shard-balance) or [browser](./ci-suite-evidence.md#browser-shard-balance) shard balance rule,
-not Playwright's count-based `--shard` selection. Omitting `--shard` runs the
+not Playwright's count-based `--shard` selection. A native shard runs the
+nextest `slice:INDEX/TOTAL` partition of the Rust tests; shard 1 also checks
+formatting and Clippy and runs the doc tests. CI runs two macOS and four
+Windows native shards. Omitting `--shard` runs the
 complete selected suite. Unknown suites, malformed shards, missing values, and
 attempts to shard the repository or native suite fail before any subprocess
 starts.
@@ -43,7 +46,7 @@ starts.
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                |
 | Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                                                                   |
 | Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                                                                   |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, every viewer and browser shard, and the static-delivery job on each runtime selected for the event, of both native platforms, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                                       |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, every viewer and browser shard, and the static-delivery job on each runtime selected for the event, of every native job and shard, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                                  |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
@@ -52,7 +55,7 @@ The local Repository and Viewer suites cover the native build and Rust checks
 once. The selected Native suite repeats those checks on the hosted macOS and
 Windows runners, for the `mokly-*` crates and `xtask` only. On Linux, the
 Native suite also selects only the Mokly crates and `xtask`. The cloud Rust
-suite covers cloud crates. Required CI requires both native jobs.
+suite covers cloud crates. Required CI requires every native job and shard.
 The cloud contract tests of `xtask` run on Linux only.
 Decision: the macOS and Windows runs leave out the `mkc-` crates, because
 those crates use Diesel with Postgres, which needs `libpq`.

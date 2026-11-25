@@ -37,7 +37,8 @@ Run the steps in this order:
    toolchain for every command in the checkout.
 5. Restore the Rust build cache with the action and options that the CI viewer,
    browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
-   unreviewed local trees, so they never save.
+   unreviewed local trees, so they never save. Then install the pinned
+   cargo-nextest with the CI install step.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`

@@ -106,6 +106,11 @@ jobs:
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Restore npm download cache
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -264,7 +269,7 @@ jobs:
           include-hidden-files: true
           retention-days: 14
   native:
-    name: Native (${{ matrix.runner }})
+    name: Native (${{ matrix.runner }}${{ matrix.shard && format(', shard {0}', matrix.shard) || '' }})
     needs:
       - profile
     runs-on: ${{ matrix.runner }}
@@ -272,9 +277,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner:
-          - macos-26
-          - windows-2025
+        # macOS runs its Rust tests in two nextest partitions and Windows in
+        # four. Shard 1 also checks formatting and Clippy and runs the doc tests.
+        include:
+          - runner: macos-26
+            shard: 1/2
+          - runner: macos-26
+            shard: 2/2
+          - runner: windows-2025
+            shard: 1/4
+          - runner: windows-2025
+            shard: 2/4
+          - runner: windows-2025
+            shard: 3/4
+          - runner: windows-2025
+            shard: 4/4
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -295,6 +312,11 @@ jobs:
         with:
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       # The Windows runner image moves npm's cache out of the home folder.
       - name: Locate npm download cache
         id: npm-cache-path
@@ -325,7 +347,13 @@ jobs:
       - name: Build sidecar package
         run: npm run build --workspace @mokly/mokly
       - name: Run native verification
-        run: cargo xtask check --suite native
+        shell: bash
+        env:
+          NATIVE_SHARD: ${{ matrix.shard }}
+        run: |
+          shard=()
+          [[ -z "$NATIVE_SHARD" ]] || shard=(--shard "$NATIVE_SHARD")
+          cargo xtask check --suite native "${shard[@]}"
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }})
     needs: [profile]
@@ -490,6 +518,12 @@ jobs:
           shared-key: ${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        if: matrix.command == 'cloud-rust'
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Restore Electron download
         if: matrix.command == 'cloud-desktop'
         id: electron-cache

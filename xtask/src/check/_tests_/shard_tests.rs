@@ -36,15 +36,10 @@ fn shard_requires_a_supported_selected_suite() {
         CheckRequest::new(None, Some(shard), None),
         Err(Error::ShardRequiresSuite)
     ));
-    for suite in [
-        Some(VerificationSuite::Repository),
-        Some(VerificationSuite::Native),
-    ] {
-        assert!(matches!(
-            CheckRequest::new(suite, Some(shard), None),
-            Err(Error::UnsupportedShard { .. })
-        ));
-    }
+    assert!(matches!(
+        CheckRequest::new(Some(VerificationSuite::Repository), Some(shard), None),
+        Err(Error::UnsupportedShard { .. })
+    ));
 }
 
 #[test]

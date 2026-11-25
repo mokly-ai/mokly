@@ -100,8 +100,6 @@ before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout. No CI job installs Rust a second way, such as with a
 toolchain action.
-Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
-failing test binary.
 
 Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
 runner image. They refresh the package index and install a package only when

@@ -83,7 +83,7 @@ fail when the build output is missing. Native builds the host binary through
 sources into the render cache, and the tests read nothing back from the
 repository. Every suite rejects skips and todos.
 
-`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, and `cloud-app`. It uses one-based
+`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, and `cloud-app`. It uses one-based
 integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts.
 
@@ -124,6 +124,14 @@ checks once. Rust formatting and file length cover every crate. Repository
 Clippy and Rust tests select only `mokly-*` and `xtask`. Cloud Rust covers
 `mkc-*`. Cloud Rust builds workspace Mokly before its publication smokes.
 The Native suite selects only Mokly crates and xtask on every host.
+Repository, Native, and Cloud Rust run their Rust tests with cargo-nextest,
+then their doc tests with `cargo test --doc`, under the
+[Rust test runner](../docs/protocol/ci-verification-repository.md#rust-test-runner)
+contract. Each first runs `xtask/scripts/require-nextest.mjs`, which fails
+with install commands when `cargo nextest` is missing or older than the
+requirement. Install the version
+that `.config/nextest.toml` requires, for example with
+`cargo install cargo-nextest --locked --version 0.9.152`.
 Seven remote cloud workers cover Rust and desktop, four app shards, web,
 and infrastructure. Each worker attempts every assigned suite and reports
 each failure. The [remote guide](remote/README.md#remote-runs) lists the groups.

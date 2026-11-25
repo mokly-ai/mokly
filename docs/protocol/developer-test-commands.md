@@ -11,7 +11,8 @@
   and the frame package tests under `packages/frame/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
   `cargo test --workspace` runs the default targets. The Repository suite runs `mokly-*` and `xtask`. The cloud Rust suite runs
-  `mkc-*`; a selected crate is partial verification. Sidecar integration tests
+  `mkc-*`; a selected crate is partial verification. The suites run these
+  tests with the [Rust test runner](./ci-verification-repository.md#rust-test-runner). Sidecar integration tests
   require `npm run build --workspace @mokly/ui`, then
   `npm run build --workspace @mokly/model`, then
   `npm run build --workspace @mokly/frame`, then
