@@ -43,6 +43,9 @@
     change `packages/viewer`. Three runs of
     `npm test -- packages/viewer/tests/comparison_pane_titles.test.tsx`
     passed, and the next full suite run passed it.
+  - On 2026-11-25 it failed again in a complete gate run on the same branch,
+    at commit `6ac0b8f41`, with the same failure text and 3,660 of 3,661
+    viewer tests passing. Three runs of the file alone passed.
 - **Problem:** Suspected source: render work that the scheduler queued
   before `unmount()` runs in a later `setImmediate`, after the `t.after`
   hook has already removed `window`.
