@@ -11,6 +11,7 @@ import { ShellStoreProvider } from "../src/shell/store.js";
 import { StandaloneShellContents } from "../src/standalone/shell.js";
 
 import { FakeDataSource, flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 import {
   HOME_URL,
   ORIGIN,
@@ -35,7 +36,7 @@ export function registerShellDocument(t: TestContext, path = HOME_URL): void {
   });
   t.after(async () => {
     cleanup();
-    await GlobalRegistrator.unregister();
+    await unregisterDom();
   });
 }
 

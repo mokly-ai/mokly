@@ -16,6 +16,7 @@ import type { ComparedFrame } from "../src/shell/comparison_selection.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 
 import { OUTLINE } from "./comparison_lifecycle_harness.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 const KEY = `${OUTLINE}:light`;
 
@@ -37,7 +38,7 @@ const FAILED: ComparedFrame = {
 
 test("Try again on a failed row's frame requests that row again", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const retried: unknown[] = [];
   const cells = comparisonSectionFrames(
     {

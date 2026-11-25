@@ -22,6 +22,7 @@ import {
   renderComparison,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 /** Both rows of the variant set, with the Dark frame of the component's own row. */
 const BOTH = [
@@ -32,7 +33,7 @@ const BOTH = [
 
 test("a row's frames renew that row alone, a mode switch renews each row, and another generation reacquires its row alone", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const props: ComparisonOptions = {
     eligible: true,
@@ -102,7 +103,7 @@ test("a row's frames renew that row alone, a mode switch renews each row, and an
 
 test("a row that leaves the comparison returns at once and renews before its panes load", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const props: ComparisonOptions = {
     comparedFrame: `${ACTION}:light`,
