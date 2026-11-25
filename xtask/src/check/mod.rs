@@ -13,6 +13,9 @@ mod check_tests;
 #[cfg(test)]
 #[path = "_tests_/dependency_audit_tests.rs"]
 mod dependency_audit_tests;
+#[cfg(test)]
+#[path = "_tests_/repository_tests.rs"]
+mod repository_tests;
 
 #[cfg(test)]
 #[path = "_tests_/native_tests.rs"]
