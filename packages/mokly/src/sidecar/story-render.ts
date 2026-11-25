@@ -9,6 +9,7 @@ import type { RenderResult } from "../generated/sidecar/RenderResult.js";
 import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
 
 import type { Generation } from "./bundle.js";
+import { readStoryParameters } from "./story-parameters.js";
 import type { StoredStory } from "./story-reader.js";
 import { setupStories } from "./story-setup.js";
 
@@ -34,8 +35,18 @@ export async function renderStory(
       story.args,
       Object.getOwnPropertyDescriptors(props),
     );
-    story.globals.moklyViewport = params.viewport;
-    story.globals.moklyColorScheme = params.colorScheme;
+    const { viewports, colorSchemes } = readStoryParameters(
+      story.parameters.mokly,
+    );
+    Object.defineProperties(
+      story.globals,
+      Object.getOwnPropertyDescriptors({
+        ...viewports.get(params.viewport),
+        ...colorSchemes.get(params.colorScheme),
+        moklyViewport: params.viewport,
+        moklyColorScheme: params.colorScheme,
+      }),
+    );
     await setupStories(generation, stored.beforeAll);
     await story.load();
     return renderMarkup(generation.runtime.react.createElement(() => story()));

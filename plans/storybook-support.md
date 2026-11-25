@@ -162,7 +162,6 @@ request #492 merged. Each one needs no decision, and a branch from this
 branch fixes it as its file says. Fix them before the pull request into
 `main`.
 
-
 - [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
   the Markdown link check does not read crate topic pages.
 
@@ -1405,8 +1404,8 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answer to decision B4 to the protocol pages.
-      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B4 to the protocol pages.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
@@ -1701,6 +1700,20 @@ Design calls of track B, made on 2026-11-18:
   non-data arg of the same story, the requested value renders. Reason: the
   answer to B1 renders exactly the requested data props, and Storybook lays
   extra args over a story's own args.
+- B-g. Made on 2026-11-25 by the orchestrator of the track B finish, for the
+  answer to B4. The warning code is `storybook-parameter-ignored`. Its
+  subject is the entry of the story's page, and its message is
+  `parameter {path} is ignored: {reason}`, with the JSON-quoted path of the
+  malformed value, such as `"mokly.viewports.tablet"`. Reason: the subject
+  already names the story's page, the record rule forbids a message that
+  repeats it, and JSON quotes escape the control characters of an authored
+  name, as the `prop` messages do.
+- B-h. Made on 2026-11-25 by the same orchestrator. The `describe` result
+  carries the malformed values in an optional `ignoredParameters` list on
+  each definition and variant, as `excludedProps` carries the keys of
+  `props-not-data`. A value that the preview sets gives a warning on each
+  story page that composes it. Reason: the core derives the final entry
+  path, and each story page composes its own parameters.
 
 ## Milestone 3: Story reader
 
@@ -1809,11 +1822,14 @@ Depends on: 3, and the answer to decision B4 for malformed values
 
 Existing theme decorators follow Mokly's views, as decision 8 says.
 
-- [ ] Set the globals of the `mokly` parameter for each view before render,
+- [x] Set the globals of the `mokly` parameter for each view before render,
       as design call 11 says.
-- [ ] Test that a theme decorator that reads a `theme` global renders the
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Test that a theme decorator that reads a `theme` global renders the
       dark theme in dark views when the parameter maps it.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 ## Milestone 8: Story reading verification, review, and pull request
 

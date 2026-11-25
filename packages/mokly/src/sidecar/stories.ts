@@ -5,6 +5,7 @@ import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { storyHints } from "./story-hints.js";
+import { readStoryParameters } from "./story-parameters.js";
 import { readStories, type StoredStory } from "./story-reader.js";
 
 export async function describeStories(
@@ -44,8 +45,18 @@ export async function describeStories(
         };
         generation.stories.set(id, stored);
         result.stories.push({ id, title, props, argTypes });
+        const { ignoredParameters } = readStoryParameters(
+          story.parameters.mokly,
+        );
         return {
-          saved: { slug: exportName, title, tags, props, excludedProps },
+          saved: {
+            slug: exportName,
+            title,
+            tags,
+            props,
+            excludedProps,
+            ...(ignoredParameters.length ? { ignoredParameters } : {}),
+          },
           argTypes,
           stored,
         };
@@ -56,6 +67,9 @@ export async function describeStories(
     generation.stories.set(handle, first.stored);
     result.components.push({
       excludedProps: first.saved.excludedProps,
+      ...(first.saved.ignoredParameters
+        ? { ignoredParameters: first.saved.ignoredParameters }
+        : {}),
       handle,
       title: read.title,
       description: read.description,

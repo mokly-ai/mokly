@@ -5,13 +5,14 @@ use std::collections::BTreeMap;
 use mokly_catalogue::definition_provider::ProvidedDefinition;
 use mokly_catalogue::input::EntryInput;
 use mokly_catalogue::render_sources::{
-    EntryReference, ExcludedProp, ProvidedRendering, RenderMethod, RenderSource, StoryControlHint,
+    EntryReference, ExcludedProp, IgnoredStoryParameter, ProvidedRendering, RenderMethod,
+    RenderSource, StoryControlHint,
 };
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::{SourceLocation, UseCaseStep};
 use mokly_sidecar::controls::StoryHints;
 use mokly_sidecar::definition_metadata;
-use mokly_sidecar::definitions::Definition;
+use mokly_sidecar::definitions::{Definition, IgnoredParameter, IgnoredParameterReason};
 
 use crate::{definition_handle, transport_values};
 
@@ -58,6 +59,11 @@ pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> Pr
             key: key.clone(),
         });
     }
+    if let Some(parameters) = &definition.ignored_parameters {
+        rendering
+            .ignored_parameters
+            .insert(String::new(), ignored_parameters(parameters));
+    }
     if let Some(hints) = &definition.arg_types {
         rendering.story_hints.insert(
             String::new(),
@@ -90,12 +96,18 @@ pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> Pr
                 key: key.clone(),
             });
         }
+        if let Some(parameters) = &variant.ignored_parameters {
+            rendering
+                .ignored_parameters
+                .insert(variant.slug.clone(), ignored_parameters(parameters));
+        }
         let mut value = serde_json::to_value(variant)
             .expect("sidecar variants contain only JSON values and string-keyed maps");
         let object = value
             .as_object_mut()
             .expect("the sidecar variant struct serializes as a JSON object");
         object.remove("excludedProps");
+        object.remove("ignoredParameters");
         object.remove("useCasePaths");
         if kind != EntryKind::Component {
             object.remove("slots");
@@ -147,6 +159,21 @@ pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> Pr
         input,
         rendering,
     }
+}
+
+fn ignored_parameters(parameters: &[IgnoredParameter]) -> Vec<IgnoredStoryParameter> {
+    parameters
+        .iter()
+        .map(|parameter| IgnoredStoryParameter {
+            path: parameter.path.clone(),
+            reason: match parameter.reason {
+                IgnoredParameterReason::NotAnObject => "not an object",
+                IgnoredParameterReason::UnknownField => "unknown field",
+                IgnoredParameterReason::UnknownColorScheme => "unknown colour scheme",
+                IgnoredParameterReason::UnknownViewport => "unknown viewport",
+            },
+        })
+        .collect()
 }
 
 fn reference(value: &definition_metadata::EntryReference) -> EntryReference {

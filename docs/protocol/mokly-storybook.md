@@ -1,7 +1,5 @@
 # Storybook Stories
 
-Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
-
 ## Stories Files
 
 A stories file is a `*.stories.{ts,tsx,js,jsx}` file that a root matches. The
@@ -198,8 +196,9 @@ an object of Storybook globals. `viewports` maps a viewport name, `mobile` or
 `desktop`, to an object of Storybook globals. Mokly reads the parameter from
 the composed parameters of each story, so the preview, the meta, and the
 story can each set or override it. For each view, Mokly applies these globals
-over the composed story's globals, the story's own `globals` included. It
-applies them in this order, so that a later item wins:
+over the composed story's globals, the story's own `globals` included. Before
+the loaders, the `beforeEach` hooks, and the render run, it applies them in
+this order, so that a later item wins:
 
 1. The mapped globals of the view's viewport.
 2. The mapped globals of the view's colour scheme.
@@ -211,6 +210,34 @@ Documentation alone, detection of `addon-themes`, and a map in
 `mokly.config.json` were rejected. One view combines one viewport and one
 colour scheme, so both maps apply to it. The mapped globals win over the
 story's own `globals`, as the globals of a Chromatic mode do.
+
+Mokly ignores each of these malformed values on its own and uses the valid rest:
+
+| Malformed value                                                  | Path                                      | Reason                  |
+| ---------------------------------------------------------------- | ----------------------------------------- | ----------------------- |
+| A `mokly` parameter that is not a plain object, such as an array | `mokly`                                   | `not an object`         |
+| A field other than `colorSchemes` and `viewports`                | such as `mokly.colourSchemes`             | `unknown field`         |
+| A `colorSchemes` or `viewports` value that is not a plain object | `mokly.colorSchemes` or `mokly.viewports` | `not an object`         |
+| A name other than `light` and `dark` in `colorSchemes`           | such as `mokly.colorSchemes.sepia`        | `unknown colour scheme` |
+| A name other than `mobile` and `desktop` in `viewports`          | such as `mokly.viewports.tablet`          | `unknown viewport`      |
+| A mapped value that is not a plain object                        | such as `mokly.colorSchemes.dark`         | `not an object`         |
+
+A `mokly` parameter that is absent or `undefined` is not malformed. Mokly does
+not check the globals inside a mapped object. Each malformed value gives one
+`storybook-parameter-ignored` build warning on each story page whose composed
+parameters hold it, so a value in the preview gives a warning on each story
+page that does not override it. Its subject is the entry of that page: the
+parent path for the first included story, and the variant path for each other
+story. Its message is `parameter <JSON-quoted-path> is ignored: <reason>`,
+such as `parameter "mokly.viewports.tablet" is ignored: unknown viewport`.
+
+Decision: Mokly ignores a malformed value with a warning, because the views
+still render, and the parameter belongs to Mokly. A silent ignore was
+rejected, because a typo then shows only as a wrong theme or layout. A failed
+render was rejected, because a typo then stops the build. A `MoklyParameter`
+type alone was rejected, because Storybook's parameter type accepts any key,
+so it helps only files that apply it. An `invalid-field` failure at describe
+time was rejected, because one typo then fails the whole build.
 
 ## Related Docs
 

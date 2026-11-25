@@ -137,8 +137,8 @@ Mokly infers one prop schema from all included stories. A top-level prop is
 required only when every included story sets it. In the example, `label` is
 required and `disabled` is optional.
 
-`argTypes` supplies control hints: options, number bounds and step, a label,
-and help text. It does not supply a schema or change validation.
+`argTypes` supplies control hints such as options, number bounds and step,
+a label, and help text. It does not supply a schema or change validation.
 
 Each story keeps the meta's select choices and number bounds, even for an
 entry prop that the story does not set. A story's own `argTypes` can override
@@ -154,20 +154,66 @@ React element args and arrays of React elements do too. Their file values
 remain available to the story. Other non-data args, such as a `Map`, still
 give a `props-not-data` warning.
 
-Mokly renders each story with exactly the data props it shows for that story.
+Mokly starts each render with exactly the data props it shows for that story.
 If you unset an optional prop in `mokly serve`, the story renders without it.
-Non-data args keep the values the file defines.
+Non-data args start with the values the file defines. As in Storybook's
+preview, `argTypes.mapping` supplies mapped control values to the component
+and `argTypes.if` omits args whose conditions are false.
 
 ## Decorators and themes
 
 Mokly loads the consumer's `.storybook/preview` annotations and uses
 Storybook's portable story composition. Storybook decorators wrap the story.
-The configured Mokly renderer wraps React mockup screens and components;
-stories use their Storybook providers.
+The configured Mokly renderer wraps React mockup screens and components.
+Stories use their Storybook providers.
 
 A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
 select a layout or product theme. Each story renders for the catalogue's
 viewports and enabled color schemes.
+
+Use the `mokly` parameter to set Storybook globals for each view. The
+`colorSchemes` field maps `light` or `dark` to an object of globals. The
+`viewports` field maps `mobile` or `desktop` to an object of globals. Set
+or override the parameter in the preview, the meta, or the story. Mokly
+reads the composed parameters for each story.
+
+Mokly starts with the story's composed globals and applies these values in
+order. Later values win when they set the same global.
+
+1. The mapped globals for the view's viewport.
+2. The mapped globals for the view's color scheme.
+3. The values of `moklyViewport` and `moklyColorScheme` for the view.
+
+This preview's theme decorator reads `globals.theme`. It sets
+`data-theme="dark"` on the story wrapper in dark views.
+
+```tsx
+// .storybook/preview.tsx
+import type { Preview } from "@storybook/react";
+
+const preview = {
+  decorators: [
+    (Story, { globals }) => (
+      <div data-theme={globals.theme === "dark" ? "dark" : "light"}>
+        <Story />
+      </div>
+    ),
+  ],
+  parameters: {
+    mokly: {
+      colorSchemes: { dark: { theme: "dark" }, light: { theme: "light" } },
+    },
+  },
+} satisfies Preview;
+
+export default preview;
+```
+
+Mokly applies the valid mappings and ignores malformed values. Examples
+include the unknown field `colourSchemes`, the unknown view name `tablet`,
+and a string where the mapping expects a globals object. The build gives a
+`storybook-parameter-ignored` warning that names the story page and the
+ignored value's path. `mokly build --strict` fails on this warning.
 
 Consumer JavaScript runs during static rendering. It does not run in the
 catalogue's frames. Use data args and static component output for the states
