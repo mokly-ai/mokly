@@ -1,0 +1,151 @@
+/* The download page: its column, the heading with its redline and the
+   installer frames in their section boxes. The page is one 1240px column,
+   the footer frame's width, as pricing is. The Mac box and the Linux box
+   sit side by side with a 64px gap, and each holds two frames 24px apart.
+   The mobile composition lives in download-responsive.css. */
+
+.site-download {
+  margin: 0 auto;
+  max-width: calc(1240px + 156px);
+  padding: 0 78px;
+  width: 100%;
+}
+
+/* The heading: the kicker, then the title, with the redline that measures
+   the space under the title, down to the section boxes */
+
+.site-download-hero {
+  padding-top: 64px;
+}
+
+.site-download-heading {
+  margin-top: 20px;
+  position: relative;
+}
+
+.site-download-heading .site-download-title {
+  font-size: 4.75rem;
+  letter-spacing: -0.054em;
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+
+.site-download-redline {
+  height: 64px;
+  left: 4px;
+  top: 100%;
+}
+
+/* The installers. The grid has three rows: the box head, then the frame's
+   name and its action. Each box and each frame passes the rows down as a
+   subgrid, so the names and the actions line up across the four frames
+   when a name takes two lines. */
+
+.site-download-installers {
+  align-items: start;
+  column-gap: 64px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, auto);
+  padding-top: 64px;
+}
+
+/* A section box is outset so that its frames sit on the column */
+
+.site-download-installers .site-section-box {
+  column-gap: 24px;
+  display: grid;
+  grid-row: 1 / span 3;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: subgrid;
+  margin: 0 -20px;
+  padding: 14px 20px 24px;
+}
+
+.site-download-installers .site-section-box-head {
+  grid-column: 1 / -1;
+  margin-bottom: 38px;
+}
+
+/* An installer frame: the computer's name over its Download action. A
+   hover draws the signal ring, as it does on a plan frame. */
+
+.site-download-installer {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: grid;
+  grid-row: 2 / span 2;
+  grid-template-rows: subgrid;
+  padding: 28px 28px 30px;
+  position: relative;
+  transition: box-shadow var(--mk-motion-standard) var(--mk-motion-easing);
+}
+
+.site-download-installer:hover {
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+}
+
+.site-download-installer:hover .site-frame-name {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-download-installer .site-download-name {
+  font-size: 1.625rem;
+  letter-spacing: -0.034em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.site-download-installer .site-button {
+  margin-top: 28px;
+  width: 100%;
+}
+
+/* Narrower desktops. From 1439px down, the column's gutter and the heading
+   follow the viewport, as on pricing, and each meets its 1440px size at
+   the top of the range. From 1279px down the frames pad a little less.
+   Below 1100px the boxes stack, and each keeps its two frames side by
+   side with their rows lined up. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-download {
+    max-width: calc(1240px + 10.8vw);
+    padding: 0 5.4vw;
+  }
+
+  [data-site-viewport="desktop"] .site-download-hero {
+    padding-top: clamp(3rem, 4.4vw, 4rem);
+  }
+
+  [data-site-viewport="desktop"] .site-download-heading .site-download-title {
+    font-size: clamp(2.625rem, 5.3vw, 4.75rem);
+  }
+}
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-download-installer {
+    padding: 26px 24px 28px;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-download-installers {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 28px;
+  }
+
+  [data-site-viewport="desktop"] .site-download-installers .site-section-box {
+    grid-row: auto;
+    grid-template-rows: repeat(3, auto);
+  }
+
+  [data-site-viewport="desktop"] .site-download-installer {
+    padding: 28px 28px 30px;
+  }
+}

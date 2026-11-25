@@ -32,7 +32,7 @@ test("every site screen owns its folder, viewports and schemes", () => {
   }
 });
 
-test("the Site folder holds the eight canonical screens, the open menu and their tour in order", () => {
+test("the Site folder holds the nine canonical screens, the open menu and their tour in order", () => {
   assert.deepEqual(
     catalogueEntries()
       .filter((entry) => entry.path.startsWith("design/site/"))

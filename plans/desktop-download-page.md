@@ -93,19 +93,21 @@ Depends on: none
 
 Add the download screen to the site mockups and link it from the home.
 
-- [ ] Add the `design/site/download` entry and its screen under
+- [x] Add the `design/site/download` entry and its screen under
       `docs/mockups/src/screens/design/site/`, in mobile and desktop and in
       light and dark, from the shared site parts.
-- [ ] Make the home hero's **Download for Mac** open the download screen, and
+- [x] Make the home hero's **Download for Mac** open the download screen, and
       add the screen to the site tour.
-- [ ] Add the download styles under `docs/mockups/styles/site/`.
-- [ ] Update the site mockup tests, such as
+- [x] Add the download styles under `docs/mockups/styles/site/`.
+- [x] Update the site mockup tests, such as
       `docs/mockups/src/_tests_/design-site-home.test.ts`.
-- [ ] Run the mockup check that `docs/mockups/README.md` gives. Save
+- [x] Run the mockup check that `docs/mockups/README.md` gives. Save
       screenshots under `.context/download-page/`.
 - [ ] Get Cal's approval of the screen and its copy.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. The mockups README changed with the screen. The other
+      docs that count the site's pages joined Milestone 2. The check of the
+      links against the release file list joined Milestone 4.
 
 ## Milestone 2: Documentation and protocol
 
@@ -117,6 +119,8 @@ Depends on: 1
 - [ ] `site-design-pages.md`: add the Download page layout.
 - [ ] `site-mockups.md`: add the download entry and the tour step.
 - [ ] The site README: add `/download/` to its responsibilities.
+- [ ] `marketing-site.md` and `site-design.md`: add the download page where
+      they list the routes, the tour, the pages and their sizes.
 
 ## Milestone 3: Reserve the route
 
@@ -139,6 +143,12 @@ Depends on: 3
 - [ ] Point `Actions.astro` at `/download/`, and remove
       `EXTERNAL_LINKS.desktopReleases` when nothing else uses it.
 - [ ] Update the site tests and the browser specs, the route walk included.
+      `apps/site/tests/browser/home.spec.ts:62` expects the GitHub list today.
+- [ ] Give `reason` a JSDoc type in `packages/desktop/scripts/release-assets.mjs`,
+      so that TypeScript tests can import `releaseInventory`. Then check the
+      installer names of the mockups and of the site against it. My call of
+      2026-11-25: one shared names module was rejected, because it reaches
+      three workspaces, and the check catches a renamed installer.
 - [ ] Smoke-test the built page at 320px, 390px and 1440px in both schemes.
 
 ## Milestone 5: Verification, commit, review, and pull request

@@ -7,6 +7,7 @@ export const SITE_SCREENS = {
   changelog: "design/site/changelog",
   complaints: "design/site/complaints",
   docs: "design/site/docs",
+  download: "design/site/download",
   home: "design/site/home",
   pricing: "design/site/pricing",
   privacy: "design/site/privacy",
@@ -14,7 +15,7 @@ export const SITE_SCREENS = {
   terms: "design/site/terms",
 } as const;
 
-/** One of the eight site screens in the design catalogue. */
+/** One of the nine site screens in the design catalogue. */
 export type SiteScreen = (typeof SITE_SCREENS)[keyof typeof SITE_SCREENS];
 
 /** The site screens that the header and the menu list, in reading order. */
@@ -46,6 +47,7 @@ export const SITE_PAGE_NAMES: Readonly<Record<SiteScreen, string>> = {
   [SITE_SCREENS.changelog]: "Changelog",
   [SITE_SCREENS.complaints]: "Complaints",
   [SITE_SCREENS.docs]: "Docs",
+  [SITE_SCREENS.download]: "Download",
   [SITE_SCREENS.home]: "Home",
   [SITE_SCREENS.pricing]: "Pricing",
   [SITE_SCREENS.privacy]: "Privacy",

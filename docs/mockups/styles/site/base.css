@@ -7,8 +7,8 @@
    Canvas parts, the labels, the people, the panels, the code panel, the
    document typography, the chrome, the menu, the footer and the legal
    pages. The area files follow, one group each for the home, the
-   documentation, the changelog and pricing, and each area file holds only
-   rules that its own area uses.
+   documentation, the changelog, pricing and the download page, and each
+   area file holds only rules that its own area uses.
 
    Site documents draw in the canvas palette, so the --mk-* roles hold the
    Canvas values and the sans and mono families are Geist and Geist Mono.

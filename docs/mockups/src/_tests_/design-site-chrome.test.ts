@@ -21,11 +21,18 @@ const pageNames: Record<SiteScreenPath, string> = {
   "design/site/docs": "Docs",
   "design/site/changelog": "Changelog",
   "design/site/pricing": "Pricing",
+  "design/site/download": "Download",
   "design/site/terms": "Terms",
   "design/site/privacy": "Privacy",
   "design/site/complaints": "Complaints",
   "design/site/security": "Security",
 };
+
+/**
+ * The screens that the footer does not list: the home's Download for Mac
+ * opens the download page, so no footer link is current there.
+ */
+const outsideFooter: readonly SiteScreenPath[] = ["design/site/download"];
 
 /** The navigation link that each screen marks as the current page. */
 const currentNav: Partial<Record<SiteScreenPath, string>> = {
@@ -125,7 +132,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
         links
           .filter((node) => attribute(node, "aria-current") === "page")
           .map((node) => attribute(node, "data-mokly-link")),
-        [id],
+        outsideFooter.includes(id) ? [] : [id],
+        id,
       );
     }
   });

@@ -19,12 +19,28 @@ export const app = {
   signUp: siteOrigin + "/sign-up",
 } as const;
 
-/**
- * The public GitHub destinations: the open-source repository linked from
- * every site header, and the releases of the desktop app, which the home's
- * Download for Mac opens.
- */
+/** The public GitHub repository linked from every site header. */
 export const openSource = {
   github: "https://github.com/mokly-ai/mokly",
-  desktopReleases: "https://github.com/mokly-ai/mokly-desktop/releases",
 } as const;
+
+/**
+ * The desktop app's installers, which every desktop release publishes under
+ * these names. A name holds no version, and every release becomes the
+ * latest release, so an installer's download address never changes.
+ */
+export const desktopInstallers = {
+  macAppleSilicon: "Mokly-mac-arm64.dmg",
+  macIntel: "Mokly-mac-x64.dmg",
+  linuxAppImage: "Mokly-linux-x86_64.AppImage",
+  linuxDeb: "Mokly-linux-amd64.deb",
+} as const;
+
+/** One installer of the desktop app, by its file name. */
+export type DesktopInstaller =
+  (typeof desktopInstallers)[keyof typeof desktopInstallers];
+
+/** GitHub's fixed download address of an installer in the latest release. */
+export function desktopDownload(installer: DesktopInstaller): string {
+  return `https://github.com/mokly-ai/mokly-desktop/releases/latest/download/${installer}`;
+}

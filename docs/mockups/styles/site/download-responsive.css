@@ -1,0 +1,59 @@
+/* The download mobile composition: everything stacks in reading order.
+   The Mac box sits over the Linux box, and the frames stack inside them
+   50px apart, so that each frame keeps room for its label above it. Every
+   control is at least 44px tall. */
+
+[data-site-viewport="mobile"] .site-download {
+  padding: 0 20px;
+}
+
+/* The heading; the redline measures the space down to the Mac box */
+
+[data-site-viewport="mobile"] .site-download-hero {
+  padding-top: 48px;
+}
+
+[data-site-viewport="mobile"] .site-download-heading .site-download-title {
+  font-size: 2.625rem;
+  line-height: 1;
+}
+
+[data-site-viewport="mobile"] .site-download-redline {
+  height: 44px;
+}
+
+/* The installers stack inside their section boxes */
+
+[data-site-viewport="mobile"] .site-download-installers {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  padding-top: 44px;
+  row-gap: 28px;
+}
+
+[data-site-viewport="mobile"] .site-download-installers .site-section-box {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  grid-row: auto;
+  margin: 0 -10px;
+  padding: 12px 10px 24px;
+}
+
+[data-site-viewport="mobile"] .site-download-installers .site-section-box-head {
+  margin-bottom: -8px;
+}
+
+[data-site-viewport="mobile"] .site-download-installer {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px 26px;
+}
+
+[data-site-viewport="mobile"] .site-download-installer .site-download-name {
+  font-size: 1.5rem;
+}
+
+[data-site-viewport="mobile"] .site-download-installer .site-button {
+  min-height: 50px;
+}

@@ -80,7 +80,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.equal(label(only(hero, "site-hero-lead")), LEAD);
     assert.deepEqual(links(only(hero, "site-actions")), [
       ["Get started →", "design/site/docs"],
-      ["Download for Mac", openSource.desktopReleases],
+      ["Download for Mac", "design/site/download"],
     ]);
   });
 

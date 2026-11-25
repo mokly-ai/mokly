@@ -26,6 +26,7 @@ export const siteScreens = [
   "design/site/docs",
   "design/site/changelog",
   "design/site/pricing",
+  "design/site/download",
   "design/site/terms",
   "design/site/privacy",
   "design/site/complaints",

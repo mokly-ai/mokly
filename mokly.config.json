@@ -77,7 +77,9 @@
         "docs/mockups/styles/site/pricing.css",
         "docs/mockups/styles/site/pricing-plans.css",
         "docs/mockups/styles/site/pricing-compare.css",
-        "docs/mockups/styles/site/pricing-responsive.css"
+        "docs/mockups/styles/site/pricing-responsive.css",
+        "docs/mockups/styles/site/download.css",
+        "docs/mockups/styles/site/download-responsive.css"
       ]
     },
     {

@@ -1,12 +1,12 @@
 import { MockLink } from "@mokly/mokly";
 
 import { SiteIcon } from "./icons.js";
-import { EXTERNAL_LINKS, GET_STARTED_SCREEN } from "./links.js";
+import { EXTERNAL_LINKS, GET_STARTED_SCREEN, SITE_SCREENS } from "./links.js";
 
 /**
  * The home's action pair: the filled Get started, which opens the
  * documentation, and a secondary action. The hero's secondary action is
- * Download for Mac, which opens the desktop releases; the open-foundation
+ * Download for Mac, which opens the download page; the open-foundation
  * closing's is View on GitHub.
  */
 export function SiteActions({
@@ -26,13 +26,13 @@ export function SiteActions({
         </span>
       </MockLink>
       {secondary === "download" ? (
-        <a
+        <MockLink
           className="site-button site-button--secondary"
-          href={EXTERNAL_LINKS.desktopReleases}
+          to={SITE_SCREENS.download}
         >
           <SiteIcon name="download" />
           Download for Mac
-        </a>
+        </MockLink>
       ) : (
         <a
           className="site-button site-button--secondary"
