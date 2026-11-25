@@ -57,7 +57,8 @@ bound uses the control's own value, else the schema's `minimum` or `maximum`.
 Step uses the control's own value, else the schema's `multipleOf`, else 1 for
 an integer, else no step. Parents and saved variants carry the same limits.
 Saved props or story args outside their controls produce `props-control-bounds`
-build warnings. This includes complete merged variants and Storybook hints.
+build warnings. This includes Storybook hints and the
+[complete props](./mokly-entry-props.md#one-model) of variants.
 Each warning names the entry or the variant, including a Storybook story. Its
 message is `saved prop <JSON-quoted-pointer> is outside its control bounds`,
 with a JSON pointer to the top-level prop, such as `"/count"`. The pointer
@@ -66,17 +67,16 @@ The viewer accepts these saved values when they satisfy the prop schema.
 The values still render. `--strict` makes the warnings fatal. Live validation
 keeps the complete merged-props check so every accepted preview meets its bounds.
 
-A control starts from the props of the entry that Props edits, that is the
-entry's own props or a variant's merged props, updates the preview after
-validation, and has a label from the control's `label`, else the schema
-`title`, else the prop name. No invented sample value replaces a missing
-value; an optional prop exposes its unset state, and `unset` removes only an
-optional prop. Empty text stays a string. Reset restores that entry's complete
-props. Navigating to another entry discards temporary edits, as does a reload.
-Viewport and scheme changes keep validated edits and render them in the new
-context. Temporary state is never written to a source, never encoded in a URL,
-local storage, a comparison, or a Changes count, and never enters the
-catalogue model.
+A control starts from the complete props of the entry that Props edits, updates
+the preview after validation, and has a label from the control's `label`, else
+the schema `title`, else the prop name. No invented sample value replaces a
+missing value; an optional prop exposes its unset state, and `unset` removes
+only an optional prop. Empty text stays a string. Reset restores that entry's
+complete props. Navigating to another entry discards temporary edits, as does
+a reload. Viewport and scheme changes keep validated edits and render them in
+the new context. Temporary state is never written to a source, never encoded
+in a URL, local storage, a comparison, or a Changes count, and never enters
+the catalogue model.
 
 Temporary edits operate on the current frames. A comparison shows only while
 the Changes tab shows a compare mode; while a mode stays chosen there, Inspect

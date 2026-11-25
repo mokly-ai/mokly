@@ -9,6 +9,9 @@
  * steps show them in place of the panels.
  */
 
+import "./styles/shared.js";
+import "./styles/docs.js";
+
 import { SiteLayout } from "./parts/chrome.js";
 import {
   FIRST_SCREEN_DESKTOP_PAGE,

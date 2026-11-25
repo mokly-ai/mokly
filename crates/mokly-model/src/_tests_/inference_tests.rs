@@ -1,4 +1,4 @@
-//! Inference across own props and shallow-merged variant sets.
+//! Schema inference over complete prop sets.
 
 use serde_json::{Value, json};
 
@@ -11,7 +11,7 @@ use crate::validation::PropValidator;
 fn empty_arrays_omit_items_and_changed_kinds_form_type_lists() {
     let own: Props = serde_json::from_value(json!({"empty":[],"value":true})).unwrap();
     let variant: Props = serde_json::from_value(json!({"empty":[],"value":"text"})).unwrap();
-    let schema = serde_json::to_value(infer(&own, &[variant])).unwrap();
+    let schema = serde_json::to_value(infer(&[&own, &variant])).unwrap();
     assert!(schema["properties"]["empty"].get("items").is_none());
     assert_eq!(
         schema["properties"]["value"]["type"],
@@ -20,7 +20,18 @@ fn empty_arrays_omit_items_and_changed_kinds_form_type_lists() {
 }
 
 #[test]
-fn inference_closes_objects_unions_types_and_requires_own_keys() {
+fn inference_requires_only_keys_in_every_complete_set() {
+    let first: Props =
+        serde_json::from_value(json!({"label":"First","detail":"Extra","active":true})).unwrap();
+    let second: Props = serde_json::from_value(json!({"label":"Second","active":false})).unwrap();
+    let schema = serde_json::to_value(infer(&[&first, &second])).unwrap();
+
+    assert_eq!(schema["required"], json!(["active", "label"]));
+    assert_eq!(schema["properties"]["detail"]["type"], json!("string"));
+}
+
+#[test]
+fn inference_closes_objects_unions_types_and_requires_shared_keys() {
     let own: Props = serde_json::from_value(
         json!({"user":{"name":"Ada","plan":"pro"},"items":[],"enabled":true}),
     )
@@ -33,7 +44,7 @@ fn inference_closes_objects_unions_types_and_requires_own_keys() {
         serde_json::to_value(&variant["user"]).unwrap(),
         json!({"name":"Bob"})
     );
-    let schema = serde_json::to_value(infer(&own, std::slice::from_ref(&variant))).unwrap();
+    let schema = serde_json::to_value(infer(&[&own, &variant])).unwrap();
     assert_eq!(schema["required"], json!(["enabled", "items", "user"]));
     assert_eq!(schema["properties"]["user"]["required"], json!(["name"]));
     assert_eq!(

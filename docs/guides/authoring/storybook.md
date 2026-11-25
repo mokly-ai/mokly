@@ -137,8 +137,8 @@ Mokly infers one prop schema from all included stories. A top-level prop is
 required only when every included story sets it. In the example, `label` is
 required and `disabled` is optional.
 
-`argTypes` supplies control hints: options, number bounds and step, a label,
-and help text. It does not supply a schema or change validation.
+`argTypes` supplies control hints such as options, number bounds and step,
+a label, and help text. It does not supply a schema or change validation.
 
 Each story keeps the meta's select choices and number bounds, even for an
 entry prop that the story does not set. A story's own `argTypes` can override
@@ -154,20 +154,66 @@ React element args and arrays of React elements do too. Their file values
 remain available to the story. Other non-data args, such as a `Map`, still
 give a `props-not-data` warning.
 
-Mokly renders each story with exactly the data props it shows for that story.
+Mokly starts each render with exactly the data props it shows for that story.
 If you unset an optional prop in `mokly serve`, the story renders without it.
-Non-data args keep the values the file defines.
+Non-data args start with the values the file defines. As in Storybook's
+preview, `argTypes.mapping` supplies mapped control values to the component
+and `argTypes.if` omits args whose conditions are false.
 
 ## Decorators and themes
 
 Mokly loads the consumer's `.storybook/preview` annotations and uses
 Storybook's portable story composition. Storybook decorators wrap the story.
-The configured Mokly renderer wraps React mockup screens and components;
-stories use their Storybook providers.
+The configured Mokly renderer wraps React mockup screens and components.
+Stories use their Storybook providers.
 
 A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
 select a layout or product theme. Each story renders for the catalogue's
 viewports and enabled color schemes.
+
+Use the `mokly` parameter to set Storybook globals for each view. The
+`colorSchemes` field maps `light` or `dark` to an object of globals. The
+`viewports` field maps `mobile` or `desktop` to an object of globals. Set
+or override the parameter in the preview, the meta, or the story. Mokly
+reads the composed parameters for each story.
+
+Mokly starts with the story's composed globals and applies these values in
+order. Later values win when they set the same global.
+
+1. The mapped globals for the view's viewport.
+2. The mapped globals for the view's color scheme.
+3. The values of `moklyViewport` and `moklyColorScheme` for the view.
+
+This preview's theme decorator reads `globals.theme`. It sets
+`data-theme="dark"` on the story wrapper in dark views.
+
+```tsx
+// .storybook/preview.tsx
+import type { Preview } from "@storybook/react";
+
+const preview = {
+  decorators: [
+    (Story, { globals }) => (
+      <div data-theme={globals.theme === "dark" ? "dark" : "light"}>
+        <Story />
+      </div>
+    ),
+  ],
+  parameters: {
+    mokly: {
+      colorSchemes: { dark: { theme: "dark" }, light: { theme: "light" } },
+    },
+  },
+} satisfies Preview;
+
+export default preview;
+```
+
+Mokly applies the valid mappings and ignores malformed values. Examples
+include the unknown field `colourSchemes`, the unknown view name `tablet`,
+and a string where the mapping expects a globals object. The build gives a
+`storybook-parameter-ignored` warning that names the story page and the
+ignored value's path. `mokly build --strict` fails on this warning.
 
 Consumer JavaScript runs during static rendering. It does not run in the
 catalogue's frames. Use data args and static component output for the states
@@ -176,9 +222,15 @@ you want to show.
 ## Loaders and hooks
 
 Before each story render, Mokly runs the story's loaders and `beforeEach`
-hooks, as Storybook's portable stories do. The render receives the loader
-results through `loaded`. This story uses `Button` and `meta` from the first
-example:
+hooks. They get the same args as the render. These are the story's own
+non-data args and exactly the data props the preview shows. When you edit a
+prop in `mokly serve`, the loaders and hooks see the new value. When you unset
+an optional prop, Mokly leaves it out of the args. If a loader or a
+`beforeEach` hook changes the story's args, the decorators and the render
+get the updated args, as in Storybook's preview.
+
+The render receives the loader results through `loaded`. This story uses
+`Button` and `meta` from the first example.
 
 ```tsx
 export const Loaded: StoryObj<typeof meta> = {
@@ -187,8 +239,14 @@ export const Loaded: StoryObj<typeof meta> = {
 };
 ```
 
-A `beforeEach` hook can return a cleanup. Mokly runs it before the next story
-loads. The preview's `beforeAll` hook runs before the first story render of a
+A `beforeEach` hook can return a cleanup function to undo its setup before
+another story or screen renders. Mokly runs the cleanups once each, in reverse
+order, at the end of the story render whose hooks returned them. It runs them
+even if a loader, a hook, or the render fails. A cleanup that throws fails
+only that story's render. Storybook's own preview runs a story's cleanups when
+the next story loads.
+
+The preview's `beforeAll` hook runs before the first story render of a
 build. Each render process keeps one active setup. When rebuilt stories render
 in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
 again. This can happen in `mokly serve` after an edit.
@@ -196,10 +254,10 @@ again. This can happen in `mokly serve` after an edit.
 Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
 run. Loaders and `beforeEach` hooks can read them from `context.globals`.
 
-A loader, hook, cleanup, or render that throws fails that render. If
-`beforeAll` throws, Mokly does not retry it for that build. Each story render
-of that build fails with its error. Mokly runs no `play` function or
-`afterEach` hook.
+A loader, hook, `beforeAll` cleanup, or render that throws fails the current
+render. If `beforeAll` throws, Mokly does not retry it for that build. Each
+story render of that build fails with its error. Mokly runs no `play` function
+or `afterEach` hook.
 
 Loaders and hooks run in Node during the static render. A hook that needs a
 browser API, such as `window` or `document`, does not work.

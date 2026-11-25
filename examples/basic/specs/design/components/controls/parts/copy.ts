@@ -104,3 +104,16 @@ export const CONTROLS_COPY = {
   chooseAvailable: "Choose an available value.",
   propsUnavailable: "Props are unavailable for this screen.",
 } as const;
+
+/**
+ * The sentences of a failed or an invalid edit while no edit has rendered,
+ * so that the preview still shows the saved props: a failed first render,
+ * and an invalid value before any edit rendered. Once an edit has rendered,
+ * `CONTROLS_COPY.failedBody` and `CONTROLS_COPY.invalid` name the last valid
+ * props instead. The viewer does not choose the sentence from its frame yet,
+ * so these stay outside `CONTROLS_COPY`, which the viewer's copy equals.
+ */
+export const SAVED_PREVIEW_COPY = {
+  failedBody: CONTROLS_COPY.expiredBody,
+  invalid: "Check the highlighted values. The preview shows the saved props.",
+} as const;

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 
+import { currentDocumentPath } from "../packages/model/src/catalogue/delivery_paths.js";
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
 import { decodeProps } from "../packages/viewer/src/components/codec.js";
 
@@ -111,4 +112,99 @@ export const Alternate = { args: { name: "Ada" } };
     "utf8",
   );
   assert.match(document, /<span data-avatar="true">Zoe<\/span>/);
+});
+
+test("malformed Storybook parameters warn per included page and fail strict builds", async (context) => {
+  const root = await consumer(context, {
+    ".storybook/preview.ts": String.raw`
+export default { initialGlobals: { density: "default" } };
+export const initialGlobals = { density: "named" };
+export const parameters = {
+  mokly: {
+    "colourSchemes\ud800": {},
+    viewports: { mobile: { density: "compact" } },
+  },
+};
+`,
+    "specs/nested/Globals.stories.tsx": String.raw`
+export default {
+  title: "Globals",
+  render: (_args, { globals }) => (
+    <output>{String(globals.theme)}/{String(globals.density)}</output>
+  ),
+  parameters: {
+    mokly: {
+      viewports: {
+        desktop: [],
+        ['tablet"\\\n\u0085\ud800']: {},
+      },
+      colorSchemes: { light: { theme: "light" }, dark: [], sepia: {} },
+    },
+  },
+};
+export const Excluded = { tags: ["!mokly"], parameters: { mokly: null } };
+export const Primary = {};
+export const InvalidMap = { parameters: { mokly: { colorSchemes: false } } };
+export const InvalidRoot = { parameters: { mokly: [] } };
+`,
+  });
+  const parent = "nested/Globals";
+  const unknownField =
+    'parameter "mokly.colourSchemes�" is ignored: unknown field';
+  const invalidViewport =
+    'parameter "mokly.viewports.desktop" is ignored: not an object';
+  const unknownViewport = String.raw`parameter "mokly.viewports.tablet\"\\\u000a\u0085�" is ignored: unknown viewport`;
+  const expected = [
+    [parent, 'parameter "mokly.colorSchemes.dark" is ignored: not an object'],
+    [
+      parent,
+      'parameter "mokly.colorSchemes.sepia" is ignored: unknown colour scheme',
+    ],
+    [parent, unknownField],
+    [parent, invalidViewport],
+    [parent, unknownViewport],
+    [
+      `${parent}/InvalidMap`,
+      'parameter "mokly.colorSchemes" is ignored: not an object',
+    ],
+    [`${parent}/InvalidMap`, unknownField],
+    [`${parent}/InvalidMap`, invalidViewport],
+    [`${parent}/InvalidMap`, unknownViewport],
+    [`${parent}/InvalidRoot`, 'parameter "mokly" is ignored: not an object'],
+  ].map(([entry, message]) => `[mokly/warning] entry "${entry}": ${message}`);
+  const build = (args: string[]) =>
+    command(
+      root,
+      "build",
+      ["--no-changes", ...args],
+      "plain",
+      {},
+      context.signal,
+    ).result;
+  const warningLines = (stderr: string) =>
+    stderr.split(/\r?\n/).filter((line) => line.startsWith("[mokly/warning] "));
+
+  const built = await build([]);
+  assert.equal(built.code, 0, built.stderr);
+  assert.deepEqual(warningLines(built.stderr), expected);
+  for (const [entry, markup] of [
+    [parent, "<output>light/compact</output>"],
+    [`${parent}/InvalidMap`, "<output>undefined/compact</output>"],
+    [`${parent}/InvalidRoot`, "<output>undefined/default</output>"],
+  ] as const) {
+    const document = await fs.readFile(
+      path.join(
+        root,
+        "mokly-static",
+        currentDocumentPath(`${entry}/index.mobile.html`),
+      ),
+      "utf8",
+    );
+    assert.ok(document.includes(markup), `${entry} should render ${markup}`);
+  }
+
+  const strict = await build(["--strict"]);
+  assert.equal(strict.code, 1, strict.stderr);
+  assert.deepEqual(warningLines(strict.stderr), expected);
+  assert.match(strict.stderr, /10 build warnings with --strict/);
 });

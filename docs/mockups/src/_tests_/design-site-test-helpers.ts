@@ -13,24 +13,13 @@ import type {
 import { catalogueEntries, catalogueIndex } from "./catalogue-index";
 import { catalogueRoot, screenFile, screenView } from "./catalogue-paths";
 import type { Scheme, Viewport } from "./catalogue-paths";
+import { siteStylesheets, type SiteScreenPath } from "./site-stylesheets";
 
 type Node = DefaultTreeAdapterMap["node"];
 export type Element = DefaultTreeAdapterMap["element"];
 
 /** Root of the repository that owns the mockups. */
 export const repositoryRoot = resolve(catalogueRoot, "../..");
-
-/** The canonical site screens, in the order of the site tour. */
-export const siteScreens = [
-  "design/site/home",
-  "design/site/docs",
-  "design/site/changelog",
-  "design/site/pricing",
-  "design/site/terms",
-  "design/site/privacy",
-  "design/site/complaints",
-  "design/site/security",
-] as const;
 
 /** Find one current entry's record in the catalogue index. */
 export function siteEntry(id: string): CatalogueRecord {
@@ -131,52 +120,12 @@ export function label(node: Node): string {
   return textContent(node).replace(/\s+/g, " ").trim();
 }
 
-/** The configuration rule that gives every site document its stylesheets. */
-const siteStylesheetRule = "design/site/**/index.html";
-
-/** Whether a parsed JSON value is an object with named fields. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/** Whether a parsed JSON value is a list of strings. */
-function isStringList(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-  );
-}
-
 /**
- * The site stylesheets as repository paths, in link order, read from the one
- * rule of `mokly.config.json` that gives every site document its sheets, so
- * the policy tests read exactly what the documents link.
+ * Read the site styles as one policy input, in the cascade order of a site
+ * document: the CSS of one screen, or without a screen of every site screen.
  */
-export function siteStylesheets(): string[] {
-  const config: unknown = JSON.parse(
-    readFileSync(resolve(repositoryRoot, "mokly.config.json"), "utf8"),
-  );
-  const rules: unknown[] =
-    isRecord(config) && Array.isArray(config.stylesheets)
-      ? config.stylesheets
-      : [];
-  const rule: unknown = rules.find(
-    (candidate) =>
-      isRecord(candidate) && candidate.match === siteStylesheetRule,
-  );
-  const sheets: unknown = isRecord(rule) ? rule.stylesheets : undefined;
-  assert.ok(
-    isStringList(sheets),
-    "mokly.config.json has no stylesheet list for " + siteStylesheetRule,
-  );
-  return sheets;
-}
-
-/**
- * Read all split mockup site styles as one policy input, in the order each
- * generated site document links them.
- */
-export function siteStyles(): string {
-  return siteStylesheets()
+export function siteStyles(screen?: SiteScreenPath): string {
+  return siteStylesheets(screen)
     .map((path) => readFileSync(resolve(repositoryRoot, path), "utf8"))
     .join("\n");
 }
@@ -198,13 +147,15 @@ export function cssRules(source: string): CssRule[] {
 }
 
 /**
- * Assert that each named class has a hover rule in the site styles, and that
- * one of its hover rules changes more than the colour.
+ * Assert that each named class has a hover rule in the site styles, or in
+ * the styles of one screen, and that one of its hover rules changes more
+ * than the colour.
  */
 export function assertHoverChangesMoreThanColor(
   classNames: readonly string[],
+  screen?: SiteScreenPath,
 ): void {
-  const parsed = cssRules(siteStyles());
+  const parsed = cssRules(siteStyles(screen));
   for (const className of classNames) {
     const matching = parsed.filter((rule) =>
       rule.selector.includes(`.${className}:hover`),
@@ -222,11 +173,15 @@ export function assertHoverChangesMoreThanColor(
 }
 
 /**
- * Assert that each selector has a rule of its own in the site styles whose
- * declarations use the strong border role, the boundary of a control.
+ * Assert that each selector has a rule of its own in the site styles, or in
+ * the styles of one screen, whose declarations use the strong border role,
+ * the boundary of a control.
  */
-export function assertStrongBoundaries(selectors: readonly string[]): void {
-  const parsed = cssRules(siteStyles());
+export function assertStrongBoundaries(
+  selectors: readonly string[],
+  screen?: SiteScreenPath,
+): void {
+  const parsed = cssRules(siteStyles(screen));
   for (const selector of selectors) {
     const rule = parsed.find((candidate) =>
       candidate.selector.split(",").some((part) => part.trim() === selector),

@@ -29,8 +29,8 @@ and [instance](./mokly-instances.md) contracts; the prop schema follows the
 [`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
 type and the generated types that it imports define the shape of the read
 model. The viewer exports these types and the component value types without a
-CLI dependency. A screen's or a component's `props` hold the entry's own
-props, or a variant's merged props.
+CLI dependency. A screen's or a component's `props` hold its
+[complete props](./mokly-entry-props.md#one-model).
 
 No entry record carries a derived route or file name. Resource evidence names
 only rendered-resource paths. A reader uses the

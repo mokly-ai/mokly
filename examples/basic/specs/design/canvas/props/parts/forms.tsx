@@ -2,7 +2,10 @@ import { mockLink } from "@mokly/mokly";
 
 import { SavedPropsPanel } from "../../../../../../../packages/ui/src/controls-panel/controls-panel.js";
 import { PropValues } from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
-import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
+import {
+  CONTROLS_COPY,
+  SAVED_PREVIEW_COPY,
+} from "../../../components/controls/parts/copy.js";
 import {
   actionFields,
   VariantControls,
@@ -20,6 +23,8 @@ export type EditState =
   | "invalid"
   | "together"
   | "failed"
+  | "failed-later"
+  | "pending-later"
   | "expired"
   | "preparing"
   | "preparing-failed";
@@ -27,7 +32,11 @@ export type EditState =
 /**
  * The form's state in each depicted state, with the copy of the shipped
  * Props controls. Edited props draw their badge, and Reset opens the
- * restored state. The action of a failed or an expired render renders the
+ * restored state. An invalid value and a failed render name the props that
+ * the preview shows: the saved props until an edit has rendered, and the
+ * last valid props after one has. Try again of a later edit renders that
+ * edit again beside the earlier edit that rendered, so it opens its own
+ * pending state. The action of a failed or an expired render renders the
  * edits again, through the pending state, and Try again of a failed start
  * asks Serve again, through the preparing state.
  */
@@ -42,12 +51,24 @@ function editOf(state: EditState): VariantEdit {
     case "restored":
       return { restored: CONTROLS_COPY.restored };
     case "invalid":
-      return { ...edited, alert: { text: CONTROLS_COPY.invalid } };
+      return { ...edited, alert: { text: SAVED_PREVIEW_COPY.invalid } };
     case "together":
       return { ...edited, alert: { text: CONTROLS_COPY.invalidTogether } };
     case "failed":
       return {
         ...rerender,
+        alert: {
+          action: CONTROLS_COPY.retry,
+          body: SAVED_PREVIEW_COPY.failedBody,
+          title: CONTROLS_COPY.failedTitle,
+        },
+      };
+    case "pending-later":
+      return edited;
+    case "failed-later":
+      return {
+        ...edited,
+        retryHref: mockLink(PROPS_PAGES.propsLaterPending),
         alert: {
           action: CONTROLS_COPY.retry,
           body: CONTROLS_COPY.failedBody,

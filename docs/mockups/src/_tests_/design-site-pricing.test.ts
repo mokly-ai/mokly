@@ -205,7 +205,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("split site styles own the pricing compositions", () => {
-  const css = siteStyles();
+  const css = siteStyles("design/site/pricing");
   for (const selector of [
     ".site-pricing-plan",
     ".site-pricing-props",

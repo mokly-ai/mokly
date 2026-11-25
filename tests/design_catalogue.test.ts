@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { parse } from "parse5";
+
 import type { ComponentInstanceRecord } from "../packages/model/dist/index.js";
 
 import {
@@ -22,8 +24,14 @@ import {
   scriptViolations,
 } from "./helpers/design_rules.js";
 import { bypassViolations } from "./helpers/design_sources.js";
+import { viewFactViolations } from "./helpers/design_view_facts.js";
 import { fileFixture } from "./helpers/file_fixture.js";
-import { serveExample } from "./helpers/served_design.js";
+import {
+  serveExample,
+  viewRoute,
+  type ServedCatalogue,
+  type ServedView,
+} from "./helpers/served_design.js";
 
 // The design catalogue checks of the design component, component library,
 // component design, and design links contracts, over one served example.
@@ -145,6 +153,49 @@ test("served view documents run no scripts", setup, async () => {
   assert.deepEqual(scriptViolations(await served()), []);
 });
 
+test("design views reject unmarked external hrefs", () => {
+  const anchors = `
+    <a href="http://example.test/">HTTP</a>
+    <a href="https://example.test/">HTTPS</a>
+    <a href="mailto:design@example.test">Email</a>
+    <a href="#section">Section</a>
+    <a>Placeholder</a>
+  `;
+  const view = (path: string): ServedView => ({
+    path,
+    kind: "screen",
+    viewport: "desktop",
+    colorScheme: "light",
+    route: viewRoute(path, "desktop", "light"),
+    document: parse(anchors),
+  });
+  const design = view("design/screen");
+  const catalogue: ServedCatalogue = {
+    index: {
+      schemaVersion: 9,
+      identity: { id: "fixture", title: "Link check" },
+      deploymentId: "fixture",
+      revision: 0,
+      changesStatus: "unavailable",
+      comparisonUrl: null,
+      tree: [],
+      screens: [],
+      pages: [],
+      documents: [],
+      useCases: [],
+      components: [],
+      removedEntries: [],
+    },
+    details: new Map(),
+    views: [design, view("example/screen")],
+  };
+  assert.deepEqual(linkViolations(catalogue), [
+    `${design.route}: "HTTP" has an unmarked href http://example.test/`,
+    `${design.route}: "HTTPS" has an unmarked href https://example.test/`,
+    `${design.route}: "Email" has an unmarked href mailto:design@example.test`,
+  ]);
+});
+
 test(
   "every link opens an entry through one portable focus stop",
   setup,
@@ -178,6 +229,14 @@ test(
   setup,
   async () => {
     assert.deepEqual(tagViolations(await served()), []);
+  },
+);
+
+test(
+  "Props retries and Storybook Details show the expected values",
+  setup,
+  async () => {
+    assert.deepEqual(viewFactViolations(await served()), []);
   },
 );
 

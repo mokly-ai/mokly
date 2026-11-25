@@ -207,7 +207,9 @@ const TOKEN_KINDS = [
 ];
 
 test("a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes", () => {
-  const rules = siteRules().filter((rule) => rule.at === null);
+  const rules = siteRules("design/site/docs").filter(
+    (rule) => rule.at === null,
+  );
   /** The last value that a rule with this exact selector declares. */
   const last = (selector: string, property: string) =>
     rules

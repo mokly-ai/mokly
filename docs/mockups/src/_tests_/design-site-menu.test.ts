@@ -9,9 +9,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 /** The control that opens the menu, read from one header. */
 function menuControl(id: string, viewport: "mobile" | "desktop") {
@@ -125,15 +125,16 @@ test("Get started stays in the tool bar beside the menu control", () => {
   }
 });
 
-test("only the mobile composition draws the menu control", () => {
-  const css = siteStyles();
-  assert.match(css, /\.site-menu-button \{\s*display: none;\s*\}/);
-  assert.match(
-    css,
-    /\[data-site-viewport="mobile"\] \.site-menu-button \{\s*display: inline-flex;\s*\}/,
-  );
-  assert.match(
-    css,
-    /\[data-site-viewport="mobile"\] \.site-nav \{\s*display: none;\s*\}/,
-  );
-});
+for (const id of siteScreens)
+  test(`${id}: only the mobile composition draws the menu control`, () => {
+    const css = siteStyles(id);
+    assert.match(css, /\.site-menu-button \{\s*display: none;\s*\}/);
+    assert.match(
+      css,
+      /\[data-site-viewport="mobile"\] \.site-menu-button \{\s*display: inline-flex;\s*\}/,
+    );
+    assert.match(
+      css,
+      /\[data-site-viewport="mobile"\] \.site-nav \{\s*display: none;\s*\}/,
+    );
+  });

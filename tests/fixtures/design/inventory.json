@@ -93,6 +93,8 @@
     "design/canvas/props/states/expired",
     "design/canvas/props/states/invalid",
     "design/canvas/props/states/invalid-together",
+    "design/canvas/props/states/later-edit",
+    "design/canvas/props/states/later-pending",
     "design/canvas/search/tags",
     "design/canvas/search/tags/forms",
     "design/canvas/search/tags/forms-picker",
@@ -107,7 +109,11 @@
     "design/canvas/stage/document",
     "design/canvas/stage/document/light-only",
     "design/canvas/stage/home",
-    "design/canvas/stage/zoomed"
+    "design/canvas/stage/zoomed",
+    "design/canvas/stories/failed",
+    "design/canvas/stories/failed/changes",
+    "design/canvas/stories/storybook",
+    "design/canvas/stories/storybook/added"
   ],
   "runtimeOnly": [
     "design/canvas/components/inspection",
@@ -147,6 +153,7 @@
     "design/canvas/props/editing/edited",
     "design/canvas/props/editing/unset",
     "design/canvas/props/states/error",
+    "design/canvas/props/states/later-edit",
     "design/canvas/props/states/invalid",
     "design/canvas/stage/document/light-only"
   ],

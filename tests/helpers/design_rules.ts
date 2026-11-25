@@ -23,12 +23,16 @@ const hasClass = (element: Parameters<typeof attribute>[0], name: string) =>
   (attribute(element, "class") ?? "").split(/\s+/u).includes(name);
 
 /**
- * Catalogue-wide link validation: every marked link opens an existing entry,
- * a design entry from a design view, through a portable relative href for
- * the same viewport, with the dark file wherever the target renders one; no
- * link nests in or holds another focus stop; no inactive control is a link;
- * only an anchor carries a link marker; and a design link to its own entry
- * says that it is the current page, apart from the top bar's brand link.
+ * Marked links open existing entries in the same viewport through portable
+ * relative hrefs. A dark view links to the dark file when the target has one.
+ * Marked links in design views open design entries. A design link to its own
+ * entry sets `aria-current`, except for the top bar's brand link.
+ * Only anchors carry a link marker. Marked links cannot sit inside or hold
+ * another focus stop. Inactive controls carry no link marker.
+ *
+ * Unmarked anchors in design views can omit `href` or use an `href` that
+ * starts with `#`. Other views also allow `http:`, `https:`, and `mailto:`
+ * prefixes on unmarked anchors.
  */
 export function linkViolations(catalogue: ServedCatalogue): string[] {
   const visual = new Map(
@@ -45,7 +49,9 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
     ].map((entry) => entry.path),
   );
   const violations: string[] = [];
-  for (const view of catalogue.views)
+  for (const view of catalogue.views) {
+    const isDesignView = view.path.startsWith("design/");
+    const allowedUnmarkedHref = isDesignView ? /^#/u : /^(#|https?:|mailto:)/u;
     for (const [element, ancestors] of withAncestors(view.document)) {
       if (element.tagName !== "a") {
         if (attribute(element, "data-mokly-link") !== undefined)
@@ -56,7 +62,7 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
       const href = attribute(element, "href");
       const where = `${label(view)}: "${accessibleName(element)}"`;
       if (target === undefined) {
-        if (href !== undefined && !/^(#|https?:|mailto:)/u.test(href))
+        if (href !== undefined && !allowedUnmarkedHref.test(href))
           violations.push(`${where} has an unmarked href ${href}`);
         continue;
       }
@@ -64,8 +70,7 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
       const entry = visual.get(entryPath);
       if (!entry && !other.has(entryPath))
         violations.push(`${where} opens ${target}, which is no entry`);
-      // Design links name design entries, not the depicted example paths.
-      if (view.path.startsWith("design/") && !entryPath.startsWith("design/"))
+      if (isDesignView && !entryPath.startsWith("design/"))
         violations.push(`${where} opens the example entry ${target}`);
       if (entry) {
         const scheme =
@@ -88,12 +93,13 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
         violations.push(`${where} is an inactive control`);
       if (
         entryPath === view.path &&
-        view.path.startsWith("design/") &&
+        isDesignView &&
         attribute(element, "aria-current") === undefined &&
         !hasClass(element, "mbk-brand")
       )
         violations.push(`${where} links to its own entry without aria-current`);
     }
+  }
   return violations;
 }
 

@@ -1,9 +1,12 @@
 # Component Explorer Design
 
+Status: A story that cannot render still stops the build, and the shell shows no Story or Storybook row yet. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) adds the error document, and the [Storybook link milestone](../../plans/storybook-support.md#milestone-28-the-storybook-link-in-the-shell) adds the rows.
+
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-the component explorer and Props design entries and their owning folders.
+the component explorer, Props, and Storybook stories design entries and their
+owning folders.
 
 ## Component Pages
 
@@ -174,3 +177,56 @@ Disabled highlight controls explain whether there are no registered components,
 inspection is unavailable, a comparison is selected, or the screen was removed.
 Highlight chips have a small gap above an intact rounded outline, shared by
 outer and nested regions.
+
+## Storybook Stories
+
+The Storybook stories designs depict a branch of their own, the stories
+branch. There the catalogue also holds the Menu, a stories entry: the
+component entry of a stories file. Under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants),
+its first story, Collapsed, renders the Menu's own page, and Expanded and
+Disabled are its variants. On the branch, Expanded opens its list through a
+portal, so it could not render. The branch also adds Disabled, so Changes
+lists two entries: Expanded, changed, and Disabled, added. No screen uses the
+Menu, so Usage lists no consumers.
+
+Each view of a story that could not render holds an error document in place
+of the story. The document starts where the story would render, and its title
+says that the story could not render: `The Expanded story couldn’t render`.
+Next, it tells the reader to add the `!mokly` tag to leave the story out of
+the catalogue. It gives the reason last, under `Reason`, here
+`document is not defined`. The document carries only its own styles, with
+system colours that follow the scheme of its view, so the Dark frame shows it
+dark. Project CSS therefore cannot change its look or mark a failed view as
+changed.
+
+Around the document, the shell does not change. On
+`design/canvas/stories/failed`, Expanded keeps its Changed badge and its
+Changes tab. Props still edits the story's args, so a reader can try args that
+render. The error document renders no registered component, and neither does
+the Menu, so Highlight components is unavailable.
+
+Changes shows a failed story as an ordinary changed variant. On Expanded's
+Changes tab, `design/canvas/stories/failed/changes`, Side by side shows
+Expanded's last render at the branch point, with the list open, as Before. It
+shows the error document as Current. The comparison details say that the
+rendered content changed, and they name the saved variant with its unchanged
+saved props.
+
+Details of a stories entry name the story that the page renders in a Story
+row, directly below Source. On the Menu's own page,
+`design/canvas/stories/storybook`, the row reads `Collapsed`. That page is
+unmodified, but its set shows the changed Expanded row, so its panel has
+Changes. When the
+configuration gives the URL of the published Storybook, as on the stories
+branch, a Storybook row follows the Story row. Its link, `Open in Storybook`,
+opens the same story there in a new tab, so the reader keeps their place and
+their prop edits. An external-link icon follows the text, and a screen-reader
+label adds `(opens in a new tab)`.
+
+The page of an added story has no Storybook row, because the published
+Storybook does not hold that story yet. So
+`design/canvas/stories/storybook/added`, the added Disabled from the Changes
+filter, shows a Story row and no Storybook row. A changed story, such as
+Expanded, keeps its link. In a build without Changes, and while Changes is
+not ready, every story page shows its link.

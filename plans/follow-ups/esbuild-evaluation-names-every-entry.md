@@ -55,13 +55,12 @@
     comments change with the bundle options.
 - **Wider fix:** A. A source map lets each evaluation error, from any module,
   name its file.
-- **Previous examples:** `plans/follow-ups/describe-failure-names-every-file.md`
-  records the same message for a failure while `describe` collects the
-  definitions.
-- **Related:** `plans/follow-ups/describe-failure-names-every-file.md`: the
-  sibling message in `describe`. Use one message form for both. That fix
-  knows the module in its collection loop. This item needs the source map of
-  A.
+- **Previous examples:** commit `b741db86d` fixed the same message for a
+  failure while `describe` collects the definitions: it now names the failing
+  module.
+- **Related:** commit `b741db86d` names the failing module in a `describe`
+  failure. Use the same message form here. That fix knows the module in its
+  collection loop. This item needs the source map of A.
 - **Recommendation:** A. It names the module that the rule asks for, and it
   keeps the list as the fallback.
 - **Action:** fix after merge, apply A, because the message predates the Vite

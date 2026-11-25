@@ -1,9 +1,9 @@
 # Storybook Support
 
-Status: Active, paused by the user on 2026-11-24. On branch
-`calummoore/mokly-storybook-integration`, with no pull request into `main`
-yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I
-have not started. The section [Where the work stands](#where-the-work-stands)
+Status: Active. On branch `calummoore/mokly-storybook-integration`, with no
+pull request into `main` yet. Tracks A, B, C, and J are complete and merged
+into this branch. Track D is merged, and its last milestones run on a track
+branch. Tracks E to I have not started. The section [Where the work stands](#where-the-work-stands)
 gives what is done, what waits for the user, and how to continue. Each track
 works on its own branch from this branch and opens a pull request into this
 branch, as design calls 1 and 25 say. Pull requests from this branch into
@@ -93,18 +93,20 @@ The user paused the work on 2026-11-24, after tracks A, B, C, D, and J
 merged into this branch. On 2026-11-25 the user answered most of the open
 decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
-Milestone 1a draws the Storybook mockups again on Canvas. This section tells the next agent what is
-done, what waits for the user, and how to continue.
+Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
+merged Milestone 1a, and pull request #508 finished track B. This section
+tells the next agent what is done, what waits for the user, and how to
+continue.
 
-| Track                    | Pull request | Done                         | Open                                                                                  |
-| ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
-| A. Mockups               | #339, merged | Milestone 1, except one TODO | Milestone 1a, which also does the last TODO of Milestone 1                            |
-| B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
-| C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
-| D. Vite adapter          | #493, merged | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
-| J. Spike for decision 18 | #349, merged | Milestone 37                 | None                                                                                  |
-| E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
-| All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
+| Track                    | Pull request          | Done                 | Open                                                                                  |
+| ------------------------ | --------------------- | -------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a  | None                                                                                  |
+| B. Story reading         | #492 and #508, merged | Milestones 2 to 8    | None                                                                                  |
+| C. Imported assets       | #453, merged          | Milestones 9 to 12   | None                                                                                  |
+| D. Vite adapter          | #493, merged          | Milestones 13 and 16 | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
+| J. Spike for decision 18 | #349, merged          | Milestone 37         | None                                                                                  |
+| E to I                   | None                  | Nothing              | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None                  | Nothing              | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
 
@@ -133,8 +135,6 @@ A branch from this branch applies each answer and deletes the file.
 
 - [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
   Severity High.
-- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
-  D. Severity High.
 - [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
@@ -144,8 +144,8 @@ A branch from this branch applies each answer and deletes the file.
 - [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
 - [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
   F.
-- [design-external-link-check.md](follow-ups/design-external-link-check.md):
-  E.
+- `design-external-link-check.md`: E. Milestone 1a applied it and deleted
+  the file.
 
 ### Decisions that wait for the user
 
@@ -160,25 +160,22 @@ option. None has an answer yet, so no option applies.
   workspace package sources under Vite, raised on 2026-11-25. Its answer
   goes into the branch `calummoore/storybook-track-d-finish-nkpi`.
 
+### Follow-up items that wait for the user
+
+The review of track B found these problems outside its scope. Each file
+holds the full item and its recommended option. They block no milestone.
+
+- [sidecar-transport-rejects-lone-surrogates.md](follow-ups/sidecar-transport-rejects-lone-surrogates.md):
+  a lone surrogate in authored text stops the whole build.
+- [screen-renders-skip-story-setup.md](follow-ups/screen-renders-skip-story-setup.md):
+  a screen render depends on an earlier story render.
+
 ### Defects in merged code
 
-The first review of track B found these defects in the code that pull
-request #492 merged. Each one needs no decision, and a branch from this
-branch fixes it as its file says. Fix them before the pull request into
-`main`.
-
-- [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
-  Severity High.
-- [storybook-loaders-read-saved-args.md](follow-ups/storybook-loaders-read-saved-args.md):
-  Severity High.
-- [storybook-argtypes-mapping-skipped-in-render.md](follow-ups/storybook-argtypes-mapping-skipped-in-render.md):
-  Severity Medium.
-- [variant-props-docs-say-merged.md](follow-ups/variant-props-docs-say-merged.md):
-  Severity Medium.
-- [story-required-keys-derived-twice.md](follow-ups/story-required-keys-derived-twice.md):
-  Severity Low.
-- [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
-  Severity Low.
+The first review of track B found defects in the code that pull request
+#492 merged. Pull request #508 fixed them. This item remains. It needs no
+decision, and a branch from this branch fixes it as its file says. Fix it
+before the pull request into `main`.
 
 - [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
   the Markdown link check does not read crate topic pages.
@@ -197,10 +194,9 @@ branch fixes each one as its file says.
    recommended options. Ask for all of them in one message.
 2. Apply each answer in the milestone that waits for it, and record the
    answer in this plan with its date.
-3. Fix the defects in merged code above. Then run the reviews that did not
-   finish: the review TODO of Milestone 8 for track B, and the review TODO of
-   Milestone 17 for track D. Run each against this branch with the
-   `implementation-review` skill.
+3. Fix the defect in merged code above. Finish track D: Milestones 14, 15,
+   and 17 run on its track branch, with the review of Milestone 17 against
+   this branch.
 4. Merge `main` into this branch before a track starts. Only this branch
    merges `main`. Each track branch merges this branch.
 5. Start tracks E to I in the order of the [Tracks](#tracks) table. Each
@@ -1265,6 +1261,20 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     "Render failed" mockup, "Later edit failed", shows a failure after an
     earlier edit rendered. Reason: each sentence of design call 29 then has a
     mockup whose preview matches it.
+33. Made on 2026-11-25 in Milestone 1a. The Storybook mockups live in their
+    own Canvas folder, `design/canvas/stories`, "Storybook stories", because
+    the Component explorer folder already holds five screens. One branch
+    depicts every state: the Menu stories file, whose first story,
+    Collapsed, renders the parent page, whose Expanded story no longer
+    renders, and whose Disabled story the branch adds. The panel of a story
+    opens at its head, so the Story and Storybook rows show. The two
+    saved-props sentences of design calls 29 and 32 stay in
+    `SAVED_PREVIEW_COPY` of the controls copy, outside `CONTROLS_COPY`,
+    until Milestone 24a moves them into `CONTROLS_COPY` and the viewer's
+    copy together. Reason: the merge of `main` on 2026-11-25 dropped the
+    sentence of design call 32 from the viewer's copy, so the second TODO of
+    Milestone 24a no longer holds, and `tests/viewer_controls_copy.test.ts`
+    requires both copies to hold the same keys.
 
 ## Tracks
 
@@ -1294,6 +1304,12 @@ gate, commits, pushes, and runs the `implementation-review` skill against
 this branch. The track's workspace gives the findings and the decisions to
 the user in its own session, applies the fix rule, and opens a pull request
 into this branch. The orchestrator merges it.
+
+Design call 34, made on 2026-11-25: the orchestrator updates
+[Where the work stands](#where-the-work-stands) at each merge of a track
+branch, and a track branch lists those changes in its pull request
+description. Reason: a track branch edits only its own TODO lines, so the
+status section goes stale when each track edits it.
 
 ## Milestone 1: Mockups
 
@@ -1334,8 +1350,9 @@ Storybook.
       mockup, as design call 32 says, and add it to the frozen design lists
       and to the route table of `docs/protocol/mokly-component-controls-design.md`.
       Branch: `conductor/storybook-support-a-mockups`.
-- [ ] Update the mockups for the answer to decision 27. Milestone 1a does
-      this TODO on the Canvas design, and ticks it.
+- [x] Update the mockups for the answer to decision 27. Milestone 1a does
+      this TODO on the Canvas design, and ticks it. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
 - [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `conductor/storybook-support-a-mockups`.
@@ -1360,31 +1377,39 @@ This milestone draws them again on the Canvas design, with the answers of
 `.context/storybook-support/merge-main-justifications.md` of the primary
 workspace.
 
-- [ ] Draw the state of a story that could not render on the Canvas
+- [x] Draw the state of a story that could not render on the Canvas
       component page, desktop and mobile, and in Changes: the error document
       in Current, and the last successful render in Before. The error
       document names the story, says that it could not render, gives the
       reason in a secondary place, and gives the `!mokly` tag. It carries
       only its own styles, with system colors that follow the view's scheme,
-      as decision 26 says. Draw it in a dark view too.
-- [ ] Draw the Story row of design call 30 and the Storybook link in the
+      as decision 26 says. Draw it in a dark view too. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Draw the Story row of design call 30 and the Storybook link in the
       Details of a stories entry. The link opens in a new tab, with an icon
       and a screen-reader label, as decision 27 says. Draw it without an
       address, because a design link opens a design entry. The page of an
       added entry in Changes has no Storybook link, as decision 23 says.
-- [ ] Draw the saved-props sentences of design call 29 in the "Render
+      Branch: `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Draw the saved-props sentences of design call 29 in the "Render
       failed" and the "Invalid prop value" controls mockups, and the "Later
-      edit failed" state of design call 32.
-- [ ] Add each new state to the component and controls design inventories,
-      the screen and browser inventories, and the design snapshots.
-- [ ] Follow the copy rules and the forbidden patterns of the `product-ui`
-      skill.
-- [ ] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
-      pages through `npm run dev`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
-- [ ] Commit, push, review against this branch, give the findings to the
+      edit failed" state of design call 32. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Add each new state to the component and controls design inventories,
+      the screen and browser inventories, and the design snapshots. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Follow the copy rules and the forbidden patterns of the `product-ui`
+      skill. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
+      pages through `npm run dev`. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
 
 ## Milestone 2: Story reading documentation
 
@@ -1422,8 +1447,8 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answer to decision B4 to the protocol pages.
-      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B4 to the protocol pages.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
@@ -1718,6 +1743,20 @@ Design calls of track B, made on 2026-11-18:
   non-data arg of the same story, the requested value renders. Reason: the
   answer to B1 renders exactly the requested data props, and Storybook lays
   extra args over a story's own args.
+- B-g. Made on 2026-11-25 by the orchestrator of the track B finish, for the
+  answer to B4. The warning code is `storybook-parameter-ignored`. Its
+  subject is the entry of the story's page, and its message is
+  `parameter {path} is ignored: {reason}`, with the JSON-quoted path of the
+  malformed value, such as `"mokly.viewports.tablet"`. Reason: the subject
+  already names the story's page, the record rule forbids a message that
+  repeats it, and JSON quotes escape the control characters of an authored
+  name, as the `prop` messages do.
+- B-h. Made on 2026-11-25 by the same orchestrator. The `describe` result
+  carries the malformed values in an optional `ignoredParameters` list on
+  each definition and variant, as `excludedProps` carries the keys of
+  `props-not-data`. A value that the preview sets gives a warning on each
+  story page that composes it. Reason: the core derives the final entry
+  path, and each story page composes its own parameters.
 
 ## Milestone 3: Story reader
 
@@ -1826,23 +1865,34 @@ Depends on: 3, and the answer to decision B4 for malformed values
 
 Existing theme decorators follow Mokly's views, as decision 8 says.
 
-- [ ] Set the globals of the `mokly` parameter for each view before render,
+- [x] Set the globals of the `mokly` parameter for each view before render,
       as design call 11 says.
-- [ ] Test that a theme decorator that reads a `theme` global renders the
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Test that a theme decorator that reads a `theme` global renders the
       dark theme in dark views when the parameter maps it.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 ## Milestone 8: Story reading verification, review, and pull request
 
 Depends on: 2, 3, 4, 5, 6, 7
 
-- [ ] Remove each status line whose page this track completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
       7 build, in new small projects, and save the result under
       `.context/storybook-support/`.
-- [ ] Commit, push, review against this branch, give the findings to the
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+
+Evidence: `.context/storybook-support/track-b-matrix.md` in the workspace of
+`calummoore/storybook-track-b-finish-ekj1` holds the matrix check of
+2026-11-25.
 
 Pull request #492 merged Milestones 2 to 6 into this branch on 2026-11-24,
 before Milestone 7, at the user's request. Its description holds the

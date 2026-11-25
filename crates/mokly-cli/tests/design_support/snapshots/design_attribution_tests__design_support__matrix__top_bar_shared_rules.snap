@@ -100,6 +100,8 @@ design/library/chrome/top-bar -> design/canvas/props/states/error
 design/library/chrome/top-bar -> design/canvas/props/states/expired
 design/library/chrome/top-bar -> design/canvas/props/states/invalid
 design/library/chrome/top-bar -> design/canvas/props/states/invalid-together
+design/library/chrome/top-bar -> design/canvas/props/states/later-edit
+design/library/chrome/top-bar -> design/canvas/props/states/later-pending
 design/library/chrome/top-bar -> design/canvas/search/tags
 design/library/chrome/top-bar -> design/canvas/search/tags/forms
 design/library/chrome/top-bar -> design/canvas/search/tags/forms-picker
@@ -115,3 +117,7 @@ design/library/chrome/top-bar -> design/canvas/stage/document
 design/library/chrome/top-bar -> design/canvas/stage/document/light-only
 design/library/chrome/top-bar -> design/canvas/stage/home
 design/library/chrome/top-bar -> design/canvas/stage/zoomed
+design/library/chrome/top-bar -> design/canvas/stories/failed
+design/library/chrome/top-bar -> design/canvas/stories/failed/changes
+design/library/chrome/top-bar -> design/canvas/stories/storybook
+design/library/chrome/top-bar -> design/canvas/stories/storybook/added

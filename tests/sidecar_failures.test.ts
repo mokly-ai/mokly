@@ -89,6 +89,25 @@ test("bundle and evaluation failures remain reusable and route logs to stderr", 
   await sidecar.call("shutdown");
 });
 
+test("describe names only the entry module whose collection fails", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const file = "failures/describe.mjs";
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["page.mockup.ts", file],
+      renderer: null,
+      storiesFiles: ["button.stories.tsx"],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await assert.rejects(sidecar.call("describe", { generation }), {
+    code: "bundle-failed",
+    message: `${file}: fixture entry export failed`,
+  });
+});
+
 test("throws, promises, invalid nodes and forged markers fail each render", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
