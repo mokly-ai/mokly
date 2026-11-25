@@ -54,7 +54,7 @@ checks still apply. Binary files are outside the whitespace check.
 
 The suite compiles and lints the feature-gated design matrix target but does
 not run it; the nightly
-[Design Attribution Matrix](./ci-workflow.md#design-attribution-matrix) runs
+[Design Attribution Matrix](./ci-workflow-optional.md#design-attribution-matrix) runs
 it. Leaving that target to the nightly run alone was rejected, because a
 compile error then stays hidden until the nightly run fails.
 

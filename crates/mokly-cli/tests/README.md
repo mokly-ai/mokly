@@ -16,7 +16,7 @@ shared rules use separate selectors in one head, with exact per-rule evidence.
 The matrix runs with the `design-matrix` feature. A separate optional workflow
 runs it nightly and on manual dispatch. The default workspace tests and required
 verification gate exclude this target. Its runner and hang guards follow the
-[CI workflow contract](../../../docs/protocol/ci-workflow.md#design-attribution-matrix).
+[CI workflow contract](../../../docs/protocol/ci-workflow-optional.md#design-attribution-matrix).
 
 The design behaviour target checks parents' own-props views and the stacked
 frames of the Canvas comparisons in the default workspace suite. It renders an

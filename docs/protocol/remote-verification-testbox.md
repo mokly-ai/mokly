@@ -244,5 +244,5 @@ checkout `HEAD`. Fingerprints cover source changes and reject edits during the r
 
 - [Protocol index](./README.md)
 - [Cleanup and interrupts](./remote-verification-cleanup.md)
-- [CI workflow graph](./ci-workflow.md#testbox-workflow-target)
+- [CI workflow graph](./ci-workflow-optional.md#testbox-workflow-target)
 - [CI dependency cache and security](./ci-verification-security.md)
