@@ -6,7 +6,7 @@ import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 
 /** Run the same assertions against each catalogue delivery. */
@@ -14,7 +14,6 @@ export function registerDesignScrollTogether() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl = servedDesignFileUrl;
   type Scheme = "dark" | "light";
   type Viewport = "desktop" | "mobile";
   type Box = { bottom: number; left: number; right: number; top: number };

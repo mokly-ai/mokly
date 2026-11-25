@@ -7,7 +7,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
 import { registerCanvasCases } from "./design_canvas_cases.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { designFileUrl } from "./design_fixture.js";
 import { CATALOGUE_LINKS } from "./design_links_cases.js";
 import { documentFavicon } from "./document_error_allowance.js";
 
@@ -16,7 +16,6 @@ export function registerDesignPortable() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl = servedDesignFileUrl;
   const design = (entryPath: string, viewport: string) =>
     designFileUrl(
       path.join(

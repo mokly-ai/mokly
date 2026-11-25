@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { designFileUrl } from "./design_fixture.js";
 import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
 
@@ -14,7 +14,6 @@ export function registerComparisonDesign() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl = servedDesignFileUrl;
   const design = (entryPath: string, viewport: string): string =>
     designFileUrl(
       path.join(

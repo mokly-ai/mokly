@@ -9,7 +9,7 @@ import { test } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
 import {
   assertDesignResource,
-  designFileUrl as servedDesignFileUrl,
+  designFileUrl,
   designResourceExists,
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
@@ -24,9 +24,8 @@ export function registerDesignLibrary(viewport: "desktop" | "mobile") {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl = servedDesignFileUrl;
   const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
-  const manifest = { entries: designCatalogue(test) };
+  const manifest = { entries: designCatalogue() };
   const fileUrl = (route: string) =>
     designFileUrl(path.join(generated, route)).href;
   const size =
