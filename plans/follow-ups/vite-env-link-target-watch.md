@@ -144,6 +144,12 @@
     Equal head and base setups then share renders. That change can rename the
     `vite-env/` names. Before you apply C, check that the core still finds
     the env inputs of both calls by their role.
+  - `plans/follow-ups/vite-outside-env-directory.md`: work that waits for the
+    answer. Its recommended option takes its watch rule for an env file
+    outside the repository from this item.
+  - `plans/follow-ups/vite-static-build-input-evidence.md`: the same function
+    `bundle_finish::finish`. Its recommended option maps the same env record
+    for static evidence, so one mapping can serve both items.
 - **Recommendation:** C, not the review's B. The two calls already send the
   same setup names and differ only in the two core watch mappings. So C fixes
   them there, with the existing stylesheet admission pairs and no wire

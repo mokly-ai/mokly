@@ -122,6 +122,10 @@
   - `plans/follow-ups/vite-replay-computed-imports.md`: through C only. A
     structured source location can also carry the authored caller of its
     missing-fetch diagnostic. This link does not change the recommendation.
+  - `plans/follow-ups/vite-outside-env-directory.md`: its option A is a setup
+    failure for an `envDir` outside the roots. The env snapshot runs after
+    the setup loads, so D here does not reach that failure, and A must name
+    the config file itself.
 - **Recommendation:** D, not the review's B. D is B at the one step that both
   requests share. It reuses the locator that the loader already builds, for
   the same Medium effort.

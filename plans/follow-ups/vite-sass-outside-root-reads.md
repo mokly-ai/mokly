@@ -8,7 +8,7 @@
   `packages/mokly/src/sidecar/vite-css-hooks.ts:89`,
   `packages/mokly/src/sidecar/vite-plugin-inputs.ts:20`,
   `packages/mokly/src/sidecar/vite-css-transform.ts:92`, and
-  `docs/protocol/mokly-vite-adapter-inputs.md:45`.
+  `docs/protocol/mokly-vite-adapter-inputs.md:58`.
 - **Reason:** Every option makes a build fail that passes today, and a new
   build failure needs the user's answer, although the protocol already
   requires the failure.
@@ -29,7 +29,7 @@
   - `docs/protocol/mokly-sidecar-modules.md:69` to line 75 says that a file
     outside the source, the repository mapping, and the selected dependencies
     fails closed, for JavaScript and CSS alike.
-  - `docs/protocol/mokly-vite-adapter-inputs.md:45` says that a plugin's
+  - `docs/protocol/mokly-vite-adapter-inputs.md:58` says that a plugin's
     report of a file outside the source root and the selected dependency
     roots is skipped with a sidecar `diagnostic` event.
   - A load by a preprocessor is a stylesheet import under the fail-closed
@@ -101,7 +101,7 @@
     - Use the existing confinement error with the file's base name. Keep the
       skip and its diagnostic for each other report.
     - Change the plugin report sentence at
-      `docs/protocol/mokly-vite-adapter-inputs.md:45`. Say in
+      `docs/protocol/mokly-vite-adapter-inputs.md:58`. Say in
       `docs/guides/authoring/vite.md:92` that preprocessor load paths must
       stay inside the roots.
     - Add a test with an outside Sass load path.
@@ -158,6 +158,9 @@
   - `plans/follow-ups/vite-renderer-pruning-css-modules.md`: its options C
     and D need a record of actual reads with the importer and the import's
     conditions. The record of B here can serve both items.
+  - `plans/follow-ups/vite-css-url-resolution.md`: the same resolver override
+    in `configureViteCss`. Keep D here and the URL change of that item on the
+    one `ViteLookup`.
 - **Recommendation:** E, not the review's A. E closes the gap for each
   preprocessor at Small effort, with no new Sass hook. A is Large, covers Sass
   only, and leaves Less include paths and each Stylus import open. If the

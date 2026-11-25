@@ -75,6 +75,10 @@
   - [base-batch-fallback-processes.md](base-batch-fallback-processes.md) is
     about Git processes per file after a failed batch of source reads. It is
     the same cost class in another reader, so one design can cover both.
+  - [base-link-target-batch-reads.md](base-link-target-batch-reads.md) is
+    about one Git process for each committed link of a base. Its wider
+    option E puts that reader and the opaque-asset digests of this item
+    through one bounded batch boundary.
   - The
     [opaque asset spool item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/opaque-asset-generation-spool.md)
     was about how Serve delivers the same opaque assets. It closed on

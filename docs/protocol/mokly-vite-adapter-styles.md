@@ -101,6 +101,15 @@ project's own Vite build, and each scoped name depends only on the stylesheet
 path and the local name. Mokly's own scoper and the setup's own scoped names
 were rejected under the adapter.
 
+The named exports of a CSS Module are the named exports of Vite's own
+stylesheet module, such as `class`. The core installs them with the class
+maps through [`cssModules`](./mokly-sidecar.md#methods).
+
+Decision: the esbuild
+[export rule](./mokly-imported-styles-modules.md#composition-and-exports) was
+rejected under the adapter, because it drops names that the project's own
+build exports.
+
 ## Catalogues Without JavaScript
 
 Under the adapter, every local stylesheet goes through the setup, also in a

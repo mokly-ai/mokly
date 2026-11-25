@@ -125,6 +125,10 @@
   - After C lands, keep this item for B, and record C as done. If the user
     does not choose B of the composed asset item, ask the user whether B
     stays.
+  - `plans/follow-ups/vite-css-url-resolution.md`: the same code. Its options
+    B and C put their targets into the replacement table at line 63. Build
+    each replacement with one encoding function, or land C here first, so
+    that an escaped query keeps its text.
 - **Recommendation:** C now, and B after the user chooses B of the composed
   asset item. C removes the doubled `%` on both transformers in a Small
   change, and B keeps its regression. The review recommended B alone.

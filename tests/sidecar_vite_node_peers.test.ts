@@ -165,6 +165,46 @@ test("a restored Vite generation uses a fresh worker when a native package manif
   await fixture.sidecar.call("shutdown");
 });
 
+test("a restored Vite generation uses a fresh worker when an importer's nested package changes", async (context) => {
+  const fixture = await reviewFixture(context);
+  const entry = "src/feature/review.mockup.ts";
+  const dependency = "src/feature/node_modules/fixture-nested";
+  const sourceLink = path.join(fixture.parent, "linked-source");
+  await fs.symlink(fixture.root, sourceLink, "junction");
+  await fixture.write(
+    `${dependency}/package.json`,
+    '{"exports":"./index.mjs"}',
+  );
+  await fixture.write(`${dependency}/index.mjs`, 'export default "before";');
+  const imports = 'import value from "fixture-nested";';
+  await fixture.write(entry, reviewPage("value", imports));
+  fixture.params.entryFiles = [entry];
+  const first = await fixture.compile();
+  assert.match((await fixture.render(first)).html, /<body>before<\/body>/);
+
+  await fixture.write(entry, reviewPage('value + " value"', imports));
+  const edited = await compileOnAnotherWorker(context, fixture);
+  await restoreBundle(fixture, edited, sourceLink);
+  assert.match(
+    (await fixture.render(edited)).html,
+    /<body>before value<\/body>/,
+  );
+
+  await fixture.write(`${dependency}/index.mjs`, 'export default "after";');
+  const second = await compileOnAnotherWorker(context, fixture);
+  await restoreBundle(fixture, second, sourceLink);
+  await assert.rejects(fixture.render(second), {
+    code: "fresh-worker-required",
+  });
+  await fixture.replaceWorker();
+  await restoreBundle(fixture, second, sourceLink);
+  assert.match(
+    (await fixture.render(second)).html,
+    /<body>after value<\/body>/,
+  );
+  await fixture.sidecar.call("shutdown");
+});
+
 async function compileOnAnotherWorker(
   context: TestContext,
   fixture: ReviewFixture,
@@ -176,9 +216,13 @@ async function compileOnAnotherWorker(
   return bundle;
 }
 
-function restoreBundle(fixture: ReviewFixture, bundle: BundleResult) {
+function restoreBundle(
+  fixture: ReviewFixture,
+  bundle: BundleResult,
+  sourceRoot = fixture.params.sourceRoot,
+) {
   return fixture.sidecar.call("restoreGeneration", {
     ...bundle,
-    params: fixture.params,
+    params: { ...fixture.params, sourceRoot },
   });
 }

@@ -180,6 +180,15 @@
     here needs the source file, the conditions, and the scoping of each
     inlined rule. One provenance record can serve all three items. It does
     not affect B.
+  - `plans/follow-ups/vite-tailwind-scan-scopes.md`: options that conflict
+    while the current pruning rule stays. If the files that a Tailwind scan
+    scope matches join the stylesheet dependencies, a renderer stylesheet
+    with a broad scope prunes each entry stylesheet below it. The options of
+    that item keep the scope out of the dependencies. B here removes the
+    conflict.
+  - `plans/follow-ups/vite-lazy-css-order.md`: its option D changes the
+    renderer exclusion that this item also changes, so decide the two
+    together.
 - **Recommendation:** B, as the review says. B gives the CSS of the
   project's own Vite build. Vite loads a JavaScript-imported stylesheet
   module once. A JavaScript import of a file that a stylesheet inlines with

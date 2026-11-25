@@ -37,6 +37,10 @@
   failure has no module.
 - **Wider fix:** None, because this is one message.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/esbuild-evaluation-names-every-entry.md`:
+  the sibling message of an esbuild evaluation failure in `describe`. Use one
+  message form for both. Here the collection loop knows the module. That
+  item needs a source map to know it.
 - **Recommendation:** A. It meets the fail-closed table with the least
   change.
 - **Action:** fix after merge, apply A, because the problem predates the

@@ -526,6 +526,7 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   Vite server for the JavaScript and stylesheet requests of a side. It sends
   `fresh-worker-required` when a setup reload needs empty Node module caches.
   A stylesheet dependency edit can replace the server in the same process.
+  Before replacement, the old server receives the detected file changes.
   [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
   HTTP, file watching, hot reload, or dependency pre-bundling.
   [`vite-setup-snapshot.ts`](./vite-setup-snapshot.ts) checks setup observations
@@ -565,8 +566,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   peers other than React, then loads Vite and finds its real package path.
   [`vite-node-peers.ts`](./vite-node-peers.ts) scopes Node's resolve hook to each
   request so dependencies of a Vite generation load one React runtime.
-  It keeps the peer paths and recorded dependency-root inputs of evaluated
-  generations. A conflict returns `fresh-worker-required` before evaluation.
+  It keeps the peer paths of evaluated generations. It also keeps the digests
+  and directory membership of recorded inputs that the repository ownership rule
+  treats as unowned. A conflict returns `fresh-worker-required` before evaluation.
   [`vite-react-peers.ts`](./vite-react-peers.ts) builds that table after setup
   using the setup's aliases. Mokly's first resolver claims React imports and
   uses the table to serve them and the JSX development shim.
@@ -583,11 +585,12 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   aliases and setup hooks. It serves the virtual modules and stylesheet stubs
   and confines the remaining project resolutions.
 - [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) captures `this.load` and
-  `this.addWatchFile` before the setup's ordered hooks run. It retains each
-  module's report digests while Vite reuses its transform. Both JavaScript
-  fetches and inline stylesheet transforms use these reports, including files
-  the same module imports. Reports outside the selected roots or for existing
-  non-file paths emit a diagnostic.
+  `this.addWatchFile` in the contexts of load, transform, and resolve hooks.
+  Resolve reports belong to the importer. It retains each module's reports and
+  load edges while Vite reuses its transform. JavaScript fetches and inline
+  stylesheet transforms collect reports from the module and its nested loads.
+  They keep reports for files that the module also imports. Reports outside
+  the selected roots or for existing non-file paths emit a diagnostic.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
   builds digests for setup files, plugin inputs, React manifests, preview, package
@@ -596,14 +599,18 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   with the disk. It invalidates virtual, changed, and unsnapshotted modules, or
   all modules when a directory list changes. [`vite-watch-events.ts`](./vite-watch-events.ts)
   passes each change to the setup's watcher listeners and to Vite's environment
-  containers before transforms run again.
+  containers before transforms run again or the server is replaced in the
+  same process.
 - [`vite-evaluate.ts`](./vite-evaluate.ts) runs the generation once through Vite's
-  module runner. A restored recipe uses only its recorded fetches, without reads
-  or transforms. [`vite-urls.ts`](./vite-urls.ts) converts URLs, IDs, query
-  variants, and virtual names to files and logical names.
-  [`vite-errors.ts`](./vite-errors.ts) reports `bundle-failed` with the logical
-  module, plugin, and, once loaded, the installed and tested Vite versions. It
-  rewrites absolute paths to logical names and virtual names to “entry module”.
+  module runner. A restored recipe uses its recorded fetches without reading
+  current source files or running transforms. [`vite-urls.ts`](./vite-urls.ts)
+  converts URLs, IDs, query variants, and virtual names to files and logical names.
+  [`vite-errors.ts`](./vite-errors.ts) reports transform and resolve failures
+  with the logical module, plugin, and, once loaded, the installed and tested
+  Vite versions. For evaluation, it reports `bundle-failed` with the logical
+  module that failed and the error text. A failure outside a module uses the
+  label `Vite evaluation` and gives the installed version and tested range.
+  The formatters rewrite absolute paths to logical names.
   `viteStylesheetFailure` uses the requested stylesheet path instead. When the
   failure has a line and a column in a file inside the side's source root, it
   names that file with the line and the column. A location in a virtual module

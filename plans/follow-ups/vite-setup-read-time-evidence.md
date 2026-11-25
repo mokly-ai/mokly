@@ -168,6 +168,11 @@
     plugin reports, at `packages/mokly/src/sidecar/vite-plugin-inputs.ts:76`,
     when no earlier snapshot holds the file. C can cover it, unless another
     fix already did.
+  - `plans/follow-ups/vite-static-build-input-evidence.md`: a shared wider
+    fix. Its recommended option delivers static observations of each Vite
+    input. Deliver them from the read record of C.
+  - `plans/follow-ups/vite-setup-config-directory-listing.md`: C here also
+    lets the setup check drop its listing of the configuration directory.
 - **Recommendation:** C. It makes read-time evidence a part of each setup
   input, so a new loader cannot bring the race back.
 - **Action:** fix after merge, apply C, because C reaches every setup loader

@@ -59,6 +59,7 @@ export function moklyViteFirstPlugin(
       order: "pre",
       async handler(source, importer) {
         const input = current();
+        if (importer) reports.trackResolve(this, input, importer);
         source = viteId(source);
         const inline = css.forId(source);
         if (inline) return inline.id;

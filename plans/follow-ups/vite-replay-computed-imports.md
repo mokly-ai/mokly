@@ -141,6 +141,13 @@
   importer, at `packages/mokly/src/sidecar/vite-urls.ts:40`.
 - **Previous examples:** `plans/follow-ups/base-template-import-resolution.md`
   records a separate computed import case on the default compile path.
+- **Related:**
+  - `plans/follow-ups/vite-import-glob-new-files.md`: this item points
+    authors to `import.meta.glob`. That item records that Serve misses a new
+    file that matches such a glob in a new subdirectory.
+  - `plans/follow-ups/vite-lazy-css-order.md`: under C here, each captured
+    target of a computed import is a dynamic edge, and its option B must give
+    that edge the dynamic kind.
 - **Recommendation:** D, not the review's B. D keeps the boundary text and
   the replay message of B. It also names each unanalyzed import with its line
   at compile time, also when the import runs only in a later render.

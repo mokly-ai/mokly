@@ -163,6 +163,11 @@
   - The `transformViteCss` row of the methods table in
     `docs/protocol/mokly-sidecar.md` links the generated `ViteCssResult` type.
     So the warning field of E needs no edit of that row.
+  - `plans/follow-ups/vite-css-url-resolution.md`: the same code and a shared
+    wider fix. Its option D is the record of B here, so that option waits for
+    this answer. Its other options use the same placeholder table as C and D
+    here. A composed rule reaches `resolve` with no importer, so their alias
+    step must run before that check.
 - **Recommendation:** C, not the review's A. A cannot cost less than C. C
   keeps the processed nodes, so Vite's own URL rewrite gives each composed
   URL its file. If the user does not accept a Mokly loader inside Vite's CSS

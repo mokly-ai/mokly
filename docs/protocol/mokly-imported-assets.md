@@ -1,6 +1,6 @@
 # JavaScript Asset Imports
 
-Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them.
+Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them. Under the Vite adapter, the asset token and delivery rules of this page are not available yet. The [Vite asset milestone](../../plans/storybook-support.md#milestone-31-imported-assets-on-the-vite-adapter) adds them.
 
 This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each
@@ -43,6 +43,9 @@ A `.css` or `.module.css` import is the exception to these rules. It stays a
 stylesheet import under the
 [imported stylesheet contract](./mokly-imported-styles.md), also with an import
 attribute. That contract also gives its loader rules.
+
+Under the [Vite adapter](./mokly-vite-adapter.md#moklys-plugin), the setup,
+not these rules, chooses the value of each import that is not a stylesheet.
 
 Decision: the import attribute wins over every loader, as in esbuild.
 Rejected: a configured loader first, because an import then gets another value

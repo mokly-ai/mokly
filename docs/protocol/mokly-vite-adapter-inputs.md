@@ -27,7 +27,9 @@ A change to one of them causes a rebuild, reloads the setup, and moves every
 [render input key](./mokly-watch.md#invalidation-through-the-render-graph). A
 file that starts or stops matching a `rebuild` rule is also a change. In
 Serve, Mokly prepares again before publication when a rule match stops being
-a source, module, or stylesheet input. Mokly's watcher drives rebuilds. A
+a source, module, or stylesheet input. Mokly's watcher drives rebuilds. Each
+change that makes the setup transform again in the same process first reaches
+the `watchChange` hooks and the watcher listeners of its plugins, once. A
 `bundle` request never uses a transform of older bytes than the bytes that the
 graph reports.
 

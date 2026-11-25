@@ -27,7 +27,23 @@ export function viteFailure(
   const message = viteDetail(paths, detail(error));
   return new SidecarError(
     "bundle-failed",
-    `${viteName(paths, source)}: ${plugin}: ${message}${version ? ` (Vite ${version}; tested range ${testedViteRange()})` : ""}`,
+    `${viteName(paths, source)}: ${plugin}: ${message}${viteVersion(version)}`,
+  );
+}
+
+export function viteEvaluationFailure(
+  error: unknown,
+  paths: Pick<ModulePaths, "name">,
+  version: string,
+  module?: string,
+): SidecarError {
+  if (error instanceof SidecarError) return error;
+  const message = viteDetail(paths, detail(error), "virtual module");
+  return new SidecarError(
+    "bundle-failed",
+    module === undefined
+      ? `Vite evaluation: ${message}${viteVersion(version)}`
+      : `${module}: ${message}`,
   );
 }
 
@@ -143,6 +159,10 @@ function viteDetail(
         return viteName(paths, name) + (location?.[0] ?? "");
       },
     );
+}
+
+function viteVersion(version: string | undefined): string {
+  return version ? ` (Vite ${version}; tested range ${testedViteRange()})` : "";
 }
 
 function testedViteRange(): string {

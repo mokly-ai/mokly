@@ -140,6 +140,9 @@
   - `plans/follow-ups/vite-renderer-pruning-css-modules.md`: each recorded
     stylesheet report joins the dependency set that the renderer pruning
     reads.
+  - `plans/follow-ups/vite-tailwind-scan-scopes.md`: the same code. If D here
+    lands, move the scan pattern rule of that item into the shared report
+    rule of D.
 - **Recommendation:** D. It records each report whatever the order of its
   hook, so the record does not depend on the position of Mokly's plugin.
 - **Action:** fix after merge, apply D, because D wraps the hooks of every

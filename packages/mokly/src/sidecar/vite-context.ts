@@ -16,7 +16,6 @@ import {
 } from "./vite-invalidation.js";
 import type { ViteSnapshot } from "./vite-invalidation.js";
 import type { loadVite } from "./vite-peers.js";
-import { currentViteReport } from "./vite-plugin-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { captureReactPeers } from "./vite-react-peers.js";
 import { ViteLookup } from "./vite-resolution.js";
@@ -110,8 +109,12 @@ export class ViteContext {
         (await setupSnapshot({ ...previous.files, rebuild }, directory, paths))
           .stamp;
     if (this.setupStarted && reloadSetup) throw new FreshViteWorker();
-    if (previous && (await changedStylesheets(previous.stylesheets)))
-      await this.dispose();
+    if (previous) {
+      await withViteConfigResolution(previous.lookup, () =>
+        previous.watchEvents.dispatch(previous.server, changed.events),
+      );
+      if (changed.stylesheetDependenciesChanged) await this.dispose();
+    }
     if (!this.setup) {
       this.setupStarted = true;
       // Node can reuse config helpers without running either module hook.
@@ -145,9 +148,6 @@ export class ViteContext {
       input.peers = await captureReactPeers(input.lookup);
     }
     if (setup === previous) {
-      await withViteConfigResolution(setup.lookup, () =>
-        setup.watchEvents.dispatch(setup.server, changed.events),
-      );
       for (const [file, digest] of changed.files)
         setup.observed.set(file, digest);
       if (entry !== undefined || changed.files.size || changed.directories.size)
@@ -174,15 +174,4 @@ export class ViteContext {
     if (setup)
       await withViteConfigResolution(setup.lookup, () => setup.server.close());
   }
-}
-
-async function changedStylesheets(
-  sheets: Setup["stylesheets"],
-): Promise<boolean> {
-  const files = new Map(
-    [...sheets.values()].flatMap(({ dependencies }) => [...dependencies]),
-  );
-  for (const [file, digest] of files)
-    if (!(await currentViteReport(file, digest))) return true;
-  return false;
 }

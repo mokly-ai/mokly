@@ -90,7 +90,9 @@
   delivery path, and the Mokly Cloud reservation calls the same exported table.
 - **Action:** fix after merge, apply E, because the user approved the change to
   Serve and to Mokly Cloud on 2026-11-25.
-- **Done when:** the status lines of `docs/protocol/mokly-imported-assets.md`
-  and `docs/protocol/mokly-imported-styles-assets.md` are gone, because Mokly
-  Cloud sends the content types of the asset tables and of a delivered
-  `.txt` asset.
+- **Done when:** the status line of
+  `docs/protocol/mokly-imported-styles-assets.md` and the Mokly Cloud part of
+  the status line of `docs/protocol/mokly-imported-assets.md` are gone,
+  because Mokly Cloud sends the content types of the asset tables and of a
+  delivered `.txt` asset. The other part of that status line names the Vite
+  adapter and has another owner.

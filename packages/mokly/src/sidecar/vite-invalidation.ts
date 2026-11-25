@@ -11,7 +11,7 @@ import type {
 import { fileDigest, missingFile } from "./file-digests.js";
 import type { ViteStylesheetSnapshot } from "./vite-css-transform.js";
 import type { viteMetadata } from "./vite-metadata.js";
-import { currentViteReport } from "./vite-plugin-inputs.js";
+import { currentViteReportDigest } from "./vite-plugin-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 import { viteFile } from "./vite-urls.js";
@@ -63,29 +63,46 @@ export async function changedViteInputs(
   const directories = new Map<string, string[]>();
   const events = new Map<string, ViteWatchEvent>();
   const sources = new Map<string, string>();
+  const stylesheetDependencies = new Map<string, string | null>();
   for (const [file, bytes] of snapshot?.files ?? [])
     sources.set(file, createHash("sha256").update(bytes).digest("hex"));
-  for (const { file, digest } of stylesheets) sources.set(file, digest);
+  for (const { file, digest, dependencies } of stylesheets) {
+    sources.set(file, digest);
+    for (const [dependency, digest] of dependencies)
+      stylesheetDependencies.set(dependency, digest);
+  }
   for (const file of observed.keys())
     if (!sources.has(file)) observed.delete(file);
-  for (const [file, digest] of sources) {
+  let stylesheetDependenciesChanged = false;
+  for (const file of new Set([
+    ...sources.keys(),
+    ...stylesheetDependencies.keys(),
+  ])) {
     const prior = observed.get(file);
-    const before = prior === undefined ? digest : prior;
-    const after = await fileDigest(file);
-    if (after === before) continue;
-    files.set(file, after);
-    events.set(
-      file,
-      before === null ? "create" : after === null ? "delete" : "update",
-    );
+    const before = prior === undefined ? sources.get(file) : prior;
+    const dependencyBefore = stylesheetDependencies.get(file);
+    const after =
+      dependencyBefore === undefined
+        ? await fileDigest(file)
+        : await currentViteReportDigest(file);
+    if (before !== undefined && after !== before) {
+      files.set(file, after ?? null);
+      events.set(file, fileEvent(before, after));
+    }
+    if (dependencyBefore !== undefined && after !== dependencyBefore) {
+      stylesheetDependenciesChanged = true;
+      if (!events.has(file))
+        events.set(file, fileEvent(dependencyBefore, after));
+    }
   }
   let metadata = false;
   if (snapshot) {
     for (const [file, digest] of Object.entries(snapshot.metadata)) {
-      const current = snapshot.reports.has(file)
-        ? await currentViteReport(file, digest)
-        : (await fileDigest(file)) === digest;
-      if (!current) metadata = true;
+      const current =
+        snapshot.reports.has(file) || stylesheetDependencies.has(file)
+          ? await currentViteReportDigest(file)
+          : await fileDigest(file);
+      if (current !== digest) metadata = true;
     }
     for (const [directory, before] of snapshot.directories) {
       const after = await membership(directory);
@@ -103,7 +120,21 @@ export async function changedViteInputs(
       }
     }
   }
-  return { files, directories, events, metadata };
+  return {
+    files,
+    directories,
+    events,
+    metadata,
+    stylesheetDependenciesChanged,
+  };
+}
+
+function fileEvent(
+  before: string | null,
+  after: string | null | undefined,
+): ViteWatchEvent {
+  if (before === null) return "create";
+  return after == null ? "delete" : "update";
 }
 
 /** Recipes evaluate a fresh graph, so unchanged importers need no new transform. */

@@ -143,6 +143,9 @@
     path too.
   - `plans/follow-ups/vite-node-loading-rule.md`: the rule for which packages
     Node loads natively. C here works against it.
+  - `plans/follow-ups/installed-module-watch-paths.md`: a child that only
+    Node loads gets no record and no Serve watch until this item lands. Its
+    Vite regression imports the edited child directly for that reason.
 - **Recommendation:** G. One record of what Node actually loaded protects
   every native load path of a worker, during the setup and the evaluation.
 - **Action:** fix after merge, apply G, because G reaches every native load

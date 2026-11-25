@@ -78,7 +78,9 @@
 - **Related:** `plans/follow-ups/bundle-reuse-outcome-field.md` adds a reuse
   field to the `bundle` reply, in the same row. Under B or C, that field
   needs no edit of the row. Make both changes in one edit when both items
-  are open.
+  are open. `plans/follow-ups/sidecar-process-css-row-fields.md` records the
+  same omission in the `processCss` row. C here closes both items in one
+  edit.
 - **Recommendation:** B. The generated types then supply the field list, so a
   field change needs no edit of the row, and the row matches the
   `transformViteCss` row.

@@ -11,10 +11,19 @@ import { viteFile } from "./vite-urls.js";
 
 type Reports = Map<string, string | null>;
 
+interface HookReports {
+  files: Reports;
+  loads: Set<string>;
+}
+
 interface ModuleReports {
-  pendingLoad?: Reports;
-  load: Reports;
-  transform: Reports;
+  pendingLoad?: HookReports;
+  load: HookReports;
+  transform: HookReports;
+}
+
+function hookReports(): HookReports {
+  return { files: new Map(), loads: new Set() };
 }
 
 /** Retain the reports of each module while Vite can reuse its transform. */
@@ -33,7 +42,7 @@ export class VitePluginReports {
         order: "pre",
         handler(id) {
           const reports = reportsFor(this.environment, id);
-          const load = new Map<string, string | null>();
+          const load = hookReports();
           reports.pendingLoad = load;
           track(this, current(), id, load);
         },
@@ -42,18 +51,49 @@ export class VitePluginReports {
         order: "pre",
         handler(_code, id) {
           const reports = reportsFor(this.environment, id);
-          reports.load = reports.pendingLoad ?? new Map();
+          reports.load = reports.pendingLoad ?? hookReports();
           delete reports.pendingLoad;
-          reports.transform = new Map();
-          track(this, current(), id, reports.transform, reports.load);
+          reports.transform = hookReports();
+          track(this, current(), id, reports.transform, reports.load.files);
         },
       },
     };
   }
 
   forModule(environment: Environment, id: string): Reports {
-    const reports = this.environments.get(environment)?.get(id);
-    return new Map(reports && [...reports.transform, ...reports.load]);
+    const collected: Reports = new Map();
+    const modules = this.environments.get(environment);
+    const reachable = new Set([id]);
+    for (const module of reachable) {
+      const reports = modules?.get(module);
+      if (!reports) continue;
+      for (const hook of [
+        reports.load,
+        reports.transform,
+        reports.pendingLoad,
+      ]) {
+        if (!hook) continue;
+        for (const [file, digest] of hook.files)
+          if (!collected.has(file)) collected.set(file, digest);
+        for (const loaded of hook.loads) reachable.add(loaded);
+      }
+    }
+    return collected;
+  }
+
+  trackResolve(
+    context: Rollup.PluginContext,
+    input: ViteInputs,
+    importer: string,
+  ): void {
+    const reports = this.module(context.environment, importer);
+    this.track(
+      context,
+      input,
+      importer,
+      reports.pendingLoad ?? reports.transform,
+      reports.pendingLoad ? undefined : reports.load.files,
+    );
   }
 
   private module(environment: Environment, id: string): ModuleReports {
@@ -64,7 +104,7 @@ export class VitePluginReports {
     }
     let reports = modules.get(id);
     if (!reports) {
-      reports = { load: new Map(), transform: new Map() };
+      reports = { load: hookReports(), transform: hookReports() };
       modules.set(id, reports);
     }
     return reports;
@@ -74,7 +114,7 @@ export class VitePluginReports {
     context: Rollup.PluginContext,
     input: ViteInputs,
     id: string,
-    reports: Reports,
+    { files, loads }: HookReports,
     earlier?: Reports,
   ): void {
     const load = context.load.bind(context);
@@ -85,11 +125,7 @@ export class VitePluginReports {
       if (!file || file === source) return true;
       const confined = reportFile(input, file);
       if (!confined) return false;
-      if (
-        confined === source ||
-        reports.has(confined) ||
-        earlier?.has(confined)
-      )
+      if (confined === source || files.has(confined) || earlier?.has(confined))
         return true;
       const digest = reportDigest(confined, input.files.get(confined));
       if (digest === undefined) {
@@ -101,7 +137,7 @@ export class VitePluginReports {
         }
         return false;
       }
-      reports.set(confined, digest);
+      files.set(confined, digest);
       return true;
     };
     context.addWatchFile = (id) => {
@@ -109,6 +145,7 @@ export class VitePluginReports {
     };
     context.load = async (options) => {
       const keep = report(options.id);
+      loads.add(options.id);
       const loaded = await load(options);
       if (keep) watch(options.id);
       return loaded;
@@ -148,15 +185,13 @@ function reportDigest(file: string, bytes?: Uint8Array) {
   }
 }
 
-/** Reclassify a former file candidate if a different kind of path takes its place. */
-export async function currentViteReport(
+/** Read a reported file and distinguish an absent path from a non-file path. */
+export async function currentViteReportDigest(
   file: string,
-  digest: string | null,
-): Promise<boolean> {
+): Promise<string | null | undefined> {
   const kind = fileKind(file);
-  return kind === "absent"
-    ? digest === null
-    : kind === "file" && (await fileDigest(file)) === digest;
+  if (kind === "other") return undefined;
+  return kind === "absent" ? null : fileDigest(file);
 }
 
 function fileKind(file: string): "file" | "absent" | "other" {

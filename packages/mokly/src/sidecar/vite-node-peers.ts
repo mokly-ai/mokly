@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import type { Generation } from "./bundle.js";
 import { dependencyDirectory } from "./importer-resolution.js";
-import { inside } from "./path-scope.js";
+import { inside, repositoryOwned } from "./path-scope.js";
 import { FreshViteWorker } from "./vite-errors.js";
 
 const active = new AsyncLocalStorage<Generation | undefined>();
@@ -14,17 +14,20 @@ let loadedPeers: string | undefined;
 let installed = false;
 
 /** Admit a generation before it can populate the process-wide Node caches. */
-export function retainViteNodeInputs(generation: Generation): void {
+export function retainViteNodeInputs(
+  generation: Generation,
+  sourceRoot: string,
+): void {
   const { peers, inputs, inputDirectories } = generation.compiled;
   const selectedPeers = JSON.stringify(Object.entries(peers).sort());
   if (loadedPeers !== undefined && loadedPeers !== selectedPeers)
     throw new FreshViteWorker();
 
-  const inDependencyRoot = ([file]: [string, unknown]) =>
-    generation.dependencyRoots.some((root) => inside(root, file));
-  const files = Object.entries(inputs).filter(inDependencyRoot);
+  const nodeInput = ([file]: [string, unknown]) =>
+    !repositoryOwned(sourceRoot, generation.dependencyRoots, file);
+  const files = Object.entries(inputs).filter(nodeInput);
   const directories = Object.entries(inputDirectories)
-    .filter(inDependencyRoot)
+    .filter(nodeInput)
     .map(([directory, names]) => [directory, JSON.stringify(names)] as const);
   if (
     files.some(([file, digest]) => conflicts(loadedFiles, file, digest)) ||

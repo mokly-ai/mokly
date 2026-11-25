@@ -9,11 +9,18 @@ import { AuthoringRuntime } from "../authoring/runtime.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import { cssModulePrefix } from "./css-modules.js";
-import { SidecarError } from "./errors.js";
+import { SidecarError, detail } from "./errors.js";
 import { inside, logical } from "./path-scope.js";
-import { viteFailure } from "./vite-errors.js";
+import { viteEvaluationFailure } from "./vite-errors.js";
 import { retainViteNodeInputs } from "./vite-node-peers.js";
-import { fetchKey, viteFile } from "./vite-urls.js";
+import { candidateLocation } from "./vite-setup-input.js";
+import {
+  fetchKey,
+  viteEntry,
+  viteFile,
+  viteId,
+  viteName,
+} from "./vite-urls.js";
 
 const pending = new WeakMap<Generation, Promise<void>>();
 
@@ -22,14 +29,18 @@ export async function evaluateVite(generation: Generation): Promise<void> {
   if (!generation.compiled.vite || generation.exports) return;
   let evaluation = pending.get(generation);
   if (!evaluation) {
-    retainViteNodeInputs(generation);
-    evaluation = replay(generation);
+    const sourceRoot = candidateLocation(generation.params.sourceRoot);
+    retainViteNodeInputs(generation, sourceRoot);
+    evaluation = replay(generation, sourceRoot);
     pending.set(generation, evaluation);
   }
   await evaluation;
 }
 
-async function replay(generation: Generation): Promise<void> {
+async function replay(
+  generation: Generation,
+  sourceRoot: string,
+): Promise<void> {
   const recipe = generation.compiled.vite!;
   const names = {
     name(file: string) {
@@ -38,10 +49,20 @@ async function replay(generation: Generation): Promise<void> {
       );
       if (index >= 0)
         return `node_modules/${index ? `.mokly-roots/${index}/` : ""}${logical(generation.dependencyRoots[index]!, file)}`;
-      if (inside(generation.params.sourceRoot, file))
-        return logical(generation.params.sourceRoot, file);
+      if (inside(sourceRoot, file)) return logical(sourceRoot, file);
       throw new Error("module is outside sourceRoot");
     },
+  };
+  const origins = new WeakMap<object, string>();
+  const atModule = (error: unknown, id: string): unknown => {
+    if (error instanceof SidecarError || viteId(id) === viteEntry) return error;
+    const failure = errorObject(error) ? error : new Error(detail(error));
+    if (!origins.has(failure))
+      origins.set(
+        failure,
+        viteFile(id) ? viteName(names, id) : "virtual module",
+      );
+    return failure;
   };
   try {
     const runnerPath = generation.require.resolve("vite/module-runner");
@@ -76,11 +97,10 @@ async function replay(generation: Generation): Promise<void> {
       classes.set(generation.runtimeKey + cssModulePrefix + file, bindings);
       cssNamespaces.set(bindings, bindings);
     }
-    class Evaluator extends ESModulesEvaluator {
-      override async runInlinedModule(
-        context: ViteRunner.ModuleRunnerContext,
-        code: string,
-      ): Promise<unknown> {
+    const base = new ESModulesEvaluator();
+    const evaluator: ViteRunner.ModuleEvaluator = {
+      startOffset: base.startOffset,
+      async runInlinedModule(context, code, module) {
         const exportAll = context[ssrExportAllKey];
         context[ssrExportAllKey] = (source: unknown) => {
           const bindings = cssNamespaces.get(source);
@@ -89,15 +109,23 @@ async function replay(generation: Generation): Promise<void> {
           for (const [name, value] of Object.entries(bindings))
             context[ssrExportNameKey](name, () => value);
         };
-        return super.runInlinedModule(context, code);
-      }
+        try {
+          return await base.runInlinedModule(context, code);
+        } catch (error) {
+          throw atModule(error, module.id);
+        }
+      },
 
-      override async runExternalModule(file: string): Promise<unknown> {
+      async runExternalModule(file) {
         if (file === generation.runtimeKey) return { default: runtime };
         if (classes.has(file)) return classes.get(file);
-        return super.runExternalModule(file);
-      }
-    }
+        try {
+          return await base.runExternalModule(file);
+        } catch (error) {
+          throw atModule(error, file);
+        }
+      },
+    };
     const records = new Map(
       recipe.modules.map((record) => [
         fetchKey(record.url, record.importer),
@@ -150,18 +178,22 @@ async function replay(generation: Generation): Promise<void> {
           },
         },
       },
-      new Evaluator(),
+      evaluator,
     );
     const exports = await runner.import<BundleExports>(recipe.entry);
     generation.exports = { ...exports, styleAdapters };
   } catch (error) {
-    throw viteFailure(
+    throw viteEvaluationFailure(
       error,
       names,
-      generation.params.entryFiles[0]
-        ? generation.params.sourceRoot + "/" + generation.params.entryFiles[0]
-        : "",
       recipe.version,
+      errorObject(error) ? origins.get(error) : undefined,
     );
   }
+}
+
+function errorObject(error: unknown): error is object {
+  return (
+    (typeof error === "object" && error !== null) || typeof error === "function"
+  );
 }
