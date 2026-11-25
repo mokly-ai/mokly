@@ -35,6 +35,13 @@ Public test commands and strict evidence rules live in the
   [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
+- [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
+  job runs. It reads the jobs of the run, compares each run time with
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, and lists
+  the slowest tests of the downloaded reports, under the
+  [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
+  Run it locally on a saved API response with
+  `node scripts/verification/ci-timing.mjs --jobs-file {file} --reports {directory}`.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
