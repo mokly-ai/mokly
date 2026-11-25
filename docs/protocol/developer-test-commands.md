@@ -9,15 +9,15 @@
   the viewer tests under `packages/viewer/tests/`, the UI package tests under
   `packages/ui/tests/`, the model package tests under `packages/model/tests/`,
   and the frame package tests under `packages/frame/tests/`.
-- `cargo test -p <crate>` runs one crate's Rust tests, and
-  `cargo test --workspace` runs the default targets. The Repository suite runs `mokly-*` and `xtask`. The cloud Rust suite runs
-  `mkc-*`; a selected crate is partial verification. The suites run these
-  tests with the [Rust test runner](./ci-verification-repository.md#rust-test-runner). Sidecar integration tests
-  require `npm run build --workspace @mokly/ui`, then
-  `npm run build --workspace @mokly/model`, then
-  `npm run build --workspace @mokly/frame`, then
-  `npm run build --workspace @mokly/viewer`, then
-  `npm run build --workspace @mokly/mokly` before a raw Cargo run.
+- `cargo nextest run -p <crate>` runs one crate's Rust tests with the
+  [Rust test runner](./ci-verification-repository.md#rust-test-runner) of the
+  suites, every test binary at the same time, and
+  `cargo test --doc -p <crate>` runs its doc tests. `cargo test -p <crate>`
+  runs both, one test binary at a time, and `cargo test --workspace` runs the
+  default targets. The Repository suite runs `mokly-*` and `xtask`. The cloud
+  Rust suite runs `mkc-*`; a selected crate is partial verification. Sidecar
+  integration tests require the package builds of `npm run build` before a raw
+  Cargo run.
 - Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
 - `npm run test:browser -- [<spec> ...] [-g "<name>"]` builds first, then
   forwards its arguments to Playwright. Without filters, it runs every browser
@@ -27,6 +27,18 @@
 current sources, including after a change to the viewer, the shim, the sidecar,
 or a crate. The build runs before the developer runner starts; argument
 rejection still happens before any test process starts.
+
+`npm run build` builds only what changed. It skips a package build when the
+content of its inputs, and of the outputs of earlier package builds that it
+reads, equals that of its last successful build, and its outputs still hold the
+bytes that this build wrote. Any other change to an input or an output runs the
+package build again. Cargo decides itself what the native build needs. Package
+builds that do not read each other's outputs, and the native build, run at the
+same time. A failed build starts no build that reads its outputs.
+
+Decision: the skip compares SHA-256 content hashes, not modification times.
+Rejected: modification times, because a checkout, a copy, or a cache restore
+can keep an old time on a changed file, and the build would then skip it.
 
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip the build and test the last build. After a

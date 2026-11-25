@@ -95,6 +95,15 @@ pub(crate) enum Command {
         #[arg(long, value_enum)]
         executor: Option<Executor>,
     },
+    /// Run the Mokly Rust test units of one weighted test shard with nextest.
+    RustTestShard {
+        /// Select one of the test shards, after the leading checks shards.
+        #[arg(long, value_name = "INDEX/TOTAL")]
+        partition: Shard,
+        /// Report every failed test instead of stopping at the first.
+        #[arg(long)]
+        no_fail_fast: bool,
+    },
     /// Print the available executor without warming boxes or running suites.
     Executor {
         /// Override the default automatic, local or remote mode.

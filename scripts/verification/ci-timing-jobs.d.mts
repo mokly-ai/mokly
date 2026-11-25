@@ -20,15 +20,23 @@ export interface TimedJob {
   steps: TimedStep[];
 }
 
-export interface RunJobsRequest {
+export interface GitHubRequest {
   fetch: typeof globalThis.fetch;
   apiUrl: string;
   repository: string;
-  runId: string;
   token: string;
 }
 
+export interface RunJobsRequest extends GitHubRequest {
+  runId: string;
+}
+
 export function fetchRunJobs(request: RunJobsRequest): Promise<unknown[]>;
+
+export function githubJson(
+  request: Pick<GitHubRequest, "fetch" | "apiUrl" | "token">,
+  path: string,
+): Promise<unknown>;
 
 export function parseJobs(entries: readonly unknown[]): {
   jobs: TimedJob[];

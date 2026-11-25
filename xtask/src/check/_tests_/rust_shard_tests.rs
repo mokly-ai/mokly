@@ -16,6 +16,7 @@ use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask";
+const SHARD: &str = "cargo xtask rust-test-shard --partition";
 const DOC: &str = "cargo test --locked -p \"mokly-*\" -p xtask --doc";
 const CLIPPY: &str = "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings";
 const BUILDS: [&str; 7] = [
@@ -39,7 +40,7 @@ fn display(suite: VerificationSuite, shard: Option<&str>) -> Vec<String> {
 
 fn test_shard(first: &[&str], partition: &str, options: &str, doc: bool) -> Vec<String> {
     let mut expected: Vec<String> = first.iter().chain(&BUILDS).map(|c| (*c).into()).collect();
-    expected.push(format!("{NEXTEST}{options} --partition slice:{partition}"));
+    expected.push(format!("{SHARD} {partition}{options}"));
     if doc {
         expected.push(format!("{DOC}{options}"));
     }
@@ -79,11 +80,11 @@ fn repository_shard_one_checks_and_later_shards_install_then_split_the_tests() {
             .iter()
             .any(|command| BUILDS.contains(&command.as_str()))
     );
-    assert!(
-        !checks
+    assert!(!checks.iter().any(|command| {
+        [NEXTEST, SHARD, DOC]
             .iter()
-            .any(|command| command.starts_with(NEXTEST) || command.starts_with(DOC))
-    );
+            .any(|prefix| command.starts_with(prefix))
+    }));
     assert_eq!(
         display(repository, Some("2/3")),
         test_shard(&["npm ci"], "1/2", "", true)
@@ -95,21 +96,23 @@ fn repository_shard_one_checks_and_later_shards_install_then_split_the_tests() {
     assert_eq!(display(repository, Some("1/1")), display(repository, None));
 }
 
-/// Every command of the complete suite runs on some shard, and the test shards
-/// run each nextest partition exactly once.
+/// Every command of the complete suite runs on some shard. The test shards
+/// replace the complete nextest run with each test partition exactly once.
 #[test]
 fn the_shards_of_a_suite_run_every_command_and_test_partition_of_the_complete_suite() {
     for suite in [VerificationSuite::Repository, VerificationSuite::Native] {
-        let complete: BTreeSet<_> = display(suite, None).into_iter().collect();
+        let complete: BTreeSet<_> = display(suite, None)
+            .into_iter()
+            .filter(|command| !command.starts_with(NEXTEST))
+            .collect();
         for total in 2..=7_u64 {
             let mut covered = BTreeSet::new();
             let mut partitions = Vec::new();
             for index in 1..=total {
                 for command in display(suite, Some(&format!("{index}/{total}"))) {
-                    match command.split_once(" --partition slice:") {
-                        Some((tests, partition)) => {
-                            partitions.push(partition.to_owned());
-                            covered.insert(tests.to_owned());
+                    match command.strip_prefix(&format!("{SHARD} ")) {
+                        Some(partition) => {
+                            partitions.push(partition.replace(" --no-fail-fast", ""))
                         }
                         None => {
                             covered.insert(command);

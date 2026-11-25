@@ -26,22 +26,32 @@ Public test commands and strict evidence rules live in the
   exact version in [`.bun-version`](../../.bun-version). The required check,
   the fast fallback hint, and the Testbox wrapper use it.
 - [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
-  Playwright specs of `npm run test:browser` after it checks the build.
+  Playwright specs of `npm run test:browser` after it checks the build. When
+  [`browser-developer-selection.mjs`](./browser-developer-selection.mjs) finds
+  that the arguments only filter specs and titles, it lists the selected specs
+  and skips the copied example when none of them reads it.
 - [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
   shard of it, and writes its report.
 - [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and
-  `file://` delivery checks of `npm run test:delivery:prepared`.
+  `file://` delivery checks of `npm run test:delivery:prepared`. With
+  `--mode static-http` or `--mode file`, it runs one of them, as each CI
+  delivery job does.
 - [`dependency-audit.mjs`](./dependency-audit.mjs) and
   [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
 - [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
   job runs. It reads the jobs of the run, compares each run time with
-  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, and lists
-  the slowest tests of the downloaded reports, under the
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, lists
+  the slowest tests of the downloaded reports, and compares the Actions cache
+  total with its budget, under the
   [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
-  Run it locally on a saved API response with
-  `node scripts/verification/ci-timing.mjs --jobs-file {file} --reports {directory}`.
+  [`ci-timing-cache.mjs`](./ci-timing-cache.mjs) reads and reports the cache
+  list. Run the report locally on saved API responses with
+  `node scripts/verification/ci-timing.mjs --jobs-file {file} --caches-file {file} --reports {directory}`.
+  Save the complete cache list with
+  `gh api --paginate --slurp "repos/{owner}/{repo}/actions/caches?per_page=100"`.
+  Without `--caches-file`, a local run does not read the cache.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
@@ -173,6 +183,19 @@ measured duration to the shard with the least estimated work.
 [`viewer-shard-weights.json`](./viewer-shard-weights.json) holds the median
 measured duration of each file in milliseconds. A new file uses the median
 weight. The selected files keep their discovery order.
+
+## Rust test weights
+
+[`rust-test-weights.json`](./rust-test-weights.json) holds the weight of each
+Rust test unit, such as `--test cli`, in seconds: its compile CPU time from
+`cargo test --no-run --timings` times 1.5, plus its mean nextest test time
+on the three CI hosts. `xtask` embeds the file and assigns the units of the
+repository and native test shards by these weights, as the
+[test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
+says. A unit that the file does not name gets `defaultSeconds`. `splits` runs
+a heavy unit, such as the render integration tests, as nextest slices on
+separate shards. A stale
+weight changes only the balance of the shards, never the set of tests.
 
 ## Shard totals and weight refresh
 

@@ -14,7 +14,7 @@ export function exampleServerCommand(port = 0): readonly string[] {
     String(port),
     "--no-watch",
     "--sidecars",
-    "1",
+    "2",
   ];
 }
 

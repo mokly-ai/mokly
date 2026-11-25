@@ -1,5 +1,25 @@
 import assert from "node:assert/strict";
 
+/** The delivery modes in the order that a complete check runs them. */
+export const DELIVERY_MODES = ["static-http", "file"];
+
+/**
+ * Select the delivery modes before any build: both without arguments, or the
+ * one mode of `--mode MODE`, so that CI can check each mode in its own job.
+ * @param {readonly string[]} args
+ * @returns {string[]}
+ */
+export function deliveryModes(args) {
+  if (args.length === 0) return [...DELIVERY_MODES];
+  if (
+    args.length !== 2 ||
+    args[0] !== "--mode" ||
+    !DELIVERY_MODES.includes(args[1] ?? "")
+  )
+    throw new Error(`expected --mode ${DELIVERY_MODES.join(" or --mode ")}`);
+  return [args[1]];
+}
+
 /**
  * The parent owns acceptance because Playwright can suppress reporter errors.
  * @param {() => Promise<void>} run

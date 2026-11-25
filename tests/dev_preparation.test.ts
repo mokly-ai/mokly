@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 
+import { BUILD_COMPLETE } from "../scripts/build/workspace-build.mjs";
 import { prepareDevelopment } from "../scripts/dev-preparation.mjs";
 import { missingPreparedOutputs } from "../scripts/verification/prepared.mjs";
 
@@ -23,12 +24,14 @@ interface Checkout {
   built?: Date;
   /** Which build outputs exist, in the order of the output list. */
   outputs: "none" | "all but the last" | "all";
+  /** Whether the build wrote its completion record with the outputs. */
+  completed?: boolean;
 }
 
 /** Write a checkout and return its root and its complete output list. */
 async function checkout(
   t: TestContext,
-  { locked, installed, built = first, outputs }: Checkout,
+  { locked, installed, built = first, outputs, completed = true }: Checkout,
 ): Promise<{ root: string; outputs: string[] }> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-dev-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -36,6 +39,8 @@ async function checkout(
   const present =
     outputs === "none" ? [] : outputs === "all" ? list : list.slice(0, -1);
   for (const output of present) await write(path.join(root, output), built);
+  if (present.length && completed)
+    await write(path.join(root, BUILD_COMPLETE), built);
   await write(path.join(root, "package-lock.json"), locked);
   if (installed) await write(path.join(root, installRecord), installed);
   return { root, outputs: list };
@@ -112,6 +117,19 @@ const cases: {
     commands: [["run", "build"]],
     reports: (outputs) => [
       `Building with npm run build, because ${outputs.at(-1)} is missing.`,
+    ],
+  },
+  {
+    name: "outputs without a complete build build again",
+    checkout: {
+      locked: first,
+      installed: first,
+      outputs: "all",
+      completed: false,
+    },
+    commands: [["run", "build"]],
+    reports: () => [
+      "Building with npm run build, because no complete build is recorded.",
     ],
   },
   {

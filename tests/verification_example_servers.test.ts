@@ -61,7 +61,7 @@ test("every worker starts through the exact shim command before readiness settle
         "0",
         "--no-watch",
         "--sidecars",
-        "1",
+        "2",
       ]);
       const url = `http://worker-${started.length}`;
       started.push(url);

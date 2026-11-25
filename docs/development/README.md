@@ -48,7 +48,7 @@ Run the tests that cover a change while you develop:
 ```bash
 npm test -- tests/markdown_links.test.ts
 npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
-cargo test -p mokly-html
+cargo nextest run -p mokly-html
 ```
 
 Put every npm test argument after `--`. Selected runs are partial

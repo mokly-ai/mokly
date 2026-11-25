@@ -1,98 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import test, { type TestContext } from "node:test";
+import test from "node:test";
 
-import { runCiTiming } from "../scripts/verification/ci-timing.mjs";
-
-import { repositoryRoot } from "./helpers/fixture.js";
-
-const FIXTURES = path.join(repositoryRoot, "tests/fixtures/ci-timing");
-
-interface Scenario {
-  mode: "warn" | "fail";
-  status?: number;
-  extraJobs?: unknown[];
-  budgets?: unknown;
-}
-
-async function run(context: TestContext, scenario: Scenario) {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ci-timing-"));
-  context.after(() => fs.rm(directory, { recursive: true, force: true }));
-  const budgets = path.join(directory, "budgets.json");
-  await fs.writeFile(
-    budgets,
-    JSON.stringify(
-      scenario.budgets ?? {
-        mode: scenario.mode,
-        wallClockMinutes: 13,
-        slowestTests: 1,
-        jobs: [
-          { pattern: "Native *", minutes: 12 },
-          { pattern: "Viewer *", minutes: 12 },
-          { pattern: "Browser *", minutes: 20 },
-          { pattern: "Site Lighthouse", minutes: 10 },
-          { pattern: "Required CI", minutes: 3 },
-          { pattern: "Runtime profile", minutes: 2 },
-          { pattern: "Cloud provider plan result", minutes: 2 },
-        ],
-      },
-    ),
-  );
-  const reports = path.join(directory, "reports/verification-viewer");
-  await fs.mkdir(reports, { recursive: true });
-  await fs.copyFile(
-    path.join(FIXTURES, "report-viewer.json"),
-    path.join(reports, "viewer.json"),
-  );
-  const body = JSON.parse(
-    await fs.readFile(path.join(FIXTURES, "jobs-first-attempt.json"), "utf8"),
-  ) as { total_count: number; jobs: unknown[] };
-  body.jobs.push(...(scenario.extraJobs ?? []));
-  const requests: { url: string; authorization: string | null }[] = [];
-  const fetch = async (input: string | URL | Request, init?: RequestInit) => {
-    requests.push({
-      url: String(input),
-      authorization: new Headers(init?.headers).get("Authorization"),
-    });
-    const page = Number(new URL(String(input)).searchParams.get("page"));
-    const jobs = body.jobs.slice((page - 1) * 100, page * 100);
-    return new Response(
-      JSON.stringify({ total_count: body.jobs.length, jobs }),
-      { status: scenario.status ?? 200 },
-    );
-  };
-  const summary = path.join(directory, "summary.md");
-  let stdout = "";
-  const status = await runCiTiming({
-    argv: [
-      "--budgets",
-      budgets,
-      "--reports",
-      path.dirname(reports),
-      "--self",
-      "CI timing",
-    ],
-    env: {
-      GITHUB_TOKEN: "token-value",
-      GITHUB_API_URL: "https://api.example.test",
-      GITHUB_REPOSITORY: "owner/repository",
-      GITHUB_RUN_ID: "42",
-      GITHUB_RUN_ATTEMPT: "1",
-      GITHUB_STEP_SUMMARY: summary,
-    },
-    fetch,
-    write: { stdout: (text) => (stdout += text) },
-  });
-  const markdown = await fs.readFile(summary, "utf8");
-  return {
-    status,
-    requests,
-    markdown,
-    annotations: stdout.trimEnd().split("\n"),
-  };
-}
+import { runTiming as run } from "./helpers/ci_timing_run.js";
 
 const running = (name: string, id: number) => ({
   id,
@@ -113,6 +22,10 @@ test("warn mode summarises budgets and warns without failing", async (context) =
   assert.deepEqual(result.requests, [
     {
       url: "https://api.example.test/repos/owner/repository/actions/runs/42/jobs?filter=latest&per_page=100&page=1",
+      authorization: "Bearer token-value",
+    },
+    {
+      url: "https://api.example.test/repos/owner/repository/actions/caches?sort=size_in_bytes&direction=desc&per_page=100&page=1",
       authorization: "Bearer token-value",
     },
   ]);
@@ -201,9 +114,9 @@ test("jobs past the first page count, and annotations stop at the GitHub limit",
   );
   const result = await run(context, { mode: "warn", extraJobs });
   assert.deepEqual(
-    result.requests.map((request) =>
-      new URL(request.url).searchParams.get("page"),
-    ),
+    result.requests
+      .filter((request) => request.url.includes("/jobs?"))
+      .map((request) => new URL(request.url).searchParams.get("page")),
     ["1", "2"],
   );
   assert.ok(
