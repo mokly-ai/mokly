@@ -39,9 +39,10 @@ directory from another job.
 
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
+- five repository shards on Node 24;
 - two viewer shards and ten browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
-- native jobs on macOS and Windows at Node 22.15.0.
+- five native shards on macOS and seven on Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
@@ -91,8 +92,11 @@ second copy of the pin. The
 [cache rules](./ci-verification-security.md#dependency-cache-and-security)
 keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
-Clippy, and the complete Rust tests run in the repository job. The native jobs
-run them for the `mokly-*` crates and `xtask` only. Native jobs build the
+Clippy, and the complete Rust tests run in the repository shards. The native
+shards run them for the `mokly-*` crates and `xtask` only. Repository and
+native shard 1 run the checks, and each later shard runs one partition of the
+Rust tests, under the
+[shard rule](./ci-verification-repository.md#suite-shards). Native jobs build the
 checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
 integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
@@ -106,8 +110,8 @@ runner image. They refresh the package index and install a package only when
 the image lacks it.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
-version in `package.json`, and runs `npm ci`. The repository job runs it inside
-its suite, after the lockfile-only audit, and not a second time before. The scheduled audit installs no
+version in `package.json`, and runs `npm ci`. Each repository shard runs it inside
+its suite, the checks shard after the lockfile-only audit, and not a second time before. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
 caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
@@ -148,9 +152,9 @@ build matrices runs on Intel macOS, on GitHub-hosted `macos-26-intel`. This
 row keeps native Intel build and execution coverage. It has no npm publishing
 permission.
 
-In the CI workflow, the repository job has a 75-minute timeout and each viewer
-shard has a 40-minute timeout. Browser shards, static-delivery jobs, and native
-jobs have a 60-minute timeout. `Required CI` has a 30-minute timeout. Job
+In the CI workflow, each repository shard has a 75-minute timeout and each
+viewer shard has a 40-minute timeout. Browser shards, static-delivery jobs, and
+native shards have a 60-minute timeout. `Required CI` has a 30-minute timeout. Job
 timeouts are hang guards, not speed requirements. Each limit must allow at
 least three times the job's typical duration, including setup and builds. The
 longer limits preserve the browser shards without reducing test coverage.

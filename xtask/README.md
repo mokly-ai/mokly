@@ -62,7 +62,7 @@ Arguments remain separate from the program name.
 | Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                         |
 | Viewer     | The required Bun type check of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`. `--shard` runs one whole-file partition; only shard 1 type checks. |
 | Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. Remote runs use the CI shard total; the local gate runs the suite unsharded.                                   |
-| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of `mokly-*` and `xtask`. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                             |
+| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of `mokly-*` and `xtask`. Hosted CI runs `--suite native` shards on macOS and Windows runners.                                                                                      |
 
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run
@@ -83,10 +83,13 @@ fail when the build output is missing. Native builds the host binary through
 sources into the render cache, and the tests read nothing back from the
 repository. Every suite rejects skips and todos.
 
-`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, `cloud-app`,
-`cloud-mockups`, and `cloud-site`. It uses one-based integers with
-`INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
-shard with another suite fails before any subprocess starts.
+`--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`,
+`native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. It uses one-based
+integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
+shard with another suite fails before any subprocess starts. With two or more
+repository or native shards, shard 1 runs the checks and each later shard runs
+one nextest partition of the Rust tests, under the
+[suite shard rule](../docs/protocol/ci-verification-repository.md#suite-shards).
 
 The [cloud suite table](../docs/protocol/ci-verification.md#cloud-suites)
 names all 16 cloud suites and their required checks. Each suite can run with
@@ -247,6 +250,7 @@ cargo xtask executor
 cargo xtask check --suite repository
 cargo xtask check --suite viewer
 cargo xtask check --suite native
+cargo xtask check --suite native --shard 2/5
 cargo xtask check --suite browser
 cargo xtask check --suite viewer --shard 1/2
 cargo xtask check --suite browser --shard 1/10

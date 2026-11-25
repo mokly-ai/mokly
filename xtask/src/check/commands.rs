@@ -4,6 +4,10 @@ use crate::command::CommandSpec;
 
 use super::cloud_commands::cloud_commands;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
+use super::rust_commands::{
+    RustPart, design_matrix_clippy, native_commands, require_nextest, rust_lints, rust_tests,
+    test_builds, test_shard,
+};
 
 /// One step of a suite plan.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -31,7 +35,7 @@ pub(super) fn steps_for(
     dependency_audit: DependencyAudit,
 ) -> Vec<Step> {
     match suite {
-        VerificationSuite::Repository => repository_steps(dependency_audit),
+        VerificationSuite::Repository => repository_steps(shard, dependency_audit),
         other => commands_for(other, shard, dependency_audit)
             .into_iter()
             .map(Step::Run)
@@ -46,7 +50,7 @@ pub(super) fn commands_for(
     dependency_audit: DependencyAudit,
 ) -> Vec<CommandSpec> {
     match suite {
-        VerificationSuite::Repository => repository_steps(dependency_audit)
+        VerificationSuite::Repository => repository_steps(shard, dependency_audit)
             .into_iter()
             .flat_map(Step::commands)
             .collect(),
@@ -80,56 +84,58 @@ fn sharded(test: CommandSpec, shard: Option<Shard>) -> CommandSpec {
     }
 }
 
-/// Build the host binary, then run the Rust tests or one nextest partition of
-/// them. The unsharded suite and shard 1 also check formatting and Clippy and
-/// run the doc tests, so a sharded run checks each of them once. The doc tests
-/// also run after failed tests, so one job reports both kinds of failure.
-fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
-    let first = shard.is_none_or(Shard::is_first);
-    let mut commands = vec![require_nextest(), cargo(&["xtask", "build-native"])];
-    if first {
-        commands.extend([cargo(&["fmt", "--all", "--", "--check"]), rust_clippy()]);
+/// The complete repository suite runs its checks, then the builds and the Rust
+/// tests. A sharded suite runs the checks on shard 1 and one nextest partition
+/// of the Rust tests on each later shard. Each test shard installs the npm
+/// lockfile first, because its job installs nothing before the suite.
+fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> Vec<Step> {
+    match RustPart::of(shard) {
+        RustPart::Complete => {
+            let mut steps = repository_checks(dependency_audit, true);
+            steps.extend(
+                test_builds()
+                    .into_iter()
+                    .chain(rust_tests(None, false))
+                    .map(Step::Run),
+            );
+            steps
+        }
+        RustPart::Checks => repository_checks(dependency_audit, false),
+        RustPart::Tests(tests) => std::iter::once(npm(&["ci"]))
+            .chain(test_shard(tests, false))
+            .map(Step::Run)
+            .collect(),
     }
-    commands.extend(
-        [
-            "@mokly/ui",
-            "@mokly/model",
-            "@mokly/frame",
-            "@mokly/viewer",
-            "@mokly/mokly",
-        ]
-        .map(|package| npm(&["run", "build", "--workspace", package])),
-    );
-    let [mut tests, doc] = mokly_tests(&["--no-fail-fast"]);
-    if let Some(shard) = shard {
-        tests = tests.args(["--partition".to_owned(), format!("slice:{shard}")]);
-    }
-    commands.push(tests.keep_going());
-    if first {
-        commands.push(doc);
-    }
-    commands
 }
 
+/// The audits and source checks of the repository suite. With `preflight`,
+/// the nextest check runs before them, so a missing runner fails early.
+///
 /// The read-only source checks run in three concurrent lanes, because Prettier
 /// and ESLint each use one core while Clippy uses the rest. No lane writes a
 /// file that another lane reads; Clippy writes only under `target/`, which
-/// Prettier and ESLint ignore. The builds and tests run after the lanes.
-fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
+/// Prettier and ESLint ignore.
+fn repository_checks(dependency_audit: DependencyAudit, preflight: bool) -> Vec<Step> {
     let audit = match dependency_audit {
         DependencyAudit::Baseline => npm(&["run", "dependencies:check", "--", "--baseline"]),
         DependencyAudit::Strict => npm(&["run", "dependencies:check"]),
     };
-    let before = [
+    let mut before = vec![
         audit,
         npm(&["ci"]),
         npm(&["run", "dependencies:check:rust"]),
-        require_nextest(),
+    ];
+    if preflight {
+        before.push(require_nextest());
+    }
+    before.extend([
         cargo(&["xtask", "boundary"]),
         cargo(&["xtask", "whitespace"]),
         cargo(&["xtask", "check-generated-types"]),
         npm(&["run", "palette:check"]),
-    ];
+    ]);
+    let mut rust = rust_lints().to_vec();
+    rust.push(design_matrix_clippy());
     let source_checks = Step::Concurrent(vec![
         vec![npm(&["run", "format:check"])],
         vec![
@@ -146,68 +152,13 @@ fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
             CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
             node(&["scripts/verification/repository-ratchets.mjs"]),
         ],
-        vec![
-            cargo(&["fmt", "--all", "--", "--check"]),
-            rust_clippy(),
-            design_matrix_clippy(),
-        ],
+        rust,
     ]);
-    let after = [
-        cargo(&["xtask", "build-native"]),
-        npm(&["run", "build", "--workspace", "@mokly/ui"]),
-        npm(&["run", "build", "--workspace", "@mokly/model"]),
-        npm(&["run", "build", "--workspace", "@mokly/frame"]),
-        npm(&["run", "build", "--workspace", "@mokly/viewer"]),
-        npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-    ];
-    let tests = mokly_tests(&[]);
     before
         .into_iter()
         .map(Step::Run)
         .chain([source_checks])
-        .chain(after.into_iter().chain(tests).map(Step::Run))
         .collect()
-}
-
-/// Fail early, with install steps, when the Rust test runner is missing.
-pub(super) fn require_nextest() -> CommandSpec {
-    node(&["xtask/scripts/require-nextest.mjs"])
-}
-
-/// Run every Mokly test target in parallel with nextest, then the doc tests,
-/// which nextest does not run.
-fn mokly_tests(options: &[&str]) -> [CommandSpec; 2] {
-    [
-        mokly_cargo(&["nextest", "run"]).args(options.iter().copied()),
-        mokly_cargo(&["test"])
-            .args(["--doc"])
-            .args(options.iter().copied()),
-    ]
-}
-
-fn rust_clippy() -> CommandSpec {
-    mokly_cargo(&["clippy"]).args(["--all-targets", "--", "-D", "warnings"])
-}
-
-/// Restrict native and MIT Rust work to the app-independent crates.
-fn mokly_cargo(operation: &[&str]) -> CommandSpec {
-    cargo(operation).args(["--locked", "-p", "mokly-*", "-p", "xtask"])
-}
-
-/// Lint the feature-gated design matrix target that the workspace lint skips.
-fn design_matrix_clippy() -> CommandSpec {
-    cargo(&[
-        "clippy",
-        "--locked",
-        "-p",
-        "mokly-cli",
-        "--features",
-        "design-matrix",
-        "--all-targets",
-        "--",
-        "-D",
-        "warnings",
-    ])
 }
 
 fn npm(args: &[&str]) -> CommandSpec {

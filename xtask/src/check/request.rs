@@ -43,7 +43,7 @@ pub(crate) enum VerificationSuite {
     Repository,
     /// Viewer typecheck and Node tooling and viewer tests.
     Viewer,
-    /// Host native artifact and Rust tests for hosted macOS and Windows jobs.
+    /// Host native artifact, Rust lints, and Rust tests for hosted macOS and Windows jobs.
     Native,
     /// Playwright checks of the served example and viewer hosts.
     Browser,
@@ -138,7 +138,8 @@ impl VerificationSuite {
     fn supports_shards(self) -> bool {
         matches!(
             self,
-            Self::Viewer
+            Self::Repository
+                | Self::Viewer
                 | Self::Browser
                 | Self::Native
                 | Self::CloudApp
@@ -227,7 +228,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional viewer, browser, native, cloud application, mockup, or site shard.
+    /// Optional repository, viewer, browser, native, cloud application, mockup, or site shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,
