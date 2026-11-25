@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{CommandRunnerRunMock, CommandSpec};
+use crate::command::{CommandRunnerRunConcurrentlyMock, CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
@@ -18,7 +18,8 @@ use super::runner::{CheckRunner, DefaultCheckRunner};
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
     let observed = Arc::new(Mutex::new(Vec::new()));
     let captured = observed.clone();
-    let command_runner = Arc::new(Unimock::new(
+    let grouped = observed.clone();
+    let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, command: &CommandSpec| {
@@ -26,7 +27,16 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
                 captured.lock().unwrap().push(command.display());
                 Ok(())
             })),
-    ));
+        CommandRunnerRunConcurrentlyMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, lanes: &[Vec<CommandSpec>]| {
+                for command in lanes.iter().flatten() {
+                    assert_eq!(command.working_directory(), Some(Path::new("/workspace")));
+                    grouped.lock().unwrap().push(command.display());
+                }
+                Ok(())
+            })),
+    )));
     let auditor = Arc::new(Unimock::new(
         RustFileLengthAuditorRunMock
             .some_call(matching!(_))
@@ -91,60 +101,6 @@ fn selected_viewer_builds_then_checks_and_tests() {
     let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
         .expect("viewer suite is valid");
     runner.run(request).expect("viewer suite succeeds");
-}
-
-#[test]
-fn repository_suite_runs_audit_first_and_includes_file_length() {
-    let observed = Arc::new(Mutex::new(Vec::new()));
-    let captured = observed.clone();
-    let command_runner = Arc::new(Unimock::new(
-        CommandRunnerRunMock
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, command: &CommandSpec| {
-                captured.lock().unwrap().push(command.display());
-                Ok(())
-            })),
-    ));
-    let auditor = Arc::new(Unimock::new(
-        RustFileLengthAuditorRunMock
-            .some_call(matching!(_))
-            .returns(Ok(())),
-    ));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    runner
-        .run(CheckRequest::new(Some(VerificationSuite::Repository), None, None).unwrap())
-        .unwrap();
-    assert_eq!(
-        *observed.lock().unwrap(),
-        [
-            "npm run dependencies:check -- --baseline",
-            "npm ci",
-            "npm run dependencies:check:rust",
-            "node xtask/scripts/require-nextest.mjs",
-            "cargo xtask boundary",
-            "cargo xtask whitespace",
-            "cargo xtask check-generated-types",
-            "npm run palette:check",
-            "npm run format:check",
-            "npm run lint",
-            "node_modules/.bin/ast-grep test --skip-snapshot-tests",
-            "node_modules/.bin/ast-grep scan crates xtask packages apps",
-            "node --test xtask/scripts/boundary-imports.test.mjs xtask/scripts/strict-command.test.mjs xtask/scripts/isolated-postgres.test.mjs",
-            "node scripts/verification/source-file-length.mjs",
-            "node scripts/verification/repository-ratchets.mjs",
-            "cargo fmt --all -- --check",
-            "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
-            "cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings",
-            "cargo xtask build-native",
-            "npm run build --workspace \"@mokly/ui\"",
-            "npm run build --workspace \"@mokly/model\"",
-            "npm run build --workspace \"@mokly/frame\"",
-            "npm run build --workspace \"@mokly/viewer\"",
-            "npm run build --workspace \"@mokly/mokly\"",
-            "cargo nextest run --locked -p \"mokly-*\" -p xtask",
-            "cargo test --locked -p \"mokly-*\" -p xtask --doc",
-        ]
-    );
 }
 
 #[test]

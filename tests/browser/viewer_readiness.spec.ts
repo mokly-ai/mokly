@@ -64,7 +64,13 @@ for (const cross of [false, true]) {
       await sibling
         .getByRole("button", { name: "Visible", exact: true })
         .click();
-      await sibling.getByRole("link", { name: "Open Action" }).click();
+      // The action screen's frames report hover. A pointer that rests over
+      // the canvas when the action document loads under it reports a hover
+      // of no instance when the canvas moves that frame. The pointer goes to
+      // the page's top-left corner, outside every canvas frame, before the
+      // keyboard opens the link.
+      await page.mouse.move(0, 0);
+      await sibling.getByRole("link", { name: "Open Action" }).press("Enter");
       await expect
         .poll(() =>
           page.evaluate(() =>
