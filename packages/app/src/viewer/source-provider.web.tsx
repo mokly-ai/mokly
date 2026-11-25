@@ -7,7 +7,7 @@ import { createCatalogueSources } from "./source-store";
 /** Expo can rebuild its root layout; web modules last for the document. */
 const documentSources = createCatalogueSources(catalogueReads());
 
-/** The source survives query-only Back; Reload creates a new document scope. */
+/** The source survives a route rebuild; Reload creates a new document scope. */
 export function CatalogueSourceProvider({ children }: { children: ReactNode }) {
   return (
     <CatalogueSourceContext.Provider value={documentSources}>

@@ -443,47 +443,131 @@ jobs:
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 1/4
+          - name: App checks 1/8
             command: cloud-app
-            app_shard: "1/4"
+            shard: "1/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 2/4
+          - name: App checks 2/8
             command: cloud-app
-            app_shard: "2/4"
+            shard: "2/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 3/4
+          - name: App checks 3/8
             command: cloud-app
-            app_shard: "3/4"
+            shard: "3/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 4/4
+          - name: App checks 4/8
             command: cloud-app
-            app_shard: "4/4"
+            shard: "4/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: Mockup checks
+          - name: App checks 5/8
+            command: cloud-app
+            shard: "5/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 6/8
+            command: cloud-app
+            shard: "6/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 7/8
+            command: cloud-app
+            shard: "7/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 8/8
+            command: cloud-app
+            shard: "8/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          # Mockup shard 1 runs the checks without a browser, shard 2 the policy
+          # and served suites, and shards 3 to 6 split the disk browser suite.
+          - name: Mockup checks 1/6
             command: cloud-mockups
+            shard: "1/6"
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 2/6
+            command: cloud-mockups
+            shard: "2/6"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
-          - name: Site checks
+          - name: Mockup checks 3/6
+            command: cloud-mockups
+            shard: "3/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 4/6
+            command: cloud-mockups
+            shard: "4/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 5/6
+            command: cloud-mockups
+            shard: "5/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 6/6
+            command: cloud-mockups
+            shard: "6/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Site checks 1/2
             command: cloud-site
+            shard: "1/2"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/site"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Site checks 2/2
+            command: cloud-site
+            shard: "2/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false
@@ -573,11 +657,11 @@ jobs:
       - name: Verify the partition
         env:
           XTASK_COMMAND: ${{ matrix.command }}
-          APP_SHARD: ${{ matrix.app_shard }}
+          SHARD: ${{ matrix.shard }}
           ADDITIONAL_SUITES: ${{ matrix.additional_suites }}
         run: |
           shard=()
-          [[ -z "$APP_SHARD" ]] || shard=(--shard "$APP_SHARD")
+          [[ -z "$SHARD" ]] || shard=(--shard "$SHARD")
           cargo xtask check --suite "$XTASK_COMMAND" "${shard[@]}"
           for suite in $ADDITIONAL_SUITES; do
             cargo xtask check --suite "$suite"

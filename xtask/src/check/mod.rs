@@ -1,6 +1,7 @@
 //! Complete and independently selectable verification suites.
 
 mod cloud_commands;
+mod cloud_shards;
 mod commands;
 pub(crate) mod request;
 pub(crate) mod runner;
@@ -23,6 +24,10 @@ mod native_tests;
 #[cfg(test)]
 #[path = "_tests_/cloud_tests.rs"]
 mod cloud_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cloud_shard_tests.rs"]
+mod cloud_shard_tests;
 
 #[cfg(test)]
 #[path = "_tests_/ported_stage_tests.rs"]

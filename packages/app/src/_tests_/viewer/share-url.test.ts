@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import { readQuery } from "../../navigation/address";
+import { readQuery } from "../../navigation/query";
 import type { ViewerSelection } from "../../viewer/host";
 import { readViewerState, viewerHref } from "../../viewer/selection";
 import { repositoryRoot } from "../root";

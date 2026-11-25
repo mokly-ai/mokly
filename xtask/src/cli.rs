@@ -85,7 +85,7 @@ pub(crate) enum Command {
         /// Run one partial verification suite.
         #[arg(long, value_enum)]
         suite: Option<VerificationSuite>,
-        /// Select one partition of the viewer, browser, native, or cloud-app suite.
+        /// Select one partition of the viewer, browser, native, cloud-app, cloud-mockups, or cloud-site suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
         /// Select the workspace audit policy for complete or repository checks.

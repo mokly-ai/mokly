@@ -138,7 +138,12 @@ impl VerificationSuite {
     fn supports_shards(self) -> bool {
         matches!(
             self,
-            Self::Viewer | Self::Browser | Self::CloudApp | Self::Native
+            Self::Viewer
+                | Self::Browser
+                | Self::Native
+                | Self::CloudApp
+                | Self::CloudMockups
+                | Self::CloudSite
         )
     }
 }
@@ -160,6 +165,26 @@ impl Shard {
     /// Whether this shard owns the checks that run once per sharded suite.
     pub(super) fn is_first(self) -> bool {
         self.index == 1
+    }
+
+    /// One-based shard number.
+    pub(super) fn index(self) -> u64 {
+        self.index
+    }
+
+    /// Number of shards in the selection.
+    pub(super) fn total(self) -> u64 {
+        self.total
+    }
+
+    /// The shard of the remaining work after `leading` shards that own other work.
+    ///
+    /// Returns `None` for one of the leading shards.
+    pub(super) fn after(self, leading: u64) -> Option<Self> {
+        (self.index > leading).then(|| Self {
+            index: self.index - leading,
+            total: self.total - leading,
+        })
     }
 }
 
@@ -202,7 +227,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional viewer, browser, native, or cloud application shard.
+    /// Optional viewer, browser, native, cloud application, mockup, or site shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,

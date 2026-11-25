@@ -25,7 +25,7 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/10
 ```
 
-`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, and `cloud-app`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
 `INDEX` must not exceed `TOTAL`. A Mokly viewer or browser shard runs one weighted whole-file
 partition under the [viewer](./ci-suite-evidence.md#viewer-shard-balance) or [browser](./ci-suite-evidence.md#browser-shard-balance) shard balance rule,
@@ -108,7 +108,7 @@ Each worker attempts every assigned suite and reports each failure.
 | `cloud-migrations`     | SQL pairs, migration checksums, and the append-only base lock             |
 | `cloud-typecheck`      | Type checks of every cloud npm project                                    |
 | `cloud-app`            | App logic, web export, and browser tests                                  |
-| `cloud-mockups`        | Mockup build, compilation, determinism, policy, browser smoke, and types  |
+| `cloud-mockups`        | Mockup build, determinism, policy, browser smoke, and types               |
 | `cloud-site`           | Site build, types, unit tests, links, and browser checks                  |
 | `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
 | `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
@@ -127,7 +127,8 @@ Cloud Rust, app, and desktop create a database per invocation (role: `CREATEDB`)
 `cloud-app --shard INDEX/TOTAL` builds an independent web export and runs
 that browser shard. Shard 1 also runs app logic tests. Without `--shard`, it
 runs all logic and browser tests. An inherited app shard cannot restrict an
-unsharded run.
+unsharded run. [Cloud shards](./cloud/repository-verification.md#app-shards)
+define the app, mockup, and site shard contents.
 
 The fixtures suite compares bytes from the workspace Mokly build;
 `cargo xtask mokly-fixtures` regenerates them. Fixed placeholder versions keep

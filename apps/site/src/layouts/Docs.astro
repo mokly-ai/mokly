@@ -60,6 +60,10 @@ const { description, headings, route, section, source, title } = Astro.props;
 const listed = onThisPage(headings);
 const facts = pageFacts(source, section);
 const edit = editUrl(source);
+// Copy and search hydrate in an idle moment, so they never delay the first
+// paint. A busy page can give the browser no idle moment at all, so each of
+// them starts a second after the page reaches it at the latest.
+const idle = { timeout: 1000 };
 ---
 
 <Site
@@ -91,7 +95,7 @@ const edit = editUrl(source);
         </div>
         <Pager route={route} />
       </PageFrame>
-      <CodeCopy client:idle />
+      <CodeCopy client:idle={idle} />
     </main>
     <div class="site-docs-rail">
       <Inspect
@@ -102,7 +106,7 @@ const edit = editUrl(source);
       />
     </div>
   </div>
-  <Search client:idle />
+  <Search client:idle={idle} />
 </Site>
 
 <script src="../components/docs/scroll-spy.ts"></script>
