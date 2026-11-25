@@ -73,7 +73,9 @@ tests start. Both runners print the value they use.
 
 Each Playwright worker owns one example server. Global setup starts and readies
 the workers concurrently. It starts the shim
-with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 1`.
+with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 2`.
+Decision: two sidecars, because they cut the cold readiness of the example
+from about 40 to about 27 seconds. More sidecars saved less than 5 more seconds.
 The shared example does not test Changes. Its intentionally unresolved base
 produces `unavailable` and one `git-failed` diagnostic. Real Changes specs
 own separate Git fixtures. Serve binds a free loopback port and
