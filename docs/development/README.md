@@ -58,7 +58,9 @@ dependency checks, and the length audits. See
 [developer test commands](../../docs/protocol/developer-test-commands.md) for the
 argument and report rules, the [xtask README](../../xtask/README.md) for focused
 suites, and [CI test timing](../../docs/protocol/ci-test-timing.md) for the rule
-that tests never assert elapsed time.
+that tests never assert elapsed time. The
+[shard weights guide](./shard-weights.md) says how CI balances its test shards
+and how to refresh their weights.
 
 `cargo xtask check` and `cargo xtask check --suite viewer` run the required
 type check, `npm run typecheck:ci`. It checks the five TypeScript projects of

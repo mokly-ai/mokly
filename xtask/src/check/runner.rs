@@ -32,6 +32,9 @@ pub(crate) struct DefaultCheckRunner {
     command_runner: Arc<dyn CommandRunner>,
     rust_file_length_auditor: Arc<dyn RustFileLengthAuditor>,
     workspace: PathBuf,
+    /// The Rust test weights of the test shards. `None` reads the committed
+    /// weight file that the build embedded.
+    rust_test_weights: Option<Weights>,
 }
 
 impl DefaultCheckRunner {
@@ -45,6 +48,17 @@ impl DefaultCheckRunner {
             command_runner,
             rust_file_length_auditor,
             workspace,
+            rust_test_weights: None,
+        }
+    }
+
+    /// Place the Rust test shards by fixed weights instead of the committed
+    /// weight file, so that a weight refresh never changes a test result.
+    #[cfg(test)]
+    pub(super) fn with_rust_test_weights(self, weights: Weights) -> Self {
+        Self {
+            rust_test_weights: Some(weights),
+            ..self
         }
     }
 
@@ -136,7 +150,15 @@ impl CheckRunner for DefaultCheckRunner {
         let metadata = self
             .command_runner
             .output(&cargo_metadata().in_directory(self.workspace.clone()))?;
-        let pieces = shard_pieces(&test_units(&metadata)?, &Weights::embedded()?, partition);
+        let embedded;
+        let weights = match &self.rust_test_weights {
+            Some(weights) => weights,
+            None => {
+                embedded = Weights::embedded()?;
+                &embedded
+            }
+        };
+        let pieces = shard_pieces(&test_units(&metadata)?, weights, partition);
         if pieces.is_empty() {
             eprintln!("Rust test shard {partition} has no test units");
             return Ok(());

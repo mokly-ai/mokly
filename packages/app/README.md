@@ -116,10 +116,10 @@ API and database, as
 [App shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
 defines. A shard holds whole spec files, balanced by the measured seconds in
 `src/_tests_/browser-shard-weights.json`. After a large change to the suite's
-durations, save the logs of every App checks job of one CI run, for example
-with `gh run view --log --job {job}`, then run
-`npx tsx src/_tests_/update-browser-shard-weights.ts {log}...` from this
-package and commit the new weights. To repeat one shard, run
+durations, run `npm run ci:refresh-shard-weights` from the repository root and
+commit the new weights, as the
+[shard weights guide](../../docs/development/shard-weights.md) says. To
+repeat one shard, run
 `cargo xtask check --suite cloud-app --shard 2/8` from the repository root.
 It builds the web app before the shard runs.
 `cargo xtask check --suite cloud-app` without `--shard` runs the whole suite.
