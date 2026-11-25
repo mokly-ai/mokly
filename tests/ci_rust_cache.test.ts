@@ -16,8 +16,14 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const CI_WORKFLOW = ".github/workflows/ci.yml";
 /** The action that restores and saves Cargo's dependency builds. */
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
-/** Only runs on `main` may write what CI and pull requests restore. */
+/**
+ * Only runs on `main` may write what CI and pull requests restore. A job may
+ * narrow the rule with more `&&` terms, as a restore-only matrix row does,
+ * but it may not widen it with an `||` outside parentheses.
+ */
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/** The start of a narrowed save condition: `main` and more terms. */
+const MAIN_AND = "${{ github.ref == 'refs/heads/main' && ";
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
@@ -62,11 +68,11 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           false,
           `${file} must never save its Rust build cache`,
         );
-      else
-        assert.equal(
-          step.with?.["save-if"],
-          MAIN_ONLY,
-          `${file} must save its Rust build cache only from main`,
+      // A step that restores the entry of another job never saves.
+      else if (step.with?.["save-if"] !== false)
+        assert.ok(
+          savesOnlyFromMain(step.with?.["save-if"]),
+          `${file} must save its Rust build cache only from main, not ${String(step.with?.["save-if"])}`,
         );
     }
   }
@@ -104,6 +110,34 @@ test("the Rust audit tool cache follows the tool identity", async () => {
     assert.ok(key.includes(`'${input}'`), `the cache key must hash ${input}`);
   }
 });
+
+/**
+ * The condition is `main` alone, or `main` and a condition with no `||`
+ * outside parentheses and quoted strings, so every saving run is a run on
+ * `main`.
+ */
+function savesOnlyFromMain(condition: unknown): boolean {
+  if (condition === MAIN_ONLY) return true;
+  if (
+    typeof condition !== "string" ||
+    !condition.startsWith(MAIN_AND) ||
+    !condition.endsWith(" }}")
+  )
+    return false;
+  let depth = 0;
+  let quoted = false;
+  const rest = condition.slice(MAIN_AND.length, -" }}".length);
+  for (const [index, character] of [...rest].entries()) {
+    // A quoted string is text; `''` inside it closes and reopens it.
+    if (character === "'") quoted = !quoted;
+    if (quoted) continue;
+    if (character === "(") depth += 1;
+    if (character === ")") depth -= 1;
+    if (depth < 0) return false;
+    if (depth === 0 && rest.startsWith("||", index)) return false;
+  }
+  return depth === 0 && !quoted;
+}
 
 function isRustCache(step: WorkflowStep | undefined): boolean {
   return step?.uses?.startsWith(RUST_CACHE_ACTION) ?? false;

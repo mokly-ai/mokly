@@ -127,11 +127,11 @@ fn native_build_failure_prevents_tests() {
 #[test]
 fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
     let complete = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
-    let first = format!("{complete} --partition slice:1/2");
-    for (shard, nextest) in [(None, complete.to_owned()), (Some("2/3"), first)] {
+    let first = "cargo xtask rust-test-shard --partition 1/2 --no-fail-fast";
+    for (shard, nextest) in [(None, complete), (Some("2/3"), first)] {
         let observed = Arc::new(Mutex::new(Vec::new()));
         let captured = observed.clone();
-        let failing = nextest.clone();
+        let failing = nextest.to_owned();
         let runner = DefaultCheckRunner::new(
             Arc::new(Unimock::new(
                 CommandRunnerRunMock

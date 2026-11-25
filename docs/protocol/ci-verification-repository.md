@@ -92,9 +92,10 @@ runs the checks and each later shard runs Rust tests:
   preflight, the builds of item 10, and the Rust tests of item 11.
 - Native shard 1 checks Rust formatting and runs Clippy.
 - Each later shard runs the cargo-nextest preflight and the builds of item 10.
-  Then it runs nextest partition `slice:{INDEX-1}/{TOTAL-1}` of the Mokly
-  Rust tests. The first test shard, shard 2, also runs the doc tests. A
-  repository test shard first installs the root npm lockfile.
+  Then it runs its share of the Mokly Rust test units under the
+  [test unit rule](#test-units). The first test shard, shard 2, also runs
+  the doc tests. A repository test shard first installs the root npm
+  lockfile.
 
 The shards of a suite together run every check and every test of the
 complete suite exactly once. Only the npm install, the preflight, and the
@@ -106,21 +107,53 @@ Rejected: one test build per platform in a `cargo nextest archive` that the
 test shards download. The test shards would start only after that build job,
 so the build, the upload, and the download all stay on the critical path.
 
+### Test Units
+
+A test unit is one Cargo target selection: `--lib` for the unit tests of
+every library, `--bin {name}`, or `--test {name}`. A unit holds every
+selected target with that kind and name. The units cover each target of
+`mokly-*` and `xtask` that the complete nextest run selects: each target
+with tests whose required features Cargo's resolved features enable. The
+test shards read the targets and the features from `cargo metadata`, so a
+new crate or a new test lands on a shard without an edit.
+
+The first test shard runs `--lib` with the doc tests. Their builds need every
+crates.io dependency of the Rust tests, so only this shard saves the Rust
+build cache of its job. The other units go to the test shards by weight, the
+heaviest first, each to the shard with the least weight so far. `scripts/verification/rust-test-weights.json`
+holds the measured compile and test seconds of each unit, a default for a
+unit that it does not name, and the doc test weight of the first test shard.
+The weight file can split a heavy unit other than `--lib` into nextest
+slices, `--partition slice:{k}/{n}` of that unit alone. Each slice goes to a
+shard like a unit, and the shard runs it in its own nextest command, so every
+test of the unit runs exactly once. Every host computes the same partition. A
+weight changes only the balance, never the set of tests. A shard without
+units runs no nextest command.
+
+Each test shard selects `-p "mokly-*" -p xtask` and adds the target
+arguments of its units, so it compiles only the test binaries of its units.
+Decision: shard by test target, not by `--partition`, because every
+partition shard compiled every test binary. Rejected: one `-p` crate set
+for each shard. It changed the resolved features of up to 27 crates.io
+dependencies, so the shards could not share one Rust build cache.
+
 ## Rust Test Runner
 
 The Repository, Native, and cloud Rust suites run their Rust tests with
 [cargo-nextest](https://nexte.st). Nextest runs each test in its own process
 and runs the test binaries of all selected crates in parallel. Then
 `cargo test --doc` runs the doc tests of the same crates, because nextest
-does not run doc tests. A test shard runs one nextest partition under the
+does not run doc tests. A test shard runs its test units under the
 [shard rule](#suite-shards). Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 
-The repository, native, Workspace checks, and Testbox jobs install the
+The repository, native, and Testbox jobs, and the Workspace checks
+partitions that run cloud Rust or the toolchain pins, install the
 pinned nextest version as a prebuilt binary with `taiki-e/install-action`,
 right after the Rust build cache restore.
-`.config/nextest.toml` requires at least that version. Each of these suites
-runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
+`.config/nextest.toml` requires at least that version. The Repository, Native,
+and cloud Rust suites run `xtask/scripts/require-nextest.mjs` before their Rust
+builds. When
 `cargo nextest` is missing or older than the requirement, the preflight fails
 and prints `cargo install cargo-nextest --locked --version {version}` and the
 prebuilt binary page. In Native, the doc tests also run after failed nextest

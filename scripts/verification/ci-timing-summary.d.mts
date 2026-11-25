@@ -1,4 +1,5 @@
 import type { BudgetMode, BudgetRow } from "./ci-timing-budgets.mjs";
+import type { CacheReport } from "./ci-timing-cache.mjs";
 import type { CriticalPath } from "./ci-timing-path.mjs";
 import type { SlowFile, SlowTest } from "./ci-timing-tests.mjs";
 
@@ -11,6 +12,8 @@ export interface TimingReport {
   /** Seconds above the wall-clock budget, or null when within it or not checked. */
   wallOverSeconds: number | null;
   slowest: { tests: SlowTest[]; files: SlowFile[] };
+  /** The Actions cache usage, or null when the report did not read it. */
+  cache: CacheReport | null;
   issues: string[];
 }
 
