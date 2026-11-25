@@ -104,7 +104,9 @@ the page's own origin. Astro preview serves the production CSP so the browser
 suite exercises that boundary. The development server sends the same CSP but
 keeps those scripts inline, so the browser blocks them there: under
 `npm run dev` the scheme control and the hydrated islands do not run. Preview
-a build to see them.
+a build to see them. The two hydrated islands, Copy and search, start in the
+browser's first idle moment, and at the latest one second after the page
+reaches them, because a busy page can give the browser no idle moment.
 
 Every deployment publishes transparent brand assets for external consumers:
 
