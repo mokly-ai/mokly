@@ -1,16 +1,17 @@
 ---
 /**
- * The home's action pair: the filled Get started with its arrow, which opens
- * the Install guide, then a secondary action. `secondary` names it:
- * `download` is Download for Mac, which opens the desktop app's releases,
- * for the hero; `github` is View on GitHub, which opens the open-source
- * repository, for the open foundation. Each icon is decorative, so each
- * accessible name is the label.
+ * The home's action pair: a filled action with its arrow, then a secondary
+ * action. `secondary` names the pair: `download`, for the hero, pairs Get
+ * started to the app's sign-up with Download for Mac, which opens the
+ * desktop app's releases; `github`, for the open foundation, pairs Docs to
+ * the documentation landing with View on GitHub, which opens the
+ * open-source repository. Each icon is decorative, so each accessible name is
+ * the label.
  *
  * Use: `<Actions secondary="download" />`. The rules are in
  * `src/styles/buttons.css` and `src/styles/controls.css`.
  */
-import { EXTERNAL_LINKS, GET_STARTED_PATH } from "../navigation.js";
+import { EXTERNAL_LINKS, GET_STARTED_PATH, SITE_PATHS } from "../navigation.js";
 
 import Button from "./Button.astro";
 import Icon from "./Icon.astro";
@@ -20,11 +21,16 @@ interface Props {
 }
 
 const { secondary } = Astro.props;
+const cloud = secondary === "download";
 ---
 
 <div class="site-actions">
-  <Button arrow href={GET_STARTED_PATH} kind="primary">
-    Get started
+  <Button
+    arrow
+    href={cloud ? GET_STARTED_PATH : SITE_PATHS.docs}
+    kind="primary"
+  >
+    {cloud ? "Get started" : "Docs"}
   </Button>
   {secondary === "download" ? (
     <Button href={EXTERNAL_LINKS.desktopReleases} kind="secondary">

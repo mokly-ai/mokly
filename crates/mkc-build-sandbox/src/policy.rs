@@ -6,8 +6,7 @@ use sandbox_interface::EgressDestination;
 use crate::failure::Failure;
 
 /// Rules added to the adapter's built-in private network deny list.
-pub const BUILD_DENIED_DESTINATIONS: &[&str] =
-    &["0.0.0.0/8", "240.0.0.0/4", "64:ff9b::/96", "ff00::/8"];
+pub const BUILD_DENIED_DESTINATIONS: &[&str] = &["240.0.0.0/4", "64:ff9b::/96", "ff00::/8"];
 
 /// Produce canonical, sorted, unique profile rules with all required build denies.
 ///

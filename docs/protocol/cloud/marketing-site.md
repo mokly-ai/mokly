@@ -37,9 +37,9 @@ generated inventory, the built output and the reserved names fails the checks.
 
 ## Links From The Site To The App
 
-The site links one application route: **Create an account** and **Start a
-7-day trial** on the pricing page open `/sign-up`. **Get started** opens the
-Install guide at `/docs/start/install/`, and the site has no **Sign in** link.
+The site links one application route, `/sign-up`. **Get started** in the
+header, the menu and the home hero, and **Create an account** and **Start a
+7-day trial** on the pricing page open it. The site has no **Sign in** link.
 [Site](./site.md#get-started) owns these rules and the link check's exception
 for application routes.
 

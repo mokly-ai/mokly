@@ -65,7 +65,7 @@ function SiteDocs({
   );
 }
 
-/** The Install guide, where Get started leads. */
+/** The Install guide, where Docs leads. */
 export function SiteDocsScreen({ viewport }: { viewport: Viewport }) {
   return <SiteDocs page={INSTALL_PAGE} viewport={viewport} />;
 }

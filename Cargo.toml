@@ -34,8 +34,8 @@ mokly-watch = { path = "crates/mokly-watch" }
 utoipa = { version = "6.0.0", features = ["uuid", "chrono", "preserve_order", "preserve_path_order"] }
 rpc-error = { git = "https://github.com/futex-ai/rpc-error.git", rev = "ecf4e367342138911b9f45dbb97f73c9534c3136", version = "0.1.0", features = ["derive", "axum"] }
 internal-error = { git = "https://github.com/futex-ai/internal-error.git", rev = "6477922a1c4db8c3e35189af69f0147464004b99", package = "internal-error" }
-sandbox-interface = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
-sandbox-e2b = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
+sandbox-interface = { git = "https://github.com/futex-ai/sandbox.git", rev = "5d856dbc03956a622a04d43e83198e519b390c84" }
+sandbox-e2b = { git = "https://github.com/futex-ai/sandbox.git", rev = "5d856dbc03956a622a04d43e83198e519b390c84" }
 
 mkc-api = { path = "crates/mkc-api" }
 mkc-auth = { path = "crates/mkc-auth" }

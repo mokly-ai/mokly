@@ -29,7 +29,7 @@ shows, in this order, its name and audience, its price, its one action and
 what it holds:
 
 - **Open source**, for building catalogues locally: `$0` under the MIT
-  license. **Get started →** opens the Install guide. It holds local authoring
+  license. **Docs →** opens the documentation landing. It holds local authoring
   and builds, screens in Git and a static catalogue that you host anywhere.
 - **Free**, for open-source catalogues: `$0`, and every project is public.
   **Create an account** opens `/sign-up`. It holds unlimited projects and

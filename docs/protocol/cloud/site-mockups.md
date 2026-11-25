@@ -64,10 +64,11 @@ A fragment selects its composition from `data-site-viewport` on the root
 element rather than a viewport width, so a mobile fragment depicts the mobile
 composition at any preview width; the site implements the same rule as the
 768px breakpoint. The desktop composition steps by preview width between 700px
-and 1440px. **Get started** links to the documentation screen, which depicts
-the Install guide that the site's **Get started** opens. **Create an account**
-and **Start a 7-day trial** link to the sign-up screen
-`product/account/sign-up`, which owns the application's `/sign-up`.
+and 1440px. Each action links the screen that owns its destination, and
+[Site](./site.md#get-started) gives the destination of each action. An action
+that opens `/sign-up`, **Get started**, **Create an account** and **Start a
+7-day trial**, links the sign-up screen `product/account/sign-up`, which owns
+the application's `/sign-up`. Each **Docs** links the documentation screen.
 Destinations without an owning mockup — the other documentation pages, the
 Plans and billing page, the Atom feed, previous and next — render as plain
 text, the rule the rest of the design catalogue already follows.
