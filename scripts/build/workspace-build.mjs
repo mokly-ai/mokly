@@ -10,15 +10,18 @@ const RECORD_SCHEMA = 1;
 
 /**
  * Build the native binary and every package step. Cargo decides itself what
- * the native build needs. A package step runs when its key, a digest of its
- * inputs and of the outputs that it reads from earlier steps, differs from
- * the record of its last successful build, or when its outputs no longer
- * hold the recorded bytes. Steps without a dependency between them run at
- * the same time. A failed step starts no step that reads its outputs, and
- * the other steps still run. Resolve the names of the failed steps.
+ * the native build needs. A package step runs when its key differs from the
+ * record of its last successful build, or when its outputs no longer hold
+ * the recorded bytes. The key is a digest of the step's inputs, of the
+ * outputs that it reads from earlier steps, directly or through the outputs
+ * of another earlier step, and of the manifests of those steps. Steps without
+ * a dependency between them run at the same time. A failed step starts no
+ * step that reads its outputs, and the other steps still run. Resolve the
+ * names of the failed steps.
  */
 export async function runWorkspaceBuild(repositoryRoot, { run, report }) {
   const steps = PACKAGE_STEPS;
+  const byName = new Map(steps.map((step) => [step.name, step]));
   const shared = await hashFiles(repositoryRoot, SHARED_INPUTS);
   const environment = [process.version, process.platform, process.arch];
   const failed = [];
@@ -27,35 +30,59 @@ export async function runWorkspaceBuild(repositoryRoot, { run, report }) {
   });
   const outputs = new Map();
   const started = new Map();
-  const start = (step) => {
-    if (!started.has(step.name))
-      started.set(
-        step.name,
-        (async () => {
-          const ready = await Promise.all(
-            step.after.map(({ step: name }) =>
-              start(steps.find((candidate) => candidate.name === name)),
-            ),
-          );
-          if (ready.includes(false)) return false;
-          const upstream = step.after.map(({ step: name, declarations }) =>
-            digest([name], declarationsOnly(outputs.get(name), declarations)),
-          );
-          const inputs = await hashFiles(repositoryRoot, step.inputs);
-          const key = digest(
-            [...environment, ...upstream],
-            merge(shared, inputs),
-          );
-          const built = await buildStep(repositoryRoot, step, key, run, report);
-          if (!built) failed.push(step.name);
-          else outputs.set(step.name, built);
-          return Boolean(built);
-        })(),
+  const build = async (step) => {
+    const ready = await Promise.all(
+      step.after.map(({ step: name }) => start(byName.get(name))),
+    );
+    if (ready.includes(false)) return false;
+    try {
+      const read = readSteps(step, byName);
+      const upstream = read.map(([name, declarations]) =>
+        digest(
+          [name, declarations ? "declarations" : "outputs"],
+          declarationsOnly(outputs.get(name), declarations),
+        ),
       );
+      const inputs = await hashFiles(repositoryRoot, [
+        ...step.inputs,
+        ...read.map(([name]) => ({ path: byName.get(name).manifest })),
+      ]);
+      const key = digest([...environment, ...upstream], merge(shared, inputs));
+      const built = await buildStep(repositoryRoot, step, key, run, report);
+      if (built) outputs.set(step.name, built);
+      else failed.push(step.name);
+      return Boolean(built);
+    } catch (error) {
+      report(`${step.name} failed: ${error.message}`);
+      failed.push(step.name);
+      return false;
+    }
+  };
+  const start = (step) => {
+    if (!started.has(step.name)) started.set(step.name, build(step));
     return started.get(step.name);
   };
   await Promise.all([native, ...steps.map(start)]);
   return failed;
+}
+
+/**
+ * Every earlier step that a step reads, sorted by name, each with whether the
+ * step reads only its declarations. A step reached only through declarations
+ * is read for its declarations alone.
+ */
+function readSteps(step, byName) {
+  const found = new Map();
+  const visit = (current, onlyDeclarations) => {
+    for (const { step: name, declarations = false } of current.after) {
+      const only = onlyDeclarations || declarations;
+      if (found.has(name) && (found.get(name) === false || only)) continue;
+      found.set(name, only);
+      visit(byName.get(name), only);
+    }
+  };
+  visit(step, false);
+  return [...found].sort(([left], [right]) => left.localeCompare(right));
 }
 
 /** Run one step unless its record proves its outputs; resolve their hashes. */

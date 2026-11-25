@@ -46,6 +46,7 @@ async function checkout(t: TestContext) {
     await write(root, `${directory}/src/index.ts`, `${directory} code\n`);
     await write(root, `${directory}/src/types.ts`, `${directory} types\n`);
     await write(root, `${directory}/tests/a.test.ts`, "test\n");
+    await write(root, `${directory}/package.json`, "{}\n");
   }
   await write(root, "docs/guides/a.md", "guide\n");
   await write(root, "docs/protocol/cloud/a.md", "cloud\n");
@@ -160,6 +161,16 @@ const changes: {
     name: "changed model code",
     change: (root) => write(root, "packages/model/src/index.ts", "changed\n"),
     rebuilt: ["@mokly/model", "@mokly/frame", "@mokly/viewer"],
+  },
+  {
+    name: "changed model declarations that the viewer declarations re-export",
+    change: (root) => write(root, "packages/model/src/types.ts", "changed\n"),
+    rebuilt: ["@mokly/model", "@mokly/frame", "@mokly/viewer", "@mokly/mokly"],
+  },
+  {
+    name: "a changed UI manifest",
+    change: (root) => write(root, "packages/ui/package.json", "changed\n"),
+    rebuilt: ["@mokly/ui", "@mokly/viewer", "@mokly/mokly"],
   },
   {
     name: "a new model source file",

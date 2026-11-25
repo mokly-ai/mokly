@@ -17,12 +17,16 @@ function run([command, ...args]) {
     throw new ExpectedFailure("Start the build with npm run build.");
   const [program, programArgs] =
     command === "npm" ? [process.execPath, [npm, ...args]] : [command, args];
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const child = spawn(program, programArgs, {
       cwd: repositoryRoot,
       stdio: "inherit",
     });
-    child.once("error", reject);
+    // A command that cannot start fails its step like a failed command.
+    child.once("error", (error) => {
+      console.error(`build: ${[command, ...args].join(" ")}: ${error.message}`);
+      resolve(1);
+    });
     child.once("exit", (code) => resolve(code ?? 1));
   });
 }

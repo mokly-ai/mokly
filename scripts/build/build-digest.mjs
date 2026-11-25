@@ -22,12 +22,18 @@ export async function hashFiles(repositoryRoot, paths) {
     while (next < found.length) {
       const { name, link } = found[next++];
       const file = path.join(repositoryRoot, ...name.split("/"));
-      hashes.set(
-        name,
-        link
-          ? `link:${sha256(await fs.readlink(file))}`
-          : sha256(await fs.readFile(file)),
-      );
+      try {
+        hashes.set(
+          name,
+          link
+            ? `link:${sha256(await fs.readlink(file))}`
+            : sha256(await fs.readFile(file)),
+        );
+      } catch (error) {
+        // A file removed during the walk, such as an editor's temporary
+        // file, is missing, like a file that was never there.
+        if (error.code !== "ENOENT") throw error;
+      }
     }
   };
   await Promise.all(Array.from({ length: OPEN_FILES }, worker));
@@ -58,10 +64,16 @@ async function walk(repositoryRoot, base, exclude, found) {
 
 async function walkDirectory(repositoryRoot, base, exclude, relative, found) {
   const directory = relative ? `${base}/${relative}` : base;
-  const entries = await fs.readdir(
-    path.join(repositoryRoot, ...directory.split("/")),
-    { withFileTypes: true },
-  );
+  let entries;
+  try {
+    entries = await fs.readdir(
+      path.join(repositoryRoot, ...directory.split("/")),
+      { withFileTypes: true },
+    );
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
   for (const entry of entries) {
     const child = relative ? `${relative}/${entry.name}` : entry.name;
     if (exclude.has(child)) continue;

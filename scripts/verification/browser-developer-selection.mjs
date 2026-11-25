@@ -26,3 +26,20 @@ export function browserSelectionArguments(args) {
   }
   return filters ? selection : undefined;
 }
+
+/**
+ * Whether a developer browser run needs the copied example: a run that no
+ * list can narrow, or whose list fails, needs it, and Playwright then reports
+ * its own selection errors. A narrowed run needs it when a listed spec reads it.
+ */
+export async function selectionNeedsCopiedHost(args, { list, readers }) {
+  const filters = browserSelectionArguments(args);
+  if (!filters) return true;
+  let files;
+  try {
+    files = await list(filters);
+  } catch {
+    return true;
+  }
+  return (await readers(files)).size > 0;
+}
