@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 
+use crate::error::Error;
 use crate::render_segment;
 use crate::render_store::{CachedDocuments, SegmentIdentity};
 
@@ -81,7 +82,10 @@ impl CachedDocuments {
                     .and_then(|value| value.restore())
                     .or(Err(EntryFault::Damaged))
             });
-        let store_fault = entry.maintenance.is_some();
+        let store_fault = entry
+            .maintenance
+            .as_ref()
+            .is_some_and(|error| !matches!(error, Error::Cancelled));
         let decoded = {
             let _closed = entry;
             decoded

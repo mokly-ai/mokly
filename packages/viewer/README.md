@@ -254,6 +254,12 @@ runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
 and Review regressions against `mokly serve` of the example catalogue.
 
+A viewer test that registers a happy-dom window removes it with
+`unregisterDom` from [`tests/dom_teardown.ts`](tests/dom_teardown.ts), not
+with `GlobalRegistrator.unregister`. React DOM can still hold a queued task
+that reads `window` after the test unmounts, and `unregisterDom` removes the
+window only after that task has run.
+
 ### Key Code
 
 - [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the

@@ -35,7 +35,8 @@
     - `mac-buttons-follow-measured-bar.md`: Large, option A Small.
     - `macos-serve-signal-test-cache-warning.md`: Small, option B Medium.
       Resolved on 2026-11-22: that item now recommends option A, which is
-      Small.
+      Small. On 2026-11-25 the flaky-test branch deleted the item, because
+      it fixed that flake.
     - `marked-metadata-owner-timing.md`: Medium, option A Small.
     - `marked-sibling-file-candidates.md`: Medium, option C Large.
     - `node-24-crash-workaround.md`: Medium, option A Small.

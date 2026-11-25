@@ -14,7 +14,7 @@ use tokio::task::JoinHandle;
 use tokio::time::{Instant, timeout_at};
 
 use crate::clock::BuildClock;
-use crate::command::{Command, OUTPUT_LIMIT};
+use crate::command::Command;
 use crate::failure::Failure;
 use crate::output::{OutputReader, ProcessResult, StreamReader};
 
@@ -29,6 +29,8 @@ pub(crate) struct ProcessExecutor<'a> {
     pub(crate) clock: Arc<dyn BuildClock>,
     pub(crate) sink: Arc<dyn BuildLogSink>,
     pub(crate) provider: ProviderRef,
+    /// Byte cap of each process stream.
+    pub(crate) output_limit: usize,
 }
 
 /// Aborts the detached sink writer when the owning process future is dropped.
@@ -104,8 +106,8 @@ impl ProcessDriver for ProcessExecutor<'_> {
                     args: command.args.clone(),
                     cwd: Some(command.cwd.clone()),
                     envs: command.environment(self.request),
-                    stdout_limit: OUTPUT_LIMIT,
-                    stderr_limit: OUTPUT_LIMIT,
+                    stdout_limit: self.output_limit,
+                    stderr_limit: self.output_limit,
                     deadline,
                     idle_timeout: idle,
                 };
@@ -123,6 +125,7 @@ impl ProcessDriver for ProcessExecutor<'_> {
                 let reader: &dyn OutputReader = &StreamReader {
                     request: self.request,
                     step,
+                    output_limit: self.output_limit,
                 };
                 reader
                     .read(stream, &sender, cutoff, command.capture_stdout, idle)

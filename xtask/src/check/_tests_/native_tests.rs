@@ -123,81 +123,43 @@ fn native_build_failure_prevents_tests() {
     ));
 }
 
-#[test]
-fn native_shards_split_the_tests_and_run_lints_and_doc_tests_once() {
-    let display = |shard: &str| {
-        let shard = Shard::from_str(shard).unwrap();
-        CheckRequest::new(Some(VerificationSuite::Native), Some(shard), None).unwrap();
-        commands_for(
-            VerificationSuite::Native,
-            Some(shard),
-            DependencyAudit::Baseline,
-        )
-        .iter()
-        .map(CommandSpec::display)
-        .collect::<Vec<_>>()
-    };
-    let builds = [
-        "npm run build --workspace \"@mokly/ui\"",
-        "npm run build --workspace \"@mokly/model\"",
-        "npm run build --workspace \"@mokly/frame\"",
-        "npm run build --workspace \"@mokly/viewer\"",
-        "npm run build --workspace \"@mokly/mokly\"",
-    ];
-    let mut first = vec![
-        "node xtask/scripts/require-nextest.mjs",
-        "cargo xtask build-native",
-        "cargo fmt --all -- --check",
-        "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
-    ];
-    first.extend(builds);
-    first.extend([
-        "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --partition slice:1/3",
-        "cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast",
-    ]);
-    assert_eq!(display("1/3"), first);
-    let mut later = vec![
-        "node xtask/scripts/require-nextest.mjs",
-        "cargo xtask build-native",
-    ];
-    later.extend(builds);
-    later.push(
-        "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --partition slice:3/3",
-    );
-    assert_eq!(display("3/3"), later);
-}
-
+/// The complete suite and the first test shard both keep going after failed tests.
 #[test]
 fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
-    let observed = Arc::new(Mutex::new(Vec::new()));
-    let captured = observed.clone();
-    let nextest = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
-    let runner = DefaultCheckRunner::new(
-        Arc::new(Unimock::new(
-            CommandRunnerRunMock
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, command: &CommandSpec| {
-                    let command = command.display();
-                    captured.lock().unwrap().push(command.clone());
-                    if command == nextest {
-                        Err(Error::CommandFailed {
-                            command,
-                            status: "100".into(),
-                        })
-                    } else {
-                        Ok(())
-                    }
-                })),
-        )),
-        Arc::new(Unimock::new(())),
-        PathBuf::from("/workspace"),
-    );
-    assert!(matches!(
-        runner.run(CheckRequest::new(Some(VerificationSuite::Native), None, None).unwrap()),
-        Err(Error::CommandFailed { command, status }) if command == nextest && status == "100"
-    ));
-    assert_eq!(
-        observed.lock().unwrap().last().map(String::as_str),
-        Some("cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast")
-    );
+    let complete = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
+    let first = format!("{complete} --partition slice:1/2");
+    for (shard, nextest) in [(None, complete.to_owned()), (Some("2/3"), first)] {
+        let observed = Arc::new(Mutex::new(Vec::new()));
+        let captured = observed.clone();
+        let failing = nextest.clone();
+        let runner = DefaultCheckRunner::new(
+            Arc::new(Unimock::new(
+                CommandRunnerRunMock
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+                        let command = command.display();
+                        captured.lock().unwrap().push(command.clone());
+                        if command == failing {
+                            Err(Error::CommandFailed {
+                                command,
+                                status: "100".into(),
+                            })
+                        } else {
+                            Ok(())
+                        }
+                    })),
+            )),
+            Arc::new(Unimock::new(())),
+            PathBuf::from("/workspace"),
+        );
+        let shard = shard.map(|shard| Shard::from_str(shard).unwrap());
+        assert!(matches!(
+            runner.run(CheckRequest::new(Some(VerificationSuite::Native), shard, None).unwrap()),
+            Err(Error::CommandFailed { command, status }) if command == nextest && status == "100"
+        ));
+        assert_eq!(
+            observed.lock().unwrap().last().map(String::as_str),
+            Some("cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast")
+        );
+    }
 }

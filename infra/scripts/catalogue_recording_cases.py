@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import subprocess
 import threading
 
-from catalogue_capture_endpoint import CaptureEndpoint
+from catalogue_capture_endpoint import SHUTDOWN_POLL_SECONDS, CaptureEndpoint
 from publication_smoke_fixture import cli_result, fixture_environment
 
 
@@ -28,7 +28,11 @@ def refusing_endpoint(status):
             self.end_headers()
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker = threading.Thread(
+        target=server.serve_forever,
+        kwargs={"poll_interval": SHUTDOWN_POLL_SECONDS},
+        daemon=True,
+    )
     worker.start()
     try:
         yield f"http://127.0.0.1:{server.server_port}/", requests

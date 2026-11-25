@@ -71,9 +71,10 @@ The directory holds an isolated build of `examples/basic` with Changes
 disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`. Most `static_*.spec.ts` specs,
-`stage_centring.spec.ts`, `review_snapshot_links.spec.ts`, and the shared
-`*_cases.ts` modules of the design journeys use this copy. The comparison
-specs use the two-commit copies of the
+`stage_centring.spec.ts`, and `review_snapshot_links.spec.ts` use this copy.
+The portable design journeys do not: this suite runs them on Serve, and the
+static delivery check below runs them on built output. The comparison specs
+use the two-commit copies of the
 [comparison fixture reference](comparison/README.md).
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
@@ -92,7 +93,10 @@ A zero Playwright exit cannot hide a missing or invalid report.
 The `testMatch` list of
 [`playwright.delivery.config.ts`](../../playwright.delivery.config.ts) names
 the portable design journeys that run in both delivery modes, including
-`component_fragments.spec.ts`.
+`component_fragments.spec.ts`. A check that does not depend on the delivery,
+such as the width of each Canvas artboard, runs on Serve only.
+`builtCatalogueDelivery()` in `design_fixture.ts` tells a case module that it
+runs on built output.
 
 ## Deployment replacement
 

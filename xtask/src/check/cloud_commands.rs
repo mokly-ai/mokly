@@ -5,8 +5,8 @@ use std::iter;
 use crate::command::CommandSpec;
 
 use super::cloud_shards::{app_commands, mockup_commands, site_commands};
-use super::commands::require_nextest;
 use super::request::{Shard, VerificationSuite};
+use super::rust_commands::require_nextest;
 use super::tasks::{Task, task_commands};
 
 pub(super) fn cloud_commands(suite: VerificationSuite, shard: Option<Shard>) -> Vec<CommandSpec> {

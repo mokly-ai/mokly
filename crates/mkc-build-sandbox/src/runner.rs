@@ -21,6 +21,7 @@ use tokio::time::timeout;
 use crate::checkout::CheckoutRunner;
 use crate::cleanup::Cleanup;
 use crate::clock::BuildClock;
+use crate::command::OUTPUT_LIMIT;
 use crate::failure::Failure;
 use crate::install::DependencyInstaller;
 use crate::process::{ProcessDriver, ProcessExecutor, remaining};
@@ -43,6 +44,8 @@ pub struct SandboxBuildRunner {
     sandbox: BuildSandboxCapabilities,
     clock: Arc<dyn BuildClock>,
     deployment_id: String,
+    /// Byte cap of each process stream; `new` sets the 64 MiB cap of the spec.
+    output_limit: usize,
 }
 
 impl SandboxBuildRunner {
@@ -63,6 +66,7 @@ impl SandboxBuildRunner {
             sandbox,
             clock,
             deployment_id,
+            output_limit: OUTPUT_LIMIT,
         })
     }
 }
@@ -149,6 +153,7 @@ impl BuildRunner for SandboxBuildRunner {
                         clock: self.clock.clone(),
                         sink: sink.clone(),
                         provider: sandbox.provider_ref,
+                        output_limit: self.output_limit,
                     };
                     let session: &dyn BuildSession = &Session {
                         request: &request,

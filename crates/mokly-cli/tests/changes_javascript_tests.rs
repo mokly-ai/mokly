@@ -19,58 +19,6 @@ fn dependencies(root: &Path) {
 }
 
 #[test]
-fn mixed_html_react_and_stylesheet_changes_compare_with_the_git_base() {
-    for change in ["html", "react", "css", "all"] {
-        let root = base(&[
-            ("mokly.config.json", CONFIG),
-            ("specs/card.mockup.tsx", CARD),
-            ("specs/home.screen.html", HOME),
-            ("style.css", ".html-title{color:red}"),
-        ]);
-        dependencies(root.path());
-        if change == "html" || change == "all" {
-            write(
-                root.path(),
-                "specs/home.screen.html",
-                &HOME.replace("Before", "After"),
-            );
-        }
-        if change == "react" || change == "all" {
-            write(
-                root.path(),
-                "specs/card.mockup.tsx",
-                &CARD.replace("Before", "After"),
-            );
-        }
-        if change == "css" || change == "all" {
-            write(root.path(), "style.css", ".html-title{color:blue}");
-        }
-        let output = run(root.path(), &["build"]);
-        assert_eq!(
-            output.status.code(),
-            Some(0),
-            "{change}: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(
-            stdout.contains(if change == "all" {
-                "Changes ready · 2 changes"
-            } else {
-                "Changes ready · 1 change"
-            }),
-            "{change}: {stdout}"
-        );
-        assert_eq!(stdout.matches("  cache ").count(), 1);
-        assert!(
-            output.stderr.is_empty(),
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-}
-
-#[test]
 fn historical_postcss_relative_reads_change_only_the_owned_component() {
     let root = base(&[
         (

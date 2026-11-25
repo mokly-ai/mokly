@@ -11,6 +11,7 @@ import { ShellStoreProvider } from "../src/shell/store.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { FakeDataSource, flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 /**
  * Give each document `fonts`, as each browser document has: a previous
@@ -92,7 +93,7 @@ test("a rejected removed detail shows no preview and Retry requests the route de
   );
   t.after(async () => {
     view.unmount();
-    await GlobalRegistrator.unregister();
+    await unregisterDom();
   });
   assert.match(view.container.textContent, /Loading previous version/);
   await act(async () => {
@@ -166,7 +167,7 @@ test("a page keeps its preview metadata request when the routed detail arrives",
   );
   t.after(async () => {
     view.unmount();
-    await GlobalRegistrator.unregister();
+    await unregisterDom();
   });
   assert.equal(requests.length, 1);
   await act(async () => {

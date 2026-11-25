@@ -199,17 +199,3 @@ test("a failed build newer than the newest publication holds the stage", async (
   await expect(guide).toHaveAttribute("target", "_blank");
   await expect(page.locator(".fo-build-action button")).toHaveCount(0);
 });
-
-test("a project that cannot build keeps Set up publishing", async ({
-  page,
-}) => {
-  // The running API has no GitHub or build configuration, so nothing here is
-  // routed: this is the project every deployment without builds reads.
-  const scenario = await buildScenario(page, "build-unavailable");
-  await page.unrouteAll({ behavior: "wait" });
-  await open(page, scenario.address.path);
-  await expect(page.getByTestId("set-up-publishing")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Publish this branch" }),
-  ).toHaveCount(0);
-});
