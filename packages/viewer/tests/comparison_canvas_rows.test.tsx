@@ -31,6 +31,7 @@ import {
   OUTLINE,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 const UNAVAILABLE = "The comparison is unavailable.";
@@ -165,7 +166,7 @@ function compare(
 
 test("a row's failure stays on its own frames, and only every row's failure covers the canvas with Try again for every row", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const calls: string[] = [];
   const partly = Object.assign(
@@ -206,7 +207,7 @@ test("a row's failure stays on its own frames, and only every row's failure cove
 
 test("a failed row's Try again moves focus to the comparison stage, which holds the row's load in place of the button", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const calls: string[] = [];
   const loaded = { url: generationRoot("a") };

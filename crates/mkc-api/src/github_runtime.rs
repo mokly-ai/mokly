@@ -13,6 +13,7 @@ pub(crate) trait WorkerLoop: Send + Sync {
 
 pub(crate) struct GitHubWorkerLoop {
     pub(crate) worker: Option<Arc<dyn DeliveryWorker>>,
+    pub(crate) interval: Duration,
 }
 
 impl WorkerLoop for GitHubWorkerLoop {
@@ -29,7 +30,7 @@ impl WorkerLoop for GitHubWorkerLoop {
                     Ok(Err(error)) => tracing::error!(?error, "GitHub delivery worker failed"),
                     Err(error) => tracing::error!(?error, "GitHub delivery worker task failed"),
                 }
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::time::sleep(self.interval).await;
             }
         })
     }

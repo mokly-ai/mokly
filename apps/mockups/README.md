@@ -89,8 +89,14 @@ npm run emails:check
 npm run emails:test
 ```
 
-CI installs Chromium with `--with-deps` on Ubuntu before the `cloud-mockups`
-suite.
+CI runs the `cloud-mockups` suite as six shards, as the
+[mockup shards](../../docs/protocol/cloud/repository-verification.md#mockup-and-site-shards)
+define. Each shard builds the catalogue first. Shard 1 runs the checks that
+need no browser, so only shards 2 to 6 install Chromium with `--with-deps`.
+To repeat one shard, run
+`cargo xtask check --suite cloud-mockups --shard 3/6` from the repository
+root. A disk browser shard alone is
+`npm run test:disk --workspace @mokly-cloud/mockups -- --shard 1/4`.
 
 ## Development
 
@@ -104,7 +110,8 @@ test runs in a fixture checkout also ignore the global and system Git
 configuration.
 Playwright failure traces stay under `.context/mockups-playwright` and its
 `-serve` sibling; full-page captures stay under `.context/mockups-smoke`, as
-the [authoring guide](../../docs/mockups/README.md) explains.
+the [authoring guide](../../docs/mockups/README.md) explains. Set
+`MKC_MOCKUP_CAPTURES=1` for the disk suite's captures.
 
 Typechecking covers the renderer, entries, screens, scripts and tests outside
 this npm workspace through the installed packages' public declaration

@@ -104,7 +104,9 @@ the page's own origin. Astro preview serves the production CSP so the browser
 suite exercises that boundary. The development server sends the same CSP but
 keeps those scripts inline, so the browser blocks them there: under
 `npm run dev` the scheme control and the hydrated islands do not run. Preview
-a build to see them.
+a build to see them. The two hydrated islands, Copy and search, start in the
+browser's first idle moment, and at the latest one second after the page
+reaches them, because a busy page can give the browser no idle moment.
 
 Every deployment publishes transparent brand assets for external consumers:
 
@@ -199,7 +201,12 @@ Root Prettier includes this package, and its Astro plugin formats `.astro`
 files. Root ESLint lints the TypeScript but does not parse `.astro` files;
 `npm run site:typecheck` checks them with `astro check`.
 `cargo xtask check` installs the single `package-lock.json`,
-builds and verifies mockups, then runs the complete site gate. Lighthouse is a
+builds and verifies mockups, then runs the complete site gate. CI runs the
+`cloud-site` suite as two shards, as the
+[site shards](../../docs/protocol/cloud/repository-verification.md#mockup-and-site-shards)
+define: each shard builds the site and runs half of the browser tests, and
+shard 1 also runs the type, unit, and link checks. To repeat one shard, run
+`cargo xtask check --suite cloud-site --shard 2/2` from the repository root. Lighthouse is a
 separate visible CI job and does not block the required aggregate. Workflow
 tests record reviewed immutable action pins, including the Electron download
 cache used by the desktop job.
@@ -370,7 +377,7 @@ Pages project and attach the domain are in the
 - `tests/changelog.test.ts`, `tests/changelog_notes.test.ts`, `tests/browser/changelog.spec.ts` and `changelog-layout.spec.ts` — the releases, notes, upgrade notes, anchors, links and feed that the changelog model reads, and in a browser the frames, the filter, the release in view, a link into a closed disclosure, Version history under the tool bar and in the place and the width of the docs Layers panel, the widths without sideways scroll, 200% text in a 320px window, the words of each filter option inside the option and the bar at 320px with 100% and 200% text, the checked filter option in forced colours and the page without script.
 - `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes, sticky plan heads, the phone sizes of the group heads and the Mokly CLI box, and 200% text in a 320px window.
 - `tests/lighthouse.test.ts`, `tests/site_workflows.test.ts` and `tests/site_cleanup.test.ts` — the budget against the delivery contract, the site workflow policy, and the Pages cleanup script.
-- `tests/browser/` — the Playwright suite over every built route. `large-text.ts` opens a route in a 320px window at 200% text, where the chrome, footer, home, changelog, pricing, tree sheet and sample specs check their parts.
+- `tests/browser/` — the Playwright suite over every built route. `pages.spec.ts` writes a full-page capture of each route only when `MKC_SITE_CAPTURES=1` asks for it. `large-text.ts` opens a route in a 320px window at 200% text, where the chrome, footer, home, changelog, pricing, tree sheet and sample specs check their parts.
 
 ### Related Docs
 

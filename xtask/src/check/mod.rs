@@ -1,9 +1,13 @@
 //! Complete and independently selectable verification suites.
 
 mod cloud_commands;
+mod cloud_shards;
 mod commands;
 pub(crate) mod request;
 pub(crate) mod runner;
+mod rust_commands;
+mod rust_partition;
+mod rust_targets;
 pub(crate) mod tasks;
 
 #[cfg(test)]
@@ -21,9 +25,25 @@ mod repository_tests;
 mod native_tests;
 
 #[cfg(test)]
+#[path = "_tests_/rust_shard_tests.rs"]
+mod rust_shard_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rust_partition_tests.rs"]
+mod rust_partition_tests;
+
+#[cfg(test)]
 #[path = "_tests_/cloud_tests.rs"]
 mod cloud_tests;
 
 #[cfg(test)]
+#[path = "_tests_/cloud_shard_tests.rs"]
+mod cloud_shard_tests;
+
+#[cfg(test)]
 #[path = "_tests_/ported_stage_tests.rs"]
 mod ported_stage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/shard_tests.rs"]
+mod shard_tests;

@@ -26,22 +26,32 @@ Public test commands and strict evidence rules live in the
   exact version in [`.bun-version`](../../.bun-version). The required check,
   the fast fallback hint, and the Testbox wrapper use it.
 - [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
-  Playwright specs of `npm run test:browser` after it checks the build.
+  Playwright specs of `npm run test:browser` after it checks the build. When
+  [`browser-developer-selection.mjs`](./browser-developer-selection.mjs) finds
+  that the arguments only filter specs and titles, it lists the selected specs
+  and skips the copied example when none of them reads it.
 - [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
   shard of it, and writes its report.
 - [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and
-  `file://` delivery checks of `npm run test:delivery:prepared`.
+  `file://` delivery checks of `npm run test:delivery:prepared`. With
+  `--mode static-http` or `--mode file`, it runs one of them, as each CI
+  delivery job does.
 - [`dependency-audit.mjs`](./dependency-audit.mjs) and
   [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
 - [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
   job runs. It reads the jobs of the run, compares each run time with
-  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, and lists
-  the slowest tests of the downloaded reports, under the
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, lists
+  the slowest tests of the downloaded reports, and compares the Actions cache
+  total with its budget, under the
   [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
-  Run it locally on a saved API response with
-  `node scripts/verification/ci-timing.mjs --jobs-file {file} --reports {directory}`.
+  [`ci-timing-cache.mjs`](./ci-timing-cache.mjs) reads and reports the cache
+  list. Run the report locally on saved API responses with
+  `node scripts/verification/ci-timing.mjs --jobs-file {file} --caches-file {file} --reports {directory}`.
+  Save the complete cache list with
+  `gh api --paginate --slurp "repos/{owner}/{repo}/actions/caches?per_page=100"`.
+  Without `--caches-file`, a local run does not read the cache.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
@@ -99,7 +109,7 @@ Failed or interrupted installs cannot become cache hits. It removes the
 temporary source tree after installation. Compiled dependencies use
 `target/rust-audit-tool/`. Both locations stay ignored.
 
-In CI, the Repository job's Rust build cache restores
+In CI, the Rust build cache of the Repository checks shard restores
 `.context/rust-audit-tool/`, so most runs reuse the installed tool. The cache
 key hashes the tool lockfile and this installer. A new pin or lock therefore
 misses the cache, and the next `main` run saves the new tool.
@@ -134,16 +144,26 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They use the median per-test cost
-of complete, successful hosted browser runs.
+inputs in estimated milliseconds per test. The Playwright reporter records a
+`wallMs` for each observed test: the time that its worker slot spent since
+the previous test ended. That time includes the hooks, fixtures, and worker
+restarts before the test. For each report and `specFile`, the weight sums
+`wallMs` and divides by the observed test count. The committed weight is the
+median of these per-test costs over the reports, rounded to three decimal
+places.
 
-For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Take the median of the available per-test sample
-costs for each file and round to three decimal places. A file absent from an
-older sample uses the available samples. Refresh from complete, successful
-browser report sets and retain the source reports and calculations under
-`.context/`.
-Report fixture and whole-job durations separately to check the actual balance.
+Specs go in order of their larger share of the total estimated cost or of
+the total test count. Specs with many tests therefore take their places
+before the count cap fills.
+
+[`browser-host-needs.mjs`](./browser-host-needs.mjs) marks the specs whose
+static relative import graph reaches `tests/browser/static_test.ts`, the only
+reader of the copied static example. For each count of copy shards, placement
+puts the marked specs on those shards first, each charged
+`COPIED_HOST_SETUP_MS` once, then the other specs on all shards. It keeps the
+count with the shortest longest shard. A shard without a marked spec passes
+`MOKLY_PLAYWRIGHT_COPIED_HOST=skip`, so global setup skips that build. Removed
+specs leave the weights unused, and new specs take the median weight.
 
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
@@ -155,6 +175,67 @@ of its count-based `--shard` selection. The reporter must observe the same
 test IDs as independent discovery. Unsharded strict runs and developer
 Playwright selection keep their complete or requested inventories.
 
+## Viewer partitioning
+
+A strict viewer run with `--shard INDEX/TOTAL` discovers every Node test file
+and runs only the files of its shard. It assigns whole files by descending
+measured duration to the shard with the least estimated work.
+[`viewer-shard-weights.json`](./viewer-shard-weights.json) holds the median
+measured duration of each file in milliseconds. A new file uses the median
+weight. The selected files keep their discovery order.
+
+## Rust test weights
+
+[`rust-test-weights.json`](./rust-test-weights.json) holds two parts of the
+weight of each Rust test unit, such as `--test cli`, in seconds.
+`compileSeconds` is the build time of the unit's test targets in the report
+of `cargo test --no-run --timings`, times 1.5. `testSeconds` is the nextest
+time of the unit on the CI hosts: the median of each test over the runs that
+passed it, the sum over the tests of the unit on one host, then the mean over
+the Linux, macOS, and Windows hosts. The weight of a unit is the sum of its
+two parts. `xtask` embeds the file and assigns the units of the repository
+and native test shards by these weights, as the
+[test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
+says. A unit that neither part names gets `defaultSeconds`. `splits` runs
+a heavy unit, such as the render integration tests, as nextest slices on
+separate shards. A stale
+weight changes only the balance of the shards, never the set of tests.
+
+[`rust-test-weights.mjs`](./rust-test-weights.mjs) refreshes each part:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) node scripts/verification/rust-test-weights.mjs --run {run} --run {run}
+node scripts/verification/rust-test-weights.mjs --compile
+```
+
+`--run` reads the logs of the passed Repository and native jobs of each CI
+run and replaces `testSeconds`. Give the newest `main` runs. A run with a
+failed or unfinished test shard gives fewer samples of that shard's tests.
+When no given run passed a shard, its tests are missing from their unit on
+that host, so give runs in which every test shard passed. `--compile` builds every Rust test target in a new target directory
+under `.context/`, so that Cargo reuses no build, and replaces
+`compileSeconds` from its timing report. Cargo leaves a reused build out of
+the report. The compile part changes only when the build of a unit changes.
+
+## Shard totals and weight refresh
+
+[`ci-shards.json`](./ci-shards.json) holds the viewer and browser shard
+totals. The CI matrices, [`aggregate.mjs`](./aggregate.mjs), and remote
+verification read it, so a shard count change is one edit.
+
+Refresh both weight files from passed CI reports:
+
+```bash
+gh run download {run} -R mokly-ai/mokly -p 'verification-*' -D .context/shard-reports/{run}
+node scripts/verification/shard-weights.mjs --reports .context/shard-reports
+```
+
+Download several runs into separate directories. The script reads every
+report under the directory, skips reports that did not pass, and writes both
+weight files. Compare the shard durations of the next CI run with the
+targets of the
+[shard balance rules](../../docs/protocol/ci-suite-evidence.md#viewer-shard-balance).
+
 ### Key code
 
 - [`browser-partition.mjs`](./browser-partition.mjs) selects weighted whole-file
@@ -165,6 +246,12 @@ Playwright selection keep their complete or requested inventories.
   its observed test IDs against independent discovery.
 - [`shard-balance.mjs`](./shard-balance.mjs) enforces the existing test-count
   share limit when evidence is aggregated.
+- [`viewer-partition.mjs`](./viewer-partition.mjs) selects weighted whole-file
+  viewer partitions.
+- [`shard-weights.mjs`](./shard-weights.mjs) computes both weight files from
+  downloaded reports.
+- [`rust-test-weights.mjs`](./rust-test-weights.mjs) computes the Rust test
+  weights from CI job logs and a cargo timing report.
 
 ## Remote delivery
 
@@ -179,8 +266,8 @@ before this wrapper. It refreshes every regular copied path that differs from
 the warmup base, so the first Cargo build cannot reuse a stale native binary.
 
 No browser command also runs delivery. The remote plan gives static delivery
-its own seventh Testbox and requires its exit result. Browser and viewer
-reports retain the existing five-report aggregate. The delivery parent
+its own Testbox and requires its exit result. Its reports stay out of the
+viewer and browser report aggregate. The delivery parent
 validates its own HTTP and file reports before returning success.
 
 ### Testbox workflow reference
@@ -198,10 +285,11 @@ and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 
-| Action                        | Commit                                     | Comment    |
-| ----------------------------- | ------------------------------------------ | ---------- |
-| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
-| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
-| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
-| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3` |
-| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |
+| Action                        | Commit                                     | Comment     |
+| ----------------------------- | ------------------------------------------ | ----------- |
+| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`      |
+| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`      |
+| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0`  |
+| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3`  |
+| `taiki-e/install-action`      | `fe3acb53a98b62c772db35de75ce0e4595e7ca8c` | `# v2.90.8` |
+| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`      |

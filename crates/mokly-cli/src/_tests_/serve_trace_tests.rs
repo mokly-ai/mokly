@@ -25,10 +25,30 @@ pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
 /// Capture records with a scripted render cache behind the timing layer.
 pub(super) fn capture_cache(cache: Arc<dyn RenderCache>, run: impl FnOnce()) -> Vec<Value> {
     let clock = Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64));
-    collect_lines(run, &clock, Arc::new(Redactor::default()), cache, || {})
-        .iter()
-        .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
-        .collect()
+    collect_lines(
+        |_| run(),
+        &clock,
+        Arc::new(Redactor::default()),
+        cache,
+        || {},
+    )
+    .1
+    .iter()
+    .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
+    .collect()
+}
+
+/// Run with the timing layer while the run reads the lines written so far.
+pub(super) fn capture_live<T>(run: impl FnOnce(&Mutex<Vec<String>>) -> T) -> T {
+    let clock = Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64));
+    collect_lines(
+        run,
+        &clock,
+        Arc::new(Redactor::default()),
+        Arc::new(empty_cache()),
+        || {},
+    )
+    .0
 }
 
 /// An empty cache whose statistics stay zero, for records that are not about the cache.
@@ -43,12 +63,13 @@ pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
 pub(super) fn capture_redacted(run: impl FnOnce(), redactor: Redactor) -> Vec<String> {
     let clock = Unimock::new(());
     collect_lines(
-        run,
+        |_| run(),
         &clock,
         Arc::new(redactor),
         Arc::new(empty_cache()),
         || {},
     )
+    .1
 }
 
 /// The inner layer acknowledges destruction after the outer timing layer drops its clones.
@@ -62,13 +83,15 @@ impl Drop for CaptureReleased {
     }
 }
 
-fn collect_lines(
-    run: impl FnOnce(),
+/// The layer holds only mock clones. A foreign thread can hold the dispatcher last, so the
+/// originals here drop only after the subscriber's release.
+fn collect_lines<T>(
+    run: impl FnOnce(&Mutex<Vec<String>>) -> T,
     clock: &Unimock,
     redactor: Arc<Redactor>,
     cache: Arc<dyn RenderCache>,
     after_scope: impl FnOnce(),
-) -> Vec<String> {
+) -> (T, Vec<String>) {
     let records = Arc::new(Mutex::new(Vec::new()));
     let output = records.clone();
     let terminal = Unimock::new(TerminalMock::stderr.each_call(matching!(_)).answers_arc(
@@ -85,15 +108,16 @@ fn collect_lines(
         cache,
     };
     let (released, finished) = mpsc::sync_channel(1);
-    with_default(
+    let result = with_default(
         tracing_subscriber::registry()
             .with(CaptureReleased(released))
             .with(layer),
-        run,
+        || run(&records),
     );
     after_scope();
     finished.recv().unwrap();
-    records.lock().unwrap().clone()
+    let lines = records.lock().unwrap().clone();
+    (result, lines)
 }
 
 #[test]
@@ -106,8 +130,8 @@ fn timing_mock_verification_waits_for_a_foreign_dispatch_release() {
         released.recv().unwrap();
         assert!(dispatch.downcast_ref::<Timings>().is_some());
     });
-    let lines = collect_lines(
-        || {
+    let (_, lines) = collect_lines(
+        |_| {
             tracing::info!(sidecar_timing = "owned timing record");
             tracing::dispatcher::get_default(|dispatch| send.send(dispatch.clone()).unwrap());
         },

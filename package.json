@@ -18,7 +18,7 @@
     "node": ">=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0"
   },
   "scripts": {
-    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/ui && npm run -s build --workspace @mokly/model && npm run -s build --workspace @mokly/frame && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
+    "build": "node scripts/build/build.mjs",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dependencies:check:rust": "node scripts/verification/audit-rust.mjs",

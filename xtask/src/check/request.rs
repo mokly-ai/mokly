@@ -43,7 +43,7 @@ pub(crate) enum VerificationSuite {
     Repository,
     /// Viewer typecheck and Node tooling and viewer tests.
     Viewer,
-    /// Host native artifact and Rust tests for hosted macOS and Windows jobs.
+    /// Host native artifact, Rust lints, and Rust tests for hosted macOS and Windows jobs.
     Native,
     /// Playwright checks of the served example and viewer hosts.
     Browser,
@@ -136,7 +136,16 @@ impl VerificationSuite {
     }
 
     fn supports_shards(self) -> bool {
-        matches!(self, Self::Browser | Self::CloudApp)
+        matches!(
+            self,
+            Self::Repository
+                | Self::Viewer
+                | Self::Browser
+                | Self::Native
+                | Self::CloudApp
+                | Self::CloudMockups
+                | Self::CloudSite
+        )
     }
 }
 
@@ -146,7 +155,7 @@ impl fmt::Display for VerificationSuite {
     }
 }
 
-/// One-based whole-file shard selection.
+/// One-based shard selection.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Shard {
     index: u64,
@@ -154,9 +163,29 @@ pub(crate) struct Shard {
 }
 
 impl Shard {
-    /// Whether this shard owns non-browser logic tests.
+    /// Whether this shard owns the checks that run once per sharded suite.
     pub(super) fn is_first(self) -> bool {
         self.index == 1
+    }
+
+    /// One-based shard number.
+    pub(super) fn index(self) -> u64 {
+        self.index
+    }
+
+    /// Number of shards in the selection.
+    pub(super) fn total(self) -> u64 {
+        self.total
+    }
+
+    /// The shard of the remaining work after `leading` shards that own other work.
+    ///
+    /// Returns `None` for one of the leading shards.
+    pub(super) fn after(self, leading: u64) -> Option<Self> {
+        (self.index > leading).then(|| Self {
+            index: self.index - leading,
+            total: self.total - leading,
+        })
     }
 }
 
@@ -199,7 +228,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional browser or cloud application shard.
+    /// Optional repository, viewer, browser, native, cloud application, mockup, or site shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,

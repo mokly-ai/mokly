@@ -4,5 +4,6 @@ mod claim;
 mod execution;
 mod finalize;
 mod outcome;
+mod reason;
 pub mod service;
 mod sink;

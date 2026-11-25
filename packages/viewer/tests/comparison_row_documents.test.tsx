@@ -26,6 +26,7 @@ import {
   OUTLINE,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 const UNAVAILABLE = "The comparison is unavailable.";
@@ -108,7 +109,7 @@ async function answer(requests: readonly { answer(): void }[]) {
 
 test("a change to one row's documents aborts only that row's running presentation", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const generations = new Map([
     [ACTION, action],
@@ -144,7 +145,7 @@ test("a change to one row's documents aborts only that row's running presentatio
 
 test("a row whose request failed reads failed, also when the rows do not list it", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const generations = Object.assign(new Map([[ACTION, action]]), {
     failures: new Map([[OUTLINE, UNAVAILABLE]]),
@@ -176,7 +177,7 @@ test("a row whose request failed reads failed, also when the rows do not list it
 
 test("a renewing row loads no new document until its renewal ends, and keeps showing what it accepted", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const light = sides(action.url, ACTION);
   const both = [...light, ...sides(action.url, ACTION, "dark")];
@@ -218,7 +219,7 @@ test("a renewing row loads no new document until its renewal ends, and keeps sho
 
 test("Inspect aborts the running presentations and keeps the accepted ones for the return", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = documentHost();
   const generations = new Map([
     [ACTION, action],

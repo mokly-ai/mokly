@@ -18,6 +18,7 @@ pub(super) trait ProcessTable: Send + Sync {
     /// Return `None` when the PID no longer identifies a process.
     fn identity(&self, pid: i32) -> io::Result<Option<ProcessIdentity>>;
     /// Return direct children with identities read from the same table.
+    /// A process or thread that is reaped during the read has no children.
     fn children(&self, pid: i32) -> io::Result<Vec<ProcessIdentity>>;
     /// Confirm the identity and send one signal to the process.
     fn signal(&self, identity: ProcessIdentity, signal: i32) -> io::Result<()>;

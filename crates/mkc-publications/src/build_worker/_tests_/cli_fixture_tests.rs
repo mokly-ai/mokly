@@ -77,9 +77,10 @@ fn workspace_cli_evidence_covers_every_worker_mapped_code_and_result() {
                 cli_error: Some(typed),
             },
             None,
-            5,
             at,
-        );
+        )
+        .resolve(5, at)
+        .0;
         assert_eq!(result.state, BuildState::Failed);
         assert_eq!(result.failure_cause, Some(expected));
         assert_eq!(

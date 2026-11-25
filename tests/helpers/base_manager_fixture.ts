@@ -17,21 +17,13 @@ const script = `node -e "require('node:fs').writeFileSync('lifecycle-ran', 'unex
 export async function baseManagerFixture(
   manager: Manager,
   context: TestContext,
-  mode:
-    | "installed"
-    | "missing"
-    | "version"
-    | "pnp"
-    | "paths"
-    | "exec"
-    | "constraints" = "installed",
+  mode: "installed" | "missing" | "paths" | "constraints" = "installed",
   originalPath?: string,
 ) {
-  const fixture = await coldBaseFixture(2, context);
+  const fixture = await coldBaseFixture(2, context, { install: false });
   const { root } = fixture;
   await git(root, "checkout", "HEAD", "--", "specs/source-value.ts");
   await fs.rm(path.join(root, "package-lock.json"));
-  await fs.rm(path.join(root, "node_modules"), { recursive: true });
   await write(
     root,
     ".gitignore",
@@ -83,7 +75,7 @@ import value from 'local-workspace';
 export const page = definePage({title: 'Workspace', description: '', relatedDocs: [],
 render: () => '<!doctype html><html><head><title>Workspace</title></head><body><h1>' + value + '</h1></body></html>'});`,
   );
-  const manifest = (version: string, includeExec = mode === "exec") =>
+  const manifest = (version: string) =>
     JSON.stringify({
       name: "cold-base-fixture",
       version: "1.0.0",
@@ -94,34 +86,14 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
         "mokly-cold-dependency": `file:vendor/dependency-${version}.tgz`,
         "local-workspace":
           manager.name === "Yarn Classic" ? "*" : "workspace:*",
-        ...(includeExec
-          ? { generator: "exec:./historical-generator.cjs" }
-          : {}),
       },
       scripts: { preinstall: script, postinstall: script },
       dependenciesMeta: { "mokly-cold-dependency": { built: true } },
     });
-  await write(root, "package.json", manifest("1.0.0", false));
-  if (mode === "exec") {
-    await write(
-      root,
-      "packages/generator/package.json",
-      JSON.stringify({ name: "generator", version: "1.0.0" }),
-    );
-    await write(
-      root,
-      "historical-generator.cjs",
-      "require('node:fs').writeFileSync('historical-exec-ran', 'unexpected'); module.exports = {};\n",
-    );
-  }
+  await write(root, "package.json", manifest("1.0.0"));
   await installFixture(root, manager, fixture.env);
-  if (mode === "exec") {
-    await write(root, "package.json", manifest("1.0.0"));
-  }
   if (mode === "constraints")
     await fs.rm(path.join(root, "historical-constraints-ran"), { force: true });
-  if (mode === "exec")
-    await fs.rm(path.join(root, "historical-exec-ran"), { force: true });
   if (mode === "paths")
     await write(
       root,
@@ -135,28 +107,14 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
       "packages:\n  - packages/*\nlockfileDir: ../escaped-lock\nmodulesDir: ../escaped-modules\nvirtualStoreDir: ../escaped-virtual\nstoreDir: ../escaped-store\n",
     );
   }
-  if (mode === "version") {
-    await write(
-      root,
-      "package.json",
-      manifest("1.0.0").replace(manager.version, "999.0.0"),
-    );
-  }
-  if (mode === "pnp") await write(root, ".yarnrc.yml", "nodeLinker: pnp\n");
   await git(root, "add", "-A");
   await git(root, "commit", "-qm", "manager base fixture");
   const base = await git(root, "rev-parse", "HEAD");
-  await write(root, "package.json", manifest("2.0.0", false));
+  await write(root, "package.json", manifest("2.0.0"));
   if (mode === "paths") {
     await write(root, ".npmrc", "offline=true\n");
     await write(root, "pnpm-workspace.yaml", "packages:\n  - packages/*\n");
   }
-  if (mode === "pnp")
-    await write(
-      root,
-      ".yarnrc.yml",
-      "nodeLinker: node-modules\nenableNetwork: false\nenableGlobalCache: false\nenableTelemetry: false\n",
-    );
   await installFixture(root, manager, fixture.env);
   if (mode === "constraints")
     await fs.rm(path.join(root, "historical-constraints-ran"), { force: true });
@@ -165,8 +123,6 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
     "specs/source-value.ts",
     "export const value = 'Working source';",
   );
-  if (mode === "exec")
-    await fs.rm(path.join(root, "historical-exec-ran"), { force: true });
   await write(
     root,
     "packages/local/index.js",

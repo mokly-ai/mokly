@@ -144,6 +144,12 @@ returns the build to `queued` with
 `next_attempt_at` 60, 120, 240 and 480 seconds ahead after attempts one to
 four, clearing the lease; after the fifth attempt the build ends `failed`
 with `infrastructure`. Every transition bumps the check outbox.
+After each committed infrastructure retry or exhaustion, including one from
+lease recovery, the worker logs one warning. The warning holds the build ID,
+the attempt number, whether the build ended, and a safe reason. The reason
+holds only fixed failure text, rejected field names, exit codes, HTTP status
+codes, step names and recorded upload outcomes. It never holds a credential, a request value or
+provider response text.
 
 Finalization, including infrastructure requeue, follows the
 [build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).

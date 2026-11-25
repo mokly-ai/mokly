@@ -1,10 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
-import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
+import { unexpectedDesignScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 import { canvasFrame } from "./workspace_actions.js";
 
 type Viewport = "desktop" | "mobile";
@@ -36,21 +35,11 @@ const UNCHANGED = [
 ];
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentWorkspace(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentWorkspace() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const unexpectedDesignScripts = () =>
-    mode === "static"
-      ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
-      : servedScripts();
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} component workspace`, () => {

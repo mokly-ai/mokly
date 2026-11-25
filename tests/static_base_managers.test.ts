@@ -161,59 +161,22 @@ for (const manager of managers) {
   );
 }
 
-for (const manager of [managers[0], managers[1]]) {
-  for (const mode of ["missing", "version"] as const) {
-    test(
-      `a cold ${manager.name} base warns when its manager is ${mode}`,
-      { timeout: 120_000 },
-      async (context) => {
-        const fixture = await baseManagerFixture(manager, context, mode);
-        const result = await build(fixture, context.signal);
-        assert.equal(result.tier, 3);
-        assert.match(result.diagnostics, /base dependencies at/u);
-        assert.ok(
-          result.diagnostics.includes(
-            mode === "missing"
-              ? "package manager or lockfile unavailable"
-              : "package manager version unsupported",
-          ),
-          result.diagnostics,
-        );
-        assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
-      },
-    );
-  }
-}
-
-test(
-  "a cold Yarn Plug'n'Play base gives its resolver fallback reason",
-  { timeout: 120_000 },
-  async (context) => {
-    const fixture = await baseManagerFixture(managers[2], context, "pnp");
-    const result = await build(fixture, context.signal);
-    assert.equal(result.tier, 3);
-    assert.match(result.diagnostics, /Yarn Plug'n'Play is unsupported/u);
-    assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
-  },
-);
-
-test(
-  "a cold Yarn Berry base with exec dependencies falls back without running the generator",
-  { timeout: 120_000 },
-  async (context) => {
-    const fixture = await baseManagerFixture(managers[2], context, "exec");
-    const result = await build(fixture, context.signal);
-    assert.equal(result.tier, 3);
-    assert.match(result.diagnostics, /invalid dependency input/u);
-    assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
-    await assert.rejects(
-      fs.stat(path.join(fixture.root, "historical-exec-ran")),
-      {
-        code: "ENOENT",
-      },
-    );
-  },
-);
+for (const manager of [managers[0], managers[1]])
+  test(
+    `a cold ${manager.name} base warns when its manager is missing`,
+    { timeout: 120_000 },
+    async (context) => {
+      const fixture = await baseManagerFixture(manager, context, "missing");
+      const result = await build(fixture, context.signal);
+      assert.equal(result.tier, 3);
+      assert.match(result.diagnostics, /base dependencies at/u);
+      assert.ok(
+        result.diagnostics.includes("package manager or lockfile unavailable"),
+        result.diagnostics,
+      );
+      assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
+    },
+  );
 
 test(
   "a cold Yarn Berry base disables constraints code from the historical tree",

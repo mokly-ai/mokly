@@ -1,10 +1,9 @@
 import { expect } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 type Viewport = "desktop" | "mobile";
 
@@ -41,17 +40,11 @@ const LABEL_PAIRS = Array.from({ length: 4 }, () => [
 ]).flat();
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentEvidence(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentEvidence() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} comparison evidence`, () => {

@@ -11,6 +11,7 @@ import { expect } from "@playwright/test";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { changedDot, chooseFilter, navRow } from "./comparison_ui.js";
 import { inspectHead } from "./inspect_head.js";
+import { mainHeading } from "./main_heading.js";
 
 test("an unmodified index row stays an undotted container and opens its first changed member", async ({
   page,
@@ -39,7 +40,7 @@ test("an unmodified index row stays an undotted container and opens its first ch
       "u",
     ),
   );
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Security");
+  await expect(mainHeading(page, "Security")).toBeVisible();
   await expect(navRow(page, comparisonPaths.folderChanged)).toHaveAttribute(
     "aria-current",
     "page",
@@ -68,7 +69,7 @@ test("a related document opens its entry, labelled with its title", async ({
   await expect(page).toHaveURL(
     new RegExp(`/view/${comparisonPaths.currentDocument}/$`, "u"),
   );
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Payment terms");
+  await expect(mainHeading(page, "Payment terms")).toBeVisible();
   await expect(navRow(page, comparisonPaths.currentDocument)).toHaveAttribute(
     "aria-current",
     "page",

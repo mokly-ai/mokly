@@ -45,7 +45,7 @@ export async function baseRegistryFixture(
   context: TestContext,
   attack?: RegistryAttack,
 ) {
-  const fixture = await coldBaseFixture(2, context);
+  const fixture = await coldBaseFixture(2, context, { install: false });
   const { root, cache } = fixture;
   const registry = await localRegistry(
     context,
@@ -62,7 +62,6 @@ export async function baseRegistryFixture(
   );
   await git(root, "checkout", "HEAD", "--", "specs/source-value.ts");
   await fs.rm(path.join(root, "package-lock.json"));
-  await fs.rm(path.join(root, "node_modules"), { recursive: true });
   await write(
     root,
     ".gitignore",

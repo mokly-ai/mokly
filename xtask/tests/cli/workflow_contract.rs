@@ -55,8 +55,6 @@ struct Parameters {
     #[serde(rename = "node-version-file")]
     node_version_file: Option<String>,
     key: Option<String>,
-    #[serde(rename = "shared-key")]
-    shared_key: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -69,7 +67,6 @@ pub(super) enum Violation {
     Toolchains,
     CheckCommand,
     NpmCachePath,
-    Chromium,
     Postgres,
 }
 
@@ -103,19 +100,6 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
                     && run.contains("pg_isready")
             })
     });
-    let chromium = check.steps.iter().position(|step| {
-        step.condition.as_deref() == Some("matrix.browser_workspace != ''")
-            && step.run.as_deref()
-                == Some(
-                    "npm exec --workspace \"$BROWSER_WORKSPACE\" -- playwright install --with-deps chromium",
-                )
-            && step.env.get("BROWSER_WORKSPACE").map(String::as_str)
-                == Some("${{ matrix.browser_workspace }}")
-    });
-    let dependencies = check.steps.iter().position(|step| {
-        step.condition.as_deref() == Some("matrix.install_dependencies")
-            && step.run.as_deref() == Some("npm ci")
-    });
     let verify = check.steps.iter().position(|step| {
         step.run
             .as_deref()
@@ -127,13 +111,6 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
         || !matches!((postgres, verify), (Some(database), Some(check)) if database < check)
     {
         violations.push(Violation::Postgres);
-    }
-    if !matches!(
-        (dependencies, chromium, verify),
-        (Some(dependencies), Some(browser), Some(check))
-            if dependencies < browser && browser < check
-    ) {
-        violations.push(Violation::Chromium);
     }
     if !check.steps.iter().any(|step| {
         step.uses
@@ -218,10 +195,6 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
             step.condition.as_deref() == Some("matrix.rust_cache")
                 && step.uses.as_deref()
                     == Some("Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0")
-                && step.with.shared_key.as_deref()
-                    == Some(
-                        "${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}",
-                    )
         })
     {
         violations.push(Violation::Toolchains);

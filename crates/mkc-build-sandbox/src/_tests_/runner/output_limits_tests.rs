@@ -62,8 +62,8 @@ async fn enforces_the_byte_cap_even_if_a_backend_exceeds_it() {
         } else {
             ProcessStreamEvent::Stdout
         };
-        call.events = (0..1025).map(|_| event(vec![b'x'; 64 * 1024])).collect();
-        let harness = Harness::new(request(), vec![call]);
+        call.events = (0..1025).map(|_| event(vec![b'x'; 64])).collect();
+        let harness = Harness::with_output_limit(request(), vec![call], 64 * 1024);
         assert!(matches!(
             harness.run().await,
             BuildOutcome::OutputOverflow {
@@ -83,7 +83,7 @@ async fn enforces_the_byte_cap_even_if_a_backend_exceeds_it() {
             .filter(|chunk| chunk.stream == channel)
             .map(|chunk| chunk.bytes.len())
             .sum();
-        assert_eq!(bytes, 64 * 1024 * 1024);
+        assert_eq!(bytes, 64 * 1024);
     }
 }
 

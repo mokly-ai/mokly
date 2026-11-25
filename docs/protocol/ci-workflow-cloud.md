@@ -16,10 +16,20 @@ database tests provides Postgres. The native jobs on macOS and Windows leave
 out the `mkc-` crates, under the
 [native rule](./ci-verification.md#gate-ownership).
 
-The workspace partition runs cloud Rust, migrations, type checks, OpenAPI,
-fixtures, email templates, Terraform contracts, origin-router checks, Helm,
-and toolchain pins. Desktop, mockups, and site each have a partition. Four
-app partitions pass their shard to `cloud-app`. The image job runs
+Three workspace partitions group the remaining suites by the tools that they
+need. Workspace checks (Rust) runs cloud Rust. Workspace checks (contracts)
+runs type checks, OpenAPI, fixtures, email templates, and origin-router
+checks. Workspace checks (infrastructure) runs migrations, OpenAPI lint,
+Terraform contracts, Helm, and toolchain pins. Splitting them keeps each
+partition well below the slowest job, because one partition that ran every
+suite in sequence set the CI wall clock. A partition that only reads a Rust
+build cache of another partition does not save it, so the split adds no
+cache entry. Desktop has a partition. Eight app partitions, six mockup
+partitions, and two site partitions pass their shard to `cloud-app`,
+`cloud-mockups`, and `cloud-site`, as the
+[cloud shards](./cloud/repository-verification.md#app-shards) define. Only
+partitions that run database tests start Postgres, and only partitions that
+run a browser install Chromium. The image job runs
 `cloud-infrastructure`. Each partition uses the shared `cargo xtask check
 --suite` entry point. No workflow runs the removed cloud stage runner.
 

@@ -153,8 +153,13 @@ test("an account another workspace holds is refused with the way back", async ({
   const refusal = page.getByRole("alert");
   await expect(refusal).toHaveText(/Remove it from that workspace first\./);
   await expect(refusal.locator("details")).toHaveCount(1);
+  // `/install` opens the first workspace, Holder Org, and its account is
+  // connected, so the install step hands the reader straight on to its
+  // repository step. The wait starts before the press, so it sees the
+  // address that the press opens however soon that hand-on follows.
+  const backToInstall = page.waitForURL((url) => url.pathname === "/install");
   await page.getByRole("button", { name: "Back to install" }).click();
-  await page.waitForURL((url) => url.pathname === "/install");
+  await backToInstall;
 });
 
 test("the connect situation says when the workspaces could not load", async ({
