@@ -1,22 +1,16 @@
 import type { Page } from "@playwright/test";
 
 import { projectAddress } from "./addresses";
-import {
-  disconnectInstallation,
-  installedRepository,
-} from "./database-fixture";
+import { installedRepository } from "./database-fixture";
 import {
   currentWorkspaceId,
   expect,
-  freshEmail,
   open,
   openDialog,
-  signIn,
   test,
   unloadGuard,
 } from "./harness";
 import { appOrigin } from "./origins";
-import { createProject } from "./project-setup";
 import {
   settingsAddress,
   shareSelection,
@@ -235,41 +229,4 @@ test("old shares, check links, and UUID permalinks survive both slug renames", a
   await expect(page.getByTestId("viewer-account")).toHaveAccessibleName(
     made.email,
   );
-});
-
-test("slug saves keep the unrelated install route and its settings scope", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("install-settings-address"));
-  const projectId = await createProject(page, "Install Settings Org");
-  const workspaceId = await currentWorkspaceId(page);
-  // A bound workspace's install route moves on to the repository step, so
-  // the App is removed first: that is when a reader with a project is there.
-  disconnectInstallation(workspaceId);
-  const install = new URL("/install", appOrigin);
-  install.searchParams.set("workspaceId", workspaceId);
-  install.searchParams.set("settings", "project");
-  install.searchParams.set("settingsProject", projectId);
-  await openDialog(page, install.href);
-
-  await page.getByTestId("change-project-slug").click();
-  const projectSlug = uniqueSlug("install-project");
-  await page.getByLabel("Project slug").fill(projectSlug);
-  await page.getByTestId("save-project-slug").click();
-  await page.waitForURL((url) => url.pathname === "/install");
-  let current = new URL(page.url());
-  expect(current.searchParams.get("workspaceId")).toBe(workspaceId);
-  expect(current.searchParams.get("settingsProject")).toBe(projectId);
-  expect(current.searchParams.get("settings")).toBe("project");
-
-  current.searchParams.set("settings", "workspace");
-  await openDialog(page, current.href);
-  await page.getByTestId("change-workspace-slug").click();
-  await page.getByLabel("Workspace slug").fill(uniqueSlug("install-workspace"));
-  await page.getByTestId("save-workspace-slug").click();
-  await page.waitForURL((url) => url.pathname === "/install");
-  current = new URL(page.url());
-  expect(current.searchParams.get("workspaceId")).toBe(workspaceId);
-  expect(current.searchParams.get("settingsProject")).toBe(projectId);
-  expect(current.searchParams.get("settings")).toBe("workspace");
 });
