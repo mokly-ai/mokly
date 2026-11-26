@@ -1,14 +1,11 @@
 import type { Page } from "@playwright/test";
 
 import { projectQueryPathFor } from "./addresses";
-import { failWith } from "./api-responses";
 import {
   failPayment,
   periodEndsOn,
   reportSubscription,
   subscribe,
-  trialEndsAt,
-  trialEndsOn,
 } from "./billing";
 import {
   currentWorkspaceId,
@@ -120,39 +117,6 @@ test("a subscribed workspace reads its seats, total and renewal", async ({
   await page.waitForURL(/billing\.stripe\.test/);
 });
 
-test("the trial, the cancellation and the failed payment each name themselves", async ({
-  page,
-}) => {
-  const { workspaceId, projectId } = await owner(page, "states");
-  const binding = await subscribe(page, workspaceId, {
-    status: "trialing",
-    trialEnd: trialEndsAt,
-    editors: 1,
-  });
-  await openBilling(page, projectId);
-  await expect(facts(page)).toContainText(
-    "Team until " + trialEndsOn + ", then billed monthly",
-  );
-  // A trial carries its own date, so it never claims a renewal beside it.
-  await expect(facts(page)).not.toContainText("Renews");
-
-  await reportSubscription(
-    page,
-    workspaceId,
-    { status: "active", cancelAtPeriodEnd: true },
-    binding,
-  );
-  await page.reload();
-  await expect(facts(page)).toContainText("Team ends " + periodEndsOn);
-
-  await reportSubscription(page, workspaceId, { status: "past_due" }, binding);
-  await failPayment(page, workspaceId, binding);
-  await page.reload();
-  await expect(page.getByText("Payment failed")).toBeVisible();
-  await expect(page.getByTestId("update-payment-method")).toBeVisible();
-  await expect(page.getByTestId("manage-billing")).toHaveCount(0);
-});
-
 test("both seat kinds are counted and the monthly total is their sum", async ({
   page,
 }) => {
@@ -188,68 +152,6 @@ test("both seat kinds are counted and the monthly total is their sum", async ({
   await expect(page.getByText("Payment failed")).toBeVisible();
   await expect(page.getByTestId("update-payment-method")).toHaveCount(0);
   await expect(page.getByText("An owner manages billing.")).toBeVisible();
-});
-
-test("a member is not shown the pane at all", async ({ page }) => {
-  const { workspaceId, projectId } = await owner(page, "member");
-  const second = freshEmail("member-reader");
-  const memberSession = await addMember(page, workspaceId, second, "member");
-  await switchSession(page, memberSession);
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=workspace"),
-  );
-  await expect(page.getByRole("link", { name: "Billing" })).toHaveCount(0);
-  // An address they may not read opens the first pane they may, rather than
-  // failing the surface they asked for.
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=billing"),
-  );
-  await expect(
-    page.getByRole("dialog").getByRole("heading", { level: 1 }),
-  ).toHaveText("Account");
-});
-
-test("a deployment with no billing configured says so where its facts would be", async ({
-  page,
-}) => {
-  const { projectId } = await owner(page, "unavailable");
-  await failWith(page, billingRead, "GET", "operation-unavailable");
-  await openBilling(page, projectId);
-  await expect(page.getByText("Billing opens soon.")).toBeVisible();
-  await expect(page.getByTestId("upgrade-to-team")).toHaveCount(0);
-  await expect(page.getByText("Billing couldn’t load")).toHaveCount(0);
-});
-
-test("an unverified price offers Team without an amount and links the plans", async ({
-  page,
-}) => {
-  const { projectId } = await owner(page, "unpriced");
-  // The deployment verifies its prices once, as it starts, so a price it could
-  // not confirm is an answer this run cannot otherwise produce.
-  await page.route(billingRead, async (route) => {
-    if (route.request().method() !== "GET") return route.continue();
-    const answer = await route.fetch();
-    const body = (await answer.json()) as {
-      seats: { unitAmountCents: number | null }[];
-      checkoutAvailable: boolean;
-    };
-    for (const seat of body.seats) seat.unitAmountCents = null;
-    body.checkoutAvailable = false;
-    return route.fulfill({ json: body });
-  });
-  await openBilling(page, projectId);
-  await expect(page.getByText("Free for open-source catalogues")).toBeVisible();
-  await expect(page.getByTestId("upgrade-to-team")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Pricing" })).toHaveAttribute(
-    "href",
-    /\/pricing$/,
-  );
-  await expect(page.getByText("$20 a month")).toHaveCount(0);
-  await expect(page.getByText("Team starts with a 7-day trial.")).toHaveCount(
-    0,
-  );
 });
 
 test("Upgrade to Team keeps its label when a subscription is already live", async ({

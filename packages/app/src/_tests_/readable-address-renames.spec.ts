@@ -18,7 +18,6 @@ import {
 import { appOrigin } from "./origins";
 import { createProject } from "./project-setup";
 import {
-  captureReadableAddress,
   settingsAddress,
   shareSelection,
   uniqueSlug,
@@ -110,7 +109,6 @@ test("old shares, check links, and UUID permalinks survive both slug renames", a
     page.getByRole("dialog").getByRole("heading", { level: 1 }),
   ).toHaveText("Project address");
   await page.getByLabel("Project slug").fill(nextProjectSlug);
-  await captureReadableAddress(page, "desktop-project-address-dialog");
   const projectSaved = page.waitForResponse(
     (answer) =>
       answer.url().endsWith(`/v1/projects/${made.projectId}`) &&
@@ -237,7 +235,6 @@ test("old shares, check links, and UUID permalinks survive both slug renames", a
   await expect(page.getByTestId("viewer-account")).toHaveAccessibleName(
     made.email,
   );
-  await captureReadableAddress(page, "desktop-renamed-share");
 });
 
 test("slug saves keep the unrelated install route and its settings scope", async ({

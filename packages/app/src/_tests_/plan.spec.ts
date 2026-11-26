@@ -2,7 +2,8 @@ import type { Page } from "@playwright/test";
 
 import { projectPathFor, projectQueryPathFor } from "./addresses";
 import { apiFailure } from "./api-responses";
-import { endSubscription, subscribe } from "./billing";
+import { subscribe } from "./billing";
+import { downgradeToFree } from "./database-fixture";
 import { installApp } from "./github-installation";
 import {
   currentWorkspaceId,
@@ -21,7 +22,7 @@ import {
   switchSession,
 } from "./members";
 import { chooseRepository, createProject } from "./project-setup";
-import { setVisibility } from "./visibility";
+import { makePrivate } from "./visibility";
 
 /** How the plan reads everywhere in the product outside the Billing pane. */
 
@@ -59,19 +60,43 @@ test("free onboarding states the public outcome before project creation", async 
   await expect(page.getByText(publicOnFree)).toHaveCount(0);
 });
 
-test("the Workspace pane carries the plan as a fact every member reads", async ({
+test("the plan is a fact of the Workspace pane, and only Team names the seat each invitation adds", async ({
   page,
 }) => {
   const { workspaceId, projectId } = await owner(page, "orgplan");
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=workspace"),
-  );
-  await expect(page.locator(".fo-facts").first()).toContainText("Plan");
-  await expect(page.locator(".fo-facts").first()).toContainText("Free");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await page.reload();
-  await expect(page.locator(".fo-facts").first()).toContainText("Team");
+  await test.step("a free workspace does not name a seat it is not paying for", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=members"),
+    );
+    await expect(page.getByText("Adds a Collaborator seat")).toHaveCount(0);
+  });
+
+  await test.step("the Workspace pane carries the plan as a fact every member reads", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=workspace"),
+    );
+    await expect(page.locator(".fo-facts").first()).toContainText("Plan");
+    await expect(page.locator(".fo-facts").first()).toContainText("Free");
+    await subscribe(page, workspaceId, { status: "active", editors: 1 });
+    await page.reload();
+    await expect(page.locator(".fo-facts").first()).toContainText("Team");
+  });
+
+  await test.step("Team names the seat each invitation adds", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=members"),
+    );
+    await expect(
+      page.getByText("Adds a Collaborator seat, $5 a month."),
+    ).toBeVisible();
+    await page.getByRole("radio", { name: "Member" }).click();
+    await expect(
+      page.getByText("Adds an Editor seat, $20 a month."),
+    ).toBeVisible();
+  });
 });
 
 test("making a project private on the free plan is refused in its modal", async ({
@@ -120,127 +145,98 @@ test("making a project private on the free plan is refused in its modal", async 
   ).toHaveCount(0);
 });
 
-test("Team names the seat each invitation adds", async ({ page }) => {
-  const { workspaceId, projectId } = await owner(page, "seats");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=members"),
-  );
-  await expect(
-    page.getByText("Adds a Collaborator seat, $5 a month."),
-  ).toBeVisible();
-  await page.getByRole("radio", { name: "Member" }).click();
-  await expect(
-    page.getByText("Adds an Editor seat, $20 a month."),
-  ).toBeVisible();
-});
-
-test("a free workspace does not name a seat it is not paying for", async ({
-  page,
-}) => {
-  const { projectId } = await owner(page, "noseats");
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=members"),
-  );
-  await expect(page.getByText("Adds a Collaborator seat")).toHaveCount(0);
-});
-
-test("a workspace back on the free plan is told where its private project stands", async ({
+test("a private project back on the free plan says where it stands, on its stage and in the Workspace pane", async ({
   page,
 }) => {
   const { workspaceId, projectId } = await owner(page, "downgrade");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await setVisibility(page, projectId, "private");
-  // Nothing is deleted and nothing is made public: the project stays private
-  // and takes no new publication.
-  await endSubscription(page, workspaceId);
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=workspace"),
-  );
-  await expect(page.locator(".fo-facts").first()).toContainText("Free");
-  await expect(page.getByText(publishingOnTeam + ".")).toBeVisible();
-  await page.getByRole("button", { name: "Open billing" }).click();
-  await expect(
-    page.getByRole("dialog").getByRole("heading", { level: 1 }),
-  ).toHaveText("Billing");
+  // Nothing is deleted and nothing is made public when Team ends: the project
+  // stays private and takes no new publication. The billing webhook that ends
+  // Team is the API's own lifecycle test; here the plan is written where its
+  // worker writes it.
+  await makePrivate(page, projectId);
+  downgradeToFree(workspaceId);
+
+  await test.step("a private stage retries an unreadable workspace", async () => {
+    const workspaceRead = `**/v1/workspaces/${workspaceId}`;
+    const failure = apiFailure("unavailable");
+    await page.route(workspaceRead, (route) => {
+      if (route.request().method() !== "GET") return route.continue();
+      return route.fulfill({
+        status: failure.status,
+        contentType: "application/json",
+        body: failure.body,
+      });
+    });
+
+    await open(page, await projectPathFor(page, projectId));
+    const canvas = page.locator(".fo-stage-canvas");
+    await expect(
+      canvas.getByText("This workspace couldn’t load"),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: "Try again" }),
+    ).toBeVisible();
+    await expect(canvas.getByText("Checking publishing access")).toHaveCount(0);
+
+    await page.unroute(workspaceRead);
+    await canvas.getByRole("button", { name: "Try again" }).click();
+    await expect(canvas.getByText(publishingOnTeam)).toBeVisible();
+  });
+
+  await test.step("the stage of a private project on the free plan offers the way on", async () => {
+    await open(page, await projectPathFor(page, projectId));
+    await expect(page.getByText(publishingOnTeam)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Set up publishing" }),
+    ).toHaveCount(0);
+    await page.getByTestId("stage-open-billing").click();
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { level: 1 }),
+    ).toHaveText("Billing");
+  });
+
+  await test.step("a workspace back on the free plan is told where its private project stands", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=workspace"),
+    );
+    await expect(page.locator(".fo-facts").first()).toContainText("Free");
+    await expect(page.getByText(publishingOnTeam + ".")).toBeVisible();
+    await page.getByRole("button", { name: "Open billing" }).click();
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { level: 1 }),
+    ).toHaveText("Billing");
+  });
 
   const second = freshEmail("downgrade-member");
   const memberSession = await addMember(page, workspaceId, second, "member");
   await switchSession(page, memberSession);
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=workspace"),
-  );
-  await expect(page.getByText(publishingOnTeam + ".")).toBeVisible();
-  await expect(page.getByRole("dialog").getByText(askAnOwner)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Open billing" })).toHaveCount(
-    0,
-  );
-});
 
-test("the stage of a private project on the free plan offers the way on", async ({
-  page,
-}) => {
-  const { workspaceId, projectId } = await owner(page, "stage");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await setVisibility(page, projectId, "private");
-  await endSubscription(page, workspaceId);
-  await open(page, await projectPathFor(page, projectId));
-  await expect(page.getByText(publishingOnTeam)).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Set up publishing" }),
-  ).toHaveCount(0);
-  await page.getByTestId("stage-open-billing").click();
-  await expect(
-    page.getByRole("dialog").getByRole("heading", { level: 1 }),
-  ).toHaveText("Billing");
-
-  const second = freshEmail("stage-reader");
-  const memberSession = await addMember(page, workspaceId, second, "member");
-  await switchSession(page, memberSession);
-  await open(page, await projectPathFor(page, projectId));
-  await expect(page.getByText(publishingOnTeam)).toBeVisible();
-  await expect(page.getByText(askAnOwner)).toBeVisible();
-  await expect(page.getByTestId("stage-open-billing")).toHaveCount(0);
-});
-
-test("a private stage retries an unreadable workspace", async ({ page }) => {
-  const { workspaceId, projectId } = await owner(page, "stage-plan-read");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await setVisibility(page, projectId, "private");
-  await endSubscription(page, workspaceId);
-
-  const workspaceRead = `**/v1/workspaces/${workspaceId}`;
-  const failure = apiFailure("unavailable");
-  await page.route(workspaceRead, (route) => {
-    if (route.request().method() !== "GET") return route.continue();
-    return route.fulfill({
-      status: failure.status,
-      contentType: "application/json",
-      body: failure.body,
-    });
+  await test.step("a workspace back on the free plan is told where its private project stands: a member", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=workspace"),
+    );
+    await expect(page.getByText(publishingOnTeam + ".")).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(askAnOwner)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Open billing" }),
+    ).toHaveCount(0);
   });
 
-  await open(page, await projectPathFor(page, projectId));
-  const canvas = page.locator(".fo-stage-canvas");
-  await expect(canvas.getByText("This workspace couldn’t load")).toBeVisible();
-  await expect(canvas.getByRole("button", { name: "Try again" })).toBeVisible();
-  await expect(canvas.getByText("Checking publishing access")).toHaveCount(0);
-
-  await page.unroute(workspaceRead);
-  await canvas.getByRole("button", { name: "Try again" }).click();
-  await expect(canvas.getByText(publishingOnTeam)).toBeVisible();
+  await test.step("the stage of a private project on the free plan offers the way on: a member", async () => {
+    await open(page, await projectPathFor(page, projectId));
+    await expect(page.getByText(publishingOnTeam)).toBeVisible();
+    await expect(page.getByText(askAnOwner)).toBeVisible();
+    await expect(page.getByTestId("stage-open-billing")).toHaveCount(0);
+  });
 });
 
 test("a project-only admin publishes on Team and never receives billing", async ({
   page,
 }) => {
   const { workspaceId, projectId } = await owner(page, "direct-publishing");
-  await subscribe(page, workspaceId, { status: "active", editors: 1 });
-  await setVisibility(page, projectId, "private");
+  await makePrivate(page, projectId);
   const path = await projectPathFor(page, projectId);
   const ownerSession = await page.context().storageState();
 
@@ -262,12 +258,7 @@ test("a project-only admin publishes on Team and never receives billing", async 
   await expect(page.getByText("This workspace couldn’t load")).toHaveCount(0);
   await expect(page.getByTestId("stage-open-billing")).toHaveCount(0);
 
-  await page.context().clearCookies();
-  await page.context().addCookies(ownerSession.cookies);
-  await endSubscription(page, workspaceId);
-  await page.context().clearCookies();
-  await page.context().addCookies(guestSession.cookies);
-
+  downgradeToFree(workspaceId);
   await open(page, path);
   await expect(page.getByText(publishingOnTeam)).toBeVisible();
   await expect(page.getByText(askAnOwner)).toBeVisible();

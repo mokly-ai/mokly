@@ -22,6 +22,9 @@ import { createProject } from "./project-setup";
 /** The read a Checkout return polls until its webhook has changed the plan. */
 const billingRead = "**/v1/workspaces/*/billing";
 
+/** How often a Checkout return asks for the plan again while it waits. */
+const confirmIntervalMs = 2_000;
+
 /** Sign one owner in with a project, and answer with both identifiers. */
 async function owner(
   page: Page,
@@ -44,6 +47,9 @@ test("returning from Checkout refreshes the working project before settings clos
   sql(
     `UPDATE projects SET visibility = 'private', version = version + 1 WHERE id = '${projectId}'`,
   );
+  // The pane asks again on a timer while it waits; the clock lets the test
+  // run that timer as soon as the webhook has written the plan.
+  await page.clock.install();
   await page.goto(
     await projectQueryPathFor(
       page,
@@ -55,6 +61,7 @@ test("returning from Checkout refreshes the working project before settings clos
   // The plan is written by the webhook rather than by the return, so the pane
   // waits for the worker and settles on what it wrote.
   await subscribe(page, workspaceId, { status: "active", editors: 1 });
+  await page.clock.fastForward(confirmIntervalMs);
   await expect(facts(page)).toContainText("Team");
   await expect(page).toHaveURL(/settings=billing$/);
   await expect(page.getByText("Confirming your subscription…")).toHaveCount(0);

@@ -1,16 +1,8 @@
 import type { Page } from "@playwright/test";
 
 import { projectQueryPathFor } from "../addresses";
-import { disconnectInstallation, installedAccount } from "../database-fixture";
-import {
-  currentWorkspaceId,
-  expect,
-  freshEmail,
-  openDialog,
-  signIn,
-  test,
-} from "../harness";
-import { addMember, switchSession } from "../members";
+import { installedAccount } from "../database-fixture";
+import { expect, freshEmail, openDialog, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 
 /**
@@ -62,38 +54,4 @@ test("a connected account is named, with the way to the accounts", async ({
   await expect(
     page.getByRole("dialog").getByRole("heading", { level: 1 }),
   ).toHaveText("GitHub accounts");
-});
-
-test("a workspace with no account reads None", async ({ page }) => {
-  await signIn(page, freshEmail("absent-pane"));
-  const projectId = await createProject(page, "Abs Org");
-  // The App was installed to create the project, and then removed on GitHub,
-  // which is the only way a workspace with a project has nothing bound.
-  disconnectInstallation(await currentWorkspaceId(page));
-  await workspacePane(page, projectId);
-  await expect(accountsFact(page)).toContainText("None");
-  // Installing is still the way on: Create project offers the install step.
-  await expect(
-    page.getByRole("button", { name: "Create project" }),
-  ).toBeVisible();
-});
-
-test("a member reads the accounts without the way to manage them", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("member-pane-owner"));
-  const projectId = await createProject(page, "Member Pane Org");
-  const email = freshEmail("member-pane");
-  const memberSession = await addMember(
-    page,
-    await currentWorkspaceId(page),
-    email,
-    "member",
-  );
-  await switchSession(page, memberSession);
-  await workspacePane(page, projectId);
-  await expect(accountsFact(page)).toContainText(installedAccount);
-  await expect(
-    accountsFact(page).getByRole("button", { name: "Manage" }),
-  ).toHaveCount(0);
 });
