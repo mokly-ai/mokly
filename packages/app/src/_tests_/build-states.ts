@@ -27,9 +27,9 @@ import {
 } from "./build-state-refusals";
 
 /**
- * The one table of build states the desktop build browser tests read, as
- * `web-app.md` requires: every build state, every card action, every request
- * control's refusal and its wait while its request runs, the answers that open
+ * The one table of build states the desktop build browser tests read: every
+ * build state, every card action, every request control's refusal and its
+ * wait while its request runs, the answers that open
  * what already answers for a head, the reviewer's publishing card, and builds
  * in History and the switcher. Each record is keyed by the application's own
  * union, so a state, action or request control the application gains fails
