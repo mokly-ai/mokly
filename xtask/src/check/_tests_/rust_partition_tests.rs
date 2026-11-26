@@ -12,6 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::command::{CommandRunnerOutputMock, CommandRunnerRunMock};
 use crate::error::Error;
 
+use super::native_scope::TestScope;
 use super::request::Shard;
 use super::runner::{CheckRunner, DefaultCheckRunner};
 use super::rust_partition::{Piece, Weights, partition};
@@ -96,7 +97,10 @@ fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
         test("shared"),
     ]
     .into();
-    assert_eq!(test_units(&metadata()).unwrap(), expected);
+    let units = test_units(&metadata()).unwrap();
+    assert_eq!(units.keys().cloned().collect::<BTreeSet<_>>(), expected);
+    let shared: BTreeSet<_> = ["mokly-a".to_owned(), "xtask".to_owned()].into();
+    assert_eq!(units[&test("shared")], shared);
 }
 
 /// A unit weighs its compile seconds plus its test seconds, and a part that
@@ -233,7 +237,7 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
             .next_call(matching!((spec) if spec.display().starts_with(&format!("{NEXTEST} --lib")) && spec.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
     )
-    .rust_test_shard(Shard::from_str("1/2").unwrap(), true)
+    .rust_test_shard(Shard::from_str("1/2").unwrap(), true, TestScope::Complete)
     .unwrap();
     runner(
         CommandRunnerRunMock
@@ -241,7 +245,7 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
             .answers(&|_, _| Ok(()))
             .at_least_times(1),
     )
-    .rust_test_shard(Shard::from_str("2/2").unwrap(), true)
+    .rust_test_shard(Shard::from_str("2/2").unwrap(), true, TestScope::Complete)
     .unwrap();
 }
 
@@ -272,7 +276,7 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
             .next_call(matching!((spec) if spec.display() == format!("{SLICE}3/3")))
             .returns(Ok(())),
     ))
-    .rust_test_shard(Shard::from_str("1/1").unwrap(), true);
+    .rust_test_shard(Shard::from_str("1/1").unwrap(), true, TestScope::Complete);
     assert!(matches!(
         failed,
         Err(Error::CommandFailed { command, .. }) if command == format!("{SLICE}1/3")
@@ -284,6 +288,10 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
 #[test]
 fn a_test_shard_without_units_runs_nothing() {
     runner(())
-        .rust_test_shard(Shard::from_str("10/10").unwrap(), false)
+        .rust_test_shard(
+            Shard::from_str("10/10").unwrap(),
+            false,
+            TestScope::Complete,
+        )
         .unwrap();
 }
