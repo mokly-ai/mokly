@@ -45,8 +45,9 @@ On 2026-11-25 Cal answered the four decisions below:
 - Decision 4, C: the base failure message names the override, and a warning
   reports each file that the head loads and Git ignores.
 
-This plan does not change the detection rule outside the override, and it does
-not build the base. The "Mokly base prepare command" workspace plans that
+This plan does not change the detection rule outside the override, except that
+JavaScript now matches the detected layout against the declared export target,
+as CSS already did (design call of 2026-11-26). It does not build the base. The "Mokly base prepare command" workspace plans that
 command, `review.basePrepare`, in `plans/base-prepare-command.md` on the
 branch `calummoore/mokly-base-prepare-command-7jlm`.
 
@@ -105,12 +106,14 @@ Design calls, mine, 2026-11-25:
   recovers its source after `MODULE_NOT_FOUND`. It runs only when Changes runs,
   because only a comparison needs the base. It uses the Git listing of tracked
   and unignored files in `crates/mokly-compare/src/working_inputs.rs`, so a new
-  file that is not committed yet gives no warning.
+  file that is not committed yet gives no warning. The scope part of this call
+  was replaced on 2026-11-26, below.
 - The warning ignores the files that a base prepare command makes. That change
   is not on `main` yet. The change that merges second adds this exception.
 - The warning names `moduleResolution.sourcePackages` only when a workspace
   package holds the file. Reason: no entry can fix any other file, and the
   warning still reports every ignored file. Raised by the docs implementor.
+  Replaced on 2026-11-26, below.
 - An entry that names one build folder twice after normalisation, such as
   `esm` and `./esm`, fails with `config-invalid`. Reason: decision 3 A covers
   invalid entries, and the configuration already rejects duplicate stylesheet
@@ -122,6 +125,38 @@ Design calls, mine, 2026-11-25:
 - The exact failure messages live in
   `docs/protocol/mokly-imported-styles-errors.md`, with two new rows for a
   target inside a workspace package.
+
+Design calls, mine, 2026-11-26, from the review of the branch (the findings
+file of the branch holds each finding):
+
+- The `ignored-module` warning counts each repository file outside
+  `node_modules` that Git ignores and that a bundled import, a CSS `@import`,
+  a PostCSS plugin entry, a stylesheet that a PostCSS plugin reports, or a
+  module that the PostCSS configuration loads through Node reaches. It skips a
+  Node load only when every load of the file was Mokly's own require by
+  package name and the layout rule maps it to a source that Git keeps. It
+  skips startup preloads from `NODE_OPTIONS`, such as Yarn's `.pnp.cjs`.
+  Reason: decision 4 C asks for a warning for each ignored file that the head
+  loads, and my exemption of 2026-11-25 hid files that no base recovers
+  (findings 2, 80, 81, 160, 162).
+- The failure messages and the warning name `moduleResolution.sourcePackages`
+  only for an import by package name of a target below a package subfolder,
+  and not after a `false` entry. Reason: only there can an entry change the
+  result (findings 4 and 42).
+- A layout matches the export target that the package declares, not the real
+  path behind a link, also for a package without an entry. With `dist` linked
+  to `release` and no entry, JavaScript now loads `src`, as CSS already did on
+  `main`. Reason: JavaScript and CSS then select the same file, and a base
+  without the link sees the declared path (findings 41 and 130).
+- When the base's own package differs from the installed copy, the base looks
+  the package up again in its own package folder. Reason: the base must use
+  its own manifest and files (finding 40).
+- A repeated key in the configuration keeps its last value, as on `main`. Two
+  spellings of one build folder, such as `esm` and `./esm`, still fail.
+  Reason: one reader and one repeated-key rule (finding 1).
+- Each render gets one canonical layout list, without repeated or unreachable
+  working entries. Reason: equal layouts then give equal cache keys
+  (finding 3).
 
 Contract owners:
 

@@ -179,7 +179,7 @@ export function workspaceTarget(
   const original = paths.location(real).file;
   try {
     const targets = [
-      ...buildTargets(pkg.manifest, nativeRoot, pkg.subpath, []),
+      ...new Set(buildTargets(pkg.manifest, nativeRoot, pkg.subpath, [])),
     ].filter((target) => inside(nativeRoot, target));
     // The ordinary layout and folder rules record same-side canonical selections.
     if (

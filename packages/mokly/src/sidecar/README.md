@@ -335,9 +335,10 @@ its requests and results. The paths below are relative to the package root.
   `ConfiguredModuleFiles` in
   [`src/sidecar/module-configured-files.ts`](./module-configured-files.ts)
   holds the configured entry, stories, renderer, and PostCSS files and each
-  added preview file. Its `has` matches the resolved or the canonical path of
-  each file. `ModulePaths` skips the workspace package source rule for these
-  files, so they keep their exact paths.
+  added preview file. Its `has` matches the queried path directly or compares
+  its real path with the configured files' real paths on the render side.
+  `ModulePaths` skips the workspace package source rule for these files, so
+  they keep their exact paths.
   [`src/sidecar/workspace-sources.ts`](./workspace-sources.ts) holds
   `WorkspaceSources`, which finds the source file of a workspace build target
   under the
@@ -347,8 +348,8 @@ its requests and results. The paths below are relative to the package root.
   for which it uses `ConfigChain` to read `rootDir` and `outDir`.
   [`src/sidecar/workspace-lookups.ts`](./workspace-lookups.ts) holds
   `WorkspaceLookups`, which records the candidate files and directories that
-  can change that choice. When the request has `sourcePackages` entries, it
-  also records each `package.json` that the package lookup reads. Its
+  can change that choice. It records each `package.json` probe that
+  `WorkspaceSources` uses to find the package root, including misses. Its
   `buildTarget` records the build target of each entry that `WorkspaceSources`
   tries.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map

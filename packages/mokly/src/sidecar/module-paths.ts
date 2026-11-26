@@ -147,7 +147,10 @@ export class ModulePaths {
     );
   }
 
-  location(real: string): {
+  location(
+    real: string,
+    packageTarget?: string,
+  ): {
     file: string;
     mapped: boolean;
     name: string;
@@ -161,9 +164,12 @@ export class ModulePaths {
         inside(root, real),
       );
       if (repository) {
-        const name = logical(repository, real);
+        const name =
+          packageTarget === undefined
+            ? logical(repository, real)
+            : logical(this.sourceRoot, packageTarget);
         return {
-          file: path.resolve(this.sourceRoot, name),
+          file: packageTarget ?? path.resolve(this.sourceRoot, name),
           mapped: true,
           name,
         };
@@ -230,7 +236,10 @@ export class ModulePaths {
   ): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const real = await fs.promises.realpath(file);
-    const target = this.location((await sourceDependency(this, real)) ?? real);
+    const target = this.location(
+      (await sourceDependency(this, real)) ?? real,
+      packageTarget,
+    );
     const source = this.workspaceSource(
       packageTarget ?? target.file,
       specifier,
@@ -239,6 +248,8 @@ export class ModulePaths {
       source === undefined ? target : { ...target, file: source };
     if (!candidate.mapped) return this.observe(candidate.file);
     try {
+      if (source === undefined && packageTarget !== undefined)
+        this.workspaceLookups.nativeTarget(packageTarget);
       const real = await fs.promises.realpath(candidate.file);
       return this.checked(
         candidate,
@@ -259,9 +270,14 @@ export class ModulePaths {
   ): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
-    const target = this.location(sourceDependencySync(this, real) ?? real);
+    const target = this.location(
+      sourceDependencySync(this, real) ?? real,
+      packageTarget,
+    );
     if (!target.mapped) return this.observe(target.file);
     try {
+      if (packageTarget !== undefined)
+        this.workspaceLookups.nativeTarget(packageTarget);
       const real = fs.realpathSync(target.file);
       return this.checked(
         target,
@@ -271,9 +287,11 @@ export class ModulePaths {
       );
     } catch (error) {
       if (missingFile(error)) {
-        const build = packageTarget ?? target.file;
-        const source = this.workspaceSource(build, specifier);
-        if (source !== undefined && this.workspaceLookups.buildTarget(build))
+        const source = this.workspaceSource(target.file, specifier);
+        if (
+          source !== undefined &&
+          this.workspaceLookups.buildTarget(target.file)
+        )
           return this.observe(source);
       }
       throw this.missing(target.name, packageTarget);

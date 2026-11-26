@@ -86,4 +86,62 @@ for (const capture of ["serveEdit", "full"] as const) {
       "packages/local/esm/value.js",
     ]);
   });
+
+  test(`a ${capture} bundle watches for a new manifest above a linked build without overrides`, async (context) => {
+    const root = await nativeRoot(context);
+    const directory = path.join(root, pkg);
+    const manifestKey = `${pkg}/nested/package.json`;
+    const manifest = path.join(root, manifestKey);
+    await write(path.join(root, "entry.mjs"), 'export {value} from "local";');
+    await write(
+      path.join(directory, "package.json"),
+      JSON.stringify({ name, exports: "./nested/dist/value.js" }),
+    );
+    await write(
+      path.join(directory, "release/value.js"),
+      'export const value = "Built";',
+    );
+    await write(
+      path.join(directory, "nested/src/value.ts"),
+      'export const value = "Source";',
+    );
+    await link(
+      path.join(directory, "release"),
+      path.join(directory, "nested/dist"),
+    );
+    await link(directory, path.join(root, "node_modules/local"));
+
+    const params = nativeParams(root);
+    const compile = () => bundle(params, build, undefined, undefined, capture);
+    const first = await compile();
+    assert.deepEqual(moduleNames(first.result).sort(), [
+      "entry.mjs",
+      `${pkg}/release/value.js`,
+    ]);
+    assert.equal(
+      (await reuse([first.generation], params, capture))?.runtimeKey,
+      first.generation.runtimeKey,
+    );
+
+    await write(manifest, '{"name":"nested"}');
+    const reused = await reuse([first.generation], params, capture);
+    const { result: second } = await compile();
+    assert.deepEqual(
+      {
+        evidence: first.result.compiled.reuseEvidence.inputs[manifest]?.kind,
+        metadata: first.result.compiled.metadataInputs[manifestKey],
+        reused: reused !== undefined,
+      },
+      { evidence: "absent", metadata: null, reused: false },
+    );
+    assert.deepEqual(moduleNames(second).sort(), [
+      "entry.mjs",
+      `${pkg}/nested/src/value.ts`,
+    ]);
+    assert.equal(second.compiled.reuseEvidence.inputs[manifest]?.kind, "file");
+    assert.match(
+      second.compiled.metadataInputs[manifestKey] ?? "",
+      /^[0-9a-f]{64}$/,
+    );
+  });
 }

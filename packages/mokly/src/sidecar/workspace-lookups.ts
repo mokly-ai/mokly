@@ -35,7 +35,7 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     return result.kind === "file" ? result.real : undefined;
   }
 
-  /** A named override can depend on a manifest outside the selected module's ancestors. */
+  /** Record the manifest digest or absence when the caller needs lookup evidence. */
   manifest(file: string, record: boolean): string | null | undefined {
     const result = this.probe(file);
     try {

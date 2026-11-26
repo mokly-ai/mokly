@@ -10,6 +10,7 @@ import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageRes
 import { restore } from "../packages/mokly/src/sidecar/compiled.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
 
+import { link } from "./helpers/native_resolution.js";
 import {
   bundleParams,
   installBindings,
@@ -180,23 +181,24 @@ test("Node-loaded requires suggest a source override for missing base builds", a
 
 test("workspace imports preserve configured files and relative build paths", async (context) => {
   const { head, params } = await workspace(context);
+  const pkg = path.join(head, "packages/local");
   await write(
     head,
     "entry.mjs",
-    'export {value} from "local"; export {other} from "./packages/local/dist/relative.mjs";',
+    'export {value} from "local"; export {other} from "./packages/local/lib/relative.mjs";',
   );
   await write(
     head,
     "packages/local/package.json",
     '{"name":"local","exports":"./dist/configured.mjs"}',
   );
-  for (const [file, name] of [
-    ["configured", "value"],
-    ["relative", "other"],
+  for (const [folder, file, name] of [
+    ["release", "configured", "value"],
+    ["lib", "relative", "other"],
   ]) {
     await write(
       head,
-      `packages/local/dist/${file}.mjs`,
+      `packages/local/${folder}/${file}.mjs`,
       `export const ${name} = "Built";`,
     );
     await write(
@@ -205,16 +207,17 @@ test("workspace imports preserve configured files and relative build paths", asy
       `export const ${name} = "Source";`,
     );
   }
+  await link(path.join(pkg, "release"), path.join(pkg, "dist"));
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const result = await sidecar.call<BundleResult>("bundle", {
     ...params(head),
-    entryFiles: ["entry.mjs", "packages/local/dist/configured.mjs"],
+    entryFiles: ["entry.mjs", "packages/local/release/configured.mjs"],
   });
   assert.deepEqual(result.modules.map((module) => module.path).sort(), [
     "entry.mjs",
-    "packages/local/dist/configured.mjs",
-    "packages/local/dist/relative.mjs",
+    "packages/local/lib/relative.mjs",
+    "packages/local/release/configured.mjs",
   ]);
   await sidecar.call("shutdown");
 });

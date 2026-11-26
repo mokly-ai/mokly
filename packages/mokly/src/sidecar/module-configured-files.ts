@@ -29,6 +29,11 @@ export class ConfiguredModuleFiles {
         }
       }),
     );
-    return this.canonical.has(file);
+    if (this.canonical.has(file)) return true;
+    try {
+      return this.canonical.has(fs.realpathSync(file));
+    } catch {
+      return false;
+    }
   }
 }

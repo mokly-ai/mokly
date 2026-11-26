@@ -95,14 +95,6 @@ export class WorkspaceSources {
       top && buildFolders.has(top) ? path.join(root, top) : undefined;
     const build = outDir ?? convention;
     if (convention || (outDir && inside(outDir, file) && file !== outDir)) {
-      for (
-        let current = path.dirname(file);
-        ;
-        current = path.dirname(current)
-      ) {
-        this.files.metadata(path.join(current, "package.json"));
-        if (current === root) break;
-      }
       for (const input of layout.inputs) this.files.metadata(input);
     }
     if (!build || file === build || !inside(build, file)) return undefined;
@@ -156,7 +148,7 @@ export class WorkspaceSources {
     if (cached !== undefined) return cached;
     const manifest = this.files.manifest(
       path.join(directory, "package.json"),
-      this.overrides.length > 0,
+      true,
     );
     let pkg: WorkspacePackage | null = null;
     if (manifest === undefined) {
