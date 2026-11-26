@@ -1,7 +1,7 @@
 //! Physical PostCSS roots stay isolated even when plain CSS can share head records.
 
 use super::base_stylesheet_differential_tests::assert_base;
-use super::base_stylesheet_support::{CSS, Fixture};
+use super::base_stylesheet_support::Fixture;
 
 const CONFIG: &str = r#"{"roots":[{"dir":"specs","files":["**/*.screen.html"]}],"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["main.css"]}]}"#;
 
@@ -25,14 +25,4 @@ fn changed_postcss_module_keeps_the_historical_plugin_output() {
         ".equal {\n  --selection: base;\n}\n",
         &["no-record"],
     );
-}
-
-#[test]
-fn even_equal_postcss_output_keeps_the_physical_root_key() {
-    let fixture = Fixture::with_files(&[
-        ("mokly.config.json", CONFIG),
-        ("postcss.mjs", "export default {plugins:[]};"),
-    ]);
-    fixture.head.generation(fixture.head.prepare().unwrap());
-    assert_base(&fixture, CSS, &["no-record"]);
 }

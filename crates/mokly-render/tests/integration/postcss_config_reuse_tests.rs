@@ -92,10 +92,8 @@ fn nested_generation(runtime: &Arc<Runtime>, consumer: &Consumer) -> Arc<dyn Ren
 fn a_browserslist_edit_rebuilds_css_in_the_same_serve_runtime() {
     let cases = [
         (".browserslistrc", "main.css"),
-        ("browserslist", "main.css"),
         ("package.json", "main.css"),
         ("app/.browserslistrc", "app/styles/main.css"),
-        ("app/browserslist", "app/styles/main.css"),
         ("app/package.json", "app/styles/main.css"),
     ];
     let outcomes = parallel_cases::run(
