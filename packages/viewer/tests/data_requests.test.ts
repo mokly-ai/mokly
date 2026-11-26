@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+import type { EntryDetailV4 } from "@mokly/model";
 
-import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
   loadFencedDetail,
@@ -11,7 +10,6 @@ import {
   routeDetailRequests,
   routeKey,
 } from "../src/shell/data_requests.js";
-import type { ShellDataSource } from "../src/shell/data_source.js";
 import { routeFromUrl, type ShellRoute } from "../src/shell/routes.js";
 
 import {
@@ -19,6 +17,7 @@ import {
   detailFixture,
   indexFixture,
 } from "./catalogue_v9_fixture.js";
+import { scripted } from "./scripted_data_source.js";
 
 const OTHER = "e".repeat(64);
 const RETIRED =
@@ -29,30 +28,6 @@ function route(path: string): ShellRoute {
     catalogueFixture(),
     new URL(path, "https://catalogue.test"),
   );
-}
-
-/** A source that answers from scripts and records every request. */
-function scripted(
-  indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV4 | Error,
-) {
-  const calls = { indexes: 0, details: [] as DetailRequest[] };
-  const source: ShellDataSource = {
-    async loadIndex() {
-      const next = indexes[Math.min(calls.indexes, indexes.length - 1)]!;
-      calls.indexes += 1;
-      if (next instanceof Error) throw next;
-      return next;
-    },
-    async loadDetail(request) {
-      calls.details.push(request);
-      const next = detail(request);
-      if (next instanceof Error) throw next;
-      return next;
-    },
-    deploymentChanged() {},
-  };
-  return { source, calls };
 }
 
 function revised(path: string, revision: number): EntryDetailV4 {
@@ -185,6 +160,18 @@ test("a rejected, failed or newer-format detail does not install", async () => {
     await loadFencedDetail(wrong.source, indexFixture(), request, signal),
     { kind: "deployment" },
   );
+  const other = scripted([indexFixture()], () => {
+    const detail = detailFixture(request);
+    return {
+      ...detail,
+      identity: { ...detail.identity, title: "Another catalogue" },
+    };
+  });
+  assert.deepEqual(
+    await loadFencedDetail(other.source, indexFixture(), request, signal),
+    { kind: "failed" },
+  );
+  assert.equal(other.calls.indexes, 0);
   const failed = scripted([indexFixture()], () => new Error("offline"));
   assert.deepEqual(
     await loadFencedDetail(failed.source, indexFixture(), request, signal),
