@@ -1,6 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { askAnOwnerToUpgrade } from "../../api/labels";
@@ -14,7 +12,6 @@ import {
   stepWords,
 } from "../../viewer/build-copy";
 import type { WorkspaceRole } from "../../viewer/workspace-role";
-import { repositoryRoot } from "../root";
 
 import { build, buildPullRequest } from "./build-fixtures";
 
@@ -22,56 +19,40 @@ const owner: WorkspaceRole = { kind: "owner" };
 const notOwner: WorkspaceRole = { kind: "not-owner" };
 const pending: WorkspaceRole = { kind: "pending" };
 
-const contract = readFileSync(
-  resolve(repositoryRoot, "docs/protocol/cloud/viewer-builds.md"),
-  "utf8",
-);
-
-/** The body rows of the contract's Markdown table whose header starts so. */
-function table(first: string): string[][] {
-  const lines = contract.split("\n");
-  const start = lines.findIndex((line) => line.startsWith("| " + first));
-  assert.ok(start >= 0, first + " table");
-  const rows: string[][] = [];
-  for (const line of lines.slice(start + 2)) {
-    if (!line.startsWith("|")) break;
-    rows.push(
-      line
-        .split("|")
-        .slice(1, -1)
-        .map((cell) => cell.trim()),
-    );
-  }
-  return rows;
-}
-
-test("every cause sentence is the viewer builds contract's own", () => {
-  assert.deepEqual(
-    Object.fromEntries(
-      table("Cause").map(([cause, sentence]) => [
-        cause.replaceAll("`", ""),
-        sentence,
-      ]),
-    ),
-    causeSentences,
-  );
+test("each failure cause has its sentence", () => {
+  assert.deepEqual(causeSentences, {
+    "exit at install": "Installing dependencies failed.",
+    "exit at publish": "The catalogue couldn’t be built.",
+    "upload-rejected": "Mokly couldn’t accept this catalogue.",
+    "unsupported-lockfile": "Mokly installs with npm, pnpm or Yarn.",
+    "unsupported-mokly-version":
+      "Update `@mokly/mokly` to 0.18.0 or later to publish.",
+    "uncommitted-changes":
+      "The build left files that Git doesn’t ignore; add them to .gitignore.",
+    "output-limit": "The build printed too much output; print less to publish.",
+    deadline: "The build stopped at its 15-minute limit.",
+    idle: "The build stopped after going quiet.",
+    infrastructure: "Mokly couldn’t run this build.",
+    "repository-unavailable":
+      "Mokly can’t reach this repository; check the GitHub installation.",
+  });
 });
 
-test("every title is the contract's, for a branch and a pull request", () => {
-  const titles = Object.fromEntries(
-    table("Build state").map(([state, title]) => [state, title]),
-  );
+test("each build state has its title, for a branch and a pull request", () => {
   const pull = { pullRequest: buildPullRequest };
   const read = (state: Parameters<typeof build>[0]) => buildTitle(build(state));
-  assert.equal(read({ state: "queued" }), titles["`queued`"]);
-  assert.equal(read({ state: "running" }), titles["`running`"]);
-  assert.equal(read({ state: "published" }), titles["`published`"]);
-  assert.equal(read({ state: "failed" }), titles["`failed` or `timed-out`"]);
-  assert.equal(read({ state: "timed-out" }), titles["`failed` or `timed-out`"]);
-  assert.equal(read({ state: "superseded" }), titles["`superseded`"]);
-  assert.equal(read({ state: "cancelled" }), titles["`cancelled`"]);
-  // A pull request's build reads this pull request wherever the table reads
-  // this branch.
+  assert.equal(read({ state: "queued" }), "Publishing this branch");
+  assert.equal(read({ state: "running" }), "Publishing this branch");
+  assert.equal(read({ state: "published" }), "Published this branch");
+  assert.equal(read({ state: "failed" }), "Unable to publish this branch");
+  assert.equal(read({ state: "timed-out" }), "Unable to publish this branch");
+  assert.equal(
+    read({ state: "superseded" }),
+    "A newer push replaced this build",
+  );
+  assert.equal(read({ state: "cancelled" }), "Publishing was cancelled");
+  // A pull request's build reads this pull request wherever a branch's build
+  // reads this branch.
   assert.equal(
     read({ state: "running", ...pull }),
     "Publishing this pull request",

@@ -53,9 +53,7 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   fullyParallel: false,
   workers: 1,
-  // One retry: these tests drive a real API and a real browser, and a shared
-  // machine can stall a step long enough to fail an otherwise correct run.
-  retries: 1,
+  retries: 0,
   timeout: 120_000,
   reporter: [["list"]],
   globalSetup: "./src/_tests_/global-setup.ts",

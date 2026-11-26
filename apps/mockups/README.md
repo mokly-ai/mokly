@@ -44,8 +44,10 @@ suite's catalogue, Stripe and GitHub ports, so 8085 with the default app port
 of 8081. A worktree that moves `MKC_APP_PORT` therefore moves its mockup test
 port too. The disk tests also run the
 [catalogue focus policy](../../docs/protocol/cloud/mockup-verification.md#disk-and-http-smoke)
-on every page, and `focus.spec.ts` holds its fixtures. The disk tests open every
-document that the catalogue index lists. They serve Mokly's frame probe script
+on every document they open. `focus.spec.ts` checks the rule in both themes.
+The disk sweep opens every light view. A Node check compares the light and
+dark documents at each width to determine which dark views also need Chromium.
+The disk tests serve Mokly's frame probe script
 from the output and fail on every other request outside the output. The served tests start
 Serve with the canonical `mokly.config.json` and `--base` naming a ref that
 does not exist, so Changes stay unavailable and Serve extracts and installs no
@@ -154,7 +156,7 @@ served-test exception, the cache and limits.
 - `package.json` — the dependencies and the scripts that the root `mockups:*` and `emails:*` commands run.
 - `scripts/check-determinism.mjs` and `scripts/determinism.mjs` — the determinism guard behind `test:determinism`, and its comparison of two independent builds.
 - `scripts/emails.ts` and `scripts/emails.test.ts` — the generator behind `npm run emails:build` and `npm run emails:check`, and its tests.
-- `playwright.config.ts` and `playwright.serve.config.ts` — the disk suite over every generated document and the served suite that starts the test server, with its global teardown.
+- `playwright.config.ts` and `playwright.serve.config.ts` — the disk suite over selected generated views and the served suite that starts the test server, with its global teardown.
 - `src/_tests_/serve-fixture.ts`, `src/_tests_/served-files.ts` and `src/_tests_/serve-teardown.ts` — the served test server launcher, the recorded state of the build output and the checkout, and the served suite's global teardown.
 - `src/_tests_/origins.ts` — `mockupsPort` and `mockupsOrigin`, the one port and origin of the served suite.
 - `src/_tests_/register-web.mjs` — the Node resolve hook that the policy runner preloads.

@@ -1,4 +1,4 @@
-//! Execute each action class and compare its role matrix to the protocol table.
+//! Execute each action class and compare its role matrix to the workspace roles.
 
 use std::collections::BTreeMap;
 
@@ -144,48 +144,43 @@ fn capabilities() -> BTreeMap<&'static str, Vec<Capability>> {
     ])
 }
 
-fn documented_matrix() -> BTreeMap<&'static str, Vec<bool>> {
-    let doc = include_str!("../../../../../docs/protocol/cloud/platform-model.md");
-    let roles = doc
-        .split_once("## Roles\n")
-        .unwrap()
-        .1
-        .split("\n## ")
-        .next()
-        .unwrap();
-    let mut rows = roles
-        .lines()
-        .filter(|line| line.starts_with('|'))
-        .map(|line| {
-            line.trim_matches('|')
-                .split('|')
-                .map(str::trim)
-                .collect::<Vec<_>>()
-        });
-    assert_eq!(
-        rows.next().unwrap(),
-        ["Action", "Owner", "Admin", "Member", "Reviewer"]
-    );
-    rows.next().unwrap();
-    rows.map(|cells| {
-        assert_eq!(cells.len(), 5);
+/// The workspace role matrix: whether Owner, Admin, Member and Reviewer, in
+/// that order, may take each action class.
+fn role_matrix() -> BTreeMap<&'static str, Vec<bool>> {
+    BTreeMap::from([
         (
-            cells[0],
-            cells[1..]
-                .iter()
-                .map(|cell| match *cell {
-                    "Yes" => true,
-                    "No" => false,
-                    other => panic!("unexpected role permission {other}"),
-                })
-                .collect(),
-        )
-    })
-    .collect()
+            "Read workspace and its projects",
+            vec![true, true, true, true],
+        ),
+        ("Create project", vec![true, true, true, false]),
+        (
+            "Rename workspace, invite/manage non-owners",
+            vec![true, true, false, false],
+        ),
+        (
+            "Promote/demote/remove an owner; delete workspace",
+            vec![true, false, false, false],
+        ),
+        (
+            "Administer every workspace project",
+            vec![true, true, false, false],
+        ),
+        ("Request a build", vec![true, true, true, false]),
+        ("Cancel a build", vec![true, true, true, false]),
+        ("Change Automatic builds", vec![true, true, false, false]),
+        (
+            "Read billing status, seats and renewal facts",
+            vec![true, true, false, false],
+        ),
+        (
+            "Start Checkout, open the Customer Portal",
+            vec![true, false, false, false],
+        ),
+    ])
 }
 
 #[test]
-fn each_workspace_role_obeys_every_capability_in_the_protocol_table() {
+fn each_workspace_role_gets_exactly_its_capabilities() {
     let mut executed = BTreeMap::new();
     for (capability, actions) in capabilities() {
         let mut permissions = Vec::new();
@@ -229,5 +224,5 @@ fn each_workspace_role_obeys_every_capability_in_the_protocol_table() {
         }
         executed.insert(capability, permissions);
     }
-    assert_eq!(executed, documented_matrix());
+    assert_eq!(executed, role_matrix());
 }

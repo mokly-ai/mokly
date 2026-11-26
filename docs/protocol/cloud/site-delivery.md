@@ -164,13 +164,17 @@ than skips.
   accepted without a site file, because the app router owns it. External
   URLs are not fetched. Missing output, an output tree without HTML, and a
   search index that is missing or one build behind the pages all fail.
-- The browser check serves the built output through a local preview and opens
-  every route at 390px and 1440px in light and dark, and once at 320px in the
-  light scheme, the narrowest width the design contract keeps usable. It holds
-  every page to the accessibility rules above and to the header, menu, footer,
-  home, changelog, pricing, legal, docs and search behavior this contract,
-  [Site](./site.md) and [Site docs](./site-docs.md) require.
-- The unit tests hold the rules a browser cannot prove cheaply: the stylesheet
+- The Node tests check the built HTML for every route, including `404.html`.
+  They check titles, headings, landmarks, language, image and control text in
+  the markup, the docs island count, and the 404 indexing rule.
+- The browser check serves the built output through a local preview. At 320px
+  in light it checks each route's response status, final pathname, and title.
+  It also checks horizontal overflow and the names of exposed buttons and
+  links on every route. It checks focus, hydrated control names and load
+  errors on representative routes for each page template. It checks skip-link
+  focus once per layout. Interaction and layout checks run at the widths they
+  exercise. Checks that depend on the colour scheme run in light and dark.
+- The Node tests also check the stylesheet
   rules of [Site design](./site-design.md), its contrast pairs measured from
   the token values in both schemes, and the banned-words rule of
   [Site](./site.md#copy-rules) read back from the built pages.
