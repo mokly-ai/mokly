@@ -3,9 +3,9 @@
 
 use std::io;
 
-use crate::unix_process_table::ProcessTable;
+use crate::unix_process_table::{ProcessIdentity, ProcessTable};
 
-use super::group::{remember, remember_result, signal_process};
+use super::group::{GroupSignal, remember_result, signal_process};
 
 /// The result of one signal to an owned process group.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -25,30 +25,25 @@ pub enum GroupOutcome {
         all(not(target_os = "macos"), not(test)),
         expect(dead_code, reason = "only the macOS group signal reports a refusal")
     )]
-    Refused(Vec<i32>),
+    Refused(Vec<ProcessIdentity>),
 }
 
-/// Return true when the group is gone. A refused group signal goes to each
-/// listed member by its own identity, so a member that leaves its fork still
-/// gets it. A member that refuses its own signal keeps the error.
-pub(super) fn settle(
-    outcome: io::Result<GroupOutcome>,
+/// Send one signal to the group and finish it. Every caller uses this, so no
+/// caller can drop the members that a refused group signal still needs.
+/// Return true when the group is gone.
+pub(super) fn send(
+    group: &dyn GroupSignal,
     table: &dyn ProcessTable,
+    pid: i32,
     signal: i32,
 ) -> io::Result<bool> {
-    match outcome? {
+    match group.signal(pid, signal)? {
         GroupOutcome::Delivered => Ok(false),
         GroupOutcome::Gone => Ok(true),
         GroupOutcome::Refused(members) => {
             let mut first_error = None;
-            for pid in members {
-                match table.identity(pid) {
-                    Ok(Some(identity)) => {
-                        remember_result(&mut first_error, signal_process(table, identity, signal))
-                    }
-                    Ok(None) => {}
-                    Err(source) => remember(&mut first_error, source),
-                }
+            for identity in members {
+                remember_result(&mut first_error, signal_process(table, identity, signal));
             }
             first_error.map_or(Ok(false), Err)
         }

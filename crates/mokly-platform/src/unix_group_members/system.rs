@@ -1,7 +1,10 @@
-//! Darwin libproc adapter with exact return-size checks.
+//! Darwin libproc adapter. A member's state comes from the same process
+//! record reader as the process table, so its identity matches the walk.
 
 use std::io;
-use std::mem::{MaybeUninit, size_of, size_of_val};
+use std::mem::size_of_val;
+
+use crate::unix_process_table::{bsd_identity, bsd_info};
 
 use super::{Member, Members};
 
@@ -29,37 +32,17 @@ impl Members for SystemMembers {
     }
 
     fn state(&self, pgid: i32, pid: i32) -> io::Result<Member> {
-        let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
-        let expected = size_of::<libc::proc_bsdinfo>() as i32;
-        // SAFETY: libproc receives a correctly aligned buffer of expected bytes.
-        let size = unsafe {
-            *libc::__error() = 0;
-            libc::proc_pidinfo(
-                pid,
-                libc::PROC_PIDTBSDINFO,
-                0,
-                info.as_mut_ptr().cast(),
-                expected,
-            )
+        let info = match bsd_info(pid) {
+            Ok(info) => info,
+            Err(error) if error.raw_os_error() == Some(libc::ESRCH) => return Ok(Member::Gone),
+            Err(error) => return Err(error),
         };
-        if size != expected {
-            let error = io::Error::last_os_error();
-            return if error.raw_os_error() == Some(libc::ESRCH) {
-                Ok(Member::Gone)
-            } else if error.raw_os_error() == Some(0) {
-                Err(io::ErrorKind::UnexpectedEof.into())
-            } else {
-                Err(error)
-            };
-        }
-        // SAFETY: the full structure was initialized, as the exact size proves.
-        let info = unsafe { info.assume_init() };
         if info.pbi_pgid != pgid as u32 || info.pbi_status == libc::SZOMB {
             Ok(Member::Gone)
         } else if info.pbi_flags & PROC_FLAG_INEXIT != 0 {
             Ok(Member::Exiting)
         } else {
-            Ok(Member::Live)
+            Ok(Member::Live(bsd_identity(pid, &info)))
         }
     }
 }

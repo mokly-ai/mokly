@@ -117,11 +117,19 @@ fn a_reaped_root_with_no_retained_descendants_does_no_table_walk() {
 
 #[test]
 fn a_read_failure_still_signals_the_group() {
-    let table = Unimock::new(
+    let members = Arc::new(Mutex::new(Vec::new()));
+    let sent = Arc::clone(&members);
+    let table = Unimock::new((
         IdentityMock
             .some_call(matching!(1))
             .answers(&|_, _| Err(io::ErrorKind::PermissionDenied.into())),
-    );
+        SignalMock
+            .each_call(matching!(_, _))
+            .answers_arc(Arc::new(move |_, identity, signal| {
+                sent.lock().unwrap().push((identity, signal));
+                Ok(())
+            })),
+    ));
     let signals = Arc::new(Mutex::new(Vec::new()));
     let captured = Arc::clone(&signals);
     let groups = Unimock::new(
@@ -129,7 +137,7 @@ fn a_read_failure_still_signals_the_group() {
             .some_call(matching!(1, _))
             .answers_arc(Arc::new(move |_, _, signal| {
                 captured.lock().unwrap().push(signal);
-                Ok(GroupOutcome::Delivered)
+                Ok(GroupOutcome::Refused(vec![CHILD]))
             })),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
@@ -139,6 +147,11 @@ fn a_read_failure_still_signals_the_group() {
     };
     assert_eq!(kind, Some(io::ErrorKind::PermissionDenied));
     assert_eq!(*signals.lock().unwrap(), vec![libc::SIGSTOP, libc::SIGKILL]);
+    assert_eq!(
+        *members.lock().unwrap(),
+        vec![(CHILD, libc::SIGSTOP), (CHILD, libc::SIGKILL)],
+        "a refused group signal must still reach its members"
+    );
 }
 
 #[test]

@@ -222,8 +222,9 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
 
         // Both requests settle while the test still holds the eight unread
         // responses. A starved request never settles, and the CI job timeout
-        // ends the run, so no wall-clock limit decides the result.
-        let ordinary = service
+        // ends the run, so no wall-clock limit decides the result. The router
+        // cannot fail, so each request gives its response.
+        let Ok(ordinary) = service
             .clone()
             .oneshot(
                 Request::builder()
@@ -233,7 +234,7 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
                     .unwrap(),
             )
             .await;
-        let access = service
+        let Ok(access) = service
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -245,10 +246,23 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
                     .unwrap(),
             )
             .await;
-        assert!(ordinary.is_ok(), "ordinary file request was starved");
-        assert!(access.is_ok(), "access exchange was starved");
-        assert_eq!(ordinary.unwrap().status(), StatusCode::OK);
-        assert_eq!(access.unwrap().status(), StatusCode::NO_CONTENT);
+        assert_eq!(
+            ordinary.status(),
+            StatusCode::OK,
+            "ordinary file request beside unread responses"
+        );
+        assert_eq!(
+            access.status(),
+            StatusCode::NO_CONTENT,
+            "access exchange beside unread responses"
+        );
         assert_eq!(slow.len(), 8);
+        for response in slow {
+            let frame = response.into_body().frame().await;
+            assert!(
+                matches!(&frame, Some(Ok(frame)) if frame.is_data()),
+                "each held response must stay open and unread: {frame:?}"
+            );
+        }
     });
 }

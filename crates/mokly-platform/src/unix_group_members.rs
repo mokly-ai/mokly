@@ -2,6 +2,8 @@
 
 use std::io;
 
+use crate::unix_process_table::ProcessIdentity;
+
 #[cfg(target_os = "macos")]
 mod system;
 #[cfg(target_os = "macos")]
@@ -18,8 +20,9 @@ pub enum Member {
     Gone,
     /// A process that has begun to exit and needs no signal.
     Exiting,
-    /// A process that still needs the signal.
-    Live,
+    /// A process that still needs the signal, with the identity of the
+    /// same read that showed its membership.
+    Live(ProcessIdentity),
 }
 
 #[cfg_attr(test, unimock::unimock(api = MembersMock))]
@@ -37,7 +40,7 @@ pub(super) enum Refusal {
     /// No member remains, so the group is gone.
     Stopped,
     /// Members remain. These live members still need the signal.
-    Pending(Vec<i32>),
+    Pending(Vec<ProcessIdentity>),
 }
 
 /// Read a refused group only after a complete, readable enumeration.
@@ -57,7 +60,7 @@ pub(super) fn refusal(members: &dyn Members, pgid: i32) -> Option<Refusal> {
             match members.state(pgid, *pid).ok()? {
                 Member::Gone => {}
                 Member::Exiting => present = true,
-                Member::Live => live.push(*pid),
+                Member::Live(identity) => live.push(identity),
             }
         }
         if !present && live.is_empty() {

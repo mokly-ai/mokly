@@ -8,7 +8,7 @@ use crate::error::{Error, IoResult, Result};
 use crate::processes::ProcessGroup;
 use crate::unix_process_table::{ProcessIdentity, ProcessTable, SystemTable};
 
-use super::outcome::{GroupOutcome, settle};
+use super::outcome::{GroupOutcome, send};
 use super::walk;
 
 /// Group-level signal boundary kept separate from process-table inspection.
@@ -95,14 +95,20 @@ impl UnixGroup {
     fn signal_group(&self, signal: i32) -> io::Result<bool> {
         match self.table.identity(self.root.pid) {
             Ok(Some(current)) if current != self.root => Ok(true),
-            Ok(current) => settle(
-                self.group.signal(self.root.pid, signal),
+            Ok(current) => send(
+                self.group.as_ref(),
                 self.table.as_ref(),
+                self.root.pid,
                 signal,
             )
             .map(|gone| gone || current.is_none()),
             Err(source) => {
-                let _ = self.group.signal(self.root.pid, signal);
+                let _ = send(
+                    self.group.as_ref(),
+                    self.table.as_ref(),
+                    self.root.pid,
+                    signal,
+                );
                 Err(source)
             }
         }

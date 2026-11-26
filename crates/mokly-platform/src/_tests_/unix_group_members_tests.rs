@@ -4,7 +4,14 @@ use std::io;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::unix_process_table::ProcessIdentity;
+
 use super::{Member, MembersMock, Refusal, refusal};
+
+const MEMBER: ProcessIdentity = ProcessIdentity {
+    pid: 18,
+    start: 180,
+};
 
 #[test]
 fn a_single_live_member_cannot_be_mistaken_for_an_empty_group() {
@@ -17,9 +24,9 @@ fn a_single_live_member_cannot_be_mistaken_for_an_empty_group() {
             }),
         MembersMock::state
             .next_call(matching!(17, 18))
-            .returns(Ok(Member::Live)),
+            .returns(Ok(Member::Live(MEMBER))),
     ));
-    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![18])));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![MEMBER])));
 }
 
 #[test]
@@ -36,9 +43,9 @@ fn an_exiting_member_keeps_the_group_but_needs_no_signal() {
             .returns(Ok(Member::Exiting)),
         MembersMock::state
             .next_call(matching!(17, 18))
-            .returns(Ok(Member::Live)),
+            .returns(Ok(Member::Gone)),
     ));
-    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![18])));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![])));
 }
 
 #[test]

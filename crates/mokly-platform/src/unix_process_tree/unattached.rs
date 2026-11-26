@@ -7,7 +7,7 @@ use crate::error::{Error, Result};
 use crate::unix_process_table::{ProcessTable, SystemTable};
 
 use super::group::{GroupSignal, remember, remember_result, signal_process};
-use super::outcome::settle;
+use super::outcome::send;
 use super::walk;
 
 /// An unreaped child reserves its PID, even if its identity cannot be read.
@@ -23,7 +23,7 @@ fn kill(pid: i32, table: &dyn ProcessTable, group: &dyn GroupSignal) -> Result<(
     let mut error = None;
     remember_result(
         &mut error,
-        settle(group.signal(pid, libc::SIGSTOP), table, libc::SIGSTOP).map(|_| ()),
+        send(group, table, pid, libc::SIGSTOP).map(|_| ()),
     );
     let walk = walk::unattached_descendants(table, pid);
     if let Some(source) = walk.error {
@@ -31,7 +31,7 @@ fn kill(pid: i32, table: &dyn ProcessTable, group: &dyn GroupSignal) -> Result<(
     }
     remember_result(
         &mut error,
-        settle(group.signal(pid, libc::SIGKILL), table, libc::SIGKILL).map(|_| ()),
+        send(group, table, pid, libc::SIGKILL).map(|_| ()),
     );
     for identity in walk.found {
         remember_result(&mut error, signal_process(table, identity, libc::SIGKILL));
