@@ -9,7 +9,10 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use mokly_platform::error;
-use mokly_platform::processes::{AttachFailure, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{
+    AttachFailure, ProcessGroups, ProcessGroupsMock, SystemProcessGroups,
+};
+use unimock::{MockFn, Unimock, matching};
 
 #[test]
 fn stop_kills_the_unattached_tree_before_it_gives_back_the_child() {
@@ -23,9 +26,10 @@ fn stop_kills_the_unattached_tree_before_it_gives_back_the_child() {
             path: "attach-probe".into(),
         },
     );
+    let cause = std::error::Error::source(&failure).and_then(|cause| cause.downcast_ref());
     assert!(matches!(
-        failure.cause(),
-        error::Error::Locked { path } if path == Path::new("attach-probe")
+        cause,
+        Some(error::Error::Locked { path }) if path == Path::new("attach-probe")
     ));
     let mut unattached = failure.stop(&SystemProcessGroups);
     assert!(
@@ -51,4 +55,32 @@ fn stop_kills_the_unattached_tree_before_it_gives_back_the_child() {
         &unattached.source,
         error::Error::Locked { path } if path == Path::new("attach-probe")
     ));
+}
+
+/// The stop is `kill_unattached` alone. It neither kills nor reaps the child,
+/// which the caller does after the stop.
+#[test]
+fn stop_runs_kill_unattached_once_and_gives_back_the_running_child() {
+    let mut command = Command::new("sleep");
+    command.arg("60");
+    SystemProcessGroups.configure(&mut command).unwrap();
+    let child = command.spawn().unwrap();
+    let groups = Unimock::new(
+        ProcessGroupsMock::kill_unattached
+            .next_call(matching!(_))
+            .returns(Ok(())),
+    );
+    let failure = AttachFailure::new(
+        child,
+        error::Error::Locked {
+            path: "attach-probe".into(),
+        },
+    );
+    let mut unattached = failure.stop(&groups);
+    let running = unattached.child.try_wait().unwrap().is_none();
+    let _ = SystemProcessGroups.kill_unattached(&unattached.child);
+    let _ = unattached.child.kill();
+    let _ = unattached.child.wait();
+    assert!(unattached.stopped.is_ok());
+    assert!(running, "the stop ended the child itself");
 }

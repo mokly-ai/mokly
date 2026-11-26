@@ -141,8 +141,9 @@ calls `setsid()`, because macOS has no `setsid` command. The attachment test
 observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
 attaches to the unreaped child and stops it. The `ProcessTree` tests check that
 the root stays unreaped through `wait` and `kill`, and that the drop reaps it.
-The `AttachFailure` test checks that `stop` kills the tree of a running child
-before it gives the child back.
+The `AttachFailure` tests check that `stop` calls `kill_unattached` once and
+nothing else, and that the host stop ends a running child before `stop` gives
+it back.
 Consumers enable the `mock` feature to use every public trait with unimock.
 The feature also adds `ProcessTree::into_parts`, which gives back the child and
 the guard. Test doubles use it to wrap the host guard, and the guard tests use

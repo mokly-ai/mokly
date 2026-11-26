@@ -35,11 +35,6 @@ impl AttachFailure {
         Self { child, source }
     }
 
-    /// The cause of the failed attachment.
-    pub fn cause(&self) -> &Error {
-        &self.source
-    }
-
     /// Stop the whole tree of the child with `kill_unattached`, and then give
     /// back the child, the cause, and the result of the stop.
     pub fn stop(self, groups: &dyn ProcessGroups) -> Unattached {

@@ -39,7 +39,8 @@ impl Reap for Arc<ProcessTree> {
     }
 }
 
-/// The attached tree of a sidecar, which stops and kills its root on drop.
+/// The attached tree of a sidecar. Its drop kills the root and waits for its
+/// exit. Before startup ends, the drop first stops the whole tree.
 pub(super) struct Reaper {
     tree: Arc<ProcessTree>,
     startup: Option<Startup>,
