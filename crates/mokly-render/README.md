@@ -55,8 +55,10 @@ request of the context that already waits for its turn. The cache keeps a runnin
 an insert charges one record instead of recounting the cache. A context
 projects and hashes each of its private PostCSS inputs once, and its later
 results reuse those late digests. Before it projects them, it hints the
-projections of its modules without a digest at once, so a base tree that has
-no listing yet looks them up in one batch.
+projections of its modules without a digest at once. The base side passes on
+the private repository names and the first repository candidate of each
+dependency name, so a base tree that has no listing yet looks those up in one
+batch; an ordinary repository module keeps its own lookup.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
