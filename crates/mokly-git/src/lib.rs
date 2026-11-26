@@ -24,6 +24,7 @@ pub mod tree;
 pub mod access;
 
 mod lookup;
+mod lookup_scope;
 mod repository_access;
 mod repository_command;
 
@@ -37,4 +38,5 @@ mod conversion_paths;
 mod extraction;
 mod fetch;
 mod history;
+mod proven;
 pub mod source_key;

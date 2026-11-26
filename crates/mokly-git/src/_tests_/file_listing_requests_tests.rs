@@ -23,6 +23,7 @@ fn repository(
         promisor_remotes,
         unavailable: Mutex::new(BTreeMap::new()),
         timed_out: Mutex::new(BTreeSet::new()),
+        proven: Default::default(),
         directory: "/repo".into(),
         disk: Arc::new(Unimock::new(())),
         runner: Arc::new(Unimock::new(

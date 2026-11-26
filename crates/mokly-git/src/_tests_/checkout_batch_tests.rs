@@ -32,6 +32,7 @@ fn repository(mock: Unimock) -> GitRepository {
         promisor_remotes: Vec::new(),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
+        proven: Default::default(),
         directory: "/repo".into(),
         runner: Arc::new(mock),
         disk: Arc::new(Unimock::new(())),

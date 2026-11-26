@@ -9,6 +9,7 @@ use crate::command::{
 };
 use crate::error::{Error, Result};
 use crate::identity::ObjectId;
+use crate::proven::blobs;
 use crate::repository::GitRepository;
 use crate::tree::{Entry, Mode, text};
 
@@ -42,14 +43,11 @@ impl GitRepository {
     /// start competing fetches. Returns whether a fetch ran.
     /// The depth-limited walk reads direct entries of the root and parent trees.
     /// Filtering provided tips keeps reused trees independent of their depth.
-    /// Only requested missing ids enter the fetch.
+    /// Only requested missing ids enter the fetch. Without a promisor remote,
+    /// objects that an earlier check of the session proved present start no walk.
     pub(crate) fn ensure_objects(&self, commit: &ObjectId, entries: &[Entry]) -> Result<bool> {
-        let ids: BTreeSet<_> = entries
-            .iter()
-            .filter(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
-            .map(|entry| entry.object.clone())
-            .collect();
-        if ids.is_empty() {
+        let ids: BTreeSet<_> = blobs(entries).collect();
+        if ids.is_empty() || self.proven().is_some_and(|proven| proven.all_present(&ids)) {
             return Ok(false);
         }
         let _fetch = self
@@ -90,6 +88,9 @@ impl GitRepository {
             } else {
                 ObjectId::parse(line)?;
             }
+        }
+        if let Some(proven) = self.proven() {
+            proven.keep_present(ids.into_iter().filter(|id| !missing.contains(id)));
         }
         let Some(object) = missing.first().map(ToString::to_string) else {
             return Ok(false);

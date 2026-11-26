@@ -1,12 +1,13 @@
 //! One filtered Git process converts a batch with the bytes of per-file conversion.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::process::Command;
 use std::sync::{Arc, Mutex};
 
 use mokly_git::control::Token;
 use mokly_git::disk::SystemDisk;
-use mokly_git::identity::ObjectId;
+use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::tree::{Entry, Limits};
 
@@ -190,4 +191,66 @@ fn a_failing_filter_inside_a_batch_affects_only_its_file() {
             "{name}"
         );
     }
+}
+
+/// The Git commands of one session that looks up `count` files at once and then
+/// reads each one alone, as a stylesheet walk reads its imports, by subcommand.
+fn single_file_reads(count: usize) -> BTreeMap<String, usize> {
+    let fixture = Fixture::new();
+    fixture.write(".gitattributes", b"* text=auto eol=crlf\n");
+    for index in 0..count {
+        fixture.write(
+            &format!("styles/{index}.css"),
+            format!("a{index}\n").as_bytes(),
+        );
+    }
+    let commit = fixture.commit();
+    let (recorded, repository) = recorded(&fixture);
+    recorded.requests.lock().unwrap().clear();
+    let paths: Vec<_> = (0..count)
+        .map(|index| RepoPath::parse(&format!("styles/{index}.css")).unwrap())
+        .collect();
+    let entries = repository
+        .lookup(&commit, &paths, Limits::default())
+        .unwrap();
+    assert_eq!(entries.len(), count);
+    for entry in &entries {
+        assert_eq!(
+            repository
+                .read_many(&commit, std::slice::from_ref(entry), Limits::default())
+                .unwrap(),
+            [per_file(&fixture, &commit, entry)],
+            "{}",
+            entry.path
+        );
+    }
+    let mut commands = BTreeMap::new();
+    for request in recorded.requests.lock().unwrap().iter() {
+        let command = request
+            .args
+            .iter()
+            .filter_map(|arg| arg.to_str())
+            .find(|arg| !arg.starts_with('-'))
+            .unwrap_or_default();
+        *commands.entry(command.to_owned()).or_insert(0) += 1;
+    }
+    commands
+}
+
+#[test]
+fn single_file_reads_repeat_no_attribute_lookup_or_object_check() {
+    let small = single_file_reads(4);
+    let large = single_file_reads(16);
+    assert_eq!(small.get("cat-file"), Some(&4));
+    assert_eq!(large.get("cat-file"), Some(&16));
+    assert!(
+        small.get("ls-tree").is_some_and(|count| *count > 0),
+        "{small:?}"
+    );
+    let once = |commands: &BTreeMap<String, usize>| {
+        let mut commands = commands.clone();
+        commands.remove("cat-file");
+        commands
+    };
+    assert_eq!(once(&small), once(&large));
 }

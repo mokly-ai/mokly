@@ -74,3 +74,12 @@ unsafe_code = "forbid"
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+
+# Debug and test builds hash every source, dependency, and capture input. The
+# hash crates run about ten times slower without optimisation. These entries
+# compile only them optimised; the hashes and every other crate stay the same.
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.xxhash-rust]
+opt-level = 3

@@ -22,16 +22,26 @@ impl GitRepository {
                 parent = directory;
             }
         }
-        let attrs = self.lookup_metadata(
-            commit,
-            &attributes.into_iter().collect::<Vec<_>>(),
-            Limits::default(),
-            false,
-            true,
-        )?;
+        let attributes: Vec<_> = attributes.into_iter().collect();
+        let attrs = match self
+            .proven()
+            .and_then(|proven| proven.attributes(commit, &attributes))
+        {
+            Some(attrs) => attrs,
+            None => {
+                let attrs: Vec<_> = self
+                    .lookup_metadata(commit, &attributes, Limits::default(), false, true)?
+                    .into_iter()
+                    .filter(|entry| entry.mode.regular() || entry.mode == Mode::Directory)
+                    .collect();
+                if let Some(proven) = self.proven() {
+                    proven.keep_attributes(commit, attributes, &attrs);
+                }
+                attrs
+            }
+        };
         let mut indexed: BTreeMap<_, _> = attrs
             .into_iter()
-            .filter(|entry| entry.mode.regular() || entry.mode == Mode::Directory)
             .map(|entry| (entry.path.clone(), entry))
             .collect();
         indexed.extend(
@@ -62,6 +72,7 @@ impl GitRepository {
         let listing = self.initial_tree_listing(&request)?;
         let entries = tree::parse(&listing, Limits::default())?;
         if tree::sizes_every_blob(&listing) {
+            self.keep_present(&entries);
             return Ok(entries);
         }
         if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
