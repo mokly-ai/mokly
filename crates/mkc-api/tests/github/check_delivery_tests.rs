@@ -6,11 +6,10 @@ use std::sync::atomic::Ordering;
 use chrono::Utc;
 use mkc_domain::ids::PublicationId;
 use mkc_store_interface::github_state::DeliveryStatus;
-use mkc_store_interface::publication_event::EventKind;
 use serde_json::{Value, json};
 use uuid::Uuid;
 
-use super::check_support::{CheckRuntime, wait_until};
+use super::check_support::{CheckRuntime, RerequestRow, wait_until};
 use super::fixtures;
 use super::harness::Harness;
 
@@ -51,34 +50,33 @@ fn upload_creates_a_live_check_and_both_rerun_events_update_the_same_run() {
     );
     wait_until(|| app.check_events_are_delivered(publication));
     app.queries(&mut |queries| {
-        let stored = queries.github_check(4).unwrap().unwrap();
+        let stored = queries.github_check(4)?.unwrap();
         assert_eq!(stored.project_id, project.id);
         assert_eq!(stored.repository_id, project.repository);
         assert_eq!(stored.head_sha, "a".repeat(40));
+        Ok(())
     });
     for (event, updates) in [("check_run", 1), ("check_suite", 2)] {
         rerequest(&app, event, publication);
-        wait_until(|| {
-            let mut queued = false;
-            app.queries(&mut |queries| {
-                let check = queries.github_check(4).unwrap().unwrap();
-                let events = queries
-                    .pending_publication_events(Utc::now(), 100, Some(project.id))
-                    .unwrap();
-                queued = !check.rerequested
-                    && events.iter().any(|pending| {
-                        pending.event.kind == EventKind::Rerequest
-                            && pending.event.publication_id == publication
-                            && pending.attempts == 0
-                            && pending.permanent_failures == 0
-                    });
-            });
-            queued
-        });
         let updated = app.wait_check(publication, updates);
         assert_eq!(updated["id"], first["id"]);
         assert_eq!(updated["output"], first["output"]);
         wait_until(|| app.check_events_are_delivered(publication));
+        // The rerequest cleared the check's flag and queued one fresh event. A
+        // claim adds one attempt, so a delivered event with one attempt and no
+        // permanent failure was queued with none, and the duplicate webhook
+        // queued nothing. The rows are read once delivered, because a check
+        // pass can claim an event before a poll sees it pending.
+        app.queries(&mut |queries| {
+            assert!(!queries.github_check(4)?.unwrap().rerequested);
+            Ok(())
+        });
+        let delivered = RerequestRow {
+            attempts: 1,
+            permanent_failures: 0,
+            delivered: true,
+        };
+        assert_eq!(app.rerequest_events(publication), vec![delivered; updates]);
     }
     let mode = app.github.mode.lock().unwrap();
     assert_eq!(mode.check_creates, 1);
@@ -107,15 +105,15 @@ fn lost_create_response_recovers_by_external_id_before_another_create() {
                     Utc::now() + chrono::Duration::minutes(2),
                     100,
                     Some(project.id),
-                )
-                .unwrap()
+                )?
                 .iter()
                 .any(|pending| {
                     pending.event.publication_id == publication
                         && pending.attempts == 1
                         && pending.permanent_failures == 0
                 });
-            assert!(queries.github_check(4).unwrap().is_none());
+            assert!(queries.github_check(4)?.is_none());
+            Ok(())
         });
         failed
     });
@@ -124,9 +122,10 @@ fn lost_create_response_recovers_by_external_id_before_another_create() {
     wait_until(|| app.check_events_are_delivered(publication));
     app.queries(&mut |queries| {
         assert_eq!(
-            queries.github_check(4).unwrap().unwrap().external_id,
+            queries.github_check(4)?.unwrap().external_id,
             format!("mokly-publication:{publication}")
-        )
+        );
+        Ok(())
     });
     let mode = app.github.mode.lock().unwrap();
     assert_eq!(mode.check_creates, 1);

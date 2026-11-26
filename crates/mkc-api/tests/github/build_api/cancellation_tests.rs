@@ -57,12 +57,10 @@ fn cancel_handles_every_state_and_returns_committed_and_terminal_builds_unchange
                 created_at: Utc::now(),
             };
             app.queries(&mut |q| {
-                q.insert_publication(&ready).unwrap();
-                q.mint_build_grant(&grant).unwrap();
-                assert!(
-                    q.consume_build_grant(grant.id, ready.id, &|| Utc::now())
-                        .unwrap()
-                );
+                q.insert_publication(&ready)?;
+                q.mint_build_grant(&grant)?;
+                assert!(q.consume_build_grant(grant.id, ready.id, &|| Utc::now())?);
+                Ok(())
             });
             let committed = json(
                 app.request(
@@ -139,8 +137,9 @@ fn cancel_and_ready_commit_serialize_so_only_one_can_win() {
         created_at: Utc::now(),
     };
     app.queries(&mut |q| {
-        q.insert_publication(&ready).unwrap();
-        q.mint_build_grant(&grant).unwrap();
+        q.insert_publication(&ready)?;
+        q.mint_build_grant(&grant)?;
+        Ok(())
     });
     let barrier = Arc::new(Barrier::new(2));
     let store = app.store.clone();

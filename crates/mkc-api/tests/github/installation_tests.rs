@@ -56,16 +56,15 @@ fn two_accounts_bind_to_one_workspace_and_a_candidate_refreshes_the_same_rows() 
     app.queries(&mut |queries| {
         assert!(
             queries
-                .integration(IntegrationSubject::Organization(workspace_id))
-                .unwrap()
+                .integration(IntegrationSubject::Organization(workspace_id))?
                 .is_none()
         );
         assert!(
             queries
-                .integration(IntegrationSubject::User(app.user))
-                .unwrap()
+                .integration(IntegrationSubject::User(app.user))?
                 .is_some()
         );
+        Ok(())
     });
 }
 
@@ -114,9 +113,10 @@ fn installation_filter_requires_membership_and_includes_suspended_bindings() {
         .unwrap()
         .into();
     app.queries(&mut |queries| {
-        let mut bindings = queries.github_installations(workspace_id).unwrap();
+        let mut bindings = queries.github_installations(workspace_id)?;
         bindings[0].active = false;
-        queries.save_github_installation(&bindings[0]).unwrap();
+        queries.save_github_installation(&bindings[0])?;
+        Ok(())
     });
     let rows = list(&app, &workspace);
     assert_eq!(rows["items"][0]["state"], "suspended");
@@ -157,9 +157,10 @@ fn installation_filter_requires_membership_and_includes_suspended_bindings() {
     );
     assert!(list(&app, &empty)["items"].as_array().unwrap().is_empty());
     app.queries(&mut |queries| {
-        for member in queries.members(workspace_id).unwrap() {
-            queries.delete_member(member.id).unwrap();
+        for member in queries.members(workspace_id)? {
+            queries.delete_member(member.id)?;
         }
+        Ok(())
     });
     for id in [workspace_id.to_string(), Uuid::now_v7().to_string()] {
         let denied = harness::json(

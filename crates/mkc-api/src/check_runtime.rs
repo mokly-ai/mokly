@@ -1,4 +1,4 @@
-//! Five-second provider delivery batches owned by the serving application future.
+//! Provider delivery batches at the check delivery interval, owned by the serving application future.
 
 use std::future::{self, Future};
 use std::pin::Pin;
@@ -57,6 +57,8 @@ impl CheckClock for TokioCheckClock {
 pub(crate) struct CheckWorkerLoop {
     pub(crate) worker: Option<Arc<dyn CheckDelivery>>,
     pub(crate) clock: Arc<dyn CheckClock>,
+    /// The pause after each pass; production waits five seconds.
+    pub(crate) interval: Duration,
 }
 
 impl WorkerLoop for CheckWorkerLoop {
@@ -70,7 +72,7 @@ impl WorkerLoop for CheckWorkerLoop {
                 if let Err(error) = tokio::task::spawn_blocking(move || worker.run_once()).await {
                     tracing::error!(?error, "check delivery worker task failed");
                 }
-                self.clock.sleep(Duration::from_secs(5)).await;
+                self.clock.sleep(self.interval).await;
             }
         })
     }

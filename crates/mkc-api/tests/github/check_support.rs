@@ -7,9 +7,12 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
+use diesel::sql_types::{Bool, Integer, Text, Uuid as SqlUuid};
+use diesel::{Connection, PgConnection, RunQueryDsl};
 use mkc_auth::runtime::{Runtime, SystemRuntime};
 use mkc_domain::ids::{ProjectId, PublicationId};
 use mkc_store_interface::error::Result;
+use mkc_store_interface::publication_event::EventKind;
 use reqwest::Method;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -35,6 +38,17 @@ impl Runtime for CheckRuntime {
     fn secret(&self) -> Result<String> {
         SystemRuntime.secret()
     }
+}
+
+/// One rerequest event of a publication, as its outbox row holds it.
+#[derive(Clone, Debug, PartialEq, Eq, diesel::QueryableByName)]
+pub(super) struct RerequestRow {
+    #[diesel(sql_type = Integer)]
+    pub(super) attempts: i32,
+    #[diesel(sql_type = Integer)]
+    pub(super) permanent_failures: i32,
+    #[diesel(sql_type = Bool)]
+    pub(super) delivered: bool,
 }
 
 #[derive(Deserialize)]
@@ -134,19 +148,33 @@ impl Harness {
             .clone()
     }
 
+    /// Every rerequest event of one publication, oldest first, delivered ones
+    /// included. The store reads only due events, so this reads the rows.
+    pub(super) fn rerequest_events(&self, publication: PublicationId) -> Vec<RerequestRow> {
+        diesel::sql_query(
+            "SELECT attempts, permanent_failures, delivered_at IS NOT NULL AS delivered
+            FROM publication_events WHERE publication_id = $1 AND kind = $2
+            ORDER BY created_at, id",
+        )
+        .bind::<SqlUuid, _>(publication.0)
+        .bind::<Text, _>(EventKind::Rerequest.as_str())
+        .load(&mut PgConnection::establish(self._schema.scoped_url()).unwrap())
+        .unwrap()
+    }
+
     pub(super) fn check_events_are_delivered(&self, publication: PublicationId) -> bool {
         let mut done = false;
         self.queries(&mut |queries| {
-            let value = queries.publication(publication).unwrap().unwrap();
+            let value = queries.publication(publication)?.unwrap();
             done = queries
                 .pending_publication_events(
                     Utc::now() + chrono::Duration::days(1),
                     100,
                     Some(value.project_id),
-                )
-                .unwrap()
+                )?
                 .iter()
                 .all(|pending| pending.event.publication_id != publication);
+            Ok(())
         });
         done
     }
