@@ -430,23 +430,45 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   On 2026-11-26 at 15:27 UTC, the current assertion script run by hand in a
   sandbox of this v6 build printed `FAIL build template: python3 has multiple copies on PATH`.
 
-- E2B team `firna` built the Debian candidate
-  `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` on
-  2026-11-26T12:43:06Z in 1m10s from the Dockerfile at `0ad58e724` on the pinned
-  trixie base above, with v6's SDK, build script, Node version and checksum,
-  2 vCPU and 4096 MiB. Reusing `mokly-build-v6` gave the candidate v6's
-  template ID, so that bare ID starts this unreleased build, which `mokly-build-v7`
-  supersedes. The `0ad58e724` probe, with Git, compiler and one-copy `PATH` checks
-  for `node`, `npm`, `npx`, `corepack`, `python3` and `git`, printed
-  `PASS live build template: assertion completed and candidate destroyed` on
-  this reference at 2026-11-26T12:43:32Z, and sandbox checks from 12:43:44Z to
-  12:44:08Z confirmed Debian 13, glibc 2.41, Python 3.13.5, gcc 14.2.0, GNU Make
-  4.4.1, `/usr/bin/git` 2.47.3, 746 MiB of root filesystem use, the absence of
-  `gh`, HTTPS `git ls-remote`, `npm ci` and a strict catalogue build in
-  `mokly-ai/mokly-build-smoke` at `d5fe94d` with `@mokly/mokly` 0.21.0,
-  `changesStatus: "ready"` in a strict comparison against `origin/main` after
-  one commit with base `d5fe94d`, a forced source build of `utf-8-validate@6.0.5`,
-  a `git grep -P` lookahead match, and exit 0 from `git cat-file --batch --filters -Z`.
+- `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` is a Debian
+  candidate built under the reused name `mokly-build-v6`. It is not a release.
+  `mokly-build-v7` supersedes it. It shares v6's template ID, so the bare ID
+  `mm5vcm4xv7inkey7ad9p` starts it. Only v6's full build reference starts v6.
+  It was built 2026-11-26T12:43:06Z from the Dockerfile at `0ad58e724`. The
+  probe from that commit passed at 12:43:32Z. The v7 record gives the checks of
+  the same image.
+- `mokly-build-v7`, build reference
+  `ez8gf58grc5zofiqv7ql:548d54fd-072d-47eb-b484-e90e23471ecb` (template ID
+  `ez8gf58grc5zofiqv7ql`, build ID `548d54fd-072d-47eb-b484-e90e23471ecb`),
+  E2B team `firna`. It was built 2026-11-26T15:41:31Z in 17 s with
+  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`. Its Dockerfile is
+  the one at `cc1be056f`, which is the same as at `0ad58e724`. Node 24.21.0,
+  checksum `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base
+  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+  On 2026-11-26 at 15:40Z, Docker Hub's tag record and the registry gave the
+  same digest again. The build log marks every Dockerfile step `CACHED`. Only
+  E2B's finalize and optimize steps ran. E2B reused the steps that it built at
+  12:42Z for the candidate `b63ce806` above, under the name `mokly-build-v6`.
+  So v7 holds the Debian packages that were installed at 12:42Z. E2B's step
+  cache is shared across template names.
+  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
+  gcc 14.2.0 and GNU Make 4.4.1, and `git` was `/usr/bin/git` 2.47.3. Each of
+  `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
+  `PATH`. The root filesystem used 746 MiB. The image had 228 installed
+  packages and no `gh`. An HTTPS `git ls-remote` worked. In the smoke
+  repository `mokly-ai/mokly-build-smoke` at its `main` commit `d5fe94d`, with
+  `@mokly/mokly` 0.21.0, `npm ci` succeeded. `mokly build --strict` built the
+  catalogue. After a one-commit change,
+  `mokly build --config mokly.config.json --strict --base origin/main` gave
+  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
+  source, `npm_config_build_from_source=true npm install utf-8-validate@6.0.5`,
+  compiled `validation.node`. `git grep -P` with a lookahead pattern matched.
+  `git cat-file --batch --filters -Z` exited 0 in the repository. These checks
+  ran from 2026-11-26T15:42:12Z to 15:42:29Z. The live probe from commit
+  `cc1be056f`, with its Git, compiler and one-copy checks, printed
+  `PASS live build template: assertion completed and candidate destroyed` at
+  2026-11-26T15:41:58Z with the build reference.
 
 ### Environments
 

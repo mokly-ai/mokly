@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from the branch `calummoore/builds-keep-the-template-s-compiler-and-csnm`, review finding 1 of round 1.
 - **Location:** `docs/ops/build-template.md`, sections "Verify The Streaming Boundary" (the rollback bullet), "Rotate, Roll Back And Disable", and the `mokly-build-v5` record under "Live Evidence"; `docs/protocol/cloud/cloud-build-runner.md`, section "Template"; `plans/follow-ups/cloud-builds-never-ran-live.md`, its rollback line.
-- **Reason:** Each option except A changes the rollback policy, a requirement of the runner protocol, or adds a deploy check, so it waits for the user.
+- **Reason:** Each option changes the rollback policy, a requirement of the runner protocol, or adds a deploy check, so the item waits for the user.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -15,29 +15,32 @@
   - **Native addon:** an npm dependency that compiles C or C++ code during install, through `node-gyp`, when no prebuilt binary fits.
 - **Background:**
   - The runbook lets an operator roll back only to a previous build reference whose release meets the current template contract. When no recorded release meets it, the operator disables builds. The section "Rotate, Roll Back And Disable" repeats the rule. In 2026-11, the Git floor of the contract retired `mokly-build-v3` this way.
-  - The template contract, in the "Template" section of `docs/protocol/cloud/cloud-build-runner.md`, names no C or C++ toolchain and no PCRE2 in Git. The probe checks neither.
-  - `mokly-build-v5` (build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`) has no `gcc`, `g++`, `make`, or `ld`, and its Git exits 128 on `git grep -P` with a real Perl pattern. Its recorded probe pass came from `main` with the `npm ci` check, before the probe's Git check. No recorded run of the current probe exists for v5. A pass is expected: in a v5 sandbox, Git 2.56.1 ran `git cat-file --batch --filters -Z` and exited 0, and the current probe checks no compiler and no PCRE2.
+  - The template contract, in the "Template" section of `docs/protocol/cloud/cloud-build-runner.md`, names no C or C++ toolchain and no PCRE2 in Git in its current text. On 2026-11-26 Cal decided that the template requires a C compiler, a C++ compiler, and `make`, and exactly one real file each for `node`, `npm`, `npx`, `corepack`, `python3`, and `git` on `PATH`. That section takes these requirements in a separate change.
+  - The current probe requires that one real file. It finds `cc`, `c++`, and `make` on `PATH` and runs each with `--version`. It compiles nothing, and it does not check PCRE2.
+  - `mokly-build-v5` (build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`) has no `gcc`, `g++`, `make`, or `ld`, and its Git exits 128 on `git grep -P` with a real Perl pattern. Its recorded probe pass came from `main` with the `npm ci` check, before the probe's Git check.
   - `mokly-build-v6` (build reference `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c`) keeps the base toolchain and builds Git with PCRE2. Main-preview uses it since 2026-11-26.
+  - On 2026-11-26 the current assertion script, run by hand, printed `FAIL build template: python3 has multiple copies on PATH` against v5, and at 15:27 UTC against v6. Both hold the base image's own Python beside Debian's, and the Git source build beside Debian's Git.
+  - `mokly-build-v7` (build reference `ez8gf58grc5zofiqv7ql:548d54fd-072d-47eb-b484-e90e23471ecb`) starts from a pinned Debian 13 image. It passed the current probe at 2026-11-26T15:41:58Z. Cal switches main-preview from v6 to v7 after the v7 Dockerfile merges into `main`. After that switch, v5 and v6 both fail the current probe.
   - The runbook's v5 record says that v5 is superseded by v6 and that a rollback to it breaks each install that compiles a native addon. The rollback rule does not read the word "superseded".
   - `infra/scripts/build_values.py` accepts any nonempty `builds.template` value. Only the operator applies the rollback rule.
   - `docs/protocol/cloud/cloud-build-runner.md` has 249 lines, and protocol pages are capped at 250. A new sentence there needs the "Template" section moved to its own page first.
-- **Problem:** v5 still meets the template contract, so the rollback rule lets an operator roll back from v6 to v5, and v5 is expected to pass the current probe.
-- **Impact if no action:** A rollback to v5 passes verification and then fails each customer install that compiles a native addon or uses `git grep -P`.
+- **Problem:** The rollback rule admits any previous release that meets the template contract and passes the current probe. The probe now rejects v5 and v6, through its one-copy check. Neither the contract nor the probe checks a working compiler or PCRE2 in Git, so a later release that loses either can still qualify.
+- **Impact if no action:** A later release that loses the toolchain or PCRE2 can pass the rollback probe and then fail each customer install that compiles a native addon or uses `git grep -P`. After the switch to v7, no other recorded release passes the current probe, so a failing v7 leaves only the choice to disable builds.
 - **Root question:** What must a rollback target give customer builds, and how does each rotation check it?
 - **Options:**
-  - **A.** Keep the rule. Say in the v5 record that v5 is a degraded fallback, and which builds fail on it, so that an operator can weigh that loss against disabling builds. Effort: Small.
   - **B.** Mark v5 as not eligible for a rollback from v6, outside the contract. Change the two rollback rule texts in `docs/ops/build-template.md`, which admit any release that meets the contract. When no reference qualifies, disable builds, and projects publish from their own CI. Effort: Small.
   - **C.** Record a verified fallback build reference for each release in use, with evidence that covers the same build capabilities. A fallback with changed Dockerfile bytes needs a new release. Effort: Medium.
   - **D.** Add one sentence to the "Template" section: the template supplies a C and C++ toolchain with `make` and `pkg-config`, and its Git supports Perl-compatible patterns. This is option B of `plans/follow-ups/build-template-toolchain-has-no-guard.md`. Move the section to its own page first. The rollback rule stays, and it then retires v5, as the Git floor retired v3. Change the v5 record and the rollback line of `plans/follow-ups/cloud-builds-never-ran-live.md` to say that v5 does not meet the contract. Each later release must keep these tools. Effort: Small.
   - **E.** D, plus the probe check of option C of `plans/follow-ups/build-template-toolchain-has-no-guard.md`. The runbook already probes a rollback reference, so v5 then fails the probe, and so does each later release that loses a tool. It adds a new gate and a credentialed probe run against v6. Effort: Medium.
   - **F.** Keep a checked-in list of qualified build references, and make `infra/scripts/build_values.py` reject a `builds.template` value that is not on it. Retire a release by removing its entry. It adds a new configuration rejection, each release must edit the list, and an out-of-date list blocks an emergency rollback. `plans/follow-ups/build-template-config-accepts-bare-id.md` adds a format check to the same field, so decide the two together. Effort: Medium.
 - **Left out:**
-  - Rerun the current probe as the only qualification. It is expected to pass v5, because the probe checks neither tool. E brings the probe back with the tool checks.
-  - Change nothing. The rule does not read "superseded", so an operator cannot tell whether v5 qualifies. A removes that doubt.
+  - Keep the rule, and call v5 a degraded fallback in its record. This was option A. The current probe fails v5, so the runbook cannot use v5 as a fallback.
+  - Rerun the current probe as the only qualification. It rejects v5 and v6, but only through its one-copy check. It checks no working compiler and no PCRE2. E adds those checks.
+  - Change nothing. The current probe rejects v5 and v6, but a later release that loses the toolchain or PCRE2 can still pass it.
 - **Wider fix:** E. It fails each release without the tools, through the contract and the probe that the runbook already runs on a rollback reference.
 - **Previous examples:** The Git floor of the contract retired `mokly-build-v3` from rollback, because v3 could not compare.
 - **Related:**
   - `plans/follow-ups/build-template-toolchain-has-no-guard.md`: its option B is D here, and its option C is E here, so one answer can settle both items.
   - `plans/follow-ups/template-image-change-keeps-release-name.md`: its option D writes a release receipt for each build reference. One release record can serve C here and that option.
 - **Recommendation:** D. It retires v5 through the existing rule at Small effort, and the guard item asks for the same sentence. E best protects later rotations.
-- **Action:** ask the user, because B, D, E, and F change the rollback policy, a protocol requirement, or add a check, and A keeps a degraded fallback that the user has not chosen.
+- **Action:** ask the user, because B, D, E, and F change the rollback policy, a protocol requirement, or add a check.

@@ -161,11 +161,13 @@ Depends on: 5. Starts after `main` with PR #571 merges into this branch.
 - [x] Resolve the trixie digest again, and confirm that no E2B template has
       the name `mokly-build-v7`. Evidence:
       `.context/build-template-debian-base/digest-resolved-v7.txt`.
-- [ ] Build `mokly-build-v7` from the final Dockerfile with the release
+- [x] Build `mokly-build-v7` from the final Dockerfile with the release
       script. Run the live probe, the smoke build, the comparison build, a
-      forced native addon build, and `git grep -P`.
-- [ ] `docs/ops/build-template.md`: the v7 release record.
-- [ ] Reconcile the follow-up items that PR #571 added or kept with this
+      forced native addon build, and `git grep -P`. Evidence:
+      `.context/build-template-debian-base/v7-build.log`, `v7-probe.log`, and
+      `v7-release-checks.json`.
+- [x] `docs/ops/build-template.md`: the v7 release record.
+- [x] Reconcile the follow-up items that PR #571 added or kept with this
       change.
 - [ ] Run the gate checks again, review the merge, and push.
 
