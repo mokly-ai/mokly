@@ -37,7 +37,7 @@ After Serve publishes the result of a Changes classification, also an
 unavailable result, it starts one return pass. The pass begins when the
 publication is complete. A classification that a watched change replaces
 starts no pass. Only a Serve publication starts a pass. Other commands start
-none. After a failed reap ends background return, no publication starts a
+none. After a failed exit wait ends background return, no publication starts a
 pass.
 
 Each base process is a candidate of the pass until the pass replaces it or a
@@ -49,9 +49,9 @@ Decision: the publication starts the pass. Rejected: a pass whenever no base
 call runs or waits, because sequential base calls leave short gaps. A pass in
 such a gap would replace the process that the next base call needs.
 
-For each process, the pass ends the old process and waits until it exits and
-is reaped. Only then does it start the new process, so the two processes
-never run at the same time. The new process completes its hello. While the
+For each process, the pass ends the old process and waits until it exits.
+Only then does it start the new process, so the two processes never run at
+the same time. The new process completes its hello. While the
 pool is idle, it then prepares the newest head generation and replays at most
 30 recent renders of that generation, under the
 [return warm-up rules](./mokly-sidecar-return-warmup.md). Otherwise it loads
@@ -59,7 +59,7 @@ generations on demand, as after a recycle. A failed start or hello leaves the
 slot empty. The next request that takes the slot then starts a process as
 usual.
 
-Decision: the pass waits for the reaping. Rejected: a start after the kill
+Decision: the pass waits for the exit. Rejected: a start after the kill
 signal alone, because the old and the new process could then run together
 beyond the pool size.
 
@@ -108,14 +108,14 @@ then adds this diagnostic line:
 
 The timing records of that step keep error status.
 
-Decision: a failed reap takes only its slot out of use. Rejected: a stop of
+Decision: a failed exit wait takes only its slot out of use. Rejected: a stop of
 the whole pool, because one unconfirmed process would then end every
 JavaScript render of the session. Rejected: a new process in that slot,
 because it could run beside the old process beyond the pool size.
 
-Decision: the first failed reap ends background return for the life of the
+Decision: the first failed exit wait ends background return for the life of the
 pool, so background work can cost at most one slot. Rejected: a pass that
-goes on after it, because one cause that fails every reap could then retire
+goes on after it, because one cause that fails every exit wait could then retire
 every idle base slot in one pass. Rejected: an end of the current pass only,
 because the same cause could then retire one more slot at each publication.
 
@@ -125,11 +125,11 @@ These rules apply to a waiting request that can use the slot. A request whose
 live PostCSS context belongs to another slot cannot use this slot, so it keeps
 waiting for that other slot while that slot is in use.
 
-When such a request waits after the pass reaps the old process, the request
+When such a request waits after the old process exits, the request
 takes the empty slot. The pass then starts no process in that slot. A head
 request that waits during the hello of the new process takes that process
 after the hello. A base request that waits during the hello takes the slot
-after the pass ends and reaps the new process.
+after the pass ends and the new process exits.
 
 Neither the publication of Changes nor the release of a generation or a
 PostCSS context waits for the pass or a warm-up. The

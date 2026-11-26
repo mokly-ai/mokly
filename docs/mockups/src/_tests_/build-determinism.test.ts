@@ -1,29 +1,41 @@
 import assert from "node:assert/strict";
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after, before } from "node:test";
+import type { TestContext } from "node:test";
 
 import { checkBuildDeterminism } from "../../../../apps/mockups/scripts/determinism.mjs";
 
 import { indexPath, screenView } from "./catalogue-paths";
-import { outputFixture } from "./generated-output-fixture";
+import { outputDirectory, outputFixture } from "./generated-output-fixture";
 import { policyFixture } from "./policy-fixture";
 
 const document = screenView("screen", "desktop");
 
-/** One real strict build of the fixture catalogue, and a snapshot parent. */
-async function sampleTree() {
-  const fixture = await outputFixture();
-  await fixture.cli("build", "--strict", "--no-changes");
+let seed: Awaited<ReturnType<typeof outputFixture>>;
+before(async () => {
+  seed = await outputFixture();
+  await seed.cli("build", "--strict", "--no-changes");
+});
+after(() => seed?.cleanup());
+
+/** Each check has its own snapshot parent and copies the output before edits. */
+async function sampleTree(t: TestContext, writable = false) {
+  const fixture = await policyFixture();
+  t.after(fixture.cleanup);
+  const output = writable
+    ? path.join(fixture.root, outputDirectory)
+    : seed.output;
+  if (writable) await cp(seed.output, output, { recursive: true });
   return {
-    ...fixture,
+    output,
+    generatedFont: seed.generatedFont,
     snapshots: path.join(fixture.root, ".context/snapshots"),
   };
 }
 
 test("independent identical builds pass and only the owned snapshot is removed", async (t) => {
-  const fixture = await sampleTree();
-  t.after(fixture.cleanup);
+  const fixture = await sampleTree(t);
   await mkdir(fixture.snapshots, { recursive: true });
   await writeFile(path.join(fixture.snapshots, "keep.txt"), "Unrelated\n");
   const built = await readFile(path.join(fixture.output, document));
@@ -41,8 +53,7 @@ test("independent identical builds pass and only the owned snapshot is removed",
 });
 
 test("index, document, binary and membership drift list the differing paths", async (t) => {
-  const fixture = await sampleTree();
-  t.after(fixture.cleanup);
+  const fixture = await sampleTree(t, true);
   await assert.rejects(
     checkBuildDeterminism({
       output: fixture.output,
@@ -101,8 +112,7 @@ test("missing output gives the root build command before any rebuild", async (t)
 });
 
 test("a failed second compilation fails the guard and cleans its copy", async (t) => {
-  const fixture = await sampleTree();
-  t.after(fixture.cleanup);
+  const fixture = await sampleTree(t);
   await assert.rejects(
     checkBuildDeterminism({
       output: fixture.output,

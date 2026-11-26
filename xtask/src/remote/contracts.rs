@@ -158,7 +158,7 @@ pub(crate) trait Fingerprint: Send + Sync {
     fn read(&self, cwd: &Path) -> Result<String>;
 }
 
-/// Existing nine-report aggregate script.
+/// The viewer and browser report aggregate script.
 #[cfg_attr(test, unimock::unimock(api = [AggregateValidateMock]))]
 pub(crate) trait Aggregate: Send + Sync {
     /// Validate reports for the local commit and minimum runtime.

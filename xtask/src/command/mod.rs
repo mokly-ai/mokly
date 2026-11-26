@@ -3,12 +3,14 @@
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, iter};
+use std::sync::Mutex;
+use std::{env, io, iter};
 
 use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
 use crate::error::{Error, Result};
 
 mod capture;
+mod concurrent;
 
 /// One deterministic subprocess invocation.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -18,6 +20,7 @@ pub(crate) struct CommandSpec {
     cwd: Option<PathBuf>,
     input: Option<String>,
     environment: Vec<(String, Option<String>)>,
+    keep_going: bool,
 }
 
 impl CommandSpec {
@@ -29,6 +32,7 @@ impl CommandSpec {
             cwd: None,
             input: None,
             environment: Vec::new(),
+            keep_going: false,
         }
     }
 
@@ -85,6 +89,18 @@ impl CommandSpec {
         self
     }
 
+    /// Let the later commands of a suite run after this command fails. The
+    /// suite still fails with this command's error.
+    pub(crate) fn keep_going(mut self) -> Self {
+        self.keep_going = true;
+        self
+    }
+
+    /// Whether the later commands of a suite run after this command fails.
+    pub(crate) fn keeps_going(&self) -> bool {
+        self.keep_going
+    }
+
     /// Inspect the working directory without changing the display command.
     pub(crate) fn working_directory(&self) -> Option<&Path> {
         self.cwd.as_deref()
@@ -101,12 +117,16 @@ impl CommandSpec {
 }
 
 /// Runs subprocesses for an xtask operation.
-#[cfg_attr(test, unimock::unimock(api = [CommandRunnerRunMock, CommandRunnerOutputMock]))]
+#[cfg_attr(test, unimock::unimock(api = [CommandRunnerRunMock, CommandRunnerOutputMock, CommandRunnerRunConcurrentlyMock]))]
 pub(crate) trait CommandRunner: Send + Sync {
     /// Run a command and require a successful status.
     fn run(&self, spec: &CommandSpec) -> Result<()>;
     /// Capture successful stdout and preserve both streams on failure.
     fn output(&self, spec: &CommandSpec) -> Result<String>;
+    /// Run the lanes at the same time and each lane's commands in order.
+    /// Each command's output prints as one block when it ends. A lane stops at
+    /// its first failure, and the first failure in lane order is the result.
+    fn run_concurrently(&self, lanes: &[Vec<CommandSpec>]) -> Result<()>;
 }
 
 /// Operating-system subprocess implementation.
@@ -115,6 +135,11 @@ pub(crate) struct SystemCommandRunner;
 impl CommandRunner for SystemCommandRunner {
     fn output(&self, spec: &CommandSpec) -> Result<String> {
         capture::output(spec)
+    }
+
+    fn run_concurrently(&self, lanes: &[Vec<CommandSpec>]) -> Result<()> {
+        let out = Mutex::new(io::stderr());
+        concurrent::run_lanes(lanes, &concurrent::buffered, &out)
     }
 
     fn run(&self, spec: &CommandSpec) -> Result<()> {

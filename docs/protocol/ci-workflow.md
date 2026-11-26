@@ -39,35 +39,35 @@ directory from another job.
 
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
-- one viewer job on Node 22.15.0;
-- four browser shards on Node 22.15.0;
-- one static-delivery job on Node 22.15.0; and
-- native jobs on macOS and Windows at Node 22.15.0.
+- five repository shards on Node 24;
+- three viewer shards, fourteen browser shards, and one static-delivery job per delivery mode on Node 22.15.0; and
+- five native shards on macOS and eight on Windows at Node 22.15.0.
 
-The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
+The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
-For a same-repository Release Please pull request, the viewer job and every
-browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
-only when its head repository is this repository and either its head ref
-starts with `release-please--` or it has an `autorelease:` label. A fork cannot
-opt into the more expensive profile by choosing a matching branch name.
+For a same-repository Release Please pull request, every viewer shard also
+runs on Node 24; browser and static delivery stay on Node 22.15.0. A release
+pull request selects this profile only when its head repository is this
+repository and either its head ref starts with `release-please--` or it has
+an `autorelease:` label. A fork cannot opt into the more expensive profile by
+choosing a matching branch name. Decision: Node 24 repeats only the Node
+tests of the viewer suite. Rejected: 16 more browser and delivery jobs.
 
 The runtime profile job resolves floating Node 24 once per run and publishes
 that exact version, the selected matrix, and the report-runtime identities as
-job outputs. The repository job, `Required CI`, and every viewer, browser, and
-static-delivery job selected for Node 24 install that exact version. Matrix
-labels and report runtime identities stay `node-24`; reports record the exact
-installed version. The aggregate rejects mixed versions within a group.
-A profile names the Node version that runs the tests. The pinned Bun of the
-viewer jobs adds no profile and changes no label or runtime identity.
+job outputs. The repository job, `Required CI`, and every viewer job selected
+for Node 24 install that exact version. Matrix labels and report runtime
+identities stay `node-24`; reports record the exact installed version. The
+aggregate rejects mixed versions within a group. A profile names the Node
+version that runs the tests. The pinned Bun of the viewer jobs adds no profile
+and changes no label or runtime identity.
 
 Node 22.15 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository job runs on every event. A
-Node 24-only regression can therefore reach unreleased `main`, but the
-dual-runtime Release Please gate must catch it before versions, tags, or npm
-artifacts can be published. Release Please normally updates its pull request
-after a releasable merge, keeping that feedback close to the originating change
-without paying for both functional profiles on every ordinary event.
+Node 24-only regression can therefore reach unreleased `main`, but the Release
+Please gate must catch it before versions, tags, or npm artifacts can be
+published. Release Please normally updates its pull request after a releasable
+merge, so that feedback stays close to the originating change.
 
 The [package contract](./mokly-package.md#node-support) defines supported Node
 versions and exclusions. CI runtime representatives do not change that range.
@@ -92,23 +92,32 @@ second copy of the pin. The
 [cache rules](./ci-verification-security.md#dependency-cache-and-security)
 keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
-Clippy, and the complete Rust tests run in the repository job. The native jobs
-run them for the `mokly-*` crates and `xtask` only. Native jobs build the
+Clippy, and the complete Rust tests run in the repository shards. The native
+shards run them for the `mokly-*` crates and `xtask` only. Repository and
+native shard 1 run the checks, and each later shard runs one partition of the
+Rust tests, under the
+[shard rule](./ci-verification-repository.md#suite-shards). Native jobs build the
 checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
 integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
 before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
-in the checkout.
-Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
-failing test binary.
+in the checkout. No CI job installs Rust a second way, such as with a
+toolchain action.
+
+Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
+runner image. They refresh the package index and install a package only when
+the image lacks it.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
-version in `package.json`, and runs `npm ci`. The scheduled audit installs no
+version in `package.json`, and runs `npm ci`. Each repository shard runs it inside
+its suite, the checks shard after the lockfile-only audit, and not a second time before. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
 caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
-download cache from the checked-out `package-lock.json`. Only the repository
+download cache from the checked-out `package-lock.json`. Every CI job sets up
+Node.js with the same `actions/setup-node` release and without its built-in
+package cache. Only the repository
 audit reads a comparison-commit lockfile, for baseline evaluation rather than a
 cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
@@ -143,12 +152,12 @@ build matrices runs on Intel macOS, on GitHub-hosted `macos-26-intel`. This
 row keeps native Intel build and execution coverage. It has no npm publishing
 permission.
 
-In the CI workflow, the repository job has a 75-minute timeout and each viewer
-job has a 40-minute timeout. Browser shards, static-delivery jobs, and native
-jobs have a 60-minute timeout. `Required CI` has a 30-minute timeout. Job
+In the CI workflow, each repository shard has a 75-minute timeout and each
+viewer shard has a 40-minute timeout. Browser shards, static-delivery jobs, and
+native shards have a 60-minute timeout. `Required CI` has a 30-minute timeout. Job
 timeouts are hang guards, not speed requirements. Each limit must allow at
 least three times the job's typical duration, including setup and builds. The
-longer limits preserve the four browser shards without reducing test coverage.
+longer limits preserve the browser shards without reducing test coverage.
 
 Action revisions are immutable 40-character lowercase commit hashes with
 reviewed version comments, in every workflow and composite action. Runtime
@@ -161,9 +170,8 @@ workflows contain no `${{` expression.
 
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
-aggregate against the runtime profile job's selection: five
-viewer and browser reports for ordinary events and ten for a Release Please
-pull request. Every cloud verification partition is also required. The
+aggregate against the runtime profile job's selection: one report per viewer
+and browser shard on each runtime that the profile selects for its suite. Every cloud verification partition is also required. The
 [cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
 provider plan only when its trusted main-push guard permits it.
 
@@ -171,7 +179,7 @@ Static delivery is also required. It builds the example with Changes disabled
 and checks portable design journeys through static HTTP and `file://`.
 Both modes require every assigned test to pass once. Empty discovery, skips,
 duplicate results, missing results, and reporter errors fail the job.
-Its reports stay separate from the five- or ten-report suite aggregate.
+Its reports stay separate from the viewer and browser suite aggregate.
 
 Required CI is a report aggregator. It checks out the validator and installs
 Node. It needs no npm dependencies or Rust build.
@@ -189,6 +197,13 @@ The [CI verification contract](./ci-verification.md) defines suite ownership,
 report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
+
+## CI Timing Report
+
+The `CI timing` job reports job run times against budgets, the critical path,
+and the slowest tests in every run. It runs after every other job and is not a
+prerequisite of `Required CI`. [CI duration budgets](./ci-duration-budgets.md)
+defines its budgets, its warnings, and its failing mode.
 
 ## Cloud Jobs And Workflows
 

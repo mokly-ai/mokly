@@ -3,7 +3,6 @@
 #![allow(clippy::unwrap_used)]
 
 use std::alloc::System;
-use std::fmt::Write;
 
 use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
 
@@ -17,18 +16,28 @@ use mkc_mokly_contract::scanned_archive::ScannedArchive;
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
+/// `count` paths of 1,023 bytes and `segments` one-character segments: three
+/// base-36 digits of the index, then `a` segments, the fourth padded with `a`
+/// to the length.
+///
+/// Each path is written into one buffer, because a vector of segment strings
+/// for each of 20,000 deep paths takes seconds in a debug build.
 fn files(count: usize, segments: usize) -> ArchiveFiles {
     let alphabet = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    // One-character segments and their separators take 2 * segments - 1 bytes.
+    let padding = 1023 - (2 * segments - 1);
     (0..count)
         .map(|index| {
-            let mut parts = vec!["a".to_owned(); segments];
+            let mut path = Vec::with_capacity(1023);
             for digit in 0..3 {
-                parts[digit] =
-                    char::from(alphabet[(index / 36_usize.pow(digit as u32)) % 36]).to_string();
+                path.push(alphabet[(index / 36_usize.pow(digit as u32)) % 36]);
+                path.push(b'/');
             }
-            let padding = 1023 - parts.join("/").len();
-            parts[3].push_str(&"a".repeat(padding));
-            let path = parts.join("/");
+            path.resize(path.len() + 1 + padding, b'a');
+            for _ in 4..segments {
+                path.extend_from_slice(b"/a");
+            }
+            let path = String::from_utf8(path).unwrap();
             assert_eq!(path.len(), 1023);
             (path, Vec::new().into())
         })
@@ -107,9 +116,10 @@ fn many_files(size: usize, artifact: ArtifactKind) -> Vec<u8> {
         ArtifactKind::Index => br#"{"schemaVersion":9,"screens":["#.to_vec(),
         _ => br#"{"schemaVersion":3,"files":["#.to_vec(),
     };
-    while bytes.len() + 6 <= size {
-        bytes.extend_from_slice(br#""a","#);
-    }
+    let entry = br#""a","#;
+    let count =
+        size.saturating_sub(bytes.len() + 6) / entry.len() + usize::from(bytes.len() + 6 <= size);
+    bytes.extend_from_slice(&entry.repeat(count));
     bytes.pop();
     bytes.extend_from_slice(b"]}");
     bytes.resize(size, b' ');
@@ -117,27 +127,40 @@ fn many_files(size: usize, artifact: ArtifactKind) -> Vec<u8> {
 }
 
 /// Numeric unique keys reproduce the ignored-field attack; long keys expose String retention.
+///
+/// The keys are the decimal indexes from zero, padded to `width` digits. An
+/// ASCII counter writes them, because formatting millions of keys in a debug
+/// build takes seconds.
 fn many_keys(size: usize, width: usize, artifact: ArtifactKind) -> Vec<u8> {
-    let mut text = String::with_capacity(size);
-    text.push_str(match artifact {
-        ArtifactKind::Index => r#"{"schemaVersion":9,"screens":[],"extra":{"#,
-        _ => r#"{"schemaVersion":3,"files":[],"extra":{"#,
+    let mut bytes = Vec::with_capacity(size);
+    bytes.extend_from_slice(match artifact {
+        ArtifactKind::Index => br#"{"schemaVersion":9,"screens":[],"extra":{"#,
+        _ => br#"{"schemaVersion":3,"files":[],"extra":{"#,
     });
-    let mut index = 0;
-    loop {
-        let length = text.len();
-        write!(text, "\"{index:0width$}\":0,").unwrap();
-        if text.len() + 2 > size {
-            text.truncate(length);
-            break;
-        }
-        index += 1;
+    let mut digits = vec![b'0'; width.max(1)];
+    while bytes.len() + digits.len() + 5 + 2 <= size {
+        bytes.push(b'"');
+        bytes.extend_from_slice(&digits);
+        bytes.extend_from_slice(br#"":0,"#);
+        increment(&mut digits);
     }
-    text.pop();
-    text.push_str("}}");
-    let mut bytes = text.into_bytes();
+    bytes.pop();
+    bytes.extend_from_slice(b"}}");
     bytes.resize(size, b' ');
     bytes
+}
+
+/// Add one to a decimal number held as ASCII digits, growing it on overflow.
+fn increment(digits: &mut Vec<u8>) {
+    for digit in digits.iter_mut().rev() {
+        if *digit == b'9' {
+            *digit = b'0';
+        } else {
+            *digit += 1;
+            return;
+        }
+    }
+    digits.insert(0, b'1');
 }
 
 fn json_allocations() {

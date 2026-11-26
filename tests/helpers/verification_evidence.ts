@@ -1,3 +1,6 @@
+import type { CiShardTotals } from "../../scripts/verification/aggregate.mjs";
+import ciShards from "../../scripts/verification/ci-shards.json" with { type: "json" };
+
 export interface VerificationReportFixture {
   schemaVersion: number;
   suite: string;
@@ -11,6 +14,7 @@ export interface VerificationReportFixture {
   observedTests?: (BrowserTest & {
     status: string;
     durationMs: number;
+    wallMs?: number;
     errors: unknown[];
   })[];
   fullFiles: string[];
@@ -24,32 +28,50 @@ export interface VerificationReportFixture {
   outcome: { exitCode: number; signal: null; status: string };
 }
 
+/**
+ * Passed reports of every viewer shard per runtime and of every browser shard
+ * per browser runtime. Each viewer shard holds two files and each browser
+ * shard holds two tests. The defaults give the release profile: the viewer
+ * on Node 22.15.0 and Node 24, and the browser on Node 22.15.0.
+ */
 export function ciReports(
   runtimes: readonly string[] = ["node-22.15.0", "node-24"],
+  totals: Readonly<CiShardTotals> = ciShards,
+  browserRuntimes: readonly string[] = ["node-22.15.0"],
 ): VerificationReportFixture[] {
   return runtimes.flatMap((runtime): VerificationReportFixture[] => {
-    const files = [
-      "tests/tooling.test.ts",
-      "packages/viewer/tests/viewer.test.tsx",
-    ];
-    const viewer: VerificationReportFixture = {
-      schemaVersion: 1,
-      suite: "viewer",
-      commit: "a".repeat(40),
-      runtime,
-      nodeVersion: runtime === "node-22.15.0" ? "22.15.0" : "24.21.0",
-      shard: null,
-      fullFiles: files,
-      assignedFiles: files,
-      observedFiles: files.map((file) => ({ file, durationMs: 1, tests: 1 })),
-      failures: [],
-      reporterComplete: true,
-      reporterErrors: [],
-      skipped: 0,
-      cancelled: 0,
-      outcome: { exitCode: 0, signal: null, status: "passed" },
-    };
-    const tests = Array.from({ length: 8 }, (_, index) => ({
+    const files = Array.from(
+      { length: totals.viewer * 2 },
+      (_, index) => `tests/tooling-${index}.test.ts`,
+    );
+    const viewer: VerificationReportFixture[] = Array.from(
+      { length: totals.viewer },
+      (_, offset) => {
+        const assigned = files.slice(offset * 2, offset * 2 + 2);
+        return {
+          schemaVersion: 1,
+          suite: "viewer",
+          commit: "a".repeat(40),
+          runtime,
+          nodeVersion: runtime === "node-22.15.0" ? "22.15.0" : "24.21.0",
+          shard: { index: offset + 1, total: totals.viewer },
+          fullFiles: files,
+          assignedFiles: assigned,
+          observedFiles: assigned.map((file) => ({
+            file,
+            durationMs: 1,
+            tests: 1,
+          })),
+          failures: [],
+          reporterComplete: true,
+          reporterErrors: [],
+          skipped: 0,
+          cancelled: 0,
+          outcome: { exitCode: 0, signal: null, status: "passed" },
+        };
+      },
+    );
+    const tests = Array.from({ length: totals.browser * 2 }, (_, index) => ({
       id: `chromium:test-${index}`,
       project: "chromium",
       specFile: `tests/browser/test-${index}.spec.ts`,
@@ -59,14 +81,14 @@ export function ciReports(
       title: `test ${index}`,
     }));
     const browser = Array.from(
-      { length: 4 },
+      { length: totals.browser },
       (_, offset): VerificationReportFixture => {
         const assigned = tests.slice(offset * 2, offset * 2 + 2);
         const files = assigned.map((test) => test.specFile);
         return {
-          ...viewer,
+          ...viewer[0]!,
           suite: "browser",
-          shard: { index: offset + 1, total: 4 },
+          shard: { index: offset + 1, total: totals.browser },
           playwrightFiles: tests.map((test) => test.specFile),
           fullFiles: tests.map((test) => test.specFile),
           assignedFiles: files,
@@ -81,12 +103,13 @@ export function ciReports(
             ...test,
             status: "passed",
             durationMs: 1,
+            wallMs: 1,
             errors: [],
           })),
         };
       },
     );
-    return [viewer, ...browser];
+    return browserRuntimes.includes(runtime) ? [...viewer, ...browser] : viewer;
   });
 }
 

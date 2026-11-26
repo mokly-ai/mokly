@@ -10,6 +10,7 @@ import {
   navRow,
   snapshotOf,
 } from "./comparison_ui.js";
+import { mainHeading } from "./main_heading.js";
 import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 import { openPanelTab } from "./workspace_actions.js";
 
@@ -61,7 +62,7 @@ for (const [kind, removedPath, title, content] of [
         ? historicalFrame(page, "desktop").locator("iframe")
         : page.locator(PREVIEW);
     const expectHistorical = async () => {
-      await expect(page.locator("#mb-main h2").first()).toHaveText(title);
+      await expect(mainHeading(page, title)).toBeVisible();
       await expect(previousVersionLabel(page)).toHaveText(
         "Showing previous version",
       );
@@ -70,9 +71,7 @@ for (const [kind, removedPath, title, content] of [
       ).toBeVisible();
     };
     const expectCurrent = async () => {
-      await expect(page.locator("#mb-main h2").first()).toHaveText(
-        "Changed screen",
-      );
+      await expect(mainHeading(page, "Changed screen")).toBeVisible();
       await expect(page.locator("[data-mokly-preview]")).toHaveCount(0);
     };
     await page.goto(`/view/${comparisonPaths.changed}/`);

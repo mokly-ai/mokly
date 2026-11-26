@@ -1,7 +1,7 @@
 # Stabilize the PostCSS context release test
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   failure outside the scope of its review.
 - **Location:** `crates/mokly-render/tests/integration/watch_lifetimes_tests.rs:13`,
@@ -9,8 +9,8 @@
 - **Reason:** On 2026-11-03 the user chose option A, a reproduction on
   Windows before the fix, and asked for it in a later branch. On
   2026-11-18, 100 isolated Windows repetitions passed, and a CI audit found
-  no later failure. The source remains unknown, so the Work list requires
-  another user decision before a code change.
+  no later failure. On 2026-11-26 the user chose option B: change nothing
+  until the test fails again.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -133,9 +133,9 @@
   native jobs. This basis does not show that the cause is fixed, because
   the source is still unknown. The user chose A on 2026-11-03, but its
   required Windows reproduction did not fail on 2026-11-18.
-- **Action:** ask the user, because the Work list requires another
-  decision when Windows repetitions do not fail. The source remains
-  unknown.
+- **Action:** fix after merge, record the panic text of the next failure
+  and then apply A, because the user chose B on 2026-11-26 and the source
+  stays unknown until another failure.
 - **Work:**
   - Repeat the test on Windows until it fails, and record the pass counts
     under `.context/`, as the flaky-test rule of the `testing` skill says.

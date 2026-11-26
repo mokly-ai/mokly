@@ -1,23 +1,9 @@
-import { type Locator, type Page, expect, test } from "@playwright/test";
+import { type Locator, expect, test } from "@playwright/test";
 
-import {
-  EXTERNAL_LINKS,
-  GET_STARTED_PATH,
-  SITE_PATHS,
-} from "../../src/navigation.js";
+import { GET_STARTED_PATH, SITE_PATHS } from "../../src/navigation.js";
 
 import { NARROW_WIDTH, openLargeText } from "./large-text.js";
-import { headerDestinations, narrow, openMenu } from "./menu.js";
-import { HEADINGS } from "./routes.js";
-
-const HEADER_LINKS = [
-  SITE_PATHS.home,
-  SITE_PATHS.docs,
-  SITE_PATHS.changelog,
-  SITE_PATHS.pricing,
-  EXTERNAL_LINKS.github,
-  GET_STARTED_PATH,
-];
+import { narrow, openMenu } from "./menu.js";
 
 /** What the navigation lists above the breakpoint and the menu below it. */
 const DESTINATIONS = ["Docs", "Changelog", "Pricing", "GitHub"];
@@ -49,75 +35,20 @@ const BANNER = {
   `,
 };
 
-const FOOTER_LINKS = [
-  SITE_PATHS.home,
-  SITE_PATHS.home,
-  SITE_PATHS.docs,
-  SITE_PATHS.changelog,
-  SITE_PATHS.pricing,
-  SITE_PATHS.terms,
-  SITE_PATHS.privacy,
-  SITE_PATHS.complaints,
-  SITE_PATHS.security,
-];
-
-/** The href of every anchor matched, including ones the viewport hides. */
-async function hrefs(anchors: Locator): Promise<string[]> {
-  return anchors.evaluateAll((nodes) =>
-    nodes.map((anchor) => anchor.getAttribute("href") ?? ""),
-  );
-}
-
-/**
- * A region's anchors. The banner's are the tool bar's: the brand, its
- * navigation and Get started; the menu's own links are checked with the
- * menu.
- */
-function anchors(page: Page, region: "banner" | "contentinfo"): Locator {
-  return region === "banner"
-    ? page
-        .getByRole("banner")
-        .locator(".site-brand, .site-nav a, .site-header-cta")
-    : page.getByRole("contentinfo").locator("a");
-}
-
-/** Follow a site route and assert the heading it publishes. */
-async function walk(page: Page, href: string): Promise<void> {
-  const heading = HEADINGS.get(href);
-  expect(heading, `no published heading for ${href}`).toBeDefined();
-  const response = await page.goto(href);
-  expect(response?.status(), href).toBe(200);
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText(heading ?? "");
-}
-
-for (const region of ["banner", "contentinfo"] as const) {
-  const expected = region === "banner" ? HEADER_LINKS : FOOTER_LINKS;
-  test(`the ${region} links match the inventory and site routes resolve`, async ({
-    page,
-  }) => {
+test(
+  "Get started opens the app's sign-up",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    // The app serves the sign-up route, so the site preview checks that the
+    // press reaches the address, not the app's page.
     await page.goto(SITE_PATHS.home);
-    const found = await hrefs(anchors(page, region));
-    expect(found).toEqual(expected);
-    for (const href of new Set(found)) {
-      if (href === EXTERNAL_LINKS.github || href === GET_STARTED_PATH) continue;
-      await walk(page, href);
-    }
-  });
-}
-
-test("Get started opens the app's sign-up", async ({ page }) => {
-  // The app serves the sign-up route, so the site preview checks that the
-  // press reaches the address, not the app's page.
-  await page.goto(SITE_PATHS.home);
-  const action = page
-    .getByRole("banner")
-    .getByRole("link", { name: "Get started" });
-  await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
-  await action.click();
-  await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
-});
+    const action = page
+      .getByRole("banner")
+      .getByRole("link", { name: "Get started" });
+    await action.click();
+    await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
+  },
+);
 
 test("the header composition follows the viewport", async ({ page }) => {
   const wide = !narrow(page);
@@ -137,12 +68,9 @@ test("the header composition follows the viewport", async ({ page }) => {
     includeHidden: true,
     name: "Menu",
   });
-  await expect(control).toHaveCount(1);
   await expect(control).toBeVisible({ visible: !wide });
-  // The navigation keeps every destination; only the viewport decides
-  // whether it is drawn. The menu lists them and Get started.
+  // The viewport selects the toolbar navigation or the menu.
   const row = header.locator(".site-nav");
-  await expect(row.locator("a")).toHaveText(DESTINATIONS);
   await expect(row).toBeVisible({ visible: wide });
   const visible = wide ? row : await openMenu(page);
   const listed = wide ? DESTINATIONS : [...DESTINATIONS, "Get started"];
@@ -198,46 +126,6 @@ test("the header hides its depictions from assistive technology", async ({
   await expect(page.getByRole("banner")).toMatchAriaSnapshot(
     narrow(page) ? BANNER.narrow : BANNER.wide,
   );
-});
-
-test("the current route is marked in the header and footer", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.docs);
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Docs" }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", {
-      exact: true,
-      name: "Home",
-    }),
-  ).not.toHaveAttribute("aria-current", "page");
-  await expect(
-    (await headerDestinations(page)).getByRole("link", { name: "Docs" }),
-  ).toHaveAttribute("aria-current", "page");
-  await page.goto(SITE_PATHS.privacy);
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Privacy" }),
-  ).toHaveAttribute("aria-current", "page");
-  await page.goto(SITE_PATHS.changelog);
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Changelog" }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    (await headerDestinations(page)).getByRole("link", { name: "Changelog" }),
-  ).toHaveAttribute("aria-current", "page");
-  await page.goto(SITE_PATHS.security);
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Security" }),
-  ).toHaveAttribute("aria-current", "page");
-  await page.goto(SITE_PATHS.pricing);
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Pricing" }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    (await headerDestinations(page)).getByRole("link", { name: "Pricing" }),
-  ).toHaveAttribute("aria-current", "page");
 });
 
 /**

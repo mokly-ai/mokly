@@ -28,12 +28,20 @@ async function failThenHold(page: Page): Promise<Route[]> {
   return held;
 }
 
-/** Open the entry with its first detail read failed and the next one held. */
+/**
+ * Open the entry with its first detail read failed and the next one held.
+ * The entry's heading is found by its name: once the read fails, the stage's
+ * failure heading comes before it.
+ */
 async function openFailed(page: Page): Promise<Route[]> {
   await page.setViewportSize({ width: 1280, height: 900 });
   const held = await failThenHold(page);
   await page.goto(`/view/${ENTRY}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(
+    page
+      .locator("#mb-main")
+      .getByRole("heading", { level: 2, name: "Action", exact: true }),
+  ).toBeVisible();
   return held;
 }
 

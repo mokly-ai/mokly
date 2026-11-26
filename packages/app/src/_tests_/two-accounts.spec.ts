@@ -180,3 +180,34 @@ test("removing an account keeps the repository step's answers and the pane over 
   await expect(pane.getByText("No GitHub accounts yet")).toBeVisible();
   await expect(page.getByTestId("add-github-account")).toBeVisible();
 });
+
+test("closing the GitHub accounts pane keeps the repository step's answers", async ({
+  page,
+}) => {
+  await signIn(page, freshEmail("two-accounts-close"));
+  const workspaceId = await createWorkspace(page, "Two Accounts Close Org");
+  await installApp(page);
+  await addSecondAccount(page, workspaceId);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await atRepositoryStep(page);
+
+  await chooseRepository(page);
+  const chosen = await repositoryField(page).textContent();
+  const configPath = page.getByLabel("Config path");
+  const slug = page.getByLabel("Project slug");
+  await configPath.fill("custom/mokly.config.ts");
+  await slug.fill("kept-on-close");
+
+  // Closing undoes the pane's own history entry. The step beneath it is the
+  // page the pane opened over, so it keeps every answer the reader gave.
+  await page.getByRole("link", { name: "Manage repository access" }).click();
+  await expect(
+    page.getByRole("dialog").getByRole("heading", { level: 1 }),
+  ).toHaveText("GitHub accounts");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(repositoryField(page)).toHaveText(chosen ?? "");
+  await expect(configPath).toHaveValue("custom/mokly.config.ts");
+  await expect(slug).toHaveValue("kept-on-close");
+});

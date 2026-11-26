@@ -31,7 +31,7 @@ new process through hello, excluding the old stop and time between requests.
 They start with error status and record `ok` only after hello succeeds.
 
 `sidecar.stop` measures the old process's retirement. It includes the lifecycle
-operations that its cause requires: shutdown, grace, kill, reaping, and bounded
+operations that its cause requires: shutdown, grace, kill, exit, and bounded
 stderr drainage where those operations apply. It adds no lifecycle operation,
 retry, deadline, or wait for the next request. A stop starts with error status;
 it records `ok` only if every attempted lifecycle operation succeeds. A failed
@@ -49,7 +49,7 @@ operation keeps error status even if a later fallback kill succeeds.
 A [return pass](./mokly-sidecar-root-scheduling.md#background-return) uses the
 `root-switch` reason for each stop and replacement that it performs. These
 spans follow the Changes publication that starts the pass. Each such stop
-includes the kill and the reaping of the old process. When a failed call of a
+includes the kill and the exit of the old process. When a failed call of a
 [warm-up](./mokly-sidecar-return-warmup.md) makes its process unusable, the
 stop of that process uses the `replacement` reason, as after a failed request.
 

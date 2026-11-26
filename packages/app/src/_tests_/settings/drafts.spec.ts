@@ -123,20 +123,25 @@ test("a draft survives the surface changing under it", async ({ page }) => {
     page,
     `${await projectSettingsPathFor(page, projectId, "project")}?${query}`,
   );
-  const settleAddress = () =>
-    page.evaluate(
+  // A hand-over can land one scope read after the surface draws: the route
+  // wait of a new settings route is a dialog too. Wait for the final address
+  // first, as `openDialog` does, then check that it stays.
+  const settleAddress = async (search: string) => {
+    await expect(page).toHaveURL((url) => url.search === search);
+    await page.evaluate(
       () =>
         new Promise<void>((resolve) =>
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         ),
     );
+  };
   expect(new URL(page.url()).search).toBe(`?${query}`);
   await page.getByLabel("Project name").fill("Rotation draft");
 
   // A tablet rotated into landscape: the dialog takes over from the layer.
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(page.getByRole("dialog")).toBeVisible();
-  await settleAddress();
+  await settleAddress(`?${query}&settings=project`);
   expect(new URL(page.url()).search).toBe(`?${query}&settings=project`);
   await expect(page.getByLabel("Project name")).toHaveValue("Rotation draft");
   await expect.poll(() => unloadGuard(page)).toBe(true);
@@ -144,7 +149,7 @@ test("a draft survives the surface changing under it", async ({ page }) => {
   // And back again.
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await settleAddress();
+  await settleAddress(`?${query}`);
   expect(new URL(page.url()).search).toBe(`?${query}`);
   await expect(page.getByLabel("Project name")).toHaveValue("Rotation draft");
   await expect.poll(() => unloadGuard(page)).toBe(true);
@@ -154,7 +159,7 @@ test("a draft survives the surface changing under it", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(page.getByRole("dialog")).toBeVisible();
-  await settleAddress();
+  await settleAddress(`?${query}&settings=project`);
   expect(new URL(page.url()).search).toBe(`?${query}&settings=project`);
   await expect(page.getByLabel("Project name")).toHaveValue("Rotation draft");
 });

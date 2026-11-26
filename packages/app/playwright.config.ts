@@ -1,25 +1,35 @@
+import { join } from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
+import {
+  discoverSpecFiles,
+  parseAppShard,
+  readShardWeights,
+  selectShardFiles,
+  specDirectory,
+} from "./src/_tests_/browser-shards";
 import { appOrigin, appServerCommand } from "./src/_tests_/origins";
 
-function appShard() {
-  const value = process.env.MKC_APP_SHARD;
-  if (!value) return undefined;
-  const match = /^([0-9]+)\/([0-9]+)$/.exec(value);
-  const current = Number(match?.[1]);
-  const total = Number(match?.[2]);
-  if (
-    match?.[0] !== value ||
-    !Number.isInteger(current) ||
-    !Number.isInteger(total) ||
-    current < 1 ||
-    current > total ||
-    total > 0xffff_ffff
-  ) {
-    throw new Error("MKC_APP_SHARD must be <n>/<total>, where 1 <= n <= total");
-  }
-  return { current, total };
-}
+const shard = parseAppShard(process.env.MKC_APP_SHARD);
+const shardFiles =
+  shard &&
+  selectShardFiles(
+    discoverSpecFiles(__dirname),
+    readShardWeights(__dirname),
+    shard,
+  );
+
+/**
+ * Exact patterns for the shard's files. Both projects take the same list, and
+ * each project's own ignore rule then keeps its desktop or mobile specs.
+ */
+const shardMatch = shardFiles?.map(
+  (file) =>
+    new RegExp(
+      `^${join(__dirname, file).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+    ),
+);
 
 /**
  * The browser suite runs the exported web build the way a deployment serves it,
@@ -33,14 +43,17 @@ function appShard() {
  * for that reason, and everything around it is still real.
  */
 export default defineConfig({
-  testDir: "src/_tests_",
+  // The shard patterns and the discovered files share this absolute base, also
+  // when the config is opened through a linked path.
+  testDir: join(__dirname, specDirectory),
+  // In weighted mode Playwright runs all of its single native shard, which
+  // lets a valid shard without files pass with no tests, as Playwright's own
+  // shards do.
+  shard: shard && { current: 1, total: 1 },
   testMatch: "**/*.spec.ts",
-  shard: appShard(),
   fullyParallel: false,
   workers: 1,
-  // One retry: these tests drive a real API and a real browser, and a shared
-  // machine can stall a step long enough to fail an otherwise correct run.
-  retries: 1,
+  retries: 0,
   timeout: 120_000,
   reporter: [["list"]],
   globalSetup: "./src/_tests_/global-setup.ts",
@@ -55,6 +68,7 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
+      testMatch: shardMatch ?? "**/*.spec.ts",
       testIgnore: "**/*-mobile.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
@@ -63,7 +77,8 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      testMatch: "**/*-mobile.spec.ts",
+      testMatch: shardMatch ?? "**/*.spec.ts",
+      testIgnore: /(?<!-mobile)\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 390, height: 844 },

@@ -1,6 +1,7 @@
 //! Complete remote evidence and per-command download order assertions.
 
 use crate::check::request::DependencyAudit;
+use crate::remote::plan::plan_support::plan_counts;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -29,7 +30,7 @@ fn probe_diagnostic_counts_completed_boxes_before_starting_suites() {
             .iter()
             .filter(|event| event.starts_with("probe:"))
             .count();
-        assert_eq!(probes, 14);
+        assert_eq!(probes, plan_counts().commands);
         assert_eq!(announcements.len(), 1);
         let (announced_at, message) = announcements[0];
         assert_eq!(
@@ -53,7 +54,8 @@ fn probe_diagnostic_counts_completed_boxes_before_starting_suites() {
 
 /// Keep the existing remote evidence and cleanup assertions.
 #[test]
-fn complete_remote_gate_downloads_five_reports_after_fourteen_commands() {
+fn complete_remote_gate_downloads_every_report_after_every_command() {
+    let counts = plan_counts();
     let fixture = harness(Case::Success);
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
@@ -66,21 +68,21 @@ fn complete_remote_gate_downloads_five_reports_after_fourteen_commands() {
             .iter()
             .filter(|event| event.starts_with("suite:"))
             .count(),
-        14
+        counts.commands
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("download:"))
             .count(),
-        5
+        counts.reports
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("stop:"))
             .count(),
-        14
+        counts.commands
     );
     let aggregate = events
         .iter()

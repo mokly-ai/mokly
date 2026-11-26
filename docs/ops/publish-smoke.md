@@ -7,8 +7,11 @@ storage and API-created projects/tokens, then drops the schema after its child
 processes exit.
 
 The published-CLI path installs `@mokly/mokly@latest` from npm in an isolated
-prefix. It records that version and runs its executable against the frozen
-v0.19 source fixture on a clean committed checkout.
+prefix. Its other dependencies resolve to versions published at least an hour
+before the run, or before that release when it is newer. So a third-party
+release that npm is still publishing cannot make the install fail.
+It records that version and runs its executable against the frozen v0.19 source
+fixture on a clean committed checkout.
 Neither path turns a current-only upload into an
 available `listScreens` or screen-specific Share API response; those paths
 remain `operation-unavailable` under the comparison-only API projection

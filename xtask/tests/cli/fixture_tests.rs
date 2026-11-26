@@ -1,9 +1,11 @@
 //! Real CLI fixture regeneration, deterministic drift rejection, and isolation.
 
 use std::fs;
+use std::thread;
 
 use serde_json::{Value, json};
 
+use super::fixture_support::{FIXTURES, GENERATOR, prepare, prepared, with_output};
 use super::support::{Fixture, FixtureFactory, TemporaryFixtures, failure, repository, success};
 
 #[test]
@@ -78,15 +80,12 @@ fn fixture_generation_rejects_a_stale_workspace_cli_before_normalizing_versions(
 
 #[test]
 fn fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_files() {
-    let factory: &dyn FixtureFactory = &TemporaryFixtures;
-    let fixture = factory.create();
-    prepare(fixture.as_ref());
-    let generator = "xtask/scripts/mokly-fixtures.mjs";
+    let generated = prepared();
     let metadata: Value = serde_json::from_slice(
-        &fs::read(repository().join("crates/mkc-mokly-contract/fixtures/checksums.json")).unwrap(),
+        &fs::read(repository().join(FIXTURES).join("checksums.json")).unwrap(),
     )
     .unwrap();
-    success(fixture.run("node", &[generator]));
+    success(generated.run("node", &[GENERATOR]));
     for name in [
         "mokly-upload.json",
         "moves-mokly-upload.json",
@@ -94,58 +93,63 @@ fn fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_fil
         "checksums.json",
         "moves-checksums.json",
     ] {
-        let path = fixture
-            .root()
-            .join("crates/mkc-mokly-contract/fixtures")
-            .join(name);
+        let path = generated.root().join(FIXTURES).join(name);
         let value: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
         assert_eq!(value["moklyVersion"], metadata["moklyVersion"], "{name}");
     }
-    success(fixture.run("node", &[generator, "--check"]));
+
+    let edited = with_output(generated.root());
+    write_unrelated_sources(edited.as_ref());
+    thread::scope(|scope| {
+        scope.spawn(|| reject_changed_and_missing(edited.as_ref()));
+
+        success(generated.run("node", &[GENERATOR, "--check"]));
+        write_unrelated_sources(generated.as_ref());
+        success(generated.run("node", &[GENERATOR, "--check"]));
+        assert!(
+            !generated
+                .root()
+                .join("mokly-static/mokly-viewer/index.json")
+                .exists()
+        );
+        generated.write(&format!("{FIXTURES}/extra.json"), "{}\n");
+        failure(generated.run("node", &[GENERATOR, "--check"]), "extra.json");
+    });
+}
+
+fn write_unrelated_sources(fixture: &dyn Fixture) {
     fixture.write(
         "docs/mockups/src/entries/unrelated.mockup.tsx",
         "invalid unrelated source",
     );
     fixture.write("mokly.config.json", "invalid unrelated config");
-    success(fixture.run("node", &[generator, "--check"]));
-    assert!(
-        !fixture
-            .root()
-            .join("mokly-static/mokly-viewer/index.json")
-            .exists()
-    );
-    for path in [
-        "crates/mkc-mokly-contract/fixtures/mokly-upload.json",
-        "crates/mkc-mokly-contract/fixtures/cli-errors.json",
-    ] {
-        let original = fs::read_to_string(fixture.root().join(path)).unwrap();
-        fixture.write(path, "{}\n");
+}
+
+fn reject_changed_and_missing(fixture: &dyn Fixture) {
+    for name in ["mokly-upload.json", "cli-errors.json"] {
+        let path = format!("{FIXTURES}/{name}");
+        let original = fs::read_to_string(fixture.root().join(&path)).unwrap();
+        fixture.write(&path, "{}\n");
         failure(
-            fixture.run("node", &[generator, "--check"]),
+            fixture.run("node", &[GENERATOR, "--check"]),
             "Mokly fixture drift",
         );
-        fixture.write(path, &original);
-        fs::remove_file(fixture.root().join(path)).unwrap();
-        failure(
-            fixture.run("node", &[generator, "--check"]),
-            path.rsplit('/').next().unwrap(),
-        );
-        fixture.write(path, &original);
+        fixture.write(&path, &original);
+        fs::remove_file(fixture.root().join(&path)).unwrap();
+        failure(fixture.run("node", &[GENERATOR, "--check"]), name);
+        fixture.write(&path, &original);
     }
-    fixture.write("crates/mkc-mokly-contract/fixtures/extra.json", "{}\n");
-    failure(fixture.run("node", &[generator, "--check"]), "extra.json");
 }
 
 #[test]
 fn fixture_generation_is_identical_from_different_absolute_roots() {
-    let factory: &dyn FixtureFactory = &TemporaryFixtures;
-    let first = factory.create();
-    let second = factory.create();
+    let first = prepared();
+    let second = prepared();
     assert_ne!(first.root(), second.root());
-    for fixture in [&first, &second] {
-        prepare(fixture.as_ref());
-        success(fixture.run("node", &["xtask/scripts/mokly-fixtures.mjs"]));
-    }
+    thread::scope(|scope| {
+        scope.spawn(|| success(first.run("node", &[GENERATOR])));
+        success(second.run("node", &[GENERATOR]));
+    });
     assert!(
         !first
             .root()
@@ -181,31 +185,19 @@ fn fixture_generation_is_identical_from_different_absolute_roots() {
 
 #[test]
 fn fixture_check_refuses_counts_the_public_reader_disagrees_with() {
-    let factory: &dyn FixtureFactory = &TemporaryFixtures;
-    let fixture = factory.create();
-    prepare(fixture.as_ref());
-    let generator = "xtask/scripts/mokly-fixtures.mjs";
-    success(fixture.run("node", &[generator]));
-    let path = "crates/mkc-mokly-contract/fixtures/index-v9-cases.json";
+    let fixture = with_output(&repository());
+    let path = &format!("{FIXTURES}/index-v9-cases.json");
     let original = fs::read_to_string(fixture.root().join(path)).unwrap();
     let mut corpus: Value = serde_json::from_str(&original).unwrap();
     corpus["cases"][0]["counts"]["changed"] = json!(999);
     fixture.write(path, &serde_json::to_string_pretty(&corpus).unwrap());
-    success(fixture.run("node", &[generator]));
-    failure(
-        fixture.run("node", &[generator, "--check"]),
-        "Viewer counts differ: baseline-counts",
-    );
+    check_regenerated_corpus(fixture.as_ref(), "Viewer counts differ: baseline-counts");
 }
 
 #[test]
 fn fixture_check_refuses_cloud_acceptance_of_viewer_invalid_input() {
-    let factory: &dyn FixtureFactory = &TemporaryFixtures;
-    let fixture = factory.create();
-    prepare(fixture.as_ref());
-    let generator = "xtask/scripts/mokly-fixtures.mjs";
-    success(fixture.run("node", &[generator]));
-    let path = "crates/mkc-mokly-contract/fixtures/index-v9-cases.json";
+    let fixture = with_output(&repository());
+    let path = &format!("{FIXTURES}/index-v9-cases.json");
     let mut corpus: Value =
         serde_json::from_str(&fs::read_to_string(fixture.root().join(path)).unwrap()).unwrap();
     corpus["cases"][0]["patch"] = json!([{ "op": "set", "path": "/schemaVersion", "value": 8 }]);
@@ -226,45 +218,14 @@ await writeFile(path, JSON.stringify(corpus, null, 2) + '\n');"#,
             path,
         ],
     ));
-    success(fixture.run("node", &[generator]));
-    failure(
-        fixture.run("node", &[generator, "--check"]),
+    check_regenerated_corpus(
+        fixture.as_ref(),
         "Viewer refused cloud-accepted case: baseline-counts",
     );
 }
 
-fn prepare(fixture: &dyn Fixture) {
-    fixture.tools();
-    fixture.link("packages", &repository().join("packages"));
-    for name in [
-        "export-ownership-v3.json",
-        "upload-plan-v1.json",
-        "catalogue-v9.json",
-    ] {
-        fixture.copy(&format!("docs/protocol/fixtures/{name}"));
-    }
-    fixture.copy("xtask/scripts/mokly-fixtures.mjs");
-    fixture.copy("xtask/scripts/mokly-cli-errors.mjs");
-    fixture.copy("xtask/scripts/mokly-fixture-runtime.mjs");
-    fixture.copy("xtask/scripts/mokly-fixture-upload.mjs");
-    fixture.copy("xtask/scripts/mokly-fixture-artifacts.mjs");
-    fixture.copy("xtask/scripts/mokly-fixture-normalize.mjs");
-    fixture.write("package.json", "{\"private\":true,\"type\":\"module\"}\n");
-    copy_sources(fixture, "crates/mkc-mokly-contract/fixtures/src");
-    copy_sources(fixture, "crates/mkc-mokly-contract/fixtures/moves/src");
-    fixture.copy("crates/mkc-mokly-contract/fixtures/index-v9-cases.json");
-    fixture.copy("crates/mkc-mokly-contract/fixtures/check-index-corpus.mjs");
-    fixture.copy("crates/mkc-mokly-contract/fixtures/index-corpus.mjs");
-}
-
-fn copy_sources(fixture: &dyn Fixture, path: &str) {
-    for entry in fs::read_dir(repository().join(path)).unwrap() {
-        let entry = entry.unwrap();
-        let child = format!("{path}/{}", entry.file_name().to_str().unwrap());
-        if entry.file_type().unwrap().is_dir() {
-            copy_sources(fixture, &child);
-        } else {
-            fixture.copy(&child);
-        }
-    }
+/// Regenerate a copy of the goldens after an edit, then require the reader's refusal.
+fn check_regenerated_corpus(fixture: &dyn Fixture, diagnostic: &str) {
+    success(fixture.run("node", &[GENERATOR]));
+    failure(fixture.run("node", &[GENERATOR, "--check"]), diagnostic);
 }

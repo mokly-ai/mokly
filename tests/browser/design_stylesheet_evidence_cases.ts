@@ -1,9 +1,8 @@
 import { expect, type Locator } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 type Viewport = "desktop" | "mobile";
 
@@ -24,17 +23,11 @@ function nestedSpacing(files: Locator) {
   });
 }
 
-export function registerDesignStylesheetEvidence(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignStylesheetEvidence() {
   test.beforeEach(({ allowBrowserError, baseURL }) =>
     documentFavicon(allowBrowserError, baseURL!),
   );
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} stylesheet evidence designs`, () => {

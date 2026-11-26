@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use crate::check::request::DependencyAudit;
 use crate::remote::error::Error;
+use crate::remote::plan::plan_support::plan_counts;
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
 use self::harness_tests::{Case, harness};
@@ -105,7 +106,7 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
                     .iter()
                     .filter(|event| event.starts_with("download:"))
                     .count(),
-                5
+                plan_counts().reports
             );
         }
     }

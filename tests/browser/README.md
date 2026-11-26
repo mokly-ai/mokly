@@ -1,5 +1,7 @@
 # Browser fixtures
 
+Status: Follow-up work remains in the [browser evaluate promise item](../../plans/follow-ups/browser-evaluate-promise-collected.md).
+
 `npm run test:browser` builds the workspace and runs the selected browser
 specs. Select a spec file, and optionally a test name with `-g`:
 
@@ -9,12 +11,15 @@ npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 
 The [developer browser commands](../../docs/protocol/developer-browser-commands.md)
 give the selection rules and the environment variables that supply prebuilt
-output. Strict shards use [measured whole-file placement](../../scripts/verification/README.md#browser-partitioning).
+output. Strict shards use [measured whole-file placement](../../docs/development/shard-weights.md#browser-partitioning).
 Specs import `test` from `browser_test.ts` or one of its host fixtures. The
 automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.
 
 Global setup starts the worker Serve hosts and two copied builds together.
+A strict shard sets `MOKLY_PLAYWRIGHT_COPIED_HOST=skip` when none of its specs
+imports `static_test.ts`, directly or through helpers. Setup then skips the
+copied example build. Read the copied example only through `static_test.ts`.
 The shared Serve example uses the unresolved base `refs/mokly/browser-suite-no-base`.
 It waits for settled usage and unavailable Changes, with one Git diagnostic.
 Real Changes specs use their own Git fixtures.
@@ -59,6 +64,15 @@ worker has loaded `@mokly/viewer`.
 - An assertion that depends on a navigated preview's layout waits for the
   expected frame URL and the complete document state together. The outer Browse
   URL or an iframe `src` attribute alone is not enough.
+- A test awaits viewer work, such as a pick, through `awaitViewerWork` in
+  `viewer_work.ts` or `startViewerPick` in `viewer_pick.ts`, not through the
+  promise of a `page.evaluate`. Chromium's protocol holds that promise only
+  weakly. When it settles in a later task, a garbage collection before the
+  protocol reply loses the reply, and Playwright reports "Execution context
+  was destroyed, most likely because of a navigation", although no page
+  navigated. The page function of `awaitViewerWork` returns
+  `window.holdViewerWork(work)`, which also handles a rejection that comes
+  before the test reads it.
 
 ## Current-only copy
 
@@ -68,13 +82,16 @@ The directory holds an isolated build of `examples/basic` with Changes
 disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`. Most `static_*.spec.ts` specs,
-`stage_centring.spec.ts`, `review_snapshot_links.spec.ts`, and the shared
-`*_cases.ts` modules of the design journeys use this copy. The comparison
-specs use the two-commit copies of the
+`stage_centring.spec.ts`, and `review_snapshot_links.spec.ts` use this copy.
+The portable design journeys do not: this suite runs them on Serve, and the
+static delivery check below runs them on built output. The comparison specs
+use the two-commit copies of the
 [comparison fixture reference](comparison/README.md).
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
 It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
+`-- --mode static-http` or `-- --mode file` selects one mode, and CI runs
+each mode in its own job.
 The private slot and saved-variant fixture builds its own output, removes its
 source, and checks every viewport and scheme through standalone links. Disk
 mode requires `file://` navigation without HTTP requests. The delivery reporter
@@ -89,7 +106,10 @@ A zero Playwright exit cannot hide a missing or invalid report.
 The `testMatch` list of
 [`playwright.delivery.config.ts`](../../playwright.delivery.config.ts) names
 the portable design journeys that run in both delivery modes, including
-`component_fragments.spec.ts`.
+`component_fragments.spec.ts`. A check that does not depend on the delivery,
+such as the width of each Canvas artboard, runs on Serve only.
+`builtCatalogueDelivery()` in `design_fixture.ts` tells a case module that it
+runs on built output.
 
 ## Deployment replacement
 

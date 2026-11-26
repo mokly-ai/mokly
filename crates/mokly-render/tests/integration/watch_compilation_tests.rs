@@ -7,70 +7,75 @@ use mokly_sidecar::methods::{Call, Generation};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::SidecarPool;
 
+use super::parallel_cases;
 use super::support::Consumer;
 
 #[test]
 fn evaluation_changes_reuse_compilation_on_a_recycled_second_sidecar() {
-    for configuration in [false, true] {
-        let consumer = Consumer::new();
-        let prepared = consumer.prepare().unwrap();
-        let id = prepared.javascript.generation.as_ref().unwrap().id.clone();
-        let original = consumer.generation(prepared);
-        let first = original
-            .render("components/chip/index.mobile.html")
-            .unwrap();
-        assert_eq!(consumer.processes.count(Operation::Esbuild), 1);
-        let (entered, release) = consumer.processes.hold_next();
-        let busy = consumer.pool.clone();
-        let request =
-            thread::spawn(move || busy.request(Call::Describe(Generation { generation: id })));
-        assert_eq!(entered.recv().unwrap(), 0);
-        if configuration {
-            consumer.replace(
-                "mokly.config.json",
-                "\"dir\": \"specs\"",
-                "\"dir\": \"specs\", \"path\": \"nested\"",
-            );
-        } else {
-            fs::write(
-                consumer.root().join("tokens.json"),
-                r#"{"color":"blue","className":"replacement"}"#,
-            )
-            .unwrap();
-        }
-        consumer.processes.recycle_next();
-        let changed = consumer.prepare();
-        release.send(()).unwrap();
-        request.join().unwrap().unwrap();
-        let changed = consumer.generation(changed.unwrap());
-        assert!(
-            consumer.processes.hellos().len() >= 3,
-            "the second slot must start and recycle"
-        );
-        assert_eq!(consumer.processes.count(Operation::Esbuild), 1);
-        if configuration {
+    parallel_cases::run(
+        &[false, true],
+        |configuration| format!("recycled configuration={configuration}"),
+        |&configuration| {
+            let consumer = Consumer::new();
+            let prepared = consumer.prepare().unwrap();
+            let id = prepared.javascript.generation.as_ref().unwrap().id.clone();
+            let original = consumer.generation(prepared);
+            let first = original
+                .render("components/chip/index.mobile.html")
+                .unwrap();
+            assert_eq!(consumer.processes.count(Operation::Esbuild), 1);
+            let (entered, release) = consumer.processes.hold_next();
+            let busy = consumer.pool.clone();
+            let request =
+                thread::spawn(move || busy.request(Call::Describe(Generation { generation: id })));
+            assert_eq!(entered.recv().unwrap(), 0);
+            if configuration {
+                consumer.replace(
+                    "mokly.config.json",
+                    "\"dir\": \"specs\"",
+                    "\"dir\": \"specs\", \"path\": \"nested\"",
+                );
+            } else {
+                fs::write(
+                    consumer.root().join("tokens.json"),
+                    r#"{"color":"blue","className":"replacement"}"#,
+                )
+                .unwrap();
+            }
+            consumer.processes.recycle_next();
+            let changed = consumer.prepare();
+            release.send(()).unwrap();
+            request.join().unwrap().unwrap();
+            let changed = consumer.generation(changed.unwrap());
             assert!(
-                changed
-                    .plans()
-                    .contains_key("nested/screen/index.mobile.html")
+                consumer.processes.hellos().len() >= 3,
+                "the second slot must start and recycle"
             );
-        } else {
-            assert_ne!(
+            assert_eq!(consumer.processes.count(Operation::Esbuild), 1);
+            if configuration {
+                assert!(
+                    changed
+                        .plans()
+                        .contains_key("nested/screen/index.mobile.html")
+                );
+            } else {
+                assert_ne!(
+                    first.bytes,
+                    changed
+                        .render("components/chip/index.mobile.html")
+                        .unwrap()
+                        .bytes
+                );
+            }
+            assert_eq!(
                 first.bytes,
-                changed
+                original
                     .render("components/chip/index.mobile.html")
                     .unwrap()
                     .bytes
             );
-        }
-        assert_eq!(
-            first.bytes,
-            original
-                .render("components/chip/index.mobile.html")
-                .unwrap()
-                .bytes
-        );
-    }
+        },
+    );
 }
 
 #[test]

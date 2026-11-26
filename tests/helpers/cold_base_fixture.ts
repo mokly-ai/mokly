@@ -3,10 +3,10 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { TestContext } from "node:test";
 
 import { create } from "tar";
 
+import type { FixtureOwner } from "./file_fixture.js";
 import { runNpm } from "./npm.js";
 import { git, write } from "./static_changes.js";
 
@@ -88,13 +88,18 @@ export const page = definePage({title: '${title}', description: '', relatedDocs:
   render: () => '<!doctype html><html><head><title>${title}</title></head><body><h1>' + ${value} + '</h1></body></html>'});`;
 }
 
-/** A real Git base and npm install, with an empty external Mokly cache. */
+/**
+ * A real Git base and an empty external Mokly cache. The fixture installs
+ * working dependencies, copies an install from the same fixture inputs, or
+ * lets a caller supply its own install.
+ */
 export async function coldBaseFixture(
   tier: DependencyTier,
-  context: TestContext,
+  owner: FixtureOwner,
+  options: { install?: boolean } | { nodeModules: string } = {},
 ) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-cold-"));
-  context.after(() => fs.rm(temporary, { recursive: true, force: true }));
+  owner.after(() => fs.rm(temporary, { recursive: true, force: true }));
   const root = path.join(await fs.realpath(temporary), "repository");
   const cache = path.join(await fs.realpath(temporary), "cache");
   await fs.mkdir(root);
@@ -156,7 +161,13 @@ export async function coldBaseFixture(
     npm_config_ignore_scripts: "false",
     npm_config_cache: path.join(root, ".context/npm-cache"),
   };
-  await runNpm(["ci", "--ignore-scripts"], { cwd: root, env });
+  if ("nodeModules" in options)
+    await fs.cp(options.nodeModules, path.join(root, "node_modules"), {
+      recursive: true,
+      verbatimSymlinks: true,
+    });
+  else if (options.install !== false)
+    await runNpm(["ci", "--ignore-scripts"], { cwd: root, env });
   await write(
     root,
     "specs/source-value.ts",

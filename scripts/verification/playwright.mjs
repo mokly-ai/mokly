@@ -4,10 +4,11 @@ import { selectBrowserShard } from "./browser-partition.mjs";
 import { runCaptured } from "./process.mjs";
 
 export async function discoverBrowserTests(repositoryRoot, options = {}) {
-  const { project, shard } = options;
+  const { project, shard, filters = [] } = options;
   const cli = path.join(repositoryRoot, "node_modules/@playwright/test/cli.js");
   const args = [cli, "test", "--list", "--reporter=json"];
   if (project) args.push(`--project=${project}`);
+  args.push(...filters);
   const result = await runCaptured(process.execPath, args, {
     cwd: repositoryRoot,
   });

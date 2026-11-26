@@ -212,6 +212,10 @@ impl SourceTree for GitTree {
     fn prefetch(&self, requested: &[PathBuf]) -> Result<()> {
         self.prefetch_sources(requested)
     }
+
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        self.hint_metadata(paths);
+    }
 }
 
 fn kind(mode: Mode) -> FileKind {

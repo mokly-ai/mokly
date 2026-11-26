@@ -12,6 +12,7 @@ use mokly_render::runtime::Runtime;
 use mokly_sidecar::methods::BundleCapture;
 
 use super::base_stylesheet_support::generation;
+use super::parallel_cases;
 use super::stylesheet_reuse_tests::requests;
 use super::support::{Consumer, link_directory};
 
@@ -89,49 +90,51 @@ fn nested_generation(runtime: &Arc<Runtime>, consumer: &Consumer) -> Arc<dyn Ren
 
 #[test]
 fn a_browserslist_edit_rebuilds_css_in_the_same_serve_runtime() {
-    let mut outcomes = Vec::new();
-    for (configuration, stylesheet) in [
+    let cases = [
         (".browserslistrc", "main.css"),
-        ("browserslist", "main.css"),
         ("package.json", "main.css"),
         ("app/.browserslistrc", "app/styles/main.css"),
-        ("app/browserslist", "app/styles/main.css"),
         ("app/package.json", "app/styles/main.css"),
-    ] {
-        let consumer = catalogue();
-        consumer.replace("mokly.config.json", "main.css", stylesheet);
-        consumer.write(stylesheet, "p { user-select: none }\n");
-        let config = |query| {
-            if configuration.ends_with("package.json") {
-                format!(r#"{{"browserslist":["{query}"]}}"#)
-            } else {
-                format!("{query}\n")
-            }
-        };
-        consumer.write(configuration, &config("Safari 14"));
-        let mut serving = runtime(&consumer);
-        let first = generation(&serving, &consumer).0;
-        assert_eq!(
-            stylesheet_css(&first, stylesheet),
-            PREFIXED,
-            "{configuration}"
-        );
-        assert_eq!(requests(&consumer).len(), 1);
-        Arc::make_mut(&mut serving).bundle_capture = BundleCapture::ServeEdit;
-        let unchanged = generation(&serving, &consumer).0;
-        assert_eq!(stylesheet_css(&unchanged, stylesheet), PREFIXED);
-        assert_eq!(requests(&consumer).len(), 1);
+    ];
+    let outcomes = parallel_cases::run(
+        &cases,
+        |(configuration, _)| format!("browserslist {configuration}"),
+        |&(configuration, stylesheet)| {
+            let consumer = catalogue();
+            consumer.replace("mokly.config.json", "main.css", stylesheet);
+            consumer.write(stylesheet, "p { user-select: none }\n");
+            let config = |query| {
+                if configuration.ends_with("package.json") {
+                    format!(r#"{{"browserslist":["{query}"]}}"#)
+                } else {
+                    format!("{query}\n")
+                }
+            };
+            consumer.write(configuration, &config("Safari 14"));
+            let mut serving = runtime(&consumer);
+            let first = generation(&serving, &consumer).0;
+            assert_eq!(
+                stylesheet_css(&first, stylesheet),
+                PREFIXED,
+                "{configuration}"
+            );
+            assert_eq!(requests(&consumer).len(), 1);
+            Arc::make_mut(&mut serving).bundle_capture = BundleCapture::ServeEdit;
+            let unchanged = generation(&serving, &consumer).0;
+            assert_eq!(stylesheet_css(&unchanged, stylesheet), PREFIXED);
+            assert_eq!(requests(&consumer).len(), 1);
 
-        consumer.write(configuration, &config("Chrome 130"));
-        let edited = generation(&serving, &consumer).0;
-        let control = generation(&runtime(&consumer), &consumer).0;
-        assert_eq!(stylesheet_css(&control, stylesheet), UNPREFIXED);
-        outcomes.push((
-            configuration,
-            stylesheet_css(&edited, stylesheet),
-            requests(&consumer).len(),
-        ));
-    }
+            consumer.write(configuration, &config("Chrome 130"));
+            let edited = generation(&serving, &consumer).0;
+            let control = generation(&runtime(&consumer), &consumer).0;
+            assert_eq!(stylesheet_css(&control, stylesheet), UNPREFIXED);
+            (
+                configuration,
+                stylesheet_css(&edited, stylesheet),
+                requests(&consumer).len(),
+            )
+        },
+    );
     eprintln!("Browserslist edit outcomes: {outcomes:?}");
     for (configuration, edited, count) in outcomes {
         assert_eq!(edited, UNPREFIXED, "{configuration}");

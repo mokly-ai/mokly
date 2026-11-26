@@ -11,8 +11,9 @@ mod unix {
     use std::env;
     use std::io::{BufRead, BufReader, Read};
     use std::process::{Command, Stdio};
+    use std::sync::atomic::{AtomicBool, Ordering};
 
-    use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
+    use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
 
     #[test]
     fn owned_process_group_terminates_descendants_and_closes_pipes() {
@@ -27,16 +28,16 @@ mod unix {
             .stdout(Stdio::piped());
         groups.configure(&mut command).unwrap();
         let mut child = command.spawn().unwrap();
-        // Child::wait closes its stdin. Keep this writer until stdout drains
-        // so reaping the leader cannot change the descendant's input.
+        // Keep this writer until stdout drains, so the exit and the reap of
+        // the leader cannot change the descendant's input.
         let _input = child.stdin.take().unwrap();
-        let group = groups.attach(&child).unwrap();
         let mut reader = BufReader::new(child.stdout.take().unwrap());
+        let group = groups.attach(child).unwrap();
         let mut ready = String::new();
         reader.read_line(&mut ready).unwrap();
         assert_eq!(ready, "ready\n");
         group.terminate().unwrap();
-        assert!(!child.wait().unwrap().success());
+        assert!(!group.wait().unwrap().success());
         let mut remaining = String::new();
         reader.read_to_string(&mut remaining).unwrap();
         let mut lines: Vec<_> = remaining.lines().collect();
@@ -68,7 +69,18 @@ mod unix {
         }
     }
 
+    /// The tree receives SIGTERM through its group and directly, so two helper
+    /// threads can each run this handler. Only the first one reports and exits.
+    static LEAF_STOPPING: AtomicBool = AtomicBool::new(false);
+
     extern "C" fn leaf_stopped(_: i32) {
+        if LEAF_STOPPING.swap(true, Ordering::SeqCst) {
+            loop {
+                // SAFETY: pause accesses no memory. The first handler's _exit
+                // ends this thread with the process.
+                unsafe { libc::pause() };
+            }
+        }
         // SAFETY: write and _exit are async-signal-safe. fd 3 is the owned
         // readiness pipe. Exiting stops every helper thread without Rust locks.
         unsafe {

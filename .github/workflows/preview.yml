@@ -103,8 +103,6 @@ jobs:
         with:
           node-version: 24.21.0
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Validate Cloudflare configuration
         id: credentials
         run: |
@@ -158,6 +156,8 @@ jobs:
           PREVIEW_BRANCH: ${{ steps.deploy.outputs.branch }}
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -191,6 +191,20 @@ jobs:
                 issue_number: context.payload.pull_request.number,
                 body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
 
   close-pr:
@@ -270,6 +284,8 @@ jobs:
           CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -468,6 +484,8 @@ jobs:
         if: env.PREVIEW_ACTION == 'deploy'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';
@@ -485,6 +503,20 @@ jobs:
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number, body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
       - name: Check cloud identity configuration
         id: credentials
@@ -610,6 +642,8 @@ jobs:
         if: ${{ always() && steps.comment-body.outcome == 'success' }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';
@@ -627,6 +661,20 @@ jobs:
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number, body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
       - name: Remove the private preview credential file
         if: ${{ always() }}

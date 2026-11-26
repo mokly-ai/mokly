@@ -3185,6 +3185,7 @@ version = "0.14.0"
 dependencies = [
  "dunce",
  "mokly-platform",
+ "mokly-test-support",
  "sha2",
  "tempfile",
  "thiserror",
@@ -3261,6 +3262,7 @@ name = "mokly-platform"
 version = "0.14.0"
 dependencies = [
  "libc",
+ "mokly-platform",
  "tempfile",
  "thiserror",
  "tracing",
@@ -3426,6 +3428,8 @@ dependencies = [
 name = "mokly-test-support"
 version = "0.14.0"
 dependencies = [
+ "libc",
+ "mokly-platform",
  "tempfile",
  "tracing",
  "tracing-subscriber",

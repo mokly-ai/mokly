@@ -11,6 +11,7 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import { unavailableResourceNotice } from "./document_error_allowance.js";
+import { awaitViewerWork } from "./viewer_work.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -33,15 +34,19 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  await page.evaluate(async () => {
-    const host = window.viewerHarness.get("one");
-    await Promise.all([
-      host.ref.current.startPick(),
-      host.ref.current.startPick(),
-    ]);
-    host.ref.current.cancelPick();
-    host.ref.current.cancelPick();
-  });
+  await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
+        const host = window.viewerHarness.get("one");
+        await Promise.all([
+          host.ref.current.startPick(),
+          host.ref.current.startPick(),
+        ]);
+        host.ref.current.cancelPick();
+        host.ref.current.cancelPick();
+      })(),
+    ),
+  );
   expect(
     await page.evaluate(() =>
       window.viewerHarness
@@ -52,27 +57,31 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
     { name: "pick-start", value: null },
     { name: "pick-end", value: { reason: "cancelled" } },
   ]);
-  const cancelled = await page.evaluate(async () => {
-    const host = window.viewerHarness.get("one");
-    let attempted!: () => void;
-    const attempt = new Promise<void>((resolve) => {
-      attempted = resolve;
-    });
-    host.props.frameAdapter = {
-      mount: () => {
-        attempted();
-        return new Promise<MountedFrame>(() => {});
-      },
-    };
-    host.render();
-    await attempt;
-    const pending = host.ref.current.startPick().then(
-      () => false,
-      () => true,
-    );
-    host.ref.current.cancelPick();
-    return pending;
-  });
+  const cancelled = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
+        const host = window.viewerHarness.get("one");
+        let attempted!: () => void;
+        const attempt = new Promise<void>((resolve) => {
+          attempted = resolve;
+        });
+        host.props.frameAdapter = {
+          mount: () => {
+            attempted();
+            return new Promise<MountedFrame>(() => {});
+          },
+        };
+        host.render();
+        await attempt;
+        const pending = host.ref.current.startPick().then(
+          () => false,
+          () => true,
+        );
+        host.ref.current.cancelPick();
+        return pending;
+      })(),
+    ),
+  );
   expect(cancelled).toBe(true);
 });
 
@@ -203,63 +212,71 @@ test("frame failures end picking once and reject one handle with one safe error"
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  const result = await page.evaluate(async () => {
-    const host = window.viewerHarness.get("one");
-    let emit: ((event: FrameEvent) => void) | undefined;
-    let installed!: () => void;
-    const installation = new Promise<void>((resolve) => {
-      installed = resolve;
-    });
-    const adapter: FrameAdapter = {
-      async mount() {
-        return {
-          listInstanceBoundaries: async () => [],
-          highlight: async () => {},
-          scrollTo: async () => {},
-          subscribe(fn) {
-            emit = fn;
-            installed();
-            return () => {};
+  const result = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
+        const host = window.viewerHarness.get("one");
+        let emit: ((event: FrameEvent) => void) | undefined;
+        let installed!: () => void;
+        const installation = new Promise<void>((resolve) => {
+          installed = resolve;
+        });
+        const adapter: FrameAdapter = {
+          async mount() {
+            return {
+              listInstanceBoundaries: async () => [],
+              highlight: async () => {},
+              scrollTo: async () => {},
+              subscribe(fn) {
+                emit = fn;
+                installed();
+                return () => {};
+              },
+              dispose() {},
+            };
           },
-          dispose() {},
         };
-      },
-    };
-    host.props.frameAdapter = adapter;
-    host.render();
-    await installation;
-    await host.ref.current.startPick();
-    emit?.({ type: "error", code: "timeout" });
-    emit?.({ type: "pick-end", reason: "escape" });
-    return host.events
-      .filter((event) => event.name === "pick-end")
-      .map((event) => event.value);
-  });
+        host.props.frameAdapter = adapter;
+        host.render();
+        await installation;
+        await host.ref.current.startPick();
+        emit?.({ type: "error", code: "timeout" });
+        emit?.({ type: "pick-end", reason: "escape" });
+        return host.events
+          .filter((event) => event.name === "pick-end")
+          .map((event) => event.value);
+      })(),
+    ),
+  );
   expect(result).toEqual([{ reason: "error" }]);
-  const failures = await page.evaluate(async () => {
-    const host = window.viewerHarness.get("one");
-    host.events.length = 0;
-    let attempted!: () => void;
-    const attempt = new Promise<void>((resolve) => {
-      attempted = resolve;
-    });
-    host.props.frameAdapter = {
-      mount: async () => {
-        attempted();
-        throw new Error("/private/user/source.ts");
-      },
-    };
-    host.render();
-    await attempt;
-    try {
-      await host.ref.current.startPick();
-    } catch {
-      /* The assertion below checks the one reported failure. */
-    }
-    return host.events
-      .filter((event) => event.name === "error")
-      .map((event) => event.value);
-  });
+  const failures = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
+        const host = window.viewerHarness.get("one");
+        host.events.length = 0;
+        let attempted!: () => void;
+        const attempt = new Promise<void>((resolve) => {
+          attempted = resolve;
+        });
+        host.props.frameAdapter = {
+          mount: async () => {
+            attempted();
+            throw new Error("/private/user/source.ts");
+          },
+        };
+        host.render();
+        await attempt;
+        try {
+          await host.ref.current.startPick();
+        } catch {
+          /* The assertion below checks the one reported failure. */
+        }
+        return host.events
+          .filter((event) => event.name === "error")
+          .map((event) => event.value);
+      })(),
+    ),
+  );
   expect(failures).toEqual([
     {
       code: "frame",

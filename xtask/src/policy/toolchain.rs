@@ -9,6 +9,12 @@ use crate::error::{Error, Result, reject};
 use super::environment::{Environment, text};
 use super::{build_pins, pins};
 
+/// Workflows that install cargo-nextest for the Rust test suites.
+const NEXTEST_WORKFLOWS: [&str; 2] = [
+    ".github/workflows/ci.yml",
+    ".github/workflows/blacksmith-testbox.yml",
+];
+
 pub(super) struct ToolchainCheck {
     pub(super) environment: Arc<dyn Environment>,
 }
@@ -58,6 +64,25 @@ impl ToolchainCheck {
             &text(environment, "infra/toolchains.json")?,
             &pins,
         )?);
+        violations.extend(pins::nextest_config(
+            &text(environment, ".config/nextest.toml")?,
+            &pins,
+        )?);
+        for path in NEXTEST_WORKFLOWS {
+            violations.extend(pins::nextest_installs(
+                path,
+                &text(environment, path)?,
+                &pins,
+            )?);
+        }
+        let nextest =
+            environment.output(&CommandSpec::new("cargo").args(["nextest", "--version"]))?;
+        violations.extend(pins::compare(
+            "cargo-nextest",
+            "installed version",
+            &pins.nextest,
+            nextest.split_whitespace().nth(1).unwrap_or_default(),
+        ));
         let terraform =
             environment.output(&CommandSpec::new("terraform").args(["version", "-json"]))?;
         violations.extend(pins::compare(

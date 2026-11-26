@@ -8,6 +8,11 @@ use crate::unix;
 #[cfg(windows)]
 use crate::windows;
 
+mod failure;
+mod tree;
+pub use failure::{AttachFailure, Unattached};
+pub use tree::ProcessTree;
+
 /// A child tree owned by one command; keep this guard until pipes close.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ProcessGroupMock))]
 pub trait ProcessGroup: Send + Sync {
@@ -24,8 +29,10 @@ pub trait ProcessGroups: Send + Sync {
     fn configure(&self, command: &mut Command) -> Result<()>;
     /// Configure a helper-free child in its own group without a Unix exec hook.
     fn configure_plain(&self, command: &mut Command) -> Result<()>;
-    /// Acquire the process-tree guard immediately after spawn.
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>>;
+    /// Take the child immediately after spawn and acquire its tree guard. The
+    /// returned [`ProcessTree`] owns the child and reaps it only after the
+    /// guard's last signal, so no caller can reap the root early.
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure>;
     /// Stop a configured child's tree before its first reap when attachment fails.
     fn kill_unattached(&self, child: &Child) -> Result<()>;
 }
@@ -50,11 +57,15 @@ impl ProcessGroups for SystemProcessGroups {
         Ok(())
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
         #[cfg(unix)]
-        return unix::attach(child);
+        let group = unix::attach(&child);
         #[cfg(windows)]
-        return windows::attach(child);
+        let group = windows::attach(&child);
+        match group {
+            Ok(group) => Ok(ProcessTree::new(child, group)),
+            Err(source) => Err(AttachFailure::new(child, source)),
+        }
     }
 
     fn kill_unattached(&self, child: &Child) -> Result<()> {

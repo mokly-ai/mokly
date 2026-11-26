@@ -28,14 +28,12 @@ fn ci_pins_tools_checks_pull_requests_and_has_an_unconditional_aggregate() {
             "cancel-in-progress: false",
             Violation::Concurrency,
         ),
-        ("--with-deps chromium", "chromium", Violation::Chromium),
         ("createdb mkc_test", "true", Violation::Postgres),
         (
             "MKC_TEST_DATABASE_URL:",
             "IGNORED_DATABASE_URL:",
             Violation::Postgres,
         ),
-        ("npm ci", "npm install", Violation::Chromium),
         (
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
             "actions/checkout@main",
@@ -52,10 +50,10 @@ fn npm_cache_uses_the_workspace_lockfile() {
     assert!(!validate(&text).contains(&Violation::NpmCachePath));
     for broken in [
         text.replace(
-            "cache-dependency-path: package-lock.json",
-            "cache-dependency-path: missing-lock.json",
+            "hashFiles('package-lock.json')",
+            "hashFiles('missing-lock.json')",
         ),
-        text.replace("cache-dependency-path: package-lock.json", ""),
+        text.replace("actions/cache/restore@", "actions/cache@"),
     ] {
         assert!(validate(&broken).contains(&Violation::NpmCachePath));
     }
@@ -66,7 +64,7 @@ fn origin_router_deploy_uses_the_workspace_lockfile() {
     let text = fs::read_to_string(repository().join(".github/workflows/deploy.yml")).unwrap();
     let deploy =
         fs::read_to_string(repository().join("infra/scripts/deploy-origin-router.sh")).unwrap();
-    assert!(text.contains("cache-dependency-path: package-lock.json"));
+    assert!(text.contains("package-manager-cache: false"));
     assert!(text.contains("npm ci"));
     assert!(text.contains("bash infra/scripts/deploy-origin-router.sh"));
     assert!(deploy.contains("npm exec --workspace @mokly-cloud/worker -- wrangler deploy"));

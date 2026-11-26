@@ -9,18 +9,27 @@ The CI workflow runs the [cloud suites](./ci-verification.md#cloud-suites) in
 cloud jobs on GitHub-hosted `ubuntu-24.04`, under the
 [runner rule](./ci-workflow.md#job-execution).
 [Required CI](./ci-workflow.md#required-ci) requires
-each partition, the image check and the provider-plan result. Linux builds
+each partition, each image job and the provider-plan result. Linux builds
 and tests every crate. Each job that
 builds the `mkc-` crates provides `libpq`, and each job that runs their
 database tests provides Postgres. The native jobs on macOS and Windows leave
 out the `mkc-` crates, under the
 [native rule](./ci-verification.md#gate-ownership).
 
-The workspace partition runs cloud Rust, migrations, type checks, OpenAPI,
-fixtures, email templates, Terraform contracts, origin-router checks, Helm,
-and toolchain pins. Desktop, mockups, and site each have a partition. Four
-app partitions pass their shard to `cloud-app`. The image job runs
-`cloud-infrastructure`. Each partition uses the shared `cargo xtask check
+Three workspace partitions group the remaining suites by the tools that they
+need. Workspace checks (Rust) runs cloud Rust. Workspace checks (contracts)
+runs type checks, OpenAPI, fixtures, email templates, and origin-router
+checks. Workspace checks (infrastructure) runs migrations, OpenAPI lint,
+Terraform contracts, Helm, and toolchain pins. Splitting them keeps each
+partition well below the slowest job, because one partition that ran every
+suite in sequence set the CI wall clock. A partition that only reads a Rust
+build cache of another partition does not save it, so the split adds no
+cache entry. Desktop has a partition. Eight app partitions and five mockup
+partitions pass their shard to `cloud-app` and `cloud-mockups`, as the
+[cloud shards](./cloud/repository-verification.md#app-shards) define. One
+site partition runs the whole `cloud-site` suite. Only
+partitions that run database tests start Postgres, and only partitions that
+run a browser install Chromium. Each partition uses the shared `cargo xtask check
 --suite` entry point. No workflow runs the removed cloud stage runner.
 
 Cloud workers use Node 24.21.0 and npm 11.21.0. Testboxes also retain Node
@@ -31,6 +40,17 @@ runs a suite. It clears the Electron skip setting only for a desktop worker.
 Foundation can retain the old repository during cutover with
 `MKC_LEGACY_REPOSITORY_ID`. Its trust pairs each repository name with its own
 numeric ID and main workflow refs. An empty value trusts only this repository.
+
+## Image Jobs
+
+Three image jobs run the three
+[infrastructure shards](./cloud/repository-verification.md#infrastructure-shards)
+of `cloud-infrastructure` at the same time: Workload image checks (tests),
+(API and catalogue), and (app). Job `n` of `N` runs shard `n/N`, with `n`
+and `N` from its matrix position, so the jobs always cover every part. Only
+the tests job installs the npm dependencies and Postgres. Each job starts its
+own layered BuildKit. One job for the whole suite was rejected, because it
+runs the parts one after another and sets the CI wall clock.
 
 ## Cloud Testbox Tools
 

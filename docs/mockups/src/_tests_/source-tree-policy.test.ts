@@ -65,6 +65,21 @@ for (const [name, entries, message] of [
     "authored path is forbidden",
   ],
   [
+    "module moved away from its entry path",
+    [{ ...fixture(sibling), module: "elsewhere/" + sibling }],
+    "module derives its entry path",
+  ],
+  [
+    "entry path that its module does not name",
+    [
+      {
+        ...fixture(sibling),
+        definition: { ...fixture(sibling).definition, path: "somewhere/else" },
+      },
+    ],
+    "module derives its entry path",
+  ],
+  [
     "callback owner title",
     [
       fixture(

@@ -58,30 +58,25 @@ fn two_api_replicas_keep_the_newer_build_when_a_provider_read_is_delayed() {
         assert_eq!(refused["error"]["data"]["buildId"], winner["id"]);
         app.queries(&mut |q| {
             let stored = if pull {
-                q.github_pull_requests(project.repository)
-                    .unwrap()
+                q.github_pull_requests(project.repository)?
                     .into_iter()
                     .find(|row| row.number == 42)
                     .map(|row| row.head_sha)
             } else {
-                q.github_branches(project.repository)
-                    .unwrap()
+                q.github_branches(project.repository)?
                     .into_iter()
                     .find(|row| row.name == "replica-race")
                     .and_then(|row| row.head_sha)
             };
             assert_eq!(stored, Some(head.clone()));
-            let build = q.active_build(project.id, &head).unwrap().unwrap();
+            let build = q.active_build(project.id, &head)?.unwrap();
             assert_eq!(build.id.to_string(), winner["id"]);
             assert!(matches!(
                 build.state,
                 BuildState::Queued | BuildState::Running
             ));
-            assert!(
-                q.active_build(project.id, &"e".repeat(40))
-                    .unwrap()
-                    .is_none()
-            );
+            assert!(q.active_build(project.id, &"e".repeat(40))?.is_none());
+            Ok(())
         });
     }
 }
@@ -158,18 +153,18 @@ fn delayed_requests_schedule_and_report_duplicates_on_the_stored_head() {
         }
         app.queries(&mut |q| {
             let stored = q
-                .github_branches(repository)
-                .unwrap()
+                .github_branches(repository)?
                 .into_iter()
                 .find(|row| row.name == branch)
                 .unwrap();
             assert_eq!(stored.head_sha.as_deref(), Some(current.as_str()));
             if case == 1 {
                 assert!(matches!(
-                    q.build(project.id, winner.into()).unwrap().unwrap().state,
+                    q.build(project.id, winner.into())?.unwrap().state,
                     BuildState::Queued | BuildState::Running
                 ));
             }
+            Ok(())
         });
     }
 }
@@ -218,10 +213,7 @@ fn setup_uses_the_stored_head_and_keeps_a_newer_active_build() {
         }
         let project = app.install_project();
         app.queries(&mut |q| {
-            let build = q
-                .active_build(project.id, &"f".repeat(40))
-                .unwrap()
-                .unwrap();
+            let build = q.active_build(project.id, &"f".repeat(40))?.unwrap();
             assert_eq!(
                 build.trigger,
                 if already_active {
@@ -234,11 +226,8 @@ fn setup_uses_the_stored_head_and_keeps_a_newer_active_build() {
                 build.state,
                 BuildState::Queued | BuildState::Running
             ));
-            assert!(
-                q.active_build(project.id, &"e".repeat(40))
-                    .unwrap()
-                    .is_none()
-            );
+            assert!(q.active_build(project.id, &"e".repeat(40))?.is_none());
+            Ok(())
         });
     }
 }

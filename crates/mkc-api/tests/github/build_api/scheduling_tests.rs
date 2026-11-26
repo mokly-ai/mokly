@@ -103,21 +103,19 @@ fn requests_recheck_access_plan_and_duplicate_heads_after_the_provider_read() {
         );
         assert!(app.github.mode.lock().unwrap().branch_hook.is_none());
         app.queries(&mut |q| {
-            let mut installation = q
-                .github_installation(project.installation)
-                .unwrap()
-                .unwrap();
+            let mut installation = q.github_installation(project.installation)?.unwrap();
             installation.connected = true;
-            q.save_github_installation(&installation).unwrap();
-            let mut current = q.project(project.id).unwrap().unwrap();
+            q.save_github_installation(&installation)?;
+            let mut current = q.project(project.id)?.unwrap();
             current.visibility = Visibility::Public;
-            q.save_project(&current).unwrap();
-            for mut member in q.members(current.organization_id).unwrap() {
+            q.save_project(&current)?;
+            for mut member in q.members(current.organization_id)? {
                 if member.user_id == Some(app.user) {
                     member.role = Role::Owner;
-                    q.save_member(&member).unwrap();
+                    q.save_member(&member)?;
                 }
             }
+            Ok(())
         });
     }
 }
@@ -208,12 +206,13 @@ fn requested_builds_ignore_automatic_setting_and_use_the_current_comparison_base
     app.sign_in();
     let project = app.install_project();
     app.queries(&mut |q| {
-        let mut current = q.project(project.id).unwrap().unwrap();
+        let mut current = q.project(project.id)?.unwrap();
         current.automatic_builds = false;
-        q.save_project(&current).unwrap();
-        let mut repository = q.github_repository(project.repository).unwrap().unwrap();
+        q.save_project(&current)?;
+        let mut repository = q.github_repository(project.repository)?.unwrap();
         repository.default_branch = "main".into();
-        q.save_github_repository(&repository).unwrap();
+        q.save_github_repository(&repository)?;
+        Ok(())
     });
     assert_eq!(read(&app, project.id, "")["canRequestBuilds"], true);
     for (index, branch, base) in [(10, "main", None), (11, "topic", Some("main"))] {
