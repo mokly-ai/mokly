@@ -1,13 +1,12 @@
 import { type Page, expect, test } from "@playwright/test";
 
-import { DOCS_PAGES } from "../../src/docs/pages.js";
-import { NOT_FOUND_ROUTE } from "../../src/metadata.js";
 import { SITE_PATHS } from "../../src/navigation.js";
+import { NOT_FOUND_PAGE, ROUTES } from "../helpers/published-routes.js";
 
 import { assertFocusGlow } from "./accessibility.js";
-import { PAGES } from "./routes.js";
 
 const UNKNOWN_ROUTE = "/does-not-exist/";
+const NOT_FOUND_FILE = `${NOT_FOUND_PAGE.route}.html`;
 const SAMPLE_GUIDE = "/docs/start/your-first-screen/";
 
 const TEMPLATES = [
@@ -24,8 +23,25 @@ const TEMPLATES = [
   SITE_PATHS.complaints,
   SITE_PATHS.security,
   // pages/404.astro. Visit the file directly to watch for unexpected errors.
-  `${NOT_FOUND_ROUTE}.html`,
+  NOT_FOUND_FILE,
 ];
+
+async function visit(page: Page, pathname: string): Promise<void> {
+  const expected =
+    pathname === UNKNOWN_ROUTE || pathname === NOT_FOUND_FILE
+      ? NOT_FOUND_PAGE
+      : ROUTES.find(({ route }) => route === pathname);
+  if (!expected) throw new Error(`No expected page for ${pathname}`);
+
+  const response = await page.goto(pathname);
+  expect(response?.status(), `${pathname} response status`).toBe(
+    pathname === UNKNOWN_ROUTE ? 404 : 200,
+  );
+  expect(new URL(page.url()).pathname, `${pathname} final pathname`).toBe(
+    pathname,
+  );
+  await expect(page, `${pathname} page title`).toHaveTitle(expected.title);
+}
 
 /** Collect the failures a page must not produce while it loads. */
 function watch(page: Page): string[] {
@@ -45,20 +61,23 @@ async function checkFocus(page: Page): Promise<void> {
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("contentinfo")).toBeVisible();
   await assertFocusGlow(page);
+  await checkControlNames(page);
+}
+
+async function checkControlNames(page: Page): Promise<void> {
   for (const role of ["button", "link"] as const) {
     await expect(page.getByRole(role, { name: /^\s*$/ })).toHaveCount(0);
   }
 }
 
-for (const route of [...PAGES, ...DOCS_PAGES]
-  .map(({ route }) => route)
-  .concat(UNKNOWN_ROUTE)) {
+for (const { route } of ROUTES) {
+  const pathname = route === NOT_FOUND_PAGE.route ? UNKNOWN_ROUTE : route;
   test(
-    `${route} fits a 320px window`,
+    `${pathname} fits a 320px window`,
     { tag: "@narrow" },
     async ({ page }, testInfo) => {
-      const response = await page.goto(route);
-      if (route === UNKNOWN_ROUTE) expect(response?.status()).toBe(404);
+      await visit(page, pathname);
+      await checkControlNames(page);
       await page.evaluate(() => document.fonts.ready);
       expect(
         await page.evaluate(
@@ -67,7 +86,7 @@ for (const route of [...PAGES, ...DOCS_PAGES]
       ).toBe(true);
       if (capturesRequested)
         await page.screenshot({
-          path: testInfo.outputPath(`${route.replace(/\//g, "_")}.png`),
+          path: testInfo.outputPath(`${pathname.replace(/\//g, "_")}.png`),
           fullPage: true,
         });
     },
@@ -80,7 +99,7 @@ for (const route of TEMPLATES) {
     { tag: ["@desktop", "@scheme"] },
     async ({ page }) => {
       const errors = watch(page);
-      await page.goto(route);
+      await visit(page, route);
       if (route === SITE_PATHS.docs)
         await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
       await checkFocus(page);
@@ -96,7 +115,7 @@ test(
   { tag: "@mobile" },
   async ({ page }) => {
     const errors = watch(page);
-    await page.goto("/docs/cli/serve/");
+    await visit(page, "/docs/cli/serve/");
     await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
     expect(errors).toEqual([]);
   },
@@ -108,7 +127,7 @@ test(
   "the sample guide's frames and controls show focus",
   { tag: ["@mobile", "@scheme"] },
   async ({ page }) => {
-    await page.goto(SAMPLE_GUIDE);
+    await visit(page, SAMPLE_GUIDE);
     await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
     await checkFocus(page);
   },
@@ -120,7 +139,7 @@ for (const route of [SITE_PATHS.home, SITE_PATHS.docs]) {
     `${route} starts with the skip link and moves focus to main`,
     { tag: "@desktop" },
     async ({ page }) => {
-      await page.goto(route);
+      await visit(page, route);
       await page.keyboard.press("Tab");
       const skip = page.getByRole("link", { name: "Skip to content" });
       await expect(skip).toBeFocused();

@@ -46,23 +46,37 @@ export function hiddenInMarkup(element: Element): boolean {
   );
 }
 
-function labelContent(node: Node): string {
+function labelContent(node: Node, directlyReferenced = false): string {
   if ("tagName" in node) {
-    if (hiddenInMarkup(node) || ["script", "style"].includes(node.tagName))
+    if (
+      (!directlyReferenced && hiddenInMarkup(node)) ||
+      ["script", "style"].includes(node.tagName)
+    )
       return "";
     const label = attribute(node, "aria-label")?.trim();
     if (label) return label;
     if (node.tagName === "img") return attribute(node, "alt") ?? "";
-    if (node.tagName === "svg")
-      return byTag(node, "title").map(textContent).join(" ");
+    if (node.tagName === "svg") {
+      const title = node.childNodes.find(
+        (child) => "tagName" in child && child.tagName === "title",
+      );
+      return title ? labelContent(title) : "";
+    }
   }
   if ("value" in node) return node.value;
-  return "childNodes" in node ? node.childNodes.map(labelContent).join("") : "";
+  return "childNodes" in node
+    ? node.childNodes.map((child) => labelContent(child)).join("")
+    : "";
 }
 
 /** Text and image labels supplied by an element's markup. */
 export function markupLabel(node: Node): string {
   return normalizeText(labelContent(node));
+}
+
+/** An explicit reference can name a control from a hidden target. */
+export function referencedLabel(node: Element): string {
+  return normalizeText(labelContent(node, true));
 }
 
 /** Find elements with one class name. */

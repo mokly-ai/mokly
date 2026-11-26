@@ -5,9 +5,8 @@
 - **Added:** 2026-11-22, from a local run of the `cloud-site` suite on the
   branch `calummoore/mokly-earlier-postcss-start-bdhv`, which does not change
   `apps/site`.
-- **Location:** `apps/site/tests/browser/pages.spec.ts:77`,
-  `apps/site/src/layouts/Docs.astro:88`, and
-  `apps/site/src/components/Header.astro:34`.
+- **Location:** `apps/site/tests/browser/pages.spec.ts` and
+  `apps/site/src/layouts/Docs.astro`.
 - **Reason:** The branch that saw it does not touch the site, so one fix in its
   own branch reaches every open branch.
 
@@ -18,12 +17,15 @@
     component. It keeps an `ssr` attribute until the component hydrates in the
     browser.
 - **Background:**
-  - The test "`/docs/authoring/screens/` meets the deterministic accessibility
-    contract" opens the page and expects `astro-island[ssr]` to have a count of
-    0 within the default 5-second expect timeout, before it checks the page
-    structure.
-  - It runs for five viewports: 320 px light, 390 px light and dark, and
-    1440 px light and dark.
+  - `apps/site/tests/browser/pages.spec.ts` waits for `astro-island[ssr]` to
+    have a count of zero on the docs landing at 1440 px in both schemes.
+    It also waits on the serve guide at 390 px in light and on the sample
+    guide at 390 px in both schemes.
+  - The 320 px visits verify the response, names and overflow on each route.
+    `apps/site/tests/pages.test.ts` checks for two pending islands in the built
+    HTML of each docs page.
+  - The layout now gives both idle islands a one-second deadline. The failure
+    records below come from the earlier five-project route walk.
 - **Problem:** The check fails now and then, on more than one docs page:
   first in a complete local `cloud-site` run on a 4-CPU machine (1 failed, 508
   passed), and then in the CI of PR #472. The failure text: "Error:

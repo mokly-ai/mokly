@@ -1,6 +1,6 @@
 import { transformStyleAttribute } from "lightningcss";
 import postcss, { CssSyntaxError } from "postcss";
-import type { Root } from "postcss";
+import type { Declaration, Node, Root } from "postcss";
 import valueParser from "postcss-value-parser";
 
 import type { Scheme } from "./catalogue-paths";
@@ -72,7 +72,11 @@ function parseCss(css: string): Root | undefined {
   }
 }
 
-function schemeChangesOnlyPaint(prop: string, value: string): boolean {
+function schemeChangesOnlyPaint(
+  { prop, value }: Declaration,
+  unconditionalProperties: ReadonlySet<string>,
+): boolean {
+  if (prop.startsWith("--") && !unconditionalProperties.has(prop)) return false;
   if (prop === "color-scheme") return value === "dark" || value === "light";
   if (sharedPaint.test(prop)) return !/(?:url|src|image-set)\(|\\/i.test(value);
   return (
@@ -84,35 +88,33 @@ function schemeChangesOnlyPaint(prop: string, value: string): boolean {
 }
 
 function mayChangeLayout(sheet: Root): boolean {
-  const hasConditionalStyles =
+  const themeConditions = new Set<Node>();
+  const hasUnverifiedAtRules =
     sheet.walkAtRules((rule) => {
       if (
         rule.name.toLowerCase() === "import" ||
         /style\((?!\s*--fo-window-inset(?:-end)?\s*:)/i.test(rule.params)
       )
         return false;
-      if (/prefers-color-scheme/i.test(rule.params))
-        return rule.walkDecls(({ prop, value }) => {
-          if (!schemeChangesOnlyPaint(prop, value)) return false;
-        });
+      if (/prefers-color-scheme/i.test(rule.params)) themeConditions.add(rule);
     }) === false;
-  if (hasConditionalStyles) return true;
+  if (hasUnverifiedAtRules) return true;
 
-  const hasConditionalLayout =
+  const hasUnverifiedSelectors =
     sheet.walkRules((rule) => {
       if (rule.selector.includes("\\")) return false;
       if (
-        !changingAttribute.test(rule.selector.replace(/\/\*[\s\S]*?\*\//g, ""))
+        changingAttribute.test(rule.selector.replace(/\/\*[\s\S]*?\*\//g, ""))
       )
-        return;
-      return rule.walkDecls(({ prop, value }) => {
-        if (!schemeChangesOnlyPaint(prop, value)) return false;
-      });
+        themeConditions.add(rule);
     }) === false;
-  if (hasConditionalLayout) return true;
+  if (hasUnverifiedSelectors) return true;
 
-  return (
-    sheet.walkDecls(({ prop, value }) => {
+  const unconditionalProperties = new Set<string>();
+  const themeDeclarations: Declaration[] = [];
+  const hasUnverifiedDeclarations =
+    sheet.walkDecls((declaration) => {
+      const { prop, value } = declaration;
       if (readsChangingAttribute.test(value) || /\bif\(/i.test(value))
         return false;
       if (
@@ -122,7 +124,18 @@ function mayChangeLayout(sheet: Root): boolean {
         !colorProperty.test(prop)
       )
         return false;
-    }) === false
+      if (themeConditions.size === 0) return;
+      let parent: Node | undefined = declaration.parent;
+      while (parent && !themeConditions.has(parent)) parent = parent.parent;
+      if (parent) themeDeclarations.push(declaration);
+      else if (prop.startsWith("--")) unconditionalProperties.add(prop);
+    }) === false;
+  return (
+    hasUnverifiedDeclarations ||
+    themeDeclarations.some(
+      (declaration) =>
+        !schemeChangesOnlyPaint(declaration, unconditionalProperties),
+    )
   );
 }
 

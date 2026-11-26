@@ -1,14 +1,15 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { defaultTreeAdapter, parse, serialize } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
+import type { CatalogueScreen } from "@mokly/viewer";
 import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 
 import { catalogueIndex } from "./catalogue-index";
-import { outputRoot, screenView } from "./catalogue-paths";
+import { outputRoot, repositoryFilePath, screenView } from "./catalogue-paths";
 import type { Scheme, Viewport } from "./catalogue-paths";
 import {
   linkedCssCanShareSweep,
@@ -25,16 +26,46 @@ export interface GeneratedView {
   scheme: Scheme;
 }
 
-export function generatedViews(): GeneratedView[] {
-  const { screens, components } = catalogueIndex();
-  return [...screens, ...components].flatMap(({ path, views }) =>
-    views.map(({ viewport, colorScheme: scheme }) => ({
-      file: screenView(path, viewport, scheme),
-      path,
-      viewport,
-      scheme,
-    })),
+type ViewRecord = Pick<CatalogueScreen, "path" | "views">;
+
+export function generatedViews(
+  {
+    screens,
+    components,
+  }: {
+    screens: readonly ViewRecord[];
+    components: readonly ViewRecord[];
+  } = catalogueIndex(),
+) {
+  const missingIndexViews: string[] = [];
+  const views: GeneratedView[] = [...screens, ...components].flatMap(
+    ({ path, views: indexedViews }) => {
+      const indexedFiles = new Set(
+        indexedViews.map(({ viewport, colorScheme }) =>
+          screenView(path, viewport, colorScheme),
+        ),
+      );
+      return (["mobile", "desktop"] as const).flatMap((viewport) =>
+        (["light", "dark"] as const).map((scheme) => {
+          const file = screenView(path, viewport, scheme);
+          if (!indexedFiles.has(file)) missingIndexViews.push(file);
+          return { file, path, viewport, scheme };
+        }),
+      );
+    },
   );
+  return { views, missingIndexViews };
+}
+
+/** Every HTML file in the public tree, including authored resources. */
+export function generatedHtmlFiles(): string[] {
+  return readdirSync(resolve(outputRoot, repositoryFilePath("")), {
+    recursive: true,
+    encoding: "utf8",
+  })
+    .filter((path) => path.endsWith(".html"))
+    .map((path) => repositoryFilePath(path.split(sep).join("/")))
+    .sort();
 }
 
 type ReadOutput = (file: string) => string | undefined;
@@ -96,8 +127,7 @@ export function compareBuiltViews(
 
   function safeStylesheet(element: Element, base: URL): boolean {
     const href = attr(element, "href")?.value;
-    const media = attr(element, "media")?.value ?? "";
-    if (!href || /prefers-color-scheme/i.test(media)) return false;
+    if (!href) return false;
     const url = URL.parse(href, base);
     if (url === null || !url.href.startsWith(outputUrl.href)) return false;
     let file: string;
@@ -136,8 +166,6 @@ export function compareBuiltViews(
         )
           return false;
         if (tagName === "style") {
-          if (/prefers-color-scheme/i.test(attr(node, "media")?.value ?? ""))
-            return false;
           for (const child of node.childNodes) {
             if (!defaultTreeAdapter.isTextNode(child)) return false;
             const css = inlineCss(child.value, view.scheme);
@@ -148,7 +176,8 @@ export function compareBuiltViews(
         const entry = attr(node, "data-mokly-link")?.value;
         for (const attribute of node.attrs) {
           const { name, value } = attribute;
-          if (/^on[a-z]/.test(name)) return false;
+          if (/^on[a-z]/.test(name) || /prefers-color-scheme/i.test(value))
+            return false;
           if (schemeAttribute.test(name) && value === view.scheme) {
             attribute.value = "\u0000scheme\u0000";
           } else if (

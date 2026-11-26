@@ -166,12 +166,13 @@ others. Missing or stale site output fails rather than skips.
 - The Node tests check the built HTML for every route, including `404.html`.
   They check titles, headings, landmarks, language, image and control text in
   the markup, the docs island count, and the 404 indexing rule.
-- The browser check serves the built output through a local preview. It checks
-  every route for horizontal overflow at 320px in light. It checks focus,
-  hydrated control names and load errors on a representative route for each
-  page template. It checks skip-link focus once per layout. Interaction and
-  layout checks run at the widths they exercise. Checks that depend on the
-  colour scheme run in light and dark.
+- The browser check serves the built output through a local preview. At 320px
+  in light it checks each route's response status, final pathname, and title.
+  It also checks horizontal overflow and the names of exposed buttons and
+  links on every route. It checks focus, hydrated control names and load
+  errors on representative routes for each page template. It checks skip-link
+  focus once per layout. Interaction and layout checks run at the widths they
+  exercise. Checks that depend on the colour scheme run in light and dark.
 - The Node tests also check the stylesheet
   rules of [Site design](./site-design.md), its contrast pairs measured from
   the token values in both schemes, and the banned-words rule of

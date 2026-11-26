@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { tokens } from "@mokly-cloud/tokens/tokens";
@@ -9,19 +9,18 @@ import { currentDocumentPath } from "@mokly/viewer/data";
 
 import { currentScreen } from "../fixtures/viewer-catalogue";
 
-import {
-  catalogueRoot,
-  outputRoot,
-  repositoryFilePath,
-  screenView,
-} from "./catalogue-paths";
+import { catalogueRoot, outputRoot, screenView } from "./catalogue-paths";
 import {
   controlDocumentViolations,
   controlPolicyInput,
 } from "./controls-document-policy";
 import { checkDiskOverlay } from "./disk-overlay-policy";
 import { serveOutput } from "./disk-requests";
-import { diskSweepViews, generatedViews } from "./disk-views";
+import {
+  diskSweepViews,
+  generatedHtmlFiles,
+  generatedViews,
+} from "./disk-views";
 import { documentViolations } from "./document-policy";
 import { focusPolicyViolations } from "./focus-policy";
 import { inventoryPages } from "./product-inventory";
@@ -33,19 +32,7 @@ const screenshots = resolve(catalogueRoot, "../../.context/mockups-smoke");
 /** A developer asks for the full-page captures; a CI run writes none. */
 const capturesRequested = process.env.MKC_MOCKUP_CAPTURES === "1";
 
-const views = generatedViews();
-
-/**
- * Every HTML file in the output's public tree, `static/`, which holds the
- * documents and each authored file that they reference, in sorted order.
- */
-const files = readdirSync(resolve(outputRoot, repositoryFilePath("")), {
-  recursive: true,
-  encoding: "utf8",
-})
-  .filter((path) => path.endsWith(".html"))
-  .map((path) => repositoryFilePath(path.split(sep).join("/")))
-  .sort();
+const { views, missingIndexViews } = generatedViews();
 
 /** Product states whose controls are drawn disabled on purpose. */
 const disabledStates = new Set(
@@ -65,6 +52,10 @@ function disabledByDesign(path: string): boolean {
 }
 
 test("the complete generated catalogue is present", () => {
+  expect(missingIndexViews, "the catalogue index omits required views").toEqual(
+    [],
+  );
+  const files = generatedHtmlFiles();
   const expected = views.map(({ file }) => file);
   expect(files).toEqual([...expected].sort());
   expect(new Set(expected).size).toBe(expected.length);
@@ -111,11 +102,6 @@ test("the complete generated catalogue is present", () => {
     "user-flows/marketing/",
   ])
     expect(views.some(({ path }) => path.startsWith(retired))).toBe(false);
-
-  for (const { path } of views)
-    for (const viewport of ["mobile", "desktop"] as const)
-      for (const scheme of ["light", "dark"] as const)
-        expect(files, path).toContain(screenView(path, viewport, scheme));
 });
 
 for (const { file, path, viewport, scheme } of diskSweepViews(views)) {

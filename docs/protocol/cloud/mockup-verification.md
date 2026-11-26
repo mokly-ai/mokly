@@ -171,8 +171,9 @@ label after a refusal.
 The disk smoke opens every light view at 390px or 1440px. A Node check compares
 each dark view with its light view at the same width. It accounts for color
 values, theme markers and verified links to the same entry and viewport.
-Chromium opens the dark view when the markup differs, when the stylesheets
-can change layout with the theme, or when the check cannot verify them.
+Chromium opens the dark view when the markup differs or an HTML attribute
+contains `prefers-color-scheme`. It also opens the dark view when the
+stylesheets can change layout with the theme or the check cannot verify them.
 Chromium uses the document's theme for media queries.
 The smoke waits for documents, fonts and images. It rejects browser errors,
 missing resources, blank content and horizontal overflow, including frames.

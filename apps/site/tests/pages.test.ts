@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { DefaultTreeAdapterMap } from "parse5";
+import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { DOCS_PAGES } from "../src/docs/pages.js";
-import { NOT_FOUND_ROUTE, PAGE_METADATA } from "../src/metadata.js";
+import { NOT_FOUND_ROUTE } from "../src/metadata.js";
 import { SITE_PATHS } from "../src/navigation.js";
 
-import { PAGES } from "./browser/routes.js";
 import {
   attribute,
   byTag,
@@ -15,8 +14,10 @@ import {
   hiddenInMarkup,
   markupLabel,
   normalizeText,
+  referencedLabel,
   textContent,
 } from "./helpers/html.js";
+import { ROUTES } from "./helpers/published-routes.js";
 import { builtPage } from "./helpers/site-output.js";
 
 type Element = DefaultTreeAdapterMap["element"];
@@ -25,20 +26,6 @@ const DOCS_ROUTES = new Set<string>([
   SITE_PATHS.docs,
   ...DOCS_PAGES.map(({ route }) => route),
 ]);
-
-const ROUTES = [
-  ...PAGES,
-  ...DOCS_PAGES.map(({ route, title: heading }) => ({
-    heading,
-    route,
-    title: `${heading} · Mokly`,
-  })),
-  {
-    heading: "Page not found",
-    route: NOT_FOUND_ROUTE,
-    title: PAGE_METADATA[NOT_FOUND_ROUTE].title,
-  },
-];
 
 function isControl(element: Element): boolean {
   const role = attribute(element, "role");
@@ -74,7 +61,7 @@ function controlName(
     .map((id) => ids.get(id))
     .filter((node) => node !== undefined);
   if (labels.length > 0)
-    return normalizeText(labels.map(textContent).join(" "));
+    return normalizeText(labels.map(referencedLabel).join(" "));
 
   const label = markupLabel(control);
   if (label) return label;
@@ -88,6 +75,49 @@ function controlName(
     if (type === "button") return attribute(control, "value")?.trim() ?? "";
   }
   return attribute(control, "title")?.trim() ?? "";
+}
+
+function assertNamedControls(page: DefaultTreeAdapterMap["document"]): void {
+  const ids = new Map<string, Element>();
+  for (const element of elements(
+    page,
+    (node) => attribute(node, "id") !== undefined,
+  )) {
+    const id = attribute(element, "id");
+    if (id !== undefined && !ids.has(id)) ids.set(id, element);
+  }
+  for (const control of elements(page, isControl)) {
+    if (hiddenControl(control)) continue;
+    const detail =
+      attribute(control, "href") ?? attribute(control, "class") ?? "";
+    assert.ok(
+      controlName(control, ids),
+      `empty ${control.tagName} name: ${detail}`,
+    );
+  }
+}
+
+for (const attribute of ['aria-hidden="true"', "hidden"]) {
+  test(`a referenced label whose only child has ${attribute} leaves the link unnamed`, () => {
+    const page = parse(`
+      <a href="/docs/" aria-labelledby="label"></a>
+      <span id="label"><span ${attribute}>Docs</span></span>
+    `);
+    assert.throws(() => assertNamedControls(page), /empty a name: \/docs\//);
+  });
+}
+
+for (const [source, markup] of [
+  ["a hidden target", '<span id="label" hidden>Docs</span>'],
+  ["the target's aria-label", '<span id="label" aria-label="Docs"></span>'],
+  ["an image alt", '<span id="label"><img alt="Docs"></span>'],
+]) {
+  test(`a referenced label can name a link from ${source}`, () => {
+    const page = parse(
+      `<a href="/docs/" aria-labelledby="label"></a>${markup}`,
+    );
+    assertNamedControls(page);
+  });
 }
 
 for (const { route, title, heading } of ROUTES) {
@@ -117,23 +147,7 @@ for (const { route, title, heading } of ROUTES) {
       );
     }
 
-    const ids = new Map<string, Element>();
-    for (const element of elements(
-      page,
-      (node) => attribute(node, "id") !== undefined,
-    )) {
-      const id = attribute(element, "id");
-      if (id !== undefined && !ids.has(id)) ids.set(id, element);
-    }
-    for (const control of elements(page, isControl)) {
-      if (hiddenControl(control)) continue;
-      const detail =
-        attribute(control, "href") ?? attribute(control, "class") ?? "";
-      assert.ok(
-        controlName(control, ids),
-        `empty ${control.tagName} name: ${detail}`,
-      );
-    }
+    assertNamedControls(page);
 
     if (DOCS_ROUTES.has(route)) {
       const pending = byTag(page, "astro-island").filter(

@@ -47,10 +47,6 @@ export function byId(node: Node, id: string): DefaultTreeAdapterMap["element"] {
   return element;
 }
 
-export function linkTargets(node: Node): (string | undefined)[] {
-  return anchors(node).map((link) => attribute(link, "href"));
-}
-
 export function namedLinks(
   node: Node,
 ): (readonly [label: string, href: string | undefined])[] {
