@@ -43,7 +43,7 @@ test(
 
 test(
   "the scroll spy marks the section in view and shows the reading progress",
-  { tag: "@desktop" },
+  { tag: ["@desktop", "@scheme"] },
   async ({ page }) => {
     await page.goto(INSTALL);
     const outline = page.getByRole("navigation", { name: "On this page" });

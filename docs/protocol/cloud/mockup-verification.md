@@ -168,9 +168,14 @@ label after a refusal.
 
 ## Disk And HTTP Smoke
 
-The disk smoke opens every generated HTML document at 390px or 1440px, waits
-for documents, fonts and images, and rejects browser errors, missing
-resources, blank content and horizontal overflow, including frames.
+The disk smoke opens every light view at 390px or 1440px. A Node check compares
+each dark view with its light view at the same width. It accounts for color
+values, theme markers and verified links to the same entry and viewport.
+Chromium opens the dark view when the markup differs, when the stylesheets
+can change layout with the theme, or when the check cannot verify them.
+Chromium uses the document's theme for media queries.
+The smoke waits for documents, fonts and images. It rejects browser errors,
+missing resources, blank content and horizontal overflow, including frames.
 HTTP checks open the settings panes through the dialog rail, account entry and
 every flow through Browse, and check keyboard focus in account entry. They read
 the canvas frames by their labels, check a settings pane in its Light and Dark
@@ -180,8 +185,8 @@ component with the mapped theme, atomic styles, accessible fields, focus
 fallback, disabled states and the control-style policy.
 
 A catalogue policy test uses the keyboard to focus each element with
-`tabindex` outside registered controls on every built page, in both viewports
-and themes, and checks the computed
+`tabindex` outside registered controls in each document in the disk sweep.
+It checks the computed
 [token outline](./design-tokens.md#radius-elevation-and-focus): a solid 2px
 `focus` outline at a 3px offset, on `:focus-visible`. The disk smoke runs it
 on each page after its capture, so no capture shows a focus ring;
@@ -195,13 +200,14 @@ target in the tab order from the top of the page. For negative `tabindex`,
 transfer focus after keyboard input, as a keyboard action's focus handoff
 does. The build card's title and output region are included. Rejection fixtures fail a page without
 the shared rule and list only the targets above, and a fixture with the real
-`base.css` passes.
+`base.css` passes. The focus and shared button
+tests check their scheme-specific token values in both themes.
 Application browser tests also focus the output and prove that new output
 follows the newest line at the end, stops following after the reader scrolls
 up, and resumes when the reader returns to the end.
 
 No element inside an `aria-hidden` subtree takes focus unless an `inert`
-ancestor holds it, on every built page in both viewports and themes. An
+ancestor holds it, in any document in the disk sweep. An
 overlay screen's viewer backdrop is `inert`, and Tab from its panel never
 reaches a control outside the panel.
 

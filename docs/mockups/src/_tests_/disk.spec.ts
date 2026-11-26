@@ -9,20 +9,19 @@ import { currentDocumentPath } from "@mokly/viewer/data";
 
 import { currentScreen } from "../fixtures/viewer-catalogue";
 
-import { catalogueIndex } from "./catalogue-index";
 import {
   catalogueRoot,
   outputRoot,
   repositoryFilePath,
   screenView,
 } from "./catalogue-paths";
-import type { Scheme, Viewport } from "./catalogue-paths";
 import {
   controlDocumentViolations,
   controlPolicyInput,
 } from "./controls-document-policy";
 import { checkDiskOverlay } from "./disk-overlay-policy";
 import { serveOutput } from "./disk-requests";
+import { diskSweepViews, generatedViews } from "./disk-views";
 import { documentViolations } from "./document-policy";
 import { focusPolicyViolations } from "./focus-policy";
 import { inventoryPages } from "./product-inventory";
@@ -34,31 +33,7 @@ const screenshots = resolve(catalogueRoot, "../../.context/mockups-smoke");
 /** A developer asks for the full-page captures; a CI run writes none. */
 const capturesRequested = process.env.MKC_MOCKUP_CAPTURES === "1";
 
-/** One generated document: its output-relative file and the view it draws. */
-interface GeneratedView {
-  file: string;
-  path: string;
-  viewport: Viewport;
-  scheme: Scheme;
-}
-
-/**
- * Every document that the catalogue index lists: both viewports of each color
- * scheme of every screen and component, the components' own pages included.
- */
-const views: GeneratedView[] = [
-  ...catalogueIndex().screens,
-  ...catalogueIndex().components,
-].flatMap(({ path, colorSchemes }) =>
-  (["mobile", "desktop"] as const).flatMap((viewport) =>
-    colorSchemes.map((scheme) => ({
-      file: screenView(path, viewport, scheme),
-      path,
-      viewport,
-      scheme,
-    })),
-  ),
-);
+const views = generatedViews();
 
 /**
  * Every HTML file in the output's public tree, `static/`, which holds the
@@ -143,9 +118,10 @@ test("the complete generated catalogue is present", () => {
         expect(files, path).toContain(screenView(path, viewport, scheme));
 });
 
-for (const { file, path, viewport, scheme } of views) {
+for (const { file, path, viewport, scheme } of diskSweepViews(views)) {
   test("disk: " + file, async ({ page }) => {
     const mobile = viewport === "mobile";
+    await page.emulateMedia({ colorScheme: scheme });
     await page.setViewportSize({
       width: mobile ? 390 : 1440,
       height: mobile ? 844 : 900,

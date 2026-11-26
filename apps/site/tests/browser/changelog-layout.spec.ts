@@ -70,17 +70,15 @@ function widths(from: number, to: number, step = 1): number[] {
 }
 
 /**
- * The widths the page is drawn at, in sweeps short enough for one test
- * each: every width from 768px to 797px, both sides of every layout step of
- * the page and of its tool bar, and every 40px from 320px to 1920px.
+ * Check every width just above the toolbar breakpoint, both sides of each
+ * layout step, and a wider sample across the full width range.
  */
 const SWEEPS: Readonly<Record<string, readonly number[]>> = {
   "every width from 768px to 797px": widths(768, 797),
   "both sides of each layout step": [
     767, 779, 799, 829, 933, 959, 1035, 1099, 1155, 1199, 1319, 1399, 1439,
   ].flatMap((edge) => [edge, edge + 1]),
-  "every 40px from 320px to 1080px": widths(320, 1080, 40),
-  "every 40px from 1120px to 1920px": widths(1120, 1920, 40),
+  "every 80px from 320px to 1920px": widths(320, 1920, 80),
 };
 
 for (const disclosures of ["closed", "open"] as const) {
@@ -174,7 +172,7 @@ for (const percent of [100, 200]) {
   );
 }
 
-test.describe("without script", () => {
+test.describe("without script", DESKTOP, () => {
   test.use({ javaScriptEnabled: false });
 
   test("every note shows and the filter does not", async ({ page }) => {

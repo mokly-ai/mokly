@@ -24,7 +24,7 @@ import { focusGlows } from "./accessibility.js";
 type Scheme = "light" | "dark";
 
 /** Runs a test in the desktop projects only. */
-const DESKTOP = { tag: "@desktop" };
+const DESKTOP = { tag: ["@desktop", "@scheme"] };
 
 /** The label of each option, which names its radio. */
 const LABEL: Readonly<Record<Scheme, string>> = {
