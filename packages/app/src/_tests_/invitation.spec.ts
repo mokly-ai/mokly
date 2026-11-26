@@ -1,11 +1,10 @@
 import type { Page } from "@playwright/test";
 
-import { settingsPath } from "../navigation/paths";
-
-import { workspaceAddress } from "./addresses";
+import { workspaceAddress, projectQueryPathFor } from "./addresses";
 import { apiFailure, failWith } from "./api-responses";
 import { magicLinkFor } from "./api-server";
 import {
+  currentWorkspaceId,
   expect,
   freshEmail,
   open,
@@ -14,7 +13,7 @@ import {
   signIn,
   test,
 } from "./harness";
-import { createWorkspace } from "./setup-walks";
+import { createProject } from "./project-setup";
 import { admitLinkRequest } from "./sign-in-links";
 
 async function expectErrorReference(page: Page) {
@@ -30,9 +29,14 @@ test("the delivered invitation accepts the invited address after sign-in", async
   page,
 }) => {
   await signIn(page, freshEmail("invitation-owner"));
-  const workspaceId = await createWorkspace(page, "Invitation Org");
+  const projectId = await createProject(page, "Invitation Org");
+  const workspaceId = await currentWorkspaceId(page);
   const workspaceSlug = (await workspaceAddress(page, workspaceId)).slug;
-  const membersPath = settingsPath({ pane: "members", workspaceSlug });
+  const membersPath = await projectQueryPathFor(
+    page,
+    projectId,
+    "settings=members",
+  );
   await openDialog(page, membersPath);
   const invited = freshEmail("invitation-recipient");
   await page.getByLabel("Email").fill(invited);
@@ -99,9 +103,10 @@ test("an accepted invitation survives a failed workspace read", async ({
   page,
 }) => {
   await signIn(page, freshEmail("read-failure-owner"));
-  const workspaceId = await createWorkspace(page, "Read Failure Org");
+  await createProject(page, "Read Failure Org");
+  const workspaceId = await currentWorkspaceId(page);
   const workspaceSlug = (await workspaceAddress(page, workspaceId)).slug;
-  await openDialog(page, settingsPath({ pane: "members", workspaceSlug }));
+  await openDialog(page, `/${workspaceSlug}/-/settings/members`);
   const invited = freshEmail("read-failure-recipient");
   await page.getByLabel("Email").fill(invited);
   await page.getByRole("button", { name: "Send invitation" }).click();
@@ -190,9 +195,10 @@ test("a different signed-in address can switch to the invited address", async ({
   page,
 }) => {
   await signIn(page, freshEmail("wrong-invitation-account"));
-  const workspaceId = await createWorkspace(page, "Switch Org");
+  await createProject(page, "Switch Org");
+  const workspaceId = await currentWorkspaceId(page);
   const workspaceSlug = (await workspaceAddress(page, workspaceId)).slug;
-  await openDialog(page, settingsPath({ pane: "members", workspaceSlug }));
+  await openDialog(page, `/${workspaceSlug}/-/settings/members`);
   const invited = freshEmail("switch-invitation-recipient");
   await page.getByLabel("Email").fill(invited);
   await page.getByRole("button", { name: "Send invitation" }).click();
