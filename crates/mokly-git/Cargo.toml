@@ -16,6 +16,7 @@ unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }
+stats_alloc = "0.1.10"
 unimock = "0.6.8"
 
 [features]

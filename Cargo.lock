@@ -3209,6 +3209,7 @@ dependencies = [
  "mokly-platform",
  "mokly-test-support",
  "sha2",
+ "stats_alloc",
  "tempfile",
  "thiserror",
  "tracing",

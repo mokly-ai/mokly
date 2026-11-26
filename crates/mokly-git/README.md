@@ -48,7 +48,9 @@ reason and the Git source evidence.
 
 The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
 first list metadata without blob sizes. They fetch missing requested blobs and
-attribute files before listing sizes. A Git build that ignores the lazy-fetch
+attribute files before listing sizes. A first listing without a blob, such as
+an empty tree, a directory record, or an absent path, is complete, so no sized
+listing follows. A Git build that ignores the lazy-fetch
 control can still fetch a missing tree during a tree query or sparse-index
 listing. So `ls-tree` and both listings keep `FullTree` when the repository has
 a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
@@ -81,7 +83,7 @@ Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
 disabled. Without a promisor remote, the preflight is usually one plain sized
 `ls-tree` of the requested paths and their ancestor attribute files: when each
-blob record has a decimal size, Git can read every object, and the
+blob record has a decimal size, Git can read every listed blob, and the
 missing-object walk does not run. Like the read, the size follows replacement
 refs, so a replaced blob counts as present when its original is missing, which
 the walk alone reports as missing. An exact lookup and a listing below a root take their

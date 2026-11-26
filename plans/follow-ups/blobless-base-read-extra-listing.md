@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the performance orchestrator's check of PR #382, which fixed missing base objects on Git 2.43.
-- **Location:** `crates/mokly-git/src/fetch.rs:25` (`GitRepository::initial_tree_listing`) and line 46 (`GitRepository::ensure_objects`), and the three callers that list again: `crates/mokly-git/src/checkout_index.rs:67`, `crates/mokly-git/src/lookup.rs:19`, and `crates/mokly-git/src/repository_access.rs:43`.
+- **Location:** `crates/mokly-git/src/fetch.rs:25` (`GitRepository::initial_tree_listing`) and line 46 (`GitRepository::ensure_objects`), and the three callers that list again: `crates/mokly-git/src/checkout_index.rs:62`, `crates/mokly-git/src/lookup.rs:29`, and `crates/mokly-git/src/repository_access.rs:59`.
 - **Reason:** PR #382 made blobless base reads correct on Git 2.43 first, and the cost of its extra Git processes on newer Git needs a measurement before a change.
 
 - **Source:** Review.
@@ -13,9 +13,9 @@
   - **Base tree read:** a read of the file names, modes, and sizes of the comparison base commit, through `git ls-tree`.
   - **Sized listing:** `git ls-tree -l`, which prints the size of each blob. Git prints `BAD` as the size of a blob that the object store does not hold.
 - **Background:**
-  - Before PR #382, a base tree read ran one sized listing. When every blob had a decimal size, `tree::sizes_every_blob` in `crates/mokly-git/src/tree.rs:146` returned true, and the read ended. Only a listing with a missing size ran the missing-object check, one fetch, and a second sized listing.
+  - Before PR #382, a base tree read ran one sized listing. When every blob had a decimal size, `tree::sizes_every_blob` in `crates/mokly-git/src/tree.rs:155` returned true, and the read ended. Only a listing with a missing size ran the missing-object check, one fetch, and a second sized listing.
   - PR #382, commit `91e3a454d`, merged on 2026-11-20. In a repository with a promisor remote, it lists without `-l` first, through `initial_tree_listing`, so that Git 2.43 never reads the size of a missing blob. Then `ensure_objects` runs `git rev-list --objects --no-object-names --missing=print --no-walk --filter=tree:2 --filter-provided-objects --stdin`. It feeds the commit tree and the directory trees, keeps only the requested missing ids, and fetches them in one batch.
-  - Each of the three callers then always runs a second, sized listing when the repository has a promisor remote, because the first listing holds no sizes. The condition is `|| !self.promisor_remotes.is_empty()`.
+  - Each of the three callers then runs a second, sized listing when the repository has a promisor remote and the first listing holds a blob, because the first listing holds no sizes.
   - So each base tree read in a blobless clone now runs one more `ls-tree` and one `rev-list`, also when no blob is missing and Git is new. Full clones keep the single sized listing.
   - Each Serve edit runs the base freshness check, which the performance orchestrator measured at about 35 to 40 ms per edit after PR #356, in a full clone. One or two extra Git processes for each base read in a blobless clone can be a large share of that time. Cloud builds that read a blobless base also pay the cost.
   - Nobody has measured the cost in a blobless clone yet.

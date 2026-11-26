@@ -11,7 +11,8 @@ use crate::tree::{self, Entry, Limits, Mode};
 
 /// A sized listing of requested paths together with the attribute files of their
 /// ancestors, in which each blob record has a decimal size. Git prints a size only
-/// for a blob that it can read, so each listed object is present.
+/// for a blob that it can read, so each listed blob is present. Git prints a
+/// directory record without opening its tree.
 pub(crate) struct Presence {
     /// The requested records, parsed within the caller's limits, as a listing of
     /// those paths alone returns them.
@@ -55,27 +56,30 @@ impl GitRepository {
         if !self.promisor_remotes.is_empty() || paths.is_empty() || paths.len() > MAX_ARGUMENTS {
             return None;
         }
+        let mut arguments = vec!["ls-tree"];
+        arguments.extend_from_slice(flags);
+        arguments.extend(["-z", "--full-tree", commit.as_str(), "--"]);
+        let mut request = self.tree_request(&arguments);
+        // Each ancestor directory adds one attribute argument, so a request that fits one
+        // batch has paths that fit it alone and at most `MAX_ARGUMENTS - 1` ancestors per
+        // path. These gates bound the attribute names before they are built.
+        let deep = paths
+            .iter()
+            .any(|path| path.as_str().matches('/').count() >= MAX_ARGUMENTS);
+        if deep || one_batch(&request.args, paths.iter()).is_none() {
+            return None;
+        }
         let requested: BTreeSet<_> = paths.iter().collect();
         let attributes = attribute_paths(paths).ok()?;
         let added: Vec<_> = attributes
             .iter()
             .filter(|path| !requested.contains(path))
             .collect();
-        let mut arguments = vec!["ls-tree"];
-        arguments.extend_from_slice(flags);
-        arguments.extend(["-z", "--full-tree", commit.as_str(), "--"]);
-        let mut request = self.tree_request(&arguments);
-        let listed: Vec<_> = paths
-            .iter()
-            .chain(added.iter().copied())
-            .map(|path| OsString::from(path.as_str()))
-            .collect();
-        let mut batches =
-            batches::split(&request.args, &listed, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES).ok()?;
-        if batches.len() != 1 || nested(paths, &added) {
+        let listed = one_batch(&request.args, paths.iter().chain(added.iter().copied()))?;
+        if nested(paths, &added) {
             return None;
         }
-        request.args = batches.pop()?;
+        request.args = listed;
         let listing = self.runner.run(&request).ok()?.stdout;
         if !tree::sizes_every_blob(&listing) {
             return None;
@@ -86,6 +90,19 @@ impl GitRepository {
             attributes: tree::parse(&attributes, Limits::default()).ok()?,
         })
     }
+}
+
+/// The arguments of `prefix` and `paths` when they fit one argument batch.
+fn one_batch<'a>(
+    prefix: &[OsString],
+    paths: impl Iterator<Item = &'a RepoPath>,
+) -> Option<Vec<OsString>> {
+    let paths: Vec<_> = paths.map(|path| OsString::from(path.as_str())).collect();
+    let mut batches = batches::split(prefix, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES).ok()?;
+    if batches.len() != 1 {
+        return None;
+    }
+    batches.pop()
 }
 
 /// Whether a path of `paths` lies at or below another path of `paths` or `added`.
@@ -100,15 +117,25 @@ fn nested(paths: &[RepoPath], added: &[&RepoPath]) -> bool {
 }
 
 /// The root attribute file and the attribute file of each ancestor directory of `paths`.
-pub(crate) fn attribute_paths(paths: &[RepoPath]) -> Result<BTreeSet<RepoPath>> {
-    let mut attributes = BTreeSet::new();
-    attributes.insert(RepoPath::parse(".gitattributes")?);
+pub(crate) fn attribute_paths<'a>(
+    paths: impl IntoIterator<Item = &'a RepoPath>,
+) -> Result<BTreeSet<RepoPath>> {
+    let mut directories = BTreeSet::new();
     for path in paths {
         let mut parent = path.as_str();
+        // Each directory in the set already has its ancestors in the set, so the
+        // climb stops at the first directory that it has seen.
         while let Some((directory, _)) = parent.rsplit_once('/') {
-            attributes.insert(RepoPath::parse(&format!("{directory}/.gitattributes"))?);
+            if !directories.insert(directory) {
+                break;
+            }
             parent = directory;
         }
+    }
+    let mut attributes = BTreeSet::new();
+    attributes.insert(RepoPath::parse(".gitattributes")?);
+    for directory in directories {
+        attributes.insert(RepoPath::parse(&format!("{directory}/.gitattributes"))?);
     }
     Ok(attributes)
 }

@@ -25,7 +25,8 @@ impl GitRepository {
             return Ok(entries);
         }
         let entries = self.lookup_metadata(commit, paths, limits, false, false)?;
-        if self.fetch_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+        let fetched = self.fetch_checkout_objects(commit, &entries)?;
+        if (fetched || !self.promisor_remotes.is_empty()) && tree::holds_blob(&entries) {
             return self.lookup_metadata(commit, paths, limits, true, false);
         }
         Ok(entries)

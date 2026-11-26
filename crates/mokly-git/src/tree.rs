@@ -140,6 +140,14 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
+/// Whether `entries` hold a blob: a regular file or a link. Only a blob record can
+/// take a size from a second, sized listing.
+pub(crate) fn holds_blob(entries: &[Entry]) -> bool {
+    entries
+        .iter()
+        .any(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
+}
+
 /// Whether each blob record of a `ls-tree -l -z` listing has a decimal size. Git prints a
 /// size only for a blob that it can read, after it follows replacement refs, and `BAD` for
 /// a missing blob. A record

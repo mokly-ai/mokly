@@ -15,8 +15,7 @@ impl GitRepository {
         commit: &ObjectId,
         entries: &[Entry],
     ) -> Result<BTreeMap<RepoPath, Entry>> {
-        let paths: Vec<_> = entries.iter().map(|entry| entry.path.clone()).collect();
-        let attributes = attribute_paths(&paths)?;
+        let attributes = attribute_paths(entries.iter().map(|entry| &entry.path))?;
         let attrs = self.lookup_metadata(
             commit,
             &attributes.into_iter().collect::<Vec<_>>(),
@@ -59,7 +58,8 @@ impl GitRepository {
         if self.whole_listing_proves(&listing, Limits::default()) {
             return Ok(entries);
         }
-        if self.fetch_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+        let fetched = self.fetch_checkout_objects(commit, &entries)?;
+        if (fetched || !self.promisor_remotes.is_empty()) && tree::holds_blob(&entries) {
             return tree::parse(&self.runner.run(&request)?.stdout, Limits::default());
         }
         Ok(entries)
@@ -67,8 +67,9 @@ impl GitRepository {
 
     /// Whether a sized whole-tree listing, which holds every attribute file of the
     /// commit, proves each listed blob present: each blob record has a decimal size.
-    /// The listing must also fit the default bounds that the attribute listing of
-    /// the missing-object walk applies, so skipping that walk loses no bound error.
+    /// The listing must also fit the default file and node bounds that the attribute
+    /// listing of the missing-object walk applies, so skipping that walk loses neither
+    /// bound error.
     pub(crate) fn whole_listing_proves(&self, listing: &[u8], limits: Limits) -> bool {
         let bounds = Limits::default();
         self.promisor_remotes.is_empty()

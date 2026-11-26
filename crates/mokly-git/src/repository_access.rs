@@ -55,7 +55,8 @@ impl Repository for GitRepository {
         if root.is_none() && self.whole_listing_proves(&listing, limits) {
             return Ok(entries);
         }
-        if self.fetch_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+        let fetched = self.fetch_checkout_objects(commit, &entries)?;
+        if (fetched || !self.promisor_remotes.is_empty()) && tree::holds_blob(&entries) {
             return tree::parse(&self.runner.run(&request)?.stdout, limits);
         }
         Ok(entries)
