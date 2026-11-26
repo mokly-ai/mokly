@@ -90,6 +90,10 @@ export type DesktopGrantRequest = Schemas["DesktopGrantRequest"];
 export type DesktopGrantResult = Schemas["DesktopGrantResult"];
 /** What the desktop landing exchanges: the grant and the window's verifier. */
 export type DesktopGrantCallback = Schemas["DesktopGrantCallback"];
+/** What sign in's password section sends: the password and `returnTo`. */
+export type PreviewSignIn = Schemas["PreviewSignIn"];
+/** Which optional configuration the API has, such as the shared account. */
+export type Configuration = Schemas["Configuration"];
 
 /** Workspace roles, strongest first. */
 export type Role = Workspace["role"];

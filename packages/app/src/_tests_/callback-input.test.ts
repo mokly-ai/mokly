@@ -95,22 +95,6 @@ test("a magic link's token leaves the fragment and the query stays", () => {
   );
 });
 
-test("a preview secret leaves the fragment and the query stays", () => {
-  withDocument(
-    "https://app.test/auth/preview/callback?source=comment#secret=shared",
-    (browser) => {
-      captureCallbackInput();
-      assert.equal(
-        browser.address(),
-        "https://app.test/auth/preview/callback?source=comment",
-      );
-      assert.equal(browser.writes(), 1);
-      assert.equal(browser.referrer(), undefined);
-      assert.equal(takeCallbackInput("preview").get("secret"), "shared");
-    },
-  );
-});
-
 test("a desktop grant leaves the fragment and the query stays", () => {
   withDocument(
     "https://app.test/auth/desktop/callback?source=app#grant=" + "a".repeat(64),

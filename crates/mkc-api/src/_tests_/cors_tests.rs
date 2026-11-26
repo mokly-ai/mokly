@@ -13,7 +13,7 @@ use mkc_domain::client_origins::{AdmittedOrigins, DESKTOP_ORIGIN};
 use tower::ServiceExt;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::dispatch::DispatchMock;
+use crate::dispatch::{DispatchMock, DispatchOutcome};
 use crate::payload::Reply;
 use crate::router::{RouterBuilder, RouterFactory};
 
@@ -27,7 +27,7 @@ async fn cors_admission_matches_the_flag_and_never_reflects_a_third_origin() {
                     Unimock::new(
                         DispatchMock
                             .next_call(matching!(_))
-                            .answers(&|_, _| Ok(Reply::empty())),
+                            .answers(&|_, _| Ok(DispatchOutcome::Reply(Reply::empty()))),
                     )
                 } else {
                     Unimock::new(())

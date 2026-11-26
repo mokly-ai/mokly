@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the desktop browser sign-in brainstorm on the branch `calummoore/desktop-browser-authentication`.
-- **Location:** `packages/app/src/screens/account/callback-screen.tsx:139-150`, `docs/protocol/cloud/auth-sessions.md` "Magic Links" and "Sessions", and `docs/protocol/cloud/auth-callbacks.md` "Email Callback".
+- **Location:** `packages/app/src/screens/account/callback-screen.tsx:128-150`, `docs/protocol/cloud/auth-sessions.md` "Magic Links" and "Sessions", and `docs/protocol/cloud/auth-callbacks.md` "Email Callback".
 - **Reason:** The fix changes sign-in requirements for the web app, which the desktop browser sign-in change does not touch.
 
 - **Terms:**

@@ -1,0 +1,54 @@
+# Rust tests have no hang guard
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/preview-password-sign-in-jofl`, round 2 review, finding 11, "Queue regression can hang its test". It holds the wider fixes of its finding check, which need the user. Option B here is option F of that check, and option C here is option E. The branch applied the direct fix, option D of the check.
+- **Location:**
+  - `.config/nextest.toml:10-13`: `[profile.default]`, with no `slow-timeout` and no `terminate-after`.
+  - `docs/protocol/ci-test-timing.md:9-11` and `:24-29`, the introduction and the section "Hang Guards And Budgets".
+  - `.github/workflows/ci.yml:86`, `:343` and `:516`: the timeouts of the jobs that run Rust tests.
+  - `clippy.toml` at the repository root, a new file.
+  - `crates/mkc-api/src/_tests_/preview_queue_tests.rs:51`, `:71-75` and `:87-89`: the expected-state timeouts of one test.
+- **Reason:** Each option adds a new check, and B also changes the hang-guard rule of `docs/protocol/ci-test-timing.md`, so the user must choose.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **nextest:** cargo-nextest, the runner that the gate uses for every Rust test target. `.config/nextest.toml` configures it.
+  - **Hang guard:** a time limit that only stops a hung test or job. `docs/protocol/ci-test-timing.md` keeps it at three times the typical duration or more.
+  - **`slow-timeout` and `terminate-after`:** nextest settings. `slow-timeout` reports a test as slow after each period, and `terminate-after` stops the test after that many periods.
+  - **`disallowed-methods`:** a Clippy setting in `clippy.toml`. Clippy then reports each call of a listed function, with the reason that the setting gives.
+  - **Expected-state wait:** a bounded wait of a test for a signal that it expects. `docs/protocol/ci-test-timing.md` requires an allowance of at least 10 seconds.
+- **Background:**
+  - The gate runs every Rust test target with `cargo nextest run`, and the doc tests with `cargo test --doc`. The commands are in `xtask/src/check/rust_commands.rs:78-87` and `xtask/src/check/cloud_commands.rs:28-29`.
+  - `.config/nextest.toml` sets no `slow-timeout` and no `terminate-after`. By default nextest reports a test as slow after 60 seconds, and it never stops the test.
+  - `docs/protocol/ci-test-timing.md:9-11` says that Rust tests follow the assertion rule, and that the CI job timeout is their hang guard.
+  - In CI, each repository shard allows 75 minutes, and each native shard allows 60 minutes. The check job allows 120 minutes. The row "Workspace checks (Rust)" of the check job runs the `mkc-*` tests. The values are at `.github/workflows/ci.yml:86`, `:343` and `:516`.
+  - A local run has no guard.
+  - On 2026-11-25 a review found that `health_answers_while_admitted_preview_password_attempts_wait` in `crates/mkc-api/src/_tests_/preview_queue_tests.rs` could hang. A regression that made a password attempt wait on the only blocking worker of the test would block the test's own waits for that worker.
+  - The branch then bounded each such wait with an expected-state timeout of 30 seconds, at lines 51, 71-75 and 87-89. A timeout releases the held check slots and fails with the name of the pending signal.
+  - Other Rust tests have no such bound. A test that deadlocks still runs until the job timeout.
+  - In two local gate runs on 2026-11-25, the slowest test of `cargo nextest run --locked -p "mokly-*" -p xtask` took 58.1 and 41.0 seconds. It was `xtask::cli fixture_tests::fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_files`. Nobody measured CI durations for this item.
+  - The optional design attribution workflow already has a test-process hang guard. It wraps its test command in `timeout --signal=TERM --kill-after=30s 90m`, at `.github/workflows/design-attribution.yml:48-49`.
+  - The repository has no `clippy.toml`. The gate runs Clippy with `-D warnings`, so each reported call fails it.
+  - A search on 2026-11-26 found no call of `tokio::runtime::Handle::block_on` or `tokio::task::block_in_place` in `crates/` or `xtask/`. `Runtime::block_on` runs at the CLI entry points and in tests.
+- **Problem:** No guard stops a Rust test that stalls. In CI it holds its job until the job timeout, up to 120 minutes, and the job then fails as a timeout. Locally it runs until someone stops it.
+- **Impact if no action:** A deadlock regression in a Rust test costs up to two hours of CI time before it fails. It can also stall a local check with no end.
+- **Root question:** How can a stalled Rust test fail with a report in bounded time, locally and in CI?
+- **Options:**
+  - **A.** Change nothing more. Each test that waits on its own signals bounds those waits with an expected-state timeout of 10 seconds or more. The queue test now does this. A test without such a bound still waits for the job timeout. Effort: Small.
+  - **B.** Set `slow-timeout` with `terminate-after` in `[profile.default]` of `.config/nextest.toml`. nextest then stops and fails each test that runs past the limit, locally and in CI. First measure the typical durations of the slowest tests on the CI runners. Keep the limit at three times the slowest typical duration or more, or give a few slow tests an override with their own limit. Change the sentence of `docs/protocol/ci-test-timing.md:9-11` that names the job timeout as the Rust hang guard. Update the background of `plans/follow-ups/flaky-catalogue-unread-body-starvation.md`, which says the same. Doc tests keep the job timeout, because nextest does not run them. Effort: Medium.
+  - **C.** Add a workspace `clippy.toml` with `disallowed-methods` entries for `tokio::runtime::Handle::block_on` and `tokio::task::block_in_place`, each with a reason. It stops the cause of the hang above in product and test code: a blocking worker that waits for async work. It does not stop other hangs. Effort: Small.
+  - **D.** B and C together. Effort: Medium.
+- **Left out:**
+  - A silence guard in the xtask executor, which stops a suite command that prints nothing for a set time. It is option C of `plans/follow-ups/ci-timeout-duration-report.md` and option I of `plans/follow-ups/native-ci-timeout-headroom.md`. For this goal B is better on every point: it stops the stalled test itself, names it, and also works in a local nextest run.
+  - A shared helper that wraps each async test body in `tokio::time::timeout`. It cannot fire when the runtime thread of the test itself blocks, and synchronous tests get no guard, so it fails the goal.
+  - Shorter CI job timeouts. A job timeout covers setup and builds, and it must allow three times the typical duration of its job, so it cannot become short.
+- **Wider fix:** B. It stops every stalled test that nextest runs, whatever the cause. No structural fix was found, because a hang can come from any wait.
+- **Previous examples:**
+  - The queue test above, until its fix on 2026-11-25.
+  - `plans/follow-ups/flaky-catalogue-unread-body-starvation.md`: a Rust starvation test whose 200 ms waits act as hang guards and flake under load.
+  - The 90-minute test-process guard of the design attribution workflow, in `.github/workflows/design-attribution.yml:48-49`.
+- **Related:** `plans/follow-ups/windows-canonical-paths.md`, the same new file. Its option B creates the first `clippy.toml` with `disallowed-methods`. The branch that comes first creates the file, and the other adds its entries. The user decides each lint.
+- **Recommendation:** B. It stops every stalled test that nextest runs, names it, and works the same locally and in CI. D also keeps the known deadlock cause out of product code.
+- **Action:** ask the user, because B adds a new test-runner limit and changes the hang-guard rule of `docs/protocol/ci-test-timing.md`, and C adds a new lint. The always-on rules reserve both kinds of change for the user.

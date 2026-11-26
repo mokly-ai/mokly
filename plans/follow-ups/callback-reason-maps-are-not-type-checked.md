@@ -1,0 +1,35 @@
+# Callback reason maps are not type-checked
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 4, "Invalid email links show generic failure": the wider fix that the branch split off, option D of its check, which is option B here.
+- **Location:** `packages/app/src/screens/account/callback-screen.tsx` (the map from an API reason to a failed state of the email landing), `packages/app/src/api/reasons.ts:4` (`ApiReason`), `packages/app/package.json:12` (`api:generate`), `xtask/src/policy/openapi_client.rs:11-14` and `:28-60`, `docs/api/openapi.json` (the `x-reasons` of `verifyMagicLink`), and `docs/protocol/cloud/auth-callbacks.md:75-90`, section "Email Callback".
+- **Reason:** The generator and its drift check reach the xtask policy and the app's generated types, outside the purpose of the branch that found the defect.
+- **Category:** Code structure.
+
+- **Terms:**
+  - **`x-reasons`:** the list of error reasons that one operation declares in `docs/api/openapi.json`. The Rust contract under `crates/mkc-api/src/contract/` writes it.
+  - **Email landing:** the app screen at `/auth/email/callback`. It exchanges the token of a sign-in email with `POST /v1/auth/callback`, operation `verifyMagicLink`.
+  - **`ApiReason`:** the TypeScript union of every error reason of the API, read from the error schema of `packages/app/src/api/generated/schema.ts`.
+- **Background:**
+  - `docs/protocol/cloud/auth-callbacks.md:86-89` gives each failed state of the email landing its heading. Missing input and `magic-link-invalid` read "This link isn’t valid". `magic-link-expired` and `magic-link-used` have their own headings. Every other failure reads "We couldn’t sign you in".
+  - The landing picks its heading through a map from an API reason to a state, typed `Partial<Record<ApiError["reason"], …>>`. Its key type is `ApiReason` and the app's own `unrecognized`, so it allows every reason of the API.
+  - `verifyMagicLink` declares seven reasons in `x-reasons`: `csrf-rejected`, `internal-error`, `magic-link-expired`, `magic-link-invalid`, `magic-link-used`, `payload-too-large` and `validation-failed`.
+  - `api:generate` in `packages/app/package.json:12` writes `schema.ts` with `openapi-typescript`, which drops `x-reasons`. So no app type knows the reasons of one operation.
+  - `xtask/src/policy/openapi_client.rs` generates `docs/api/openapi.json` and `schema.ts`. Its check mode fails when either committed file differs from the generated one.
+  - The branch `calummoore/preview-password-sign-in-jofl` removed `magic-link-invalid` from the map by mistake. An invalid link then read "We couldn’t sign you in", and the typecheck passed. On 2026-11-25 the branch restored the state and added a node test with one literal case per row of the table, in `packages/app/src/_tests_/screens/account/callback-screen.test.ts`.
+  - Other reason maps use the same partial type over every reason, such as `packages/app/src/api/form-error.ts:19` and `packages/app/src/components/form-failure.tsx:15`. This item does not need to change them.
+- **Problem:** The compiler cannot tell when the landing's map misses a reason that `verifyMagicLink` declares, or keeps one that it no longer declares. The literal test checks today's rows only. A reason that the API adds later falls through to the generic heading with every check green.
+- **Impact if no action:** A change of the API's reasons can give readers the wrong heading on the email landing again.
+- **Root question:** How can the email landing's reason map stay in step with the reasons that its operation declares?
+- **Options:**
+  - **A.** Add a node test that reads the `x-reasons` of `verifyMagicLink` from `docs/api/openapi.json`. It checks that the map gives each declared reason a state, and no other reason. It is a test for the class, so it needs the user's approval. Effort: Medium.
+  - **B.** Generate, from the `x-reasons` of each operation, a TypeScript type that maps each operation ID to the union of its reasons. Write it beside `schema.ts`, in the same generation and drift check of `xtask/src/policy/openapi_client.rs`. Key the landing's map with `satisfies Record<…>` over the union of `verifyMagicLink`, so that it names all seven reasons. A removed reason then fails the typecheck as an extra key, and a newly declared reason fails as a missing key. Effort: Large.
+- **Left out:**
+  - Change nothing more. The literal test misses a reason that the API adds later, so it fails the goal.
+  - Write each operation's reason union by hand in the app. It drifts from `x-reasons` in the same way, so B is better on every point.
+  - Let the API send the heading. The headings are app copy, which `docs/protocol/cloud/auth-callbacks.md` defines.
+- **Wider fix:** B. A generated type removes the wrong case without a test to maintain.
+- **Previous examples:** The removal of `magic-link-invalid` from the map, fixed on 2026-11-25. On `origin/main` the landing joined missing input and `magic-link-invalid` in one condition, from commit `5cba4dc4b`.
+- **Recommendation:** B. The compiler then checks the map against the operation's own reasons, and other maps of one operation can use the same type later.
+- **Action:** fix after merge, apply B, because the generator and its drift check reach the xtask policy and the generated types, outside that branch's purpose.

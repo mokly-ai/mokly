@@ -24,6 +24,10 @@ spec:
   template:
     metadata:
       labels: { app.kubernetes.io/name: {{ $name }} }
+      {{- if and (eq $.Values.database.mode "namespace") (eq $name "api") (ne $.Values.preview.signInRolloutMarker "none") }}
+      annotations:
+        mokly.ai/preview-sign-in-rollout-marker: {{ $.Values.preview.signInRolloutMarker | quote }}
+      {{- end }}
     spec:
       serviceAccountName: {{ $name }}
       terminationGracePeriodSeconds: 30

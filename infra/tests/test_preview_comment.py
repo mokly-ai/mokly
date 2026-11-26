@@ -1,4 +1,4 @@
-"""PR comment states, input validation and the one permitted credential."""
+"""PR comment states, input validation and credential-free output."""
 
 import json
 from pathlib import Path
@@ -10,7 +10,6 @@ from support import load
 
 comment = load("preview-comment")
 RUN = "https://github.com/mokly-ai/mokly-cloud/actions/runs/123"
-SECRET = "a" * 64
 
 
 class PreviewCommentTests(unittest.TestCase):
@@ -20,7 +19,6 @@ class PreviewCommentTests(unittest.TestCase):
         sign_in=None,
         project="failed",
         proof=False,
-        private=True,
         **changes,
     ):
         inputs = dict(
@@ -33,13 +31,9 @@ class PreviewCommentTests(unittest.TestCase):
         inputs.update(changes)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            secret_file = None
             status_file = None
             proof_file = None
             if sign_in is not None:
-                secret_file = root / "preview-sign-in"
-                secret_file.write_text(SECRET)
-                secret_file.chmod(0o600)
                 status_file = root / "seed-status.json"
                 status_file.write_text(
                     json.dumps(
@@ -63,40 +57,35 @@ class PreviewCommentTests(unittest.TestCase):
                 inputs["domain"],
                 inputs["catalogue"],
                 inputs["run_url"],
-                private,
-                secret_file,
                 status_file,
                 proof_file,
             )
 
-    def test_every_outcome_row_selects_its_exact_links(self):
+    def test_every_outcome_keeps_its_status_and_has_no_credential_link(self):
         cases = (
-            ("running", {}, "Checks running", False, False),
-            ("failed", {}, "Checks failed. Open the run for details.", False, False),
+            ("running", {}, "Checks running", None),
+            ("failed", {}, "Checks failed. Open the run for details.", None),
             (
                 "failed",
                 {"sign_in": "accepted"},
                 "Checks failed. Open the run for details.",
-                True,
-                False,
+                None,
             ),
             (
                 "success",
                 {"sign_in": "accepted", "project": "seeded", "proof": True},
                 "Checks passed",
-                True,
-                True,
+                "https://pr-42.preview.example.com/mokly-ai/mokly/pull-requests/42",
             ),
-            ("removed", {}, "Preview removed", False, False),
+            ("removed", {}, "Preview removed", None),
             (
                 "cleanup-failed",
                 {},
                 "Cleanup failed. Rerun the workflow.",
-                False,
-                False,
+                None,
             ),
         )
-        for state, inputs, expected, open_preview, sample_project in cases:
+        for state, inputs, expected, sample_project in cases:
             with self.subTest(state=state, inputs=inputs):
                 body = self.render(state, **inputs)
                 self.assertTrue(body.startswith("<!-- mokly-preview -->\n### Mokly preview\n"))
@@ -108,24 +97,17 @@ class PreviewCommentTests(unittest.TestCase):
                     "`https://p-<publication-id>.pr-42.preview.catalogues.net`", body
                 )
                 self.assertIn(f"- Workflow evidence: {RUN}", body)
-                self.assertEqual("- Open preview:" in body, open_preview)
-                self.assertEqual("- Sample project:" in body, sample_project)
-
-    def test_public_repository_never_receives_the_credential_link(self):
-        body = self.render(
-            "success", sign_in="accepted", project="seeded", proof=True, private=False
-        )
-        self.assertNotIn("#secret=", body)
-        self.assertIn("- Sample project:", body)
-        self.assertIn(
-            "https://pr-42.preview.example.com/mokly-ai/mokly/pull-requests/42", body
-        )
+                self.assertNotIn("- Open preview:", body)
+                self.assertNotIn("#secret=", body)
+                self.assertEqual(
+                    [line for line in body.splitlines() if line.startswith("- Sample project:")],
+                    [f"- Sample project: {sample_project}"] if sample_project else [],
+                )
 
     def test_proof_content_and_other_credentials_never_appear(self):
         body = self.render(
             "success", sign_in="accepted", project="seeded", proof=True
         )
-        self.assertEqual(body.count(SECRET), 1)
         for forbidden in ("must-not-appear", "csrf", "mkc_session", "mkc_"):
             self.assertNotIn(forbidden, body)
 
@@ -145,8 +127,6 @@ class PreviewCommentTests(unittest.TestCase):
             inputs.update(changes)
             with self.subTest(state=state, changes=changes), self.assertRaises(ValueError):
                 self.render(state, **inputs)
-        with self.assertRaisesRegex(ValueError, "privacy"):
-            self.render("failed", private="yes")
 
 
 if __name__ == "__main__":

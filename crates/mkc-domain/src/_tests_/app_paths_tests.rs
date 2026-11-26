@@ -3,7 +3,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use crate::app_paths::{
-    DASHBOARD, EMAIL_CALLBACK, GITHUB_CALLBACK, GITHUB_INSTALL, PREVIEW_CALLBACK, SIGN_IN, SIGN_UP,
+    DASHBOARD, EMAIL_CALLBACK, GITHUB_CALLBACK, GITHUB_INSTALL, SIGN_IN, SIGN_UP,
     invitation_acceptance, on_origin, project, publication, pull_request, workspace,
     workspace_billing,
 };
@@ -16,7 +16,6 @@ fn paths_use_root_slug_addresses_and_join_an_origin() {
         SIGN_IN,
         SIGN_UP,
         EMAIL_CALLBACK,
-        PREVIEW_CALLBACK,
         GITHUB_CALLBACK,
         GITHUB_INSTALL,
         DASHBOARD,
@@ -35,7 +34,6 @@ fn paths_use_root_slug_addresses_and_join_an_origin() {
         ),
         "/workspaces/00000000-0000-0000-0000-000000000001/invitations/00000000-0000-0000-0000-000000000002/accept"
     );
-    assert_eq!(PREVIEW_CALLBACK, "/auth/preview/callback");
     let workspace_slug = "mokly".parse().unwrap();
     let project_slug = "cloud".parse().unwrap();
     let publication_id = PublicationId(Uuid::from_u128(2));

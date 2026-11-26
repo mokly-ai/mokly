@@ -2,7 +2,7 @@
 
 Email sign-in and sign-up share one flow. [GitHub sign-in](./github-sign-in.md)
 links by verified primary email and uses the same session policy. Previews add
-one [shared sign-in link](#preview-sign-in). The desktop app signs in with a
+one [shared password](./preview-sign-in.md). The desktop app signs in with a
 [desktop grant](#desktop-grants) from a browser session. The
 [API document](../../api/openapi.json) owns transport shapes.
 
@@ -44,51 +44,12 @@ same window so replay stays distinguishable during that period.
 
 ## Preview Sign-In
 
-A preview signs one shared account in with a per-namespace secret instead of
-email, as the [preview seed](./preview-seed.md) describes. The preview
-[seed command](./preview-seed.md#seed-command) also finds or creates the
-configured account, under the same settings and capability, and it issues no
-session.
-`MKC_PREVIEW_SIGN_IN_SECRET` (64 lowercase hex digits) and
-`MKC_PREVIEW_SIGN_IN_EMAIL` (validated and normalized like any account email)
-are both set or both absent. They require the named `preview_sign_in`
-capability, which `MKC_ENV=preview` and `development` grant and production
-never does. Setting only one, a malformed value, or either without the
-capability fails startup with a typed configuration error. Stable environments
-run with `MKC_ENV=production`, so no stable API can accept a secret.
-
-`MKC_PREVIEW_SIGN_IN_PLAN` is optional: `free` (the default when absent) or
-`team`. It requires both settings above and the same `preview_sign_in`
-capability. A plan without the pair, a plan without the capability, or an
-unknown value fails startup with a typed error that names the configuration
-key and never a secret. At workspace creation the API compares the creator's
-normalized email, read in that same transaction, with the configured email.
-A match uses the configured initial plan; every other creator uses `free`.
-This setting never changes an existing workspace's plan. See
-[Billing](./billing.md#plan-catalogue) for the consequences.
-
-`POST /v1/auth/preview` accepts `{secret}` and requires an admitted
-Origin; like the magic-link exchange, it cannot require a session CSRF
-token. The shared optional-operation gate runs before Origin or body
-validation. Without configuration it returns 503 `operation-unavailable`, as
-unconfigured GitHub operations do, even when both the Origin and body are
-invalid. Once configured, the endpoint validates Origin first, then its JSON
-body, then admission. Every attempt that passes the Origin and body checks
-consumes admission: at most 20 per selected peer IP per 60 seconds in a
-persistent fixed window. An unavailable, wrong-Origin or invalid JSON/body-shape
-attempt consumes none. A body with a malformed or different secret has passed
-those checks, consumes admission and returns `magic-link-invalid`. The API
-compares SHA-256 digests in constant time; the submitted value is never logged.
-
-On success one transaction finds or creates the user with the configured
-email, revokes a supplied existing session and issues a session exactly as the
-magic-link exchange does: the same cookie, deadlines, CSRF token and
-`SessionIssued` response, with `returnTo` `/dashboard` and
-`Cache-Control: no-store`. This is the only account created without email
-verification; possession of the namespace secret replaces it, and only under
-the capability. The secret stays valid until its namespace is deleted and
-leaves no expiry, consumption or replay records; its sessions follow the
-ordinary lifetimes.
+A preview signs one shared account in with a shared preview password, which
+`POST /v1/auth/preview` checks against a slow verifier, only under the
+`preview_sign_in` capability that production never grants.
+[Preview sign-in](./preview-sign-in.md) defines the account settings, the
+verifier, the exchange and the configuration answer. The exchange issues
+sessions exactly as this page defines.
 
 ## Desktop Grants
 
@@ -217,8 +178,10 @@ Publishing secrets are `mkc_` plus 64 random lowercase hex digits. The visible
 prefix is `mkc_` plus its first eight hex digits. Hash the entire secret using
 SHA-256; random 256-bit credentials do not need a password stretching scheme.
 The same rationale applies to magic links, desktop grants and sessions. Human
-passwords are
-not accepted. Hashes never appear in resource DTOs; production diagnostics
+passwords are not accepted, except the
+[preview password](./preview-sign-in.md#verifier), which only a preview
+accepts and which a slow scrypt verifier checks. Hashes never appear in
+resource DTOs; production diagnostics
 never log credentials, cookies, CSRF tokens or email bodies.
 
 Sign-in mail crosses the shared mail boundary as a typed message: the

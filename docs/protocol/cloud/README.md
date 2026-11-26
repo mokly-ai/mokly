@@ -47,7 +47,7 @@ Change a doc only when a requirement or a decision changes.
 - [PR preview environments](./pr-preview-environments.md) — namespace/data/host
   contracts, [shared platform](./preview-platform.md),
   [script interfaces](./preview-scripts.md) and the
-  [seed data](./preview-seed.md) account, sign-in link and sample project;
+  [seed data](./preview-seed.md) account and sample project;
   the [seed Job](./preview-seed-job.md) owns its template and release script,
   [local seed](./preview-seed-local.md) owns the local seed command, and
   [catalogue capture](./preview-capture.md) owns the producer command and failures.
@@ -71,7 +71,9 @@ Change a doc only when a requirement or a decision changes.
 - [Billing workers](./billing-workers.md) — Stripe webhooks, retries, seat
   reconciliation and the workers' use of verified prices.
 - [Authentication and sessions](./auth-sessions.md) — links, desktop grants,
-  cookies, rotation and CSRF.
+  cookies, rotation and CSRF; [preview sign-in](./preview-sign-in.md) owns the
+  shared account, the preview password, its verifier and the configuration
+  answer's password field.
 - [Authentication callbacks](./auth-callbacks.md) — provider-scoped browser
   landings, tab state, cleanup, recovery and resume behavior.
 - [Email](./email.md) — the sign-in and invitation messages: typed content,

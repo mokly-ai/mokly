@@ -59,7 +59,6 @@
   "src/_tests_/not-found.spec.ts": 0.9,
   "src/_tests_/onboarding.spec.ts": 16.5,
   "src/_tests_/plan.spec.ts": 37,
-  "src/_tests_/preview-callback.spec.ts": 3.7,
   "src/_tests_/publish-proof.spec.ts": 3.2,
   "src/_tests_/publish-refusals-mobile.spec.ts": 3.8,
   "src/_tests_/publish-refusals.spec.ts": 6.9,

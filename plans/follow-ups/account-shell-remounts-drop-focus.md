@@ -1,0 +1,61 @@
+# Account shell remounts drop keyboard focus
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from the branch `calummoore/preview-password-sign-in-jofl`, round 2 review, finding 10, "Email callback drops keyboard focus on refusal". It holds the wider fix that the branch split off, option C of the finding check. It also holds the cases that the review and the check listed outside the scope.
+- **Location:**
+  - `packages/app/src/screens/account/account-shell.tsx:86-148`: `AccountShell`, which draws the frame and the panel in one component.
+  - `packages/app/src/screens/account/desktop-callback-screen.tsx:34-59` and `:117-120`: `Failed` and the branches that return it.
+  - `packages/app/src/session/guard.tsx:62-84`: `RequireSession`.
+  - `packages/app/src/screens/app/workspace-route.tsx:51-140`: `WorkspaceRoute` and `Resolved`.
+  - `packages/app/src/screens/app/home-redirect.tsx:49-73`: `Resolver`.
+  - `packages/app/app/_layout.tsx`: the only Expo Router layout of the app.
+  - `docs/protocol/cloud/web-app.md:146-155`, section "Accessibility".
+- **Reason:** The wider fix changes the route layout and every account screen. The branch that found the problem fixed only the email callback, which it had changed.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **AccountShell:** the component that draws every account page: the skip link, the header, the `main` landmark with the panel, and the footer.
+  - **Remount:** React removes the DOM elements of a component and draws new ones, because the component at that place changed its type.
+  - **Session guard:** `RequireSession`, which reads the session before it draws a product route.
+  - **Expo Router layout:** a `_layout.tsx` file under `packages/app/app/` that draws once around the routes of its folder.
+- **Background:**
+  - `AccountShell` draws the root element with `data-mkc-screen`, the skip link, the header, the `main` landmark with the panel, and the footer links Terms and Privacy.
+  - React keeps a DOM element only while the component at its place keeps its type. A screen that returns another component, which draws its own `AccountShell`, remounts the shell. Focus on the old skip link, header link or footer link then falls to the page body.
+  - `docs/protocol/cloud/web-app.md:146` gives every screen one `main` landmark, one `h1` and a skip link. Lines 151-155 say that loading states keep their landmark and draw the layout that they wait for.
+  - Sign in keeps one shell element for its wait and its form. The comment at `packages/app/src/screens/account/entry-screen.tsx:97-106` says that the frame "stays in place, and so does focus".
+  - The GitHub callback keeps one shell for every state, in `packages/app/src/screens/account/github-callback-screen.tsx:196-252`.
+  - On 2026-11-25 the branch `calummoore/preview-password-sign-in-jofl` fixed the email callback in the same way. `EmailLanding` in `packages/app/src/screens/account/callback-screen.tsx:83-111` draws one shell for the wait and every failure.
+  - Before that fix, the failures of the email callback drew a second shell. The new browser test failed against the old screen with `Error: focus stays on the skip link`, `Expected: focused` and `Received: inactive`.
+  - That test is "a link refused after the wait keeps the skip link focused", in `packages/app/src/_tests_/email-callback.spec.ts:79-99`. It holds the request with `page.route`, focuses the skip link, releases a refusal and checks focus.
+  - A test of the guard can hold the session read, `GET /v1/session` in `packages/app/src/session/context.tsx:48`, in the same way.
+  - The app has one Expo Router layout, `packages/app/app/_layout.tsx`, which draws the active route through `<Slot />`.
+  - These places still remount the shell:
+    - The desktop callback draws its wait with `AccountShell` directly, in `packages/app/src/screens/account/desktop-callback-screen.tsx:145-159`. A refused exchange returns `Failed` at line 117. A signed-out landing without input returns it at lines 118-120. `Failed` draws its own shell, at lines 34-59.
+    - `RequireSession` in `packages/app/src/session/guard.tsx:62-84` returns its `waiting` element while the session read runs, then `children(session)`. Each route passes a wait component and a screen component that both draw `AccountShell`.
+    - `WorkspaceRoute` in `packages/app/src/screens/app/workspace-route.tsx:51-140` hands over twice. When the session read answers, a new `Resolved` element draws the wait again. When the workspace read answers, it draws the screen, or its own shell at lines 104-140.
+    - The guarded routes are in `packages/app/app/new.tsx:21-30`, `packages/app/src/screens/app/install-route.tsx:25-45`, `packages/app/src/screens/app/new-project-route.tsx:14-22` and `packages/app/src/screens/app/cli-project-route.tsx:12-22`.
+    - More guarded routes are in `packages/app/src/screens/account/connect-desktop-screen.tsx:255-263`, `packages/app/src/screens/account/invitation-accept-screen.tsx:212-223`, `packages/app/src/screens/app/home-redirect.tsx:84-108` and `packages/app/src/screens/app/permalink-route.tsx:125-130` and `:181-184`.
+    - Some screens also switch inside themselves. `Resolver` in `packages/app/src/screens/app/home-redirect.tsx:49-73` draws `HomeWait`, then its own shell when the redirect fails.
+  - The session read runs on each full page load, so a reader meets the guard hand-over after a load or a reload. A slow network makes each wait longer.
+- **Problem:** Several account screens still remount their shell when a wait ends. The desktop callback does it on a refusal. Every guarded route does it when the session read answers, and `WorkspaceRoute` does it again when the workspace read answers. A reader who focused a link of the frame during the wait loses focus.
+- **Impact if no action:** A keyboard or screen-reader reader loses their place after a network wait, and must start again from the top of the page.
+- **Root question:** How can every account screen keep the reader's focus when it moves from a wait to its loaded or failed state?
+- **Options:**
+  - **A.** Fix each screen whose own states switch components. Draw the failures of the desktop callback in its one shell, as `EmailLanding` does, and do the same in `Resolver`. The guard hand-overs stay, because the guard switches between two components by design. Each new screen must repeat the pattern. Effort: Medium.
+  - **B.** Give the callback pages one shared layout that owns one shell for the wait and the recovery. Move the email, desktop and GitHub callbacks to it, and keep their own headings, actions and state messages. It covers the callbacks only. Effort: Medium.
+  - **C.** Split `AccountShell` into a frame and a panel. The frame holds the root element, the skip link, the header and the footer. An Expo Router layout for the account routes draws the frame once, and each screen draws only its panel. Each screen passes its screen name and its identity to the frame, for example through a context of the layout. Every state change and every guard hand-over then keeps the frame and its focus. Keep the behaviour of today between routes, for example by keying the frame by the pathname, and check where focus goes after a route change. A focused link inside the panel, such as the Back link of the CLI form's wait, still moves when the panel's component changes. Effort: Large.
+  - **D.** Make `RequireSession` and `WorkspaceRoute` render one screen element in every state. The guard passes the session, or nothing while it reads, and each screen draws its own wait in one shell, as Sign in does. It also keeps a focused link inside the panel. Every guarded screen changes, and the desktop callback still needs A. Effort: Large.
+- **Left out:**
+  - Move focus back after a remount. It adds a second focus move, and it still replaces the `main` landmark.
+  - Change nothing. Keyboard readers keep losing focus after a wait, so it fails the goal.
+- **Wider fix:** C. The frame stays mounted through every state of every account route, so a new screen cannot drop the focus of the frame.
+- **Previous examples:**
+  - The email callback until its fix on 2026-11-25, as the background says.
+  - Commit `5a9f08007` kept the viewer of the app mounted when a panel closed.
+- **Related:**
+  - `plans/follow-ups/viewer-bar-resize-drops-held-focus.md`: the same cause. The viewer bar removes a focused control when it changes its layout. Each place needs its own fix.
+  - `plans/follow-ups/session-error-screen-lacks-heading.md`: the same code. Its option A draws the error of the session guard inside the account shell. With C, that error draws inside the shared frame, so the later branch adapts to the earlier one.
+- **Recommendation:** C. It keeps the skip link, the header and the footer in place through every state change of every account route. Screens that are added later get the same frame.
+- **Action:** fix after merge, apply C, because it changes the route layout and every account screen, beyond the email callback that the branch fixed.

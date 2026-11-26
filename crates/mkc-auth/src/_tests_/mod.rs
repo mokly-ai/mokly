@@ -11,6 +11,7 @@ mod links_tests;
 mod origin_tests;
 mod preview_account_tests;
 mod preview_tests;
+mod preview_verifier_tests;
 mod session_failure_tests;
 mod sessions_tests;
 mod support;
