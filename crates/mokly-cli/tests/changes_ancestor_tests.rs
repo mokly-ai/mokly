@@ -154,7 +154,7 @@ const WARNINGS: &str = concat!(
 fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
     let root = warning_fixture();
     let path = root.path();
-    let run = |args: &[&str]| run_configured(path, args, None, None, "plain");
+    let run = |args: &[&str]| run_configured(path, args, None, &[], "plain");
     let build = run(&["build"]);
     let stderr = String::from_utf8(build.stderr).unwrap();
     assert_eq!(build.status.code(), Some(0), "{stderr}");

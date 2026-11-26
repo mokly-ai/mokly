@@ -139,7 +139,7 @@ fn changes_explain_the_missing_override_when_only_the_head_can_load_the_build() 
         root.path(),
         &["build", "--config", CONFIG_PATH],
         None,
-        None,
+        &[],
         "plain",
     );
     let stderr = String::from_utf8(output.stderr).unwrap();
