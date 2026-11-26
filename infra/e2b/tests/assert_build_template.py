@@ -15,7 +15,7 @@ import tempfile
 TEMPLATE_HOME = "/home/user"
 PROBE_KEY = "MKC_TEMPLATE_PROBE"
 PROBE_VALUE = "stream-process-added-env"
-BUILD_TOOLS = ("cc", "c++", "make")
+BUILD_TOOLS = ("cc", "c++", "make", "pkg-config", "libtool")
 SECRET_KEYS = {
     "E2B_API_KEY", "MKC_E2B_API_KEY", "MOKLY_TOKEN", "GITHUB_TOKEN", "GH_TOKEN",
     "GIT_ASKPASS", "SSH_ASKPASS", "GOOGLE_APPLICATION_CREDENTIALS",
@@ -44,6 +44,28 @@ NPM_CLEAN_INSTALL = ["npm", "ci", "--offline", "--ignore-scripts", "--no-audit",
 # Git 2.43.0 is the oldest release with a recorded working comparison.
 GIT_MINIMUM = (2, 43)
 GIT_NUL_BATCH = ["git", "cat-file", "--batch", "--filters", "-Z"]
+NATIVE_BUILD_FAILURE = "native build with make, cc, g++, ar and ld failed"
+NATIVE_BUILD_FILES = {
+    "value.c": "int probe_value(void) { return 42; }\n",
+    "probe.cpp": r"""#include <iostream>
+
+extern "C" int probe_value(void);
+
+int main() {
+    if (probe_value() != 42) {
+        return 1;
+    }
+    std::cout << "native-build-ok\n";
+    return 0;
+}
+""",
+    "Makefile": (
+        "probe: probe.o libprobe.a\n"
+        "\t$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)\n"
+        "libprobe.a: value.o\n"
+        "\t$(AR) rcs $@ $^\n"
+    ),
+}
 
 
 class TemplateAssertionError(RuntimeError):
@@ -76,7 +98,7 @@ def verify_tools_on_path():
                 real_files.add(os.path.realpath(candidate))
         require(real_files, f"{executable} is missing from PATH")
         require(len(real_files) == 1, f"{executable} has multiple copies on PATH")
-    for executable in ("curl", "sha256sum", *BUILD_TOOLS):
+    for executable in ("curl", "sha256sum", "g++", "ar", "ld", *BUILD_TOOLS):
         require(shutil.which(executable) is not None, f"{executable} is missing from PATH")
 
 
@@ -102,6 +124,19 @@ def verify_git_base_reads(workspace):
             command(GIT_NUL_BATCH, cwd=repository)
     except (OSError, TemplateAssertionError) as error:
         raise TemplateAssertionError("git cat-file --batch --filters -Z failed") from error
+
+
+def verify_native_build(workspace):
+    """Build and run a small native program with make's default tools."""
+    try:
+        with tempfile.TemporaryDirectory(dir=workspace) as project:
+            for name, source in NATIVE_BUILD_FILES.items():
+                Path(project, name).write_text(source)
+            command(["make"], cwd=project)
+            output = command(["./probe"], cwd=project)
+    except (OSError, UnicodeError, TemplateAssertionError) as error:
+        raise TemplateAssertionError(NATIVE_BUILD_FAILURE) from error
+    require(output == "native-build-ok", NATIVE_BUILD_FAILURE)
 
 
 def verify(node_version):
@@ -133,6 +168,7 @@ def verify(node_version):
         command([executable, "--version"])
     verify_git_base_reads(workspace)
     verify_npm_clean_install(workspace)
+    verify_native_build(workspace)
     require(Path("/bin/sh").is_file() and os.access("/bin/sh", os.X_OK), "/bin/sh is missing")
     require(command(["/bin/sh", "-c", "printf shell-ok"]) == "shell-ok", "/bin/sh failed")
     require(not SECRET_KEYS.intersection(os.environ), "credential environment entry exists")

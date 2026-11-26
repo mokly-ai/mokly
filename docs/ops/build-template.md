@@ -29,7 +29,7 @@ Helm values, logs or a release report. Disable shell tracing.
 writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
 definition as a provider configuration.
 
-The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template),
+The Dockerfile uses the [template's base-image pin](../protocol/cloud/cloud-build-template.md#base-image),
 `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
 The digest was resolved on 2026-11-26 from the tag's
 [Docker Hub record](https://hub.docker.com/v2/repositories/library/debian/tags/trixie-20261123-slim).
@@ -155,7 +155,7 @@ Choose the build reference to probe, and set `CANDIDATE_REFERENCE` to it:
   build reference from its record in [Live Evidence](#live-evidence).
 - A rollback also takes the build reference from its record. It uses only a
   previous reference whose release meets the current
-  [template contract](../protocol/cloud/cloud-build-runner.md#template). When
+  [template contract](../protocol/cloud/cloud-build-template.md). When
   no recorded release meets it, disable builds as the last section says,
   then publish and verify a new release.
 
@@ -274,7 +274,8 @@ On first enablement, request a build against the test repository with the
 environment's App installed.
 Require a published build, its ready publication on the catalogue origin,
 a completed GitHub check and removal of the attempt sandbox. Record the
-revision, build and publication IDs, check result, timings and UTC time.
+revision, the template build reference `TEMPLATE_ID:BUILD_ID`, the build and
+publication IDs, the check result, the timings and the UTC time.
 Also prove a same-repository pull request build and Re-run. Time one pull
 request build whose base lockfile differs from its head, because the CLI then
 installs the base's dependencies inside the publish step's deadline.

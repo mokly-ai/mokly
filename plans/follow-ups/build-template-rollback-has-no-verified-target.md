@@ -1,0 +1,47 @@
+# A failing release has no verified rollback target
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-keep-the-template-s-compiler-and-csnm`, review finding 1 of round 1, as the item "A template rollback can still pick v5". Cal rescoped it on 2026-11-26.
+- **Location:** `docs/ops/build-template.md`, sections "Verify The Streaming Boundary" (the rollback bullet), "Rotate, Roll Back And Disable", and the release records under "Live Evidence"; `infra/scripts/build_values.py:44` to line 46, the check of `builds.template`; `plans/follow-ups/cloud-builds-never-ran-live.md`, its rollback step.
+- **Reason:** The two options have real trade-offs, and option B adds a configuration rejection, so the item waits for the user.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Build template:** the E2B sandbox image, `mokly-build-v<N>`, in which Mokly Cloud runs the checkout, the install, and `mokly publish` of a customer repository. `infra/e2b/build/e2b.Dockerfile` defines it.
+  - **Build reference:** `TEMPLATE_ID:BUILD_ID`, which starts exactly one template build. The environment app-config names it under `builds.template`.
+  - **Template probe:** the live check of `docs/ops/build-template.md` that runs `infra/e2b/tests/assert_build_template.py` in a fresh sandbox of a build reference.
+  - **Rollback target:** a previous build reference that an operator can deploy when the release in use fails. It must meet the current template contract and pass the current probe.
+- **Background:**
+  - The runbook lets an operator roll back only to a previous build reference whose release meets the current template contract. The operator probes that reference first. When no recorded release qualifies, the operator disables builds, then publishes and verifies a new release. The section "Rotate, Roll Back And Disable" keeps the previous release ready for rollback only when it meets the current contract.
+  - `docs/protocol/cloud/cloud-build-template.md` holds the template contract. On 2026-11-26 Cal decided that it requires a C compiler, a C++ compiler, `ar`, `ld`, `make`, `pkgconf`, and `libtool`, and a Git that supports `git grep -P`. It also requires exactly one real file each for `node`, `npm`, `npx`, `corepack`, `python3`, and `git` on `PATH`.
+  - The probe checks the one real file of each of these tools. It also builds and runs a small C and C++ program through `make`, and it requires `pkg-config` and `libtool`.
+  - On 2026-11-26 the assertion script with the one-copy check, run by hand, printed `FAIL build template: python3 has multiple copies on PATH` against two releases. They were `mokly-build-v5`, build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`, and, at 15:27 UTC, `mokly-build-v6`, build reference `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c`. Both hold the base image's own Python beside Debian's, and the Git source build beside Debian's Git.
+  - `mokly-build-v7`, build reference `ez8gf58grc5zofiqv7ql:548d54fd-072d-47eb-b484-e90e23471ecb`, passed the probe with the one-copy check at 2026-11-26T15:41:58Z. A v7 sandbox had no `pkg-config` or `libtool` command, so v7 is expected to fail the probe that requires them. No run has confirmed this.
+  - On 2026-11-26 Cal decided that `mokly-build-v8` adds `pkgconf` and `libtool` and supersedes v7 before main-preview switches. Main-preview runs v6 since 2026-11-26. Cal switches it from v6 to v8 after the v8 Dockerfile merges into `main`.
+  - So after that switch, no earlier recorded release passes the current probe. `mokly-build-v3` cannot compare, and the npm of `mokly-build-v2` is broken, so neither qualifies either.
+  - `infra/scripts/build_values.py` accepts any nonempty `builds.template` value. Only the operator applies the rollback rule.
+  - On 2026-11-26 Cal rescoped this item from a rollback to v5 to a failing release without a verified rollback target. He chose the options that are now A and B as its main options. They were options C and F before. The options that retired v5 moved to **Left out**.
+- **Problem:** After main-preview switches to v8, no earlier recorded release passes the current probe, so the rollback rule has no target. No rule keeps a verified fallback for the release in use.
+- **Impact if no action:** When v8 fails its probe or breaks builds, the operator can only disable builds. Projects then publish from their own CI until a new release passes. Each later change to the probe or the contract can retire every earlier release again.
+- **Root question:** How does each environment keep a verified release to roll back to when its release in use fails?
+- **Options:**
+  - **A.** Record a verified fallback build reference for each release in use, with evidence that covers the same build capabilities. A change to the probe or the contract verifies the fallback again, or records a new one. A fallback with changed Dockerfile bytes needs a new release. After the switch to v8, no recorded release qualifies, so the first fallback needs a new verified build. Effort: Medium.
+  - **B.** Keep a checked-in list of qualified build references, and make `infra/scripts/build_values.py` reject a `builds.template` value that is not on it. Retire a release by removing its entry. It adds a new configuration rejection, each release must edit the list, and an out-of-date list blocks an emergency rollback. It does not create a target: with only v8 on the list, a failing v8 still leaves only the choice to disable builds. `plans/follow-ups/build-template-config-accepts-bare-id.md` adds a format check to the same field, so decide the two together. Effort: Medium.
+- **Left out:**
+  - Change nothing. When the release in use fails, the runbook disables builds until a new release passes. It fails the goal, because the environment has no target.
+  - Mark v5 as not eligible for a rollback from v6, the former option B. The current probe already fails v5.
+  - Call v5 a degraded fallback in its record, the former option A. The current probe fails v5, so the runbook cannot use it.
+  - Add the toolchain and PCRE2 sentence to the contract, the former option D, and a build check to the probe, the former option E. Cal's answers of 2026-11-26 decided both. The template contract page and the probe now hold them.
+  - Relax the probe for a rollback target. It breaks the one-copy and toolchain requirements that Cal decided on 2026-11-26.
+  - A second app-config reference that the API starts when the first one fails. It still needs the verified target of A, and it adds new runner behaviour.
+- **Wider fix:** A. A fallback that each change of the probe or the contract verifies again stops such a change from retiring every target at once. B only stops an unverified target.
+- **Previous examples:** The Git floor of the contract retired `mokly-build-v3` from rollback, because v3 could not compare. On 2026-11-26 the one-copy check of the probe retired v5 and v6 at once.
+- **Related:**
+  - `plans/follow-ups/build-template-config-accepts-bare-id.md`: B here adds a check to the same `builds.template` field as its format check, so decide B with that item.
+  - `plans/follow-ups/template-image-change-keeps-release-name.md`: its option D writes a release receipt for each build reference. One release record can serve A here and that option.
+  - `plans/follow-ups/template-probe-pass-not-tied-to-assertion.md`: its options tie each enabled build reference to a pass of the current assertion. One rule can serve that item and the fallback of A here.
+  - `plans/follow-ups/cloud-builds-never-ran-live.md`: its rollback step uses the rule that this item changes.
+- **Recommendation:** A. It is the only option that gives a failing release a target. B best protects the `builds.template` field, and it waits for the bare template ID item.
+- **Action:** ask the user, because the options have real trade-offs: A costs a verified build for each release in use, and B adds a configuration rejection that can block an emergency rollback.

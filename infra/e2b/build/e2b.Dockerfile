@@ -6,7 +6,7 @@ ARG NODE_SHA256=fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        build-essential ca-certificates coreutils curl git python3 xz-utils \
+        build-essential ca-certificates coreutils curl git libtool libtool-bin pkgconf python3 xz-utils \
     && rm -rf /var/lib/apt/lists/* \
     && curl --fail --show-error --location --proto '=https' --tlsv1.2 \
         "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \

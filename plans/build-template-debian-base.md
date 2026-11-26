@@ -25,7 +25,7 @@ and the smoke build. Only trixie and v5 passed the comparison build.
 
 Contract owners:
 
-- [Cloud build runner](../docs/protocol/cloud/cloud-build-runner.md#template).
+- [Cloud build template](../docs/protocol/cloud/cloud-build-template.md).
 - [Repository layout](../docs/protocol/cloud/repository-layout.md#build-toolchain-checks).
 - The runbook [Cloud Build Template](../docs/ops/build-template.md).
 
@@ -107,9 +107,10 @@ Design calls, my calls on 2026-11-26:
 Depends on: none. Starts after the v5 pull request merges into `main` and
 `main` merges into this branch.
 
-- [ ] `docs/protocol/cloud/cloud-build-runner.md`, section "Template": a
+- [x] `docs/protocol/cloud/cloud-build-runner.md`, section "Template": a
       Debian base pinned by digest, Debian's Git, a C compiler, a C++
-      compiler, `make`, and one copy of each key tool on `PATH`.
+      compiler, `make`, and one copy of each key tool on `PATH`. Done by
+      Milestone 8, which moves the contract to `cloud-build-template.md`.
 - [x] `docs/protocol/cloud/repository-layout.md`, section "Build Toolchain
       Checks": the pin form `debian:<tag>@sha256:<64 lowercase hex>`.
 
@@ -190,23 +191,23 @@ Depends on: 5. Starts after `main` with PR #571 merges into this branch.
 
 Depends on: 6.
 
-- [ ] New protocol page for the template contract, and a short linking
+- [x] New protocol page for the template contract, and a short linking
       "Template" section in `docs/protocol/cloud/cloud-build-runner.md`.
-- [ ] Rescope and rename the rollback follow-up item.
-- [ ] Name the selection rule and the full build reference in the stale
+- [x] Rescope and rename the rollback follow-up item.
+- [x] Name the selection rule and the full build reference in the stale
       follow-up items.
 
 ## Milestone 9: Probe build proof, build helpers, and no step cache
 
 Depends on: 6. Runs with Milestone 8.
 
-- [ ] Dockerfile: add `pkgconf` and `libtool`.
-- [ ] Probe: compile and link a C and a C++ program through `make`'s default
+- [x] Dockerfile: add `pkgconf` and `libtool`.
+- [x] Probe: compile and link a C and a C++ program through `make`'s default
       rules, and require `pkg-config` and `libtool`, with a regression for
       each missing tool that fails first.
-- [ ] `infra/e2b/build/build-template.mjs` passes `skipCache: true`, with a
+- [x] `infra/e2b/build/build-template.mjs` passes `skipCache: true`, with a
       regression in `infra/tests/test_build_template_release.py`.
-- [ ] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v8"`.
+- [x] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v8"`.
 
 ## Milestone 10: Release `mokly-build-v8`
 

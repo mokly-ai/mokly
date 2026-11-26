@@ -78,7 +78,7 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
     def test_complete_template_passes_with_one_added_entry(self):
         with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_tools) as run:
             ASSERTION.verify(VERSION)
-        self.assertEqual(run.call_count, 14)
+        self.assertEqual(run.call_count, 18)
 
     def test_git_without_cat_file_nul_batches_fails(self):
         # Bookworm's Git 2.39.5 exits 129 on `cat-file -Z`, so Mokly cannot read a base.

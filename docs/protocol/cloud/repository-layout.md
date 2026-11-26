@@ -107,7 +107,7 @@ any difference.
 Each build template base image must use
 `debian:<tag>@sha256:<64 lowercase hex>`. The tag records the digest's source.
 A missing tag, a malformed or absent digest, and any other image fail, under the
-[template pin rule](./cloud-build-runner.md#template). The
+[template pin rule](./cloud-build-template.md#base-image). The
 [verification guide](../../../xtask/README.md) names the checked files and constants.
 
 ## Verification: `cargo xtask check`

@@ -3,7 +3,6 @@
 import importlib.util
 import os
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 from types import SimpleNamespace
@@ -34,7 +33,8 @@ class BuildTemplateProbeFixture:
         self.bin = self.scratch / "bin"
         self.bin.mkdir()
         for executable in ("node", "npm", "npx", "corepack", "git", "curl", "sha256sum",
-                           "python3", "cc", "c++", "make"):
+                           "python3", "cc", "c++", "make", "g++", "ar", "ld", "pkg-config",
+                           "libtool"):
             write_tool(self.bin / executable)
         self.environment = {
             "PATH": str(self.bin),
@@ -85,6 +85,8 @@ class BuildTemplateProbeFixture:
             output = "v" + VERSION
         elif argv == ["git", "--version"]:
             output = "git version 2.43.0"
+        elif argv == ["./probe"]:
+            output = "native-build-ok"
         else:
             output = "shell-ok"
         return SimpleNamespace(returncode=0, stdout=output)
@@ -111,16 +113,31 @@ class BuildTemplateToolsTests(BuildTemplateProbeFixture, unittest.TestCase):
         ) as run:
             ASSERTION.verify(VERSION)
         commands = [call.args[0] for call in run.call_args_list]
-        for executable in ("cc", "c++", "make"):
+        for executable in ("cc", "c++", "make", "pkg-config", "libtool"):
             with self.subTest(executable=executable):
                 self.assertIn([executable, "--version"], commands)
 
     def test_required_tools_missing_from_path_fail(self):
-        for executable in ("npx", "cc", "c++", "make"):
+        for executable in ("npx", "cc", "c++", "make", "g++", "ar", "ld", "pkg-config", "libtool"):
             path = self.bin / executable
             path.unlink()
-            with self.subTest(executable=executable), self.assertRaisesRegex(
-                ASSERTION.TemplateAssertionError, f"^{re.escape(executable)} is missing from PATH$"
-            ):
-                ASSERTION.verify(VERSION)
+            with self.subTest(executable=executable):
+                with self.assertRaises(ASSERTION.TemplateAssertionError) as caught:
+                    ASSERTION.verify(VERSION)
+                self.assertEqual(str(caught.exception), f"{executable} is missing from PATH")
             write_tool(path)
+
+    def test_native_build_requires_make_and_the_expected_program_output(self):
+        for executable, status in (("make", 1), ("./probe", 1), ("./probe", 0)):
+            def fail_build(argv, **kwargs):
+                if argv == [executable]:
+                    self.check_probe_call(kwargs)
+                    return SimpleNamespace(returncode=status, stdout="private stdout", stderr="private stderr")
+                return self.run_command(argv, **kwargs)
+
+            with self.subTest(executable=executable, status=status), patch.object(
+                ASSERTION.subprocess, "run", side_effect=fail_build
+            ):
+                with self.assertRaises(ASSERTION.TemplateAssertionError) as caught:
+                    ASSERTION.verify(VERSION)
+                self.assertEqual(str(caught.exception), "native build with make, cc, g++, ar and ld failed")
