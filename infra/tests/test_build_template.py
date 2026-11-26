@@ -1,6 +1,7 @@
 """Local regression checks for the candidate assertion; no provider access."""
 
 import importlib.util
+import json
 import os
 import re
 from pathlib import Path
@@ -86,9 +87,13 @@ class BuildTemplateTests(unittest.TestCase):
         return SimpleNamespace(returncode=0, stdout=output)
 
     def npm_clean_install(self, project):
-        """Like npm ci: it installs only a project that has a manifest and a lockfile."""
-        complete = all((project / name).read_text() for name in ("package.json", "package-lock.json"))
-        return SimpleNamespace(returncode=0 if complete else 1, stdout="")
+        """Like npm ci: it installs only a project with a parsable manifest and lockfile."""
+        try:
+            for name in ("package.json", "package-lock.json"):
+                json.loads((project / name).read_text())
+        except (OSError, ValueError):
+            return SimpleNamespace(returncode=1, stdout="")
+        return SimpleNamespace(returncode=0, stdout="")
 
     def test_complete_template_passes_with_one_added_entry(self):
         ASSERTION.verify(VERSION)

@@ -2,6 +2,7 @@
 """Verify a fresh candidate through the workload streaming-process boundary."""
 
 import argparse
+import json
 import os
 from pathlib import Path
 import pwd
@@ -30,10 +31,11 @@ CREDENTIAL_FILES = (
     ".config/gcloud/credentials.db", ".config/gcloud/access_tokens.db",
     ".ssh/id_rsa", ".ssh/id_ed25519", ".ssh/id_ecdsa", ".ssh/id_dsa",
 )
+NPM_PROBE_NAME = "mokly-template-probe"
 NPM_PROBE_FILES = {
-    "package.json": '{"name": "mokly-template-probe", "private": true}\n',
-    "package-lock.json": '{"name": "mokly-template-probe", "lockfileVersion": 3, "requires": true, '
-                         '"packages": {"": {"name": "mokly-template-probe"}}}\n',
+    "package.json": {"name": NPM_PROBE_NAME, "private": True},
+    "package-lock.json": {"name": NPM_PROBE_NAME, "lockfileVersion": 3, "requires": True,
+                          "packages": {"": {"name": NPM_PROBE_NAME}}},
 }
 NPM_CLEAN_INSTALL = ["npm", "ci", "--offline", "--ignore-scripts", "--no-audit", "--no-fund",
                      "--no-update-notifier"]
@@ -63,7 +65,7 @@ def verify_npm_clean_install(workspace):
     try:
         with tempfile.TemporaryDirectory(dir=workspace) as project:
             for name, content in NPM_PROBE_FILES.items():
-                Path(project, name).write_text(content)
+                Path(project, name).write_text(json.dumps(content) + "\n")
             command(NPM_CLEAN_INSTALL, cwd=project)
     except (OSError, TemplateAssertionError) as error:
         raise TemplateAssertionError("npm ci of an empty project failed") from error

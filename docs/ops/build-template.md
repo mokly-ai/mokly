@@ -291,14 +291,16 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   older npm. `npm --version` printed 11.19.0, but `npm config list` failed,
   and `npm ci` failed with
   `npm error Class extends value undefined is not a constructor or null`. The
-  probe of that time ran no npm command, so it passed.
+  probe of that time checked npm only with `npm --version`, which passes on
+  such a mixed install, so it passed.
 - `mokly-build-v3`, build reference
   `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` (template ID
   `1zj5lunxulyowh6ewmy3`, build ID `9dffde05-0e34-4afd-91f3-ac771fd52705`),
   E2B team `firna`. It was built 2026-11-26T00:40:38Z with `e2b@2.64.0`
-  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one of
-  `main` at `e1b372b7d`, plus the removal of the base image's Node, npm and
-  corepack files before the Node tarball is unpacked. Node 24.21.0, checksum
+  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `e1b372b7d`, which matches `main`, plus the removal of the base image's
+  Node, npm and corepack files before the Node tarball is unpacked. Node
+  24.21.0, checksum
   `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
   2 vCPU, 4096 MiB, base digest
   `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
