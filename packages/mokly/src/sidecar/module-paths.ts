@@ -60,6 +60,7 @@ export class ModulePaths {
       sourceRoot,
       settings.resolveExtensions,
       this.workspaceLookups,
+      settings.sourcePackages,
     );
   }
 

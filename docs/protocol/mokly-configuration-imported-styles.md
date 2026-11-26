@@ -1,7 +1,5 @@
 # Imported CSS Configuration
 
-Status: CSS `@import` does not try the entries of `moduleResolution.sourcePackages` yet. The [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) adds them.
-
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.

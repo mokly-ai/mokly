@@ -35,14 +35,15 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     return result.kind === "file" ? result.real : undefined;
   }
 
-  /** Package ownership on a layout miss already uses the module's ancestor inputs. */
-  manifest(file: string): string | null | undefined {
+  /** A named override can depend on a manifest outside the selected module's ancestors. */
+  manifest(file: string, record: boolean): string | null | undefined {
     const result = this.probe(file);
-    if (result.kind !== "file") return undefined;
     try {
-      return this.contents(result.real);
+      return result.kind === "file" ? this.contents(result.real) : undefined;
     } catch {
       return null;
+    } finally {
+      if (record) this.metadata(file);
     }
   }
 

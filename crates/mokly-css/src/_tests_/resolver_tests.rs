@@ -128,6 +128,37 @@ fn a_workspace_style_field_resolves_when_only_the_configured_sources_exist() {
 }
 
 #[test]
+fn workspace_style_exports_try_the_working_layout_until_the_base_disables_it() {
+    let mut resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"workspace-theme","exports":{"./colors":"./esm/skin.css"}}"#,
+            ),
+            ("packages/theme/esm/skin.css", ".built {}"),
+            ("packages/theme/source/skin.css", ".source {}"),
+        ],
+        Some(("node_modules/theme", "packages/theme")),
+    );
+    let layout = |folder: &str| {
+        BTreeMap::from([(
+            "workspace-theme".into(),
+            Some(BTreeMap::from([("esm".into(), folder.into())])),
+        )])
+    };
+    resolver.settings.source_packages = vec![layout("missing"), layout("source")];
+    let resolve = |resolver: &SourceResolver| {
+        resolver
+            .resolve("styles/entry.css", "theme/colors")
+            .unwrap()
+    };
+    assert_eq!(resolve(&resolver), "packages/theme/source/skin.css");
+
+    resolver.settings.source_packages[0].insert("workspace-theme".into(), None);
+    assert_eq!(resolve(&resolver), "node_modules/theme/esm/skin.css");
+}
+
+#[test]
 fn aliases_use_the_configuration_package_and_plain_imports_use_the_importer() {
     let resolver = resolver(&[
         "apps/web/theme/skin.css",

@@ -1,7 +1,5 @@
 # Sidecar Module Sources
 
-Status: The sidecar does not try the entries of `moduleResolution.sourcePackages` yet. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) adds the entries and their records in the reuse evidence.
-
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.

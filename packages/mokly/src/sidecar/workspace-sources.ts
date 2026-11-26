@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import type { SourcePackage } from "../generated/sidecar/SourcePackage.js";
+
 import { ConfigChain, configPath } from "./config-inputs.js";
 import { jsonObject, parseJson } from "./config-json.js";
 import { inside, logical } from "./path-scope.js";
@@ -7,9 +9,15 @@ import { inside, logical } from "./path-scope.js";
 export interface WorkspaceSourceFiles {
   regular(file: string): string | undefined;
   read(file: string): string;
-  manifest(file: string): string | null | undefined;
+  manifest(file: string, record: boolean): string | null | undefined;
   metadata(file: string): void;
+  buildTarget(file: string): boolean;
   candidate(file: string): string | undefined;
+}
+
+interface WorkspacePackage {
+  root: string;
+  name: string;
 }
 
 interface LayoutOptions {
@@ -29,39 +37,68 @@ const defaultExtensions = [".tsx", ".ts", ".jsx", ".js"];
 
 /** Resolve built targets against the package layout on one source side. */
 export class WorkspaceSources {
-  private readonly packages = new Map<string, string | null>();
+  private readonly packages = new Map<string, WorkspacePackage | null>();
   private readonly layouts = new Map<string, PackageLayout>();
+  private readonly overrides: readonly Record<string, SourcePackage>[];
 
   constructor(
     private readonly root: string,
     private readonly extensions: readonly string[],
     private readonly files: WorkspaceSourceFiles,
-  ) {}
+    overrides?: readonly Record<string, SourcePackage>[],
+  ) {
+    this.overrides =
+      overrides?.filter((packages) => Object.keys(packages).length > 0) ?? [];
+  }
 
   source(file: string): string | undefined {
     if (!this.repositoryFile(file)) return undefined;
-    const directory = path.dirname(file);
-    const root = this.packageRoot(directory);
-    if (root === null) return undefined;
+    const pkg = this.packageRoot(path.dirname(file));
+    if (pkg === null) return undefined;
+    const { root, name } = pkg;
+    const relative = logical(root, file);
+    for (const entries of this.overrides) {
+      const layout = Object.hasOwn(entries, name) ? entries[name] : undefined;
+      if (layout === undefined) continue;
+      this.files.buildTarget(file);
+      if (layout === false) return undefined;
+      const mapped = overridePath(root, relative, layout);
+      if (mapped === undefined) continue;
+      const candidate = this.sourceFile(mapped);
+      if (candidate !== undefined) return candidate;
+    }
+    return this.detectedSource(file, root, relative);
+  }
 
+  private detectedSource(
+    file: string,
+    root: string,
+    relative: string,
+  ): string | undefined {
     const layout = this.layout(root);
     const { rootDir, outDir } = layout.options;
-    const top = logical(root, file).split("/")[0];
+    const top = relative.split("/")[0];
     const convention =
       top && buildFolders.has(top) ? path.join(root, top) : undefined;
     const build = outDir ?? convention;
     if (convention || (outDir && inside(outDir, file) && file !== outDir)) {
-      for (let current = directory; ; current = path.dirname(current)) {
+      for (
+        let current = path.dirname(file);
+        ;
+        current = path.dirname(current)
+      ) {
         this.files.metadata(path.join(current, "package.json"));
         if (current === root) break;
       }
       for (const input of layout.inputs) this.files.metadata(input);
     }
     if (!build || file === build || !inside(build, file)) return undefined;
-    const source = path.join(
-      rootDir ?? path.join(root, "src"),
-      path.relative(build, file),
+    return this.sourceFile(
+      path.join(rootDir ?? path.join(root, "src"), path.relative(build, file)),
     );
+  }
+
+  private sourceFile(source: string): string | undefined {
     const extension = path.extname(source);
     if (!javascript.has(extension)) return this.candidate(source);
 
@@ -95,31 +132,36 @@ export class WorkspaceSources {
     );
   }
 
-  private packageRoot(directory: string): string | null {
+  private packageRoot(directory: string): WorkspacePackage | null {
     const cached = this.packages.get(directory);
     if (cached !== undefined) return cached;
-    const manifest = this.files.manifest(path.join(directory, "package.json"));
-    let root: string | null = null;
+    const manifest = this.files.manifest(
+      path.join(directory, "package.json"),
+      this.overrides.length > 0,
+    );
+    let pkg: WorkspacePackage | null = null;
     if (manifest === undefined) {
       if (directory !== this.root)
-        root = this.packageRoot(path.dirname(directory));
-    } else if (manifest !== null && this.named(manifest)) {
-      root = directory;
+        pkg = this.packageRoot(path.dirname(directory));
+    } else if (manifest !== null) {
+      const name = this.packageName(manifest);
+      if (name !== undefined) pkg = { root: directory, name };
     }
-    this.packages.set(directory, root);
-    return root;
+    this.packages.set(directory, pkg);
+    return pkg;
   }
 
-  private named(contents: string): boolean {
+  private packageName(contents: string): string | undefined {
     try {
       const json: unknown = JSON.parse(contents.replace(/^\uFEFF/, ""));
-      return (
+      if (
         jsonObject(json) &&
         typeof json.name === "string" &&
         json.name.length > 0
-      );
+      )
+        return json.name;
     } catch {
-      return false;
+      return undefined;
     }
   }
 
@@ -168,6 +210,23 @@ export class WorkspaceSources {
       return {};
     }
   }
+}
+
+function overridePath(
+  root: string,
+  relative: string,
+  folders: Record<string, string>,
+): string | undefined {
+  let build = "";
+  let source: string | undefined;
+  for (const [folder, destination] of Object.entries(folders)) {
+    if (folder.length > build.length && relative.startsWith(`${folder}/`)) {
+      build = folder;
+      source = destination;
+    }
+  }
+  if (source !== undefined)
+    return path.join(root, source, relative.slice(build.length + 1));
 }
 
 function layoutOptions(

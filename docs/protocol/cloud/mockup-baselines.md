@@ -1,7 +1,5 @@
 # Mockup Comparison Base
 
-Status: The base does not try the working tree's `moduleResolution.sourcePackages` entries yet. The [JavaScript resolution milestone](../../../plans/source-package-override.md#milestone-4-javascript-resolution) and the [CSS resolution milestone](../../../plans/source-package-override.md#milestone-5-css-resolution) add them.
-
 This is the comparison sub-contract of [Mockup tooling](./mockup-tooling.md).
 Mokly's [comparison](../mokly-comparison.md),
 [base preparation](../mokly-base-preparation.md),

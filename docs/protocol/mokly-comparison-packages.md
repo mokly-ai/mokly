@@ -1,6 +1,6 @@
 # Comparison Package Selection
 
-Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports. Mokly does not try the entries of `moduleResolution.sourcePackages` yet. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) adds them for JavaScript, and the [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) adds them for CSS. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds the `moduleResolution.sourcePackages` hint of the failure message and the `ignored-module` warning.
+Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds the `moduleResolution.sourcePackages` hint of the failure message and the `ignored-module` warning.
 
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)

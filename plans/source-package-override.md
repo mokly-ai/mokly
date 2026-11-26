@@ -218,18 +218,18 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Try the layouts in order in the folder step of
+- [x] Try the layouts in order in the folder step of
       `packages/mokly/src/sidecar/workspace-sources.ts` and
       `workspace-lookups.ts`: each entry, then the detection. Apply the same
       order to the recovery of a missing build and to a Node-loaded `require`.
       Record each try in the lookup evidence. Split a file if it passes 300
       lines.
-- [ ] Add the override cases to `tests/fixtures/workspace-sources.json`:
+- [x] Add the override cases to `tests/fixtures/workspace-sources.json`:
       other folder names, nested build folders, two build folders, `false`,
       an entry for a missing package, a base entry before a working entry, a
       working entry after a base entry that finds no file, and a missing
       source file.
-- [ ] Add head and base cases to the sidecar tests, modelled on
+- [x] Add head and base cases to the sidecar tests, modelled on
       `tests/sidecar_workspace_sources.test.ts`: an `esm/` export from
       `source/`, a CSS import from JavaScript, a Node-loaded `require`, and
       `false`.
@@ -238,9 +238,9 @@ Depends on: 3
 
 Depends on: 3
 
-- [ ] Try the same layouts in order in
+- [x] Try the same layouts in order in
       `crates/mokly-css/src/workspace_sources.rs`.
-- [ ] Run the Rust copy of the rule against the shared case table, and add
+- [x] Run the Rust copy of the rule against the shared case table, and add
       resolver cases to `crates/mokly-css/src/_tests_/resolver_tests.rs`.
 
 ## Milestone 6: Missing entry messages
