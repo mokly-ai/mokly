@@ -41,6 +41,9 @@ impl SourceTree for LeasedTree {
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         self.tree.prefetch(paths)
     }
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        self.tree.hint_projections(paths);
+    }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
         self.assets.open_stream(path)
     }
