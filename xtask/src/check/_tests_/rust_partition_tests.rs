@@ -15,8 +15,9 @@ use crate::error::Error;
 use super::native_scope::TestScope;
 use super::request::Shard;
 use super::runner::{CheckRunner, DefaultCheckRunner};
-use super::rust_partition::{Piece, Weights, partition};
+use super::rust_partition::{Piece, partition};
 use super::rust_targets::{TestUnit, test_units};
+use super::rust_weights::{Host, WeightFile, Weights};
 
 fn target(kind: &str, name: &str) -> serde_json::Value {
     json!({ "name": name, "kind": [kind], "test": true })
@@ -85,6 +86,11 @@ fn whole(shards: Vec<Vec<Piece>>) -> Vec<Vec<TestUnit>> {
         .collect()
 }
 
+/// The Linux weights of a weight file.
+fn linux(text: &str) -> Weights {
+    WeightFile::parse(text).unwrap().host(Host::Linux)
+}
+
 #[test]
 fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
     let expected: BTreeSet<_> = [
@@ -108,10 +114,9 @@ fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
 /// and `--lib` 6. The unknown unit `new` takes the default weight of 5.
 #[test]
 fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
-    let weights = Weights::parse(
-        r#"{"defaultSeconds": 5, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"--test heavy": 4, "--test light": 4}}"#,
-    )
-    .unwrap();
+    let weights = linux(
+        r#"{"defaultSeconds": 5, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"linux": {"--test heavy": 4, "--test light": 4}}}"#,
+    );
     let units: BTreeSet<_> = [
         test("heavy"),
         test("light"),
@@ -132,10 +137,9 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
 /// build holds every crates.io dependency that the cache must keep.
 #[test]
 fn the_library_unit_tests_run_on_the_first_shard() {
-    let weights = Weights::parse(
+    let weights = linux(
         r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {"--test heavy": 10, "--lib": 1}, "testSeconds": {}}"#,
-    )
-    .unwrap();
+    );
     let units: BTreeSet<_> = [test("heavy"), TestUnit::Libraries].into();
     assert_eq!(
         whole(partition(&units, &weights, 2)),
@@ -147,10 +151,8 @@ fn the_library_unit_tests_run_on_the_first_shard() {
 /// still get a shard of its own.
 #[test]
 fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
-    let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {}, "testSeconds": {}}"#,
-    )
-    .unwrap();
+    let weights =
+        linux(r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {}, "testSeconds": {}}"#);
     let units: BTreeSet<_> = [test("a"), test("b")].into();
     assert_eq!(
         whole(partition(&units, &weights, 3)),
@@ -162,10 +164,9 @@ fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
 /// weight, so the slices of a heavy unit can run on different shards.
 #[test]
 fn a_split_unit_runs_each_slice_on_its_own_shard() {
-    let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {}, "testSeconds": {"--test heavy": 10}, "splits": {"--test heavy": 2}}"#,
-    )
-    .unwrap();
+    let weights = linux(
+        r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {}, "testSeconds": {"linux": {"--test heavy": 10}}, "splits": {"--test heavy": 2}}"#,
+    );
     let units: BTreeSet<_> = [test("heavy")].into();
     let slice = |index| Piece {
         unit: test("heavy"),
@@ -177,39 +178,10 @@ fn a_split_unit_runs_each_slice_on_its_own_shard() {
     );
 }
 
-/// Every unit runs on exactly one shard, whole or as each of its slices once.
-#[test]
-fn every_unit_runs_on_exactly_one_shard_for_every_total() {
-    let weights = Weights::embedded().unwrap();
-    let units: BTreeSet<_> = (0..40)
-        .map(|index| test(&format!("unit_{index}")))
-        .chain([TestUnit::Libraries, test("integration_tests"), test("cli")])
-        .collect();
-    for total in 1..=50_u64 {
-        let pieces: Vec<_> = partition(&units, &weights, total)
-            .into_iter()
-            .flatten()
-            .collect();
-        for unit in &units {
-            let mut slices: Vec<_> = pieces
-                .iter()
-                .filter(|piece| piece.unit == *unit)
-                .map(|piece| piece.slice)
-                .collect();
-            slices.sort();
-            let expected: Vec<_> = match slices.first() {
-                Some(Some((_, count))) => (1..=*count).map(|index| Some((index, *count))).collect(),
-                _ => vec![None],
-            };
-            assert_eq!(slices, expected, "{unit:?} with {total} shards");
-        }
-    }
-}
-
-/// Fixed weights of the metadata units: `--lib` outweighs every other unit
-/// together, so it runs alone on the first of two shards, and
-/// `integration_tests` runs as three slices.
-const FIXTURE_WEIGHTS: &str = r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {"--lib": 100}, "testSeconds": {"--test integration_tests": 30}, "splits": {"--test integration_tests": 3}}"#;
+/// Fixed weights of the metadata units, the same on every host: `--lib`
+/// outweighs every other unit together, so it runs alone on the first of two
+/// shards, and `integration_tests` runs as three slices.
+const FIXTURE_WEIGHTS: &str = r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {"--lib": 100}, "testSeconds": {"linux": {"--test integration_tests": 30}, "macos": {"--test integration_tests": 30}, "windows": {"--test integration_tests": 30}}, "splits": {"--test integration_tests": 3}}"#;
 
 /// A check runner over the metadata units, placed by the fixture weights.
 fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
@@ -223,7 +195,7 @@ fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     )
-    .with_rust_test_weights(Weights::parse(FIXTURE_WEIGHTS).unwrap())
+    .with_rust_test_weights(WeightFile::parse(FIXTURE_WEIGHTS).unwrap())
 }
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";

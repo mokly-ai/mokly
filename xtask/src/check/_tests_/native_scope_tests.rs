@@ -15,8 +15,8 @@ use crate::command::{CommandRunnerOutputMock, CommandRunnerRunMock, CommandSpec}
 use super::native_scope::TestScope;
 use super::request::Shard;
 use super::runner::{CheckRunner, DefaultCheckRunner};
-use super::rust_partition::Weights;
 use super::rust_targets::TestUnit;
+use super::rust_weights::WeightFile;
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask";
 
@@ -111,7 +111,7 @@ fn shard_commands(scope: TestScope) -> Vec<String> {
         PathBuf::from("/workspace"),
     )
     .with_rust_test_weights(
-        Weights::parse(
+        WeightFile::parse(
             r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {}, "testSeconds": {}}"#,
         )
         .unwrap(),

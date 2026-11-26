@@ -363,7 +363,7 @@ jobs:
       matrix:
         # Shard 1 checks formatting and Clippy. Each later shard builds and
         # runs one weighted share of the Rust test targets of the native test
-        # scope: four on macOS and six on Windows. Shard 2 also runs the doc
+        # scope: four on macOS and seven on Windows. Shard 2 also runs the doc
         # tests.
         include:
           - runner: macos-26
@@ -377,19 +377,21 @@ jobs:
           - runner: macos-26
             shard: 5/5
           - runner: windows-2025
-            shard: 1/7
+            shard: 1/8
           - runner: windows-2025
-            shard: 2/7
+            shard: 2/8
           - runner: windows-2025
-            shard: 3/7
+            shard: 3/8
           - runner: windows-2025
-            shard: 4/7
+            shard: 4/8
           - runner: windows-2025
-            shard: 5/7
+            shard: 5/8
           - runner: windows-2025
-            shard: 6/7
+            shard: 6/8
           - runner: windows-2025
-            shard: 7/7
+            shard: 7/8
+          - runner: windows-2025
+            shard: 8/8
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
