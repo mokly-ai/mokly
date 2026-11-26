@@ -22,12 +22,12 @@ fn a_failed_attachment_stops_the_unattached_tree() {
         ProcessGroupsMock::attach
             .next_call(matching!(_))
             .answers(&|_, child| {
-                Err(AttachFailure {
+                Err(AttachFailure::new(
                     child,
-                    source: error::Error::Locked {
+                    error::Error::Locked {
                         path: "attach-probe".into(),
                     },
-                })
+                ))
             }),
         ProcessGroupsMock::kill_unattached
             .next_call(matching!(_))

@@ -34,9 +34,12 @@ that moment cannot keep the lock until its exec.
 `ProcessGroups` configures a child before spawn. Immediately after spawn,
 `attach` takes the child, creates its ownership guard, and returns a
 `ProcessTree` that owns both. The caller takes the pipes before `attach`. A
-failed attachment returns an `AttachFailure` that gives the child back with
-the cause. No guard exists then, so the caller stops the tree with
-`kill_unattached` and reaps the child itself.
+failed attachment returns an `AttachFailure`, which holds the child and the
+cause. No guard exists then. The only way to the child is
+`AttachFailure::stop`: it first stops the whole tree with `kill_unattached`,
+and then returns an `Unattached` value with the child, the cause, and the
+result of the stop. The caller then kills and reaps the child. So no caller
+can reap the child of a failed attachment while its descendants still run.
 `configure` starts a new Unix session, so the child leads its own group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
 keeps a parent link to it while it runs. `configure_plain` uses
@@ -138,6 +141,8 @@ calls `setsid()`, because macOS has no `setsid` command. The attachment test
 observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
 attaches to the unreaped child and stops it. The `ProcessTree` tests check that
 the root stays unreaped through `wait` and `kill`, and that the drop reaps it.
+The `AttachFailure` test checks that `stop` kills the tree of a running child
+before it gives the child back.
 Consumers enable the `mock` feature to use every public trait with unimock.
 The feature also adds `ProcessTree::into_parts`, which gives back the child and
 the guard. Test doubles use it to wrap the host guard, and the guard tests use
@@ -151,10 +156,13 @@ dev-dependency on the crate itself.
   which move a file or directory only when the destination is absent.
 - [`src/locks.rs`](./src/locks.rs) defines `Locks` and `SystemLocks`, which
   acquire nonblocking shared and exclusive `FileLock` guards.
-- [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups`,
-  `SystemProcessGroups`, and `AttachFailure`. They configure a child before
-  spawn and attach it to a `ProcessTree` whose `ProcessGroup` guard
-  terminates or kills the whole tree.
+- [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups` and
+  `SystemProcessGroups`. They configure a child before spawn and attach it to
+  a `ProcessTree` whose `ProcessGroup` guard terminates or kills the whole
+  tree.
+- [`src/processes/failure.rs`](./src/processes/failure.rs) defines
+  `AttachFailure` and `Unattached`. A failed attachment gives back its child
+  only through `stop`, after `kill_unattached`.
 - [`src/processes/tree.rs`](./src/processes/tree.rs) defines `ProcessTree`,
   which owns a child and its guard, waits for the exit without a reap, and
   reaps the child after the guard drops.

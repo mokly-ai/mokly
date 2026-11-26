@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, Thread};
 use std::time::Duration;
 
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree, Unattached};
 
 use crate::cancellation::signal;
 use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, ProcessMode, Request};
@@ -79,14 +79,15 @@ impl SystemRunner {
         // the final signal, so no signal can reach a reused group number.
         let group = match self.groups.attach(child) {
             Ok(tree) => Arc::new(tree),
-            Err(mut failure) => {
-                // No guard exists, so stop the whole tree before the reap.
-                let _ = self.groups.kill_unattached(&failure.child);
-                let _ = failure.child.kill();
-                let _ = failure.child.wait();
-                return Err(Error::Platform {
-                    source: failure.source,
-                });
+            Err(failure) => {
+                // No guard exists, so `stop` stops the whole tree before it
+                // gives back the child for the reap.
+                let Unattached {
+                    mut child, source, ..
+                } = failure.stop(self.groups.as_ref());
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(Error::Platform { source });
             }
         };
         let (Some(stdout), Some(stderr), Some(mut stdin)) = pipes else {

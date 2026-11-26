@@ -29,10 +29,11 @@ impl Tree {
         let reader = BufReader::new(child.stdout.take().unwrap());
         let root = match SystemProcessGroups.attach(child) {
             Ok(root) => root,
-            Err(mut failure) => {
-                let _ = failure.child.kill();
-                let _ = failure.child.wait();
-                panic!("attach failed: {}", failure.source);
+            Err(failure) => {
+                let mut unattached = failure.stop(&SystemProcessGroups);
+                let _ = unattached.child.kill();
+                let _ = unattached.child.wait();
+                panic!("attach failed: {}", unattached.source);
             }
         };
         let mut tree = Self {

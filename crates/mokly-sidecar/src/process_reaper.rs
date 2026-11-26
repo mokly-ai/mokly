@@ -1,11 +1,12 @@
-//! Child ownership preserves kill-then-wait cleanup, including partial startup drops.
+//! Child ownership preserves stop-kill-then-wait cleanup, including partial
+//! startup drops and failed attachments.
 
 use std::io;
 use std::process::Child;
 use std::sync::Arc;
 
 use mokly_platform::error;
-use mokly_platform::processes::{ProcessGroups, ProcessTree};
+use mokly_platform::processes::{AttachFailure, ProcessGroups, ProcessTree, Unattached};
 
 use crate::process_startup::StartupTiming;
 use crate::workers::WorkerControl;
@@ -16,40 +17,31 @@ pub(super) trait Reap {
     fn wait(&mut self) -> io::Result<()>;
 }
 
-/// The direct child of a failed attachment, or the tree that owns its reap.
-pub(super) enum Root {
-    Child(Child),
-    Tree(Arc<ProcessTree>),
+/// The child of a failed attachment, after the stop of its tree. Its wait
+/// reaps it.
+impl Reap for Child {
+    fn kill(&mut self) -> io::Result<()> {
+        Child::kill(self)
+    }
+    fn wait(&mut self) -> io::Result<()> {
+        Child::wait(self).map(|_| ())
+    }
 }
 
 /// After attachment, a wait leaves the root unreaped. The tree reaps it when
 /// its last reference drops, after the last signal of its guard.
-impl Reap for Root {
+impl Reap for Arc<ProcessTree> {
     fn kill(&mut self) -> io::Result<()> {
-        match self {
-            Self::Child(child) => child.kill(),
-            Self::Tree(tree) => tree.kill_root(),
-        }
+        self.kill_root()
     }
     fn wait(&mut self) -> io::Result<()> {
-        match self {
-            Self::Child(child) => child.wait().map(|_| ()),
-            Self::Tree(tree) => tree.wait().map(|_| ()),
-        }
+        ProcessTree::wait(self).map(|_| ())
     }
 }
 
-impl Root {
-    fn kill_unattached(&self, groups: &dyn ProcessGroups) -> error::Result<()> {
-        match self {
-            Self::Child(child) => groups.kill_unattached(child),
-            Self::Tree(tree) => tree.kill_unattached(groups),
-        }
-    }
-}
-
+/// The attached tree of a sidecar, which stops and kills its root on drop.
 pub(super) struct Reaper {
-    root: Option<Root>,
+    tree: Arc<ProcessTree>,
     startup: Option<Startup>,
 }
 
@@ -61,12 +53,12 @@ struct Startup {
 
 impl Reaper {
     pub(super) fn new(
-        root: Root,
+        tree: Arc<ProcessTree>,
         timing: Arc<StartupTiming>,
         groups: Arc<dyn ProcessGroups>,
     ) -> Self {
         Self {
-            root: Some(root),
+            tree,
             startup: Some(Startup {
                 timing,
                 groups,
@@ -86,9 +78,34 @@ impl Reaper {
     }
 
     pub(super) fn wait(&mut self) {
-        if let Some(root) = &mut self.root {
-            let _ = root.wait();
-        }
+        let _ = self.tree.wait();
+    }
+}
+
+/// Retire the child of a failed attachment under the startup stop span. The
+/// failure stops the whole tree first, and then the child is killed and
+/// reaped. Return the cause of the failure.
+pub(super) fn retire_unattached(
+    failure: AttachFailure,
+    timing: &StartupTiming,
+    groups: &dyn ProcessGroups,
+) -> error::Error {
+    let span = timing.stop();
+    let _scope = span.enter();
+    let Unattached {
+        mut child,
+        source,
+        stopped,
+    } = failure.stop(groups);
+    observe_unattached(timing, stopped);
+    reap(&mut child, Some(timing));
+    source
+}
+
+fn observe_unattached(timing: &StartupTiming, stopped: error::Result<()>) {
+    timing.observe(stopped.is_ok());
+    if let Err(error) = stopped {
+        tracing::warn!(operation = %"tree.kill_unattached", %error, "could not stop sidecar startup tree");
     }
 }
 
@@ -113,18 +130,15 @@ impl Drop for Reaper {
         let timing = self.startup.as_ref().map(|startup| startup.timing.as_ref());
         let span = timing.map(StartupTiming::stop);
         let _scope = span.as_ref().map(tracing::Span::enter);
-        let Some(root) = &mut self.root else {
-            return;
-        };
         if let Some(startup) = &self.startup {
-            startup.kill_tree(root);
+            startup.kill_tree(&self.tree);
         }
-        reap(root, timing);
+        reap(&mut self.tree, timing);
     }
 }
 
 impl Startup {
-    fn kill_tree(&self, root: &Root) {
+    fn kill_tree(&self, tree: &ProcessTree) {
         let stopped = self.control.as_ref().is_some_and(|control| {
             let result = control.kill();
             self.timing.observe(result.is_ok());
@@ -134,11 +148,7 @@ impl Startup {
             result.is_ok()
         });
         if !stopped && (self.control.is_none() || cfg!(unix)) {
-            let result = root.kill_unattached(self.groups.as_ref());
-            self.timing.observe(result.is_ok());
-            if let Err(error) = result {
-                tracing::warn!(operation = %"tree.kill_unattached", %error, "could not stop sidecar startup tree");
-            }
+            observe_unattached(&self.timing, tree.kill_unattached(self.groups.as_ref()));
         }
     }
 }

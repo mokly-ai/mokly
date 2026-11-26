@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::{self, JoinHandle};
 
 use mokly_git::control::Clock;
-use mokly_platform::processes::{AttachFailure, ProcessGroup, ProcessGroups};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, Unattached};
 
 use crate::commands::{Child, Command, Output, POLL_INTERVAL, STOP_GRACE, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
@@ -73,9 +73,11 @@ impl Spawner for SystemSpawner {
         let tree = match self.groups.attach(process) {
             Ok(tree) => Arc::new(tree),
             Err(failure) => {
-                let AttachFailure { mut child, source } = failure;
-                // No guard exists, so stop the whole tree before the reap.
-                let _ = self.groups.kill_unattached(&child);
+                // No guard exists, so `stop` stops the whole tree before it
+                // gives back the manager for the reap.
+                let Unattached {
+                    mut child, source, ..
+                } = failure.stop(self.groups.as_ref());
                 let _ = child.kill();
                 thread::spawn(move || child.wait());
                 return Err(InternalError::Platform { source }.into());

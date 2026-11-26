@@ -2,13 +2,15 @@
 
 use std::process::{Child, Command};
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 #[cfg(unix)]
 use crate::unix;
 #[cfg(windows)]
 use crate::windows;
 
+mod failure;
 mod tree;
+pub use failure::{AttachFailure, Unattached};
 pub use tree::ProcessTree;
 
 /// A child tree owned by one command; keep this guard until pipes close.
@@ -33,19 +35,6 @@ pub trait ProcessGroups: Send + Sync {
     fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure>;
     /// Stop a configured child's tree before its first reap when attachment fails.
     fn kill_unattached(&self, child: &Child) -> Result<()>;
-}
-
-/// A failed attachment, with the child that it gives back. No guard exists, so
-/// the caller stops the tree with [`ProcessGroups::kill_unattached`] and then
-/// reaps the child itself.
-#[derive(Debug, thiserror::Error)]
-#[error("[platform] could not attach the process tree")]
-pub struct AttachFailure {
-    /// The unreaped child of the failed attachment.
-    pub child: Child,
-    /// The cause of the failure.
-    #[source]
-    pub source: Error,
 }
 
 /// Host implementation: Unix process groups or Windows kill-on-close jobs.
@@ -75,7 +64,7 @@ impl ProcessGroups for SystemProcessGroups {
         let group = windows::attach(&child);
         match group {
             Ok(group) => Ok(ProcessTree::new(child, group)),
-            Err(source) => Err(AttachFailure { child, source }),
+            Err(source) => Err(AttachFailure::new(child, source)),
         }
     }
 

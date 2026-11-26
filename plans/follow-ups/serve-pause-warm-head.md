@@ -186,10 +186,10 @@
     restart restores the stale plan payload before a captured head compile.
     Its profile separates the added plan cost from that restart work.
   - `plans/follow-ups/forced-kill-reap-wait.md`, the same code: a forced kill
-    waits for its reap without a deadline. The worker-only cancellation of B
-    kills and reaps a worker.
+    waits for its exit without a deadline. The worker-only cancellation of B
+    kills a worker and waits for its exit.
   - `plans/follow-ups/root-switch-reap-wait.md`, the same code: a replacement
-    starts before the old process is reaped. B replaces the cancelled worker.
+    starts before the old process exits. B replaces the cancelled worker.
   - `plans/follow-ups/sequential-evidence-capture-cost.md`, the same code:
     each pause compile of B is a captured compile, and a restart after
     unreverted edits compiles the head with capture. Its option C moves the

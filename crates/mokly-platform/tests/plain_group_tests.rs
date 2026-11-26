@@ -45,10 +45,11 @@ fn plain_groups_keep_the_session_and_signal_members_after_reaping() {
         // the child and the guard out of the tree.
         let (mut child, group) = match SystemProcessGroups.attach(child) {
             Ok(tree) => tree.into_parts(),
-            Err(mut failure) => {
-                let _ = failure.child.kill();
-                let _ = failure.child.wait();
-                panic!("attachment failed: {}", failure.source);
+            Err(failure) => {
+                let mut unattached = failure.stop(&SystemProcessGroups);
+                let _ = unattached.child.kill();
+                let _ = unattached.child.wait();
+                panic!("attachment failed: {}", unattached.source);
             }
         };
         let stdout = child.stdout.take().unwrap();

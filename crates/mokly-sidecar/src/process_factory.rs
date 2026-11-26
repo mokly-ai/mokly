@@ -21,7 +21,7 @@ use crate::process_environment;
 use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
-use crate::process_reaper::{Reaper, Root};
+use crate::process_reaper::{Reaper, retire_unattached};
 use crate::process_startup::StartupTiming;
 use crate::process_threads::{PipeThreads, SystemPipeThreads};
 use crate::process_transport::{Deadlines, PipeTransport};
@@ -132,21 +132,13 @@ impl NodeFactory {
         let (mut child, group) = match self.groups.attach(process) {
             Ok(tree) => {
                 let tree = Arc::new(tree);
-                let root = Root::Tree(Arc::clone(&tree));
                 let groups = Arc::clone(&self.groups);
-                (Reaper::new(root, Arc::clone(&startup), groups), tree)
+                let reaper = Reaper::new(Arc::clone(&tree), Arc::clone(&startup), groups);
+                (reaper, tree)
             }
             Err(failure) => {
-                // Its drop stops the unattached tree and reaps the child.
-                let _child = Reaper::new(
-                    Root::Child(failure.child),
-                    Arc::clone(&startup),
-                    Arc::clone(&self.groups),
-                );
-                return Err(InternalError::Platform {
-                    source: failure.source,
-                }
-                .into());
+                let source = retire_unattached(failure, &startup, self.groups.as_ref());
+                return Err(InternalError::Platform { source }.into());
             }
         };
         let (Some(stdin), Some(stdout), Some(stderr)) = pipes else {

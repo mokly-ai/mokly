@@ -37,12 +37,12 @@ fn attachment_failure_stops_and_reaps_the_created_tree() {
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, child| {
                 ready.ready(child.id());
-                Err(AttachFailure {
+                Err(AttachFailure::new(
                     child,
-                    source: error::Error::Locked {
+                    error::Error::Locked {
                         path: "injected attachment failure".into(),
                     },
-                })
+                ))
             })),
         ProcessGroupsMock::kill_unattached
             .some_call(matching!(_))
