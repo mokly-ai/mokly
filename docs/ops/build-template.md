@@ -292,7 +292,7 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   and `npm ci` failed with
   `npm error Class extends value undefined is not a constructor or null`. The
   probe of that time checked npm only with `npm --version`, which passes on
-  such a mixed install, so it passed.
+  such a mixed install, so it passed. Do not deploy it or roll back to it.
 - `mokly-build-v3`, build reference
   `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` (template ID
   `1zj5lunxulyowh6ewmy3`, build ID `9dffde05-0e34-4afd-91f3-ac771fd52705`),

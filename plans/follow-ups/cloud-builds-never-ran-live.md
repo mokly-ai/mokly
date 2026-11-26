@@ -17,12 +17,14 @@
   - The repository cannot show whether a resource, a key or a live build exists outside it.
   - Builds default to off, and PR previews cannot enable them. The preview seed of PR #81 starts no background worker, so a preview seed proves no sandbox build.
 - **Task:** Prove cloud builds live, first on `main-preview`, then on production.
-  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v3` build reference `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
+  - Run `main-preview` builds on `mokly-build-v3`, build reference `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705`. First run the current probe against that reference, as "Verify The Streaming Boundary" in `docs/ops/build-template.md` says, and record the pass in the v3 record. The recorded v3 probe pass came before the probe's `npm ci` check.
+  - When `main-preview` already has builds enabled, change only the build reference and keep the deployment ID, as "Rotate, Roll Back And Disable" says. Otherwise add the `builds` group to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as "Provision And Enable One Environment" says. Then deploy.
+  - When the probe or a v3 build fails, disable `main-preview` builds as the runbook says. Do not restore `mokly-build-v2`, because its npm is broken.
   - With the installed App and a test repository, push to the default branch and open a pull request.
   - Watch the check move from queued to a Changes result, and press Re-run.
   - Record the result in the "Live Evidence" section of `docs/ops/build-template.md`.
   - Repeat the proof on production after promotion. First add a version to `mkc-production-e2b-api-key` and set `MKC_PRODUCTION_APP_CONFIG` with its own deployment ID. Record the timings of a cold install against the 15-minute budget.
-- **Impact if no action:** Stable deployments keep builds off until an operator verifies the template, so users cannot use the product's default onboarding path.
+- **Impact if no action:** No stable deployment has a passing cloud build, so users cannot use the product's default onboarding path.
 - **Needs:** The effort counts code changes only. The operator work of provisioning and the live runs has no sized patch. An E2B team key, the template release, a GitHub test repository with the App installed, and access to both stable environments.
 - **Done when:** The "Live Evidence" section records a successful build, check and Re-run on both environments. Each record gives the released template ID, its source revision, the environment, the publication receipts, the check URLs and the cold-install timings.
 - **Related:** `plans/follow-ups/dogfood-catalogue-not-published-from-ci.md` can use cloud builds once they run.
