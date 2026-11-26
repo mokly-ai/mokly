@@ -6,19 +6,34 @@ import { AccountEntry } from "./account-entry";
 import { AccountShell } from "./account-shell";
 import { entryCopy } from "./entry-layout";
 import type { EntryMode, EntrySituation } from "./entry-layout";
+import { passwordScreenPath } from "./preview-password";
+import type { PasswordSituation } from "./preview-password";
+
+/**
+ * What one artboard draws: a situation of the GitHub and email form, or, on
+ * sign in only, a situation of its password section with that form at rest.
+ * The section's empty page draws the form empty too, because the reader has
+ * typed nothing yet.
+ */
+type EntryDrawing =
+  | { mode: EntryMode; situation: EntrySituation; password?: undefined }
+  | { mode: "sign-in"; situation?: undefined; password: PasswordSituation };
 
 /** One account-entry artboard; each screen entry names its own situation. */
 export function EntryPage({
   mode,
-  situation,
-}: {
-  mode: EntryMode;
-  situation: EntrySituation;
-}) {
+  situation = "default",
+  password,
+}: EntryDrawing) {
   const copy = entryCopy[mode];
+  const form = password === "empty" ? "empty" : situation;
   return (
     <AccountShell
-      id={stateScreenPath("product/account/" + mode, situation)}
+      id={
+        password === undefined
+          ? stateScreenPath("product/account/" + mode, situation)
+          : passwordScreenPath(password)
+      }
       title={copy.title}
       identity={copy.identity}
       below={
@@ -28,7 +43,7 @@ export function EntryPage({
         </p>
       }
     >
-      <AccountEntry mode={mode} situation={situation} />
+      <AccountEntry mode={mode} situation={form} password={password} />
     </AccountShell>
   );
 }

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import fs from "node:fs/promises";
 import net from "node:net";
@@ -7,6 +8,7 @@ import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
+import { PostcssWorkers } from "../packages/mokly/src/sidecar/postcss.js";
 
 import { cssParams, startSidecar } from "./helpers/sidecar.js";
 import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
@@ -94,29 +96,42 @@ test("PostCSS puts selected dependency roots before inherited NODE_PATH", async 
   ];
   await fs.writeFile(
     path.join(base, "postcss.mjs"),
-    `export default {plugins:[{postcssPlugin:"environment",Once(root){
-      root.append({selector:".env",nodes:[{prop:"value",value:JSON.stringify(process.env.NODE_PATH)}]});
-    }}]};`,
+    "export default {plugins:[]};",
   );
   const params = cssParams({ sourceRoot: base, postcss: "postcss.mjs" });
-  const sidecar = startSidecar(context, undefined, {
-    ...process.env,
-    NODE_PATH: inherited.join(path.delimiter),
+  const previous = process.env.NODE_PATH;
+  process.env.NODE_PATH = inherited.join(path.delimiter);
+  context.after(() => {
+    if (previous === undefined) delete process.env.NODE_PATH;
+    else process.env.NODE_PATH = previous;
   });
-  await sidecar.call("hello");
-  const result = await sidecar.call<CssResult>("processCss", params);
+  // The launch double captures the child environment and never starts it.
+  const child = new ChildProcess();
+  child.send = () => true;
+  context.mock.method(child, "kill", () => {
+    child.emit("exit", 0, null);
+    return true;
+  });
+  const environments: Array<NodeJS.ProcessEnv | undefined> = [];
+  const workers = new PostcssWorkers(
+    () => {},
+    () => {},
+    (_file, _args, options) => {
+      environments.push(options.env);
+      return child;
+    },
+  );
+  context.after(() => workers.dispose());
+  await workers.prepare(params);
   const selected = await Promise.all(
     params.moduleResolution.packageRoots.map((root) =>
       fs.realpath(path.join(root, "node_modules")),
     ),
   );
-  assert.ok(
-    result.text.includes(
-      JSON.stringify([...selected, ...inherited].join(path.delimiter)),
-    ),
-    result.text,
+  assert.deepEqual(
+    environments.map((env) => env?.NODE_PATH),
+    [[...selected, ...inherited].join(path.delimiter)],
   );
-  await sidecar.call("shutdown");
 });
 
 test("PostCSS reports the installed package files it resolves", async (context) => {

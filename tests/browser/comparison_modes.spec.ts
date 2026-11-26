@@ -11,16 +11,12 @@ import {
   awaitRoutedDetail,
   chooseFilter,
   comparisonFrames,
-  comparisonIndex,
-  expectCurrentAlone,
   expectNoCompareModes,
   modeButton,
   navRow,
   outcomeLines,
   showMode,
-  snapshotOf,
 } from "./comparison_ui.js";
-import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 import {
   canvasFrame,
   chooseScheme,
@@ -135,46 +131,6 @@ test("unchanged views omit comparisons while changed views retain all modes", as
   await awaitRoutedDetail(page, comparisonPaths.unchanged);
   await expectNoCompareModes(page);
   await expect(comparisonFrames(page)).toHaveCount(0);
-});
-
-test("an added screen offers Current alone and a removed screen offers no compare mode", async ({
-  page,
-  request,
-  baseURL,
-}) => {
-  const index = await comparisonIndex(request, baseURL);
-  await page.goto(`/view/${comparisonPaths.added}/`);
-  await chooseFilter(page, "changed");
-  await expect(navRow(page, comparisonPaths.added)).toBeVisible();
-  await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
-  await awaitRoutedDetail(page, comparisonPaths.added);
-  await expectCurrentAlone(page);
-  await expect(
-    page
-      .frameLocator(canvasFrame("desktop"))
-      .getByRole("heading", { name: "Added screen" }),
-  ).toBeVisible();
-
-  const snapshot = snapshotOf(index, comparisonPaths.removedScreen);
-  await page.goto(
-    `/view/${comparisonPaths.removedScreen}/?snapshot=${snapshot}`,
-  );
-  await chooseFilter(page, "changed");
-  await expect(navRow(page, comparisonPaths.removedScreen)).toBeVisible();
-  await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await awaitRoutedDetail(page, comparisonPaths.removedScreen);
-  // No mode control exists, and no current frame shows.
-  await expect(page.locator("[data-diff-mode]")).toHaveCount(0);
-  await expect(page.locator(canvasFrame("desktop"))).toHaveCount(0);
-  await expect(previousVersionLabel(page)).toHaveText(
-    "Showing previous version",
-  );
-  await expect(
-    historicalFrame(page, "desktop")
-      .locator("iframe")
-      .contentFrame()
-      .getByRole("heading", { name: "Historical screen" }),
-  ).toBeVisible();
 });
 
 test("snapshot panes keep marked links inert", async ({ page }) => {

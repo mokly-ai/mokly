@@ -94,6 +94,7 @@ capabilities:
       {{- if eq .workload "api" }}
       - secret:
           name: preview-sign-in
+          optional: true
           items:
             - { key: preview-sign-in, path: preview-sign-in }
       {{- end }}

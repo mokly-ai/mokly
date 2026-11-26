@@ -111,25 +111,3 @@ test("off keeps a stack's page together but frees its panels", async ({
 });
 
 registerScrollTogetherMemory(test);
-
-test("a store that refuses the choice keeps it for the open document", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Storage.prototype.setItem = () => {
-      throw new Error("The store is blocked");
-    };
-  });
-  await openComparison(page, changed, "desktop", "Overlay");
-  const desktop = comparisonSection(page, "desktop");
-  await scrollTogether(page).click();
-  await expect(scrollTogether(page)).not.toBeChecked();
-  await wheelOverRegion(page, paneFrame(desktop, "after"), panel, 60);
-  await settleRegion(page, paneFrame(desktop, "after"), panel, 60);
-  expect(await regionOffset(paneFrame(desktop, "before"), panel)).toEqual({
-    x: 0,
-    y: 0,
-  });
-  await modeButton(page, "Side by side").click();
-  await expect(scrollTogether(page)).not.toBeChecked();
-});

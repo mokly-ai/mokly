@@ -155,17 +155,9 @@ cargo clippy -p mokly-css --all-targets -- -D warnings
 Tests use unimock at source, resolver, and processor boundaries. Graph
 integration tests verify complete delivery with real authored fixtures.
 `tests/nesting_depth_tests.rs` re-runs its own test binary to find the deepest
-CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
-`--nocapture` to print the limits, and with `--release` for release builds.
-
-`tests/token_differential_tests.rs` compares the shared statement reader with
-the token walk that the scanners used before it. It runs `git` to list the
-repository's stylesheets: tracked files, and untracked files that Git does not
-ignore. It skips a listed file that the working tree deleted. The
-`test-support` feature exposes the module `token_differential` for this test.
-The crate's own dev-dependency turns the feature on. So
-`cargo test -p mokly-css` and `cargo test --workspace` run the test with no
-extra flag.
+CSS that each Mokly scanner and pipeline survives on a 2 MiB worker stack. Run
+it with `--nocapture` to print the limits, and with `--release` for release
+builds.
 
 `src/_tests_/token_grammar_tests.rs` checks that the shared statement reader
 reads the block of each block at-rule as `lightningcss` parses it. Its one

@@ -53,6 +53,10 @@ export const busyWrites: Readonly<Record<string, BusyWrite>> = {
     working: "Sending…",
     operation: named("Sending sign-in link"),
   },
+  "sign-in/password-entry": {
+    working: "Signing in…",
+    operation: named("Signing you in"),
+  },
   "magic-link/send-link": {
     working: "Sending…",
     operation: named("Sending sign-in link"),

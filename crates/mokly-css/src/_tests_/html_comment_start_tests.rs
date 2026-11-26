@@ -1,6 +1,9 @@
-//! Unit coverage for the generated inputs and HTML comment starts.
+//! HTML comment tokens before a statement move only the starts after them.
 
-use crate::token_differential::{Observed, first_difference, scan_new};
+use std::ops::Range;
+
+use crate::token_sections::{self, Grammar, Statement};
+use crate::token_tree::Tokens;
 
 /// The statements at the first block level of each generated stylesheet.
 const STATEMENTS: [&str; 5] = [
@@ -18,6 +21,17 @@ const SECOND: &str = ".b{animation:spin 1s}";
 /// alone and with whitespace and comments around them.
 const HTML_COMMENT_PREFIXES: [&str; 4] = ["<!--", "-->", " /* note */ <!--", "\n-->\n"];
 
+/// One statement that the section reader finds, at any block depth.
+#[derive(Debug, PartialEq)]
+struct Observed {
+    /// The byte offset where the reader starts the statement.
+    start: usize,
+    /// The statement kind selected by the reader.
+    statement: Statement,
+    /// The grammar selected for the statement's block, if it has one.
+    block: Option<Grammar>,
+}
+
 fn generated_sources() -> Vec<String> {
     STATEMENTS
         .iter()
@@ -25,13 +39,26 @@ fn generated_sources() -> Vec<String> {
         .collect()
 }
 
-/// The parser-backed and legacy readers agree on every generated stylesheet.
-#[test]
-fn parser_differential_agrees_on_generated_stylesheets() {
-    for (index, source) in generated_sources().into_iter().enumerate() {
-        let name = format!("generated-{index}");
-        let difference = first_difference(&source);
-        assert!(difference.is_none(), "{name}: {difference:?}");
+/// Every statement of `source`, in reading order, read as a stylesheet.
+fn scan(source: &str) -> Vec<Observed> {
+    let tokens = Tokens::new(source);
+    let mut result = Vec::new();
+    walk(&tokens, tokens.root(), Grammar::Stylesheet, &mut result);
+    result
+}
+
+fn walk(tokens: &Tokens<'_>, mut range: Range<usize>, grammar: Grammar, out: &mut Vec<Observed>) {
+    while let Some(section) = token_sections::next(tokens, &mut range, grammar) {
+        let block = section.block.as_ref().map(|block| block.grammar);
+        let child = section.block.map(|block| block.range);
+        out.push(Observed {
+            start: section.start,
+            statement: section.statement,
+            block,
+        });
+        if let (Some(child), Some(grammar)) = (child, block) {
+            walk(tokens, child, grammar, out);
+        }
     }
 }
 
@@ -40,7 +67,7 @@ fn parser_differential_agrees_on_generated_stylesheets() {
 #[test]
 fn html_comment_prefixes_only_move_the_starts_after_them() {
     for source in generated_sources() {
-        let expected = scan_new(&source);
+        let expected = scan(&source);
         for prefix in HTML_COMMENT_PREFIXES {
             for at in [0, source.len() - SECOND.len()] {
                 let prefixed = format!("{}{prefix}{}", &source[..at], &source[at..]);
@@ -57,7 +84,7 @@ fn html_comment_prefixes_only_move_the_starts_after_them() {
                         block: observed.block,
                     })
                     .collect::<Vec<_>>();
-                assert_eq!(scan_new(&prefixed), moved, "{prefixed:?}");
+                assert_eq!(scan(&prefixed), moved, "{prefixed:?}");
             }
         }
     }

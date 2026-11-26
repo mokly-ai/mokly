@@ -16,7 +16,7 @@ render = load("render-values")
 class LifecycleTests(unittest.TestCase):
     def event(self, action="labeled"):
         return {"action": action, "number": 42, "label": {"name": "preview"},
-                "repository": {"full_name": "mokly-ai/mokly-cloud", "private": True},
+                "repository": {"full_name": "mokly-ai/mokly-cloud"},
                 "pull_request": {"state": "open", "labels": [{"name": "preview"}],
                     "head": {"sha": "a" * 40, "repo": {"full_name": "mokly-ai/mokly-cloud"}}}}
 
@@ -50,16 +50,11 @@ class LifecycleTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             events.decision(event)
 
-    def test_repository_privacy_is_validated_and_exposed(self):
-        for private, expected in ((True, "true"), (False, "false")):
-            event = self.event()
-            event["repository"]["private"] = private
-            self.assertEqual(events.decision(event)["repository_private"], expected)
-        for invalid in (None, "true", 1):
-            event = self.event()
-            event["repository"]["private"] = invalid
-            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "privacy"):
-                events.decision(event)
+    def test_event_decision_only_supplies_the_lifecycle_inputs(self):
+        self.assertEqual(
+            events.decision(self.event()),
+            {"action": "deploy", "environment": "preview-pr-42", "revision": "a" * 40},
+        )
 
     def test_preview_scripts_reject_stable_names_before_provider_calls(self):
         for script in ("preview-deploy.sh", "preview-destroy.sh"):

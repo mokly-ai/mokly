@@ -23,7 +23,10 @@ import {
 } from "./comparison_sections.js";
 import { chooseMode, compareStage, comparisonFrames } from "./comparison_ui.js";
 import { historicalFrame } from "./previous_version.js";
-import { test } from "./serve_comparison_test.js";
+import {
+  closeReadOnlyCatalogue,
+  test,
+} from "./serve_comparison_read_only_test.js";
 import {
   expectCardPane,
   generationOf,
@@ -38,6 +41,8 @@ import {
   openPanelTab,
   setFrames,
 } from "./workspace_actions.js";
+
+test.afterAll(closeReadOnlyCatalogue);
 
 const stage = "[data-mokly-preview]";
 const previews = `${stage} iframe`;

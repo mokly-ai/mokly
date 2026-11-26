@@ -1,0 +1,36 @@
+# GitHub and Billing learn availability after a request
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the plan `plans/preview-password-sign-in.md` of the branch `calummoore/preview-password-sign-in-jofl`: the task of its last milestone to record this item.
+- **Location:** `packages/app/src/screens/account/entry-screen.tsx:171-175`, `:202` and `:226-234`, `packages/app/src/screens/account/install-refusal.tsx:12-16`, `packages/app/src/screens/account/install-screen.tsx:189`, `packages/app/src/screens/account/connect-screen.tsx:132`, `packages/app/src/screens/account/github-install-screen.tsx:26-27`, `packages/app/src/settings/panes/billing-pane.tsx:64-68` and `:224-230`, `packages/app/src/data/auth.ts:24-28` (`readConfiguration`), `crates/mkc-api/src/configuration.rs:64-84`, `docs/protocol/cloud/rest-api-surface.md`, section "Configuration Answer", `docs/protocol/cloud/product-mockups-account.md:38-43`, `docs/protocol/cloud/billing-subscriptions.md:96-99` and `:117-122`, and `docs/protocol/cloud/billing.md:94`.
+- **Reason:** The change reaches three app areas, their mockups and their protocol pages, outside the purpose of the branch that added the configuration answer.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Configuration answer:** the public `GET /v1/configuration`. It answers `github`, `billing` and `previewPassword` from the same operation gate that refuses an unconfigured operation with 503 `operation-unavailable`.
+  - **Operation gate:** `ApiDispatcher::dispatch_target` in `crates/mkc-api/src/configuration.rs`. It selects the configured service of an optional operation, or it refuses the operation.
+  - **"Opens soon" state:** what a screen draws when its feature is not configured, such as "GitHub sign-in opens soon. Continue with your email address."
+- **Background:**
+  - On 2026-11-25 Cal chose a typed `GET /v1/configuration` for every optional configuration of the gate. Sign in uses it to decide whether to draw the preview password field. The chosen option said that the GitHub sign-in notice, the App install screen and the Billing pane can later read it instead of a refusal.
+  - Sign in reads the answer and waits for it in its waiting form, in `entry-screen.tsx:171-175`. Sign up does not read it.
+  - The other screens learn that a feature is off only from a refusal:
+    - Sign in and Sign up show "GitHub sign-in opens soon. Continue with your email address." only after Continue with GitHub fails with `operation-unavailable`, in `entry-screen.tsx:202` and `:226-234`.
+    - The install step and the connect situation show "App installation opens soon" only after the install request fails, in `install-screen.tsx:189`, `connect-screen.tsx:132` and `install-refusal.tsx:12-16`.
+    - The setup landing after GitHub titles itself "GitHub installation opens soon" after its exchange fails, in `github-install-screen.tsx:26-27`.
+    - The Billing pane shows "Billing opens soon." after its billing read fails with `operation-unavailable`, in `billing-pane.tsx:224-230`.
+  - `billing: true` means that the API has a billing service configured. Checkout can still answer 503 `operation-unavailable` while the catalogue prices are unverified, until a restart verifies them. `docs/protocol/cloud/billing-subscriptions.md:96-99` and `docs/protocol/cloud/billing-catalogue.md:202-203` state this. The billing read's `checkoutAvailable` says whether Checkout can start.
+  - `docs/protocol/cloud/product-mockups-account.md:38-43` describes the GitHub notice as the answer to a pressed action, beside Continue with GitHub.
+  - The mockup check allows a disabled control on a product screen only in its empty or loading state, or while a write runs, in `docs/mockups/src/_tests_/disk.spec.ts:83-90`.
+- **Problem:** A reader on a deployment without GitHub or billing finds out only after a press or a failed read. The app already has an answer that says so before the reader acts.
+- **Impact if no action:** Readers press Continue with GitHub or the install action for nothing. Each screen keeps its own handling of a refusal that the configuration answer could prevent.
+- **Root question:** How does a reader learn that GitHub sign-in, App installation or billing is off before acting?
+- **Options:**
+  - **A.** Each of these screens reads the configuration answer, as Sign in does. When the field is false, the screen draws its "opens soon" state at rest, in the place where it shows it today. The Billing pane then skips its billing read. Sign up gains the read and Sign in's wait, so its panel does not move when the notice appears. When the read fails, each screen keeps today's path and learns from the refusal. Draw the new states in the mockups first. Effort: Medium.
+  - **B.** As A, but one provider at the app root reads the answer once per page load. It gives the answer to every screen, Sign in's password section included. A screen that needs the answer waits for that one read. Effort: Medium.
+  - **C.** As A or B, and also hide or disable Continue with GitHub and the install action when `github` is false. It changes the drawn screens beyond the decision of 2026-11-25. A disabled control at rest also needs a change of the mockup check's rule. So it needs the user. Effort: Medium.
+- **Left out:** Change nothing. The reader still learns only after a press, so it fails the goal.
+- **Wider fix:** B. One read serves every screen, so a new optional configuration reaches each screen through the same provider.
+- **Previous examples:** Sign in's password section, which shows only when the configuration answer names an account, in `entry-screen.tsx:217-221` and `packages/app/src/screens/account/preview-password.tsx`.
+- **Recommendation:** B. It gives every screen the answer through one read, and Sign in keeps its waiting form. Keep the Billing pane's use of `checkoutAvailable` for Checkout, because `billing: true` does not promise verified prices.
+- **Action:** fix after merge, apply B, because the decision of 2026-11-25 covers it, and it reaches three app areas, their mockups and their protocol pages.

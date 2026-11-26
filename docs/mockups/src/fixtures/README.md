@@ -135,6 +135,11 @@ generator emits; only the content differs.
   CLI identifies it: `gitlab.com/mokly-ai/web/site`, on a host other than
   github.com and with a group beneath its owner, so the form never reads as
   GitHub-only. `cliProjectSlug` is the slug suggested for it.
+- `previewPassword` is sign in's password section: the shared account that
+  the configuration answer names, and the password the reader typed, which is
+  visibly not a credential. The sentence the Password field draws when the API
+  refused it is `fieldRefusals.password`, the application's shared sentence
+  for that refusal.
 - `failureReference` is the identifier Mokly answers a failed request with,
   quoted by the `Details` disclosure an error draws. `causes` holds the
   sentence each refused write says beside its control, taken from the

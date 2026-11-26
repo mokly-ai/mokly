@@ -5,6 +5,7 @@ import { failureShape } from "../fragment";
 import { expect, test } from "../harness";
 
 import { busyOnlyWrites, busyWrites } from "./busy-writes";
+import { walks } from "./covered-writes";
 import { refusals } from "./refusals";
 import { prepare } from "./subject";
 import { writes } from "./undoable-writes";
@@ -32,7 +33,7 @@ test("a write shows its wait on its own busy control and inserts nothing", async
 }) => {
   const subject = await prepare(page, "busy");
   const walk = [
-    ...writes.map((write) => {
+    ...writes.filter(walks("busy")).map((write) => {
       const busy = busyWrites[write.where];
       expect(busy, `${write.where}: its busy control is listed`).toBeDefined();
       return { ...write, ...busy };
@@ -79,7 +80,7 @@ test("a write shows its wait on its own busy control and inserts nothing", async
 test("an undone input takes its failure with it", async ({ page }) => {
   const subject = await prepare(page, "undo");
 
-  for (const write of writes) {
+  for (const write of writes.filter(walks("undo"))) {
     const where = write.where;
     await write.visit(page, subject);
     await failWith(page, write.url, write.method, "unavailable");

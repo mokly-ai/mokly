@@ -10,7 +10,7 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::git_tree::GitTree;
-use mokly_compare::sources::GitSources;
+use mokly_compare::sources::{GitSources, Sources};
 use mokly_git::control::{SystemClock, Token};
 use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
@@ -112,17 +112,18 @@ impl Fixture {
         let lock = SystemLocks
             .try_lock(&temporary.path().join("entry.lock"))
             .unwrap();
+        let sources = Arc::new(Lease {
+            directory,
+            guard: Box::new(Extraction {
+                _directory: temporary,
+                _lock: lock,
+            }),
+        });
         let config = self.head.config();
         let authored = config.input.module_resolution.clone().unwrap_or_default();
         let side = Arc::new(BaseSide {
             working_root: root.clone(),
-            sources: Arc::new(Lease {
-                directory,
-                guard: Box::new(Extraction {
-                    _directory: temporary,
-                    _lock: lock,
-                }),
-            }),
+            sources: sources.clone(),
             dependencies: Resolved {
                 tier: Tier::Working,
                 node_modules: root.join("node_modules"),
@@ -156,15 +157,15 @@ impl Fixture {
             cache_namespace: None,
             identity: self.commit.to_string(),
         });
-        let tree = Arc::new(GitTree::new(
-            root,
-            Arc::new(GitSources::new(
-                self.repository.clone(),
-                self.commit.clone(),
-                Limits::default(),
-            )),
-            1024 * 1024,
-        ));
+        // Changes reads the base through the same extraction that the base
+        // side leases, so the pinned Git sources read its files.
+        let git = GitSources::new(
+            self.repository.clone(),
+            self.commit.clone(),
+            Limits::default(),
+        );
+        git.attach(sources).unwrap();
+        let tree = Arc::new(GitTree::new(root, Arc::new(git), 1024 * 1024));
         Arc::new(if shared {
             self.head
                 .runtime

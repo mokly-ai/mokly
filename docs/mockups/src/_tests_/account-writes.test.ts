@@ -1,16 +1,17 @@
 /**
  * The writes of the account family: sign in, sign up and Check your email send
- * a sign-in link, sign in and sign up connect GitHub, and the onboarding steps
- * create a workspace, create a project with the CLI, install the App and
- * connect an installation. While a write runs, the pressed control carries the
- * wait, as Write in progress in `folio-chrome.md` defines. The form inserts
- * nothing.
+ * a sign-in link, sign in and sign up connect GitHub, sign in's password
+ * section signs in the shared account, and the onboarding steps create a
+ * workspace, create a project with the CLI, install the App and connect an
+ * installation. While a write runs, the pressed control carries the wait, as
+ * Write in progress in `folio-chrome.md` defines. The form inserts nothing.
+ * Before the reader types, a control that sends typed text waits disabled.
  */
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { onboarding } from "../fixtures/product-states";
+import { onboarding, previewPassword } from "../fixtures/product-states";
 
 import type { Viewport } from "./catalogue-paths";
 import {
@@ -19,7 +20,13 @@ import {
   elements,
   label,
 } from "./design-site-test-helpers";
-import { actions, busyActions, drawnPage, pendingLabels } from "./drawn-page";
+import {
+  actions,
+  busyActions,
+  controlStates,
+  drawnPage,
+  pendingLabels,
+} from "./drawn-page";
 import type { DrawnPage } from "./drawn-page";
 
 const viewports: readonly Viewport[] = ["desktop", "mobile"];
@@ -61,6 +68,14 @@ const writes = [
     working: "Connecting…",
     heard: "Connecting to GitHub…",
     typed: [onboarding.email],
+  },
+  {
+    resting: "product/account/sign-in/preview-password",
+    running: "product/account/sign-in/preview-password/signing-in",
+    control: "Continue as preview@mokly.ai",
+    working: "Signing in…",
+    heard: "Signing you in…",
+    typed: [onboarding.email, previewPassword.typed],
   },
   {
     resting: "product/account/magic-link",
@@ -166,4 +181,38 @@ test("an account write keeps its form and holds only the pressed control busy", 
         where,
       );
     }
+});
+
+test("before the reader types, sign in's email and password actions wait disabled", () => {
+  for (const viewport of viewports) {
+    const where = "product/account/sign-in/preview-password/empty " + viewport;
+    const [form] = byClass(
+      drawnPage("product/account/sign-in/preview-password/empty", viewport)
+        .main,
+      "fo-account-form",
+    );
+    assert.ok(form, where);
+    assert.deepEqual(
+      elements(form, (element) => element.tagName === "input").map((input) => [
+        attribute(input, "type"),
+        attribute(input, "value"),
+      ]),
+      [
+        ["email", ""],
+        ["password", ""],
+      ],
+      where,
+    );
+    // Neither field holds text to send, so each control that sends it waits
+    // disabled, while Continue with GitHub needs nothing typed.
+    assert.deepEqual(
+      controlStates(form),
+      [
+        ["Continue with GitHub", false],
+        ["Continue with email", true],
+        ["Continue as preview@mokly.ai", true],
+      ],
+      where,
+    );
+  }
 });

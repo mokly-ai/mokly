@@ -2,21 +2,22 @@ import type { Page } from "@playwright/test";
 
 import { publicationPathFor } from "../addresses";
 import { failWith } from "../api-responses";
-import { buildDouble } from "../build-double";
-import { routeBuilds } from "../build-routes";
-import { expect, freshEmail, open, openDialog } from "../harness";
+import { expect, open } from "../harness";
 import { chooseRepository, createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
+import { walks } from "./covered-writes";
 import type { Subject } from "./subject";
-import { field, writes } from "./undoable-writes";
+import { writes } from "./undoable-writes";
 
 /**
- * Every control the write-failure rule in `folio-chrome.md` covers, and how to
- * make its own write be refused. The rule names only its exceptions — a
- * refusal that changes what the reader does next is drawn as a state body —
- * so this list is the inventory, which is why a control that moves onto the
- * fragment is added here rather than to the protocol doc.
+ * Controls the write-failure rule in `folio-chrome.md` covers, and how to make
+ * each one's own write be refused. A row leaves this table under the rule in
+ * `covered-writes.ts`: only when a named test fails on a break of that
+ * control's own refusal, and never as the last row of its pane or screen. The
+ * rule names only its exceptions — a refusal that changes what the reader does
+ * next is drawn as a state body — so a surface that starts to draw the
+ * fragment adds a row here rather than to the protocol doc.
  *
  * The fragment puts the cause immediately above the control that made the
  * write and the reference beneath it, so the operation is named by the control
@@ -24,9 +25,10 @@ import { field, writes } from "./undoable-writes";
  * control instead, which is why the order is read from the document here rather
  * than trusted to each surface.
  *
- * Every undoable write is refused here too, because reaching its control and
- * giving it something to send is the same journey; the rows below it are the
- * controls with nothing to undo.
+ * The undoable writes are refused here too, because reaching the control and
+ * giving it something to send is the same journey, except those that
+ * `covered-writes.ts` names; the rows below them are controls with nothing to
+ * undo.
  */
 export interface RefusedWrite {
   /** The control, named for the assertion that fails. */
@@ -42,7 +44,7 @@ export interface RefusedWrite {
 }
 
 export const refusals: readonly RefusedWrite[] = [
-  ...writes.map((write) => ({
+  ...writes.filter(walks("refusal")).map((write) => ({
     where: write.where,
     control: write.control,
     says: "Try again",
@@ -53,16 +55,6 @@ export const refusals: readonly RefusedWrite[] = [
       await page.getByTestId(write.control).click();
     },
   })),
-  {
-    where: "account/sign-out",
-    says: "Try again",
-    control: "sign-out",
-    refuse: async (page, subject) => {
-      await openDialog(page, `${subject.projectPath}?settings=account`);
-      await failWith(page, "**/v1/session", "DELETE", "unavailable");
-      await page.getByTestId("sign-out").click();
-    },
-  },
   {
     // The last setup step's own write. Its input is a repository chosen from
     // the installed list, so there is nothing to take back out again and it is
@@ -83,100 +75,26 @@ export const refusals: readonly RefusedWrite[] = [
     },
   },
   {
-    where: "members/revoke-invitation",
-    says: "Try again",
-    control: "revoke-invitation",
-    refuse: async (page, subject) => {
-      await openDialog(page, `${subject.projectPath}?settings=members`);
-      await field(page, "Email").fill(freshEmail("withdrawn"));
-      await page.getByTestId("send-invitation").click();
-      const withdraw = page.getByTestId("revoke-invitation");
-      await expect(withdraw).toBeVisible();
-      await failWith(
-        page,
-        "**/v1/workspaces/*/members/*",
-        "DELETE",
-        "unavailable",
-      );
-      await withdraw.click();
-    },
-  },
-  {
-    // The entry screens' other write. `operation-unavailable` is the notice
-    // those screens keep a composition of their own for, so the refusal here
-    // is one the same request could answer.
-    where: "sign-in/github-entry",
-    says: "Try again",
-    control: "github-entry",
-    refuse: async (page) => {
-      await open(page, "/sign-in");
-      await failWith(page, "**/v1/auth/github", "POST", "unavailable");
-      await page.getByTestId("github-entry").click();
-    },
-  },
-  {
-    // The project pane's switch writes on its own. Its control shows no label
-    // to relabel, so what it says before and after is nothing at all; its
-    // fragment still puts the cause above it and the reference beneath. The
-    // suite's API cannot build, so the project read is answered as one that
-    // can, which is what puts the switch on the pane.
-    where: "project/automatic-builds",
-    says: "",
-    control: "automatic-builds",
-    refuse: async (page, subject) => {
-      await routeBuilds(
-        page,
-        subject.projectId,
-        buildDouble({
-          project: { buildsAvailable: true, automaticBuilds: false },
-        }),
-      );
-      await openDialog(page, `${subject.projectPath}?settings=project`);
-      const toggle = page.getByTestId("automatic-builds");
-      await expect(toggle).toBeVisible();
-      await failWith(page, "**/v1/projects/*", "PATCH", "unavailable");
-      await toggle.click();
-    },
-  },
-  {
-    // A clipboard the browser refused was never a request Mokly answered, so
-    // this one draws no reference. It goes after every row that still needs a
-    // clipboard: the page it needs is the one whose clipboard has been taken
-    // away for the rest of the run.
-    where: "tokens/copy-token",
-    says: "Copy token",
-    control: "copy-token",
+    // The viewer draws the same fragment for the same reason, so its own
+    // clipboard control is asserted here rather than beside the panel: what
+    // the family promises is that every member of it says a refusal the same
+    // way. A clipboard the browser refused was never a request Mokly
+    // answered, so it draws no reference. It goes last, because its init
+    // script takes the clipboard away for the rest of the run, and it
+    // publishes what it shares into a project of the fixture's own
+    // repository — the subject's is named after the suite, and an upload is
+    // admitted only for the repository the project was created for.
+    where: "share/share-copy",
+    says: "Copy link",
+    control: "share-copy",
     referenced: false,
-    refuse: async (page, subject) => {
+    refuse: async (page) => {
       await page.addInitScript(() => {
         Object.defineProperty(window.navigator, "clipboard", {
           configurable: true,
           value: undefined,
         });
       });
-      await openDialog(page, `${subject.projectPath}?settings=tokens`);
-      await page.getByTestId("new-token").click();
-      await field(page, "Token name").fill("Uncopyable token");
-      await page.getByTestId("create-token").click();
-      const copy = page.getByTestId("copy-token");
-      await expect(copy).toBeVisible();
-      await copy.click();
-    },
-  },
-  {
-    // The viewer draws the same fragment for the same reason, so its own
-    // clipboard control is asserted here rather than beside the panel: what
-    // the family promises is that every member of it says a refusal the same
-    // way. It goes after the token reveal, whose init script has taken the
-    // clipboard away for the rest of the run, and it publishes what it shares
-    // into a project of the fixture's own repository — the subject's is named
-    // after the suite, and an upload is admitted only for the repository the
-    // project was created for.
-    where: "share/share-copy",
-    says: "Copy link",
-    control: "share-copy",
-    referenced: false,
-    refuse: async (page) => {
       const projectId = await createProject(page, "Share Org");
       const token = await createToken(page, projectId);
       const made = await publish(token, projectId, { branch: "main" });

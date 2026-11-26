@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, open, test } from "../harness";
+import { expect, open, openSignIn, test } from "../harness";
 import {
   openSettingsFromAccount,
   publishedProject,
@@ -133,7 +133,7 @@ test("in the Mac window, the focused skip link turns off the account header unde
 }) => {
   await emulateMacWindowAtStart(page, "start");
   await page.setViewportSize(smallestWindow);
-  await open(page, "/sign-in");
+  await openSignIn(page);
   const header = page.getByRole("banner");
   const skip = page.getByRole("link", { name: "Skip to content" });
   await expect(

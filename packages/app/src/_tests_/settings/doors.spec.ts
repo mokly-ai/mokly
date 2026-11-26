@@ -9,7 +9,7 @@ import {
 } from "../harness";
 import { createProject } from "../project-setup";
 
-import { openDialogInApp } from "./in-app";
+import { expectDialogTakesKeys, openDialogInApp } from "./in-app";
 
 /** Every way out of settings, and where each one lands. */
 
@@ -22,14 +22,7 @@ test("Escape closes a clean dialog and returns to the page beneath", async ({
     page,
     await projectQueryPathFor(page, projectId, "settings=project"),
   );
-  // The dialog takes the keyboard once it has moved focus into itself, onto
-  // the pane the address asked for. A key pressed before that reaches no
-  // dialog yet.
-  await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("link", { name: "Project", exact: true }),
-  ).toBeFocused();
+  await expectDialogTakesKeys(page, "Project");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

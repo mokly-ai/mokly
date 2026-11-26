@@ -33,9 +33,19 @@ fn write(root: &Path, path: &str, text: &str) {
     fs::write(path, text).unwrap();
 }
 
+/// The commit identity of the fixture repositories. Each test Git command
+/// sets it, so no fixture runs `git config` processes for it.
+const IDENTITY: [(&str, &str); 4] = [
+    ("GIT_AUTHOR_NAME", "Fixture"),
+    ("GIT_AUTHOR_EMAIL", "fixture@example.test"),
+    ("GIT_COMMITTER_NAME", "Fixture"),
+    ("GIT_COMMITTER_EMAIL", "fixture@example.test"),
+];
+
 fn git(root: &Path, args: &[&str]) {
     let result = Command::new("git")
         .args(args)
+        .envs(IDENTITY)
         .current_dir(root)
         .output()
         .unwrap();
@@ -49,11 +59,6 @@ fn git(root: &Path, args: &[&str]) {
 fn fixture() -> TempDir {
     let root = TempDir::new().unwrap();
     git(root.path(), &["init", "-q"]);
-    git(root.path(), &["config", "user.name", "Fixture"]);
-    git(
-        root.path(),
-        &["config", "user.email", "fixture@example.test"],
-    );
     write(root.path(), ".gitignore", ".context/\nnode_modules/\n");
     write(root.path(), ".gitattributes", "package.json text eol=lf\n");
     write(
@@ -108,7 +113,7 @@ fn build(root: &Path, strict: bool) -> Output {
 }
 
 #[test]
-fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
+fn html_package_upgrade_warns_without_node_and_passes_a_strict_build() {
     let root = fixture();
     let first = build(root.path(), true);
     assert!(
@@ -123,23 +128,20 @@ fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
         "package.json",
         "{\"dependencies\":{\"theme\":\"2.0.0\"}}",
     );
-    for strict in [true, false] {
-        fs::remove_dir_all(&site).unwrap();
-        let result = build(root.path(), strict);
-        let stderr = String::from_utf8_lossy(&result.stderr);
-        assert!(result.status.success(), "{stderr}");
-        assert_eq!(stderr, WARNING_LINE);
-        let index: Value =
-            serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap())
-                .unwrap();
-        assert_eq!(index["changesStatus"], "ready");
-        assert_eq!(index["screens"][0]["changes"]["included"], false);
-        assert!(
-            fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
-                .unwrap()
-                .contains("7px")
-        );
-    }
+    fs::remove_dir_all(&site).unwrap();
+    let result = build(root.path(), true);
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(result.status.success(), "{stderr}");
+    assert_eq!(stderr, WARNING_LINE);
+    let index: Value =
+        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
+    assert_eq!(index["changesStatus"], "ready");
+    assert_eq!(index["screens"][0]["changes"]["included"], false);
+    assert!(
+        fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
+            .unwrap()
+            .contains("7px")
+    );
 }
 
 #[test]

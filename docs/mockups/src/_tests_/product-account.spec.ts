@@ -17,6 +17,7 @@ import { productRun, productSchemes, productViewports } from "./product-runs";
 const accountFrame = [
   ["sign-up", "none", 0],
   ["sign-in", "none", 0],
+  ["sign-in/preview-password", "none", 0],
   ["magic-link", "link", 0],
   ["sign-in/desktop", "none", 0],
   ["connect-desktop", "signed-in", 0],

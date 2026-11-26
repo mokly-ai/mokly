@@ -1,8 +1,8 @@
 /**
- * The rendered UI each branch-point case shows on Serve, in the branch copy,
- * and in the embedded viewer: affected destinations, saved props, removed
- * rows, kept comparison mode, Changes activation, and the breadcrumbs of
- * Inspect's Path row.
+ * The rendered UI each branch-point case shows on the host that runs it:
+ * affected destinations, saved props, removed rows, kept comparison mode,
+ * Changes activation, and the breadcrumbs of Inspect's Path row. The branch
+ * copy runs every case; Serve and the embedded viewer run some of them.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -162,27 +162,38 @@ async function reusedParent(page: Page, host: BranchPointHost): Promise<void> {
 }
 
 /** Every case's checks, keyed by its name in the shared case set. */
-const CHECKS: Readonly<
-  Record<string, (page: Page, host: BranchPointHost) => Promise<void>>
-> = {
+const CHECKS = {
   "moved-consumers": movedConsumers,
   "moved-parent": movedParent,
   "moved-variant": movedVariant,
   "case-renames": caseRenames,
   "reused-parent": reusedParent,
   "affected-destinations": affectedDestinations,
-};
+} as const satisfies Readonly<
+  Record<string, (page: Page, host: BranchPointHost) => Promise<void>>
+>;
+
+/** The name of a shared case that has browser checks. */
+export type BranchPointCaseName = keyof typeof CHECKS;
+
+function isCase(name: string): name is BranchPointCaseName {
+  return Object.hasOwn(CHECKS, name);
+}
 
 /**
- * Each case of `tests/fixtures/branch_point_cases.json` with its checks and
- * the title that starts its test names. A case without checks, or checks
+ * Each case of `tests/fixtures/branch_point_cases.json` with its name, its
+ * checks, and the title that starts its test names. A case without checks, or checks
  * without a case, stops the spec from loading, so the browser runs every
  * shared case.
  */
 export const BRANCH_POINT_CHECKS = branchPointCases.map(({ name }) => {
-  const check = CHECKS[name];
-  if (!check) throw new Error(`No browser checks for the case ${name}`);
-  return { title: name.replaceAll("-", " "), check };
+  if (!isCase(name)) throw new Error(`No browser checks for the case ${name}`);
+  return { name, title: name.replaceAll("-", " "), check: CHECKS[name] };
 });
 if (BRANCH_POINT_CHECKS.length !== Object.keys(CHECKS).length)
   throw new Error("Browser checks name a case that the shared set lacks");
+
+/** The title and the checks of one shared case. */
+export function branchPointCheck(name: BranchPointCaseName) {
+  return { title: name.replaceAll("-", " "), check: CHECKS[name] };
+}

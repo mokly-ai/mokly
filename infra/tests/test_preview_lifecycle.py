@@ -3,7 +3,6 @@
 import io
 import json
 from pathlib import Path
-import stat
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -339,7 +338,6 @@ class ObjectAndSecretTests(unittest.TestCase):
         for command, fixture in (
             (lifecycle.validate_postgres_secret, "kubectl-postgres-secret.json"),
             (lifecycle.validate_signing_secret, "kubectl-signing-secret.json"),
-            (lifecycle.validate_preview_secret, "kubectl-preview-secret.json"),
         ):
             with self.subTest(fixture=fixture), patch("sys.stdin", io.StringIO((FIXTURES / fixture).read_text())):
                 command()
@@ -347,18 +345,6 @@ class ObjectAndSecretTests(unittest.TestCase):
         value["data"]["url"] = value["data"]["password"]
         with patch("sys.stdin", io.StringIO(json.dumps(value))), self.assertRaisesRegex(ValueError, "URL"):
             lifecycle.validate_postgres_secret()
-
-    def test_preview_secret_extract_is_private_and_exact(self):
-        fixture = (FIXTURES / "kubectl-preview-secret.json").read_text()
-        with tempfile.TemporaryDirectory() as temporary:
-            destination = Path(temporary) / "preview-sign-in"
-            with patch("sys.stdin", io.StringIO(fixture)):
-                lifecycle.extract_preview(destination)
-            value = destination.read_text()
-            mode = stat.S_IMODE(destination.stat().st_mode)
-        self.assertEqual(value, "c" * 64)
-        self.assertEqual(mode, 0o600)
-
 
 if __name__ == "__main__":
     unittest.main()

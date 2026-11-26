@@ -10,7 +10,7 @@ Its paths match the current source and generated catalogue.
 | `product/account/sign-in`           | GitHub/email sign-in                                                                  | Untouched account form                                             | Send refused beside its control; address on its field; GitHub refused or opening soon beside it |
 | `product/account/sign-up`           | GitHub/email account entry                                                            | Untouched account form                                             | Send refused beside its control; address on its field; GitHub refused or opening soon beside it |
 | `product/account/magic-link`        | Check your email; resend/change email                                                 | No pending link; enter email                                       | Link couldn't be sent; request another                                                          |
-| `product/account/callback`          | Signing in from an email or preview link or a desktop grant                           | Missing or invalid link                                            | Email expiry/use/failure; preview failure with retry; desktop expiry/failure                    |
+| `product/account/callback`          | Signing in from an email link or a desktop grant                                      | Missing or invalid link                                            | Email expiry/use/failure; desktop expiry/failure                                                |
 | `product/account/connect-desktop`   | The browser's account; Open Mokly and Use another account                             | Link without a valid challenge                                     | Open Mokly refused beside it; try again                                                         |
 | `product/account/create-workspace`  | Name, slug, address preview and Create                                                | Empty name, disabled submit                                        | Invalid, reserved or taken slug beside its field                                                |
 | `product/account/install-app`       | Install on GitHub, the one action; the CLI form beneath                               | Nothing bound (repeats the canonical drawing)                      | Suspended on GitHub; resume there, then install                                                 |
@@ -42,22 +42,36 @@ with GitHub where that control's causes sit, because everything said about a
 control is said beside it. It offers no way back and discloses no reference,
 because the same request cannot be made to succeed. Each situation beyond the
 four states is its own screen beside sign in and sign up, in their folders:
-`github-connecting`, `github-refused`, `github-opens-soon`, `address-refused`
-and the [desktop app's](./product-mockups-account-desktop.md) `desktop`. `github-connecting` draws the
+`github-connecting`, `github-refused`, `github-opens-soon`, `address-refused`,
+the [desktop app's](./product-mockups-account-desktop.md) `desktop` and sign
+in's `preview-password`. `github-connecting` draws the
 GitHub write while it runs: the form with **Continue with GitHub** busy with
 "Connecting…" until the page leaves for GitHub, as
 [Write in progress](./folio-chrome.md#compositions) defines.
+
+`product/account/sign-in/preview-password` draws the
+[password section](./preview-sign-in.md#sign-in-section) under the email
+form, which stays at rest on every page but `empty`. The `empty` variant
+draws Sign in before the reader types: the Email and Password fields are
+empty, and both of their actions are disabled. The field asks for `current-password` and renders
+without automatic capitalization, correction or spellcheck. The
+`password-refused` variant marks the field with "This password isn’t
+valid.", keeps the action's label and leaves only the **Details** disclosure
+around the action, as a refused address does. The `failure` variant reports
+the busy cause beside the action, which reads **Try again**. The screen
+`signing-in` in its folder draws the write: the action reads "Signing in…"
+with the busy spinner, announced as "Signing you in", and the field waits
+disabled. Sign in's other pages, sign up and the desktop window draw no
+section.
 
 The callback screens reproduce [Authentication callbacks](./auth-callbacks.md)
 without naming an environment. The callback folder's own structure is in
 [Callback landings](#callback-landings). Pending says **Signing you in**. Email recovery
 uses the invalid, expired, used and generic titles, says **Request another
-sign-in link**, and offers only **Back to sign in**. Preview invalid offers only
-**Back to sign in**; its generic failure offers primary **Try again** and
-secondary **Back to sign in**. The desktop landing's expired and generic
-failures offer only **Back to sign in**. API-backed examples include the closed
-**Details** disclosure; local missing-input and transport failures use the same
-screen without an invented reference.
+sign-in link**, and offers only **Back to sign in**. The desktop landing's
+expired and generic failures offer only **Back to sign in**. API-backed
+examples include the closed **Details** disclosure; local missing-input and
+transport failures use the same screen without an invented reference.
 
 See [Install and repository steps](#install-and-repository-steps) for the
 two steps that read GitHub and the CLI form beside them.
@@ -195,8 +209,7 @@ current slug route immediately.
 `product/account/callback` is the bespoke state family. Its canonical page is
 the pending sign-in. `product/account/callback/email-invalid` has the email
 link's expired, used and generic-failure outcomes as its variants.
-`product/account/callback/preview-invalid` has the preview link's generic
-failure as its variant. `product/account/callback/desktop-expired` draws the
+`product/account/callback/desktop-expired` draws the
 [desktop landing](./auth-callbacks.md#desktop-callback) in the window: its
 expired sign-in, with its generic failure as its variant. Its pending state is
 the folder's canonical page. No screen carries more than four variants, and no
@@ -214,7 +227,7 @@ reader and the wordmark stays inert:
 | `product/account/callback/install-setup`     | Setup landing, completing                | **Install the Mokly app** over one state card placeholder whose title says "Completing installation…"                                    |
 | `product/account/callback/install-authorize` | Callback, completing                     | **GitHub installation** over one state card placeholder whose title says "Completing installation…"                                      |
 
-The situations declaration lists all fourteen callback states at these paths.
+The situations declaration lists all twelve callback states at these paths.
 
 ## Desktop App
 

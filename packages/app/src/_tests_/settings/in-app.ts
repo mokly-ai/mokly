@@ -22,11 +22,26 @@ export async function openDialogInApp(page: Page, pane: string): Promise<void> {
   await page.setViewportSize({ width: 1440, height: 900 });
   // The durable route draws the dialog's wait until it hands over to the
   // dialog by replacing its address, and the dialog opens while its scope
-  // still loads. It is ready for the reader once the address carries it and
-  // it shows the pane they chose; a key pressed before that lands on the
-  // route's wait, ahead of the hand-over.
+  // still loads. A key pressed before the address carries the dialog lands on
+  // the route's wait, ahead of the hand-over.
   await expect(page).toHaveURL((url) => url.searchParams.has("settings"));
   await expect(
     page.getByRole("dialog").getByRole("heading", { level: 1 }),
   ).toHaveText(pane);
+  await expectDialogTakesKeys(page, pane);
+}
+
+/**
+ * Wait until the open dialog takes the keyboard. It is drawn a step before
+ * that: it moves focus onto the rail link of the pane it shows and starts to
+ * take Escape together, once it is on screen. A key pressed between the two
+ * reaches no dialog.
+ */
+export async function expectDialogTakesKeys(
+  page: Page,
+  pane: string,
+): Promise<void> {
+  await expect(
+    page.getByRole("dialog").getByRole("link", { name: pane, exact: true }),
+  ).toBeFocused();
 }

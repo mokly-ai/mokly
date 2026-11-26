@@ -1,0 +1,48 @@
+# DNS token write location is untested
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the branch `calummoore/preview-password-sign-in-jofl`, round 2 review: a new problem outside the scope. The finding check of finding 12, "Verifier test permits files in the checkout", found it.
+- **Location:**
+  - `infra/scripts/preview-common.sh:109-114`: `preview_fetch_dns_token`.
+  - `infra/scripts/preview-common.sh:22-30`: `preview_create_temporary`.
+  - `infra/scripts/preview-deploy.sh:8-9` and `:21-22`, and `infra/scripts/preview-destroy.sh:7-8` and `:29-35`.
+  - `infra/tests/test_preview_lifecycle_shell.py:61-93`: the deploy test that checks the path of the verifier. The destroy tests are at lines 249-323.
+  - `infra/tests/preview_lifecycle_support.py:26-31`, `:52`, `:94-96` and `:249-250`: the fixture and its gcloud double.
+  - `docs/protocol/cloud/preview-sign-in.md:89-91`, section "Deploy", and `docs/protocol/cloud/preview-scripts.md:85-86`.
+- **Reason:** The token download is unchanged by the branch that found the gap, and the deploy writes the token to the right place today.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Catalogue DNS token:** the Cloudflare API token in Secret Manager `mkc-catalogue-dns-token`. It can edit the DNS records of the catalogue zone.
+  - **Runner temporary directory:** the private directory of a job for work files, which GitHub names in `RUNNER_TEMP`.
+  - **Call log:** the file `calls` in which the command doubles of the shell tests record each command with all its arguments.
+- **Background:**
+  - `preview_create_temporary` makes `$preview_temporary` with `mktemp -d "${RUNNER_TEMP:-/tmp}/mokly-preview.XXXXXXXX"`, under `umask 077`, with mode 700.
+  - `infra/scripts/preview-deploy.sh:9` and `infra/scripts/preview-destroy.sh:8` remove that directory on exit with `trap 'rm -rf "$preview_temporary"' EXIT`.
+  - `preview_fetch_dns_token` downloads the token to `$preview_temporary/catalogue-dns-token` with `gcloud secrets versions access latest` and `--out-file`. Then it sets mode 600.
+  - The deploy passes the file to `dns-upsert` at `infra/scripts/preview-deploy.sh:21-22`. The destroy passes it to `dns-delete` at `infra/scripts/preview-destroy.sh:29-35`.
+  - The token has Zone DNS Edit and Zone Read on the catalogue zone only, as `docs/ops/secrets.md:73` lists. A leaked verifier opens no preview, as `docs/protocol/cloud/preview-sign-in.md:205-207` says. So the token is the more powerful secret.
+  - `docs/protocol/cloud/preview-sign-in.md:89-91` puts the verifier in a private mode-0600 runner-temporary file outside `.context/`, "as it reads the catalogue DNS token", and removes the file after use. `docs/protocol/cloud/preview-scripts.md:85-86` requires private storage for the token.
+  - The deploy also writes into the `.context/` folder of the checkout: `release-values.json` at `infra/scripts/preview-deploy.sh:25-27`, and the evidence that `.github/workflows/preview.yml:549-556` uploads.
+  - On 2026-11-25 the branch `calummoore/preview-password-sign-in-jofl` moved `$preview_temporary` from a plain `mktemp -d` into `RUNNER_TEMP`. That moved the token file too. No test checked the path of the token before or after that change.
+  - The test `test_verifier_is_copied_privately_before_helm_and_only_once`, at `infra/tests/test_preview_lifecycle_shell.py:61-93`, checks only the verifier. Each recorded verifier `--out-file` path must resolve inside the `RUNNER_TEMP` of the fixture, and the file must be gone after the run.
+  - The fixture `LifecycleDouble` gives `RUNNER_TEMP`, `TMPDIR` and the checkout three separate directories, at `infra/tests/preview_lifecycle_support.py:26-31` and `:249-250`. Its gcloud double records every call in the call log, at line 52. It writes the token fixture to the `--out-file` path, at lines 94-96.
+  - For the token, the tests check only that its value never reaches the call log or the output, at `infra/tests/test_preview_lifecycle_shell.py:35`.
+- **Problem:** No test checks where the deploy or the destroy writes the catalogue DNS token, or that the file is gone after the run. A change that writes the token into the checkout, or outside the exit cleanup, passes every test.
+- **Impact if no action:** A path regression can leave a live DNS credential in the checkout, beside the deployment evidence and beyond the exit cleanup, and no test fails.
+- **Root question:** How can the shell tests prove that the deploy and the destroy keep the DNS token in private runner storage that the exit cleanup removes?
+- **Options:**
+  - **A.** Check the token as the verifier is checked. In a deploy run and in a destroy run, take each recorded `gcloud secrets versions access` line with `--secret=mkc-catalogue-dns-token`. Assert that its `--out-file` path resolves inside the `RUNNER_TEMP` of the fixture, and that the file is gone after the run. Let the gcloud double record the mode of the file, and assert 600. Effort: Small.
+  - **B.** Assert over every recorded `--out-file` of the deploy and destroy runs, with no filter by secret. Each path must resolve inside `RUNNER_TEMP`, and no such file may remain after the run. It covers the token, the verifier and any later download of the two scripts. It is a test for the class, so it needs the user's approval. Effort: Small.
+  - **C.** Keep the token off disk. Pipe it from `gcloud secrets versions access` into the DNS commands of `infra/scripts/preview-lifecycle.py` on standard input, so no file exists. It changes the input of those commands. It also changes the storage rule of `docs/protocol/cloud/preview-sign-in.md:89-91` and `docs/protocol/cloud/preview-scripts.md:85-86`, so it needs the user. Effort: Medium.
+- **Left out:**
+  - A shared helper for every Secret Manager download. Both downloads already take their path from `$preview_temporary`, so a helper adds code and still needs the test of A.
+  - A test against a live cloud deploy. It needs credentials, and it still needs the same path check.
+- **Wider fix:** C, a structural fix: with no file, no path can be wrong. B is the detection fix for the same class.
+- **Previous examples:**
+  - The verifier download of the same deploy had the same gap until 2026-11-25. Its test accepted any path under the temporary root of the fixture, which also held the checkout. The branch separated the three directories and checked `RUNNER_TEMP`.
+  - Commit `e221a84fe` separated durable capture fixtures from a shared temporary parent, because that parent made the directory boundary unreliable.
+- **Recommendation:** A. It closes the gap with the check that the verifier already has, at the same small cost. C best protects the token, because no file then exists to misplace.
+- **Action:** fix after merge, apply A, because the token download is outside the diff of the branch that found the gap, and it is correct today.

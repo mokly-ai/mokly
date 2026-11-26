@@ -1,10 +1,9 @@
-//! Authentication and command dispatch on a blocking worker.
+//! Authentication and command dispatch, with an async handoff for preview sign-in.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use mkc_auth::service::{Authenticator, Identity};
-use mkc_domain::app_paths;
 use mkc_domain::client_origins::ClientOrigin;
 use mkc_publications::access::CatalogueAccess;
 use mkc_publications::error;
@@ -13,14 +12,16 @@ use thiserror::Error;
 use crate::action::Action;
 use crate::billing::service::BillingService;
 use crate::builds::service::BuildsApi;
+use crate::configuration::DispatchTarget;
 use crate::endpoints::{self, Endpoint};
 use crate::error::{ApiError, Result};
 use crate::github::service::GitHubIntegration;
 use crate::health::HealthCheck;
-use crate::operation::{Operation, OptionalConfiguration};
+use crate::operation::Operation;
 use crate::pagination::Pagination;
 use crate::payload::{Payload, Reply};
 use crate::platform::service::Platform;
+use crate::preview_dispatch::{AdmittedPreview, PreviewHashSlots};
 use crate::publication_views::AccessGrantView;
 use crate::viewer::input::Query;
 use crate::viewer::service::Viewer;
@@ -46,15 +47,35 @@ pub(crate) struct WebhookHeaders {
     pub(crate) signature: String,
 }
 
-/// The public health endpoint is answered before authentication; reaching the
-/// authenticated path means the two dispatch stages disagree.
+/// The health and configuration endpoints are answered before authentication.
 #[derive(Debug, Error)]
-#[error("[mkc-api/dispatch] health routed through authentication")]
-struct HealthRouting;
+#[error("[mkc-api/dispatch] public read routed through authentication")]
+struct PublicReadRouting;
 
 #[unimock::unimock(api = [DispatchMock])]
 pub(crate) trait Dispatcher: Send + Sync {
-    fn dispatch(&self, request: Request) -> Result<Reply>;
+    fn dispatch(&self, request: Request) -> Result<DispatchOutcome>;
+}
+
+/// The result of the first blocking phase of API dispatch.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Ordinary requests usually return a reply, which fits inline without a new allocation."
+)]
+pub(crate) enum DispatchOutcome {
+    /// A response ready to send.
+    Reply(Reply),
+    /// An admitted password exchange that needs a hash permit.
+    Preview(AdmittedPreview),
+}
+
+impl DispatchOutcome {
+    pub(crate) async fn finish(self) -> Result<Reply> {
+        match self {
+            Self::Reply(reply) => Ok(reply),
+            Self::Preview(preview) => preview.finish().await,
+        }
+    }
 }
 
 pub(crate) struct ApiDispatcher {
@@ -66,35 +87,54 @@ pub(crate) struct ApiDispatcher {
     pub(crate) github: Option<Arc<dyn GitHubIntegration>>,
     pub(crate) billing: Option<Arc<dyn BillingService>>,
     pub(crate) access: Arc<dyn CatalogueAccess>,
+    pub(crate) preview_hash_slots: PreviewHashSlots,
 }
 
 impl Dispatcher for ApiDispatcher {
-    fn dispatch(&self, request: Request) -> Result<Reply> {
+    fn dispatch(&self, request: Request) -> Result<DispatchOutcome> {
         if !request.operation.implemented() {
             return Err(ApiError::OperationUnavailable);
         }
         if request.operation.desktop_grant() {
-            return self.dispatch_desktop_grant(request);
+            return self
+                .dispatch_desktop_grant(request)
+                .map(DispatchOutcome::Reply);
         }
-        if let DispatchTarget::GitHub(github) = self.dispatch_target(request.operation)? {
-            return self.dispatch_github(request, github);
+        match self.dispatch_target(request.operation.optional_configuration())? {
+            DispatchTarget::GitHub(github) => {
+                return self
+                    .dispatch_github(request, github)
+                    .map(DispatchOutcome::Reply);
+            }
+            DispatchTarget::Billing(billing) => {
+                return self
+                    .dispatch_billing(request, billing)
+                    .map(DispatchOutcome::Reply);
+            }
+            DispatchTarget::Standard => {}
         }
         let preview_client = if request.operation == Operation::VerifyPreviewSignIn {
             Some(self.auth.origin(request.origin.as_deref())?)
         } else {
             None
         };
-        if request.operation.billing() {
-            return self.dispatch_billing(request);
-        }
         let endpoint = endpoints::action(
             request.operation,
             &request.params,
             &request.body,
             &request.query,
         )?;
-        match endpoint {
+        let reply = match endpoint {
+            Endpoint::VerifyPreviewSignIn(input) => {
+                let client = preview_client.ok_or(ApiError::CsrfRejected)?;
+                return self
+                    .admit_preview(request, client, input)
+                    .map(DispatchOutcome::Preview);
+            }
             Endpoint::GetHealth => Ok(Reply::ok(Payload::Health(self.health.check()?))),
+            Endpoint::GetConfiguration => {
+                Ok(Reply::ok(Payload::Configuration(self.configuration())))
+            }
             Endpoint::SendMagicLink(input) => {
                 let client = self.auth.origin(request.origin.as_deref())?;
                 let result = self.auth.issue(
@@ -129,53 +169,13 @@ impl Dispatcher for ApiDispatcher {
                     effects: Vec::new(),
                 })
             }
-            Endpoint::VerifyPreviewSignIn(input) => {
-                let result = self.auth.preview(
-                    &input.secret,
-                    request.credential.as_deref(),
-                    &request.peer,
-                )?;
-                let session = self.platform.session(&result.identity)?;
-                Ok(Reply {
-                    status: 200,
-                    payload: Payload::SessionIssued(SessionIssuedView {
-                        session,
-                        return_to: app_paths::DASHBOARD.to_owned(),
-                    }),
-                    cookie: Some(cookie(
-                        &result.credential,
-                        2_592_000,
-                        preview_client.ok_or(ApiError::CsrfRejected)?,
-                    )),
-                    effects: Vec::new(),
-                })
-            }
             endpoint => self.authenticated(request, endpoint),
-        }
+        }?;
+        Ok(DispatchOutcome::Reply(reply))
     }
 }
 
 impl ApiDispatcher {
-    /// Select the configured target after the `Operation::implemented()` availability check.
-    /// The router registers operations from the Rust-derived OpenAPI document.
-    /// This single gate covers preview sign-in and every GitHub operation before
-    /// their handlers perform Origin, CSRF, or body validation, so a malformed
-    /// request never masks absent configuration.
-    fn dispatch_target(&self, operation: Operation) -> Result<DispatchTarget<'_>> {
-        match operation.optional_configuration() {
-            None => Ok(DispatchTarget::Standard),
-            Some(OptionalConfiguration::PreviewSignIn) if self.auth.preview_sign_in_available() => {
-                Ok(DispatchTarget::Standard)
-            }
-            Some(OptionalConfiguration::PreviewSignIn) => Err(ApiError::OperationUnavailable),
-            Some(OptionalConfiguration::GitHub) => self
-                .github
-                .as_deref()
-                .map(DispatchTarget::GitHub)
-                .ok_or(ApiError::OperationUnavailable),
-        }
-    }
-
     fn authenticated(&self, request: Request, endpoint: Endpoint) -> Result<Reply> {
         let identity = match request.credential.as_deref() {
             Some(credential) => Some(self.auth.authenticate(credential)?),
@@ -192,7 +192,9 @@ impl ApiDispatcher {
             ClientOrigin::App
         };
         match endpoint {
-            Endpoint::GetHealth => Err(ApiError::internal(HealthRouting)),
+            Endpoint::GetHealth | Endpoint::GetConfiguration => {
+                Err(ApiError::internal(PublicReadRouting))
+            }
             Endpoint::CatalogueGrant(project, publication) => {
                 let actor = identity.as_ref().ok_or(ApiError::Unauthenticated)?.user.id;
                 let grant = match self.access.grant(actor, project, publication) {
@@ -274,11 +276,6 @@ impl ApiDispatcher {
             | Endpoint::Billing => Err(ApiError::OperationUnavailable),
         }
     }
-}
-
-enum DispatchTarget<'a> {
-    Standard,
-    GitHub(&'a dyn GitHubIntegration),
 }
 
 pub(crate) fn cookie(credential: &str, max_age: i64, client: ClientOrigin) -> String {

@@ -40,7 +40,9 @@ methods, paths and operation IDs. Every documented operation has a route. A
 deferred operation, and an optional operation (preview sign-in, GitHub,
 billing) whose runtime configuration is incomplete, returns
 `operation-unavailable` from the dispatcher before Origin, CSRF or body
-validation. Synchronous services and Diesel queries run on the blocking pool.
+validation. The public `GET /v1/configuration` reports which of these
+optional configurations the API has, from the same configuration as that
+gate. Synchronous services and Diesel queries run on the blocking pool.
 `ApiError` is the one translation of authentication, platform policy, store,
 upload, GitHub, build and billing outcomes into the pinned `rpc-error`
 envelope; the reason catalogue in [REST API](../../docs/protocol/cloud/rest-api.md)
@@ -63,10 +65,12 @@ slug suggestion require a repository-relative config path that ends in
 
 Email, desktop grant and GitHub authentication persist the domain-validated `returnTo`
 through issue and exchange; a rejected destination resolves to `/dashboard`.
-`POST /v1/auth/preview` exists only when both preview sign-in settings
-validate and returns the ordinary session payload and cookie. Optional
+`POST /v1/auth/preview` exists only when the preview sign-in email validates.
+It checks a typed password against the optional verifier, at most two checks
+at once in one process, and returns the ordinary session payload and cookie,
+with the request's validated `returnTo`. Optional
 `MKC_PREVIEW_SIGN_IN_PLAN` accepts `free` (the absent default) or `team` under
-the same pair and capability. Workspace creation compares the creator's
+the same email and capability. Workspace creation compares the creator's
 normalized email read in its own transaction with the configured preview
 email. A match uses the configured initial plan; all other workspaces
 start on Free. Existing plans do not change. Team defaults projects to private
@@ -214,7 +218,8 @@ nonzero on failure and never prints a secret.
 
 Before `preview-seed`, stage `request.json`, `catalogue/plan.tar.gz` and the
 catalogue blobs under `seed/<run>/` in the configured store. Use `local`
-for a local run. Set the preview sign-in email, secret and plan as below.
+for a local run. Set the preview sign-in email and plan as below; the seed
+needs no verifier.
 Read `seed-status.json` and `seed-proof.json` in that folder for the result.
 The command retries failed seed-folder requests for up to two minutes.
 
@@ -232,7 +237,7 @@ defaults:
 - `MKC_DATABASE_URL`, `MKC_BIND`, `MKC_APP_ORIGIN` and `MKC_API_ORIGIN`, this API's own public origin, on which upload plans build their blob and completion URLs.
 - `MKC_MAILER=log`; `postmark` needs `POSTMARK_FROM`, `POSTMARK_SERVER_TOKEN` and `MKC_SITE_ORIGIN`.
 - `MKC_CATALOGUE_ORIGIN`, `MKC_CATALOGUE_SIGNING_KEY`, `MKC_FILE_STORE=local` and `MKC_FILE_STORE_ROOT`; the two launch scripts share the key in `.context/catalogue-signing-key` and the blob root in `.context/blobs`. Reset that directory and the development database together, because durability markers in one refer to objects in the other.
-- `MKC_PREVIEW_SIGN_IN_SECRET` and `MKC_PREVIEW_SIGN_IN_EMAIL`, which the script generates for the shared preview sign-in link, and `MKC_PREVIEW_SIGN_IN_PLAN=team`.
+- `MKC_PREVIEW_SIGN_IN_EMAIL`, `MKC_PREVIEW_SIGN_IN_PLAN=team` and `MKC_PREVIEW_SIGN_IN_VERIFIER`, which the script derives from its local preview password in `.context/preview-password`.
 - `MKC_DESKTOP_CLIENT=true`, which admits the desktop shell's `mokly-app://desktop` origin.
 - Optional: the six `MKC_GITHUB_*` settings for the GitHub App, with `MKC_GITHUB_API_ORIGIN` and `MKC_GITHUB_WEB_ORIGIN` together pointing it at [`mkc-github-double`](../mkc-github-double/README.md) in development, `MKC_BILLING=stripe` with the Stripe secrets for billing, and the cloud build group in [runner configuration](../../docs/protocol/cloud/cloud-build-runner.md#configuration).
 
@@ -359,7 +364,7 @@ setting or test detection that selects the fake runner. The
 - [contract/parameters.rs](./src/contract/parameters.rs) — shared header and pagination parameters for the operation stubs.
 - [contract/responses.rs](./src/contract/responses.rs) — the shared `ErrorResponse` component for standard operation failures.
 - [contract/session_cookie.rs](./src/contract/session_cookie.rs) — `SessionCookie`, which points every declared `Set-Cookie` response header at one shared component that states the Origin-dependent `SameSite` rule.
-- [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including authenticated desktop grant issue and public grant exchange with the inherited session deadline.
+- [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including the preview password exchange, authenticated desktop grant issue and public grant exchange with the inherited session deadline.
 - [contract/metadata.rs](./src/contract/metadata.rs) — derives deferred operation markers from `Operation::implemented()` after the area merges.
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.
@@ -370,7 +375,10 @@ setting or test detection that selects the fake runner. The
 - [route_contract.rs](./src/route_contract.rs) — validates operation IDs, methods, duplicate routes and anonymous-read capabilities before registration.
 - [operation.rs](./src/operation.rs) — `Operation`, the typed operation identifiers shared by the OpenAPI contract and dispatch.
 - [operation_policy.rs](./src/operation_policy.rs) — implementation and authentication capabilities for the typed operation inventory; `Operation::anonymous_read()` names the reads that need no session, which the route contract compares with the document's GET security requirements.
-- [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher`; `dispatch_target` returns `operation-unavailable` for an unconfigured preview sign-in or GitHub operation and `dispatch_billing` in `billing_dispatch.rs` for unconfigured billing, both before Origin, CSRF or body validation; a deferred operation is refused by `Operation::implemented()`; `cookie` writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher` uses `Operation::implemented()` to refuse deferred operations. Its `cookie` helper writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [preview_dispatch.rs](./src/preview_dispatch.rs) — preview password validation and admission. Admitted requests await one of two hash permits outside the blocking pool. The worker releases the permit when the password check ends.
+- [configuration.rs](./src/configuration.rs) — `dispatch_target` gates preview sign-in, GitHub and billing before handler validation. `GET /v1/configuration` reads from the same gate.
+- [contract/configuration.rs](./src/contract/configuration.rs) — the OpenAPI contract for the public configuration answer.
 - [desktop_grant_dispatch.rs](./src/desktop_grant_dispatch.rs) and [desktop_grant_input.rs](./src/desktop_grant_input.rs) — desktop request validation after session, Origin and CSRF admission, the grant response, and exchange cookies whose `Max-Age` follows the inherited deadline.
 - [desktop_grant_tests.rs](./tests/desktop_grant_tests.rs) — the auth service against Postgres, including issuer sign-out, a wrong verifier that leaves the grant unused, concurrent exchange and atomic session replacement.
 - [health.rs](./src/health.rs) — `DatabaseHealth`, the migration readiness read at startup and after a five-second cache expiry; concurrent callers share one refresh.
@@ -416,7 +424,7 @@ setting or test detection that selects the fake runner. The
 - [REST API](../../docs/protocol/cloud/rest-api.md), [REST API surface](../../docs/protocol/cloud/rest-api-surface.md), [REST requests and responses](../../docs/protocol/cloud/rest-transport.md) and [REST trusted proxies](../../docs/protocol/cloud/rest-proxies.md)
 - [API contract guide](../../docs/api/README.md)
 - [Platform model](../../docs/protocol/cloud/platform-model.md)
-- [Authentication](../../docs/protocol/cloud/auth-sessions.md) and [callback landings](../../docs/protocol/cloud/auth-callbacks.md)
+- [Authentication](../../docs/protocol/cloud/auth-sessions.md), [preview sign-in](../../docs/protocol/cloud/preview-sign-in.md) and [callback landings](../../docs/protocol/cloud/auth-callbacks.md)
 - [Desktop application](../../docs/protocol/cloud/desktop-app.md)
 - [GitHub App](../../docs/protocol/cloud/github-app.md) and [GitHub sign-in](../../docs/protocol/cloud/github-sign-in.md)
 - [Changes check](../../docs/protocol/cloud/changes-check.md)

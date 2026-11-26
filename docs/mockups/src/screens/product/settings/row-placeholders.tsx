@@ -16,8 +16,9 @@ import { ControlPlaceholder } from "../placeholders";
  */
 
 /**
- * A row's three-dot trigger, whose name the answer supplies: a placeholder in
- * the trigger's square box, which is the package's compact control on a
+ * A row's three-dot trigger, or another compact icon-only control such as the
+ * projects panel's Workspace settings cog, whose presence the answer decides:
+ * a placeholder in the control's square box, which is the package's compact control on a
  * pointer viewport and the touch target on a touch one, as the registered
  * menu draws it.
  */

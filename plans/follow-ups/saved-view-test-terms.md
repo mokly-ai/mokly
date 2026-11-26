@@ -3,10 +3,9 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the W2 viewer review.
-- **Location:** `tests/browser/react_comparison_evidence.spec.ts:70`,
-  `tests/browser/comparison_outside_evidence.spec.ts:104`,
-  `tests/browser/comparison_stylesheet_details.spec.ts:194`, and
-  `tests/browser/viewer_details.spec.ts:76`.
+- **Location:** `tests/browser/react_comparison_evidence.spec.ts:69`,
+  `tests/browser/comparison_outside_evidence.spec.ts:118`, and
+  `tests/browser/comparison_stylesheet_details.spec.ts:141`.
 - **Reason:** A viewer review found the old term in test files that its
   change did not touch, so a separate branch renames them.
 
@@ -26,13 +25,14 @@
   - `tests/browser/comparison_page_evidence.spec.ts:132` asserts that the
     product shows no "saved view" text. That assertion must stay.
 - **Problem:** The record counted about eight test titles that still call a
-  variant a "saved view". On `main`, four test titles use it, at the four
-  paths of the Location line.
+  variant a "saved view". Three test titles use it, at the three paths of
+  the Location line. A fourth, in `tests/browser/viewer_details.spec.ts`,
+  was removed on 2026-11-26 as a copy of unit-tested Details rules.
 - **Impact if no action:** A reader of a failing test meets a term that the
   product and the docs no longer use.
 - **Root question:** How should the browser tests name a variant?
 - **Options:**
-  - **A.** Rename the four titles and three comments to use "variant", and
+  - **A.** Rename the three titles and three comments to use "variant", and
     keep the negative assertion. Effort: Small.
   - **B.** Apply A, and add a check that rejects "saved view" in test
     titles. This adds a check. Effort: Medium.

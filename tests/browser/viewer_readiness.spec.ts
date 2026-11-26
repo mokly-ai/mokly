@@ -16,6 +16,8 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
+// The events start in the frame, so both adapters run, for each sibling
+// status that is not ready.
 for (const cross of [false, true]) {
   for (const status of ["pending", "unavailable"] as const) {
     test(`${cross ? "postMessage" : "same-origin"} ${status} sibling keeps navigation without automatic inspection`, async ({
