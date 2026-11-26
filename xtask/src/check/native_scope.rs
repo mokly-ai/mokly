@@ -14,10 +14,10 @@
 //! Git subprocesses, the sidecar Node process, or locks. Every other test of
 //! `mokly-platform`, `mokly-git`, `mokly-sidecar`, `mokly-watch`,
 //! `mokly-catalogue`, `mokly-static`, and `mokly-server` stays. A test that
-//! is not a stress test leaves only when it checks pure logic, and
-//! its fixtures use Git, temporary folders, or the sidecar only to produce
-//! the inputs that kept tests cover on every platform. When in doubt, keep
-//! the test.
+//! is not a stress test leaves only when it checks pure logic, and its
+//! fixtures use Git, temporary folders, directory links, or the sidecar only
+//! to produce inputs that kept tests cover on every platform. When in doubt,
+//! keep the test.
 //!
 //! Stress tests are the one exception, in every crate: they run on Linux
 //! only. A stress test builds an input far past authored sizes, a tree of at

@@ -120,9 +120,11 @@ process, or locks. Every other test of `mokly-platform`, `mokly-git`,
 `mokly-sidecar`, `mokly-watch`, `mokly-catalogue`, `mokly-static`, and
 `mokly-server` stays. A test leaves only when it checks pure logic, such as
 Changes classification, CSS attribution, the catalogue model, HTML repair, or
-scale counts. When in doubt, the test stays. A test unit that the list leaves
-out as a whole is not built. Decision: an exclude list, because an include list
-would run new platform code on Linux only.
+scale counts, and its fixtures use Git, temporary folders, directory links, or
+the sidecar only to produce inputs that kept tests cover on every platform.
+When in doubt, the test stays. A test unit that the list leaves out as a whole
+is not built. Decision: an exclude list, because an include list would run new
+platform code on Linux only.
 
 Stress tests run on Linux only, in every crate. A stress test builds an input
 far past authored sizes: a tree of at least 10,000 levels, at least 10,000 files
