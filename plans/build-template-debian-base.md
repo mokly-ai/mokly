@@ -12,9 +12,10 @@ because Mokly's comparison build needs Git 2.43 or newer and Debian 12 has
 2.39.5. This change moves the template to `debian:trixie-slim`, pinned by
 digest. Trixie's own Git 2.47.3 meets the floor, so the Git build from source
 goes. The change adds `build-essential`, a probe check that each key tool
-exists once on `PATH`, and the release `mokly-build-v6`. It does not change
+exists once on `PATH`, and the release `mokly-build-v7`. Release
+`mokly-build-v6` on `main` is a different build on `e2bdev/base` (decision 6). It does not change
 the runner, the API, or main-preview's app-config. Cal switches main-preview
-to v6 after the merge.
+from v6 to v7 after the merge.
 
 The spike evidence is in `.context/spike-debian-base/report.md`. E2B
 provisions systemd, sudo, openssh-server, and its other agent packages on
@@ -60,6 +61,14 @@ Cal answered the spike items on 2026-11-26.
    no check, and an allow-list of files in `/usr/local`.
 5. Runbook: A. Add the libpq development files to the release prerequisites,
    because the live probe does not link without them.
+6. Release name: Cal decided on 2026-11-26 that the Debian release is
+   `mokly-build-v7`. PR #571 had already released `mokly-build-v6` on
+   `e2bdev/base` with Git 2.56.1 from source, and main-preview runs it. That
+   v6 stays the v6 record. The Debian build
+   `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` of Milestone 3
+   was built under the reused name v6. It shares v6's template ID, it is not a
+   release, and the template must not be deleted, because that deletes
+   main-preview's live build.
 
 Design calls, my calls on 2026-11-26:
 
@@ -141,7 +150,26 @@ Depends on: every other milestone
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
+## Milestone 6: Release `mokly-build-v7` after the v6 merge
+
+Depends on: 5. Starts after `main` with PR #571 merges into this branch.
+
+- [x] Merge `origin/main` with PR #571. `main`'s v6 stays the v6 record, the
+      Debian Dockerfile and probe stay, and the Debian build `b63ce806`
+      becomes a candidate entry.
+- [x] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v7"`.
+- [x] Resolve the trixie digest again, and confirm that no E2B template has
+      the name `mokly-build-v7`. Evidence:
+      `.context/build-template-debian-base/digest-resolved-v7.txt`.
+- [ ] Build `mokly-build-v7` from the final Dockerfile with the release
+      script. Run the live probe, the smoke build, the comparison build, a
+      forced native addon build, and `git grep -P`.
+- [ ] `docs/ops/build-template.md`: the v7 release record.
+- [ ] Reconcile the follow-up items that PR #571 added or kept with this
+      change.
+- [ ] Run the gate checks again, review the merge, and push.
+
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Cal switches main-preview's build template to the v6 build reference
+- [ ] Cal switches main-preview's build template from v6 to the v7 build reference
       and confirms one comparison build with `changesStatus: "ready"`.

@@ -1,4 +1,4 @@
-template_name = "mokly-build-v6"
+template_name = "mokly-build-v7"
 dockerfile = "e2b.Dockerfile"
 cpu_count = 2
 memory_mb = 4096
