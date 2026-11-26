@@ -3,7 +3,7 @@ import type { Page, Route } from "@playwright/test";
 import type { Session } from "../../api/types";
 import { settingsPath, signInPath } from "../../navigation/paths";
 import { apiFailure } from "../api-responses";
-import { expect, freshEmail, openDialog, signIn, test } from "../harness";
+import { expect, freshEmail, openDialog, walkSignIn, test } from "../harness";
 import { apiOrigin } from "../origins";
 
 const sessionUrl = `${apiOrigin}/v1/session`;
@@ -32,7 +32,7 @@ test("failed sign out keeps authentication until retry or confirmation", async (
   page,
 }) => {
   const email = freshEmail("failed-sign-out");
-  await signIn(page, email);
+  await walkSignIn(page, email);
   await openDialog(page, accountPath);
   const account = page.getByRole("dialog", { name: "Account", exact: true });
   const control = page.getByTestId("sign-out");
@@ -133,7 +133,7 @@ test("failed sign out keeps authentication until retry or confirmation", async (
   await expect(page).toHaveURL((url) => url.pathname === signInPath);
 
   for (const reason of ["unauthenticated", "session-expired"] as const) {
-    await signIn(page, freshEmail(`sign-out-${reason}`));
+    await walkSignIn(page, freshEmail(`sign-out-${reason}`));
     await openDialog(page, accountPath);
     const stop = await interceptSignOut(page, async (route) => {
       // Revoke the real session and clear its cookie, then deliver the

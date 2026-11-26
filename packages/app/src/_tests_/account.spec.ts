@@ -1,5 +1,5 @@
 import { projectPathFor } from "./addresses";
-import { expect, freshEmail, open, signIn, test } from "./harness";
+import { expect, freshEmail, open, walkSignIn, test } from "./harness";
 import { createProject } from "./project-setup";
 import { recordedFrames, recordFrames } from "./screen-frames";
 
@@ -24,7 +24,7 @@ test("a new account signs up through a one-use email link", async ({
   page,
 }) => {
   const email = freshEmail("signup");
-  await signIn(page, email);
+  await walkSignIn(page, email);
   // A fresh account opens on the first setup step, which is the workspace:
   // nothing earlier is asked of them.
   await page.waitForURL((url) => url.pathname === "/new");
@@ -46,7 +46,7 @@ test("a private deep link returns to itself after signing in", async ({
   page,
 }) => {
   const email = freshEmail("returnto");
-  await signIn(page, email);
+  await walkSignIn(page, email);
   const projectId = await createProject(page, "Return Org");
   const destination = await projectPathFor(page, projectId);
   await page.evaluate(() => window.localStorage.clear());
