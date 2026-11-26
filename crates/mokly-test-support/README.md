@@ -1,10 +1,12 @@
 # mokly-test-support
 
-`mokly-test-support` gives the Rust tests of the workspace two shared tools. It
-captures `tracing` spans and events, and it creates private fixture folders for
-tests that need a durable capture. Depend on it as a dev-dependency. The crate
+`mokly-test-support` gives the Rust tests of the workspace three shared tools.
+It captures `tracing` spans and events, it creates private fixture folders for
+tests that need a durable capture, and on Unix it records whether a root
+process was reaped at each signal of its tree guard. Depend on it as a dev-dependency. The crate
 is internal. Its manifest sets `publish = false`, and no production code
-depends on it. It depends on `tracing`, `tracing-subscriber`, and `tempfile`.
+depends on it. It depends on `tracing`, `tracing-subscriber`, `tempfile`, `mokly-platform`,
+and, on Unix, `libc`.
 
 The tests of `mokly-cli`, `mokly-render`, `mokly-compare`, `mokly-sidecar`,
 `mokly-graph`, and `mokly-server` use the trace capture. Six tests of
@@ -140,6 +142,15 @@ The fixtures have these limits:
 - The fixtures change only where tests put their files. They change no product
   rule.
 
+### Reap order
+
+`reap_order::Watched` is a `ProcessGroups` that uses the system process groups.
+Its guards record a `Root` state before each `terminate` and `kill`: `Unreaped`
+or `Reaped`. The check uses `waitid` with `WNOHANG` and `WNOWAIT`, so it never
+reaps the root itself. The Git runner, base install, and sidecar tests use it
+to show that no tree signal follows the reap of the root, as the
+[runtime shutdown rules](../../docs/protocol/mokly-runtime.md#shutdown) require.
+
 ## Quick Start
 
 Add the crate to the dev-dependencies of the crate under test:
@@ -261,6 +272,8 @@ Follow these rules when you add a durable fixture:
 - [`src/durable_fixture.rs`](./src/durable_fixture.rs) defines `Owner` and
   `create`, which make the shared folders and every Rust owner folder before a
   scoped `TempDir`.
+- [`src/reap_order.rs`](./src/reap_order.rs) defines `Watched`, the recording
+  process groups, and `root`, the reap check of one child.
 - [`../../tests/helpers/durable_fixture.ts`](../../tests/helpers/durable_fixture.ts)
   defines `durableRoot`, the Node helper with the same ownership rule.
 - [`../mokly-compare/tests/bundle_pool_tests.rs`](../mokly-compare/tests/bundle_pool_tests.rs),

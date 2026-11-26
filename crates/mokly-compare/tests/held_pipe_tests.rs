@@ -1,4 +1,5 @@
-//! A normally exited manager leaves a survivor that holds both output pipes.
+//! A normally exited manager leaves a survivor that holds both output pipes,
+//! and the spawner reaps a manager only after its last tree signal.
 
 #![cfg(unix)]
 
@@ -11,13 +12,14 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use mokly_compare::commands::{Command, Commands, TimedCommands};
+use mokly_compare::commands::{Command, Commands, Spawner, TimedCommands};
 use mokly_compare::error::{Error, Result};
 use mokly_compare::process::SystemSpawner;
 use mokly_compare::storage::SystemStorage;
-use mokly_git::control::{Clock, ClockMock, Token};
+use mokly_git::control::{Clock, ClockMock, SystemClock, Token};
 use mokly_platform::flush::SystemFlush;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_test_support::reap_order::{Root, Watched};
 use unimock::{MockFn, Unimock, matching};
 
 const MANAGER: &str = r#"
@@ -44,12 +46,26 @@ fn exists(pid: i32) -> bool {
         .success()
 }
 
+/// A zombie has exited. The spawner keeps the manager unreaped until its
+/// tree guard has sent its last signal.
+fn running(pid: i32) -> bool {
+    let output = process::Command::new("ps")
+        .args(["-o", "stat=", "-p", &pid.to_string()])
+        .stderr(Stdio::null())
+        .output()
+        .unwrap();
+    output.status.success()
+        && !String::from_utf8_lossy(&output.stdout)
+            .trim_start()
+            .starts_with('Z')
+}
+
 fn wait_manager_gone(pid: i32) {
     let deadline = Instant::now() + Duration::from_secs(10);
-    while exists(pid) && Instant::now() < deadline {
+    while running(pid) && Instant::now() < deadline {
         thread::yield_now();
     }
-    assert!(!exists(pid), "manager {pid} did not exit");
+    assert!(!running(pid), "manager {pid} did not exit");
 }
 
 struct Running {
@@ -187,4 +203,38 @@ fn timeout_returns_while_an_exited_managers_survivor_still_holds_its_pipes() {
     );
     assert!(exists(running.survivor.unwrap()));
     assert_eq!(running.milliseconds.load(Ordering::SeqCst), 120_100);
+}
+
+/// The spawner keeps a finished manager unreaped until its last tree signal.
+#[test]
+fn a_finished_manager_is_reaped_only_after_its_last_tree_signal() {
+    let temporary = tempfile::tempdir().unwrap();
+    let groups = Arc::new(Watched::default());
+    let spawner = SystemSpawner {
+        groups: groups.clone(),
+        clock: Arc::new(SystemClock::default()),
+    };
+    let mut child = spawner
+        .spawn(&Command {
+            program: "node".into(),
+            args: vec!["-e".into(), "process.stdout.write('done')".into()],
+            scripts: true,
+            directory: temporary.path().to_owned(),
+            timeout: Duration::from_secs(120),
+            byte_limit: None,
+            size_root: None,
+            cache: None,
+            node: None,
+        })
+        .unwrap();
+    let output = child.finish().unwrap();
+    drop(child);
+    assert!(output.success);
+    assert_eq!(output.stdout, b"done");
+    let states = groups.states();
+    assert!(!states.is_empty(), "no tree signal");
+    assert!(
+        !states.contains(&Root::Reaped),
+        "a tree signal followed the reap: {states:?}"
+    );
 }

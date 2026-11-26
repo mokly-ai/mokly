@@ -171,6 +171,12 @@ stops. `NodeExecutable` resolves the shim-supplied Node or searches absolute
 `PATH` entries. The CLI uses the same resolver for rendering and for the
 scripts-on runtime probe.
 
+`SystemSpawner` gives each manager to a `ProcessTree` of `mokly-platform`. The
+tree reaps the manager only after its last tree signal. Both output readers
+share the tree. When the stop grace ends while a process that the stop did not
+end still holds the output, the install abandons the readers, and the exited
+manager stays unreaped until that process closes the output.
+
 `Resolved` returns the primary `node_modules` path, the complete
 `ModuleResolution` value, and typed `repository_roots` for sidecar mapping.
 These roots include the working tree and the base source copy for tier two.

@@ -19,7 +19,7 @@ use crate::workers::WorkerControl;
 pub(super) struct ProcessControl {
     pub(super) memory: Arc<dyn ResidentMemory>,
     pub(super) discover_memory: Arc<AtomicBool>,
-    pub(super) group: Box<dyn ProcessGroup>,
+    pub(super) group: Arc<dyn ProcessGroup>,
     pub(super) outgoing: SyncSender<Vec<u8>>,
     pub(super) exited: Mutex<Receiver<()>>,
     pub(super) drained: Mutex<Receiver<()>>,

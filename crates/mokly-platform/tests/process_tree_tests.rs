@@ -8,15 +8,18 @@ mod unix {
     //! Unix ownership checks for live descendants and exited, unreaped roots.
 
     use std::mem::MaybeUninit;
+    use std::os::unix::process::ExitStatusExt;
     use std::process::Command;
 
-    use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
+    use mokly_platform::processes::{
+        ProcessGroup, ProcessGroups, ProcessTree, SystemProcessGroups,
+    };
 
     use crate::process_tree::fixture::Tree;
     use crate::process_tree::unix_helpers::run_helper;
     #[cfg(target_os = "linux")]
     use crate::process_tree::unix_status::parent;
-    use crate::process_tree::unix_status::{alive, wait_gone};
+    use crate::process_tree::unix_status::{alive, reaped, wait_gone};
 
     /// An unreaped child keeps its identity even after it has stopped running.
     #[test]
@@ -55,6 +58,40 @@ mod unix {
         assert!(matches!(killed, Ok(Ok(()))), "kill failed: {killed:?}");
         assert!(!was_alive, "an exited, unreaped child is not alive");
         assert_eq!(status.code(), Some(23));
+    }
+
+    /// The root keeps its ID, and so its group number, until the tree drops.
+    #[test]
+    fn a_process_tree_reaps_its_exited_root_only_when_it_drops() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 23"]);
+        SystemProcessGroups.configure(&mut command).unwrap();
+        let child = command.spawn().unwrap();
+        let pid = child.id();
+        let group = SystemProcessGroups.attach(&child).unwrap();
+        let tree = ProcessTree::new(child, group);
+        let status = tree.wait().unwrap();
+        let reaped_after_wait = reaped(pid);
+        let killed = tree.kill();
+        let reaped_after_kill = reaped(pid);
+        drop(tree);
+        assert_eq!(status.code(), Some(23));
+        assert!(!reaped_after_wait, "the wait reaped the root");
+        assert!(matches!(killed, Ok(())), "kill failed: {killed:?}");
+        assert!(!reaped_after_kill, "the kill reaped the root");
+        assert!(reaped(pid), "the drop left the root unreaped");
+    }
+
+    #[test]
+    fn a_process_tree_reports_the_signal_that_ended_its_root() {
+        let mut command = Command::new("sleep");
+        command.arg("60");
+        SystemProcessGroups.configure(&mut command).unwrap();
+        let child = command.spawn().unwrap();
+        let group = SystemProcessGroups.attach(&child).unwrap();
+        let tree = ProcessTree::new(child, group);
+        tree.kill().unwrap();
+        assert_eq!(tree.wait().unwrap().signal(), Some(libc::SIGKILL));
     }
 
     #[test]

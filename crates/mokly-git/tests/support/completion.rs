@@ -1,7 +1,7 @@
 //! Explicit supervisor waits and process ownership for completion integration tests.
 
 #[cfg(target_os = "linux")]
-use std::path::Path;
+use std::fs;
 use std::process::{Child, Command};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender, sync_channel};
@@ -74,13 +74,18 @@ impl Supervisor {
     }
 
     #[cfg(target_os = "linux")]
-    /// Wait until the runner has reaped its Linux child.
+    /// Wait until the Linux child has exited. The runner keeps it unreaped,
+    /// as a zombie, until its last tree signal.
     pub(super) fn wait_for_child_exit(&self) {
         let pid = self.groups.pid.load(Ordering::Acquire);
         assert_ne!(pid, 0);
-        let path = format!("/proc/{pid}");
+        let path = format!("/proc/{pid}/stat");
         let deadline = Instant::now() + HANG_GUARD;
-        while Path::new(&path).exists() {
+        while fs::read_to_string(&path).is_ok_and(|stat| {
+            stat.rsplit_once(')')
+                .and_then(|(_, fields)| fields.split_whitespace().next())
+                != Some("Z")
+        }) {
             assert!(Instant::now() < deadline, "Git child did not exit");
             thread::yield_now();
         }

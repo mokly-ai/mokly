@@ -42,7 +42,7 @@ The child keeps the parent's session. This permits the standard library's
 checkout directory. Both modes use the same `attach` guard.
 
 The guard records the child's identity, its PID and start time, before the
-caller can reap the child. A reused PID therefore never receives a signal. The
+child can be reaped. A reused PID therefore never receives a signal. The
 guard records this identity also when the child has already exited. The Linux
 and macOS readers of the process table keep an exited process readable until
 its parent reaps it.
@@ -54,6 +54,17 @@ to each found descendant, also one in a new session. After `SIGTERM`, it sends
 `SIGCONT`, so that their handlers run. The guard keeps the found identities,
 so a later `SIGKILL` reaches a descendant whose parent died after the
 `SIGTERM`.
+
+`ProcessTree` takes the child and its guard, and callers keep it until their
+last signal. Its `wait` blocks until the child exits and leaves the child
+unreaped; on Unix it uses `waitid` with `WNOWAIT`. macOS also reports a
+stopped child to that wait, so a stop report leads to a short pause and a new
+wait. The unreaped child keeps
+its PID, so no new process can take that PID or the group number while the
+guard can still signal. The tree reaps the child only when it drops, after
+the guard. A child that still runs at that point is reaped on its own thread
+when it exits. `kill_root` and `kill_unattached` reach the owned child
+directly.
 
 A stop of a reaped child with no kept descendants signals only the group. A
 tree that keeps changing ends the search after 64 complete passes, and the
@@ -72,7 +83,7 @@ graceful termination, and terminates the job for forceful cancellation.
 attachment fails. On Unix, the unreaped child reserves its PID, so cleanup can
 follow its descendants without reading the root identity. On Windows, the
 unattached child is suspended and cannot have descendants. The caller owns
-the direct child's kill and reap, shutdown deadlines, and pipe draining.
+shutdown deadlines and pipe draining, and the tree owns the reap.
 
 `Flush` uses one Linux `syncfs` for a filesystem. Its per-file fallback uses
 plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data
@@ -120,7 +131,8 @@ process-tree tests start real helper processes. They treat a zombie process as
 gone. The tests of escaped sessions re-run the test binary as a helper that
 calls `setsid()`, because macOS has no `setsid` command. The attachment test
 observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
-attaches to the unreaped child and stops it.
+attaches to the unreaped child and stops it. The `ProcessTree` tests check that
+the root stays unreaped through `wait` and `kill`, and that the drop reaps it.
 Consumers enable the `mock` feature to use every public trait with unimock.
 
 ### Key Code
@@ -132,6 +144,9 @@ Consumers enable the `mock` feature to use every public trait with unimock.
 - [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups` and
   `SystemProcessGroups`, which configure a child before spawn and return a
   `ProcessGroup` guard that terminates or kills the whole tree.
+- [`src/processes/tree.rs`](./src/processes/tree.rs) defines `ProcessTree`,
+  which owns a child and its guard, waits for the exit without a reap, and
+  reaps the child after the guard drops.
 - [`src/flush.rs`](./src/flush.rs) defines `Flush` and `SystemFlush`, which
   flush a filesystem, a file, or a directory before a cache entry is published.
 - [`src/volumes/mod.rs`](./src/volumes/mod.rs) defines `CaptureVolumes`,
@@ -170,7 +185,8 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   fork, so `send` signals each reported member by that identity, and a process
   that later reuses the ID gets nothing. `send` skips the members when another
   process now holds the root ID, because the group number may then name a new
-  group. A member that refuses its own signal
+  group. A `ProcessTree` keeps the root unreaped, so for its guard no other
+  process can hold the root ID. A member that refuses its own signal
   keeps the error, and the other members still get the signal.
 - [`tests/process_tree/fixture.rs`](./tests/process_tree/fixture.rs) defines
   `Tree`, which starts a helper process tree for a test and cleans it up.

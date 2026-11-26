@@ -1,6 +1,7 @@
 //! Node process composition with inherited environment and whole-tree ownership.
 
 use std::fs;
+use std::io;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex, mpsc};
@@ -120,28 +121,30 @@ impl NodeFactory {
         mut child: Reaper,
         startup: Arc<StartupTiming>,
     ) -> Result<Spawned> {
-        let group = match self.groups.attach(&child.child) {
+        let Some(process) = child.child() else {
+            return Err(owned());
+        };
+        let group = match self.groups.attach(process) {
             Ok(group) => group,
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
-        let pid = child.child.id();
-        let memory = Arc::from(self.memory.monitor(pid));
-        let discover_memory = Arc::new(AtomicBool::new(false));
-        let stdin = child
-            .child
-            .stdin
-            .take()
-            .expect("stdin is configured as a pipe");
-        let stdout = child
-            .child
+        let pid = process.id();
+        let stdin = process.stdin.take().expect("stdin is configured as a pipe");
+        let stdout = process
             .stdout
             .take()
             .expect("stdout is configured as a pipe");
-        let stderr = child
-            .child
+        let stderr = process
             .stderr
             .take()
             .expect("stderr is configured as a pipe");
+        // The tree reaps the child only when its last reference drops, after
+        // the final signal, so no signal can reach a reused group number.
+        let Some(group) = child.own(group) else {
+            return Err(owned());
+        };
+        let memory = Arc::from(self.memory.monitor(pid));
+        let discover_memory = Arc::new(AtomicBool::new(false));
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);
@@ -226,6 +229,14 @@ impl NodeFactory {
             control,
         })
     }
+}
+
+/// Each spawn creates its own child, so a second owner is a broken invariant.
+fn owned() -> Error {
+    InternalError::Io {
+        source: io::Error::other("the sidecar child already has a process tree"),
+    }
+    .into()
 }
 
 impl WorkerFactory for NodeFactory {

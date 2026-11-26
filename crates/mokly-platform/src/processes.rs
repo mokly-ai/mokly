@@ -8,6 +8,9 @@ use crate::unix;
 #[cfg(windows)]
 use crate::windows;
 
+mod tree;
+pub use tree::ProcessTree;
+
 /// A child tree owned by one command; keep this guard until pipes close.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ProcessGroupMock))]
 pub trait ProcessGroup: Send + Sync {
@@ -24,7 +27,9 @@ pub trait ProcessGroups: Send + Sync {
     fn configure(&self, command: &mut Command) -> Result<()>;
     /// Configure a helper-free child in its own group without a Unix exec hook.
     fn configure_plain(&self, command: &mut Command) -> Result<()>;
-    /// Acquire the process-tree guard immediately after spawn.
+    /// Acquire the process-tree guard immediately after spawn. Give the child
+    /// and the guard to [`ProcessTree`], which reaps the child only after the
+    /// guard's last signal.
     fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>>;
     /// Stop a configured child's tree before its first reap when attachment fails.
     fn kill_unattached(&self, child: &Child) -> Result<()>;
