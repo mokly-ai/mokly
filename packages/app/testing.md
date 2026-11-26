@@ -27,8 +27,11 @@ This is the testing guide for the [App package](./README.md).
   the tab themselves, request the grant on the connect page and exchange it on
   the landing from the app origin. Only an unconfigured, unreachable
   local Postgres may skip, and it says so; a port already held by another
-  server fails the run. Every test signs in for itself and waits out the API's
-  own `Retry-After` when the magic-link admission window closes. Playwright
+  server fails the run. Every test signs in for itself, through the real
+  magic link: `signIn` requests and exchanges it through the API, and
+  `walkSignIn`, which the account entry specs use, walks the sign-up page, the
+  sent screen and the callback screen. Both wait out the API's own
+  `Retry-After` when the magic-link admission window closes. Playwright
   runs one test at a time against that API. For speed, CI splits the suite
   into [shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
   and never adds workers. `test` rebuilds the baked origins; Playwright run

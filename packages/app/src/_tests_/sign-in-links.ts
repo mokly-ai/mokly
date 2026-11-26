@@ -3,9 +3,12 @@ import { createHash } from "node:crypto";
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
+import type { SessionIssued } from "../api/types";
+import { validateReturnTo } from "../navigation/return-to";
+
 import { magicLinkFor } from "./api-server";
 import { sql } from "./database-fixture";
-import { apiBind } from "./origins";
+import { apiBind, apiOrigin, appOrigin } from "./origins";
 
 /** What the API answered one sign-in link request with. */
 export interface LinkRequestAnswer {
@@ -66,4 +69,35 @@ export async function mailedLink(email: string): Promise<string> {
     })
     .toBe(true);
   return link as string;
+}
+
+/**
+ * Sign one new person in through the real magic-link process, with the API
+ * and not the sign-up page: request the link, read it from the development
+ * mailer and exchange its token, as the callback screen does, in the page's
+ * own cookie store. Answers where the callback screen would send the reader,
+ * the issued `returnTo` as the application validates it.
+ */
+export async function issueSession(
+  page: Page,
+  email: string,
+  returnTo?: string,
+): Promise<string> {
+  const headers = { Origin: appOrigin };
+  await admitLinkRequest(page, () =>
+    page.request.post(apiOrigin + "/v1/auth/magic-links", {
+      headers,
+      data: returnTo === undefined ? { email } : { email, returnTo },
+    }),
+  );
+  const link = new URL(await mailedLink(email));
+  const token = new URLSearchParams(link.hash.slice(1)).get("token");
+  if (!token) throw new Error("[app/tests] The mailed link carries no token");
+  const answer = await page.request.post(apiOrigin + "/v1/auth/callback", {
+    headers,
+    data: { token },
+  });
+  expect(answer.status(), "the API exchanges the token").toBe(200);
+  const issued = (await answer.json()) as SessionIssued;
+  return validateReturnTo(issued.returnTo);
 }

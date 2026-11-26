@@ -8,7 +8,7 @@ import type { operations } from "../api/generated/schema";
 import { signUpPath } from "../navigation/paths";
 
 import { apiOrigin } from "./origins";
-import { admitLinkRequest, mailedLink } from "./sign-in-links";
+import { admitLinkRequest, issueSession, mailedLink } from "./sign-in-links";
 
 /**
  * The JSON body one API operation answers with.
@@ -99,8 +99,24 @@ export async function openSignIn(page: Page): Promise<void> {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
 }
 
-/** Sign one new person in through the real magic-link process. */
+/**
+ * Sign one new person in through the real magic-link process, without the
+ * sign-up page, and open where the callback screen would send them. A test
+ * whose requirement is account entry itself uses `walkSignIn`.
+ */
 export async function signIn(
+  page: Page,
+  email: string,
+  returnTo?: string,
+): Promise<void> {
+  await open(page, await issueSession(page, email, returnTo));
+}
+
+/**
+ * Sign one new person in the way a reader does: the sign-up page, the sent
+ * screen and the emailed link's callback screen.
+ */
+export async function walkSignIn(
   page: Page,
   email: string,
   returnTo?: string,
