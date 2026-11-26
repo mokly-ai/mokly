@@ -339,9 +339,12 @@ code.
   [`src/check/rust_partition.rs`](./src/check/rust_partition.rs) assigns them
   to the test shards by the weights in
   [`rust-test-weights.json`](../scripts/verification/rust-test-weights.json).
-  [`src/check/native_scope.rs`](./src/check/native_scope.rs) holds the list
-  of platform-neutral tests and stress tests that the native suite leaves
-  out, grouped by reason.
+  [`src/check/native_scope.rs`](./src/check/native_scope.rs) states the rule
+  for the tests that the native suite leaves out and builds the filter.
+  [`src/check/native_scope/neutral.rs`](./src/check/native_scope/neutral.rs)
+  lists the platform-neutral tests, grouped by reason, and
+  [`src/check/native_scope/stress.rs`](./src/check/native_scope/stress.rs)
+  lists the stress tests.
 - [`src/check/cloud_commands.rs`](./src/check/cloud_commands.rs) maps cloud
   suites to combined-workspace commands. [`src/check/tasks.rs`](./src/check/tasks.rs)
   defines fixture generation, email generation, and the Stripe subprocess.
