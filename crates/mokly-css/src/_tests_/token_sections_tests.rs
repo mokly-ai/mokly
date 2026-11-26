@@ -5,8 +5,8 @@ use crate::modules::{scope, scoped_name};
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::Tokens;
 
-#[path = "token_differential_tests.rs"]
-mod token_differential_tests;
+#[path = "html_comment_start_tests.rs"]
+mod html_comment_start_tests;
 
 /// The statements at the first block level of `source`, read with `grammar`.
 fn statements(source: &str, grammar: Grammar) -> Vec<Statement> {

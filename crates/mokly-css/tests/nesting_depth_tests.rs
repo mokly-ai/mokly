@@ -1,13 +1,12 @@
 //! The deepest authored CSS that each parser survives on a 2 MiB worker stack.
 //!
 //! A child-process search finds each limit for the current build profile and
-//! prints it. Mokly's scanners reach the search cap. lightningcss, and every
-//! pipeline that calls it, stops at a limit that depends on the nesting form.
+//! prints it. Mokly's scanners reach the search cap. Every pipeline that calls
+//! lightningcss stops at a limit that depends on the nesting form.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use mokly_css::compiler::Compiler;
 use mokly_css::resolver::SourceResolver;
 use mokly_css::rules::ParsedCss;
@@ -23,7 +22,8 @@ use depth_search::{Probe, search};
 const CHILD: &str = "depth_probe_child";
 /// Mokly's scanners keep nesting on the heap; the search stops here.
 const MOKLY_CAP: usize = 100_000;
-/// lightningcss limits are far below this cap in every build profile.
+/// The limits of the pipelines that call lightningcss are far below this cap
+/// in every build profile.
 const LIBRARY_CAP: usize = 10_000;
 /// Far above authored CSS nesting, with margin for other platforms' frames.
 const SURVIVED: usize = 32;
@@ -34,30 +34,6 @@ fn nested(open: &str, inner: &str, close: &str, depth: usize) -> String {
 
 fn rules(depth: usize) -> String {
     nested(".a{", "color:red", "}", depth)
-}
-
-fn parses(source: &str) {
-    let sheet = StyleSheet::parse(source, ParserOptions::default()).unwrap();
-    assert_eq!(sheet.rules.0.len(), 1);
-}
-
-fn lightningcss_rules(depth: usize) {
-    parses(&rules(depth));
-}
-
-fn lightningcss_media(depth: usize) {
-    parses(&nested("@media all{", ".a{color:red}", "}", depth));
-}
-
-fn lightningcss_selectors(depth: usize) {
-    parses(&format!(
-        "{}{{color:red}}",
-        nested(":is(", ".a", ")", depth)
-    ));
-}
-
-fn lightningcss_values(depth: usize) {
-    parses(&format!(".a{{--x:{}}}", nested("f(", "1", ")", depth)));
 }
 
 fn references(depth: usize) {
@@ -124,21 +100,35 @@ fn module_bundle(depth: usize) {
     assert!(bundle("deep.module.css", rules(depth)).contains("color: red"));
 }
 
+fn media_bundle(depth: usize) {
+    let source = nested("@media all{", ".a{color:red}", "}", depth);
+    assert!(bundle("deep.css", source).contains("color: red"));
+}
+
+fn selector_bundle(depth: usize) {
+    let source = format!("{}{{color:red}}", nested(":is(", ".a", ")", depth));
+    assert!(bundle("deep.css", source).contains("color: red"));
+}
+
+fn value_bundle(depth: usize) {
+    let source = format!(".a{{--x:{}}}", nested("f(", "1", ")", depth));
+    assert!(bundle("deep.css", source).contains("--x:"));
+}
+
 /// A probe that rejects every depth, which no search may accept.
 fn broken(_depth: usize) {
     panic!("this probe rejects every depth");
 }
 
 const PROBES: &[Probe] = &[
-    ("lightningcss_rules", lightningcss_rules),
-    ("lightningcss_media", lightningcss_media),
-    ("lightningcss_selectors", lightningcss_selectors),
-    ("lightningcss_values", lightningcss_values),
     ("references", references),
     ("module_scope", module_scope),
     ("rule_collection", rule_collection),
     ("stylesheet_bundle", stylesheet_bundle),
     ("module_bundle", module_bundle),
+    ("media_bundle", media_bundle),
+    ("selector_bundle", selector_bundle),
+    ("value_bundle", value_bundle),
     ("broken", broken),
 ];
 
@@ -154,19 +144,6 @@ fn mokly_reference_scanner_reaches_the_search_cap() {
 }
 
 #[test]
-fn lightningcss_forms_survive_authored_nesting() {
-    for name in [
-        "lightningcss_rules",
-        "lightningcss_media",
-        "lightningcss_selectors",
-        "lightningcss_values",
-    ] {
-        let limit = search(CHILD, name, LIBRARY_CAP);
-        assert!(limit.depth >= SURVIVED, "{name}: {limit:?}");
-    }
-}
-
-#[test]
 fn css_pipelines_survive_authored_nesting() {
     for name in [
         "module_scope",
@@ -176,6 +153,15 @@ fn css_pipelines_survive_authored_nesting() {
     ] {
         let limit = search(CHILD, name, LIBRARY_CAP);
         assert!(limit.depth >= SURVIVED, "{name}: {limit:?}");
+    }
+}
+
+/// Mokly supports at least 32 levels of nested at-rules, selector functions,
+/// and value functions in a bundled stylesheet.
+#[test]
+fn bundles_survive_authored_at_rule_selector_and_value_nesting() {
+    for name in ["media_bundle", "selector_bundle", "value_bundle"] {
+        assert_eq!(search(CHILD, name, SURVIVED).depth, SURVIVED, "{name}");
     }
 }
 
