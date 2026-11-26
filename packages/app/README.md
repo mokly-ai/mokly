@@ -114,7 +114,7 @@ and the typed client, and `cargo xtask openapi --check` and the
 The browser suite runs each test once, with no retry, so a flaky test fails
 its job. `MKC_APP_SHARD=<n>/<total>` runs only shard `n` of the suite. Without
 it, or with an empty value, the suite runs every test. A malformed value fails
-the run. CI runs the suite as eight shards, each in its own job with its own
+the run. CI runs the suite as seven shards, each in its own job with its own
 API and database, as
 [App shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
 defines. A shard holds whole spec files, balanced by the measured seconds in
@@ -123,7 +123,7 @@ durations, run `npm run ci:refresh-shard-weights` from the repository root and
 commit the new weights, as the
 [shard weights guide](../../docs/development/shard-weights.md) says. To
 repeat one shard, run
-`cargo xtask check --suite cloud-app --shard 2/8` from the repository root.
+`cargo xtask check --suite cloud-app --shard 2/7` from the repository root.
 It builds the web app before the shard runs.
 `cargo xtask check --suite cloud-app` without `--shard` runs the whole suite.
 
