@@ -11,8 +11,8 @@ use uuid::Uuid;
 use super::harness::Harness;
 use super::lifecycle_support::{
     accept, assert_cancel_contract, assert_checkout_contract, assert_collaborator_request,
-    assert_free_private_transition_is_refused, assert_seat_change_requests, invite_reviewer,
-    report_subscription,
+    assert_free_private_transition_is_refused, assert_seat_change_requests, create_project,
+    invite_reviewer, report_subscription,
 };
 
 #[test]
@@ -109,6 +109,16 @@ fn recorded_app_completes_the_billing_lifecycle() {
     let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
     assert_eq!(billing["subscription"]["status"], "trialing");
     assert_eq!(billing["subscription"]["trialEnd"], "2026-09-28T12:00:00Z");
+    // A project made on Team is private, and it must stay private after Team ends.
+    let private = create_project(
+        &app,
+        workspace_id,
+        "Kept private",
+        "kept-private",
+        "mokly/kept",
+    );
+    assert_eq!(private["visibility"], "private");
+    let private_path = format!("/v1/projects/{}", private["id"].as_str().unwrap());
     let refused = app.json(
         app.request(Method::POST, &format!("{billing_path}/checkout"))
             .json(&json!({}))
@@ -237,6 +247,9 @@ fn recorded_app_completes_the_billing_lifecycle() {
     let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
     assert_eq!(billing["plan"], "free");
     assert_eq!(billing["checkoutAvailable"], true);
+    let kept = app.json(app.request(Method::GET, &private_path).send().unwrap(), 200);
+    assert_eq!(kept["visibility"], "private");
+    assert_eq!(kept["publishingAllowed"], false);
     let replay = app.webhook(deleted_body.clone(), app.runtime.now().timestamp(), true);
     app.body(replay, 202);
     let mut mismatch = deleted_body;

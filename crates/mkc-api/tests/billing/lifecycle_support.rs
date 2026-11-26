@@ -167,28 +167,40 @@ pub(super) fn assert_seat_change_requests(app: &Harness, workspace: &str) {
     assert_eq!(collaborator.idempotency_key, None);
 }
 
-pub(super) fn assert_free_private_transition_is_refused(app: &Harness, workspace: &str) {
+/// Create a project of `workspace` for a freshly installed `repository`, as the
+/// owner, and answer the created project.
+pub(super) fn create_project(
+    app: &Harness,
+    workspace: &str,
+    name: &str,
+    slug: &str,
+    repository: &str,
+) -> Value {
     let workspace_id: OrganizationId = workspace.parse::<Uuid>().unwrap().into();
-    let mut repository = None;
+    let mut installed = None;
     app.queries(&mut |queries| {
-        repository = Some(seed_installed_repository(queries, workspace_id, "mokly/free").unwrap());
+        installed = Some(seed_installed_repository(queries, workspace_id, repository).unwrap());
     });
-    let repository: RepositoryId = repository.unwrap();
-    let project = app.json(
+    let installed: RepositoryId = installed.unwrap();
+    app.json(
         app.request(
             Method::POST,
             &format!("/v1/workspaces/{workspace}/projects"),
         )
         .json(&json!({
-            "name":"Free project",
-            "slug":"free-project",
-            "repositoryId":repository.0,
+            "name":name,
+            "slug":slug,
+            "repositoryId":installed.0,
             "configPath":"mokly.config.json"
         }))
         .send()
         .unwrap(),
         201,
-    );
+    )
+}
+
+pub(super) fn assert_free_private_transition_is_refused(app: &Harness, workspace: &str) {
+    let project = create_project(app, workspace, "Free project", "free-project", "mokly/free");
     assert_eq!(project["visibility"], "public");
     let refused = app.json(
         app.request(

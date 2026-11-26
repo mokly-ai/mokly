@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { ApiError } from "../../api/errors";
-import type { Build } from "../../api/types";
+import type { Build, BuildLogChunk } from "../../api/types";
 import { followBuild } from "../../viewer/build-follow";
 import type { BuildFollower } from "../../viewer/build-follow";
 import type { BuildWatch } from "../../viewer/build-watch";
@@ -156,30 +156,61 @@ test("only one read runs at a time, and nothing is polled before the first read"
   await answer(held[1], build({ id, state: "running" }), first);
 });
 
-test("a poll whose reads fail keeps the card and the output as they are", async () => {
-  const id = buildId(807);
-  const unavailable = new ApiError({
-    code: "unavailable",
-    reason: "unavailable",
-    message: "Unavailable.",
-    requestId: "01994f10-0000-7000-8000-0000000000cc",
-    status: 503,
-  });
-  let failing = false;
-  let current = build({ id, state: "running" });
+/** The answer of a read the API refuses. */
+const unavailable = new ApiError({
+  code: "unavailable",
+  reason: "unavailable",
+  message: "Unavailable.",
+  requestId: "01994f10-0000-7000-8000-0000000000cc",
+  status: 503,
+});
+
+/** The output one state of the card shows, if it shows the build. */
+function output(watch: BuildWatch | undefined): string[] {
+  return watch?.status === "ready"
+    ? watch.log.chunks.map((held) => held.text)
+    : [];
+}
+
+/** What the API answers a card, which reads it refuses, and how many ran. */
+interface RefusableApi {
+  build: Build;
+  log: BuildLogChunk[];
+  refuse: { build: boolean; log: boolean };
+  reads: { build: number; log: number };
+}
+
+/**
+ * Follow one running build whose reads a test can refuse one by one, count
+ * every read the card starts, and record every state the card was shown.
+ */
+async function followRefusable(id: string): Promise<{
+  follower: BuildFollower;
+  api: RefusableApi;
+  shown: BuildWatch[];
+}> {
+  const api: RefusableApi = {
+    build: build({ id, state: "running" }),
+    log: [chunk(1, "installing\n")],
+    refuse: { build: false, log: false },
+    reads: { build: 0, log: 0 },
+  };
   const shown: BuildWatch[] = [];
   const follower = followBuild({
     projectId: "project",
     buildId: id,
     reads: {
       getBuild: async () => {
-        if (failing) throw unavailable;
-        return current;
+        api.reads.build += 1;
+        if (api.refuse.build) throw unavailable;
+        return api.build;
       },
       listBuildLog: async (_project, _build, after) => {
-        if (failing) throw unavailable;
-        return after === 0
-          ? logWindow([chunk(1, "installing\n")])
+        api.reads.log += 1;
+        if (api.refuse.log) throw unavailable;
+        const fresh = api.log.filter((held) => held.sequence > after);
+        return fresh.length > 0
+          ? logWindow(fresh)
           : logWindow([], { nextAfter: after });
       },
     },
@@ -187,27 +218,65 @@ test("a poll whose reads fail keeps the card and the output as they are", async 
     visible: () => true,
   });
   await follower.firstRead;
-  const before = shown.length;
-  const output = (watch: BuildWatch | undefined) =>
-    watch?.status === "ready" ? watch.log.chunks.map((held) => held.text) : [];
-  assert.deepEqual(output(shown[before - 1]), ["installing\n"]);
+  assert.deepEqual(api.reads, { build: 1, log: 1 }, "the first read");
+  return { follower, api, shown };
+}
 
-  // The build fails while both of the poll's reads are refused: nothing on
-  // the card changes, and no failure replaces it.
-  current = build({
+/** A build that failed at install, as the API reads it. */
+function failedAtInstall(id: string): Build {
+  return build({
     id,
     state: "failed",
     canCancel: false,
     failure: { step: "install", cause: "exit", exitCode: 1 },
   });
-  failing = true;
+}
+
+test("a poll whose reads fail tries each read once and keeps the card and the output as they are", async () => {
+  const id = buildId(807);
+  const { follower, api, shown } = await followRefusable(id);
+  const before = shown.length;
+  assert.deepEqual(output(shown[before - 1]), ["installing\n"]);
+
+  // The build fails while both of the poll's reads are refused: nothing on
+  // the card changes, and no failure replaces it.
+  api.build = failedAtInstall(id);
+  api.refuse = { build: true, log: true };
   await follower.poll();
+  assert.deepEqual(api.reads, { build: 2, log: 2 });
   assert.equal(shown.length, before);
   assert.equal(lastState(shown), "running");
 
   // The next read that succeeds moves the card, and keeps its output.
-  failing = false;
+  api.refuse = { build: false, log: false };
   await follower.poll();
+  assert.equal(lastState(shown), "failed");
+  assert.deepEqual(output(shown[shown.length - 1]), ["installing\n"]);
+});
+
+test("a poll whose build read fails shows the log's new output and keeps the state", async () => {
+  const id = buildId(808);
+  const { follower, api, shown } = await followRefusable(id);
+  api.build = failedAtInstall(id);
+  api.log = [...api.log, chunk(2, "building\n")];
+  api.refuse = { build: true, log: false };
+  await follower.poll();
+  assert.deepEqual(api.reads, { build: 2, log: 2 });
+  assert.equal(lastState(shown), "running");
+  assert.deepEqual(output(shown[shown.length - 1]), [
+    "installing\n",
+    "building\n",
+  ]);
+});
+
+test("a poll whose log read fails moves the state and keeps the output", async () => {
+  const id = buildId(809);
+  const { follower, api, shown } = await followRefusable(id);
+  api.build = failedAtInstall(id);
+  api.log = [...api.log, chunk(2, "building\n")];
+  api.refuse = { build: false, log: true };
+  await follower.poll();
+  assert.deepEqual(api.reads, { build: 2, log: 2 });
   assert.equal(lastState(shown), "failed");
   assert.deepEqual(output(shown[shown.length - 1]), ["installing\n"]);
 });
