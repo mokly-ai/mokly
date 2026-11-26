@@ -9,8 +9,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates coreutils curl git python3 xz-utils \
     && apt-get install -y --no-install-recommends \
-        gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev \
-        libcurl4 libexpat1 zlib1g \
+        gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev libpcre2-dev \
+        libcurl4 libexpat1 zlib1g libpcre2-8-0 \
     && curl --fail --show-error --location --proto '=https' --tlsv1.2 \
         "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.xz" \
         --output /tmp/git.tar.xz \
@@ -18,10 +18,8 @@ RUN apt-get update \
     && mkdir /tmp/git-src \
     && tar --extract --xz --file /tmp/git.tar.xz --directory /tmp/git-src --strip-components=1 \
     && make -C /tmp/git-src -j"$(nproc)" prefix=/usr/local \
-        NO_TCLTK=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_RUST=1 install \
+        NO_TCLTK=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_RUST=1 USE_LIBPCRE2=1 install \
     && rm -rf /tmp/git.tar.xz /tmp/git-src \
-    && apt-get purge -y --auto-remove \
-        gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev \
     && /usr/local/bin/git --version \
     && rm -rf /var/lib/apt/lists/* \
     && curl --fail --show-error --location --proto '=https' --tlsv1.2 \
