@@ -42,7 +42,7 @@ test("only Repository and native jobs name a test host", () => {
   );
 });
 
-test("test seconds take each test's median run, sum a unit's tests, then take the mean host", () => {
+test("test seconds take each test's median run and sum a unit's tests on each host", () => {
   const sample = (
     run: string,
     host: string,
@@ -66,8 +66,8 @@ test("test seconds take each test's median run, sum a unit's tests, then take th
       sample("1", "linux", "a", 4),
       sample("1", "linux", "b", 6),
     ]),
-    // Windows: a median 30, b median 30, sum 60. Linux: 10. Mean 35.
-    { "--test cli": 35 },
+    // Windows: a median 30, b median 30, sum 60. Linux: 4 + 6.
+    { linux: { "--test cli": 10 }, windows: { "--test cli": 60 } },
   );
 });
 

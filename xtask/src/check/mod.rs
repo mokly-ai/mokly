@@ -9,6 +9,7 @@ pub(crate) mod runner;
 mod rust_commands;
 mod rust_partition;
 mod rust_targets;
+mod rust_weights;
 pub(crate) mod tasks;
 
 #[cfg(test)]
@@ -36,6 +37,10 @@ mod rust_shard_tests;
 #[cfg(test)]
 #[path = "_tests_/rust_partition_tests.rs"]
 mod rust_partition_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rust_weights_tests.rs"]
+mod rust_weights_tests;
 
 #[cfg(test)]
 #[path = "_tests_/cloud_tests.rs"]
