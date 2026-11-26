@@ -66,7 +66,7 @@ function screenFrame(page: Page, viewport: "desktop" | "mobile") {
   return historicalFrame(page, viewport).locator("iframe").contentFrame();
 }
 
-test.describe("1280px window", () => {
+test.describe("1280px window previews", () => {
   test.use({ viewport: { width: 1280, height: 900 } });
 
   test("a removed page and document show their previous versions", async ({

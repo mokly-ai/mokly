@@ -163,8 +163,8 @@ shared case. `branch_point_cases.ts` registers chosen cases and widths on a
 host. `branch_point_comparison_ui.spec.ts` runs every case on this copy at
 desktop width, and affected destinations also at mobile width, where the
 compact layout compares one frame. `serve_branch_point_comparison_ui.spec.ts`
-runs moved variant on one Serve per worker over the shared Serve comparison
-fixture, for the on-demand capture.
+runs moved variant and affected destinations on one Serve per worker over the
+shared Serve comparison fixture, for the on-demand captures.
 `viewer_branch_point_comparison_ui.spec.ts` runs affected destinations at
 mobile width in an embedded viewer over this copy through both frame adapters,
 and moved parent through the cross-origin adapter, for the compact search.

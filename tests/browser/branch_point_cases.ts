@@ -1,6 +1,9 @@
 /** The shared branch-point cases, registered on one host at chosen widths. */
 
-import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
+import {
+  BRANCH_POINT_CHECKS,
+  type BranchPointCase,
+} from "./branch_point_checks.js";
 import {
   BRANCH_POINT_WIDTHS,
   type BranchPointHost,
@@ -13,7 +16,7 @@ export type BranchPointWidth = (typeof BRANCH_POINT_WIDTHS)[number]["name"];
 /** One case of the shared set at one width. */
 export interface BranchPointRun {
   /** The case's name in `tests/fixtures/branch_point_cases.json`. */
-  name: string;
+  name: BranchPointCase;
   width: BranchPointWidth;
 }
 

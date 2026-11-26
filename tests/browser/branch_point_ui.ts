@@ -25,7 +25,7 @@ export type BranchPointHost = Pick<
  */
 const COMPACT_SEARCH_WIDTH = 560;
 
-/** The two widths each case renders at. */
+/** The widths that a branch-point case can render at. */
 export const BRANCH_POINT_WIDTHS = [
   { name: "desktop", width: 1280, height: 900 },
   { name: "mobile", width: 390, height: 844 },

@@ -46,7 +46,7 @@ const OUTCOMES = {
   mobile: [`Mobile · Light · ${STYLE_HEADING}`],
 } as const;
 
-test.describe("desktop screen evidence", () => {
+test.describe("desktop at-rule evidence", () => {
   test.use({ viewport: DESKTOP_INSPECTOR });
 
   test("a selector-less at-rule change names its at-rule and keeps the screen in Changes", async ({
