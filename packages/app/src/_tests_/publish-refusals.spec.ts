@@ -1,93 +1,14 @@
-import type { Page } from "@playwright/test";
-
-import {
-  publishRefusal,
-  refusalLayout,
-  scrollsSideways,
-} from "./build-refusals";
-import type { BuildScenario } from "./build-scenario";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
-import { branchRow, buildPullRequest, pullRow } from "./viewer/build-fixtures";
+import { branchRow } from "./viewer/build-fixtures";
 
 /**
- * The publishing card's refused request on the desktop, as
- * `product/viewer/standalone/publish-refused` and its `pull-request` variant
- * draw it: the write-failure fragment holds the shared control with guide, so
- * Publish from CI stays beside the control, between the refusal and Details.
+ * The publishing card at rest on the desktop, as
+ * `product/viewer/standalone/publish` draws it: the shared control with guide
+ * keeps Publish from CI beside the control. Its refused request, with the
+ * guide between the refusal and Details, is the refused publish row of the
+ * shared build state table in `build-states.spec.ts`.
  */
-
-/** Press the publishing card's control and wait for its refusal. */
-async function refusePublish(
-  page: Page,
-  scenario: BuildScenario,
-  path: string,
-  refusal: NonNullable<BuildScenario["double"]["refuseRequest"]>,
-  sentence: string,
-): Promise<void> {
-  scenario.double.refuseRequest = refusal;
-  await open(page, path);
-  await page.getByTestId("stage-publish").click();
-  await expect(
-    page.locator(".fo-state-action > .fo-write-failure > [role=alert]"),
-  ).toHaveText(sentence);
-}
-
-test("a refused publish request keeps its guide beside the control, above Details", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "publish-refused");
-  const { double } = scenario;
-  const state = page.locator(".fo-stage-card .fo-state");
-  const fragment = state.locator(".fo-state-action > .fo-write-failure");
-  const row = fragment.locator(":scope > .fo-control-guide");
-  const layout = {
-    outside: [],
-    inside: ["details", "guide"],
-    order: ["refusal above the control", "control above the reference"],
-    guide: "beside the control",
-  };
-
-  // Mokly was busy: the same request can succeed, so the control reads the
-  // way back.
-  double.branches = [branchRow("topic")];
-  await refusePublish(
-    page,
-    scenario,
-    scenario.branchAt("topic"),
-    { reason: "unavailable" },
-    "Mokly is busy. Try again in a moment.",
-  );
-  await expect(row.getByTestId("stage-publish")).toHaveText("Try again");
-  await expect(
-    row.getByRole("link", { name: "Publish from CI" }),
-  ).toHaveAttribute("href", /\/docs\/ci\/publish-from-ci\/$/);
-  await expect(fragment.locator(":scope > details")).toContainText("Details");
-  expect(await state.evaluate(refusalLayout, publishRefusal)).toEqual(layout);
-  expect(await scrollsSideways(page)).toBe(false);
-
-  // The project no longer builds: the same request would be refused again,
-  // so the control keeps its own label.
-  double.pullRequests = [pullRow()];
-  await refusePublish(
-    page,
-    scenario,
-    scenario.pullAt(buildPullRequest.number),
-    { reason: "builds-unavailable" },
-    "This project publishes from CI.",
-  );
-  await expect(row.getByTestId("stage-publish")).toHaveText(
-    "Publish this pull request",
-  );
-  await expect(row.getByRole("link", { name: "Publish from CI" })).toHaveCount(
-    1,
-  );
-  expect(await state.evaluate(refusalLayout, publishRefusal)).toEqual(layout);
-  expect(double.requests).toEqual([
-    { branch: "topic" },
-    { pullRequest: buildPullRequest.number },
-  ]);
-});
 
 test("the publishing card at rest sets its guide beside the control", async ({
   page,

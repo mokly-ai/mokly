@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { ApiError } from "../../api/errors";
 import type { Build } from "../../api/types";
 import { followBuild } from "../../viewer/build-follow";
 import type { BuildFollower } from "../../viewer/build-follow";
 import type { BuildWatch } from "../../viewer/build-watch";
 
-import { build, buildId, logWindow } from "./build-fixtures";
+import { build, buildId, chunk, logWindow } from "./build-fixtures";
 
 /** One build read a test answers when it chooses. */
 interface HeldRead {
@@ -153,4 +154,60 @@ test("only one read runs at a time, and nothing is polled before the first read"
   void follower.poll();
   assert.equal(held.length, 2, "a poll waits for the read before it");
   await answer(held[1], build({ id, state: "running" }), first);
+});
+
+test("a poll whose reads fail keeps the card and the output as they are", async () => {
+  const id = buildId(807);
+  const unavailable = new ApiError({
+    code: "unavailable",
+    reason: "unavailable",
+    message: "Unavailable.",
+    requestId: "01994f10-0000-7000-8000-0000000000cc",
+    status: 503,
+  });
+  let failing = false;
+  let current = build({ id, state: "running" });
+  const shown: BuildWatch[] = [];
+  const follower = followBuild({
+    projectId: "project",
+    buildId: id,
+    reads: {
+      getBuild: async () => {
+        if (failing) throw unavailable;
+        return current;
+      },
+      listBuildLog: async (_project, _build, after) => {
+        if (failing) throw unavailable;
+        return after === 0
+          ? logWindow([chunk(1, "installing\n")])
+          : logWindow([], { nextAfter: after });
+      },
+    },
+    show: (watch) => shown.push(watch),
+    visible: () => true,
+  });
+  await follower.firstRead;
+  const before = shown.length;
+  const output = (watch: BuildWatch | undefined) =>
+    watch?.status === "ready" ? watch.log.chunks.map((held) => held.text) : [];
+  assert.deepEqual(output(shown[before - 1]), ["installing\n"]);
+
+  // The build fails while both of the poll's reads are refused: nothing on
+  // the card changes, and no failure replaces it.
+  current = build({
+    id,
+    state: "failed",
+    canCancel: false,
+    failure: { step: "install", cause: "exit", exitCode: 1 },
+  });
+  failing = true;
+  await follower.poll();
+  assert.equal(shown.length, before);
+  assert.equal(lastState(shown), "running");
+
+  // The next read that succeeds moves the card, and keeps its output.
+  failing = false;
+  await follower.poll();
+  assert.equal(lastState(shown), "failed");
+  assert.deepEqual(output(shown[shown.length - 1]), ["installing\n"]);
 });
