@@ -190,11 +190,15 @@
   width: 34px;
   margin-inline-start: var(--mk-space-1);
 }
+/* In the Mac app the avatar takes the press with the Button beneath it. It
+   would otherwise take the bar's drag region from its parent and, lying over
+   the Button, move the window. */
 [data-color-scheme] .fo-canvas-account .fo-canvas-avatar {
   position: absolute;
   inset: 0;
   margin: auto;
   pointer-events: none;
+  -webkit-app-region: no-drag;
 }
 [data-color-scheme] .fo-canvas-account-off .fo-canvas-avatar {
   opacity: 0.55;

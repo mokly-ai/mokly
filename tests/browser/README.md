@@ -9,7 +9,7 @@ npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 
 The [developer browser commands](../../docs/protocol/developer-browser-commands.md)
 give the selection rules and the environment variables that supply prebuilt
-output. Strict shards use [measured whole-file placement](../../scripts/verification/README.md#browser-partitioning).
+output. Strict shards use [measured whole-file placement](../../docs/development/shard-weights.md#browser-partitioning).
 Specs import `test` from `browser_test.ts` or one of its host fixtures. The
 automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.

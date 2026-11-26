@@ -158,22 +158,37 @@ async function measureCompile() {
   }
 }
 
+/**
+ * Replace `testSeconds` in the weight file with the times of the passed
+ * Repository and native test jobs of the given runs, and resolve to the
+ * number of units that it holds.
+ */
+export async function refreshTestSeconds(request, runIds) {
+  const samples = [];
+  for (const runId of runIds)
+    samples.push(...(await runSamples({ ...request, runId })));
+  if (samples.length === 0)
+    throw new Error("the runs have no passed Rust test shard logs");
+  const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
+  weights.testSeconds = testSeconds(samples);
+  await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
+  return Object.keys(weights.testSeconds).length;
+}
+
 async function runSamples(request) {
   const samples = [];
   for (const job of await fetchRunJobs(request)) {
     const host = testHost(job.name);
     if (!host || job.conclusion !== "success") continue;
-    const log = await githubText(
-      request,
-      `/repos/${request.repository}/actions/jobs/${job.id}/logs`,
-    );
-    for (const test of logTests(log))
+    for (const test of logTests(await jobLog(request, job.id)))
       samples.push({ run: request.runId, host, ...test });
   }
   return samples;
 }
 
-async function githubText({ fetch, apiUrl, token }, requestPath) {
+/** The plain-text log of one Actions job. */
+export async function jobLog({ fetch, apiUrl, repository, token }, jobId) {
+  const requestPath = `/repos/${repository}/actions/jobs/${jobId}/logs`;
   const response = await fetch(`${apiUrl}${requestPath}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -217,27 +232,25 @@ if (
     },
   });
   if (values.run.length === 0 && !values.compile) throw new Error(USAGE);
-  const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
   if (values.run.length > 0) {
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error(`GITHUB_TOKEN is not set. ${USAGE}`);
-    const samples = [];
-    for (const runId of values.run)
-      samples.push(
-        ...(await runSamples({
-          fetch,
-          apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
-          repository: process.env.GITHUB_REPOSITORY || "mokly-ai/mokly",
-          runId,
-          token,
-        })),
-      );
-    if (samples.length === 0)
-      throw new Error("the runs have no passed Rust test shard logs");
-    weights.testSeconds = testSeconds(samples);
+    await refreshTestSeconds(
+      {
+        fetch,
+        apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
+        repository: process.env.GITHUB_REPOSITORY || "mokly-ai/mokly",
+        token,
+      },
+      values.run,
+    );
   }
-  if (values.compile) weights.compileSeconds = await measureCompile();
-  await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
+  if (values.compile) {
+    const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
+    weights.compileSeconds = await measureCompile();
+    await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
+  }
+  const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
   for (const part of ["compileSeconds", "testSeconds"])
     process.stdout.write(
       `${part}: ${Object.keys(weights[part] ?? {}).length} units\n`,

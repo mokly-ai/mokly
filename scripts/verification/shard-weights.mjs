@@ -63,19 +63,31 @@ function medians(samples, round) {
   return result;
 }
 
+/**
+ * Write both weight files from the reports under one directory, and resolve
+ * to the number of browser specs and viewer files that they hold.
+ */
+export async function writeShardWeights(directory) {
+  const weights = shardWeights(await readReports(directory));
+  for (const suite of ["browser", "viewer"])
+    await fs.writeFile(
+      path.join(import.meta.dirname, `${suite}-shard-weights.json`),
+      `${JSON.stringify(weights[suite], null, 2)}\n`,
+    );
+  return {
+    browser: Object.keys(weights.browser).length,
+    viewer: Object.keys(weights.viewer).length,
+  };
+}
+
 if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
 ) {
   const args = process.argv.slice(2);
   if (args.length !== 2 || args[0] !== "--reports") throw new Error(usage);
-  const weights = shardWeights(await readReports(args[1]));
-  for (const suite of ["browser", "viewer"])
-    await fs.writeFile(
-      path.join(import.meta.dirname, `${suite}-shard-weights.json`),
-      `${JSON.stringify(weights[suite], null, 2)}\n`,
-    );
+  const counts = await writeShardWeights(args[1]);
   process.stdout.write(
-    `Wrote weights for ${Object.keys(weights.browser).length} browser specs and ${Object.keys(weights.viewer).length} viewer files.\n`,
+    `Wrote weights for ${counts.browser} browser specs and ${counts.viewer} viewer files.\n`,
   );
 }
