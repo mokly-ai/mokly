@@ -17,6 +17,27 @@ pub(super) fn accept(app: &Harness, id: &str, event: &str, object: Value, status
     app.wait_delivery(id, status);
 }
 
+/// The provider reports a changed subscription; answer the owner's billing
+/// read once the webhook worker has applied it.
+pub(super) fn report_subscription(
+    app: &Harness,
+    id: &str,
+    status: &str,
+    cancel_at_period_end: bool,
+    billing_path: &str,
+) -> Value {
+    app.stripe.set_subscription(status, cancel_at_period_end);
+    app.runtime.advance(1);
+    accept(
+        app,
+        id,
+        "customer.subscription.updated",
+        json!({"id":"sub_fixture","customer":"cus_fixture"}),
+        DeliveryStatus::Done,
+    );
+    app.json(app.request(Method::GET, billing_path).send().unwrap(), 200)
+}
+
 pub(super) fn invite_reviewer(app: &Harness, workspace: &str) -> String {
     let invitation = app.json(
         app.request(Method::POST, &format!("/v1/workspaces/{workspace}/members"))

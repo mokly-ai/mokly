@@ -12,6 +12,7 @@ use super::harness::Harness;
 use super::lifecycle_support::{
     accept, assert_cancel_contract, assert_checkout_contract, assert_collaborator_request,
     assert_free_private_transition_is_refused, assert_seat_change_requests, invite_reviewer,
+    report_subscription,
 };
 
 #[test]
@@ -104,6 +105,10 @@ fn recorded_app_completes_the_billing_lifecycle() {
                 .is_some()
         );
     });
+    // The trial and its end reach the read from the provider's subscription.
+    let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
+    assert_eq!(billing["subscription"]["status"], "trialing");
+    assert_eq!(billing["subscription"]["trialEnd"], "2026-09-28T12:00:00Z");
     let refused = app.json(
         app.request(Method::POST, &format!("{billing_path}/checkout"))
             .json(&json!({}))
@@ -114,6 +119,11 @@ fn recorded_app_completes_the_billing_lifecycle() {
     assert_eq!(refused["error"]["reason"], "subscription-active");
 
     let reviewer_member = invite_reviewer(&app, workspace_id);
+    let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
+    assert_eq!(
+        billing["seats"][1],
+        json!({"kind":"collaborator","inUse":1,"unitAmountCents":500})
+    );
     assert!(app.run_seats());
     assert_collaborator_request(&app, workspace_id);
     app.stripe.set_subscription("active", false);
@@ -188,11 +198,11 @@ fn recorded_app_completes_the_billing_lifecycle() {
     assert_eq!(
         billing["subscription"]["paymentFailedAt"]
             .as_str()
-            .unwrap()
-            .parse::<chrono::DateTime<chrono::Utc>>()
-            .unwrap()
-            .timestamp(),
-        failed_at.timestamp()
+            .map(|value| value
+                .parse::<chrono::DateTime<chrono::Utc>>()
+                .unwrap()
+                .timestamp()),
+        Some(failed_at.timestamp())
     );
     app.runtime.advance(1);
     app.stripe.set_payment_paid();
@@ -209,16 +219,11 @@ fn recorded_app_completes_the_billing_lifecycle() {
     let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
     assert_eq!(billing["subscription"]["paymentFailedAt"], Value::Null);
 
-    app.stripe.set_subscription("active", true);
-    app.runtime.advance(1);
-    accept(
-        &app,
-        "evt_ending1",
-        "customer.subscription.updated",
-        json!({"id":"sub_fixture","customer":"cus_fixture"}),
-        DeliveryStatus::Done,
-    );
-    let billing = app.json(app.request(Method::GET, &billing_path).send().unwrap(), 200);
+    let billing = report_subscription(&app, "evt_pastdue1", "past_due", false, &billing_path);
+    assert_eq!(billing["subscription"]["status"], "past_due");
+
+    let billing = report_subscription(&app, "evt_ending1", "active", true, &billing_path);
+    assert_eq!(billing["subscription"]["status"], "active");
     assert_eq!(billing["subscription"]["cancelAtPeriodEnd"], true);
 
     app.stripe.set_subscription("canceled", false);
