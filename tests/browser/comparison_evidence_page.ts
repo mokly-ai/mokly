@@ -57,8 +57,6 @@ export const PAGE_OUTSIDE_LEAD =
   "These changed styles also apply outside the changed components on this page:";
 export const PAGE_UNRESOLVED_LEAD =
   "This change can apply anywhere on the page, so the page stays in Changes:";
-export const PAGE_EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this page.";
 export const PAGE_TERMINAL = "No changes to this page.";
 
 /** The window of the desktop inspector dock. */
