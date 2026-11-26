@@ -2896,6 +2896,14 @@ probe, rewrote the root question, and added options D, E, and F.
 - **Action:** ask the user, because A and D narrow a rule that three pages
   state, and B, C, and E change design call D9. No user decision covers
   either change.
+- **Answer:** B, chosen by the user on 2026-11-27. Reason: the Vite path and
+  the esbuild path stay as similar as possible. The Vite calls of the source
+  step pass the import name, as the esbuild call does, so both sides load the
+  matching source. This changes design call D9. A working tree with no build
+  still fails under Vite, because the user did not choose C. The base build
+  stays in the base prepare command plan. The order of B and the
+  `moduleResolution.sourcePackages` change on branch
+  `calummoore/mokly-source-package-override-jkum` waits for the user.
 
 - [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the
