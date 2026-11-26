@@ -15,6 +15,7 @@ tracing = "0.1.44"
 unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 unimock = "0.6.8"
 
 [features]
@@ -26,6 +27,3 @@ workspace = true
 [dev-dependencies.mokly-platform]
 workspace = true
 features = ["mock"]
-
-[target."cfg(unix)".dev-dependencies]
-libc = "0.2.190"

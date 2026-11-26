@@ -16,15 +16,6 @@ pub(super) trait Reap {
     fn wait(&mut self) -> io::Result<()>;
 }
 
-impl Reap for Child {
-    fn kill(&mut self) -> io::Result<()> {
-        Child::kill(self)
-    }
-    fn wait(&mut self) -> io::Result<()> {
-        Child::wait(self).map(|_| ())
-    }
-}
-
 /// The direct child before attachment, then the tree that owns its reap.
 pub(super) enum Root {
     Child(Child),

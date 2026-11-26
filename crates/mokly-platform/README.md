@@ -42,7 +42,7 @@ The child keeps the parent's session. This permits the standard library's
 checkout directory. Both modes use the same `attach` guard.
 
 The guard records the child's identity, its PID and start time, before the
-caller can reap the child. A reused PID therefore never receives a signal. The
+child can be reaped. A reused PID therefore never receives a signal. The
 guard records this identity also when the child has already exited. The Linux
 and macOS readers of the process table keep an exited process readable until
 its parent reaps it.
