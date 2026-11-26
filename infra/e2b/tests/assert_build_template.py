@@ -15,6 +15,7 @@ import tempfile
 TEMPLATE_HOME = "/home/user"
 PROBE_KEY = "MKC_TEMPLATE_PROBE"
 PROBE_VALUE = "stream-process-added-env"
+BUILD_TOOLS = ("cc", "c++", "make")
 SECRET_KEYS = {
     "E2B_API_KEY", "MKC_E2B_API_KEY", "MOKLY_TOKEN", "GITHUB_TOKEN", "GH_TOKEN",
     "GIT_ASKPASS", "SSH_ASKPASS", "GOOGLE_APPLICATION_CREDENTIALS",
@@ -65,6 +66,20 @@ def command(argv, cwd=None):
     return result.stdout.strip()
 
 
+def verify_tools_on_path():
+    directories = os.get_exec_path()
+    for executable in ("node", "npm", "npx", "corepack", "python3", "git"):
+        real_files = set()
+        for directory in directories:
+            candidate = os.path.join(directory, executable)
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                real_files.add(os.path.realpath(candidate))
+        require(real_files, f"{executable} is missing from PATH")
+        require(len(real_files) == 1, f"{executable} has multiple copies on PATH")
+    for executable in ("curl", "sha256sum", *BUILD_TOOLS):
+        require(shutil.which(executable) is not None, f"{executable} is missing from PATH")
+
+
 def verify_npm_clean_install(workspace):
     """Install an empty project offline; npm with files of two releases fails here."""
     try:
@@ -112,10 +127,9 @@ def verify(node_version):
             probe.write(b"workspace-write-probe")
     except OSError as error:
         raise TemplateAssertionError("/workspace is not writable") from error
-    for executable in ("node", "npm", "corepack", "git", "curl", "sha256sum", "python3"):
-        require(shutil.which(executable) is not None, f"{executable} is missing from PATH")
+    verify_tools_on_path()
     require(command(["node", "--version"]) == "v" + node_version, "Node release differs from .nvmrc")
-    for executable in ("npm", "corepack", "curl", "sha256sum", "python3"):
+    for executable in ("npm", "corepack", "curl", "sha256sum", "python3", *BUILD_TOOLS):
         command([executable, "--version"])
     verify_git_base_reads(workspace)
     verify_npm_clean_install(workspace)

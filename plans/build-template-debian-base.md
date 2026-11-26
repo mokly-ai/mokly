@@ -83,24 +83,27 @@ Depends on: none. Starts after the v5 pull request merges into `main` and
 - [ ] `docs/protocol/cloud/cloud-build-runner.md`, section "Template": a
       Debian base pinned by digest, Debian's Git, a C compiler, a C++
       compiler, `make`, and one copy of each key tool on `PATH`.
-- [ ] `docs/protocol/cloud/repository-layout.md`, section "Build Toolchain
+- [x] `docs/protocol/cloud/repository-layout.md`, section "Build Toolchain
       Checks": the pin form `debian:<tag>@sha256:<64 lowercase hex>`.
 
 ## Milestone 2: Template definition, pin rule, and probe
 
 Depends on: none. Starts with Milestone 1.
 
-- [ ] Resolve the `debian:trixie-slim` digest and its dated tag on Docker Hub.
-      Record the date and the source.
-- [ ] `infra/e2b/build/e2b.Dockerfile`: the trixie base by dated tag and
+- [x] Resolve the `debian:trixie-slim` digest and its dated tag on Docker Hub.
+      Record the date and the source. Evidence:
+      `.context/build-template-debian-base/digest-resolved-at.txt`.
+- [x] `infra/e2b/build/e2b.Dockerfile`: the trixie base by dated tag and
       digest, `apt-get upgrade`, `build-essential`, no removal of an old
       Node, and no Git build from source.
-- [ ] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v6"`.
-- [ ] Pin rule in `xtask/src/policy/build_pins.rs` and
+- [x] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v6"`.
+- [x] Pin rule in `xtask/src/policy/build_pins.rs` and
       `infra/tests/test_build_template.py`, with tests that reject
       `e2bdev/base`.
-- [ ] Probe: `cc`, `c++`, and `make`, and one real file for each key tool,
-      with regression tests that fail before the change.
+- [x] Probe: `cc`, `c++`, and `make`, and one real file for each key tool,
+      with regression tests that fail before the change. Evidence:
+      `.context/build-template-debian-base/m2-red.txt` and
+      `m2-repository-final.txt`.
 
 ## Milestone 3: Release `mokly-build-v6`
 

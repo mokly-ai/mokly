@@ -105,8 +105,8 @@ name the runner's minimum supported Mokly version. The toolchain check rejects
 any difference.
 
 Each build template base image must use
-`e2bdev/base:<tag>@sha256:<64 lowercase hex>`. The tag records the digest's
-source. Missing tags and malformed or absent digests fail, under the
+`debian:<tag>@sha256:<64 lowercase hex>`. The tag records the digest's source.
+A missing tag, a malformed or absent digest, and any other image fail, under the
 [template pin rule](./cloud-build-runner.md#template). The
 [verification guide](../../../xtask/README.md) names the checked files and constants.
 
