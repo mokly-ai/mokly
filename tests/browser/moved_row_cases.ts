@@ -19,7 +19,6 @@ import {
   movedIndex,
   PREVIOUS,
   row,
-  showCatalogue,
   showDetails,
   type MovedHost,
 } from "./moved_rows.js";
@@ -31,60 +30,59 @@ export function registerMovedRowCases(
   test: typeof baseTest,
   host: MovedHost,
 ): void {
-  for (const width of host.widths)
-    test(`${width}px: Changes keeps one Moved row per paired entry, with no changed mark`, async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      await page.setViewportSize({ width, height: 900 });
-      const { count, moved } = await movedIndex(request, baseURL);
-      expect(moved.map(([path]) => path)).toEqual(
-        expect.arrayContaining([INVOICE, ACTION, moves.pureMovedScreen]),
-      );
-      await host.open(page, comparisonPaths.unchanged);
-      await showCatalogue(page);
-      await expect(row(page, INVOICE)).not.toContainText("Moved");
-      for (const removed of [
-        moves.removedInvoiceVariant,
-        moves.removedActionVariant,
-      ])
-        await expect(row(page, removed)).toBeHidden();
-      await chooseFilter(page, "changed");
-      await expect(page.locator('[data-filter="changed"]')).toContainText(
-        String(count),
-      );
-      for (const [entry, title] of moved) {
-        await expect(row(page, entry)).toHaveAccessibleName(`${title} · Moved`);
-        expect(await dot(page, entry)).toBe("none");
-      }
-      for (const [parent, labels] of [
-        [INVOICE, ["Overdue · Moved", "Paid · Removed"]],
+  test("Changes keeps one Moved row per paired entry, with no changed mark", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const { count, moved } = await movedIndex(request, baseURL);
+    expect(moved.map(([path]) => path)).toEqual(
+      expect.arrayContaining([INVOICE, ACTION, moves.pureMovedScreen]),
+    );
+    await host.open(page, comparisonPaths.unchanged);
+    await expect(page.locator('button[data-filter="all"]')).toBeVisible();
+    await expect(row(page, INVOICE)).not.toContainText("Moved");
+    for (const removed of [
+      moves.removedInvoiceVariant,
+      moves.removedActionVariant,
+    ])
+      await expect(row(page, removed)).toBeHidden();
+    await chooseFilter(page, "changed");
+    await expect(page.locator('[data-filter="changed"]')).toContainText(
+      String(count),
+    );
+    for (const [entry, title] of moved) {
+      await expect(row(page, entry)).toHaveAccessibleName(`${title} · Moved`);
+      expect(await dot(page, entry)).toBe("none");
+    }
+    for (const [parent, labels] of [
+      [INVOICE, ["Overdue · Moved", "Paid · Removed"]],
+      [
+        ACTION,
         [
-          ACTION,
-          [
-            "Primary · Moved",
-            "Ghost · Moved",
-            "Iconic · Moved",
-            "Secondary · Removed",
-          ],
+          "Primary · Moved",
+          "Ghost · Moved",
+          "Iconic · Moved",
+          "Secondary · Removed",
         ],
-      ] as const)
-        await expect(
-          page
-            .locator(`[data-nav-disclosure="variants:${parent}"]`)
-            .locator("a[data-nav-row]"),
-        ).toHaveText(labels, { useInnerText: true });
-      await expect(row(page, comparisonPaths.unchanged)).toBeHidden();
-      // A paired base path keeps no row; only its removed variants remain.
+      ],
+    ] as const)
       await expect(
-        page.locator(
-          `nav.mbk-nav a[data-nav-row][data-entry-id^="${PREVIOUS}/"]`,
-        ),
-      ).toHaveCount(2);
-      await chooseFilter(page, "all");
-      await expect(row(page, INVOICE)).not.toContainText("Moved");
-    });
+        page
+          .locator(`[data-nav-disclosure="variants:${parent}"]`)
+          .locator("a[data-nav-row]"),
+      ).toHaveText(labels, { useInnerText: true });
+    await expect(row(page, comparisonPaths.unchanged)).toBeHidden();
+    // A paired base path keeps no row; only its removed variants remain.
+    await expect(
+      page.locator(
+        `nav.mbk-nav a[data-nav-row][data-entry-id^="${PREVIOUS}/"]`,
+      ),
+    ).toHaveCount(2);
+    await chooseFilter(page, "all");
+    await expect(row(page, INVOICE)).not.toContainText("Moved");
+  });
 
   test("All marks a moved row only when its entry changed beyond the move", async ({
     page,

@@ -137,57 +137,60 @@ export function registerComponentDesignInspection() {
         }
       });
 
-      test("missing metadata, empty usage, and a removed variant stay distinct", async ({
-        page,
-      }) => {
-        // Profile renders no registered component.
-        await page.goto(
-          designDocumentUrl("design/canvas/inspect/unchanged", viewport),
-        );
-        const components = page.locator('[data-cv-section="components"]');
-        await components.locator(":scope > summary").click();
-        await expect(
-          components.getByText(
-            "No registered components are used in this view.",
-            { exact: true },
-          ),
-        ).toBeVisible();
-        // Missing inspection metadata is not an empty view.
-        await page.goto(
-          designDocumentUrl(
-            "design/canvas/components/inspection/unavailable",
-            viewport,
-          ),
-        );
-        await expect(
-          components.getByText(
-            "Component inspection is unavailable for this view.",
-            { exact: true },
-          ),
-        ).toBeVisible();
-        await expect(
-          page.getByRole("switch", { name: "Highlight components" }),
-        ).toBeDisabled();
-        // The example has no component without consumers, so Welcome's Usage
-        // shows the explicit empty list.
-        await page.goto(
-          designDocumentUrl("design/canvas/inspect/sections", viewport),
-        );
-        await expect(
-          page
-            .locator('[data-cv-section="usage"]')
-            .getByText("No recorded consumers.", { exact: true }),
-        ).toBeVisible();
-        // A removed variant's frames hold the missing current version.
-        await page.goto(
-          designDocumentUrl("design/canvas/components/removed", viewport),
-        );
-        await expect(
-          page
-            .locator('.cv-frame[data-cv-frame="compact-light"]')
-            .getByText("This variant has been removed.", { exact: true }),
-        ).toBeVisible();
-      });
+      // The empty states read the same on a phone, so the desktop alone
+      // checks them.
+      if (viewport === "desktop")
+        test("missing metadata, empty usage, and a removed variant stay distinct", async ({
+          page,
+        }) => {
+          // Profile renders no registered component.
+          await page.goto(
+            designDocumentUrl("design/canvas/inspect/unchanged", "desktop"),
+          );
+          const components = page.locator('[data-cv-section="components"]');
+          await components.locator(":scope > summary").click();
+          await expect(
+            components.getByText(
+              "No registered components are used in this view.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          // Missing inspection metadata is not an empty view.
+          await page.goto(
+            designDocumentUrl(
+              "design/canvas/components/inspection/unavailable",
+              "desktop",
+            ),
+          );
+          await expect(
+            components.getByText(
+              "Component inspection is unavailable for this view.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          await expect(
+            page.getByRole("switch", { name: "Highlight components" }),
+          ).toBeDisabled();
+          // The example has no component without consumers, so Welcome's Usage
+          // shows the explicit empty list.
+          await page.goto(
+            designDocumentUrl("design/canvas/inspect/sections", "desktop"),
+          );
+          await expect(
+            page
+              .locator('[data-cv-section="usage"]')
+              .getByText("No recorded consumers.", { exact: true }),
+          ).toBeVisible();
+          // A removed variant's frames hold the missing current version.
+          await page.goto(
+            designDocumentUrl("design/canvas/components/removed", "desktop"),
+          );
+          await expect(
+            page
+              .locator('.cv-frame[data-cv-frame="compact-light"]')
+              .getByText("This variant has been removed.", { exact: true }),
+          ).toBeVisible();
+        });
 
       test("a removed consumer opens its previous version behind its Removed badge", async ({
         page,

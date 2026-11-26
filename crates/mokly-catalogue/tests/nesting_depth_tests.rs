@@ -1,8 +1,8 @@
-//! The deepest authored YAML that each parser survives on a 2 MiB worker stack.
+//! The deepest authored front matter that Mokly survives on a 2 MiB worker
+//! stack.
 //!
 //! A child-process search finds each limit for the current build profile and
-//! prints it. The YAML parser's block nesting reaches the search cap. Mokly's
-//! builder rejects a value more than [`yaml_limits::MAX_DEPTH`] levels below
+//! prints it. Mokly's builder rejects a value more than [`yaml_limits::MAX_DEPTH`] levels below
 //! the root before any recursive traversal, so front matter of any depth
 //! reaches the search cap. The deepest front matter that the builder accepts
 //! survives the serde-derived traversal of fields, props, and schemas.
@@ -11,7 +11,6 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::yaml_limits;
 use mokly_model::limits;
 use tempfile::TempDir;
-use yaml_rust2::parser::{Event, Parser};
 
 #[path = "support/definitions.rs"]
 mod definitions;
@@ -19,7 +18,7 @@ mod definitions;
 mod depth_search;
 mod support;
 
-use depth_search::{Failure, Probe, search};
+use depth_search::{Probe, search};
 
 const CHILD: &str = "depth_probe_child";
 /// The search stops at this depth when nothing overflows.
@@ -43,28 +42,6 @@ const SCHEMA: usize = yaml_limits::MAX_DEPTH - 4;
 const VARIANT: usize = yaml_limits::MAX_DEPTH - 3;
 const PROPS_TOO_DEEP: &str = "exceeds 64 nesting levels";
 const YAML_TOO_DEEP: &str = "exceeds 128 nesting levels";
-
-/// Count the sequences that the YAML parser opens before the stream ends.
-fn sequences(source: &str) -> usize {
-    let mut parser = Parser::new_from_str(source);
-    let mut count = 0;
-    loop {
-        match parser.next_token().unwrap().0 {
-            Event::StreamEnd => return count,
-            Event::SequenceStart(..) => count += 1,
-            _ => {}
-        }
-    }
-}
-
-fn yaml_block(depth: usize) {
-    assert_eq!(sequences(&format!("{}leaf\n", "- ".repeat(depth))), depth);
-}
-
-fn yaml_flow(depth: usize) {
-    let source = format!("{}leaf{}\n", "[".repeat(depth), "]".repeat(depth));
-    assert_eq!(sequences(&source), depth);
-}
 
 /// Prepare one screen with `front_matter` after its title. `None` expects
 /// entries whose only warnings are unused props. A message expects an issue
@@ -160,8 +137,6 @@ fn front_matter_variant(depth: usize) {
 }
 
 const PROBES: &[Probe] = &[
-    ("yaml_block", yaml_block),
-    ("yaml_flow", yaml_flow),
     ("front_matter_extra", front_matter_extra),
     ("front_matter_props", front_matter_props),
     ("front_matter_schema", front_matter_schema),
@@ -172,21 +147,6 @@ const PROBES: &[Probe] = &[
 #[ignore = "a child process of the depth searches below runs this probe"]
 fn depth_probe_child() {
     depth_search::run_child(PROBES);
-}
-
-#[test]
-fn yaml_parser_block_nesting_reaches_the_search_cap() {
-    assert_eq!(search(CHILD, "yaml_block", CAP).depth, CAP);
-}
-
-#[test]
-fn yaml_parser_rejects_flow_nesting_past_255_levels() {
-    let limit = search(CHILD, "yaml_flow", CAP);
-    assert_eq!(limit.depth, 255);
-    let Some(Failure::Rejected(stderr)) = limit.failure else {
-        panic!("{limit:?}");
-    };
-    assert!(stderr.contains("recursion limit exceeded"), "{stderr}");
 }
 
 #[test]

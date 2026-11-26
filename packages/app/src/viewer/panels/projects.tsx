@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { Workspace, Project } from "../../api/types";
 import { Action } from "../../components/action";
 import { Pending, StateMessage } from "../../components/page-parts";
-import { ControlPlaceholder, TextBar } from "../../components/placeholders";
+import { TextBar } from "../../components/placeholders";
 import { PaneResource } from "../../components/resource-state";
 import { appAddress } from "../../config";
 import { listInstallations } from "../../data/installations";
@@ -11,6 +11,7 @@ import { listProjects } from "../../data/projects";
 import { useResource } from "../../data/use-resource";
 import { listWorkspaces } from "../../data/workspaces";
 import { projectPath } from "../../navigation/paths";
+import { MenuTriggerPlaceholder } from "../../settings/panes/row-placeholders";
 
 import { PanelList } from "./panel-rows";
 
@@ -49,10 +50,10 @@ function administers(workspace: Workspace): boolean {
 }
 
 /**
- * One workspace group: its name and the GitHub accounts it connects, its
- * projects, and Workspace settings for an administrator. The loaded panel and
- * its wait both draw it, each passing its own parts, as the catalogue's
- * `WorkspaceGroup` does.
+ * One workspace group: its line, with its name, the GitHub accounts it
+ * connects and, for an administrator, the Workspace settings cog at its end,
+ * then its projects. The loaded panel and its wait both draw it, each passing
+ * its own parts, as the catalogue's `WorkspaceGroup` does.
  */
 function WorkspaceGroup({
   name,
@@ -64,7 +65,7 @@ function WorkspaceGroup({
   /** The accounts the workspace connects; empty when it connects none. */
   accounts: ReactNode;
   projects: ReactNode;
-  /** Workspace settings, for a workspace the reader administers. */
+  /** The Workspace settings cog, for a workspace the reader administers. */
   settings?: ReactNode;
 }) {
   return (
@@ -72,11 +73,11 @@ function WorkspaceGroup({
       <div className="fo-ref-head">
         <span className="fo-ref-name">{name}</span>
         {accounts && <span className="fo-ref-detail">{accounts}</span>}
+        {settings !== undefined && (
+          <span className="fo-ref-head-action">{settings}</span>
+        )}
       </div>
       {projects}
-      {settings !== undefined && (
-        <div className="fo-panel-foot">{settings}</div>
-      )}
     </section>
   );
 }
@@ -127,6 +128,8 @@ function Workspaces({
             administers(workspace) ? (
               <Action
                 label="Workspace settings"
+                icon="settings"
+                iconOnly
                 tone="quiet"
                 size="sm"
                 onPress={() => onWorkspaceSettings(workspace)}
@@ -140,16 +143,14 @@ function Workspaces({
   );
 }
 
-/** The width of Workspace settings at the panel foot's size, in px. */
-const workspaceSettingsWidth = 143;
-
 /**
  * One workspace group while the panel's read runs. The workspace's name and
  * the accounts it connects are the read's, so each is a bar in its own line.
  * The projects list draws one placeholder row in the row's own frame, and
- * Workspace settings, which only an administrator is offered, is a
- * placeholder over its own box. The person who creates a workspace owns it,
- * so the wait draws an administrator's form, which connects an account.
+ * the Workspace settings cog, which only an administrator is offered, is a
+ * placeholder over its own square box. The person who creates a workspace
+ * owns it, so the wait draws an administrator's form, which connects an
+ * account.
  */
 function WaitingWorkspace() {
   return (
@@ -169,7 +170,7 @@ function WaitingWorkspace() {
           ]}
         />
       }
-      settings={<ControlPlaceholder size="sm" width={workspaceSettingsWidth} />}
+      settings={<MenuTriggerPlaceholder />}
     />
   );
 }

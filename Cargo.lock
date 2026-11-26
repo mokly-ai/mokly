@@ -3189,7 +3189,6 @@ dependencies = [
  "insta",
  "jsonc-parser",
  "lightningcss",
- "mokly-css",
  "mokly-model",
  "mokly-source-interface",
  "precomputed-hash",

@@ -8,7 +8,6 @@ publish = false
 
 [features]
 mock = []
-test-support = []
 
 [dependencies]
 cssparser = "0.37.0"
@@ -28,5 +27,4 @@ unimock = "0.6.8"
 
 [dev-dependencies]
 insta = "1.49.0"
-mokly-css = { workspace = true, features = ["test-support"] }
 mokly-source-interface = { workspace = true, features = ["mock"] }

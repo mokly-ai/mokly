@@ -109,20 +109,27 @@ so the build, the upload, and the download all stay on the critical path.
 
 ### Native Test Scope
 
-The Native suite leaves out a reviewed list of platform-neutral Rust tests.
-The Repository suite still runs every Rust test on Linux, and the Native
-suite runs every doc test. The list excludes; a new test runs on every
-platform until a change adds it to the list. A test stays in the Native
-suite when it touches paths, links, file names or their case, line endings,
-processes and signals, file watching, sockets and ports, stack depth,
-temporary folders, Git subprocesses, the sidecar Node process, or locks.
-Every test of `mokly-platform`, `mokly-git`, `mokly-sidecar`, `mokly-watch`,
-`mokly-catalogue`, `mokly-static`, and `mokly-server` stays. A test leaves
-only when it checks pure logic, such as Changes classification, CSS
-attribution, the catalogue model, HTML repair, or scale counts. When in doubt,
-the test stays. A test unit that the list leaves out as a whole is not built.
-Decision: an exclude list, because an include list would run new platform
-code on Linux only.
+The Native suite leaves out a reviewed list of platform-neutral Rust tests and
+the stress tests below. The Repository suite still runs every Rust test on
+Linux, and the Native suite runs every doc test. The list excludes; a new test
+runs on every platform until a change adds it to the list. A test that is not a
+stress test stays in the Native suite when it touches paths, links, file names
+or their case, line endings, processes and signals, file watching, sockets and
+ports, stack depth, temporary folders, Git subprocesses, the sidecar Node
+process, or locks. Every other test of `mokly-platform`, `mokly-git`,
+`mokly-sidecar`, `mokly-watch`, `mokly-catalogue`, `mokly-static`, and
+`mokly-server` stays. A test leaves only when it checks pure logic, such as
+Changes classification, CSS attribution, the catalogue model, HTML repair, or
+scale counts. When in doubt, the test stays. A test unit that the list leaves
+out as a whole is not built. Decision: an exclude list, because an include list
+would run new platform code on Linux only.
+
+Stress tests run on Linux only, in every crate. A stress test builds an input
+far past authored sizes: a tree of at least 10,000 levels, at least 10,000 files
+or entries, or tens of megabytes. Decision: the Native suite leaves them out. A
+stack overflow at such a depth that only macOS or Windows has is then not
+caught. Rejected: stress tests on every platform, because they cost about two
+minutes of Windows and one and a half minutes of macOS test time on each run.
 
 ### Test Units
 

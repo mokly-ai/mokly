@@ -7,7 +7,8 @@ import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
 import { workspaces } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
-import { ControlPlaceholder, TextBar } from "../placeholders";
+import { TextBar } from "../placeholders";
+import { MenuTriggerPlaceholder } from "../settings/row-placeholders";
 
 import { PanelList } from "./panel-rows";
 import { ViewerPanelScreen } from "./screen";
@@ -15,9 +16,10 @@ import { ViewerPanelScreen } from "./screen";
 const title = "Projects";
 
 /**
- * One workspace group: its name and the GitHub accounts it connects, its
- * projects, and Workspace settings for an administrator. The loaded panel and
- * its wait both draw it, each passing its own parts.
+ * One workspace group: its line, with its name, the GitHub accounts it
+ * connects and, for an administrator, the Workspace settings cog at its end,
+ * then its projects. The loaded panel and its wait both draw it, each passing
+ * its own parts.
  */
 function WorkspaceGroup({
   name,
@@ -29,7 +31,7 @@ function WorkspaceGroup({
   /** The accounts the workspace connects, when it connects any. */
   accounts?: ReactNode;
   projects: ReactNode;
-  /** Workspace settings, for a workspace the reader administers. */
+  /** The Workspace settings cog, for a workspace the reader administers. */
   settings?: ReactNode;
 }) {
   return (
@@ -39,11 +41,11 @@ function WorkspaceGroup({
         {accounts !== undefined && (
           <span className="fo-ref-detail">{accounts}</span>
         )}
+        {settings !== undefined && (
+          <span className="fo-ref-head-action">{settings}</span>
+        )}
       </div>
       {projects}
-      {settings !== undefined && (
-        <div className="fo-panel-foot">{settings}</div>
-      )}
     </section>
   );
 }
@@ -84,6 +86,8 @@ function Workspaces({ state }: { state: ScreenState }) {
                 instance={"workspace-settings-" + workspace.id}
                 label="Workspace settings"
                 to="product/settings/workspace"
+                icon="settings"
+                iconOnly
                 tone="quiet"
                 size="sm"
               />
@@ -95,16 +99,13 @@ function Workspaces({ state }: { state: ScreenState }) {
   );
 }
 
-/** The width of Workspace settings at the panel foot's size, in px. */
-const workspaceSettingsWidth = 143;
-
 /**
  * One workspace group while the panel's read runs. The workspace's name and
  * the accounts it connects are the read's, so each is a bar in its own line,
  * and a bar cannot wrap as words do, so both fit one line of the narrowest
  * panel at twice the text size. The projects list draws one placeholder row
- * in the row's own frame, and Workspace settings, which only an administrator
- * is offered, is a placeholder over its own box. The person who creates a
+ * in the row's own frame, and the Workspace settings cog, which only an
+ * administrator is offered, is a placeholder over its own square box. The person who creates a
  * workspace owns it, so the wait draws an administrator's form, which
  * connects an account.
  */
@@ -126,7 +127,7 @@ function WaitingWorkspace() {
           ]}
         />
       }
-      settings={<ControlPlaceholder size="sm" width={workspaceSettingsWidth} />}
+      settings={<MenuTriggerPlaceholder />}
     />
   );
 }

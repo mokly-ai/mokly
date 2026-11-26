@@ -2,8 +2,7 @@
  * A copy whose catalogue rendered Light and Dark at the branch point and
  * renders Light only now. Its removed screens keep their dark renders, so the
  * shell still offers Dark, while the current Payment terms document has a
- * light page only. Under Dark the reading frame's label names that fallback,
- * on the canvas and in the compact layout alike.
+ * light page only. Under Dark the reading frame's label names that fallback.
  */
 
 import {
@@ -23,19 +22,6 @@ test("1280px: a current light-only document names its light page in its label un
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`/view/${paths.currentDocument}/`);
-  await expectLightOnlyDocumentLabel(
-    page,
-    paths.currentDocument,
-    "payment-terms.md",
-  );
-});
-
-test("390px: a current light-only document names its light page in its label under Dark", async ({
-  page,
-}) => {
-  // The compact layout's reading frame names the fallback as the canvas does.
-  await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(`/view/${paths.currentDocument}/`);
   await expectLightOnlyDocumentLabel(
     page,

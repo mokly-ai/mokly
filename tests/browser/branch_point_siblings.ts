@@ -1,8 +1,9 @@
 /**
- * The removed sibling of a branch-point family on each host: a parent, its
- * primary variant, and a variant that the branch removed. The sibling joins
- * its resolved parent's Variants and Changes list, opens in the comparison
- * mode of its siblings, and names its base folders in Inspect's head.
+ * The removed sibling of a branch-point family on the host that runs it: a
+ * parent, its primary variant, and a variant that the branch removed. The
+ * sibling joins its resolved parent's Variants and Changes list, opens in the
+ * comparison mode of its siblings, and names its base folders in Inspect's
+ * head.
  */
 
 import { expect, type Page } from "@playwright/test";
