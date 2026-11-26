@@ -23,7 +23,7 @@ fn kill(pid: i32, table: &dyn ProcessTable, group: &dyn GroupSignal) -> Result<(
     let mut error = None;
     remember_result(
         &mut error,
-        send(group, table, pid, libc::SIGSTOP).map(|_| ()),
+        send(group, table, pid, libc::SIGSTOP, None).map(|_| ()),
     );
     let walk = walk::unattached_descendants(table, pid);
     if let Some(source) = walk.error {
@@ -31,7 +31,7 @@ fn kill(pid: i32, table: &dyn ProcessTable, group: &dyn GroupSignal) -> Result<(
     }
     remember_result(
         &mut error,
-        send(group, table, pid, libc::SIGKILL).map(|_| ()),
+        send(group, table, pid, libc::SIGKILL, None).map(|_| ()),
     );
     for identity in walk.found {
         remember_result(&mut error, signal_process(table, identity, libc::SIGKILL));

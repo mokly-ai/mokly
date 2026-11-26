@@ -164,9 +164,10 @@
       because `proc_listpids` with `PROC_PPID_ONLY` visits the list of zombies.
     - So the walk now finds an exited parent while its own parent is stopped
       and has not reaped it. No macOS run has confirmed this timing.
-    - `crates/mokly-platform/src/unix_group_members/system.rs` still passes 0
-      to `proc_pidinfo`. There a zombie member gives ESRCH, which counts as
-      not live before the zombie check at line 54.
+    - Since 2026-11-26, the group-member reader in
+      `crates/mokly-platform/src/unix_group_members/system.rs` uses the same
+      `bsd_info` reader as the walk, so it also reads a zombie member. It
+      counts that member as gone.
     - E adds one group read for each group leader that the walk finds.
     - The macOS limit then names an orphan outside the manager's process
       group when the walk finds no leader of the orphan's process group.

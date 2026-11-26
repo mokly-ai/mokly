@@ -5,8 +5,9 @@ use std::io;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::unix_process_table::ProcessIdentity;
+use crate::unix_process_tree::GroupOutcome;
 
-use super::{Member, MembersMock, Refusal, refusal};
+use super::{Member, MembersMock, Refusal, classify, refusal};
 
 const MEMBER: ProcessIdentity = ProcessIdentity {
     pid: 18,
@@ -100,4 +101,50 @@ fn full_buffers_are_resized_before_accepting_a_stopped_group() {
             .returns(Ok(0)),
     ));
     assert_eq!(refusal(&members, 17), Some(Refusal::Stopped));
+}
+
+#[test]
+fn a_refused_signal_maps_to_the_members_that_still_need_it() {
+    let live = Unimock::new((
+        MembersMock::list
+            .next_call(matching!(17, _))
+            .answers(&|_, _, pids| {
+                pids[0] = 18;
+                Ok(1)
+            }),
+        MembersMock::state
+            .next_call(matching!(17, 18))
+            .returns(Ok(Member::Live(MEMBER))),
+    ));
+    assert_eq!(
+        classify(&live, io::Error::from_raw_os_error(libc::EPERM), 17).unwrap(),
+        GroupOutcome::Refused(vec![MEMBER])
+    );
+    let stopped = Unimock::new(MembersMock::list.next_call(matching!(17, _)).returns(Ok(0)));
+    assert_eq!(
+        classify(&stopped, io::Error::from_raw_os_error(libc::EPERM), 17).unwrap(),
+        GroupOutcome::Gone
+    );
+    let unreadable = Unimock::new(
+        MembersMock::list
+            .next_call(matching!(17, _))
+            .returns(Err(io::ErrorKind::PermissionDenied.into())),
+    );
+    assert_eq!(
+        classify(&unreadable, io::Error::from_raw_os_error(libc::EPERM), 17)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EPERM)
+    );
+    let unused = Unimock::new(());
+    assert_eq!(
+        classify(&unused, io::Error::from_raw_os_error(libc::ESRCH), 17).unwrap(),
+        GroupOutcome::Gone
+    );
+    assert_eq!(
+        classify(&unused, io::Error::from_raw_os_error(libc::EINVAL), 17)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EINVAL)
+    );
 }

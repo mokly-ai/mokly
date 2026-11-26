@@ -25,6 +25,6 @@
   - **C.** Add a fault-injection seam for the `/proc` reads, so the walk tests script ESRCH in the middle of a read. Effort: Medium.
 - **Left out:** A unit test that starts a real process, because the `rust` skill forbids subprocesses in unit tests.
 - **Wider fix:** B. One error classification makes every gone case testable without real processes.
-- **Previous examples:** Commit `1ac39faf1` added the earlier gone handling, which only the mocked walk tests cover. On 2026-11-26, the macOS side of the class, a group signal that macOS refused while its members were in exit or in a fork, got a mocked test in `crates/mokly-platform/src/unix_process_tree/_tests_/outcome_tests.rs`.
+- **Previous examples:** Commit `1ac39faf1` added the earlier gone handling, which only the mocked walk tests cover. On 2026-11-26, the macOS side of the class, a group signal that macOS refused while its members were in exit or in a fork, got a mocked test in `crates/mokly-platform/src/unix_process_tree/_tests_/outcome_tests.rs`. Its errno mapping became one function, `classify` in `crates/mokly-platform/src/unix_group_members.rs`, with a unit test for each result. That is option B of this item, for macOS.
 - **Recommendation:** A. It tests the real system call that failed. B protects the codebase best.
 - **Action:** fix after merge, apply A, because the flake fix is proven by repeats and the test needs a new public seam.

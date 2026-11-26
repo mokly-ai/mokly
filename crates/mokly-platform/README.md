@@ -162,12 +162,15 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   of a macOS group after a group signal fails with a permission result. With no
   member left, the group counts as stopped. Members that are only exiting need
   no signal. Each other live member is reported with the identity from the
-  same process-table read that showed its membership.
+  same process-table read that showed its membership. `classify` turns a failed
+  group signal into a `GroupOutcome` from that read.
 - [`src/unix_process_tree/outcome.rs`](./src/unix_process_tree/outcome.rs)
   defines `GroupOutcome` and `send`, which every group signal goes through.
   macOS refuses a group signal while each member is exiting or still in a
   fork, so `send` signals each reported member by that identity, and a process
-  that later reuses the ID gets nothing. A member that refuses its own signal
+  that later reuses the ID gets nothing. `send` skips the members when another
+  process now holds the root ID, because the group number may then name a new
+  group. A member that refuses its own signal
   keeps the error, and the other members still get the signal.
 - [`tests/process_tree/fixture.rs`](./tests/process_tree/fixture.rs) defines
   `Tree`, which starts a helper process tree for a test and cleans it up.

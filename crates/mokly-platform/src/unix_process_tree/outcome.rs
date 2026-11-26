@@ -31,15 +31,21 @@ pub enum GroupOutcome {
 /// Send one signal to the group and finish it. Every caller uses this, so no
 /// caller can drop the members that a refused group signal still needs.
 /// Return true when the group is gone.
+///
+/// A refused signal reads the group members by its number. When `owner` is
+/// set, its ID must not belong to another process after that read, because a
+/// new process with that ID can own a new group with the same number.
 pub(super) fn send(
     group: &dyn GroupSignal,
     table: &dyn ProcessTable,
     pid: i32,
     signal: i32,
+    owner: Option<ProcessIdentity>,
 ) -> io::Result<bool> {
     match group.signal(pid, signal)? {
         GroupOutcome::Delivered => Ok(false),
         GroupOutcome::Gone => Ok(true),
+        GroupOutcome::Refused(_) if owner.is_some_and(|owner| reused(table, owner)) => Ok(true),
         GroupOutcome::Refused(members) => {
             let mut first_error = None;
             for identity in members {
@@ -48,6 +54,12 @@ pub(super) fn send(
             first_error.map_or(Ok(false), Err)
         }
     }
+}
+
+/// True when another process now holds the owner's ID. A failed or empty
+/// read keeps the member signals, as the group signal itself does.
+fn reused(table: &dyn ProcessTable, owner: ProcessIdentity) -> bool {
+    matches!(table.identity(owner.pid), Ok(Some(current)) if current != owner)
 }
 
 #[cfg(test)]

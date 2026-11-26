@@ -100,6 +100,7 @@ impl UnixGroup {
                 self.table.as_ref(),
                 self.root.pid,
                 signal,
+                Some(self.root),
             )
             .map(|gone| gone || current.is_none()),
             Err(source) => {
@@ -108,6 +109,7 @@ impl UnixGroup {
                     self.table.as_ref(),
                     self.root.pid,
                     signal,
+                    Some(self.root),
                 );
                 Err(source)
             }

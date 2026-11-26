@@ -2,6 +2,7 @@
 //! read confirmed, by the identity from that read.
 
 use std::io;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
@@ -103,5 +104,40 @@ fn a_member_that_refuses_its_own_signal_keeps_the_error() {
             (SECOND, libc::SIGKILL)
         ],
         "a later member must still get each signal"
+    );
+}
+
+#[test]
+fn a_refused_group_whose_leader_id_was_reused_gets_no_member_signal() {
+    let reads = Arc::new(AtomicUsize::new(0));
+    // The table has no signal mock, so a member signal fails the test.
+    let table = Unimock::new(IdentityMock.each_call(matching!(1)).answers_arc({
+        let reads = Arc::clone(&reads);
+        Arc::new(move |_, _| {
+            let read = reads.fetch_add(1, Ordering::SeqCst);
+            Ok(Some(if read == 0 {
+                ROOT
+            } else {
+                ProcessIdentity { pid: 1, start: 99 }
+            }))
+        })
+    }));
+    let signals = Arc::new(Mutex::new(Vec::new()));
+    let captured = Arc::clone(&signals);
+    let groups = Unimock::new(
+        GroupSignalMock::signal
+            .each_call(matching!(1, _))
+            .answers_arc(Arc::new(move |_, _, signal| {
+                captured.lock().unwrap().push(signal);
+                Ok(GroupOutcome::Refused(vec![FORKED]))
+            })),
+    );
+    let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
+    let result = ProcessGroup::terminate(&group);
+    assert!(matches!(result, Ok(())), "terminate returned {result:?}");
+    assert_eq!(
+        *signals.lock().unwrap(),
+        [libc::SIGSTOP],
+        "only the first group signal ran before the reuse"
     );
 }

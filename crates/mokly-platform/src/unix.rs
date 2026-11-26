@@ -11,7 +11,7 @@ use std::sync::Arc;
 use crate::error::{Error, Result};
 use crate::processes::ProcessGroup;
 #[cfg(target_os = "macos")]
-use crate::unix_group_members::{self, Refusal, SystemMembers};
+use crate::unix_group_members::{self, SystemMembers};
 use crate::unix_process_tree::{self, GroupOutcome, GroupSignal};
 
 /// Renames with Linux `renameat2(RENAME_NOREPLACE)` or macOS
@@ -105,23 +105,19 @@ impl GroupSignal for SystemGroupSignal {
     }
 }
 
-/// Classify a failed group signal. macOS answers EPERM when it could signal
-/// no member, also when each member is only exiting or still in a fork.
+/// Classify a failed group signal. On macOS, the member reader decides what a
+/// refusal leaves behind. Other hosts answer EPERM only for a real refusal.
 fn refused(source: io::Error, pid: i32) -> io::Result<GroupOutcome> {
-    #[cfg(not(target_os = "macos"))]
-    let _ = pid;
-    if source.raw_os_error() == Some(libc::ESRCH) {
-        return Ok(GroupOutcome::Gone);
-    }
     #[cfg(target_os = "macos")]
-    if source.raw_os_error() == Some(libc::EPERM) {
-        match unix_group_members::refusal(&SystemMembers, pid) {
-            Some(Refusal::Stopped) => return Ok(GroupOutcome::Gone),
-            Some(Refusal::Pending(live)) => return Ok(GroupOutcome::Refused(live)),
-            None => {}
+    return unix_group_members::classify(&SystemMembers, source, pid);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = pid;
+        if source.raw_os_error() == Some(libc::ESRCH) {
+            return Ok(GroupOutcome::Gone);
         }
+        Err(source)
     }
-    Err(source)
 }
 
 #[cfg(test)]

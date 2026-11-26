@@ -3,6 +3,7 @@
 use std::io;
 
 use crate::unix_process_table::ProcessIdentity;
+use crate::unix_process_tree::GroupOutcome;
 
 #[cfg(target_os = "macos")]
 mod system;
@@ -68,6 +69,26 @@ pub(super) fn refusal(members: &dyn Members, pgid: i32) -> Option<Refusal> {
         }
         return Some(Refusal::Pending(live));
     }
+}
+
+/// Classify a failed group signal. macOS answers EPERM when it could signal
+/// no member, also when each member is only exiting or still in a fork.
+pub(super) fn classify(
+    members: &dyn Members,
+    source: io::Error,
+    pgid: i32,
+) -> io::Result<GroupOutcome> {
+    if source.raw_os_error() == Some(libc::ESRCH) {
+        return Ok(GroupOutcome::Gone);
+    }
+    if source.raw_os_error() == Some(libc::EPERM) {
+        match refusal(members, pgid) {
+            Some(Refusal::Stopped) => return Ok(GroupOutcome::Gone),
+            Some(Refusal::Pending(live)) => return Ok(GroupOutcome::Refused(live)),
+            None => {}
+        }
+    }
+    Err(source)
 }
 
 #[cfg(test)]
