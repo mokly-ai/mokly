@@ -7,19 +7,20 @@
   change this spec.
 - **Location:** `packages/app/src/_tests_/settings/gestures.spec.ts:183` to
   line 185.
-- **Reason:** The review found it outside the diff, and the review rules
-  fix such a problem in its own branch.
+- **Reason:** The comment is in a spec that the branch which found it does
+  not change.
 
 - **Source:** Review.
 - **Category:** Test.
 - **Terms:**
   - **`openDialogInApp`:** the browser-spec helper in
-    `packages/app/src/_tests_/settings/in-app.ts`. It opens the settings
-    dialog by a step inside the app: it narrows the window to 390 px, opens
-    the settings index, chooses a pane, and widens the window to 1440 px.
+    `packages/app/src/_tests_/settings/in-app.ts` that opens the settings
+    dialog by a step inside the app.
 - **Background:** In `gestures.spec.ts`, the spec
   `a second draft after an exit is defended like the first` opens the
-  dialog twice with `openDialogInApp`. Before the second open, a comment says "The same
+  dialog twice with `openDialogInApp`. The helper narrows the window to
+  390 px, opens the settings index, chooses a pane, and widens the window to
+  1440 px. Before the second open, a comment says "The same
   surface again, without touching the viewport".
 - **Problem:** `openDialogInApp` always narrows and widens the window, so
   the second open does touch the viewport. The comment says the opposite

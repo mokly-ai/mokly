@@ -18,17 +18,18 @@
 - **Category:** Product bug.
 - **Terms:**
   - **Settings dialog:** the modal dialog of the Expo app that shows the
-    settings panes. The `settings` query parameter of the address opens it.
-  - **`WebModalFrame`:** the `@firna/ui` modal frame that the settings
-    dialog uses for its portal, focus trap, inert page, Escape, and
-    backdrop.
-  - **Escape-layer stack:** the `@firna/ui` module `escapeLayer`. One
-    document-level capture listener sends Escape to the most recent open
-    overlay that registered a layer. The package does not export it.
-  - **Passive effect:** a React `useEffect` callback. React runs it after
-    the commit, in the same task when the render was short, and in a later
-    task when the scheduler yields.
+    settings panes, opened by the `settings` query parameter.
+  - **`WebModalFrame`:** the `@firna/ui` modal frame that gives the settings
+    dialog its portal, focus trap, inert page, Escape, and backdrop.
+  - **Escape-layer stack:** the unexported `@firna/ui` module `escapeLayer`,
+    which sends each Escape to the most recent overlay that registered.
+  - **Passive effect:** a React `useEffect` callback, which React runs after
+    the commit of a render.
 - **Background:**
+  - React runs passive effects in the same task as the commit when the
+    render was short, and in a later task when the scheduler yields.
+  - The escape-layer stack listens for keys on the document in the capture
+    phase, so focus does not decide which overlay gets Escape.
   - `WebModalFrame` moves focus into the dialog and registers its Escape
     layer in two passive effects of one component. React runs both in one
     step, after the dialog is in the document.
