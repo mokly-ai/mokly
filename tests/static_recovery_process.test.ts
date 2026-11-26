@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after, before } from "node:test";
 
 import {
   cleanup,
+  copyFixture,
   faultCommand,
   files,
   outputDirectory,
@@ -12,6 +13,7 @@ import {
   reservation,
 } from "./helpers/static_faults.js";
 import {
+  builtBytes,
   causes,
   exportCategory,
   installedBytes,
@@ -19,6 +21,26 @@ import {
   recoveryPath,
   unsafe,
 } from "./helpers/static_recovery_assertions.js";
+
+/**
+ * Every case starts from the same committed new site and earlier output. The
+ * cleanup faults compare the installed site with one plain build of it.
+ */
+let template = "";
+let built = new Map<string, Buffer>();
+before(
+  async (context) => {
+    template = await recoveryFixture(context.signal);
+    const root = await copyFixture(template);
+    try {
+      built = await builtBytes(root);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  },
+  { timeout: 120_000 },
+);
+after(() => fs.rm(template, { recursive: true, force: true }));
 
 for (const verb of ["build", "publish"] as const) {
   test(
@@ -33,7 +55,7 @@ for (const verb of ["build", "publish"] as const) {
         "stage,stage-cleanup",
         "setup,stage-cleanup",
       ]) {
-        const root = await recoveryFixture();
+        const root = await copyFixture(template);
         let output: string | undefined;
         try {
           const previous = await files(path.join(root, ".context/previous"));
@@ -76,7 +98,7 @@ for (const verb of ["build", "publish"] as const) {
             assert.ok(
               result.stderr.includes(recoveryPath(root, recovery, verb)),
             );
-            await installedBytes(root, output, verb);
+            await installedBytes(built, output, verb);
             if (fault === "backup-cleanup")
               assert.deepEqual(
                 await files(path.join(recovery, "backup")),
