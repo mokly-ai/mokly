@@ -3,6 +3,8 @@
 use std::fs;
 use std::path::Path;
 
+use tempfile::TempDir;
+
 mod changes_support;
 #[path = "process_support/parallel.rs"]
 mod parallel;
@@ -61,6 +63,25 @@ fn static_build_retains_changes_and_selects_the_explicit_base_once() {
 
 #[test]
 fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
+    let endpoint = publish_support::rejecting_endpoint();
+    // Each case builds its own repository, because parallel cases never share
+    // a Git checkout: a Git read can rewrite `.git/index`. Each case runs the
+    // strict build first, so its publish also shows that the earlier build
+    // output stays in place. The default build runs last, after the publish.
+    let publishes = [("publish --strict", true), ("publish", false)];
+    parallel::each(
+        publishes.map(|(label, strict)| (label.to_owned(), strict)),
+        |strict| {
+            let root = fixture();
+            check(root.path(), &endpoint, "build", true);
+            check(root.path(), &endpoint, "publish", strict);
+            default_build(root.path());
+        },
+    );
+}
+
+/// A committed head whose base branch has a different package and page.
+fn fixture() -> TempDir {
     let root = base(&[
         (
             "mokly.config.json",
@@ -82,59 +103,55 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
         "---\ntitle: Home\n---\n<p>After</p>",
     );
     commit(root.path());
-    let endpoint = publish_support::rejecting_endpoint();
-    let check = |verb: &str, strict: bool| {
-        let mut args = vec![verb, "--base", "base-point"];
-        if strict {
-            args.push("--strict");
-        }
-        if verb == "build" {
-            args.extend(["--out", ".context/strict"]);
-        } else {
-            args.extend([
-                "--repository",
-                "example.test/team/catalogue",
-                "--endpoint",
-                &endpoint,
-                "--token",
-                "fixture-token",
-            ]);
-        }
-        let output = run(root.path(), &args);
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        assert_eq!(
-            output.status.code(),
-            Some(if verb == "build" { 0 } else { 1 }),
-            "{verb}: {stderr}"
-        );
-        assert_eq!(
-            stderr.matches("base dependencies").count(),
-            1,
-            "{verb}: {stderr}"
-        );
-        assert!(!stderr.contains("with --strict"), "{verb}: {stderr}");
-        assert_eq!(
-            stderr.contains("[mokly/upload-failed]"),
-            verb == "publish",
-            "{verb}: {stderr}"
-        );
-        assert!(!stderr.contains("upload-transport"), "{stderr}");
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Comparing with base-point"), "{stdout}");
-        assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
-        assert!(root.path().join(".context/strict/index.html").is_file());
-    };
-    check("build", true);
-    // A publish stages its output outside the repository, so the two
-    // publishes share no files. A publish reads the repository status, and
-    // the default build writes its output reservation into the repository,
-    // so the default build runs after the publishes.
-    let publishes = [("publish --strict", true), ("publish", false)];
-    parallel::each(
-        publishes.map(|(label, strict)| (label.to_owned(), strict)),
-        |strict| check("publish", strict),
+    root
+}
+
+/// A strict build or a publish prints the base dependency fallback once and passes.
+fn check(root: &Path, endpoint: &str, verb: &str, strict: bool) {
+    let mut args = vec![verb, "--base", "base-point"];
+    if strict {
+        args.push("--strict");
+    }
+    if verb == "build" {
+        args.extend(["--out", ".context/strict"]);
+    } else {
+        args.extend([
+            "--repository",
+            "example.test/team/catalogue",
+            "--endpoint",
+            endpoint,
+            "--token",
+            "fixture-token",
+        ]);
+    }
+    let output = run(root, &args);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(if verb == "build" { 0 } else { 1 }),
+        "{verb}: {stderr}"
     );
-    let output = run(root.path(), &["build", "--base", "base-point"]);
+    assert_eq!(
+        stderr.matches("base dependencies").count(),
+        1,
+        "{verb}: {stderr}"
+    );
+    assert!(!stderr.contains("with --strict"), "{verb}: {stderr}");
+    assert_eq!(
+        stderr.contains("[mokly/upload-failed]"),
+        verb == "publish",
+        "{verb}: {stderr}"
+    );
+    assert!(!stderr.contains("upload-transport"), "{stderr}");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Comparing with base-point"), "{stdout}");
+    assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+    assert!(root.join(".context/strict/index.html").is_file());
+}
+
+/// The default build after a publish still prints the fallback once.
+fn default_build(root: &Path) {
+    let output = run(root, &["build", "--base", "base-point"]);
     assert_eq!(
         output.status.code(),
         Some(0),
