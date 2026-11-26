@@ -1,6 +1,6 @@
 # No check keeps the template's compiler
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from the branch `calummoore/builds-keep-the-template-s-compiler-and-csnm`, the part of option E of the deleted item "The v5 build template has no compiler" that release `mokly-build-v6` did not ship.
 - **Location:** `docs/protocol/cloud/cloud-build-runner.md`, section "Template"; `infra/e2b/tests/assert_build_template.py`; `infra/tests/test_build_template.py`.

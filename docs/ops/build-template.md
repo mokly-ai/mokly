@@ -376,7 +376,7 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   check, passed on 2026-11-26 with the build reference. That run came before
   the probe's Git check, and its UTC time and assertion commit are not
   recorded. It is superseded by `mokly-build-v6`, because it has no C
-  toolchain and its Git has no PCRE2: `git grep -P` with a real Perl pattern
+  and C++ toolchain and its Git has no PCRE2: `git grep -P` with a real Perl pattern
   exits 128. A rollback to it breaks each install that compiles a native addon.
 - `mokly-build-v6`, build reference
   `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c` (template ID

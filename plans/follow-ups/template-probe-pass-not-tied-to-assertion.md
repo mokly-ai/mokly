@@ -13,7 +13,7 @@
   - **Assertion revision:** the commit of `assert_build_template.py` that a probe run used.
   - **Build reference:** `TEMPLATE_ID:BUILD_ID`, which starts exactly one template build. The environment app-config names it under `builds.template`.
 - **Background:**
-  - The runbook requires a probe pass before an operator enables a build reference. It records each pass with a date, not with the assertion revision.
+  - The runbook requires a probe pass before an operator enables a build reference. It asks for the result and the UTC time of each pass, and it does not require the assertion revision. The `mokly-build-v6` record names its assertion commit, `1ce3ed0be`. The earlier records do not.
   - Two releases kept an older pass after the probe gained a check:
     - `mokly-build-v3`: its recorded pass came before the probe's `npm ci` check.
     - `mokly-build-v5`: its recorded pass, from `main` on 2026-11-26, came before the probe's Git check. Main-preview ran v5 until it moved to `mokly-build-v6` later that day. The v6 pass ran the probe from `main` at `1ce3ed0be`, which has the Git check.

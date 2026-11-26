@@ -16,12 +16,12 @@
 - **Background:**
   - The runbook lets an operator roll back only to a previous build reference whose release meets the current template contract. When no recorded release meets it, the operator disables builds. The section "Rotate, Roll Back And Disable" repeats the rule. In 2026-11, the Git floor of the contract retired `mokly-build-v3` this way.
   - The template contract, in the "Template" section of `docs/protocol/cloud/cloud-build-runner.md`, names no C or C++ toolchain and no PCRE2 in Git. The probe checks neither.
-  - `mokly-build-v5` (build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`) has no `gcc`, `g++`, `make`, or `ld`, and its Git exits 128 on `git grep -P` with a real Perl pattern. It passed the probe from `main` with its `npm ci` check.
+  - `mokly-build-v5` (build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`) has no `gcc`, `g++`, `make`, or `ld`, and its Git exits 128 on `git grep -P` with a real Perl pattern. Its recorded probe pass came from `main` with the `npm ci` check, before the probe's Git check. No recorded run of the current probe exists for v5. A pass is expected: in a v5 sandbox, Git 2.56.1 ran `git cat-file --batch --filters -Z` and exited 0, and the current probe checks no compiler and no PCRE2.
   - `mokly-build-v6` (build reference `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c`) keeps the base toolchain and builds Git with PCRE2. Main-preview uses it since 2026-11-26.
   - The runbook's v5 record says that v5 is superseded by v6 and that a rollback to it breaks each install that compiles a native addon. The rollback rule does not read the word "superseded".
   - `infra/scripts/build_values.py` accepts any nonempty `builds.template` value. Only the operator applies the rollback rule.
   - `docs/protocol/cloud/cloud-build-runner.md` has 249 lines, and protocol pages are capped at 250. A new sentence there needs the "Template" section moved to its own page first.
-- **Problem:** v5 still meets the template contract, so the rollback rule lets an operator roll back from v6 to v5, and v5 passes the probe.
+- **Problem:** v5 still meets the template contract, so the rollback rule lets an operator roll back from v6 to v5, and v5 is expected to pass the current probe.
 - **Impact if no action:** A rollback to v5 passes verification and then fails each customer install that compiles a native addon or uses `git grep -P`.
 - **Root question:** What must a rollback target give customer builds, and how does each rotation check it?
 - **Options:**
@@ -32,10 +32,12 @@
   - **E.** D, plus the probe check of option C of `plans/follow-ups/build-template-toolchain-has-no-guard.md`. The runbook already probes a rollback reference, so v5 then fails the probe, and so does each later release that loses a tool. It adds a new gate and a credentialed probe run against v6. Effort: Medium.
   - **F.** Keep a checked-in list of qualified build references, and make `infra/scripts/build_values.py` reject a `builds.template` value that is not on it. Retire a release by removing its entry. It adds a new configuration rejection, each release must edit the list, and an out-of-date list blocks an emergency rollback. `plans/follow-ups/build-template-config-accepts-bare-id.md` adds a format check to the same field, so decide the two together. Effort: Medium.
 - **Left out:**
-  - Rerun the current probe as the only qualification. It passes v5, because the probe checks neither tool. E brings the probe back with the tool checks.
+  - Rerun the current probe as the only qualification. It is expected to pass v5, because the probe checks neither tool. E brings the probe back with the tool checks.
   - Change nothing. The rule does not read "superseded", so an operator cannot tell whether v5 qualifies. A removes that doubt.
 - **Wider fix:** E. It fails each release without the tools, through the contract and the probe that the runbook already runs on a rollback reference.
 - **Previous examples:** The Git floor of the contract retired `mokly-build-v3` from rollback, because v3 could not compare.
-- **Related:** `plans/follow-ups/build-template-toolchain-has-no-guard.md`: its option B is D here, and its option C is E here, so one answer can settle both items.
+- **Related:**
+  - `plans/follow-ups/build-template-toolchain-has-no-guard.md`: its option B is D here, and its option C is E here, so one answer can settle both items.
+  - `plans/follow-ups/template-image-change-keeps-release-name.md`: its option D writes a release receipt for each build reference. One release record can serve C here and that option.
 - **Recommendation:** D. It retires v5 through the existing rule at Small effort, and the guard item asks for the same sentence. E best protects later rotations.
 - **Action:** ask the user, because B, D, E, and F change the rollback policy, a protocol requirement, or add a check, and A keeps a degraded fallback that the user has not chosen.

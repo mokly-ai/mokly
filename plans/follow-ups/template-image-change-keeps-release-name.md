@@ -21,11 +21,13 @@
 - **Root question:** How does the repository keep each checked-in Dockerfile tied to the release that it names?
 - **Options:**
   - **A.** Change nothing. The runbook rule and the review keep it. Effort: Small.
-  - **B.** Add a repository check beside `xtask/src/policy/migration_check.rs`: when a change alters `infra/e2b/build/e2b.Dockerfile` against `origin/main`, `template_name` must also change. Every past Dockerfile change passes it. It proves only that a change names a new release, not that the release exists. Effort: Medium.
-  - **C.** Record the SHA-256 of the Dockerfile in `infra/e2b/build/e2b.toml` beside `template_name`, and make a local test compare it with the file. A Dockerfile change then fails until the author updates the hash, which is the point to update the name. It adds a field that each release must edit. Effort: Medium.
+  - **B.** Add a repository check beside `xtask/src/policy/migration_check.rs`: when a change alters `infra/e2b/build/e2b.Dockerfile` against `origin/main`, `template_name` must also change. Every past Dockerfile change passes it. It proves only that the name differs from the name at `origin/main`. A change from `mokly-build-v6` back to the published `mokly-build-v5` also passes it, and it does not prove that the release exists. A variant that requires a higher number enforces the runbook's increment rule, but it also rejects a `git revert` of a release commit, which restores an earlier name together with its own Dockerfile. Effort: Medium.
+  - **C.** Record the SHA-256 of the Dockerfile in `infra/e2b/build/e2b.toml` beside `template_name`, and make a local test compare it with the file. A Dockerfile change then fails until the author updates the hash, which is the point to update the name. It does not check the name, and it adds a field that each release must edit. Effort: Medium.
+  - **D.** Make `infra/e2b/build/build-template.mjs` write a release receipt that ties the Dockerfile SHA-256 to the exact build reference that E2B returned, and make the deploy accept only a `builds.template` value that has a receipt for the checked-in Dockerfile. It ties the source bytes to the built image, not only to a name. It changes the release and deploy process. Effort: Large.
 - **Left out:**
   - A probe check that compares the image with the checked-in Dockerfile. The release in use would fail each recheck as soon as the next Dockerfile change merges.
-- **Wider fix:** B. It stops the case at merge time without a new field.
+- **Wider fix:** D. Only a receipt from the release script ties the checked-in bytes to the build that E2B returned.
 - **Previous examples:** The proposal of `plans/follow-ups/build-template-toolchain-has-no-guard.md`, before the fix on 2026-11-26, changed the Dockerfile and probed only v6.
-- **Recommendation:** B. It checks the rule of the runbook with the files that the change already edits.
-- **Action:** ask the user, because B and C add a check that can stop a merge.
+- **Related:** `plans/follow-ups/build-template-rollback-can-pick-v5.md`: its option C records a verified fallback reference for each release. One release record can serve D here and that option.
+- **Recommendation:** B. It catches a Dockerfile change that keeps its name, with the files that the change already edits, although it checks only that the name differs. D best protects the codebase.
+- **Action:** ask the user, because B, C, and D add a check that can stop a merge or a deploy.
