@@ -1,7 +1,7 @@
 /**
  * Renewal of a loaded selected comparison in Serve: one HEAD request renews
  * the generation before new panes load, later switches share it, Current and
- * navigation fence it, and a new revision cancels it in place.
+ * a saved variant's sibling fence it, and a new revision cancels it in place.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -119,56 +119,34 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
   }
 });
 
-for (const destination of ["Current", "another screen"] as const)
-  test(`a pending renewal cannot replace ${destination}`, async ({
-    page,
-    changes,
-  }) => {
-    await openOverlay(page, changes.paths.changed);
-    const pending = await holdRenewal(page);
-    try {
-      await openPanelTab(page, "Inspect");
-      await chooseViewport(page, "mobile");
-      await pending.arrived;
-      if (destination === "Current") {
-        await openPanelTab(page, "Changes");
-        await modeButton(page, "Current").click();
-      } else {
-        await navRow(page, changes.paths.component).click();
-        // The canvas shows the compare only while Changes is the selected
-        // tab, so the destination's frames are checked there.
-        await openPanelTab(page, "Changes");
-      }
-      await pending.release();
-      // Leaving the comparison cancelled the renewal before its response.
-      expect(pending.outcomes()).toEqual(["cancelled"]);
-      await expect(comparisonFrames(page)).toHaveCount(0);
-      // The canvas shows the destination's current frames.
-      await expect(
-        page.getByRole("figure", {
-          name:
-            destination === "Current"
-              ? /^Mobile · Light\b/u
-              : /^Card · Light\b/u,
-        }),
-      ).toBeVisible();
-      await openPanelTab(page, "Changes");
-      await expect(modeButton(page, "Current")).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      // The destination's address names the kept Mobile viewport.
-      if (destination === "another screen")
-        await expect(page).toHaveURL(
-          new RegExp(
-            `/view/${changes.paths.component}/\\?viewport=mobile$`,
-            "u",
-          ),
-        );
-    } finally {
-      pending.unblock();
-    }
-  });
+// `comparison_row_cancel.test.tsx` covers a renewal that another workspace
+// cancels; this journey keeps the cancellation of the browser's request.
+test("a pending renewal cannot replace Current", async ({ page, changes }) => {
+  await openOverlay(page, changes.paths.changed);
+  const pending = await holdRenewal(page);
+  try {
+    await openPanelTab(page, "Inspect");
+    await chooseViewport(page, "mobile");
+    await pending.arrived;
+    await openPanelTab(page, "Changes");
+    await modeButton(page, "Current").click();
+    await pending.release();
+    // Leaving the comparison cancelled the renewal before its response.
+    expect(pending.outcomes()).toEqual(["cancelled"]);
+    await expect(comparisonFrames(page)).toHaveCount(0);
+    // The canvas shows the current frames.
+    await expect(
+      page.getByRole("figure", { name: /^Mobile · Light\b/u }),
+    ).toBeVisible();
+    await openPanelTab(page, "Changes");
+    await expect(modeButton(page, "Current")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  } finally {
+    pending.unblock();
+  }
+});
 
 test("renewal failure offers a retry that reacquires the selected comparison", async ({
   page,
