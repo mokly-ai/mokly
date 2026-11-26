@@ -190,9 +190,12 @@ fn scripts_on_install_commands_omit_only_script_suppression_flags() {
 
 #[test]
 fn install_environment_is_an_allowed_list_without_secrets() {
-    // Mokly's own variables, every inherited token, and each manager setting
-    // are not on the list, so a base does not receive one through its config.
+    // Mokly's own variables, every inherited token, each manager setting, and
+    // the CI markers are not on the list, so a base does not receive one
+    // through its config, and a CI install runs as a local one does.
     for name in [
+        "CI",
+        "GITHUB_ACTIONS",
         "MOKLY_TOKEN",
         "MOKLY_BASE",
         "GITHUB_TOKEN",

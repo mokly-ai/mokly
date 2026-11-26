@@ -101,7 +101,8 @@
     `crates/mokly-css/tests/token_differential_tests.rs`. Its
     generated-stylesheet test stays a unit test. A `test-support` feature
     makes one test entry public, `token_differential::first_difference`,
-    which runs both section readers. That is the pattern of option A.
+    which runs both section readers. That is the pattern of option A. A
+    later change removed that one-time equivalence test and the feature.
 - **Recommendation:** A. It applies both rules: every corpus test becomes an
   integration test, and one loader serves all three.
 - **Action:** fix after merge, apply A, because the two older tests came to
