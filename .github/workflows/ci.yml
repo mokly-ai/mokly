@@ -440,16 +440,8 @@ jobs:
         with:
           path: ${{ steps.npm-cache-path.outputs.path }}
           key: ${{ steps.npm-cache.outputs.cache-primary-key }}
-      - name: Build UI package
-        run: npm run build --workspace @mokly/ui
-      - name: Build model package
-        run: npm run build --workspace @mokly/model
-      - name: Build frame package
-        run: npm run build --workspace @mokly/frame
-      - name: Build viewer package
-        run: npm run build --workspace @mokly/viewer
-      - name: Build sidecar package
-        run: npm run build --workspace @mokly/mokly
+      # The native suite builds the five npm packages that its Rust tests run
+      # before those tests, so the job builds none of them here.
       - name: Run native verification
         shell: bash
         env:
