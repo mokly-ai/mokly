@@ -1,0 +1,31 @@
+# Render writer tests wait forever on writer exit
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the branch `calummoore/ci-speed-flaky-follow-ups-a-ube3`, the finding check of review finding 1.
+- **Location:** `crates/mokly-compare/src/_tests_/render_writer_startup_tests.rs:98` and `crates/mokly-compare/src/_tests_/render_writer_tests.rs:88`.
+- **Reason:** Both waits were already on `origin/main`, and the branch that found them fixed only the waits that it added.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Writer thread:** the `mokly-documents` thread that `DocumentWriter::start` in `crates/mokly-compare/src/render_writer_control.rs` spawns. It saves rendered documents for reuse.
+  - **Idle writer helper:** `IdleWriter` in `crates/mokly-compare/src/_tests_/idle_writer.rs`. Its writer thread owns a sender, so a test that waits on it fails at once when the thread cannot start or ends.
+- **Background:**
+  - Two render writer tests wait on a channel whose sender lives in a test double that the writer itself holds.
+  - `prepared_writer_reads_while_writes_wait_for_completed_changes` calls `hashing.recv()`. Its sender lives in the image source mock inside the store's own `Startup`, so it stays alive while the store lives.
+  - `a_full_key_queue_returns_the_render_while_disk_publication_is_blocked` calls `waiting.recv()`. Its sender lives in the backend mock that the store holds.
+  - On 2026-11-26, a forced spawn failure, an impossible stack size on the writer thread, made the full-queue test fail at once through the idle writer helper. The same failure in the startup test blocks at `hashing.recv()`, before the helper runs.
+  - `docs/protocol/ci-test-timing.md` makes the CI job timeout the hang guard of the Rust tests. nextest sets no slow timeout here.
+- **Problem:** When the writer thread cannot start, or panics before it calls the mock, each test waits until the CI job timeout and shows no cause.
+- **Impact if no action:** A writer start failure or an early panic costs a whole CI job timeout and gives no failure text.
+- **Root question:** How do these tests learn that the writer thread ended before it reached the mock?
+- **Options:**
+  - **A.** Wait with `recv_timeout` and a long diagnostic limit, as `process_stop_tests.rs` does, and fail with a message. A real hang still takes the whole limit. Effort: Small.
+  - **B.** Wait in a loop that also checks the idle writer helper's receiver, and fail when it disconnects. Effort: Small.
+  - **C.** Move each sender out of the mock that the store holds, so that it drops with the writer thread. This changes how the mocks get their senders. Effort: Small.
+- **Left out:** A retry or a sleep, because the testing rules forbid them.
+- **Wider fix:** C. A sender that the writer thread owns ends every wait when the thread ends, as the idle writer helper already does.
+- **Previous examples:** The idle writer helper fixed the same class for the first offer of both tests on 2026-11-26.
+- **Recommendation:** C. It gives each wait an end signal from the thread itself, with no time limit.
+- **Action:** fix after merge, apply C, because both waits predate the branch that found them.

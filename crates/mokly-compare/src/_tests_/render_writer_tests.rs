@@ -10,10 +10,10 @@ use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::render_admission::idle_writer::offer_when_idle;
 use crate::render_pending::{StoreObserverMock, StoreWarning};
 use crate::render_segment_buffer::BuiltSegment;
 use crate::render_store::{DocumentBackendMock, WriteOutcome};
+use crate::render_writer::idle_writer::IdleWriter;
 use crate::render_writer::{DocumentWriter, WriterLimits};
 
 struct Release(Option<Arc<Barrier>>);
@@ -66,7 +66,7 @@ fn a_full_key_queue_returns_the_render_while_disk_publication_is_blocked() {
                 WriteOutcome::Written(documents.documents())
             })),
     )));
-    let store = Arc::new(DocumentWriter::new(
+    let writer = IdleWriter::start(
         backend,
         cache.clone(),
         WriterLimits {
@@ -74,11 +74,12 @@ fn a_full_key_queue_returns_the_render_while_disk_publication_is_blocked() {
             key_bytes: 4096,
             segment_bytes: 65536,
         },
-    ));
+        None,
+    );
+    let store = writer.store.clone();
     let mut release_on_failure = Release(None);
     assert_eq!(
-        offer_when_idle(
-            &store,
+        writer.offer_when_idle(
             StoreKey::new(&NodeKey("a".into()), "build"),
             NodeKey("a".into())
         ),

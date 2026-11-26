@@ -26,6 +26,6 @@
 - **Left out:** A unit test that starts a real process, because the `rust` skill forbids subprocesses in unit tests.
 - **Wider fix:** B. One error classification makes every gone case testable without real processes.
 - **Previous examples:** Commit `1ac39faf1` added the earlier gone handling, which only the mocked walk tests cover.
-- **Related:** `plans/follow-ups/macos-signal-eperm-during-process-start.md` records the macOS side of the same class: a stop that fails with EPERM when a process of the tree starts or exits.
+- **Related:** `plans/follow-ups/macos-stop-signal-eperm.md` records the macOS side of the same class: a stop that fails with EPERM while its process tree changes.
 - **Recommendation:** A. It tests the real system call that failed. B protects the codebase best.
 - **Action:** fix after merge, apply A, because the flake fix is proven by repeats and the test needs a new public seam.

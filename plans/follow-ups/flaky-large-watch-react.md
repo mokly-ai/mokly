@@ -27,9 +27,9 @@
   - **Changes:** Mokly's comparison of each entry with the base commit.
     Serve publishes the new state first and its ready Changes later.
 - **Background:**
-  - `tests/browser/large_watch.spec.ts:14` defines "large watch delivers
+  - `tests/browser/large_watch.spec.ts:15` defines "large watch delivers
     browser evidence for html" and "large watch delivers browser evidence
-    for react". Line 17 sets a runner time limit of 300,000 ms.
+    for react". Line 18 sets a runner time limit of 300,000 ms.
   - Each run makes a screen, a component, and a stylesheet edit. For each
     edit it waits for the publication, a frame reload, the index, and
     Changes.
@@ -49,22 +49,39 @@
     the combined journey took 185 to 218 s, about 155 s of them in twelve
     JavaScript compilations. One busy process per CPU pushed it past 300 s.
   - On 2026-11-03 the user chose option E.
-  - Measurements of 2026-11-25, at `main` commit `1f2f00024`:
-    - Six recent push runs of `main` on GitHub-hosted runners, with no
-      restored Mokly cache, passed the React test in 14.8, 17.3, 17.6, 23.1,
-      23.5, and 24.1 seconds. The runs are 45673612145, 45680155780,
-      45688809426, 45692262045, 45710272091, and 45713813952.
-    - A local run on Linux, pinned to two CPUs with `taskset -c 0,1`, passed
-      the html test in 13.7 seconds and the React test in 28.0 seconds.
-    - A local run on the same two CPUs, beside one busy loop on each CPU,
-      passed the React test in 41.0 seconds. In October, that load pushed the
-      journey past 300 seconds.
-    - The command was
-      `taskset -c 0,1 node scripts/verification/browser-developer.mjs tests/browser/large_watch.spec.ts`,
-      after `npm run build`, with Node 24.22.1 and one Playwright worker.
-    - The 300,000 ms guard now allows more than seven times the slowest
-      measured duration. So the test meets the three-times rule without the
-      exception, and E has no timeout left to prevent.
+  - Measurements of 2026-11-25:
+    - CI sample: the React test passed in six push runs of `main`. Each run
+      tested a different commit. Each ran on a GitHub-hosted `ubuntu-24.04`
+      runner with Node 22.15.0 and no restored Mokly cache:
+
+      | Run         | Commit      | Browser shard | Seconds |
+      | ----------- | ----------- | ------------- | ------- |
+      | 45673612145 | `800af2c81` | 7 of 10       | 17.3    |
+      | 45680155780 | `7a14afd32` | 7 of 10       | 17.6    |
+      | 45688809426 | `84d9f85ca` | 7 of 10       | 23.5    |
+      | 45692262045 | `8f267fd21` | 13 of 14      | 24.1    |
+      | 45710272091 | `08cb2178c` | 13 of 14      | 14.8    |
+      | 45713813952 | `1f2f00024` | 13 of 14      | 23.1    |
+
+    - The Playwright lines of these logs give no duration. Each value above
+      is the time from the log line of the previous passed test to the log
+      line of the passed React test, in one Playwright worker.
+    - No sample came from the remote complete gate on Blacksmith Testbox
+      machines, where the failure of 2026-10-26 happened.
+    - Local runs: on Linux, at branch commit `c256da97b`, which equals `main`
+      at `1f2f00024` outside two Rust test files. They used Node 24.22.1 and
+      one Playwright worker, after `npm run build`, with the command
+      `taskset -c 0,1 node scripts/verification/browser-developer.mjs tests/browser/large_watch.spec.ts`.
+      - Pinned to two CPUs, the html test passed in 13.7 seconds and the
+        React test in 28.0 seconds, as Playwright reported.
+      - On the same two CPUs, beside one busy loop on each CPU, the React
+        test passed in 41.0 seconds. In October, that load pushed the
+        journey past 300 seconds.
+    - The 300,000 ms guard allows more than seven times the slowest measured
+      duration. So these runs meet the three-times rule without the
+      exception, and E has no measured timeout left to prevent.
+    - These passes do not show the cause of the earlier timeouts, which
+      stays open.
     - The measurements did not count the compilations of the journey.
 - **Problem:**
   - On 2026-10-26, remote complete gate run `20261026T221539Z-992801`
