@@ -69,7 +69,7 @@ impl Pool {
             self.release(index, slot, start);
             return Err(error);
         }
-        let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
+        let deadline = self.deadline(&call);
         let mut outcome = Err(Error::Crashed);
         let mut bundle_attempt = BundleAttempt::default();
         for attempt in 0..2 {

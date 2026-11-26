@@ -223,7 +223,7 @@ impl Pool {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
+        let deadline = self.deadline(&call);
         slot.worker
             .request(&Request { id: 1, call, quiet }, deadline)?;
         Ok(())

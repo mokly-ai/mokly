@@ -53,7 +53,7 @@ fn imports_outside_configuration_and_nested_workspace_dependencies_preserve_the_
                 root.path(),
                 &["build", "--config", config],
                 None,
-                None,
+                &[],
                 "plain",
             );
             assert!(
@@ -77,7 +77,7 @@ fn imports_outside_configuration_and_nested_workspace_dependencies_preserve_the_
                 root.path(),
                 &["build", "--config", config, "--strict"],
                 None,
-                None,
+                &[],
                 "plain",
             );
             assert_eq!(

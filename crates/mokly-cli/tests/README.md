@@ -74,6 +74,14 @@ Some `mokly-cli` Rust tests use debug-only hooks, such as the allocator probe
 and `MOKLY_TEST_STATIC_COLUMNS`, so they need the dev profile and fail under
 `cargo test --release`.
 
+The hanging-render test of
+[`changes_javascript_tests.rs`](./changes_javascript_tests.rs) sets
+`MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS` to 1,000 ms. A debug binary passes it
+to `Pool::with_test_render_deadline`, which replaces the deadline of render
+calls only. The test also sets `MOKLY_SIDECAR_TIMEOUT_MS` to 10,000 ms, so the
+sidecar start and the bundle calls keep a 10-second deadline. Release builds
+compile no read of the variable.
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
