@@ -185,6 +185,18 @@ test("a rejected, failed or newer-format detail does not install", async () => {
     await loadFencedDetail(wrong.source, indexFixture(), request, signal),
     { kind: "deployment" },
   );
+  const other = scripted([indexFixture()], () => {
+    const detail = detailFixture(request);
+    return {
+      ...detail,
+      identity: { ...detail.identity, title: "Another catalogue" },
+    };
+  });
+  assert.deepEqual(
+    await loadFencedDetail(other.source, indexFixture(), request, signal),
+    { kind: "failed" },
+  );
+  assert.equal(other.calls.indexes, 0);
   const failed = scripted([indexFixture()], () => new Error("offline"));
   assert.deepEqual(
     await loadFencedDetail(failed.source, indexFixture(), request, signal),
