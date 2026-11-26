@@ -2,9 +2,11 @@
  * Details in an embedded viewer over the copied comparison output, under the
  * CSS evidence shell contract. The host supplies a public index without
  * `base`, so Details keep the "Comparison details" heading and the rest of
- * the evidence and show no branch-point sentence: for a screen, for a saved
- * view, and for a screen that the reader reaches by navigation, at the
- * desktop inspector size.
+ * the evidence and show no branch-point sentence, and the Compared rail names
+ * the branch point alone. One journey checks this wiring at the desktop
+ * inspector size: a variant in Changes, then a screen that the reader
+ * reaches by navigation. Unit tests of `@mokly/ui` and of the viewer cover
+ * the heading and the rail for each kind of entry.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -16,12 +18,9 @@ import {
   EXAMINED_LEAD,
   EXCLUDED_LEAD,
   SCREEN_TERMINAL,
-  VARIANT_EXCLUDED_LEAD,
-  VARIANT_TERMINAL,
   expectExcludedOnly,
   openChangesEvidence,
   openEvidence,
-  type DetailsTab,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
@@ -40,22 +39,15 @@ test.afterAll(async () => {
 });
 
 /**
- * Mount the viewer over an index without `base` and open its Details in
- * `tab`, which have no branch-point sentence: Inspect for an entry without a
- * Changes tab, and Changes for a set that offers it, whose Compared rail then
- * names the branch point alone.
+ * Mount the viewer over an index without `base` and open the Changes tab of
+ * `entry`, whose Details have no branch-point sentence and whose Compared
+ * rail names the branch point alone.
  */
-async function embeddedDetails(
-  page: Page,
-  entry: string,
-  tab: DetailsTab,
-): Promise<Locator> {
+async function embeddedChanges(page: Page, entry: string): Promise<Locator> {
   await page.goto(
     `${host.url}/viewer.html?adapter=same-origin&base=none&responsive=1&entry=${entry}`,
   );
-  return tab === "Changes"
-    ? openChangesEvidence(page, null)
-    : openEvidence(page, null);
+  return openChangesEvidence(page, null);
 }
 
 /** The excluded stylesheet of screens/stable, without the base sentence. */
@@ -70,33 +62,10 @@ async function expectScreenDetails(evidence: Locator): Promise<void> {
 test.describe("desktop embedded Details", () => {
   test.use({ viewport: DESKTOP_INSPECTOR });
 
-  test("an embedded screen keeps its Details without the branch-point sentence", async ({
-    page,
-  }) => {
-    await expectScreenDetails(
-      await embeddedDetails(page, comparisonPaths.unchanged, "Inspect"),
-    );
-    // The same viewer over the index with its base shows the sentence.
-    await page.goto(
-      `${host.url}/viewer.html?adapter=same-origin&responsive=1&entry=${comparisonPaths.unchanged}`,
-    );
-    await openEvidence(page);
-  });
-
-  test("an embedded saved view keeps its Details without the branch-point sentence", async ({
-    page,
-  }) => {
-    await expectExcludedOnly(
-      await embeddedDetails(page, comparisonPaths.quietParent, "Changes"),
-      [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD, VARIANT_TERMINAL],
-      [sheets.theme],
-    );
-  });
-
   test("an embedded screen reached by navigation stays without the branch-point sentence", async ({
     page,
   }) => {
-    await embeddedDetails(page, comparisonPaths.quietParent, "Changes");
+    await embeddedChanges(page, comparisonPaths.quietParent);
     await navRow(page, comparisonPaths.unchanged).click();
     await expect(inspectTitle(page.locator("#viewer"))).toHaveText(
       "Stable screen",
