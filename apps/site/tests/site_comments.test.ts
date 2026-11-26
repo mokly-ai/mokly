@@ -81,10 +81,28 @@ test("close updates only an existing site comment and preserves failures", async
   assert.match(comments[0]!.body, /retained: cleanup status unavailable/);
 });
 
+test("a create that GitHub saves twice leaves one site comment", async () => {
+  // A retried create saves a second copy when GitHub loses the first reply.
+  const comments: Comment[] = [];
+  const calls = await runComment(
+    String(deploy.with?.script),
+    comments,
+    { DEPLOY_STATUS: "success" },
+    2,
+  );
+  assert.equal(calls.created, 1);
+  assert.deepEqual(
+    comments.map((comment) => comment.id),
+    [3],
+  );
+  assert.match(comments[0]!.body, /Status: \*\*success\*\*/);
+});
+
 async function runComment(
   script: string,
   comments: Comment[],
   environment: Record<string, string>,
+  copies = 1,
 ) {
   const calls = { created: 0, updated: 0 };
   const issues = {
@@ -92,7 +110,19 @@ async function runComment(
     async createComment(input: { body: string; issue_number: number }) {
       assert.equal(input.issue_number, 71);
       calls.created++;
-      comments.push({ body: input.body, id: 3, user: { type: "Bot" } });
+      for (let copy = 0; copy < copies; copy++)
+        comments.push({
+          body: input.body,
+          id: 3 + copy,
+          user: { type: "Bot" },
+        });
+    },
+    async deleteComment(input: { comment_id: number }) {
+      const index = comments.findIndex(
+        (entry) => entry.id === input.comment_id,
+      );
+      assert.notEqual(index, -1);
+      comments.splice(index, 1);
     },
     async updateComment(input: { body: string; comment_id: number }) {
       calls.updated++;
