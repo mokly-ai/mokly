@@ -180,7 +180,13 @@ fn read(
 ) -> Result<()> {
     let digest = scan.digest(tree, identity)?;
     // The reported path and its target can each be needed in the base.
-    for name in [relative(path, root), relative(identity, root)] {
+    let target_import = origin
+        .import
+        .filter(|kind| *kind != ImportKind::NodePackage);
+    for (name, import) in [
+        (relative(path, root), origin.import),
+        (relative(identity, root), target_import),
+    ] {
         inputs
             .inputs
             .entry(name.clone())
@@ -188,8 +194,11 @@ fn read(
         inputs
             .plugin_inputs
             .entry(name)
-            .and_modify(|present| present.import = present.import.max(origin.import))
-            .or_insert_with(|| origin.clone());
+            .and_modify(|present| present.import = present.import.max(import))
+            .or_insert_with(|| PluginInput {
+                import,
+                ..origin.clone()
+            });
     }
     Ok(())
 }

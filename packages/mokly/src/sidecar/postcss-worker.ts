@@ -17,7 +17,7 @@ import {
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { bundledPostcssSource } from "./postcss-module.js";
-import { observeModulePaths } from "./postcss-path-hooks.js";
+import { observeModulePaths, postcssRequest } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import {
@@ -51,10 +51,12 @@ process.once("message", (workerData: WorkerData) => {
   }
   observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
-    loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
-      ...loaded,
-      paths,
-    })),
+    postcssRequest(() => loadPostcss(workerData.postcss, paths, phases)).then(
+      (loaded) => ({
+        ...loaded,
+        paths,
+      }),
+    ),
   );
   configuration.catch(() => {});
   process.on(
@@ -64,14 +66,16 @@ process.once("message", (workerData: WorkerData) => {
         beginReadEvidenceGeneration(params.context);
         const { processor, modules, paths } = await configuration;
         const result = await phases.run("stylesheet-run", () =>
-          processor
-            .process(params.text, {
-              from: params.sourcePath,
-              map: false,
-            })
-            .catch((error: unknown) => {
-              throw pluginFailure(error, paths.name(params.sourcePath));
-            }),
+          postcssRequest(() =>
+            processor
+              .process(params.text, {
+                from: params.sourcePath,
+                map: false,
+              })
+              .catch((error: unknown) => {
+                throw pluginFailure(error, paths.name(params.sourcePath));
+              }),
+          ),
         );
         const nodeLoads = nodeLoadedFiles(
           paths.sourceRoot,

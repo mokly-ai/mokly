@@ -28,18 +28,34 @@ pub(crate) fn warnings(
     let loaded = loaded_paths(&imports);
     let resolution = working_layout(config);
     let root = &config.repo_root;
-    let recovery: BTreeMap<_, _> = loaded
+    let packages: BTreeMap<_, _> = loaded
         .iter()
         .filter(|(_, kind)| **kind == ImportKind::NodePackage)
-        .filter_map(|(&path, _)| {
-            let source = resolution.workspace_source(imports.tree, root, &root.join(path))?;
-            Some((path, relative(&source, root)))
+        .map(|(&path, _)| {
+            let named = root.join(path);
+            let target = imports
+                .tree
+                .project(&named)
+                .ok()
+                .flatten()
+                .and_then(|node| {
+                    let target = relative(&node.identity, root);
+                    (target != path && repository_path(&target)).then_some(target)
+                });
+            let source = resolution
+                .workspace_source(imports.tree, root, &named)
+                .map(|source| relative(&source, root));
+            (path, PackagePaths { target, source })
         })
         .collect();
     let candidates = loaded
         .keys()
         .copied()
-        .chain(recovery.values().map(String::as_str));
+        .chain(packages.values().flat_map(|paths| {
+            [paths.target.as_deref(), paths.source.as_deref()]
+                .into_iter()
+                .flatten()
+        }));
     let ignored = match ignored_paths(repository, candidates.collect()) {
         Ok(ignored) => ignored,
         Err(Error::Cancelled) => return Err(Error::Cancelled),
@@ -58,22 +74,39 @@ pub(crate) fn warnings(
             .to_string_lossy()
             .replace('\\', "/"),
     );
-    Ok(loaded
+    let mut warnings = BTreeMap::new();
+    for (named, kind) in loaded {
+        let package = packages.get(named);
+        if let Some(source) = package.and_then(|paths| paths.source.as_deref())
+            && !ignored.contains(source)
+        {
+            continue;
+        }
+        let target = package.and_then(|paths| paths.target.as_deref());
+        for path in std::iter::once(named)
+            .chain(target)
+            .filter(|path| ignored.contains(path))
+        {
+            warnings
+                .entry(path)
+                .and_modify(|present: &mut (ImportKind, &str)| {
+                    if kind > present.0 {
+                        *present = (kind, named);
+                    }
+                })
+                .or_insert((kind, named));
+        }
+    }
+    Ok(warnings
         .into_iter()
-        .filter(|(path, _)| {
-            ignored.contains(path)
-                && recovery
-                    .get(path)
-                    .is_none_or(|source| ignored.contains(source.as_str()))
-        })
-        .map(|(path, kind)| {
+        .map(|(path, (kind, named))| {
             let mut message = format!(
                 "module {} is ignored by Git, so a later base cannot load it",
                 escape_controls(path)
             );
             if matches!(kind, ImportKind::Package | ImportKind::NodePackage)
                 && let Some(package) =
-                    resolution.workspace_override_hint(imports.tree, root, &root.join(path))
+                    resolution.workspace_override_hint(imports.tree, root, &root.join(named))
             {
                 message.push_str("; set moduleResolution.sourcePackages for ");
                 message.push_str(&escape_controls(&package));
@@ -85,6 +118,17 @@ pub(crate) fn warnings(
             }
         })
         .collect())
+}
+
+struct PackagePaths {
+    target: Option<String>,
+    source: Option<String>,
+}
+
+fn repository_path(path: &str) -> bool {
+    !Path::new(path).is_absolute()
+        && !path.split('/').any(|part| part == "node_modules")
+        && RepoPath::parse(path).is_ok()
 }
 
 fn loaded_paths<'a>(imports: &ModuleImports<'a>) -> BTreeMap<&'a str, ImportKind> {
@@ -104,10 +148,7 @@ fn loaded_paths<'a>(imports: &ModuleImports<'a>) -> BTreeMap<&'a str, ImportKind
         .map(|(path, kind)| (path, *kind));
     let mut paths = BTreeMap::<_, ImportKind>::new();
     for (path, kind) in javascript.chain(stylesheets) {
-        if !Path::new(path).is_absolute()
-            && !path.split('/').any(|part| part == "node_modules")
-            && RepoPath::parse(path).is_ok()
-        {
+        if repository_path(path) {
             paths
                 .entry(path.as_str())
                 .and_modify(|current| *current = (*current).max(kind))

@@ -128,9 +128,9 @@ such a file. `{path}` is the repository-relative POSIX path.
   `module {path} is ignored by Git, so a later base cannot load it`.
 
 A file that Git neither tracks nor ignores gives no warning, because a
-commit can still add it. A module loaded by Mokly's PostCSS require by
-package name gives no warning when the layout order maps it to a source
-file that Git tracks or does not ignore.
+commit can still add it. A module gives no warning when every load of the
+file uses Mokly's PostCSS require by package name and the layout order
+maps it to a source file that Git tracks or does not ignore.
 [Strict mode](./mokly-build-warnings.md#strict-mode) counts the warning.
 
 Decision: Mokly warns about each ignored file that the head loads, so the
