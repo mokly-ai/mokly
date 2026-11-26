@@ -62,6 +62,13 @@ worker has loaded `@mokly/viewer`.
 - An assertion that depends on a navigated preview's layout waits for the
   expected frame URL and the complete document state together. The outer Browse
   URL or an iframe `src` attribute alone is not enough.
+- A test awaits viewer work, such as a pick, through `awaitViewerWork` in
+  `viewer_work.ts` or `startViewerPick` in `viewer_pick.ts`, not through the
+  promise of a `page.evaluate`. Chromium's protocol holds that promise only
+  weakly. When it settles in a later task, a garbage collection before the
+  protocol reply loses the reply, and Playwright reports "Execution context
+  was destroyed, most likely because of a navigation", although no page
+  navigated.
 
 ## Current-only copy
 
