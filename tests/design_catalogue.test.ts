@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { ComponentInstanceRecord } from "../packages/model/dist/index.js";
 
+import { appearanceViolations } from "./helpers/design_appearance_views.js";
 import {
   inventoryViolations,
   libraryViolations,
@@ -163,6 +164,14 @@ test(
   setup,
   async () => {
     assert.deepEqual(highlightViolations(await served()), []);
+  },
+);
+
+test(
+  "each Canvas view names and paints the scheme it was rendered for",
+  setup,
+  async () => {
+    assert.deepEqual(appearanceViolations(await served()), []);
   },
 );
 
