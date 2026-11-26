@@ -1,0 +1,35 @@
+# Access drawing shows addresses that the app cannot show
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
+- **Location:** `docs/mockups/src/screens/product/settings/access-pane.tsx:10-20`, `:41` and `:85-91`. `packages/app/src/settings/panes/access-pane.tsx:46-55`, `:113-117` and `:129-133`. `crates/mkc-api/src/views/grants.rs:20-34`.
+- **Reason:** The addresses were in the drawing on `origin/main` before the branch that found them, and the choice decides which side of a mismatch between the drawing and the app is right.
+- **Category:** Mockup.
+
+- **Terms:**
+  - **Drawing:** one page of the cloud mockup catalogue under `docs/mockups`. The app follows the drawings as its design.
+  - **Grant read:** `GET /v1/projects/{projectId}/members`, which lists a project's inherited and direct access. The app reads it with `listProjectGrants`.
+- **Background:**
+  - The Access settings pane lists the access that a project inherits from its workspace, and the project's own grants.
+  - In the drawing, each grant row shows the person's name, their email address as the detail line, and the role. Each inherited row shows the address too, unless the name is the address.
+  - The drawing's waiting row draws a bar for the address, as its comment at lines 10-13 says.
+  - In the app, each row shows the name and the role only. The app's waiting row draws bars for those two.
+  - The grant read returns `id`, `userId`, `name`, `role`, `inherited` and `version` for each row. `GrantViewFields` in `grants.rs` has no address and denies unknown fields.
+  - The member read of the Members pane returns each address, and it needs workspace administration. The grant read needs only project administration, which a project-only guest with an admin grant also has.
+  - The parity suite in `docs/mockups/src/_tests_/app-parity.test.ts` compares control labels, pending labels and state titles. It does not read the detail line of a row, so it did not report this.
+- **Problem:** The drawing shows each person's address on the Access pane, but the API gives the app no address, and the app shows none.
+- **Impact if no action:** The design specifies text that the product cannot show. A change that follows the drawing needs an API change first.
+- **Root question:** Does the Access pane show each person's email address?
+- **Options:**
+  - **A.** Remove the address from the Access drawing: the detail line of each grant row and inherited row, and the address bar of its waiting row. The drawing then matches the app and the API. It removes drawn content that is on `origin/main`. Effort: Small.
+  - **B.** Add the address to the grant read, regenerate the OpenAPI document and the app's types, and show it in the app's rows and waiting row. A project-only guest with an admin grant then reads the address of each workspace member, which that guest cannot read today. Effort: Large.
+- **Left out:** Keep both sides as they are. The drawing then keeps specifying text that the product cannot show, so it fails the goal. Fewer than three approaches are real, because the pane either shows the address or does not.
+- **Wider fix:** None in this item. `plans/follow-ups/parity-skips-pane-facts-and-links.md` holds the open choice to compare more text in the parity suite. A row's detail line needs the same widening.
+- **Previous examples:** `plans/follow-ups/access-pane-section-title-mismatch.md`, another difference between the same drawing and the app.
+- **Related:**
+  - `plans/follow-ups/access-grant-row-links-to-members.md`: the same rows of the same drawing. Apply both answers in one change.
+  - `plans/follow-ups/access-pane-section-title-mismatch.md`: the same pane, the section title.
+  - `plans/follow-ups/parity-skips-pane-facts-and-links.md`: the same class. The parity suite does not compare this text.
+- **Recommendation:** A. The app ships without addresses, and B widens what a project-only guest can read.
+- **Action:** ask the user, because each option decides which side of a mismatch between the drawing and the app is right, and A removes drawn content that is on `origin/main`.

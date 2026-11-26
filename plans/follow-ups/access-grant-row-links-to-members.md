@@ -1,0 +1,43 @@
+# Access drawing links grant rows to Members
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 5
+- **Location:** `docs/mockups/src/screens/product/settings/access-pane.tsx:38-44`, the loaded grant row, whose `to: "product/settings/members"` is at line 43. `packages/app/src/settings/panes/access-pane.tsx:127-133`, the app's grant rows.
+- **Reason:** Each option decides which side of a mismatch between the drawing and the app is right, and the recommended option removes a drawn link that is on `origin/main`.
+- **Category:** Mockup.
+
+- **Terms:**
+  - **Drawing:** one page of the cloud mockup catalogue under `docs/mockups`. Mokly builds it into static HTML, and the app follows it as its design.
+  - **Row link:** the `a.row-link` anchor around a list row. Its `::after` box in `docs/mockups/styles/controls.css` fills the list item, so the whole row is one link.
+  - **Grant row:** one row of the Project grants list on the Access settings pane. It shows a person with a direct grant on the project, and their role.
+  - **Parity suite:** the mockup tests in `docs/mockups/src/_tests_/app-parity.test.ts`. They compare the drawn control labels, pending labels and state titles with the app's source.
+- **Background:**
+  - The Access settings pane lists the access that a project inherits from its workspace, and the project's own grants. Above the lists, a Manage members control leads to the Members pane.
+  - On `origin/main`, the drawn grant row ended in a trailing Manage link to `product/settings/members`.
+  - On 2026-11-26 the user decided that each navigation list row is one link over the whole row, with no trailing Open or Details label.
+  - The same day, the user added this rule to the `product-ui` skill: "a row that goes to one place is the link as a whole, with no trailing 'Open' text; use a trailing control only for a second, different action".
+  - The branch `calummoore/click-on-row-ux-0nhj` removed the trailing label from the drawn grant row. The row kept its `to`, so the whole row became a link to the Members pane.
+  - The same branch removed `to` from the drawing's waiting grant row. Only the loaded grant row is a link now.
+  - In the app, a grant row is no link. It shows the person's name and role only.
+- **Problem:** The row's title names a person, but the row leads to the Members pane. The **Record row** rule in `docs/protocol/cloud/folio-chrome.md:35-43` drops the trailing label because the title names where the row goes. That is false here. The drawing and the app also disagree on whether the row is a link.
+- **Screenshot:** The `product/settings/access` drawing, default state, with the pointer over the reviewer's grant row. The marks showed the hovered row and the Manage members control above it, which lead to the same pane.
+- **Impact if no action:** A screen reader announces a link that has a person's name but opens the Members pane. A later change that follows the drawing brings that link into the app.
+- **Root question:** Where, if anywhere, does a project grant row lead?
+- **Options:**
+  - **A.** Remove `to` from the loaded grant row of the drawing, so that it is a plain row, as in the app. Manage members stays the way to the Members pane. It removes a drawn link that is on `origin/main`. Effort: Small.
+  - **B.** Let each grant row lead to that person's own entry on the Members pane, so that the title names the target. Add the same link to the app. No settings address names one member today, so this adds one. A project-only guest with a grant has no Members entry at all. Effort: Large.
+  - **C.** Keep the drawing's link to the Members pane, and add the same link to the app's grant rows. The link's name still does not name its target. Effort: Medium.
+  - **D.** Extend the parity suite to compare the row links of each drawing with the app's rows. It adds a test for the class and a new check, so it needs the user's approval. Effort: Large.
+- **Left out:**
+  - A trailing Manage control beside a plain row. It brings back the trailing word that the user's decision of 2026-11-26 removed, and it breaks the `product-ui` rule.
+  - A link to the Members pane whose accessible name names the Members pane. The **Accessible name** rule in `docs/protocol/cloud/folio-chrome.md:74-79` says that a control's accessible name contains the words that it shows.
+- **Wider fix:** D. It is blocked, because it adds a test for the class and a new check. The **Record row** rule already states the class: the title of a row link names where the row goes.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/access-drawing-shows-grantee-addresses.md`: the same rows of the same drawing. Apply both answers in one change.
+  - `plans/follow-ups/access-pane-section-title-mismatch.md`: another difference between the Access drawing and the app.
+  - `plans/follow-ups/manage-members-shown-to-project-guests.md`: option A keeps Manage members as the only way to the Members pane. That item hides the control where no Members pane exists.
+  - `plans/follow-ups/parity-skips-pane-facts-and-links.md`: option D widens the same parity suite.
+- **Recommendation:** A. It matches the app as it ships, and Manage members already leads to the Members pane.
+- **Action:** ask the user, because each option decides which side of a mismatch between the drawing and the app is right, and A removes a drawn link that is on `origin/main`.

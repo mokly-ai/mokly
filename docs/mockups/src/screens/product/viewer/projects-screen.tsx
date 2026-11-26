@@ -121,7 +121,6 @@ function WaitingWorkspace() {
               id: "waiting",
               title: "",
               detail: "",
-              to: "product/viewer/standalone",
               waiting: true,
             },
           ]}

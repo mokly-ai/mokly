@@ -1,0 +1,38 @@
+# No check holds hover fills to the rule
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 1
+- **Location:** `docs/mockups/styles/controls.css:51-53`, `docs/mockups/styles/product/folio.css:30-33` and `docs/protocol/cloud/folio-chrome.md:197-198`.
+- **Reason:** The recommended fix adds a new stylesheet check, and the always-on rules keep each new gate for the user.
+- **Category:** Test.
+
+- **Terms:**
+  - **Hover rule:** the sentence in `docs/protocol/cloud/folio-chrome.md:197-198`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
+  - **Ink at 5%:** `color-mix(in srgb, var(--mk-color-text) 5%, transparent)`, the text colour mixed at 5% over the surface.
+  - **Accent ink at 9%:** `color-mix(in srgb, var(--mk-color-accent) 9%, transparent)`. The settings rail's `.fo-nav-item:hover` uses it.
+  - **Product stylesheets:** the CSS files under `docs/mockups/styles`, except `site/` and `email/`. The drawings link them, and `packages/app/scripts/sync-styles.mjs` copies them into the app.
+- **Background:**
+  - The branch `calummoore/click-on-row-ux-0nhj` made each navigation list row one link over its whole row. In `controls.css:51-53`, the list item draws the hover fill while the pointer is over the row's link.
+  - The first version of that fill was `--mk-color-surface-muted`, the colour of the muted wells. It is neither allowed fill.
+  - Measured on 2026-11-26 in the built drawings, that fill gave about 1.07:1 against the light panel and 1.05:1 against the dark panel. The ink at 5% gave about 1.11:1 and 1.14:1.
+  - On 2026-11-26 the branch changed the row fill to the ink at 5%. The **Record row** text at `folio-chrome.md:39` names it.
+  - Today the product stylesheets have two hover backgrounds: the row fill and the rail fill in `folio.css:30-33`. Both are allowed fills.
+  - The site sheets under `docs/mockups/styles/site/` use other hover backgrounds, such as `--mk-color-background` and `--mk-color-signal-soft`. The hover rule covers the product surfaces only, so a check must leave the site sheets out.
+  - The hover of a Firna `Button` comes from the JavaScript theme, not from CSS. A stylesheet check cannot see it.
+- **Problem:** A hover fill outside the hover rule reached review, and only review found it. A new rule with a third hover fill passes every check.
+- **Impact if no action:** Later hover states can drift from the hover rule. Only a review or a reader finds the drift.
+- **Root question:** How do the product stylesheets keep every hover fill inside the chrome's hover rule?
+- **Options:**
+  - **A.** Change nothing more. The direct fix keeps the row inside the rule, and review catches later cases. Effort: Small.
+  - **B.** Define the two allowed fills once, as custom properties in `docs/mockups/styles/base.css`. Make the row rule and the rail rule use them. It names the fills, but a new rule can still write another value. Each property has one user today. Effort: Small.
+  - **C.** Add a named neutral hover token to the cloud token tables, as the open-source Browse shell has `--chrome-hover`, the text at 5% over `surface`. Make the row rule use it. It adds a key to the token contract, so it needs the user. Like B, it does not stop another value. Effort: Medium.
+  - **D.** Add a stylesheet check that reads each `:hover` rule of the product stylesheets. It fails when the rule sets a background that is not one of the two allowed fills. It is a new gate, so it needs the user. Effort: Medium.
+- **Left out:** Keep `--mk-color-surface-muted` as the row fill, and add it to the hover rule. It changes a requirement, and the measured fill was hard to see in both schemes, so it fails the goal.
+- **Wider fix:** D, a detection fix. B and C only name the fills, so they do not stop a third value.
+- **Previous examples:** The row fill used `--mk-color-surface-muted` until 2026-11-26. The Firna button hovers in `plans/follow-ups/firna-neutral-hover-uses-muted-surface.md` break the same rule.
+- **Related:**
+  - `plans/follow-ups/firna-neutral-hover-uses-muted-surface.md`: the same rule. D cannot read those hovers, because they come from the theme.
+  - `plans/follow-ups/token-doc-gives-ink-wash-to-chrome-links.md`: the token doc's list of hover washes, which names the wrong element for the ink at 5%.
+- **Recommendation:** D. Only a check stops a third hover fill.
+- **Action:** ask the user, because D adds a new stylesheet check, and the always-on rules keep each new gate for the user.

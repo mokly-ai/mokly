@@ -122,7 +122,7 @@ test("a panel's read draws the panel's own groups with one placeholder row in ea
       assert.equal(regions.length, entry.regions, where);
       for (const region of regions) {
         assert.equal(attribute(region, "aria-busy"), "true", where);
-        // A destination's label is known, but its target is the answer's.
+        // A row's target is the answer's, so no waiting row is a link.
         assert.deepEqual(linksIn(region), [], where);
       }
       const rows = regions.flatMap((region) =>

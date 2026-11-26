@@ -9,7 +9,7 @@ import { PanelList } from "./panel-rows";
 import type { PanelRow } from "./panel-rows";
 
 /**
- * The drawing of each failed build a row opens through Details. That build's
+ * The drawing of each failed build a failed row opens. That build's
  * own address shows it, while the reference's stage may show another card
  * instead: a closed or fork pull request's, or the Team card.
  */
@@ -18,8 +18,8 @@ const failedBuildDrawings: Partial<Record<BuildName, string>> = {
 };
 
 /**
- * Where a row with nothing ready whose newest attempt failed opens through
- * Details: a failed publication's own details, or the failed build's.
+ * Where a row with nothing ready whose newest attempt failed leads: a failed
+ * publication's own details, or the failed build's.
  */
 function failedDetails(ref: PublicationRef): string {
   if (ref.build === undefined) return "product/viewer/standalone/failed";
@@ -50,16 +50,14 @@ interface RefDestinations {
  * A reference with one opens it, even while a build publishes a newer push; a
  * reference with none opens the stage that shows its running build or offers
  * to publish it. Two lead somewhere else. The reference the reader is on is
- * where they already are, so its row says Current in place of a
- * destination. A reference with nothing ready whose newest attempt failed
- * offers that attempt's own details, because there is no catalogue behind it
- * to open instead: a failed publication opens its own details, and a failed
- * build opens that build.
+ * where they already are, so its row says Current and is no link. A reference
+ * with nothing ready whose newest attempt failed opens that attempt's own
+ * details, because there is no catalogue behind it to open instead: a failed
+ * publication opens its own details, and a failed build opens that build.
  *
  * While the switcher's read runs, `waiting` is the label's width in its own
  * type, as a CSS length: only a group with references shows its label, so the
- * label is a bar, and one placeholder row stands for the references, its
- * destination's label as text with no link.
+ * label is a bar, and one placeholder row stands for the references.
  */
 export function RefGroup(
   props: {
@@ -89,7 +87,6 @@ export function RefGroup(
                   detail: "",
                   status: "neutral",
                   sha: "",
-                  to: "product/viewer/standalone",
                   waiting: true,
                 },
               ]

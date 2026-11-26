@@ -1,0 +1,32 @@
+# Manage members shows where no Members pane exists
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
+- **Location:** `packages/app/src/settings/panes/access-pane.tsx:105`, `packages/app/src/settings/pane-link.tsx:17-40` and `packages/app/src/settings/panes.ts:128-154`.
+- **Reason:** The control was on `origin/main` before the branch that found it, and that branch did not change the Access pane's code.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Project-only guest:** a reader with a direct grant on a project but no membership in its workspace. `docs/protocol/cloud/settings-dialog.md:132-136` says that such a reader sees no Workspace or Members pane.
+  - **`PaneLink`:** the control in `pane-link.tsx` that sends the reader to another settings pane through `goToPane`.
+- **Background:**
+  - When the grants load, the Access pane draws `PaneLink` "Manage members" to the `members` pane, at `access-pane.tsx:105`.
+  - The grant read, `GET /v1/projects/{projectId}/members`, needs project administration. `project_admin` in `crates/mkc-api/src/platform/policy.rs:49-59` accepts each reader whose project role can administer.
+  - `project_access` in `crates/mkc-api/src/platform/project_access.rs` takes the higher of the workspace role and the direct grant. A grant can carry admin, member or reviewer, as `docs/protocol/cloud/product-accounts-and-roles.md:134` says.
+  - So a project-only guest with an admin grant can open the Access pane. `grantProject` in `packages/app/src/_tests_/members.ts:18-38` gives the guest of `settings/project-guest.spec.ts` such an admin grant.
+  - `availablePanes` in `panes.ts:128-139` gives that reader no workspace pane, so no Members pane. The member read also needs workspace administration, in `crates/mkc-api/src/platform/members.rs:75`.
+  - A press on Manage members asks for `members`. In the dialog, `resolvePane` in `panes.ts:145-154` then opens the first available pane, which is Account.
+  - The Access drawing draws Manage members for a workspace member. No drawing shows the settings of a project-only guest.
+- **Problem:** A project-only guest with an admin grant sees Manage members. Its press opens the Account pane, not a Members pane.
+- **Impact if no action:** The control promises a pane that the reader cannot open, and the press lands on a pane that has nothing to do with members.
+- **Root question:** How does a pane offer the way to another pane only when the reader can open that pane?
+- **Options:**
+  - **A.** In the Access pane, draw Manage members only when the settings scope has a workspace. The settings context does not give the scope to a pane today, so the pane needs it. Effort: Small.
+  - **B.** Give the settings context the reader's available panes. Let `PaneLink` draw nothing when its target is not one of them. Every pane link then follows the same rule. Effort: Small.
+- **Left out:** Keep Manage members, and let it say that the workspace manages its members. It adds copy to a control that leads nowhere for this reader. Fewer than three approaches are real, because the control can only hide in the pane or in `PaneLink`.
+- **Wider fix:** B. A `PaneLink` that hides for an unavailable pane removes the case for every pane link.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/access-grant-row-links-to-members.md`: its recommended option keeps Manage members as the only way from the Access pane to the Members pane.
+- **Recommendation:** B. One rule in `PaneLink` covers this control and each later pane link.
+- **Action:** fix after merge, apply B, because the control was on `origin/main`, and `settings-dialog.md` already says that a project-only guest sees no Members pane.

@@ -89,7 +89,6 @@ function HistoryPage({
                   detail: "",
                   status: "neutral",
                   sha: "",
-                  to: "product/viewer/standalone",
                   waiting: true,
                 },
               ]}

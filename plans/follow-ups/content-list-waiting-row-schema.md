@@ -1,0 +1,34 @@
+# Content list schema lets waiting rows hold a destination
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 8
+- **Location:** `docs/mockups/src/components/content-list.tsx:23-57`, the row schema, and `:80-122`, the render. `docs/mockups/src/screens/product/viewer/panel-rows.tsx:25-64`, the typed panel row of the drawings.
+- **Reason:** The recommended fix makes Mokly reject a drawn waiting row with a destination, which is a new build rejection that the user must approve.
+- **Category:** Code structure.
+
+- **Terms:**
+  - **Content list:** the registered Content list component of the drawings, in `content-list.tsx`. The settings index, the Access pane and the skeleton drawings render it through `ContentList` from `docs/mockups/src/entries/design/content-list.mockup.tsx`.
+  - **`SchemaProps`:** the type in `packages/mokly/src/authoring/types.ts:25` that derives a component's props type from its JSON Schema `propSchema`.
+  - **Waiting row:** the row that a list draws while its read runs. It keeps the row's own frame, with bars where the answer supplies text, and it is no link.
+- **Background:**
+  - The content list's `propSchema` gives every row one object schema. `to`, `action`, `choose` and `waiting` are all optional fields of it.
+  - Mokly checks the props of each drawn instance against this schema when it builds the catalogue, with the `jsonschema` crate. `componentInput` in `docs/mockups/src/components/metadata.ts` derives the TypeScript props type from the same schema through `SchemaProps`.
+  - The render draws a waiting row through `WaitingListRow` before it reads `to`. So `to` and `action` on a waiting row change nothing.
+  - Before 2026-11-26, a waiting row used `to` to draw its known Open label as text. The branch `calummoore/click-on-row-ux-0nhj` removed that label, and with it the reason for `to` on a waiting row.
+  - The direct fix of 2026-11-26 dropped `to` from every waiting row of the drawings, and `action: "Select"` from the two Share waiting rows.
+  - In the same fix, the drawings' `PanelRow` became a union of a loaded row and a waiting row. The waiting row types `current`, `mark`, `to` and `action` as `never`. `WaitingListRow` no longer takes `to`.
+  - The app's waiting types, `WaitingPanelRow` in `packages/app/src/viewer/panels/panel-rows.tsx` and `WaitingContentRow` in `packages/app/src/components/controls.tsx`, have no destination field.
+  - Mokly's schema profile in `crates/mokly-model/src/profile.rs` accepts `anyOf`.
+- **Problem:** The content list's row schema still accepts `to` and `action` on a waiting row. A drawing can set them again, and the typecheck and the build both pass, although the fields do nothing.
+- **Impact if no action:** The settings index, Access and skeleton drawings can carry waiting rows with a dead destination again. Their rule for a waiting row can then drift from the app's.
+- **Root question:** How does a waiting content-list row say, in its type, that it has no destination?
+- **Options:**
+  - **A.** Change nothing more. The direct fix removed every case. Effort: Small.
+  - **B.** Pass an explicit props type to `componentInput`, with a loaded row and a waiting row, as the drawings' `PanelRow` has. The schema stays one object. The type and the schema then describe one row twice and can drift. Mokly's build check still accepts `to` on a waiting row. Effort: Small.
+  - **C.** Split the row schema with `anyOf` into a loaded row and a waiting row. The waiting row has `waiting: { "const": true }` and no `to` or `action`. `SchemaProps` then types a waiting row without a destination, and Mokly rejects a drawn waiting row that sets one. It adds a build rejection, so it needs the user. Effort: Small.
+- **Left out:** A warning in the render when a waiting row sets `to`. C removes the case, so C is better on every point.
+- **Wider fix:** C. One schema is then the source of both the type and the build check.
+- **Previous examples:** Until 2026-11-26, five waiting-only rows and the nine waiting rows of the settings index set `to`. The two Share waiting rows set `action: "Select"`.
+- **Recommendation:** C. The one schema that types the rows and checks the build then keeps waiting rows without a destination, as the app's types do.
+- **Action:** ask the user, because C makes Mokly reject a drawn waiting row with a destination, which is a new build rejection that the user must approve.

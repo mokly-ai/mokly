@@ -185,7 +185,9 @@ it. [Viewer compositions](./folio-viewer.md#compositions) gives the mobile
 forms of the panel, the dialog and its layer.
 
 Focus is a 2px solid `focus` outline with a 3px offset, never removed; local
-links round it with `radius.tight`. Forced-colors mode retains a system outline.
+links round it with `radius.tight`. A row that is one link draws it inside the
+row's frame, with the row's corners, because a panel clips its rows and the
+rows touch. Forced-colors mode retains a system outline.
 
 One shared rule, which the catalogue and the application both load, applies
 this outline on `:focus-visible` to every element that takes focus through

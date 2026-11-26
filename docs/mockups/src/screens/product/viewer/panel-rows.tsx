@@ -22,7 +22,10 @@ type TitleForm = "plain" | "reference" | "pullRequest";
  * reader is on takes the signal-soft fill, and its `mark` says so at the
  * row's end.
  */
-export interface PanelRow {
+export type PanelRow = LoadedPanelRow | WaitingPanelRow;
+
+/** What a loaded row and a waiting row both show. */
+interface PanelRowBase {
   id: string;
   title: string;
   form?: TitleForm;
@@ -30,6 +33,13 @@ export interface PanelRow {
   status?: "neutral" | "success" | "warning" | "danger";
   /** The short SHA, in mono before the row's end. */
   sha?: string;
+  /** The destination is a choice inside the panel, so a quiet button. */
+  choose?: boolean;
+}
+
+/** A loaded row. */
+interface LoadedPanelRow extends PanelRowBase {
+  waiting?: false;
   /** Whether this is the row the reader is on. */
   current?: boolean;
   /** What the row's end says for the row the reader is on, such as Current. */
@@ -38,15 +48,20 @@ export interface PanelRow {
   to?: string;
   /** The label of a choice's quiet button. */
   action?: string;
-  /** The destination is a choice inside the panel, so a quiet button. */
-  choose?: boolean;
-  /**
-   * The row while the list's read runs, in its own frame: an empty title,
-   * detail or SHA is the answer's, so it draws as a bar, and the row's end
-   * draws its choice as a placeholder. A row that leads somewhere is no link
-   * yet, because its target needs the answer.
-   */
-  waiting?: boolean;
+}
+
+/**
+ * The row while the list's read runs, in its own frame: an empty title,
+ * detail or SHA is the answer's, so it draws as a bar, and the row's end
+ * draws its choice as a placeholder. It leads nowhere yet, because its
+ * target needs the answer.
+ */
+interface WaitingPanelRow extends PanelRowBase {
+  waiting: true;
+  current?: never;
+  mark?: never;
+  to?: never;
+  action?: never;
 }
 
 /** The size of a row's density in the package's list scale. */
@@ -81,7 +96,7 @@ function Title({ title, form = "plain" }: Pick<PanelRow, "title" | "form">) {
  * The row's end: the mark of the row the reader is on, its choice, or an
  * empty column that keeps the SHAs in line.
  */
-function End({ row }: { row: PanelRow }) {
+function End({ row }: { row: LoadedPanelRow }) {
   if (row.mark !== undefined)
     return (
       <span className="fo-canvas-row-end fo-canvas-row-mark">{row.mark}</span>
@@ -105,7 +120,7 @@ function End({ row }: { row: PanelRow }) {
  * One loaded row: the package's list row, the link as a whole when the row
  * leads somewhere, with the row's end beside it.
  */
-function Row({ row, size }: { row: PanelRow; size: Size }) {
+function Row({ row, size }: { row: LoadedPanelRow; size: Size }) {
   const item = (
     <ListItem
       size={size}
@@ -163,7 +178,7 @@ function WaitingDetail({ size }: { size: Size }) {
  * same title, detail, dot and SHA places, each a bar where the answer
  * supplies it, and the row's end in its waiting form.
  */
-function WaitingRow({ row, size }: { row: PanelRow; size: Size }) {
+function WaitingRow({ row, size }: { row: WaitingPanelRow; size: Size }) {
   return (
     <div className="content-list-row">
       <ListItem
@@ -191,7 +206,7 @@ function WaitingRow({ row, size }: { row: PanelRow; size: Size }) {
           )
         }
       />
-      {row.to !== undefined && row.choose ? (
+      {row.choose ? (
         <span className="fo-canvas-row-end fo-canvas-row-choice">
           <ControlPlaceholder size="sm" width={64} />
         </span>

@@ -1,0 +1,32 @@
+# Member rows end in a Manage control
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
+- **Location:** `docs/mockups/src/screens/product/settings/members-sections.tsx:70-81` and `:98-107`. `packages/app/src/settings/panes/member-rows.tsx:56-64` and `:80`.
+- **Reason:** The rows were on `origin/main` before the branch that found them, and that branch changed only the navigation lists.
+- **Category:** Repository rule.
+
+- **Terms:**
+  - **Member row:** one row of the Members settings pane, drawn by the `fo-member-row` class: avatar, name, address, role and a Manage control.
+  - **Managed member:** the view of one person inside the Members pane, with their role and the way they lose access.
+- **Background:**
+  - On 2026-11-26 the user decided that each navigation list row is one link over the whole row, with no trailing Open or Details label. The decision named the settings index, the viewer switcher, History and Projects.
+  - The same day, the user added this rule to the `product-ui` skill: "a row that goes to one place is the link as a whole, with no trailing 'Open' text; use a trailing control only for a second, different action" (paraphrased).
+  - In the app, `MemberRows` draws a quiet Manage `Action` at the end of each row. Its press calls `onSelect`, which opens the managed member inside the same pane. The waiting row draws a disabled Manage.
+  - In the drawing, Manage is a link to the managed-member drawing, `product/settings/members` or `product/settings/members/identity`.
+  - Manage is the only action of a member row.
+  - The managed member has no address of its own. So the row can be a button, but not a link that opens in a second tab.
+- **Problem:** Each member row goes to one place, the person's management, but it ends in a trailing Manage control. The `product-ui` rule says that such a row is the control as a whole.
+- **Impact if no action:** The Members list looks and acts unlike the navigation lists. A reader must find a small control instead of pressing the row.
+- **Root question:** How does a reader open one member for management?
+- **Options:**
+  - **A.** Make each member row one button over its whole frame, which opens the managed member. Drop Manage from the rows and from the waiting row, in the drawing and in the app. The button's accessible name is the person's name. It removes a drawn and shipped control on `origin/main`. Effort: Medium.
+  - **B.** Give the managed member its own settings address, and make each row a link to it, so that a reader can open it in a second tab. It adds an address to the URL grammar of `docs/protocol/cloud/settings-dialog.md`. Effort: Large.
+  - **C.** Keep Manage, and record the Members list as an exception to the `product-ui` rule. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None. The `product-ui` rule of 2026-11-26 already states the class.
+- **Previous examples:** The navigation list rows, which ended in Open or Details until 2026-11-26.
+- **Related:** `plans/follow-ups/member-row-role-on-phones.md`: the same row and its phone grid. A change of the row's control changes that grid too, so do both in one change.
+- **Recommendation:** A. It follows the rule, and the pane keeps its inline management.
+- **Action:** ask the user, because the decision of 2026-11-26 names only the navigation lists, and A removes a drawn and shipped control on `origin/main`.

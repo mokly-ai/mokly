@@ -5,7 +5,7 @@ import type { PanelRow, WaitingPanelRow } from "./panel-rows";
 
 /**
  * A reference while the switcher's read runs: its state, its name, its time
- * and its head are the read's, and its way on keeps its label as text.
+ * and its head are the read's.
  */
 const waitingRef: WaitingPanelRow = {
   id: "waiting",

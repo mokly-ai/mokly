@@ -34,10 +34,7 @@ function Grants({ state }: { state: ScreenState }) {
             label="Project grants"
             rows={[
               state === "loading"
-                ? {
-                    ...waitingPerson,
-                    to: "product/settings/members",
-                  }
+                ? waitingPerson
                 : {
                     id: "sam",
                     title: membership.selected.name,

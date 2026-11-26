@@ -74,13 +74,13 @@ export function PersonAvatar({
 }
 
 /**
- * Where a row leads. A row that goes to one place is the link as a whole, so
- * it carries no label of its own: its title already names where it goes. A
- * row whose choice changes what its panel shows, rather than going anywhere,
- * ends in a quiet control with its label and is not openable in a second tab.
- * A row with neither leads nowhere.
+ * What a press on a row does. A row that goes to one place is the link as a
+ * whole, so it carries no label of its own: its title already names where it
+ * goes. A row whose choice changes what its panel shows, rather than going
+ * anywhere, ends in a quiet control with its label and is not openable in a
+ * second tab. A row with neither leads nowhere.
  */
-export type RowTarget =
+export type RowPress =
   | {
       href?: string;
       /** Takes the destination's place, for a row whose owner drives the move. */
@@ -98,7 +98,7 @@ export type ContentRow = {
   meta?: string;
   mono?: boolean;
   status?: StatusTone;
-} & RowTarget;
+} & RowPress;
 
 /**
  * One row of a list whose read runs: the row's own frame, with a bar in place
@@ -115,7 +115,7 @@ export function RowLink({
   row,
   children,
 }: {
-  row: RowTarget;
+  row: RowPress;
   children: ReactNode;
 }) {
   if (row.href === undefined) return children;

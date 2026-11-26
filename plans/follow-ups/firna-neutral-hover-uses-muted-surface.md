@@ -1,0 +1,35 @@
+# Firna button hovers use the muted surface
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
+- **Location:** `packages/tokens/src/shared-ui-theme.ts:28` and `:45`, and `docs/protocol/cloud/folio-chrome.md:197-198`.
+- **Reason:** The mapping was on `origin/main` before the branch that found it, and each fix reaches the token package, another repository, or a protocol requirement.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Firna:** `@firna/ui`, the shared control library. The root `package.json`, `packages/app`, `apps/mockups` and `packages/tokens` pin it at 4.0.0.
+  - **`soft` and `bg2`:** two Firna theme colours. Firna uses them as its neutral hover and press washes, and for some fills that are not hovers.
+  - **Hover rule:** the sentence in `folio-chrome.md:197-198`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
+- **Background:**
+  - `sharedUiColors` in `shared-ui-theme.ts` maps each Firna colour to a cloud token. It maps `bg2` at line 28 and `soft` at line 45 to `surfaceMuted`.
+  - In Firna 4.0.0, a `plain` Button hovers with `soft` and presses with `bg2`. A `secondary` Button does the same. See `node_modules/@firna/ui/dist/button/buttonStyles.js:174-175` and `:195-198`.
+  - The app's quiet `Action` is Firna's `plain` tone, in `packages/app/src/components/action.tsx:194`.
+  - So each quiet or secondary Button hovers with `surfaceMuted`, which the hover rule does not allow.
+  - `quietOnMutedUiTheme` in `shared-ui-theme.ts:173-187` remaps `soft` and `bg2` to the ink at 5% and 7% for the publication pill only. The pill stands on the muted surface, where the plain washes show nothing.
+  - Firna also reads `soft` for the Skeleton placeholder and the List item hover, and `bg2` for the neutral Badge fill and the List item press. The app and the drawings use the Skeleton.
+- **Problem:** Each quiet or secondary Button outside the publication pill hovers with a fill that the hover rule does not allow.
+- **Impact if no action:** Button hovers differ from the row and rail hovers, and the protocol does not describe what ships.
+- **Root question:** How do the hovers of the shared controls follow the chrome's hover rule?
+- **Options:**
+  - **A.** Map `soft` and `bg2` in `sharedUiColors` to the ink at 5% and 7% over `surface`, as `quietOnMutedUiTheme` does over the muted surface. One file changes, but the Skeleton, Badge and List fills change with it. Effort: Medium.
+  - **B.** Add separate hover and press colour roles to `@firna/ui`, release it, and bump each pin. Map the new roles to the ink at 5% and 7%. The Skeleton and Badge fills keep `surfaceMuted`. Effort: Medium.
+  - **C.** Change the hover rule of `folio-chrome.md` to allow `surfaceMuted` as the neutral hover of the shared controls. It changes a requirement. Effort: Small.
+- **Left out:** A scoped theme at each Button call site, as the pill has. It repeats one fix at each site, and A or B fixes all sites at once.
+- **Wider fix:** B. Separate roles let a hover change without the fills that are not hovers.
+- **Previous examples:** The navigation list row's hover fill used `--mk-color-surface-muted` until 2026-11-26.
+- **Related:**
+  - `plans/follow-ups/hover-fill-stylesheet-check.md`: the same rule. Its check reads CSS, so it cannot see these hovers.
+  - `plans/follow-ups/menu-rows-take-no-link.md`: it also needs a release of `@firna/ui`. One release can carry both changes.
+- **Recommendation:** B. Only separate roles change the hovers and leave the placeholder and badge fills as they are.
+- **Action:** ask the user, because A changes many fills at once, B needs a release from another repository, and C changes a requirement, so no option is clearly best.

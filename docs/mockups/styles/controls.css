@@ -32,8 +32,9 @@
 }
 /* A row that leads somewhere is one link: its content is the anchor, and the
    anchor's ::after reaches the list item's own frame, padding included, so
-   the whole row takes the click. The item shows the hover fill, and the
-   focus outline draws inside the item's frame. */
+   the whole row takes the click. The list item draws the row's states, so
+   they take its own corners: the hover fill, the text at 5% that the chrome's
+   hover rule allows, and the focus outline inside its frame. */
 .row-link {
   display: block;
   color: inherit;
@@ -43,20 +44,29 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
 }
 .row-link:focus-visible {
   outline: none;
 }
-.row-link:focus-visible::after {
+li:has(> .content-list-row > .row-link:hover) {
+  background: color-mix(in srgb, var(--mk-color-text) 5%, transparent);
+}
+li:has(> .content-list-row > .row-link:focus-visible) {
   outline: 2px solid var(--mk-color-focus);
   outline-offset: -2px;
 }
-li:has(> .content-list-row > .row-link:hover) {
-  background: var(--mk-color-surface-muted);
+/* A panel clips its first and last rows to its inner corners, so those rows
+   take the same corners and their outline is not cut. */
+.fo-panel li:first-child:has(> .content-list-row) {
+  border-start-start-radius: calc(var(--mk-radius-medium) - 1px);
+  border-start-end-radius: calc(var(--mk-radius-medium) - 1px);
+}
+.fo-panel li:last-child:has(> .content-list-row) {
+  border-end-start-radius: calc(var(--mk-radius-medium) - 1px);
+  border-end-end-radius: calc(var(--mk-radius-medium) - 1px);
 }
 @media (forced-colors: active) {
-  .row-link:focus-visible::after {
+  li:has(> .content-list-row > .row-link:focus-visible) {
     outline-color: Highlight;
   }
 }

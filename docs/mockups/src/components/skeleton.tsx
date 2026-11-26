@@ -90,7 +90,6 @@ function WaitingForm({
                 id: "waiting",
                 title: "",
                 detail: "",
-                to: "product/settings/project",
                 waiting: true,
               },
             ]}

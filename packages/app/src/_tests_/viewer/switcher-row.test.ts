@@ -16,7 +16,7 @@ import type { RefRow } from "../../viewer/switcher-row";
 import { attempt, branchRow, pullRow, summary } from "./build-fixtures";
 
 /**
- * Where a switcher row leads, as the Details rule of
+ * Where a switcher row leads, as the failed-row rule of
  * `viewer-build-navigation.md` gives it: a row with nothing ready whose newest
  * build failed opens that build's address, including where the reference's own
  * stage shows a closed pull request's, a fork's or the plan's card instead.
@@ -56,7 +56,7 @@ function pullRefRow(pull: PullRequest): RefRow {
 
 const failedBuildAddress = buildPath(workspace, project, failedBuild.id);
 
-test("Details on a failed build opens its address where the stage shows another card", () => {
+test("a failed build's row opens its address where the stage shows another card", () => {
   const older = attempt({
     state: "failed",
     publishedAt: "2026-09-15T15:00:00Z",

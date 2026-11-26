@@ -153,15 +153,23 @@ test("a query-addressed pane lands on its durable compact route", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("the compact index reaches the project panes", async ({ page }) => {
+test("a press anywhere on a compact index row opens its pane", async ({
+  page,
+}) => {
   await signIn(page, freshEmail("mobile-project-index"));
   await createProject(page, "Index Org");
   await open(page, "/settings");
   await expect(page.getByRole("heading", { name: "Project" })).toBeVisible();
-  const tokens = page.getByRole("link", { name: /Publishing tokens/ });
-  await expect(tokens).toBeVisible();
-  await tokens.click();
-  await expect(page.getByText("Publishing tokens").first()).toBeVisible();
+  // The press lands in the row's own padding, outside the link's content.
+  const tokens = page
+    .getByRole("listitem")
+    .filter({ has: page.getByText("Publishing tokens", { exact: true }) });
+  const box = await tokens.boundingBox();
+  expect(box).not.toBeNull();
+  await tokens.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Publishing tokens" }),
+  ).toBeVisible();
 });
 
 test("the compact back link confirms before discarding a draft", async ({

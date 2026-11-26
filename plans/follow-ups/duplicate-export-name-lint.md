@@ -1,0 +1,34 @@
+# No check stops two app exports sharing a name
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 9
+- **Location:** `packages/app/src/viewer/selection.ts:13`, `packages/app/src/viewer/panel.tsx:70`, `packages/app/src/viewer/source-store.ts:25`, `packages/app/src/viewer/version-failure.tsx:13` and `scripts/verification/ratchets/`.
+- **Reason:** The fix is a new lint, and the always-on rules keep each new lint for the user.
+- **Category:** Code structure.
+
+- **Terms:**
+  - **`.web` variant:** a module file such as `handoff.web.ts` that the web build loads in place of `handoff.ts`. Both files export the same names on purpose.
+- **Background:**
+  - `packages/app` holds the cloud's Expo app. An editor's automatic import offers each exported name of the package.
+  - The branch `calummoore/click-on-row-ux-0nhj` added an exported union `RowTarget` to `packages/app/src/components/controls.tsx`. It says what a press on a row does.
+  - `packages/app/src/viewer/switcher-row.ts:26` already exported an interface `RowTarget`, which holds a switcher row's state and address. On 2026-11-26 the branch renamed the new union to `RowPress`.
+  - Two cases of the class are on `origin/main`:
+    - `ViewerPanel` is the panel-id union in `viewer/selection.ts:13` and the overlay component in `viewer/panel.tsx:70`. `packages/app/src/screens/viewer/more-menu.tsx:17-18` and `panel-host.tsx:12-20` import both, and rename the type to `PanelId`.
+    - `VersionFailure` is an interface in `viewer/source-store.ts:25` and a component in `viewer/version-failure.tsx:13`.
+  - Three modules have a `.web` variant with the same exports: `viewer/handoff`, `viewer/published` and `viewer/source-provider`. A check must treat a module and its `.web` variant as one module.
+  - A rough count on 2026-11-26 found 19 more shared names where one module is under `_tests_`. An example is `createProject` in `data/projects.ts` and in `_tests_/project-setup.ts`.
+  - `scripts/verification/ratchets/` holds the repository's module checks. `internal-exports.mjs` there compares discovered exports with a baseline. Its source roots do not include `packages/app`.
+- **Problem:** Nothing stops a second export with the same name in `packages/app`. The `RowTarget` case reached review, and two older cases are still in the package.
+- **Impact if no action:** A reader or an agent can import the wrong one. The type check catches a wrong shape, so the cost is confusion, not wrong output.
+- **Root question:** How does each exported name of the app keep one meaning?
+- **Options:**
+  - **A.** Change nothing. Review finds each case. Effort: Small.
+  - **B.** Add a check that lists the exported names of `packages/app/src` outside `_tests_`. It treats a module and its `.web` variant as one module, and fails when two modules export one name. Rename the two cases on `origin/main` first, or list them in a baseline. It is a new lint, so it needs the user. Effort: Medium.
+  - **C.** Do B over `_tests_` too. It also reports the 19 test names, and many of them are test doubles named for the code that they stand in for. It is a new lint, so it needs the user. Effort: Medium.
+- **Left out:** An ESLint rule. ESLint reads one file at a time, so it cannot see the same name in another module.
+- **Wider fix:** B, a detection fix.
+- **Previous examples:** `RowTarget`, renamed on 2026-11-26. `ViewerPanel` and `VersionFailure`, still on `origin/main`.
+- **Related:** `plans/follow-ups/viewer-panel-name-exported-twice.md`: one of the two cases. Fix it first, so that the baseline of B is shorter.
+- **Recommendation:** B. The source modules are where one name must keep one meaning, and the test doubles share names on purpose.
+- **Action:** ask the user, because B adds a new lint, and the always-on rules keep each new lint for the user.

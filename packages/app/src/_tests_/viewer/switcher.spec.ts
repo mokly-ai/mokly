@@ -7,7 +7,7 @@ import { expect, freshEmail, open, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
-import { publishedViewerReady } from "./support";
+import { publicationReference, publishedViewerReady } from "./support";
 
 /** Count every request to one address, without holding it open. */
 async function counted(page: Page, url: string): Promise<() => number> {
@@ -59,9 +59,9 @@ test("opening the switcher reads no reference's own history", async ({
 
 /**
  * The switcher's own composition in `folio-viewer.md`: the reference the
- * reader is on says Current in place of a destination, and the search leads
- * the panel in its bar, before Close, while the title stays the document's
- * one heading for assistive technology.
+ * reader is on says Current and is no link, every other row is a link over
+ * its whole frame, and the search leads the panel in its bar, before Close,
+ * while the title stays the document's one heading for assistive technology.
  */
 test("the switcher leads with its search and marks the reader's reference Current", async ({
   page,
@@ -88,6 +88,14 @@ test("the switcher leads with its search and marks the reader's reference Curren
   await panel.getByLabel("Find a branch or pull request").focus();
   await page.keyboard.press("Tab");
   await expect(panel.getByTestId("close-switcher")).toBeFocused();
+
+  // The whole row is the link: a press in the row's own padding, outside the
+  // link's content, still follows it.
+  const topic = row("topic");
+  const box = await topic.boundingBox();
+  expect(box).not.toBeNull();
+  await topic.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
+  await expect(publicationReference(page)).toHaveText("topic");
 });
 
 /**

@@ -139,7 +139,6 @@ export function WaitingListRow({
   row: {
     title: string;
     detail?: string;
-    to?: string;
     status?: string;
     meta?: string;
     mono?: boolean;
@@ -170,7 +169,7 @@ export function WaitingListRow({
           )
         }
       />
-      {row.to && row.choose && <ControlPlaceholder size="sm" width={64} />}
+      {row.choose && <ControlPlaceholder size="sm" width={64} />}
     </div>
   );
 }

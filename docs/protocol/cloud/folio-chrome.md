@@ -36,7 +36,7 @@ dialog sets its sections tighter, as its **Dialog** composition in
 and `shadow.small`; the package draws the hairline between rows and never after
 the last. A row is a status dot, a 13px title over a 12px muted state line, and
 right-aligned monospace metadata. A row that leads somewhere is one link over
-its whole frame, with a muted fill on hover and the focus outline inside its
+its whole frame, with the ink at 5% on hover and the focus outline inside its
 frame. It carries no trailing label, such as Open, because its title already
 names where it goes. A trailing control is only for a second, different
 action, such as a choice, and it wraps beneath the row when enlarged text

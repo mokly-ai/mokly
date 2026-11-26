@@ -98,7 +98,7 @@ function rowFor(entry: HistoryEntry, context: RowContext): PanelRow {
 
 /**
  * An entry while the history's read runs: its state, its time and its head
- * are the read's, and its way on keeps its label as text.
+ * are the read's.
  */
 const waitingEntry: WaitingPanelRow = {
   id: "waiting",

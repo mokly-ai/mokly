@@ -36,7 +36,7 @@ export const contentListInput = componentInput({
             id: { type: "string" },
             title: { type: "string" },
             detail: { type: "string" },
-            /** Where the row leads: the whole row is the link. */
+            /** Where the row leads: the whole row is the link, unless it is a choice. */
             to: { type: "string" },
             /** The label of a choice's control; only a choice has one. */
             action: { type: "string" },

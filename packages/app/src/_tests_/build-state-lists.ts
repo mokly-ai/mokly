@@ -22,9 +22,9 @@ import { publication } from "./viewer/fixtures";
 const failedHead = "8b3f0c2a6e91d47b3c05f8a2e6d19b47c3a0f5e8";
 
 /**
- * History lists a running build as Publishing now with no Details, because the
- * stage already shows it, and a failed build as Unable to publish with Details,
- * which opens the failed build.
+ * History lists a running build as Publishing now with no link, because the
+ * stage already shows it, and a failed build as Unable to publish, whose row
+ * opens the failed build.
  */
 export const history: BuildStateRow = {
   title: "History lists builds in the words publications use",
@@ -73,14 +73,14 @@ export const history: BuildStateRow = {
 
 /**
  * Switcher rows read the newer of their publication and their build, with the
- * short SHA of whichever they read. Details on a row whose newest build failed
- * opens that build's address, even for a closed pull request, whose own
- * address shows the closed card. The reference the reader is on says Current
- * in place of Details, so each Details below is pressed from another
- * reference's address: the closed pull request's, then the branch's build.
+ * short SHA of whichever they read. A row whose newest build failed opens that
+ * build's address, even for a closed pull request, whose own address shows the
+ * closed card. The reference the reader is on says Current and is no link, so
+ * each failed row below is pressed from another reference's address: the
+ * closed pull request's, then the branch's build.
  */
 export const switcher: BuildStateRow = {
-  title: "switcher rows read their newest build, and Details opens it",
+  title: "switcher rows read their newest build, and a failed row opens it",
   label: "switcher",
   run: async (page, scenario) => {
     const { double, projectId } = scenario;

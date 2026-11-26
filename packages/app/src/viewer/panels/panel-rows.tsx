@@ -3,7 +3,7 @@ import { useSharedUiTheme } from "@firna/ui/theme";
 
 import { Action } from "../../components/action";
 import { RowLink, StateDot } from "../../components/controls";
-import type { RowTarget, StatusTone } from "../../components/controls";
+import type { RowPress, StatusTone } from "../../components/controls";
 import { WaitingDot } from "../../components/placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { useCompact } from "../../layout/viewport";
@@ -32,7 +32,7 @@ export type PanelRow = {
   current?: boolean;
   /** What the row's end says for the row the reader is on, such as Current. */
   mark?: string;
-} & RowTarget;
+} & RowPress;
 
 /**
  * One row while the list's read runs, in the loaded row's own frame: an empty

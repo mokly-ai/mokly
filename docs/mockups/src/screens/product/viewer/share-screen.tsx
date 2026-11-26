@@ -78,10 +78,10 @@ function ScreenChoice({
               {
                 id: "whole-catalogue",
                 title: "Whole catalogue",
-                ...choose,
+                choose: true,
                 waiting: true,
               },
-              { id: "waiting", title: "", ...choose, waiting: true },
+              { id: "waiting", title: "", choose: true, waiting: true },
             ]
           : [
               {
