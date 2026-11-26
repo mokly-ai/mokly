@@ -11,6 +11,8 @@ const USAGE = "usage: rust-test-weights.mjs [--run {id}]... [--compile]";
 // A unit's compile weight is its build time in the timing report times this
 // factor, as the verification README defines.
 const COMPILE_FACTOR = 1.5;
+// The CI hosts of the Rust test shards, each with its own test seconds.
+const HOSTS = ["linux", "macos", "windows"];
 const RESULT_LINE =
   /\s(?:PASS|LEAK|LEAK-PASS)\s+\[\s*(\d+(?:\.\d+)?)s\]\s+(?:\(\s*\d+\/\d+\)\s+)?(\S+)\s+(\S+)/u;
 
@@ -58,30 +60,26 @@ export function logTests(log) {
 }
 
 /**
- * The test seconds of each unit from samples of
+ * The test seconds of each unit on each host from samples of
  * `{ run, host, unit, test, seconds }`: the median of each test over the runs
- * of a host that observed it, the sum over the tests of a unit and host, then
- * the mean over the hosts, rounded. A run that lacks a job, such as a failed
- * or unfinished test shard, only lowers the sample count of that job's tests.
+ * of a host that observed it, then the sum over the tests of a unit on that
+ * host, rounded. A run that lacks a job, such as a failed or unfinished test
+ * shard, only lowers the sample count of that job's tests on its host.
  */
 export function testSeconds(samples) {
   const runs = new Map();
   for (const { host, unit, test, seconds } of samples) {
-    const key = JSON.stringify([unit, host, test]);
+    const key = JSON.stringify([host, unit, test]);
     runs.set(key, [...(runs.get(key) ?? []), seconds]);
   }
   const hosts = new Map();
   for (const [key, values] of runs) {
-    const [unit, host] = JSON.parse(key);
-    const hostKey = JSON.stringify([unit, host]);
-    hosts.set(hostKey, (hosts.get(hostKey) ?? 0) + median(values));
+    const [host, unit] = JSON.parse(key);
+    const units = hosts.get(host) ?? new Map();
+    units.set(unit, (units.get(unit) ?? 0) + median(values));
+    hosts.set(host, units);
   }
-  const units = new Map();
-  for (const [key, seconds] of hosts) {
-    const [unit] = JSON.parse(key);
-    units.set(unit, [...(units.get(unit) ?? []), seconds]);
-  }
-  return sortedObject(units, (values) => Math.round(mean(values)));
+  return sortedObject(hosts, (units) => sortedObject(units, Math.round));
 }
 
 /**
@@ -159,9 +157,10 @@ async function measureCompile() {
 }
 
 /**
- * Replace `testSeconds` in the weight file with the times of the passed
- * Repository and native test jobs of the given runs, and resolve to the
- * number of units that it holds.
+ * Replace the test seconds of each host in the weight file with the times of
+ * the passed Repository and native test jobs of the given runs. A host that
+ * no given run measured keeps its committed test seconds. Resolve to the
+ * number of units of each host.
  */
 export async function refreshTestSeconds(request, runIds) {
   const samples = [];
@@ -170,9 +169,20 @@ export async function refreshTestSeconds(request, runIds) {
   if (samples.length === 0)
     throw new Error("the runs have no passed Rust test shard logs");
   const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
-  weights.testSeconds = testSeconds(samples);
+  const measured = testSeconds(samples);
+  weights.testSeconds = Object.fromEntries(
+    HOSTS.flatMap((host) => {
+      const units = measured[host] ?? weights.testSeconds?.[host];
+      return units ? [[host, units]] : [];
+    }),
+  );
   await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
-  return Object.keys(weights.testSeconds).length;
+  return Object.fromEntries(
+    Object.entries(weights.testSeconds).map(([host, units]) => [
+      host,
+      Object.keys(units).length,
+    ]),
+  );
 }
 
 async function runSamples(request) {
@@ -217,10 +227,6 @@ function median(values) {
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-function mean(values) {
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
 if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
@@ -251,8 +257,11 @@ if (
     await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
   }
   const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
-  for (const part of ["compileSeconds", "testSeconds"])
+  process.stdout.write(
+    `compileSeconds: ${Object.keys(weights.compileSeconds ?? {}).length} units\n`,
+  );
+  for (const [host, units] of Object.entries(weights.testSeconds ?? {}))
     process.stdout.write(
-      `${part}: ${Object.keys(weights[part] ?? {}).length} units\n`,
+      `testSeconds on ${host}: ${Object.keys(units).length} units\n`,
     );
 }

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from review finding 9 of branch `calummoore/e2b-build-enabling-vbbo`.
-- **Location:** `infra/e2b/tests/assert_build_template.py:54`, `infra/tests/test_build_template.py:98`, `docs/protocol/cloud/cloud-build-runner.md` section "Template", `docs/ops/build-template.md` section "Verify The Streaming Boundary", `infra/e2b/build/e2b.Dockerfile`.
+- **Location:** `infra/e2b/tests/assert_build_template.py:93` to line 94, `infra/tests/test_build_template.py:208`, `docs/protocol/cloud/cloud-build-runner.md` section "Template", `docs/ops/build-template.md` section "Verify The Streaming Boundary", `infra/e2b/build/e2b.Dockerfile`.
 - **Reason:** The recommended option needs a new credentialed E2B template release, and its first probe may fail and force a choice between two other options.
 
 - **Source:** Review.
@@ -25,11 +25,11 @@
   - **B.** Add a harmless marker `ENV` to the template, require it and the request entry in the probe, add a regression for a missing marker, publish a new release and probe it with its build reference. Effort: Medium.
   - **C.** Have the release script set a release-specific marker and have the probe check it against the release receipt. Effort: Medium.
   - **D.** Require `E2B_TEMPLATE_ID` to equal the template under test. It needs no release, but it proves only envd's defaults layer, not template user variables, and envd sets it through a metadata poll that can race. Effort: Small.
-  - **F.** Require `NODE_VERSION` to equal the probe's `--node-version` argument, add a regression for a missing value, and re-run the credentialed probe against the `mokly-build-v3` build reference. It needs no new release. It depends on the SDK turning `ARG` into `ENV`, which the build log shows but no process has confirmed. If the value is missing, the probe fails, and the choice is between E and A. Effort: Medium.
+  - **F.** Require `NODE_VERSION` to equal the probe's `--node-version` argument, add a regression for a missing value, and re-run the credentialed probe against the build reference that main-preview runs, the `builds.template` value of `MKC_MAIN_PREVIEW_APP_CONFIG`. On 2026-11-26 that was `mokly-build-v5`, `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`. It needs no new release. It depends on the SDK turning `ARG` into `ENV`, which the build log shows but no process has confirmed. If the value is missing, the probe fails, and the choice is between E and A. Effort: Medium.
   - **E.** Make builds independent of the template environment: the runner sets `HOME` (and `PATH` if wanted) in its per-step environment (`crates/mkc-build-sandbox/src/command.rs`), the protocol drops the merge requirement, and the probe runs with the runner's real step environment. Effort: Medium.
 - **Left out:** Restoring the exact `PATH` comparison, because it depends on provider order and still uses a provider value.
 - **Wider fix:** B. E is the structural alternative if the template environment does not reach processes.
 - **Previous examples:** The pinned adapter added explicit streaming environment support in `futex-ai/sandbox` commit `86d8234`.
 - **Related:** `cloud-builds-never-ran-live.md` holds the live build proof. A release for B should also follow the build-reference rule of `docs/ops/build-template.md`.
-- **Recommendation:** F, then B only if F cannot run. F proves a template-only value survives with the verified v3 build and no new release. If its probe fails, choose between E and A, and do not weaken the probe.
+- **Recommendation:** F, then B only if F cannot run. F proves a template-only value survives with the release in use and no new release. If its probe fails, choose between E and A, and do not weaken the probe.
 - **Action:** ask the user, because F and B need a credentialed E2B run, and their result can force a protocol change.

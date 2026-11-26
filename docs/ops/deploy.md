@@ -826,7 +826,9 @@ Standard deployment smoke proves HTTP, revision and migration readiness. It
 does not prove E2B access. On first enablement or template/key rotation, also
 run the candidate assertion and a real build through publication, check
 completion and sandbox cleanup. Record that separate proof in the runbook.
-If it fails, restore the previous verified template or key and restart the API.
+If it fails, restore the previous key, or a previous template reference that
+meets the current contract as [Build template](./build-template.md) says, and
+restart the API. When no template reference qualifies, disable builds.
 Unprovisioned stable environments keep `builds.enabled: false` and the
 documented unavailable path. Disabling builds requires draining or cancelling
 active attempts first.

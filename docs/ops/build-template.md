@@ -35,16 +35,29 @@ provides its release source; the Dockerfile digest fixes the image. It installs 
 tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
 It first removes the base image's Node, npm and corepack files, so no file of
 an older release stays beside the new ones.
-It enables corepack and supplies npm, git, curl, coreutils, Python 3 and CA
+It enables corepack and supplies npm, Git, curl, coreutils, Python 3 and CA
 certificates. The image must keep glibc 2.28 or newer, because the pinned
 CLI's native binary has no musl build and no JavaScript fallback.
+The image must also keep Git 2.43 or newer. The CLI reads a comparison base
+with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
+the oldest Git with a recorded working comparison. Debian bookworm and
+bookworm-backports supply only Git 2.39.5, which exits 129 on `-Z`. So the Dockerfile builds the pinned Git source release from kernel.org,
+with its checked-in SHA-256 from kernel.org's `sha256sums.asc`, into
+`/usr/local`, and then removes the sources and the build packages. A process
+that starts `git` by name gets that build from `/usr/local/bin`. The base
+image's Debian Git 2.39.5 stays at `/usr/bin/git`. The purge with
+`--auto-remove` also removes the base image's own compiler packages, so the
+image has no `gcc`, `g++`, `make` or `ld`. A dependency that compiles a native
+addon during `npm ci` then fails.
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
 is baked into the image.
 
 Before a Node update, change `.nvmrc` and the Dockerfile version and checksum
-together. Run `cargo xtask toolchain-pins` and the local template regressions.
+together. Before a Git update, change the Dockerfile's Git version and
+checksum together. Run `cargo xtask toolchain-pins` and the local template
+regressions.
 An E2B base or tool change also requires a new template release and assertion.
 The [build toolchain checks](../protocol/cloud/repository-layout.md#build-toolchain-checks)
 reject an unpinned base before release.
@@ -109,7 +122,24 @@ prove that a value set only by the template reaches the process. It also checks 
 environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer. It runs an offline `npm ci` of an empty
 project, so an npm install that mixes files of two releases fails the probe.
+It requires that the `git` on the process `PATH` reports 2.43 or newer and
+accepts `git cat-file --batch --filters -Z` on empty input in a new
+repository. It reads no file and runs no comparison, so a pass does not prove
+that a comparison works.
 The E2B team key stays in the operator process.
+
+Choose the build reference to probe:
+
+- A new candidate uses the `build_reference` of its generated
+  `$TEMPLATE_DIRECTORY/e2b.toml`, as the commands below read it.
+- A recheck of a release in use takes the environment's `builds.template`
+  value and changes no configuration. Set `CANDIDATE_REFERENCE` to that
+  value instead of reading the generated file.
+- A production promotion uses the reference that passed the main-preview proof.
+- A rollback uses only a previous reference whose release meets the current
+  [template contract](../protocol/cloud/cloud-build-runner.md#template). When
+  no recorded release meets it, disable builds as the last section says,
+  then publish and verify a new release.
 
 Set the candidate build reference from the generated configuration:
 
@@ -231,7 +261,8 @@ proof is separate from the repository's local checks.
 
 For a template rotation, publish and verify `mokly-build-v<N+1>`, change only
 the reviewed build reference, and roll the API. Keep the previous release ready
-for rollback. Do not change the environment deployment ID during rotation;
+for rollback when it meets the current template contract. A contract change,
+such as the Git floor, can retire it. Do not change the environment deployment ID during rotation;
 the new worker must reconcile sandboxes made by the previous worker.
 
 For key rotation, create a replacement key in the same E2B team. Verify the
@@ -246,8 +277,9 @@ template or add a key version through Terraform.
 A provider failure retries under the build lifecycle. It does not make API
 health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
-Restore the previous verified build reference or key version and restart the API
-if verification fails. Keep keys needed by old pods until recovery completes.
+If verification fails, restore the previous key version, or a previous build
+reference chosen as "Verify The Streaming Boundary" says, and restart the API.
+When no build reference qualifies, disable builds. Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
 [live-lease renewal rule](../protocol/cloud/cloud-builds.md#claims-leases-and-retries).
@@ -309,13 +341,47 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   `mokly build --strict --no-changes` built the catalogue. The probe printed
   `PASS live build template: assertion completed and candidate destroyed` on
   2026-11-26 with the build reference. That run came before the probe's
-  `npm ci` check.
+  `npm ci` check. It is a working release for builds without a comparison,
+  but it cannot compare. Its Git is Debian bookworm's 2.39.5, and
+  `git cat-file --batch --filters -Z` exits 129 there with unknown option
+  `-Z`. In a sandbox of it, the runner's checkout and
+  `mokly build --config mokly.config.json --base origin/main` of a pull
+  request printed `base <sha>: [mokly/config-invalid] mokly.config.json: unknown`,
+  and the published index had `changesStatus: "unavailable"`. The probe's Git
+  check rejects this Git, and no probe with that check has run against v3. It
+  does not meet the current template contract, so do not roll back to it.
+- `mokly-build-v4` was a candidate that installed Git from bookworm-backports.
+  It still had Git 2.39.5, so it was deleted. It is not a release.
+- `mokly-build-v5`, build reference
+  `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8` (template ID
+  `tpjwc7qiz8bp7bvnpzp7`, build ID `433b3d4d-1e81-4d54-8963-d62eceb3ecc8`),
+  E2B team `firna`. It was built 2026-11-26T10:00:53Z with `e2b@2.64.0`
+  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `1578b776f` plus the Git source build: Git 2.56.1, checksum
+  `f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f`. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, `git` was `/usr/local/bin/git` 2.56.1, an HTTPS
+  `git ls-remote` worked, `git cat-file --batch --filters -Z` exited 0,
+  `npm ci` worked, and the `--base origin/main` build of the same pull request
+  gave `changesStatus: "ready"`. A container check of the pinned base on
+  2026-11-26 found that the Dockerfile's purge leaves no `gcc`, `g++`, `make`
+  or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
+  check, passed on 2026-11-26 with the build reference. That run came before
+  the probe's Git check, and its UTC time and assertion commit are not
+  recorded.
 
 ### Environments
 
 On 2026-11-24, main-preview had one enabled `mkc-main-preview-e2b-api-key`
 version, and production had no version. On 2026-11-26, main-preview cloud
 builds passed checkout and failed at Install: `npm ci --no-audit --no-fund`
-exited 1 with the broken-npm error of `mokly-build-v2`. No cloud build has
-passed on an environment yet. Record the first main-preview and production
+exited 1 with the broken-npm error of `mokly-build-v2`. Later that day, on
+`mokly-build-v3`, main-preview pull request builds published, but their check
+said "Catalogue published." instead of "Catalogue ready to review.", because
+the published index had `changesStatus: "unavailable"`. On 2026-11-26,
+main-preview builds moved to the `mokly-build-v5` build reference. No complete
+build proof is recorded yet. Record the first main-preview and production
 build proofs here.

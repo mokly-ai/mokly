@@ -23,7 +23,8 @@ The cloud suites need no cloud credential.
 - `cloud-infrastructure` runs the HTTP smoke, input, and cleanup tests, the
   Dockerfile contracts, and the bounded BuildKit storage comparison. Then it
   builds the API, catalogue, and app images with the pinned standalone
-  BuildKit, under [Image Build Runtime](#image-build-runtime). A missing
+  BuildKit, under [Image Build Runtime](#image-build-runtime). Its
+  [shards](#infrastructure-shards) split these parts. A missing
   BuildKit or crane fails the suite, and the message names the commands that
   install and start them.
 - `cloud-desktop` runs the logic tests of `@mokly-cloud/desktop` and builds
@@ -128,6 +129,19 @@ With two mockup shards, shard 1 runs the checks without a browser and shard 2
 runs both browser suites. One shard runs the complete suite. The mockup and
 site browser suites run their tests in parallel mode, so a browser shard is
 Playwright's even split by test count.
+
+## Infrastructure Shards
+
+CI runs the `cloud-infrastructure` suite as three jobs, one for each of its
+three shards. The suite has three parts, in this order: the contract and
+storage tests, the API and catalogue images, and the app image. With `N`
+shards, where `N` is at least 2, the part at position `p`, counted from 0,
+belongs to shard `p % N + 1`. A shard after the third runs nothing. One shard, or none, runs
+the complete suite. The API and catalogue images stay in one part, because
+they build the same Rust build stage, and the catalogue build reuses it.
+
+Each image part reports the BuildKit capacity at its entry and after each of
+its images, under [Image Build Runtime](#image-build-runtime).
 
 ## CI Jobs
 
