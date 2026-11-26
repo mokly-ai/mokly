@@ -122,7 +122,8 @@ fixtures and the workspace Mokly CLI's recorded capture output without cloud
 credentials.
 
 Build all three images with `bash infra/scripts/check-image.sh` after
-installing and starting standalone BuildKit with `start-buildkit.sh`. The
+installing and starting standalone BuildKit with `start-buildkit.sh`. Pass
+`api`, `catalogue`, or `app` to build only the named images, in the order given. The
 launcher uses the pinned `buildkit-runc` and requires a layered snapshotter by
 default; a machine deliberately provisioned with enough space for full parent
 copies can set `MKC_BUILDKIT_REQUIRE_LAYERED=false`. On a startup failure it

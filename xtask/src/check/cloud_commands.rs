@@ -4,7 +4,7 @@ use std::iter;
 
 use crate::command::CommandSpec;
 
-use super::cloud_shards::{app_commands, mockup_commands, site_commands};
+use super::cloud_shards::{app_commands, infrastructure_commands, mockup_commands, site_commands};
 use super::request::{Shard, VerificationSuite};
 use super::rust_commands::require_nextest;
 use super::tasks::{Task, task_commands};
@@ -48,14 +48,7 @@ pub(super) fn cloud_commands(suite: VerificationSuite, shard: Option<Shard>) -> 
         VerificationSuite::CloudHelm => {
             vec![CommandSpec::new("python3").args(["infra/helm/tests/check.py"])]
         }
-        VerificationSuite::CloudInfrastructure => vec![
-            CommandSpec::new("node").args(["xtask/scripts/require-postgres-tools.mjs"]),
-            CommandSpec::new("python3")
-                .args(["infra/scripts/run-infrastructure-tests.py", "contracts"]),
-            CommandSpec::new("python3")
-                .args(["infra/scripts/run-infrastructure-tests.py", "storage"]),
-            CommandSpec::new("bash").args(["infra/scripts/check-image.sh"]),
-        ],
+        VerificationSuite::CloudInfrastructure => infrastructure_commands(shard),
         VerificationSuite::CloudDesktop => {
             let mut commands = built([]);
             commands.push(CommandSpec::new("node").args(["xtask/scripts/require-postgres.mjs"]));

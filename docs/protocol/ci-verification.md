@@ -25,7 +25,7 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/14
 ```
 
-`--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`, `native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`, `native`, `cloud-app`, `cloud-mockups`, `cloud-site`, and `cloud-infrastructure`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
 `INDEX` must not exceed `TOTAL`. A Mokly viewer or browser shard runs one weighted whole-file
 partition under the [viewer](./ci-suite-evidence.md#viewer-shard-balance) or [browser](./ci-suite-evidence.md#browser-shard-balance) shard balance rule,

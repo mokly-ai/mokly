@@ -85,7 +85,8 @@ sources into the render cache, and the tests read nothing back from the
 repository. Every suite rejects skips and todos.
 
 `--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`,
-`native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. It uses one-based
+`native`, `cloud-app`, `cloud-mockups`, `cloud-site`, and
+`cloud-infrastructure`. It uses one-based
 integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts. With two or more
 repository or native shards, shard 1 runs the checks and each later shard runs
@@ -94,8 +95,9 @@ repository or native shards, shard 1 runs the checks and each later shard runs
 
 The [cloud suite table](../docs/protocol/ci-verification.md#cloud-suites)
 names all 16 cloud suites and their required checks. Each suite can run with
-`--suite`. The app, mockup, and site suites accept `--shard INDEX/TOTAL`, as
-the [cloud shards](../docs/protocol/cloud/repository-verification.md#app-shards)
+`--suite`. The app, mockup, site, and infrastructure suites accept
+`--shard INDEX/TOTAL`, as the
+[cloud shards](../docs/protocol/cloud/repository-verification.md#app-shards)
 define. Cloud suites
 fail when a tool is missing or a runner reports skipped, ignored, pending, or
 todo tests. Cloud Rust, app, and desktop tests need Postgres; cloud Rust also
