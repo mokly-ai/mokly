@@ -11,8 +11,11 @@ interface ReadCount {
 
 /**
  * The poll interval `viewer-builds.md` gives: the card reads a working build
- * every three seconds. It is the test's own value, not the product's, so a
- * card that polls less often misses the read that `nextPoll` waits for.
+ * every three seconds. `nextPoll` moves the page clock by this test value, not
+ * by the product's constant, so a card that polls much less often does not
+ * reach the next state before the test's wait for that state ends. No test
+ * here checks the exact three-second boundary: the follow-up item
+ * `plans/follow-ups/build-poll-three-second-boundary-untested.md` records it.
  */
 const pollIntervalMs = 3_000;
 

@@ -19,7 +19,7 @@ function accountsFact(page: Page) {
   return page.getByRole("dialog").getByTestId("github-accounts-fact");
 }
 
-/** The Workspace pane over the project the walk just created. */
+/** The Workspace pane over the project that `createProject` just made. */
 async function workspacePane(page: Page, projectId: string): Promise<void> {
   await openDialog(
     page,

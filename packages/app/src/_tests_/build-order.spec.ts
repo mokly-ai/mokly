@@ -43,7 +43,20 @@ test("a plan-refused pull request asks everyone but an owner to ask one", async 
   const scenario = await buildScenario(page, "build-order-plan-reader");
   const { double } = scenario;
   double.project = refused;
+  double.branches = [branchRow("topic")];
   double.pullRequests = [pullRow()];
+  await test.step("an owner's Team cards send no build request", async () => {
+    for (const path of [
+      scenario.branchAt("topic"),
+      scenario.pullAt(buildPullRequest.number),
+    ]) {
+      expect(await stageTitle(page, path), path).toBe(
+        "Publishing to private projects is on Team",
+      );
+      await expect(page.getByTestId("stage-open-billing"), path).toHaveCount(1);
+    }
+    expect(double.requests).toEqual([]);
+  });
   await page.route("**/v1/workspaces/*", async (route) => {
     if (route.request().method() !== "GET") return route.continue();
     const answer = await route.fetch();
