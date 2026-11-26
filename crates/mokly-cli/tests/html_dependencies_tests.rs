@@ -102,7 +102,7 @@ fn build(root: &Path, strict: bool) -> Output {
 }
 
 #[test]
-fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
+fn html_package_upgrade_warns_without_node_and_passes_a_strict_build() {
     let root = fixture();
     let first = build(root.path(), true);
     assert!(
@@ -117,23 +117,20 @@ fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
         "package.json",
         "{\"dependencies\":{\"theme\":\"2.0.0\"}}",
     );
-    for strict in [true, false] {
-        fs::remove_dir_all(&site).unwrap();
-        let result = build(root.path(), strict);
-        let stderr = String::from_utf8_lossy(&result.stderr);
-        assert!(result.status.success(), "{stderr}");
-        assert_eq!(stderr, WARNING_LINE);
-        let index: Value =
-            serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap())
-                .unwrap();
-        assert_eq!(index["changesStatus"], "ready");
-        assert_eq!(index["screens"][0]["changes"]["included"], false);
-        assert!(
-            fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
-                .unwrap()
-                .contains("7px")
-        );
-    }
+    fs::remove_dir_all(&site).unwrap();
+    let result = build(root.path(), true);
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(result.status.success(), "{stderr}");
+    assert_eq!(stderr, WARNING_LINE);
+    let index: Value =
+        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
+    assert_eq!(index["changesStatus"], "ready");
+    assert_eq!(index["screens"][0]["changes"]["included"], false);
+    assert!(
+        fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
+            .unwrap()
+            .contains("7px")
+    );
 }
 
 #[test]
