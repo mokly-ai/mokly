@@ -48,7 +48,11 @@ test("PostCSS readers retain the opened identity before a same-byte symlink reta
   for (const reader of readers) {
     await fs.writeFile(path.join(base, `${reader}-a.txt`), "red");
     await fs.writeFile(path.join(base, `${reader}-b.txt`), "red");
-    await fs.symlink(`${reader}-a.txt`, path.join(base, `${reader}.txt`));
+    await fs.symlink(
+      `${reader}-a.txt`,
+      path.join(base, `${reader}.txt`),
+      "file",
+    );
     body.push(
       `{${reads[reader].replaceAll("FILE", `'${reader}.txt'`)}`,
       `root.append({prop:'${reader}',value});`,
