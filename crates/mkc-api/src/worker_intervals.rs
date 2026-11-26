@@ -1,8 +1,8 @@
-//! Pauses of the polling worker loops after a pass that finds no work.
+//! Pauses of the polling worker loops; each field says when its loop pauses.
 
 use std::time::Duration;
 
-/// How long each polling worker loop waits after a pass.
+/// How long each polling worker loop pauses.
 ///
 /// Production uses [`WorkerIntervals::default`]: a one-second pause for each
 /// webhook delivery loop, five seconds between check delivery passes, and two

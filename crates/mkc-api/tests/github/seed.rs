@@ -18,7 +18,7 @@ impl Harness {
         let workspace: OrganizationId = workspace.parse::<Uuid>().unwrap().into();
         let mut repository = None;
         self.queries(&mut |queries| {
-            repository = Some(seed_installed_repository(queries, workspace, full_name));
+            repository = Some(seed_installed_repository(queries, workspace, full_name)?);
             Ok(())
         });
         let repository: RepositoryId = repository.unwrap();

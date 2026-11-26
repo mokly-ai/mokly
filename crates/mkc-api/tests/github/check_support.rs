@@ -40,9 +40,9 @@ impl Runtime for CheckRuntime {
     }
 }
 
-/// One rerequest event of a publication, as its outbox row holds it.
+/// One check event of a publication, as its outbox row holds it.
 #[derive(Clone, Debug, PartialEq, Eq, diesel::QueryableByName)]
-pub(super) struct RerequestRow {
+pub(super) struct EventRow {
     #[diesel(sql_type = Integer)]
     pub(super) attempts: i32,
     #[diesel(sql_type = Integer)]
@@ -148,16 +148,21 @@ impl Harness {
             .clone()
     }
 
-    /// Every rerequest event of one publication, oldest first, delivered ones
-    /// included. The store reads only due events, so this reads the rows.
-    pub(super) fn rerequest_events(&self, publication: PublicationId) -> Vec<RerequestRow> {
+    /// Every event of one kind for one publication, oldest first, delivered
+    /// and dead-lettered ones included. The store reads only due events, so
+    /// this reads the rows.
+    pub(super) fn check_events(
+        &self,
+        publication: PublicationId,
+        kind: EventKind,
+    ) -> Vec<EventRow> {
         diesel::sql_query(
             "SELECT attempts, permanent_failures, delivered_at IS NOT NULL AS delivered
             FROM publication_events WHERE publication_id = $1 AND kind = $2
             ORDER BY created_at, id",
         )
         .bind::<SqlUuid, _>(publication.0)
-        .bind::<Text, _>(EventKind::Rerequest.as_str())
+        .bind::<Text, _>(kind.as_str())
         .load(&mut PgConnection::establish(self._schema.scoped_url()).unwrap())
         .unwrap()
     }

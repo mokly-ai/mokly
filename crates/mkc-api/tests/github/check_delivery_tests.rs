@@ -6,10 +6,11 @@ use std::sync::atomic::Ordering;
 use chrono::Utc;
 use mkc_domain::ids::PublicationId;
 use mkc_store_interface::github_state::DeliveryStatus;
+use mkc_store_interface::publication_event::EventKind;
 use serde_json::{Value, json};
 use uuid::Uuid;
 
-use super::check_support::{CheckRuntime, RerequestRow, wait_until};
+use super::check_support::{CheckRuntime, EventRow, wait_until};
 use super::fixtures;
 use super::harness::Harness;
 
@@ -71,12 +72,15 @@ fn upload_creates_a_live_check_and_both_rerun_events_update_the_same_run() {
             assert!(!queries.github_check(4)?.unwrap().rerequested);
             Ok(())
         });
-        let delivered = RerequestRow {
+        let delivered = EventRow {
             attempts: 1,
             permanent_failures: 0,
             delivered: true,
         };
-        assert_eq!(app.rerequest_events(publication), vec![delivered; updates]);
+        assert_eq!(
+            app.check_events(publication, EventKind::Rerequest),
+            vec![delivered; updates]
+        );
     }
     let mode = app.github.mode.lock().unwrap();
     assert_eq!(mode.check_creates, 1);
@@ -156,6 +160,16 @@ fn unlinked_project_uploads_are_acknowledged_without_provider_requests() {
         .into();
     let publication = app.publish(project, "octocat/Hello-World", &"a".repeat(40));
     wait_until(|| app.check_events_are_delivered(publication));
+    // The ready event was claimed once and acknowledged locally; no pending
+    // row alone would also hold for an upload that queued no event.
+    assert_eq!(
+        app.check_events(publication, EventKind::Ready),
+        vec![EventRow {
+            attempts: 1,
+            permanent_failures: 0,
+            delivered: true,
+        }]
+    );
     let mode = app.github.mode.lock().unwrap();
     assert_eq!(
         (mode.check_lists, mode.check_creates, mode.check_updates),
