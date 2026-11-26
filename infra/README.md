@@ -67,8 +67,9 @@ foundation imports, enablement and rotation.
 Rollout smoke receives `MKC_DESKTOP_CLIENT` from the same Helm environment
 value as the API and catalogue server. It reads the desktop origin fixture
 and checks exact frame ancestors plus credentialed CORS reads and
-preflights. Infrastructure tests compare every environment with the real
-catalogue server; they need Rust, Postgres and `psql`. See the
+preflights. Infrastructure tests compare each Helm environment and its golden
+Deployments with the rollout smoke configuration. The catalogue server's Rust
+test checks rollout admission against the real server in both flag states. See the
 [smoke contract](../docs/protocol/cloud/deployment-smoke-checks.md).
 
 Stable deployment [synchronizes Postmark templates](../docs/protocol/cloud/email-postmark-sync.md)

@@ -1,5 +1,7 @@
 //! A running Serve closes its clients and kills busy sidecars before releasing its port.
 
+#[cfg(target_os = "macos")]
+use std::mem::{MaybeUninit, size_of};
 use std::time::Duration;
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -40,7 +42,30 @@ pub(super) fn alive(pid: i32) -> bool {
     {
         return false;
     }
+    #[cfg(target_os = "macos")]
+    if zombie(pid) {
+        return false;
+    }
     exists(pid)
+}
+
+/// A nonzero flavor lets libproc report an exited, unreaped process.
+#[cfg(target_os = "macos")]
+fn zombie(pid: i32) -> bool {
+    let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
+    let expected = size_of::<libc::proc_bsdinfo>() as i32;
+    // SAFETY: The aligned buffer holds exactly `expected` writable bytes.
+    let count = unsafe {
+        libc::proc_pidinfo(
+            pid,
+            libc::PROC_PIDTBSDINFO,
+            1,
+            info.as_mut_ptr().cast(),
+            expected,
+        )
+    };
+    // SAFETY: libproc initialized the full structure, as the count proves.
+    count == expected && unsafe { info.assume_init() }.pbi_status == libc::SZOMB
 }
 
 pub(super) fn exists(pid: i32) -> bool {
@@ -48,12 +73,14 @@ pub(super) fn exists(pid: i32) -> bool {
     unsafe { libc::kill(pid, 0) == 0 }
 }
 
+/// The sidecar must have exited. Its tree reaps it only after the last signal,
+/// so it can still be a zombie when the listener is released.
 pub(super) async fn released_after_worker(host: &str, pid: i32) {
     tokio::time::timeout(Duration::from_secs(30), async {
         loop {
             if let Ok(listener) = std::net::TcpListener::bind(host) {
                 assert!(
-                    !exists(pid),
+                    !alive(pid),
                     "listener released while the sidecar remained live"
                 );
                 drop(listener);

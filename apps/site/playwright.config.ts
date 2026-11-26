@@ -21,15 +21,17 @@ export default defineConfig({
     ...[390, 1440].flatMap((width) =>
       (["light", "dark"] as const).map((colorScheme) => ({
         name: `${width}-${colorScheme}`,
-        grepInvert: width === 390 ? /@desktop/ : /@mobile/,
+        // Untagged widths exercise both layouts. Only @scheme needs dark.
+        ...(colorScheme === "dark" ? { grep: /@scheme\b/ } : {}),
+        grepInvert:
+          width === 390 ? /@(?:desktop|narrow)\b/ : /@(?:mobile|narrow)\b/,
         use: { colorScheme, viewport: { width, height: 900 } },
       })),
     ),
-    // The narrowest width the design contract keeps usable. It walks every
-    // route once for the shared accessibility checks, including horizontal
-    // overflow; the scheme-dependent suites run at the two inspection widths.
+    // @narrow walks every route once for horizontal overflow at 320px.
     {
       name: "320-light",
+      grep: /@narrow\b/,
       testMatch: /pages\.spec\.ts/,
       use: {
         colorScheme: "light" as const,

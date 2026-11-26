@@ -189,8 +189,10 @@ extra and changed paths.
 
 The browser suites write every full-page capture under `.context/mockups-smoke`,
 mirroring the output path, with the served journeys under `served/`. The disk
-suite writes its captures only when `MKC_MOCKUP_CAPTURES=1` asks for them,
-because a CI run keeps none. Mobile
+suite captures the views it opens only when `MKC_MOCKUP_CAPTURES=1`.
+It opens every light view and the dark views that cannot share the light
+view's check. See [Mockup verification](../protocol/cloud/mockup-verification.md#disk-and-http-smoke)
+for the comparison rules. Mobile
 journey captures come from the served fragment at 390px in both themes, so
 they include content below Browse's iframe viewport; compose journey sheets
 from those ordered captures. Stop an interactive Serve session before the
@@ -300,6 +302,7 @@ directory, never in the repository, and deleting that cache is safe.
 - `src/_tests_/app-parity-allowances.ts` — holds the allowlists of the app-parity check.
 - `src/_tests_/build-drawings.ts`, `stage-drawings.ts` and `stage-card-pages.ts` — what each build drawing, each publishing card and each unresolved build address must draw, read from the viewer builds contract, and the drawn pages the stage card policy tests read.
 - `src/_tests_/focus-policy.ts` and `src/_tests_/focus.spec.ts` — the catalogue focus policy: every element that takes focus through `tabindex` draws the token focus outline from the shared rule in `styles/base.css`.
+- `src/_tests_/disk-views.ts` and `src/_tests_/disk-views.test.ts` — select the documents that Chromium opens and check every light and dark pair from the build.
 - `src/_tests_/disk-overlay-policy.ts` — `checkDiskOverlay`, the Tab guard that the disk test runs before its capture on each page with an open viewer panel: it requires the `inert` viewer backdrop, then presses Tab once for each panel control from the top of the page and requires each stop inside the panel.
 - `src/_tests_/overlay.spec.ts` — the overlay focus checks in Chromium: the regressions that a built settings confirmation page and an open mobile row menu keep focus out of the frame beneath them, and the rejection and acceptance fixtures of the hidden-subtree focus rule in `document-policy.ts`, the inert viewer backdrop and `checkDiskOverlay`.
 - `src/_tests_/viewer-builds.spec.ts`, `viewer-panels.spec.ts`, `viewer-ready-stage.spec.ts` and `viewer-recovery.spec.ts` — the Chromium checks of the build and publishing pages, the four slot panels, the ready canvas with its frames, its right panel and its compact layout, and the stage's recovery cards, with the in-page measures in `viewer-measures.ts`.

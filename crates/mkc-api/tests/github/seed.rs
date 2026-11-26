@@ -18,7 +18,8 @@ impl Harness {
         let workspace: OrganizationId = workspace.parse::<Uuid>().unwrap().into();
         let mut repository = None;
         self.queries(&mut |queries| {
-            repository = Some(seed_installed_repository(queries, workspace, full_name));
+            repository = Some(seed_installed_repository(queries, workspace, full_name)?);
+            Ok(())
         });
         let repository: RepositoryId = repository.unwrap();
         response_json(
@@ -53,7 +54,10 @@ impl Harness {
             automatic_builds: false,
             version: 1,
         };
-        self.queries(&mut |queries| queries.insert_project(&project).unwrap());
+        self.queries(&mut |queries| {
+            queries.insert_project(&project)?;
+            Ok(())
+        });
         response_json(
             self.request(Method::GET, &format!("/v1/projects/{}", project.id))
                 .send()

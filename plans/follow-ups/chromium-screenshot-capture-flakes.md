@@ -1,10 +1,10 @@
 # Chromium screenshot capture fails at random
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
-- **Location:** `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`. The full-page capture of each disk test in `docs/mockups/src/_tests_/disk.spec.ts` runs only on request since pull request #528.
-- **Reason:** The source is not known after a code reading and 200 local repeats, so the next step needs diagnostics in CI or a removal, and both need the user.
+- **Location:** `packages/desktop/src/_tests_/shell.ts`, the `screenshot` helper and the `launch` that starts Electron, `packages/desktop/src/_tests_/electron-output.ts`, and the first caller `packages/desktop/src/_tests_/global-setup.ts:34`. The full-page capture of each disk test in `docs/mockups/src/_tests_/disk.spec.ts` runs only on request since pull request #528.
+- **Reason:** The source is not known after a code reading and 200 local repeats, and only the next failure in CI can name it.
 
 - **Category:** Test.
 - **Terms:**
@@ -31,5 +31,5 @@
 - **Wider fix:** None. The source is not known.
 - **Previous examples:** None found.
 - **Related:** Pull request #528, the cloud test value audit, applied option B to the mockup disk suite: its capture runs only when `MKC_MOCKUP_CAPTURES=1` is set, and CI does not set it. This item now covers only the desktop captures of `packages/desktop/src/_tests_/shell.ts`.
-- **Recommendation:** A. The failure is rare and costs only a rerun, and A can name the source before anything goes.
-- **Action:** ask the user, because the source is unknown after a reproduction attempt, and each option changes the suite launch or removes a capture.
+- **Decision:** On 2026-11-26 the user chose A, in item 34 of the cloud test audit. The branch `calummoore/ci-speed-app-retries-and-desktop-capture-03pn` applied it. `launch` starts Electron with `--enable-logging=file` and a `--log-file` of its own in the profile, so Chromium writes its log from the process start. When `page.screenshot` throws on an Electron window, `screenshot` prints the last 200 lines of that log and the error to the job log, then throws the error again. Nothing retries or hides the failure.
+- **Action:** Fix after merge. At the next `Unable to capture screenshot` failure in the `Desktop checks` job, read the Chromium log lines above the error in the job log. Look for a GPU process exit, a lost context, or a compositor error. Fix the source that they name, then delete this item. If the lines name no cause, record what they show here and ask the user for the next step.

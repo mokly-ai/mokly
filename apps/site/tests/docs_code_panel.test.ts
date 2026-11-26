@@ -149,3 +149,13 @@ test("the landing's install snippet renders the shell panel of a guide", () => {
     text: INSTALL_COMMAND,
   });
 });
+
+test("the Install guide labels its first code panel shell", () => {
+  const [panel] = byClass(built("docs", "start", "install"), "site-code");
+  assert.ok(panel, "the Install guide's first code panel");
+  assert.equal(
+    textContent(one(panel, "site-code-language")),
+    "shell",
+    "Install code language",
+  );
+});

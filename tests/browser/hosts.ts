@@ -46,7 +46,7 @@ export async function serveHost(
     const outcome = await server.stop();
     if (outcome.code !== 0)
       throw new Error(
-        `Example Serve did not stop cleanly:\n${server.diagnostics()}`,
+        `Example Serve did not stop cleanly, exit code ${outcome.code}, signal ${outcome.signal}:\n${server.diagnostics()}`,
       );
   };
   try {

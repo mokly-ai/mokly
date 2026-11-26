@@ -10,9 +10,15 @@ import {
   type DependencyTier,
 } from "./helpers/cold_base_fixture.js";
 import { reportDuration } from "./helpers/durations.js";
+import { fileFixture } from "./helpers/file_fixture.js";
 import { git } from "./helpers/static_changes.js";
 import { command } from "./helpers/static_publication.js";
 import { timings } from "./helpers/static_timings.js";
+
+const workingModules = fileFixture(async (owner) => {
+  const fixture = await coldBaseFixture(2, owner);
+  return path.join(fixture.root, "node_modules");
+});
 
 async function children(directory: string) {
   try {
@@ -45,7 +51,9 @@ for (const mode of ["config", "flag"] as const) {
     `scripts-on ${mode} opt-in runs the base lifecycle marker`,
     { timeout: 120_000 },
     async (context) => {
-      const fixture = await coldBaseFixture(2, context);
+      const fixture = await coldBaseFixture(2, context, {
+        nodeModules: await workingModules(),
+      });
       if (mode === "config") {
         await fs.writeFile(
           path.join(fixture.root, "mokly.config.json"),
@@ -98,7 +106,9 @@ const cases: ReadonlyArray<{ tier: DependencyTier; title: string }> = [
 
 for (const { tier, title } of cases) {
   test(title, { timeout: 120_000 }, async (context) => {
-    const fixture = await coldBaseFixture(tier, context);
+    const fixture = await coldBaseFixture(tier, context, {
+      nodeModules: await workingModules(),
+    });
     const { root, cache, base, env } = fixture;
     const working = await git(root, "status", "--porcelain");
     assert.deepEqual(await fs.readdir(cache), []);

@@ -4,8 +4,10 @@ import importlib.util
 import os
 import re
 from pathlib import Path
+import shutil
 from types import SimpleNamespace
 import subprocess
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -17,6 +19,10 @@ SPEC = importlib.util.spec_from_file_location("assert_build_template", SCRIPT)
 ASSERTION = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ASSERTION)
 VERSION = (ROOT / ".nvmrc").read_text().strip()
+# Captured before the tests patch the environment, subprocess.run and shutil.which.
+HOST_PATH = os.environ.get("PATH", "")
+HOST_NPM = shutil.which("npm")
+HOST_RUN = subprocess.run
 
 
 def pinned_base_images(dockerfile):
@@ -50,6 +56,12 @@ class BuildTemplateTests(unittest.TestCase):
             ASSERTION.PROBE_KEY: ASSERTION.PROBE_VALUE,
         }
         self.account = SimpleNamespace(pw_name="user", pw_dir="/home/user")
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        self.scratch = Path(scratch.name)
+        (self.scratch / "project").mkdir()
+        npm_project = MagicMock()
+        npm_project.__enter__.return_value = str(self.scratch / "project")
         patches = (
             patch.dict(os.environ, self.environment, clear=True),
             patch.object(ASSERTION.os, "getuid", return_value=1000),
@@ -63,6 +75,7 @@ class BuildTemplateTests(unittest.TestCase):
             patch.object(Path, "exists", return_value=False),
             patch.object(Path, "is_symlink", return_value=False),
             patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
+            patch.object(ASSERTION.tempfile, "TemporaryDirectory", return_value=npm_project),
             patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
             patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
         )
@@ -70,16 +83,46 @@ class BuildTemplateTests(unittest.TestCase):
         for item in patches:
             self.addCleanup(item.stop)
 
-    def run_command(self, argv, **kwargs):
+    def check_probe_call(self, kwargs):
         self.assertNotIn("env", kwargs)
         self.assertNotIn("shell", kwargs)
         self.assertEqual(kwargs["timeout"], 10)
+
+    def run_command(self, argv, **kwargs):
+        self.check_probe_call(kwargs)
         output = "v" + VERSION if argv[0] == "node" else "shell-ok"
         return SimpleNamespace(returncode=0, stdout=output)
 
+    def run_with_host_npm(self, argv, **kwargs):
+        """Run the probe's npm ci with the host's clean npm, so npm judges the generated project."""
+        if argv[:2] != ["npm", "ci"]:
+            return self.run_command(argv, **kwargs)
+        self.check_probe_call(kwargs)
+        self.assertIsNotNone(HOST_NPM, "this test needs npm on PATH")
+        npm_home = self.scratch / "npm-home"
+        environment = {"PATH": HOST_PATH, "HOME": str(npm_home),
+                       "npm_config_cache": str(npm_home / "cache"),
+                       "npm_config_userconfig": str(npm_home / "npmrc"),
+                       "npm_config_globalconfig": str(npm_home / "global-npmrc")}
+        return HOST_RUN([HOST_NPM, *argv[1:]], env=environment, **kwargs)
+
     def test_complete_template_passes_with_one_added_entry(self):
-        ASSERTION.verify(VERSION)
-        self.assertEqual(self.mocks[-1].call_count, 8)
+        with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_npm) as run:
+            ASSERTION.verify(VERSION)
+        self.assertEqual(run.call_count, 9)
+
+    def test_npm_with_files_of_two_releases_fails(self):
+        # A Node tarball unpacked over an older npm prints its version but cannot run npm ci.
+        def mixed_npm(argv, **kwargs):
+            if argv[:2] == ["npm", "ci"]:
+                return SimpleNamespace(returncode=1, stdout="", stderr=(
+                    "npm error Class extends value undefined is not a constructor or null"))
+            return self.run_command(argv, **kwargs)
+
+        with patch.object(ASSERTION.subprocess, "run", side_effect=mixed_npm):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError,
+                                        "^npm ci of an empty project failed$"):
+                ASSERTION.verify(VERSION)
 
     def test_native_cli_requires_glibc_2_28_or_newer(self):
         cases = [("glibc 2.27", False), ("glibc 2.28", True),

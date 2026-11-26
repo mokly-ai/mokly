@@ -43,7 +43,8 @@ to the configuration file.
 
 Build and check pass `--strict`. Runtime and type mappings use documented
 public entrypoints from the single installation.
-The `cloud-mockups` suite runs build, test and typecheck in that order.
+The `cloud-mockups` suite runs build, then test. The `cloud-typecheck` suite
+type-checks the mockups.
 In CI the suite runs as parallel
 [mockup shards](./repository-verification.md#mockup-and-site-shards); each
 shard builds the catalogue first, and the shards do not wait for one another.

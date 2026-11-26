@@ -78,11 +78,13 @@ impl ApiApplication {
         let check_worker = CheckWorkerLoop {
             worker: self.check_worker.clone(),
             clock: Arc::new(TokioCheckClock),
+            interval: self.intervals.check_delivery,
         };
         let check_worker: &dyn WorkerLoop = &check_worker;
         let builds = BuildWorkerLoop {
             worker: self.build_worker.clone(),
             clock: Arc::new(TokioCheckClock),
+            interval: self.intervals.build_claim,
         };
         let builds: &dyn WorkerLoop = &builds;
         let reconciliation = BuildReconciliationLoop {

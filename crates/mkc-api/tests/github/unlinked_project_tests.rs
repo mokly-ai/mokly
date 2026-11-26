@@ -32,9 +32,10 @@ fn cli_projects_publish_from_another_host_and_keep_cloud_builds_off() {
             .unwrap()
             .into();
         app.queries(&mut |queries| {
-            let mut workspace = queries.organization(workspace_id).unwrap().unwrap();
+            let mut workspace = queries.organization(workspace_id)?.unwrap();
             workspace.plan = plan;
-            queries.save_organization(&workspace).unwrap();
+            queries.save_organization(&workspace)?;
+            Ok(())
         });
         let created = create(
             &app,
@@ -54,12 +55,8 @@ fn cli_projects_publish_from_another_host_and_keep_cloud_builds_off() {
             .unwrap()
             .into();
         app.queries(&mut |queries| {
-            assert!(
-                queries
-                    .github_project_repository(project)
-                    .unwrap()
-                    .is_none()
-            );
+            assert!(queries.github_project_repository(project)?.is_none());
+            Ok(())
         });
         let path = format!("/v1/projects/{project}");
         let refused = harness::json(

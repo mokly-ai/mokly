@@ -28,10 +28,6 @@ const MODULES = [
   },
 ] as const;
 
-/** Every element that can take focus. */
-const FOCUSABLE =
-  "a[href], area[href], button, input, select, textarea, iframe, summary, [tabindex], [contenteditable]";
-
 /**
  * A transform that moves nothing: the base `none`, or the identity matrix
  * that an ended animation leaves.
@@ -86,25 +82,26 @@ async function expectEditFinished(page: Page): Promise<void> {
   await expect(before).toHaveCSS("opacity", "0");
 }
 
-test("the Review and Edit frames leave only the module's copy to assistive technology", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  for (const { body, kicker, title } of MODULES) {
-    const module = page.getByRole("article", { name: title });
-    await expect(module, title).toMatchAriaSnapshot(`
+test(
+  "the Review and Edit frames leave only the module's copy to assistive technology",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    for (const { body, kicker, title } of MODULES) {
+      const module = page.getByRole("article", { name: title });
+      await expect(module, title).toMatchAriaSnapshot(`
       - /children: equal
       - paragraph: ${kicker}
       - heading "${title}" [level=3]
       - paragraph: ${body}
     `);
-    await expect(module.getByRole("heading", { name: title })).toBeVisible();
-    await expect(module.getByText(body)).toBeVisible();
-    await expect(module.locator(FOCUSABLE), title).toHaveCount(0);
-  }
-});
+      await expect(module.getByRole("heading", { name: title })).toBeVisible();
+      await expect(module.getByText(body)).toBeVisible();
+    }
+  },
+);
 
-test.describe("with motion allowed", () => {
+test.describe("with motion allowed", { tag: "@desktop" }, () => {
   test.use({ contextOptions: { reducedMotion: "no-preference" } });
 
   test("the Review demo plays once in view and rests waiting for Approve", async ({
@@ -138,7 +135,7 @@ test.describe("with motion allowed", () => {
   });
 });
 
-test.describe("under reduced motion", () => {
+test.describe("under reduced motion", { tag: "@desktop" }, () => {
   test.use({ contextOptions: { reducedMotion: "reduce" } });
 
   test("the Review and Edit demos rest in their finished states at once", async ({

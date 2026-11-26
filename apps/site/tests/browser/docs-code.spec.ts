@@ -19,35 +19,40 @@ function rgb(hex: string): string {
   return `rgb(${red}, ${green}, ${blue})`;
 }
 
-test("copying a multi-line shell block writes its lines without prompts", async ({
-  context,
-  page,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto(PAGE);
-  const panel = page.locator(".site-code", {
-    hasText: "npx mokly build --out mokly-static",
-  });
-  const copy = panel.getByRole("button");
-  await expect(copy).toHaveText("Copy");
-  await copy.click();
-  await expect(copy).toHaveText("Copied");
-  await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe("npx mokly serve\nnpx mokly build --out mokly-static");
-});
+test(
+  "copying a multi-line shell block writes its lines without prompts",
+  { tag: "@desktop" },
+  async ({ context, page }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(PAGE);
+    const panel = page.locator(".site-code", {
+      hasText: "npx mokly build --out mokly-static",
+    });
+    const copy = panel.getByRole("button");
+    await expect(copy).toHaveText("Copy");
+    await copy.click();
+    await expect(copy).toHaveText("Copied");
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe("npx mokly serve\nnpx mokly build --out mokly-static");
+  },
+);
 
-test("a code panel stays dark in both schemes", async ({ page }, testInfo) => {
-  await page.goto(PAGE);
-  const panel = page.locator(".site-code", {
-    hasText: "npx mokly build --out mokly-static",
-  });
-  const fill =
-    testInfo.project.use.colorScheme === "dark"
-      ? tokens.color.dark.surfaceMuted
-      : tokens.color.light.text;
-  await expect(panel).toHaveCSS("background-color", rgb(fill));
-});
+test(
+  "a code panel stays dark in both schemes",
+  { tag: ["@desktop", "@scheme"] },
+  async ({ page }, testInfo) => {
+    await page.goto(PAGE);
+    const panel = page.locator(".site-code", {
+      hasText: "npx mokly build --out mokly-static",
+    });
+    const fill =
+      testInfo.project.use.colorScheme === "dark"
+        ? tokens.color.dark.surfaceMuted
+        : tokens.color.light.text;
+    await expect(panel).toHaveCSS("background-color", rgb(fill));
+  },
+);
 
 test("Copy sits beside the sample's language at the end of its tab bar", async ({
   page,
@@ -117,11 +122,13 @@ for (const [width, cut] of [
     async ({ page }) => {
       await page.setViewportSize({ height: 900, width });
       await page.goto(PAGE);
-      const name = samplePanel(page).getByText("welcome.screen.html", {
+      const panel = samplePanel(page);
+      await expect(panel.getByRole("button", { name: "Copy" })).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const name = panel.getByText("welcome.screen.html", {
         exact: true,
       });
-      const language = samplePanel(page).getByText("html", { exact: true });
-      await expect(name).toHaveText("welcome.screen.html");
+      const language = panel.getByText("html", { exact: true });
       const [named, label] = await Promise.all([
         name.boundingBox(),
         language.boundingBox(),

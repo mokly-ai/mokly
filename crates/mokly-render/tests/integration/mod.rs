@@ -21,6 +21,7 @@ mod lazy_tests;
 mod owned_catalogue_tests;
 mod owned_rule_tests;
 mod ownership_tests;
+mod parallel_cases;
 mod plan_candidate_tests;
 mod plan_capture;
 mod plan_directory_tests;

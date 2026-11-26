@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::{self, JoinHandle};
 
 use mokly_git::control::Clock;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, Unattached};
 
 use crate::commands::{Child, Command, Output, POLL_INTERVAL, STOP_GRACE, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
@@ -26,7 +26,8 @@ pub struct SystemSpawner {
     pub clock: Arc<dyn Clock>,
 }
 
-/// Keeps manager reaping off the owner thread and joins only ready readers during polling.
+/// Waits for the manager exit off the owner thread and joins only ready readers
+/// during polling. The shared tree reaps the manager after its last signal.
 struct OwnedChild {
     process: Mutex<Receiver<Result<process::ExitStatus>>>,
     status: Option<process::ExitStatus>,
@@ -66,24 +67,32 @@ impl Spawner for SystemSpawner {
             Ok(process) => process,
             Err(_) => return Err(Error::CommandUnavailable),
         };
-        let group: Arc<dyn ProcessGroup> = match self.groups.attach(&process) {
-            Ok(group) => Arc::from(group),
-            Err(source) => {
-                let _ = process.kill();
-                thread::spawn(move || process.wait());
+        let pipes = (process.stdout.take(), process.stderr.take());
+        // The tree reaps the manager only when its last reference drops, after
+        // the final signal, so no signal can reach a reused group number.
+        let tree = match self.groups.attach(process) {
+            Ok(tree) => Arc::new(tree),
+            Err(failure) => {
+                // No guard exists, so `stop` stops the whole tree before it
+                // gives back the manager for the reap.
+                let Unattached {
+                    mut child, source, ..
+                } = failure.stop(self.groups.as_ref());
+                let _ = child.kill();
+                thread::spawn(move || child.wait());
                 return Err(InternalError::Platform { source }.into());
             }
         };
-        let (Some(stdout), Some(stderr)) = (process.stdout.take(), process.stderr.take()) else {
+        let group: Arc<dyn ProcessGroup> = tree.clone();
+        let (Some(stdout), Some(stderr)) = pipes else {
             let _ = group.kill();
-            thread::spawn(move || process.wait());
             return Err(InternalError::Worker.into());
         };
         let output_group = Arc::clone(&group);
         let error_group = Arc::clone(&group);
         let (sender, receiver) = mpsc::channel();
         thread::spawn(move || {
-            let _ = sender.send(process.wait().base());
+            let _ = sender.send(tree.wait().base());
         });
         Ok(Box::new(OwnedChild {
             process: Mutex::new(receiver),

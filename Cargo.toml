@@ -75,9 +75,18 @@ unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
 
-# The preview password check runs scrypt with production parameters in the
-# debug API that tests and the local stack use. Unoptimized, one check takes
-# about five seconds, so these crates build optimized in debug builds too.
+# Debug and test builds hash every source, dependency, and capture input. The
+# hash crates run about ten times slower without optimisation. These entries
+# compile only them optimised; the hashes and every other crate stay the same.
+# The preview password check also runs scrypt with production parameters in
+# the debug API that tests and the local stack use, so scrypt and the crates
+# it hashes with build optimised too.
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.xxhash-rust]
+opt-level = 3
+
 [profile.dev.package.scrypt]
 opt-level = 3
 
@@ -85,7 +94,4 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.pbkdf2]
-opt-level = 3
-
-[profile.dev.package.sha2]
 opt-level = 3

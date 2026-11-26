@@ -126,7 +126,7 @@ impl Pool {
         Ok(Some(slot))
     }
 
-    /// A slot stays leased and registered until finish confirms reaping.
+    /// A slot stays leased and registered until finish confirms the exit.
     pub(super) fn retire_return(&self, index: usize, control: &dyn WorkerControl) -> Result<()> {
         let span = Reason::RootSwitch.stop();
         let _scope = span.enter();
@@ -138,7 +138,7 @@ impl Pool {
             now.saturating_add(2_000)
         };
         let finished = control.finish(deadline);
-        let reap_failed = finished.is_err();
+        let exit_unconfirmed = finished.is_err();
         if finished.is_ok() {
             let mut state = self.lock();
             state.controls.remove(&index);
@@ -159,7 +159,7 @@ impl Pool {
             span.record("status", "ok");
         }
         match killed.and(finished) {
-            Err(source) if reap_failed => Err(Error::HeadReturnDisabled {
+            Err(source) if exit_unconfirmed => Err(Error::HeadReturnDisabled {
                 source: Box::new(source),
             }),
             outcome => outcome,

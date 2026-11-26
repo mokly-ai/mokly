@@ -2,11 +2,9 @@
 
 #[cfg(unix)]
 use std::sync::Arc;
-#[cfg(unix)]
-use std::time::Duration;
 
 #[cfg(unix)]
-use mokly_git::control::{Clock, Token};
+use mokly_git::control::Token;
 #[cfg(unix)]
 use mokly_git::disk::SystemDisk;
 #[cfg(unix)]
@@ -21,8 +19,13 @@ use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
 use sha2::{Digest, Sha256};
 
+#[cfg(unix)]
+use hang_clock::HangClock;
 use support::Fixture;
 
+#[cfg(unix)]
+#[path = "support/hang_clock.rs"]
+mod hang_clock;
 mod support;
 
 #[test]
@@ -124,16 +127,21 @@ fn an_optional_checkout_filter_failure_does_not_return_pointer_bytes() {
 fn a_hanging_checkout_filter_is_bounded() {
     let fixture = Fixture::new();
     fixture.git(&["config", "filter.wait.clean", "cat"]);
-    fixture.git(&["config", "filter.wait.smudge", "sh -c 'sleep 60'"]);
+    fixture.git(&[
+        "config",
+        "filter.wait.smudge",
+        "sh -c 'echo hang >> hang.log; exec sleep 60'",
+    ]);
     fixture.git(&["config", "filter.wait.required", "true"]);
     fixture.write(".gitattributes", b"*.wait filter=wait\n");
     fixture.write("value.wait", b"source\n");
     let base = fixture.commit();
+    let log = fixture.root().join("hang.log");
     let repositories: &dyn Repositories = &GitRepositories {
         runner: Arc::new(SystemRunner {
             groups: Arc::new(SystemProcessGroups),
             cancellation: Arc::new(Token::default()),
-            clock: Arc::new(FastClock::default()),
+            clock: Arc::new(HangClock::new(log.clone())),
         }),
         disk: Arc::new(SystemDisk),
     };
@@ -143,26 +151,10 @@ fn a_hanging_checkout_filter_is_bounded() {
         .read(&base, &RepoPath::parse("value.wait").unwrap(), 64)
         .unwrap_err();
     assert!(
-        matches!(error, Error::Conversion { source, .. } if matches!(*source, Error::CheckoutTimeout))
+        matches!(&error, Error::Conversion { source, .. } if matches!(**source, Error::CheckoutTimeout)),
+        "{error:?}"
     );
-}
-
-#[cfg(unix)]
-#[derive(Default)]
-struct FastClock(std::sync::atomic::AtomicU64);
-
-#[cfg(unix)]
-impl Clock for FastClock {
-    fn now(&self) -> Duration {
-        Duration::from_millis(self.0.load(std::sync::atomic::Ordering::Relaxed))
-    }
-
-    fn pause(&self, duration: Duration) {
-        self.0.fetch_add(
-            duration.as_millis() as u64,
-            std::sync::atomic::Ordering::Relaxed,
-        );
-    }
+    assert_eq!(std::fs::read_to_string(&log).unwrap(), "hang\n");
 }
 
 #[test]

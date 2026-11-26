@@ -139,12 +139,10 @@ fn only_administrators_change_automatic_builds_and_an_absent_field_preserves_it(
         "validation-failed",
     );
     app.queries(&mut |q| {
-        let mut installation = q
-            .github_installation(project.installation)
-            .unwrap()
-            .unwrap();
+        let mut installation = q.github_installation(project.installation)?.unwrap();
         installation.active = false;
-        q.save_github_installation(&installation).unwrap();
+        q.save_github_installation(&installation)?;
+        Ok(())
     });
     input["automaticBuilds"] = json!(true);
     refusal(

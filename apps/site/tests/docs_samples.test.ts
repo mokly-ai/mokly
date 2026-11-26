@@ -17,6 +17,7 @@ import { sitePath } from "../src/workspace.js";
 import {
   attribute,
   byClass,
+  byTag,
   elements,
   one,
   textContent,
@@ -190,6 +191,8 @@ test("the built first-screen guide has a numbered sample and four script-free vi
     ],
   );
   const frames = views.map((view) => one(view, "site-docs-sample-document"));
+  assert.equal(byTag(band, "iframe").length, frames.length, "sample frames");
+  one(band, "site-docs-sample-wire");
   assert.deepEqual(
     frames.map((frame) => [
       frame.tagName,

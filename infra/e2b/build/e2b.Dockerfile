@@ -11,6 +11,9 @@ RUN apt-get update \
         "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
         --output /tmp/node.tar.xz \
     && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum --check --strict \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+        /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+        /usr/local/include/node \
     && tar --extract --xz --file /tmp/node.tar.xz --directory /usr/local --strip-components=1 \
     && rm /tmp/node.tar.xz \
     && /usr/local/bin/corepack enable \

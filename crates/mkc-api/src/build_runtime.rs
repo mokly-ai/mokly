@@ -1,4 +1,4 @@
-//! Concurrent two-second build claims and independent five-minute reconciliation.
+//! Concurrent build claims at the claim interval and independent five-minute reconciliation.
 
 use std::future::{self, Future};
 use std::pin::Pin;
@@ -15,6 +15,8 @@ use crate::github_runtime::WorkerLoop;
 pub(crate) struct BuildWorkerLoop {
     pub(crate) worker: Option<Arc<dyn BuildWorker>>,
     pub(crate) clock: Arc<dyn CheckClock>,
+    /// The pause after a claim that finds no build; production waits two seconds.
+    pub(crate) interval: Duration,
 }
 
 impl WorkerLoop for BuildWorkerLoop {
@@ -50,7 +52,7 @@ impl WorkerLoop for BuildWorkerLoop {
                     result = attempts.join_next(), if !attempts.is_empty() => {
                         if let Some(Err(error)) = result { tracing::error!(?error, "build execution task failed"); }
                     }
-                    () = self.clock.sleep(Duration::from_secs(2)) => {},
+                    () = self.clock.sleep(self.interval) => {},
                 }
             }
         })

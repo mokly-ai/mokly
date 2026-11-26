@@ -10,8 +10,19 @@ use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
 use super::commands::commands_for;
+use super::native_scope::TestScope;
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
+
+/// The complete native nextest run: every failure, in the native scope. The
+/// native scope runs a subset of the tests of the local complete run.
+fn native_nextest() -> CommandSpec {
+    CommandSpec::new("cargo")
+        .args(["nextest", "run", "--locked", "-p", "mokly-*", "-p", "xtask"])
+        .args(["--no-fail-fast"])
+        .args(TestScope::Native.nextest_args())
+        .keep_going()
+}
 
 #[test]
 fn every_native_command_stays_covered_by_the_local_gate() {
@@ -26,7 +37,7 @@ fn every_native_command_stays_covered_by_the_local_gate() {
         .args(["nextest", "run"])
         .args(mokly);
     if local.contains(&nextest) {
-        local.push(nextest.args(["--no-fail-fast"]).keep_going());
+        local.push(native_nextest());
     }
     let doc = CommandSpec::new("cargo")
         .args(["test"])
@@ -62,7 +73,7 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
             "npm run build --workspace \"@mokly/frame\"",
             "npm run build --workspace \"@mokly/viewer\"",
             "npm run build --workspace \"@mokly/mokly\"",
-            "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast",
+            &native_nextest().display(),
             "cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast",
         ]
     );
@@ -86,7 +97,7 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
             CommandRunnerRunMock
-                .next_call(matching!((command) if command.display() == "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast"))
+                .next_call(matching!((command) if command.display() == native_nextest().display()))
                 .returns(Ok(())),
             CommandRunnerRunMock
                 .next_call(matching!((command) if command.display() == "cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast"))
@@ -126,9 +137,9 @@ fn native_build_failure_prevents_tests() {
 /// The complete suite and the first test shard both keep going after failed tests.
 #[test]
 fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
-    let complete = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
-    let first = "cargo xtask rust-test-shard --partition 1/2 --no-fail-fast";
-    for (shard, nextest) in [(None, complete), (Some("2/3"), first)] {
+    let complete = native_nextest().display();
+    let first = "cargo xtask rust-test-shard --partition 1/2 --no-fail-fast --native";
+    for (shard, nextest) in [(None, complete.as_str()), (Some("2/3"), first)] {
         let observed = Arc::new(Mutex::new(Vec::new()));
         let captured = observed.clone();
         let failing = nextest.to_owned();

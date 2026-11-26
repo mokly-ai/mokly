@@ -7,7 +7,7 @@
  * mockup sheets are the ones that the site mockups load: the font sheets of
  * the site rule of `mokly.config.json`, then the CSS that each site screen
  * imports, read from the sources as the mockup tests read them. The browser
- * walk checks the drawn glow of every control on every route, and
+ * walk checks the drawn glow of every control on a page of each template, and
  * `contrast.test.ts` checks that the glow keeps 3:1.
  */
 import assert from "node:assert/strict";

@@ -11,6 +11,7 @@ use crate::host_memory::HostMemory;
 use crate::methods::Call;
 use crate::pool_claim::CallClaim;
 use crate::pool_cleanup;
+use crate::pool_deadlines::TestDeadlines;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
 use crate::pool_start::StartLease;
@@ -68,6 +69,7 @@ pub struct Pool {
     pub(super) clock: Arc<dyn Clock>,
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
+    pub(super) test_deadlines: TestDeadlines,
     pub(super) state: Arc<Mutex<State>>,
     pub(super) releases: Option<Sender<Notice>>,
     pub(super) ready: Arc<Condvar>,
@@ -91,6 +93,7 @@ impl Pool {
             clock,
             launch,
             options,
+            test_deadlines: TestDeadlines::default(),
             state: Arc::new(Mutex::new(State::default())),
             ready: Arc::new(Condvar::new()),
             releases: Some(sender),

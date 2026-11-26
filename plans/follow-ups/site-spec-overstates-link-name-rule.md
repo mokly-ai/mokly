@@ -40,9 +40,10 @@
   - **D.** Make a rule for the two labels on every page: Get started opens
     only `/sign-up`, and **Docs** opens only `/docs/`. It needs Cal. Effort:
     Small.
-  - **E.** Do B, and add the rule to the shared accessibility walk in
-    `apps/site/tests/browser/accessibility.ts` for `/` and `/pricing`. It is
-    a new gate, which needs Cal. Effort: Medium.
+  - **E.** Do B and add a check in `apps/site/tests/marketing_output.test.ts`.
+    It reads the link names and targets in the built HTML for `/` and
+    `/pricing`. This adds one Node check over two files and needs Cal's
+    approval for the new gate. Effort: Medium.
 - **Left out:** Drop the reason, because a decision in force keeps its
   rejected alternative and the reason. Change nothing, because the sentence
   then conflicts with `site-changelog.md`.

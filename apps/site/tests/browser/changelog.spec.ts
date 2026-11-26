@@ -19,54 +19,23 @@ import {
 } from "./changelog.js";
 
 /**
- * The changelog page in a real browser: the release frames, the note filter
+ * The changelog page in a real browser: the note filter
  * and its status, a link to a release that the filter hides, the release in
  * view and a link into a closed disclosure. changelog-layout.spec.ts holds
- * the layout and the page without script, and the page walk of
- * pages.spec.ts checks its title, its heading and the shared accessibility
- * rules; tests/changelog.test.ts checks the releases that the page draws.
+ * the layout and the page without script. The Node suite checks the built
+ * frames and the release data.
  */
 
 test(
-  "every release draws as a frame, newest first, and the older ones as Earlier releases",
-  DESKTOP,
+  "a filter choice shows only its notes and the releases that list them",
+  { tag: ["@desktop", "@scheme"] },
   async ({ page }) => {
     await page.goto(SITE_PATHS.changelog);
     const [newest] = RELEASES;
-    if (newest === undefined) throw new Error("the changelog has no release");
-    await expect(page.getByRole("main").getByRole("article")).toHaveCount(
-      RELEASES.length,
-    );
-    const first = page.getByRole("main").getByRole("article").first();
-    await expect(first).toHaveAccessibleName(`Mokly CLI ${newest.version}`);
-    await expect(first.locator("time")).toHaveAttribute(
-      "datetime",
-      newest.date,
-    );
-    await expect(first.locator("time")).toHaveText(newest.readableDate);
-    await expect(first.getByText("Latest", { exact: true })).toBeVisible();
-    await expect(
-      first.getByRole("link", { name: "Read release details" }),
-    ).toHaveAttribute("href", newest.link ?? "");
-    await expect(
-      page
-        .getByRole("group", { name: "Earlier releases" })
-        .getByRole("article"),
-    ).toHaveCount(RELEASES.length - FULL_FRAMES);
-    for (const release of RELEASES.filter((each) => each.link === null))
-      await expect(
-        frame(page, release.version).getByRole("link", {
-          name: "Read release details",
-        }),
-      ).toHaveCount(0);
-  },
-);
-
-test(
-  "a filter choice shows only its notes and the releases that list them",
-  DESKTOP,
-  async ({ page }) => {
-    await page.goto(SITE_PATHS.changelog);
+    if (!newest) throw new Error("the changelog has no release");
+    const latest = frame(page, newest.version);
+    await expect(latest).toHaveAccessibleName(`Mokly CLI ${newest.version}`);
+    await expect(latest.getByText("Latest", { exact: true })).toBeVisible();
     await expect(status(page)).toHaveText(
       `${notes()} notes in ${RELEASES.length} releases`,
     );
@@ -216,46 +185,48 @@ test(
   },
 );
 
-test("in forced colours the checked filter option takes the system highlight", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.changelog);
-  await page.emulateMedia({ forcedColors: "active" });
-  // The system colours as this browser resolves them. The probe keeps its
-  // own colours, as the checked option does.
-  const system = await page.evaluate(() => {
-    const probe = document.createElement("span");
-    probe.style.cssText =
-      "background-color: Highlight; color: HighlightText; outline-color: CanvasText; forced-color-adjust: none";
-    document.body.append(probe);
-    const style = getComputedStyle(probe);
-    const colours = {
-      canvasText: style.outlineColor,
-      highlight: style.backgroundColor,
-      highlightText: style.color,
-    };
-    probe.remove();
-    return colours;
-  });
-  const segment = (name: RegExp) =>
-    filter(page).locator("label", { has: page.getByRole("radio", { name }) });
-  const checked = segment(/^All \d+$/);
-  await expect(checked).toHaveCSS("background-color", system.highlight);
-  await expect(checked).toHaveCSS("color", system.highlightText);
-  await expect(checked.getByText(/^\d+$/)).toHaveCSS(
-    "color",
-    system.highlightText,
-  );
-  await expect(segment(/^Breaking \d+$/)).not.toHaveCSS(
-    "background-color",
-    system.highlight,
-  );
-  // Focus draws an outline in the system text colour, apart from the
-  // highlight. A press of Tab gives the page keyboard focus first.
-  await page.keyboard.press("Tab");
-  await filter(page)
-    .getByRole("radio", { name: /^All \d+$/ })
-    .focus();
-  await expect(checked).toHaveCSS("outline-style", "solid");
-  await expect(checked).toHaveCSS("outline-color", system.canvasText);
-});
+test(
+  "in forced colours the checked filter option takes the system highlight",
+  { tag: ["@desktop", "@scheme"] },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.changelog);
+    await page.emulateMedia({ forcedColors: "active" });
+    // The system colours as this browser resolves them. The probe keeps its
+    // own colours, as the checked option does.
+    const system = await page.evaluate(() => {
+      const probe = document.createElement("span");
+      probe.style.cssText =
+        "background-color: Highlight; color: HighlightText; outline-color: CanvasText; forced-color-adjust: none";
+      document.body.append(probe);
+      const style = getComputedStyle(probe);
+      const colours = {
+        canvasText: style.outlineColor,
+        highlight: style.backgroundColor,
+        highlightText: style.color,
+      };
+      probe.remove();
+      return colours;
+    });
+    const segment = (name: RegExp) =>
+      filter(page).locator("label", { has: page.getByRole("radio", { name }) });
+    const checked = segment(/^All \d+$/);
+    await expect(checked).toHaveCSS("background-color", system.highlight);
+    await expect(checked).toHaveCSS("color", system.highlightText);
+    await expect(checked.getByText(/^\d+$/)).toHaveCSS(
+      "color",
+      system.highlightText,
+    );
+    await expect(segment(/^Breaking \d+$/)).not.toHaveCSS(
+      "background-color",
+      system.highlight,
+    );
+    // Focus draws an outline in the system text colour, apart from the
+    // highlight. A press of Tab gives the page keyboard focus first.
+    await page.keyboard.press("Tab");
+    await filter(page)
+      .getByRole("radio", { name: /^All \d+$/ })
+      .focus();
+    await expect(checked).toHaveCSS("outline-style", "solid");
+    await expect(checked).toHaveCSS("outline-color", system.canvasText);
+  },
+);
