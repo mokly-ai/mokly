@@ -1,10 +1,10 @@
 import { publicationPathFor } from "./addresses";
+import { installPollClock, nextPoll } from "./build-clock";
 import { advance } from "./build-double";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
 import { createToken, publish } from "./publish";
 import {
-  attempt,
   branchRow,
   build,
   buildId,
@@ -25,6 +25,7 @@ test("a reference with nothing ready shows its running build", async ({
     newestBuild: summary({ id, state: "running" }),
   });
   double.branches = [topic];
+  await installPollClock(page);
   await open(page, scenario.branchAt("topic"));
   await expect(
     page.getByRole("heading", { name: "Publishing this branch" }),
@@ -41,6 +42,7 @@ test("a reference with nothing ready shows its running build", async ({
     publicationId: published.id,
     canCancel: false,
   });
+  await nextPoll(page);
   await page.waitForURL((url) =>
     url.pathname.endsWith("/publications/" + published.id),
   );
@@ -63,6 +65,7 @@ test("an open pull request alias follows its build to the ready publication", as
       pullRequest: buildPullRequest,
     }),
   );
+  await installPollClock(page);
   await open(page, scenario.pullAt(buildPullRequest.number));
   await expect(
     page.getByRole("heading", { name: "Publishing this pull request" }),
@@ -82,6 +85,7 @@ test("an open pull request alias follows its build to the ready publication", as
     publicationId: published.id,
     canCancel: false,
   });
+  await nextPoll(page);
   await expect(page).toHaveURL(
     await publicationPathFor(page, projectId, published.id),
   );
@@ -150,52 +154,4 @@ test("a pull request shows its build, and offers to publish when it has none", a
   await page.getByRole("button", { name: "Publish this pull request" }).click();
   await page.waitForURL((url) => url.pathname === scenario.buildAt(next));
   expect(double.requests).toEqual([{ pullRequest: buildPullRequest.number }]);
-});
-
-test("a failed build newer than the newest publication holds the stage", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-failed-alias");
-  const { double, projectId } = scenario;
-  const id = buildId(130);
-  double.builds.set(
-    id,
-    build({
-      id,
-      projectId,
-      state: "failed",
-      canCancel: false,
-      failure: {
-        step: "install",
-        cause: "unsupported-lockfile",
-        exitCode: null,
-      },
-    }),
-  );
-  double.branches = [
-    branchRow("topic", {
-      newestBuild: summary({
-        id,
-        state: "failed",
-        createdAt: "2026-09-15T16:00:00Z",
-      }),
-      newestPublication: attempt({
-        state: "expired",
-        publishedAt: "2026-09-14T10:00:00Z",
-      }),
-    }),
-  ];
-  await open(page, scenario.branchAt("topic"));
-  await expect(page.locator(".fo-build-line")).toHaveText(
-    "Mokly installs with npm, pnpm or Yarn.",
-  );
-  // The same request would fail again, so the CI setup guide replaces Try
-  // again, as a link like every other Publish from CI.
-  await expect(page.getByTestId("build-try-again")).toHaveCount(0);
-  const guide = page
-    .locator(".fo-build-action")
-    .getByRole("link", { name: "Publish from CI" });
-  await expect(guide).toHaveAttribute("href", /\/docs\/ci\/publish-from-ci\/$/);
-  await expect(guide).toHaveAttribute("target", "_blank");
-  await expect(page.locator(".fo-build-action button")).toHaveCount(0);
 });

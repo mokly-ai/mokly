@@ -36,9 +36,11 @@ This is the testing guide for the [App package](./README.md).
   configured as both `MKC_GITHUB_API_ORIGIN` and `MKC_GITHUB_WEB_ORIGIN` for the
   fixture App the recordings were captured for. It makes the installation real:
   a project linked to GitHub is a repository the App can read, so
-  `createProject` presses Install on GitHub, and the API mints an installation
+  `walkToProject` presses Install on GitHub, and the API mints an installation
   token, reads the installation and its one repository, exchanges the
-  authorization code and binds them. The connect situation, the Add GitHub
+  authorization code and binds them. `createProject`, which every test whose
+  subject comes after onboarding uses, sends the same requests through the
+  API without the four screens. The connect situation, the Add GitHub
   account action and the conflict recovery run the same exchange through the
   candidate flow. The suite answers only the two pages GitHub itself would
   draw — the setup page and the authorization page — with the returns GitHub
