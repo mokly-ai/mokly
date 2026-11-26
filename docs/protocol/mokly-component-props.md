@@ -65,7 +65,9 @@ holes, and undefined elements fail `component-props`. `__proto__`,
 `constructor`, and `prototype` are rejected as property names at every
 object level. Negative zero is preserved in prop values. All supplied data
 props participate in material comparison, including props without a control
-or without visible output; nothing is silently omitted.
+or without visible output; nothing is silently omitted. This rule does not
+apply to a [story component use](./mokly-story-component-uses.md#recorded-props),
+which records its props in its own forms.
 
 ## Authoring Types And Slots
 

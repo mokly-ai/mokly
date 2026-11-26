@@ -3,15 +3,25 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV4 } from "../packages/model/dist/index.js";
+import {
+  currentDocumentPath,
+  type ComponentWireValue,
+  type EntryDetailV4,
+} from "../packages/model/dist/index.js";
+import { viewRoute } from "../packages/viewer/src/navigation/routes.js";
 
 import { viteFixture } from "./fixtures/vite/support.js";
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { command } from "./helpers/static_publication.js";
 
 const badge = (implementation: string) => `
-  export function Badge({ label }: { label: string }) {
-    return <b data-badge={label === "Fixed" ? label : undefined}>${implementation}</b>;
+  export function Badge({ label, items }: {
+    label?: string;
+    items?: { label: string; onClick: () => void }[];
+    depth?: unknown;
+  }) {
+    return <b data-badge={label === "Fixed" ? label : undefined}
+      data-callback={items ? typeof items[0]?.onClick : undefined}>${implementation}</b>;
   }
   export function Repeated() {
     return <><Badge label="Fixed" /><Badge label="Fixed" /></>;
@@ -61,7 +71,13 @@ for (const vite of [false, true]) {
     );
     const caller = (label: string) =>
       screen(`<Badge data-identity="edit" label="${label}" />`);
+    const items = (label: string) =>
+      screen(
+        `<Badge key="items" items={[{ label: "${label}", onClick() {} }]} depth={depth} />`,
+      ) +
+      'const depth = Array.from({ length: 63 }).reduce<unknown>((value) => ({ nested: value }), "leaf");';
     await write(root, "usage/edit.mockup.tsx", caller("Old data"));
+    await write(root, "usage/items.mockup.tsx", items("Old item"));
     await write(root, "usage/one.mockup.tsx", screen("<Repeated />"));
     await write(root, "usage/two.mockup.tsx", screen("<Repeated />"));
     for (const args of [
@@ -75,6 +91,7 @@ for (const vite of [false, true]) {
       await git(root, ...args);
     await write(root, "usage/Badge.tsx", badge("After implementation"));
     await write(root, "usage/edit.mockup.tsx", caller("New data"));
+    await write(root, "usage/items.mockup.tsx", items("New item"));
 
     const result = await build(root, [], "plain");
     const component = result.index.components.find(
@@ -91,6 +108,7 @@ for (const vite of [false, true]) {
       result.index.screens.map(({ path, changes }) => [path, changes]),
       [
         ["edit", { status: "ready", included: true, kind: "changed" }],
+        ["items", { status: "ready", included: true, kind: "changed" }],
         ["one", { status: "ready", included: false, kind: "unmodified" }],
         ["two", { status: "ready", included: false, kind: "unmodified" }],
       ],
@@ -111,16 +129,55 @@ for (const vite of [false, true]) {
       "data-identity": ["string", "edit"],
       label: ["string", "New data"],
     });
+    const itemsDetail = await detail("items");
+    const itemInput = itemsDetail.workspace!.inputChanges.find(
+      ({ viewport, colorScheme }) =>
+        viewport === "mobile" && colorScheme === "light",
+    );
+    assert.equal(itemInput?.instanceId, "Badge_Story-items");
+    let depth: ComponentWireValue = ["string", "leaf"];
+    for (let level = 0; level < 63; level++)
+      depth = ["object", [["nested", depth]]];
+    for (const [props, label] of [
+      [itemInput.before, "Old item"],
+      [itemInput.after, "New item"],
+    ] as const) {
+      assert.deepEqual(props, {
+        depth,
+        items: [
+          "array",
+          [
+            [
+              "object",
+              [
+                ["label", ["string", label]],
+                ["onClick", ["string", "mokly:function"]],
+              ],
+            ],
+          ],
+        ],
+      });
+    }
+    assert.match(
+      await fs.readFile(
+        path.join(
+          result.output,
+          currentDocumentPath(viewRoute("items", "mobile")),
+        ),
+        "utf8",
+      ),
+      /data-callback="function"/u,
+    );
     const badgeDetail = await detail("Badge_Story");
     assert.deepEqual(
       new Set(badgeDetail.workspace!.usedBy?.map(({ entryPath }) => entryPath)),
-      new Set(["composite", "edit", "one", "two"]),
+      new Set(["composite", "edit", "items", "one", "two"]),
     );
     assert.deepEqual(
       new Set(
         badgeDetail.workspace!.affected?.map(({ entryPath }) => entryPath),
       ),
-      new Set(["composite", "edit", "one", "two"]),
+      new Set(["composite", "edit", "items", "one", "two"]),
     );
     const unchanged = await detail("one");
     assert.deepEqual(unchanged.workspace!.inputChanges, []);

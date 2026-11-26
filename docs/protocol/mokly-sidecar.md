@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: The JSX development shim does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them.
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and

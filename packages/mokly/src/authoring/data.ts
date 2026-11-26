@@ -2,6 +2,13 @@ import { createHash } from "node:crypto";
 
 import type { ComponentWireValue } from "../generated/sidecar/ComponentWireValue.js";
 
+export const maxDataNodes = 10_000;
+export const maxDataDepth = 64;
+
+export function reservedDataKey(key: string): boolean {
+  return ["__proto__", "constructor", "prototype"].includes(key);
+}
+
 export class DataError extends Error {
   constructor(
     readonly path: string,
@@ -16,7 +23,7 @@ export function copyData(value: unknown, allowReservedKeys = false): unknown {
   let nodes = 0;
   const seen = new Set<object>();
   function visit(input: unknown, depth: number, at: string): unknown {
-    if (++nodes > 10_000 || depth > 64)
+    if (++nodes > maxDataNodes || depth > maxDataDepth)
       throw new DataError(at, "data exceeds its bounds");
     if (
       input === null ||
@@ -43,8 +50,7 @@ export function copyData(value: unknown, allowReservedKeys = false): unknown {
       if (
         !descriptor.enumerable ||
         !("value" in descriptor) ||
-        (!allowReservedKeys &&
-          ["__proto__", "constructor", "prototype"].includes(key))
+        (!allowReservedKeys && reservedDataKey(key))
       )
         throw new DataError(
           `${at}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`,

@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite.config` and `instanceNameProps` fields are not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds `vite.config`, and the [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds `instanceNameProps`.
+Status: The `vite.config` field is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
@@ -38,7 +38,7 @@ following contract:
   turns the [Vite adapter](./mokly-vite-adapter.md) on or off, defaulting to
   off;
 - `instanceNameProps`: the props that name a
-  [story component use](./mokly-story-component-uses.md#ids), defaulting to
+  [story component use](./mokly-instance-ids.md#ids), defaulting to
   `["id", "name", "data-testid", "aria-label"]`;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base, defaulting to `origin/main`;
@@ -233,8 +233,8 @@ settings of this section that the project's Vite setup replaces.
 ## Instance Name Props
 
 `instanceNameProps` is an array of strings. The
-[story component id rules](./mokly-story-component-uses.md#ids) try the `key`
-of a use first, and then each listed prop in order. A `key` item, an empty
+[instance id rules](./mokly-instance-ids.md#ids) try the `key` of a story
+component use first, and then each listed prop in order. A `key` item, an empty
 item, and a repeated item change nothing. With an empty list, only the `key`
 names a use, and a repeated id takes a number. Decision: one top-level list
 serves every root, because the naming props are product-wide. Such items give

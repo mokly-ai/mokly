@@ -49,11 +49,10 @@ registered component, and `unknown-link-definition`, for a link to a
 definition that no entry module exports.
 
 Each other error of Mokly's own code fails with `render-failed`, such as a
-duplicate instance id or a failed check of
-[reserved markers](./mokly-link-validation.md#document-checks) in the rendered
-output. So the [duplicate id rule](./mokly-instances.md#stability-rule) and the
+failed check of [reserved markers](./mokly-link-validation.md#document-checks)
+in the rendered output. So the
 [plain data rule](./mokly-component-props.md#plain-data) of registered
-components stay in force inside a story.
+components stays in force inside a story.
 
 Decision: these errors stop the build, because the author fixes them in the
 catalogue, or because they protect Mokly's records. A failed view for them was

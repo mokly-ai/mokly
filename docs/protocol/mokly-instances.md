@@ -1,6 +1,6 @@
 # Component Instance Identity
 
-Status: Mokly does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them, with their ids and numbers.
+Status: A repeated id of a `defineComponent` wrapper or an HTML component element still fails the build, and a wrapper does not take its id from `key` yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds both, under the [instance id rules](./mokly-instance-ids.md).
 
 ## Identity And Scope
 
@@ -31,16 +31,10 @@ const key = sha256(JSON.stringify(preimage)); // lowercase hex
 Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
 The result is exactly 64 lowercase hexadecimal characters. The
 `mokly-instance-v1` domain string is a fixed protocol identifier,
-including its spelling. `id` is the validated local instance id: the
-`mokly-instance` attribute of a component element, or the `moklyInstance`
-prop of a wrapper, defaulting to the final segment of the registered
-component's resolved path, including after index collapse or a declared path
-override. A story component use takes its id from its `key`, a naming prop,
-or the same default segment, under the
-[story component id rules](./mokly-story-component-uses.md#ids).
-Explicit values use lowercase kebab-case grammar; inferred defaults and the
-ids of story component uses follow the component path's segment grammar.
-`owner` is `{ kind: "entry" }` or `{ kind: "instance", instanceKey }`. The
+including its spelling. `id` is the validated local instance id of the
+[instance id rules](./mokly-instance-ids.md#ids), by default the final
+segment of the registered component's resolved path. `owner` is
+`{ kind: "entry" }` or `{ kind: "instance", instanceKey }`. The
 receiving-slot key is the same digest operation over
 `["mokly-slot-v1", instanceKey, name]`.
 
@@ -64,12 +58,12 @@ A digest changes if and only if its serialized preimage changes, subject to the
 usual SHA-256 collision assumption. Edits that change it are:
 
 - Changing the effective instance id, including changing the final component
-  path segment when it supplies the default or starts the id of a story
-  component use.
-- For a story component use, changing the value that gives its id: its `key`,
-  or else its first naming prop that has a value. A numbered id also changes
-  when a use with the same id is inserted or removed before it in render order
-  in its input scope.
+  path segment when the id comes from it.
+- Changing the `key` or the naming prop that gives the id, under the
+  [instance id rules](./mokly-instance-ids.md#ids).
+- For a numbered id, an edit of the earlier instances of its input scope that
+  changes its number, under the
+  [numbered id rules](./mokly-instance-ids.md#numbered-ids).
 - Changing input ownership between entry and instance, or moving the use to a
   parent with a different instance key.
 - Changing the original receiving slot key, including entering or leaving a
@@ -81,7 +75,7 @@ Edits that keep it, provided those inputs stay the same, are:
 
 - Editing data props, slot content, component implementation, styles or assets.
 - Reordering siblings, or inserting or removing other siblings with distinct
-  ids.
+  ids, when no number changes.
 - Changing source filename, invocation line or column, comments or formatting.
 - Renaming an entry title or folder title, or moving the containing entry;
   moving between entry scopes can keep the digest but changes the scoped
@@ -93,12 +87,11 @@ Edits that keep it, provided those inputs stay the same, are:
 - Replacing the registered component while keeping an explicit local id;
   `componentId` is recorded separately and Changes can still be material.
 
-Duplicate local ids in the same input scope and placement are build errors
-for component elements and wrappers. Repeated placement comes only from slot
-content that a component renders more than once with the same logical inputs.
-A story component use whose id its input scope already holds takes a number
-instead, with the `instance-numbered` warning, under the
-[numbered id rules](./mokly-story-component-uses.md#numbered-ids).
+An instance whose id an earlier instance of its input scope holds takes a
+number, with the `instance-numbered` warning, under the
+[numbered id rules](./mokly-instance-ids.md#numbered-ids). Repeated placement
+comes only from slot content that a component renders more than once with the
+same logical inputs, and it repeats no id.
 
 ## Record-Only Resolution
 
@@ -166,8 +159,10 @@ or a selected dependency root omits this optional source metadata.
 The sidecar supplies the location for a `defineComponent` wrapper through the
 JSX development shim of its [bundling rules](./mokly-sidecar.md#bundling). The
 location reaches only wrappers that `defineComponent` identified, through the
-reserved `__moklySource` prop. The wrapper strips `__moklySource` before prop and slot validation, hashing, and
-the consumer render, exactly as it strips `moklyInstance`. The name is
+reserved `__moklySource` prop. The shim passes the invocation `key` of a
+wrapper through the reserved `__moklyKey` prop. The wrapper strips
+`__moklySource` and `__moklyKey` before prop and slot validation, hashing, and
+the consumer render, exactly as it strips `moklyInstance`. Both names are
 reserved from authored props and slots, and no development runtime or
 attribute reaches the fragment. Programmatic `createElement` calls and
 transformed modules without invocation information omit `source`. The shim
@@ -223,6 +218,7 @@ a missing logical instance and unavailable geometry are separate states.
 - [Tree comparison and Changes](./mokly-comparison.md)
 - [Component usage records](./mokly-component-usage-records.md)
 - [Registered components](./mokly-components.md)
+- [Instance ids](./mokly-instance-ids.md)
 - [Story component uses](./mokly-story-component-uses.md)
 - [HTML components](./mokly-html-components.md)
 - [Render sidecar](./mokly-sidecar.md)

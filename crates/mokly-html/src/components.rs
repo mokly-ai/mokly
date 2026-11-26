@@ -17,6 +17,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{InternalError, Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::fragment::RenderKind;
+use crate::instance_names::{first_available, numbered_warning};
 use crate::props::{camel_case, coerce, schema_at, validate_prepared_for, value_at};
 use crate::tree::{Element, Region, RegionKind};
 use crate::{conditions, relative_links, source_locations};
@@ -48,14 +49,15 @@ impl Engine<'_> {
         let fragment = conditions::reserved(element.take("fragment"), context)?;
         element.take("slot");
         let explicit_id = conditions::reserved(element.take("mokly-instance"), context)?;
-        let id = explicit_id
+        let base = explicit_id
             .as_deref()
             .unwrap_or_else(|| component.path.rsplit('/').next().unwrap_or(&component.path));
-        if (explicit_id.is_some() && !kebab(id)) || (explicit_id.is_none() && !is_path_segment(id))
+        if (explicit_id.is_some() && !kebab(base))
+            || (explicit_id.is_none() && !is_path_segment(base))
         {
             return Err(invalid(
                 Code::HtmlAttribute,
-                format!("invalid component instance id {id:?}"),
+                format!("invalid component instance id {base:?}"),
             ));
         }
         let mut props = Props::new();
@@ -102,12 +104,6 @@ impl Engine<'_> {
                 props.insert(name, value);
             }
         }
-        self.warnings.extend(numeric_warnings::for_invocation(
-            &props,
-            self.request.entry,
-            &component.path,
-            id,
-        ));
         let validator = self
             .request
             .catalogue
@@ -117,43 +113,52 @@ impl Engine<'_> {
                 entry: component.path.clone(),
             })?;
         validate_prepared_for(validator, &props, &component.path, AuthoringKind::Html)?;
-        let key = instance_key(&context.owner, context.slot_key.as_deref(), id);
         let props_digest = props_key(&props);
-        let existing = self.instances.get(&key);
-        let repeated = context.replay
-            && existing.is_some_and(|record| {
-                record.props_key == props_digest && record.component_id == component.path
-            })
-            && site
-                .as_ref()
-                .is_some_and(|site| self.invocation_sites.get(&key) == Some(site));
-        if existing.is_some() && !repeated {
-            return Err(invalid(
-                Code::HtmlAttribute,
-                format!("duplicate component instance id {id:?} in one input scope"),
-            ));
-        }
+        let (id, (key, repeated)) = first_available(base, |id| {
+            let key = instance_key(&context.owner, context.slot_key.as_deref(), id);
+            let Some(record) = self.instances.get(&key) else {
+                return Some((key, false));
+            };
+            let replay = context.replay
+                && record.props_key == props_digest
+                && record.component_id == component.path
+                && site
+                    .as_ref()
+                    .is_some_and(|site| self.invocation_sites.get(&key) == Some(site));
+            replay.then_some((key, true))
+        });
+        self.warnings.extend(numeric_warnings::for_invocation(
+            &props,
+            self.request.entry,
+            &component.path,
+            &id,
+        ));
         if !repeated {
             let scope = format!("{:?}/{:?}", context.owner, context.slot_key);
             let order = self.orders.entry(scope).or_default();
-            self.instances.insert(
-                key.clone(),
-                ComponentInstanceRecord {
-                    key: key.clone(),
-                    id: id.into(),
-                    component_id: component.path.clone(),
-                    owner: context.owner.clone(),
-                    slot_key: context.slot_key.clone(),
-                    order: *order,
-                    props: wire_props::encode(&props),
-                    props_key: props_digest.clone(),
-                    source: invocation.as_ref().map(|source| ComponentSourceLocation {
-                        path: source.path.clone(),
-                        line: source.line as u64,
-                        column: source.column as u64,
-                    }),
-                },
-            );
+            let record = ComponentInstanceRecord {
+                key: key.clone(),
+                id: id.clone(),
+                component_id: component.path.clone(),
+                owner: context.owner.clone(),
+                slot_key: context.slot_key.clone(),
+                order: *order,
+                props: wire_props::encode(&props),
+                props_key: props_digest.clone(),
+                source: invocation.as_ref().map(|source| ComponentSourceLocation {
+                    path: source.path.clone(),
+                    line: source.line as u64,
+                    column: source.column as u64,
+                }),
+            };
+            if id != base {
+                self.warnings.push(numbered_warning(
+                    &record,
+                    self.request.entry,
+                    "mokly-instance",
+                ));
+            }
+            self.instances.insert(key.clone(), record);
             *order += 1;
             if let Some(site) = site {
                 self.invocation_sites.insert(key.clone(), site);
@@ -194,7 +199,7 @@ impl Engine<'_> {
                 kind: RegionKind::Instance {
                     path: component.path.clone(),
                     key,
-                    local_id: id.into(),
+                    local_id: id,
                     props_key: props_digest,
                 },
             },

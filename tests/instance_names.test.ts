@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveInstanceId } from "../packages/mokly/src/authoring/instance-names.js";
+import {
+  resolveInstanceId,
+  resolveWrapperInstanceId,
+} from "../packages/mokly/src/authoring/instance-names.js";
 
 test("story use naming takes the first usable key or default naming prop", () => {
   for (const [key, props, id] of [
@@ -63,4 +66,44 @@ test("story use naming fills the first available suffix after a collision", () =
     assert.deepEqual(result, { id, numbered });
     seen.add(result.id);
   }
+});
+
+test("wrapper naming prefers moklyInstance to key and the path segment", () => {
+  for (const [explicit, key, id] of [
+    ["manual", "ignored", "manual"],
+    [undefined, "Café / Save", "Button_Icon-cafe-save"],
+    [undefined, 7, "Button_Icon-7"],
+    [undefined, "!!!", "Button_Icon"],
+  ] as const) {
+    assert.deepEqual(
+      resolveWrapperInstanceId("Button_Icon", new Set(), explicit, key),
+      { id, numbered: false },
+    );
+  }
+  assert.throws(
+    () => resolveWrapperInstanceId("Button_Icon", new Set(), "Not valid", 7),
+    /moklyInstance must be lowercase kebab-case/u,
+  );
+});
+
+test("wrappers and story uses number collisions in the same scope", () => {
+  const seen = new Set(["button-3"]);
+  const first = resolveWrapperInstanceId("button", seen, undefined, undefined);
+  assert.deepEqual(first, { id: "button", numbered: false });
+  seen.add(first.id);
+  const story = resolveInstanceId("button", seen, undefined, {});
+  assert.deepEqual(story, { id: "button-2", numbered: true });
+  seen.add(story.id);
+  const wrapper = resolveWrapperInstanceId(
+    "button",
+    seen,
+    undefined,
+    undefined,
+  );
+  assert.deepEqual(wrapper, { id: "button-4", numbered: true });
+  seen.add(wrapper.id);
+  assert.deepEqual(resolveWrapperInstanceId("button", seen, undefined, 2), {
+    id: "button-2-2",
+    numbered: true,
+  });
 });

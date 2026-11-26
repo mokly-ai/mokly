@@ -12,8 +12,8 @@ import {
 } from "../authoring/usage.js";
 
 import type { Generation } from "./bundle.js";
-import { dataProps } from "./definition-fields.js";
 import { storyComponentPath, storyComponentType } from "./story-components.js";
+import { storyUseDataProps } from "./story-use-props.js";
 
 export function wrapStoryUse(generation: Generation) {
   return (
@@ -63,7 +63,7 @@ export function wrapStoryUse(generation: Generation) {
           {
             ...instancePlacement(session, parent, id),
             componentPath,
-            ...instanceProps(storyUseDataProps(props)),
+            ...instanceProps(storyUseDataProps(props, React.isValidElement)),
             ...(numbered ? { numbered } : {}),
             ...(site ? { source: site } : {}),
           },
@@ -73,15 +73,6 @@ export function wrapStoryUse(generation: Generation) {
       });
     return create(StoryUse, outerProps, element.key ?? undefined);
   };
-}
-
-function storyUseDataProps(
-  props: Record<string, unknown>,
-): Record<string, unknown> {
-  const inputs = Object.fromEntries(
-    Object.entries(props).filter(([, value]) => typeof value !== "function"),
-  );
-  return dataProps(inputs, false);
 }
 
 function storyInvocationSource(source: unknown, session: RenderSession) {

@@ -1,6 +1,6 @@
 # Component Change Attribution
 
-Status: Mokly does not record [story component uses](./mokly-story-component-uses.md) yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them. How Changes keeps the content that a screen passes into a story component use is not settled yet: [track I decision 3](../../plans/storybook-support.md#track-i-decision-3-the-content-of-a-use-and-faithful-rendering) waits for the user.
+Status: A [story component use](./mokly-story-component-uses.md) still leaves out each prop value that is not data. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds their [recorded forms](./mokly-story-component-uses.md#recorded-props). How Changes keeps the content that a screen passes into a story component use is not settled yet: the answer to [track I decision 3](../../plans/storybook-support.md#track-i-decision-3-the-content-of-a-use-and-faithful-rendering) waits for its design note.
 
 ## Changes Membership
 
@@ -135,10 +135,9 @@ inputs; an incomplete region fails validation instead of granting blanket
 ignore behaviour.
 
 A [story component use](./mokly-story-component-uses.md) pairs and compares
-like any other instance. Its props digest uses the same canonical JSON for
-each of its props whose value is data under the
-[prop schema profile](./mokly-entry-props.md#prop-schema-profile). Function
-props stay out of the digest, so an edit of a function prop alone changes no
+like any other instance. Its props digest uses the same canonical JSON over
+its [recorded props](./mokly-story-component-uses.md#recorded-props), which
+leave out its function props. So an edit of a function prop alone changes no
 input of the use. Neither the core nor a reader validates the props of a use
 against the prop schema of its stories entry. The catalogue record of a
 stories entry marks it as one, and the instances of every other component

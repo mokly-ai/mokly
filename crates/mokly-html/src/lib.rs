@@ -44,6 +44,7 @@ mod fragment_validation;
 mod html_arena;
 mod html_sink;
 mod ignore_checks;
+mod instance_names;
 mod javascript;
 mod javascript_request;
 mod link_destination;

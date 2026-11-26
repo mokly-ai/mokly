@@ -5,6 +5,7 @@ use std::mem;
 
 use mokly_html::composition::Composed;
 use mokly_html::links::Reference;
+use mokly_model::bounded_json;
 use serde::Deserialize;
 
 use crate::document_annotations::ReferenceRecord;
@@ -117,7 +118,7 @@ impl EncodedView {
             return Err(CodecInternalError::InvalidLength.into());
         }
         let metadata_bytes = &bytes[PREFIX..PREFIX + metadata_len];
-        if !bounded_json(metadata_bytes) {
+        if !bounded_json::within_depth(metadata_bytes) {
             return Err(CodecInternalError::InvalidLength.into());
         }
         let mut decoder = serde_json::Deserializer::from_slice(metadata_bytes);
@@ -160,41 +161,6 @@ impl EncodedView {
             metadata_bytes,
         })
     }
-}
-
-fn bounded_json(bytes: &[u8]) -> bool {
-    let mut depth = 0usize;
-    let mut quoted = false;
-    let mut escaped = false;
-    for byte in bytes {
-        if quoted {
-            if escaped {
-                escaped = false;
-            } else if *byte == b'\\' {
-                escaped = true;
-            } else if *byte == b'"' {
-                quoted = false;
-            }
-        } else {
-            match byte {
-                b'"' => quoted = true,
-                b'[' | b'{' => {
-                    depth += 1;
-                    if depth > 256 {
-                        return false;
-                    }
-                }
-                b']' | b'}' => {
-                    let Some(value) = depth.checked_sub(1) else {
-                        return false;
-                    };
-                    depth = value;
-                }
-                _ => {}
-            }
-        }
-    }
-    !quoted && depth == 0
 }
 
 struct Limited<'a> {

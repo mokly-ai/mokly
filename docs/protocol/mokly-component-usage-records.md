@@ -23,14 +23,14 @@ and `["mokly-slot-v1", instanceKey, name]`. Those domain strings are permanent
 protocol identifiers. Readers recompute keys and reject mismatches or
 conflicting duplicates. Keys are not entry paths, selectors, or file names.
 
-`id` is the instance id of the [instance contract](./mokly-instances.md),
-which an HTML screen declares with `mokly-instance`, a React wrapper with
-`moklyInstance`, and a [story component use](./mokly-story-component-uses.md#ids)
-with its `key` or a naming prop. `props` holds the instance's data props and
-`propsKey` their canonical digest. `source` is the optional invocation
-location: the component element's file, line, and column for an HTML screen,
-or the location the sidecar reports for a React render. It is secondary
-metadata and never enters keys, props digests, or Changes.
+`id` is the local instance id under the
+[instance id rules](./mokly-instance-ids.md#ids). `props` holds the
+instance's data props, or the
+[recorded props](./mokly-story-component-uses.md#recorded-props) of a story
+component use, and `propsKey` their canonical digest. `source` is the optional
+invocation location: the component element's file, line, and column for an
+HTML screen, or the location the sidecar reports for a React render. It is
+secondary metadata and never enters keys, props digests, or Changes.
 
 ## Ownership And Ordering
 

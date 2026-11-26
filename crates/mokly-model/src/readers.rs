@@ -13,7 +13,7 @@ use crate::public_index::CatalogueReadModel;
 use crate::public_privacy;
 use crate::read_contract::ContractViolation;
 use crate::read_decode::value;
-use crate::{public_validation, versions};
+use crate::{bounded_json, public_validation, versions};
 
 /// Typed public read failure.
 #[derive(Debug, Error)]
@@ -129,7 +129,7 @@ fn decode_with_mode<T: DeserializeOwned + Serialize>(
     expected: u32,
     mode: Mode,
 ) -> Result<T, ReadError> {
-    let value: Value = match serde_json::from_str(text) {
+    let value: Value = match bounded_json::from_slice(text.as_bytes()) {
         Ok(value) => value,
         Err(source) => return Err(ReadError::Invalid { boundary, source }),
     };

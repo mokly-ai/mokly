@@ -3,6 +3,7 @@
 #![warn(unreachable_pub)]
 
 pub mod axes;
+pub mod bounded_json;
 pub mod canonical;
 pub mod catalogue;
 pub mod controls;

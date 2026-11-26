@@ -1,5 +1,6 @@
 //! Request, response and event envelopes.
 
+use mokly_model::bounded_json;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -194,8 +195,9 @@ impl Response {
 
 /// Keep legacy last-key decoding on the exceptional typed-decode path.
 fn decode<T: DeserializeOwned>(value: &RawValue) -> Result<T> {
-    let decoded = serde_json::from_str(value.get())
-        .or_else(|_| serde_json::from_str::<Value>(value.get()).and_then(serde_json::from_value));
+    let bytes = value.get().as_bytes();
+    let decoded = bounded_json::from_slice(bytes)
+        .or_else(|_| bounded_json::from_slice::<Value>(bytes).and_then(serde_json::from_value));
     match decoded {
         Ok(value) => Ok(value),
         Err(source) => Err(Error::Protocol(ProtocolError::Json { source })),

@@ -156,9 +156,10 @@ component page.
 
 `moklyInstance` is wrapper-only kebab-case input, stripped before consumer
 rendering; `mokly-instance` is its attribute form on a component element in
-an HTML body. Its default, scope, stable key, duplicate rules, and sentinels
-belong to [Component Instance Identity](./mokly-instances.md). Each rendered
-instance is an ownership region of the composed tree under the
+an HTML body. Its fallbacks, scope, stable key, numbered ids, and sentinels
+belong to [Component Instance Identity](./mokly-instances.md) and its
+[id rules](./mokly-instance-ids.md). Each rendered instance is an ownership
+region of the composed tree under the
 [comparison contract](./mokly-comparison.md#markers): the core attaches the
 region to an HTML component it renders, and reads a sidecar fragment's
 markers into the same regions. Usage derives from those regions, so only
@@ -193,8 +194,8 @@ variant, under the [catalogue contract](./mokly-catalogue.md); a parent has
 its own views and an empty `suppliedSlots`. Per-view usage, resource
 evidence, and the workspace lists travel in the entry detail of the
 [shell delivery contract](./mokly-shell-delivery.md#entry-detail).
-Comparison metadata and props contain no timestamps, absolute checkout paths,
-function bodies, or transient control values. Only data props are serialized
+Mokly adds no timestamp, absolute checkout path, function body, or transient
+control value to comparison metadata or props. Only data props are serialized
 as values; slots serialize ownership references and rendered material, never
 React elements or executable definitions. Inspector values come from the
 recorded props. Source metadata is repository-relative and secondary to the

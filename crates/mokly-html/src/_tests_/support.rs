@@ -211,7 +211,7 @@ pub(super) fn prepared_html_count(
     )
 }
 
-fn prepare(
+pub(super) fn prepare(
     files: BTreeMap<PathBuf, String>,
     definitions: Arc<dyn DefinitionProvider>,
 ) -> PreparedCatalogue {

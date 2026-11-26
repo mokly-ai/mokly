@@ -55,16 +55,20 @@ export function jsxDevelopmentModuleSource(
         ${recordStoryUses ? 'import runtime from "mokly:runtime";' : ""}
         export { Fragment };
         const locate = source => ({...source, fileName: resolve(${JSON.stringify(path.resolve(root, configurationDirectory))}, source.fileName)});
+        const invocationKey = (props, key) => {
+          const spreadKey = Object.getOwnPropertyDescriptor(props ?? {}, "key")?.value;
+          return spreadKey === undefined ? key : spreadKey;
+        };
         export function jsxDEV(type, props, key, staticChildren, source) {
           const create = staticChildren ? jsxs : jsx;
           if (type && type[Symbol.for("mokly.component")])
-            return create(type, source ? {...props, __moklySource: locate(source)} : props, key);
+            return create(type, {...props, __moklyKey: invocationKey(props, key),
+              ...(source ? {__moklySource: locate(source)} : {})}, key);
           ${
             recordStoryUses
               ? `
           if (typeof type === "function" || (type && typeof type === "object")) {
-            const spreadKey = Object.getOwnPropertyDescriptor(props, "key")?.value;
-            return runtime.storyUse(create(type, props, key), spreadKey === undefined ? key : spreadKey,
+            return runtime.storyUse(create(type, props, key), invocationKey(props, key),
               source && typeof source.fileName === "string" ? locate(source) : undefined, jsx);
           }`
               : ""

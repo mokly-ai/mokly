@@ -150,13 +150,9 @@ pub(crate) fn declarations(
         let reserved_input = component
             && matches!(
                 name.as_str(),
-                "moklyInstance" | "key" | "ref" | "__moklySource"
+                "moklyInstance" | "key" | "ref" | "__moklySource" | "__moklyKey"
             );
-        if component
-            && matches!(
-                name.as_str(),
-                "moklyInstance" | "key" | "ref" | "__moklySource"
-            )
+        if reserved_input
             || component
                 && parsed.input.element.is_some()
                 && matches!(
@@ -187,7 +183,7 @@ pub(crate) fn declarations(
             || properties.is_some_and(|props| props.contains_key(name))
             || matches!(
                 name.as_str(),
-                "moklyInstance" | "key" | "ref" | "__moklySource"
+                "moklyInstance" | "key" | "ref" | "__moklySource" | "__moklyKey"
             )
         {
             return Err(issue(

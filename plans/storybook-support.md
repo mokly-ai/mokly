@@ -3475,6 +3475,18 @@ own lines of this plan.
   checks. Track G adds story fields to the same record in Milestone 27, so
   the merge of the two tracks keeps one sign of a stories entry. Reason: a
   forged record keeps failing validation, and one field carries both rules.
+- I11. Made on 2026-11-26 for the answer E to track I decision 2. A `Map`
+  or a `Set` puts its entries into its canonical form. An object with a
+  reserved key, such as `__proto__`, a value that contains itself, a value
+  past the plain data limits of 64 levels or 10,000 nodes, and an invalid
+  `Date` record as a digest text. The core reads prop data at those limits,
+  so its JSON readers allow the extra nesting of tagged values. Reason: two
+  different Maps must not give one digest, and the core rejects those values
+  when it reads a record, so a use would otherwise still fail.
+- I12. Made on 2026-11-26 for the answer E to track I decision 1. The shim
+  passes a wrapper's `key` through the reserved prop `__moklyKey`, which the
+  wrapper strips as it strips `__moklySource`. Reason: React never passes
+  `key` to a component.
 - I10. Track I decision 3 settles how a use renders its content. Its answer,
   H, waits for the design note under
   `.context/storybook-support/track-i/` in the track I workspace.

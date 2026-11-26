@@ -52,12 +52,11 @@ pub fn validate_with(
         let default_id = component.entry.path.rsplit('/').next().unwrap_or("");
         if instance.id != default_id
             && !is_kebab_id(&instance.id)
-            && !(component.story
-                && instance
-                    .id
-                    .strip_prefix(default_id)
-                    .and_then(|suffix| suffix.strip_prefix('-'))
-                    .is_some_and(is_kebab_id))
+            && !instance
+                .id
+                .strip_prefix(default_id)
+                .and_then(|suffix| suffix.strip_prefix('-'))
+                .is_some_and(is_kebab_id)
         {
             return Err(invalid(ContractViolation::UsageKey));
         }

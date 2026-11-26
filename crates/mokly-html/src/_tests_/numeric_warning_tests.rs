@@ -1,12 +1,14 @@
 //! HTML composition warnings retain component invocation identities.
 
+use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::material::{instance_key, props_key};
-use mokly_model::usage::ComponentInputOwner;
+use mokly_model::usage::{CatalogueUsage, ComponentInputOwner, ComponentRangeTarget};
 use mokly_model::validation::PropValidator;
 use mokly_model::wire_props;
 use serde_json::json;
@@ -76,6 +78,96 @@ fn html_entry_and_invocation_warnings_remain_separate() {
     assert_eq!(
         document.warnings[0].message,
         "component \"note\" instance \"note\" prop \"/count\" is outside the JavaScript safe integer range and uses the nearest binary64 value"
+    );
+}
+
+#[test]
+fn repeated_html_component_elements_number_once_across_slot_placements() {
+    let files = BTreeMap::from([
+        (
+            PathBuf::from("/repo/specs/home.screen.html"),
+            concat!(
+                "---\ntitle: Home\n---\n<ui-panel>\n",
+                "<ui-note mokly-instance='note-3'></ui-note>\n",
+                "<ui-note></ui-note>\n",
+                "<ui-note></ui-note>\n",
+                "<ui-note></ui-note>\n",
+                "<ui-note mokly-instance='note-2'></ui-note>\n",
+                "</ui-panel>",
+            )
+            .into(),
+        ),
+        (
+            PathBuf::from("/repo/specs/note.component.html"),
+            "---\ntitle: Note\nelement: ui-note\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<b>Note</b>".into(),
+        ),
+        (
+            PathBuf::from("/repo/specs/panel.component.html"),
+            concat!(
+                "---\ntitle: Panel\nelement: ui-panel\nslots: [children]\n",
+                "propSchema: {type: object, additionalProperties: false, properties: {}}\n---\n",
+                "<slot></slot>",
+                // Change the ignore state so the second slot placement composes again.
+                "<mokly-ignore-scope enabled='false'><slot></slot></mokly-ignore-scope>",
+            )
+            .into(),
+        ),
+    ]);
+    let catalogue = support::prepare(files, Arc::new(Unimock::new(())));
+    let document = compose_html(&catalogue);
+    let CatalogueUsage::Ready {
+        instances, ranges, ..
+    } = document.usage
+    else {
+        panic!("expected usage records");
+    };
+    let mut notes: Vec<_> = instances
+        .iter()
+        .filter(|record| record.component_id == "note")
+        .collect();
+    notes.sort_by_key(|record| record.order);
+    assert_eq!(
+        notes
+            .iter()
+            .map(|record| record.id.as_str())
+            .collect::<Vec<_>>(),
+        ["note-3", "note", "note-2", "note-4", "note-2-2"],
+    );
+    for record in notes {
+        assert_eq!(
+            ranges.iter().filter(|range| matches!(&range.target, ComponentRangeTarget::Instance { instance_key } if instance_key == &record.key)).count(),
+            2,
+            "{} uses the same record at both placements",
+            record.id,
+        );
+    }
+    assert_eq!(
+        document
+            .warnings
+            .iter()
+            .map(|warning| (
+                warning.code,
+                warning.printed_subject(),
+                warning.message.as_str()
+            ))
+            .collect::<Vec<_>>(),
+        [
+            (
+                "instance-numbered",
+                "entry \"home\"".into(),
+                "component \"note\" instance \"note-2\" at \"specs/home.screen.html\":7:1 has a numbered id; give the use a mokly-instance that is unique in its input scope"
+            ),
+            (
+                "instance-numbered",
+                "entry \"home\"".into(),
+                "component \"note\" instance \"note-4\" at \"specs/home.screen.html\":8:1 has a numbered id; give the use a mokly-instance that is unique in its input scope"
+            ),
+            (
+                "instance-numbered",
+                "entry \"home\"".into(),
+                "component \"note\" instance \"note-2-2\" at \"specs/home.screen.html\":9:1 has a numbered id; give the use a mokly-instance that is unique in its input scope"
+            ),
+        ],
     );
 }
 

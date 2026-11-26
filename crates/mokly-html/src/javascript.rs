@@ -5,14 +5,13 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use mokly_catalogue::diagnostic::{Warning, WarningSubject, json_quoted};
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::html_tokens::ignore_warning_message;
 use mokly_catalogue::numeric_warnings;
 use mokly_model::axes::EntryKind;
-use mokly_model::catalogue::{EntryContent, ModelEntry};
+use mokly_model::catalogue::EntryContent;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
-use mokly_model::usage::ComponentInstanceRecord;
 use mokly_model::wire_decode;
 
 use crate::composition::Engine;
@@ -21,6 +20,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{Fragment, FragmentRequest, RenderKind};
+use crate::instance_names::numbered_warning;
 use crate::javascript_request::{self, Invocation};
 use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
@@ -119,7 +119,17 @@ impl Engine<'_> {
                     .instances
                     .iter()
                     .filter(|instance| result.numbered_instances.contains(&instance.key))
-                    .map(|instance| numbered_warning(instance, self.request.entry)),
+                    .map(|instance| {
+                        let story = self.request.catalogue.model.entries.iter().any(|entry| {
+                            entry.metadata.path == instance.component_id
+                                && matches!(
+                                    entry.content,
+                                    EntryContent::Component { story: true, .. }
+                                )
+                        });
+                        let hint = if story { "key" } else { "moklyInstance" };
+                        numbered_warning(instance, self.request.entry, hint)
+                    }),
             );
         }
         fragment_rebase::rebase(
@@ -168,31 +178,5 @@ impl Engine<'_> {
             page,
         });
         Ok(expansion)
-    }
-}
-
-fn numbered_warning(instance: &ComponentInstanceRecord, entry: &ModelEntry) -> Warning {
-    let site = instance.source.as_ref().map_or_else(String::new, |source| {
-        format!(
-            " at {}:{}:{}",
-            json_quoted(&source.path),
-            source.line,
-            source.column
-        )
-    });
-    let path = entry.metadata.path.clone();
-    let subject = if matches!(entry.content, EntryContent::Component { .. }) {
-        WarningSubject::Component(path)
-    } else {
-        WarningSubject::Entry(path)
-    };
-    Warning {
-        code: "instance-numbered",
-        subject,
-        message: format!(
-            "component {} instance {}{site} has a numbered id; give the use a key that is unique in its input scope",
-            json_quoted(&instance.component_id),
-            json_quoted(&instance.id),
-        ),
     }
 }

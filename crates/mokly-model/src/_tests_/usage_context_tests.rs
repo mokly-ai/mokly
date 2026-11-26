@@ -87,25 +87,28 @@ fn explicit_instance_ids_follow_shared_kebab_cases_without_device_restrictions()
 
 #[test]
 fn derived_instance_ids_keep_the_component_path_spelling() {
-    let (mut usage, mut components) = fixture();
+    let (usage, mut components) = fixture();
     components[0].entry.path = "components/Action_Button".into();
-    let CatalogueUsage::Ready {
-        instances, ranges, ..
-    } = &mut usage
-    else {
-        unreachable!()
-    };
-    let instance = &mut instances[0];
-    instance.component_id = components[0].entry.path.clone();
-    instance.id = "Action_Button".into();
-    instance.key = material::instance_key(&instance.owner, None, &instance.id);
-    ranges[0].target = ComponentRangeTarget::Instance {
-        instance_key: instance.key.clone(),
-    };
-    assert_eq!(
-        validate(&usage, EntryKind::Screen, &components).map_err(|error| error.to_string()),
-        Ok(())
-    );
+    for id in ["Action_Button", "Action_Button-2", "Action_Button-save-2"] {
+        let mut candidate = usage.clone();
+        let CatalogueUsage::Ready {
+            instances, ranges, ..
+        } = &mut candidate
+        else {
+            unreachable!()
+        };
+        let instance = &mut instances[0];
+        instance.component_id = components[0].entry.path.clone();
+        instance.id = id.into();
+        instance.key = material::instance_key(&instance.owner, None, id);
+        ranges[0].target = ComponentRangeTarget::Instance {
+            instance_key: instance.key.clone(),
+        };
+        assert_eq!(
+            validate(&candidate, EntryKind::Screen, &components).map_err(|error| error.to_string()),
+            Ok(())
+        );
+    }
 }
 
 #[test]

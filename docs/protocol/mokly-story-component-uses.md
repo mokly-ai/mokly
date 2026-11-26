@@ -1,10 +1,10 @@
 # Story Component Uses
 
-Status: Mokly does not record story component uses yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds them.
+Status: A use still leaves out each prop value that is not data, and the rule for its React content is not settled yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds the [recorded forms](#recorded-props) of those values.
 
 This page continues the [instance contract](./mokly-instances.md). It defines
-the uses of story components, the id of each use, and the
-`instance-numbered` warning.
+the uses of story components and the props that each use records. The
+[instance id rules](./mokly-instance-ids.md) give the id of each use.
 
 ## Story Components
 
@@ -43,79 +43,48 @@ spread, the element is a use. Decision: only compiled JSX gives uses, because
 the [JSX development shim](./mokly-sidecar.md#bundling) sees it on both
 compile paths.
 
-## Ids
+## Recorded Props
 
-The id of a use comes from the first of these that gives a value: its `key`,
-then each naming prop in the order of the
-[`instanceNameProps`](./mokly-configuration.md#instance-name-props)
-configuration field. A string or a finite number gives a value when its
-kebab-case form below is not empty. A number counts as the text that
-JavaScript's `String` gives it. The id is the final segment of the stories
-entry's resolved path, a hyphen, and the kebab-case form of the value. For
-example, `key="Save"` on a use of `ui/button` gives `button-save`. Without a
-value, the id is the segment alone, such as `button`. The segment keeps its
-case, and every such id follows the
-[segment grammar](./mokly-paths.md#segment-grammar).
+A use records every prop value without a failure. Its record holds only data
+in the [wire form](./mokly-component-props.md#canonical-wire-props), so the
+core can read it and check its props digest. Each value records in the first
+of these forms that fits it, except React content: the `children` prop, a
+prop whose value is an element, and an element inside a value.
 
-The kebab-case form of a value comes from four steps:
+- A string, a boolean, a finite number, and `null` record unchanged.
+- A function prop stays out of the record. A function inside an object or an
+  array records as one fixed text.
+- `undefined` records as a missing key in an object and as `null` in an
+  array. So an `undefined` prop records as an absent prop.
+- `NaN`, `Infinity`, `-Infinity`, and a bigint record as a tagged text: a
+  text that marks the value as not data and names it.
+- A `Date` with a valid time records as its ISO text.
+- An array, and an object with the shape that the
+  [plain data rule](./mokly-component-props.md#plain-data) allows, record each
+  member in these forms, unless they contain themselves.
+- Every other value records as a text that holds the digest of its canonical
+  form, such as a `Map`, a `Set`, another class instance, and a value that
+  contains itself. The canonical form holds the constructor name and the own
+  enumerable fields in these forms, and the entries of a `Map` or a `Set` in
+  their order.
 
-1. Letters lose their accents: the text takes its canonical decomposition,
-   and the combining marks drop out.
-2. Letters become lowercase.
-3. Each run of characters other than `a` to `z` and `0` to `9` becomes one
-   hyphen.
-4. The ends lose their hyphens.
+A prop value whose record would pass the nesting or node bounds of the plain
+data rule also records as a digest text, so the record of a use stays inside
+them. A value that changes on each render, such as `new Date()`, gives a new
+record on each render. The entry that renders the use then shows a change in
+each comparison.
 
-So `Café` gives `cafe`, and `Save draft` gives `save-draft`.
-
-Decision: the id comes from `key` and the naming props, because authors
-already keep their values stable for lists, tests, and accessibility. The
-segment keeps the uses of two components with one key apart, the kebab-case
-form makes every value a valid id, and translated labels keep their letters.
-Names from source lines and names from all props were rejected, because an
-edit above a use, or of any prop, would then change its id.
-
-## Numbered Ids
-
-Uses take their ids in render order. When an earlier instance of the same
-[input scope](./mokly-component-usage-records.md#ownership-and-ordering)
-holds the id of a use, the use takes the id, a hyphen, and the first number
-from 2 that gives an id that the scope does not hold yet, such as `button-2`.
-So the first use keeps the id without a number, and a named use whose id
-equals an earlier number also takes a number.
-
-Each numbered use gives one `instance-numbered`
-[build warning](./mokly-build-warnings.md). Its subject is the rendered entry,
-a variant included, as for the
-[invocation warnings](./mokly-entry-props.md#schema-inference) of
-`props-unsafe-integer`. So the subject kind is `component` when the rendered
-entry is a component, and `entry` otherwise. Equal warnings merge under the
-[record rules](./mokly-build-warnings.md#record), so the views of one entry
-give one warning for each use. A numbered use inside a product component
-gives its warning in each entry that renders that component. The message is
-the first line below, or the second line when the use's record has a
-`source`:
-
-```text
-component {component} instance {id} has a numbered id; give the use a key that is unique in its input scope
-component {component} instance {id} at {path}:{line}:{column} has a numbered id; give the use a key that is unique in its input scope
-```
-
-`{component}` is the JSON-quoted resolved path of the stories entry, and
-`{id}` is the JSON-quoted numbered id. `{path}` is the JSON-quoted path of the
-record's `source`, and `{line}` and `{column}` are its numbers.
-[Strict mode](./mokly-build-warnings.md#strict-mode) counts the warning.
-
-Decision: a repeated id takes a number with a warning, so the build goes on.
-A build error was rejected, because keys repeat across two lists of one
-screen, and most screens that render a story component twice would fail. The
-warning tells the author what to add, and `--strict` fails a repeated use
-without a name.
+Decision: every value records without a failure, because a product use cannot
+change its props for Mokly. A failure was rejected, because a screen that
+renders in the product would then fail. A warning for each such value was
+rejected, because `--strict` would then fail on ordinary props, such as
+`items` with an `onClick`. Leaving such values out was rejected, because their
+edits would then drop out of Changes.
 
 ## Related Docs
 
 - [Component instance identity](./mokly-instances.md)
+- [Instance ids](./mokly-instance-ids.md)
 - [Storybook stories](./mokly-storybook.md)
 - [Component change attribution](./mokly-component-changes.md)
-- [Configuration](./mokly-configuration.md#instance-name-props)
-- [Build warnings](./mokly-build-warnings.md)
+- [Component prop schema](./mokly-component-props.md)

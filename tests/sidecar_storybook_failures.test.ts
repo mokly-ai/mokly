@@ -5,7 +5,7 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { sidecarFixture, startSidecar } from "./helpers/sidecar.js";
-import { callStory, prepare } from "./helpers/storybook_setup.js";
+import { callStory, prepare, renderStory } from "./helpers/storybook_setup.js";
 
 const directory = "story-render-failures";
 
@@ -23,16 +23,21 @@ test("reserved story markers and Mokly-coded render errors stay fatal", async (c
   });
 });
 
-test("a duplicate registered component instance stops a story render", async (context) => {
+test("repeated registered component instances keep their rendered story output and take distinct ids", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const generation = await prepare(sidecar, directory, [
     "component.mockup.tsx",
   ]);
-  await assert.rejects(callStory(sidecar, generation, "DuplicateInstance"), {
-    code: "render-failed",
-    message: /duplicate instance same/u,
-  });
+  const result = await renderStory(sidecar, generation, "DuplicateInstance");
+  assert.match(result.html, />First<\/\w+>[\s\S]*>Second<\/\w+>/u);
+  assert.deepEqual(
+    result.instances.map(({ id, numbered }) => [id, numbered]),
+    [
+      ["same", undefined],
+      ["same-2", true],
+    ],
+  );
 });
 
 test("a non-data prop of a registered component stops a story render", async (context) => {

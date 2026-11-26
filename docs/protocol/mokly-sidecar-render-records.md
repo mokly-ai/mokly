@@ -94,6 +94,9 @@ Each instance placement has these fields:
   [wire form](./mokly-component-props.md#canonical-wire-props).
 - Optional `source`: the JSX invocation's repository-relative path and
   one-based line and column. It never enters identity or prop digests.
+- Optional `numbered`: `true` when the id took a number under the
+  [numbered id rules](./mokly-instance-ids.md#numbered-ids). The core then
+  raises the `instance-numbered` warning.
 
 Repeated placement of one input instance returns one draft per region. Each
 placement agrees on the logical inputs. Encounter order is zero-based within

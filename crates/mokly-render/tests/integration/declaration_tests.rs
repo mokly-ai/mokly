@@ -29,6 +29,14 @@ fn component_declarations_keep_typed_schema_prop_slot_control_and_element_errors
             Code::ComponentSlots,
         ),
         (
+            "propSchema: {type:'object',additionalProperties:false,properties:{__moklyKey:{type:'string'}}},",
+            Code::ComponentSlots,
+        ),
+        (
+            "propSchema: {type:'object',additionalProperties:false,properties:{}},slots:['__moklyKey'],",
+            Code::ComponentSlots,
+        ),
+        (
             "propSchema: {type:'object',additionalProperties:false,properties:{to:{type:'string'}}},element:'extra-chip',",
             Code::ComponentElement,
         ),

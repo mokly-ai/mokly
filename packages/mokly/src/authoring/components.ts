@@ -7,6 +7,7 @@ import { SidecarError, detail } from "../sidecar/errors.js";
 
 import { copyData, digest } from "./data.js";
 import { withAuthoringErrors } from "./errors.js";
+import { resolveWrapperInstanceId } from "./instance-names.js";
 import { validateDestination } from "./links.js";
 import type { AuthoringRuntime, DefinitionData, Owner } from "./runtime.js";
 import { wrapperBrand } from "./runtime.js";
@@ -38,14 +39,13 @@ export function componentWrapper(definition: object, data: DefinitionData) {
           `component ${registered.handle} requires its resolved catalogue path`,
         );
       validateDestination(registered.path);
-      const { moklyInstance, __moklySource, ...supplied } = input;
-      const id = moklyInstance ?? registered.path.split("/").at(-1)!;
-      if (
-        typeof id !== "string" ||
-        (moklyInstance !== undefined && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id))
-      )
-        throw new Error("moklyInstance must be lowercase kebab-case");
-      if (parent.seen.has(id)) throw new Error(`duplicate instance ${id}`);
+      const { moklyInstance, __moklySource, __moklyKey, ...supplied } = input;
+      const { id, numbered } = resolveWrapperInstanceId(
+        registered.path.split("/").at(-1)!,
+        parent.seen,
+        moklyInstance,
+        __moklyKey,
+      );
       const placement = instancePlacement(session, parent, id);
       const props: Record<string, unknown> = {};
       const slotProps: Record<string, ReactNode> = {};
@@ -84,6 +84,7 @@ export function componentWrapper(definition: object, data: DefinitionData) {
         ...placement,
         componentPath: registered.path,
         ...instanceProps(normalized),
+        ...(numbered ? { numbered } : {}),
         ...(source ? { source } : {}),
       };
       const render = data.input.render as (
