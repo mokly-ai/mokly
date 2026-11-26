@@ -99,10 +99,11 @@
   - Commit `9e57d861` moved the repository-stylesheet part of the CSS
     differential test of `mokly-css` into
     `crates/mokly-css/tests/token_differential_tests.rs`. Its
-    generated-stylesheet test stays a unit test. A `test-support` feature
-    makes one test entry public, `token_differential::first_difference`,
-    which runs both section readers. That is the pattern of option A. A
-    later change removed that one-time equivalence test and the feature.
+    generated-stylesheet test stayed a unit test. A `test-support` feature
+    made one test entry public, `token_differential::first_difference`,
+    which ran both section readers. That is the pattern of option A. A
+    later change removed both differential tests and the feature, because
+    they were one-time equivalence proofs.
 - **Recommendation:** A. It applies both rules: every corpus test becomes an
   integration test, and one loader serves all three.
 - **Action:** fix after merge, apply A, because the two older tests came to

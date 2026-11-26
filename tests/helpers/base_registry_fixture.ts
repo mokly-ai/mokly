@@ -45,6 +45,8 @@ export async function baseRegistryFixture(
   context: TestContext,
   attack?: RegistryAttack,
 ) {
+  if (attack && manager.name !== "Yarn Berry")
+    throw new Error("Only a Yarn Berry registry fixture carries an attack");
   const fixture = await coldBaseFixture(2, context, { install: false });
   const { root, cache } = fixture;
   const registry = await localRegistry(

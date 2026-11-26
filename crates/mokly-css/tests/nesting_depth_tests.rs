@@ -100,6 +100,21 @@ fn module_bundle(depth: usize) {
     assert!(bundle("deep.module.css", rules(depth)).contains("color: red"));
 }
 
+fn media_bundle(depth: usize) {
+    let source = nested("@media all{", ".a{color:red}", "}", depth);
+    assert!(bundle("deep.css", source).contains("color: red"));
+}
+
+fn selector_bundle(depth: usize) {
+    let source = format!("{}{{color:red}}", nested(":is(", ".a", ")", depth));
+    assert!(bundle("deep.css", source).contains("color: red"));
+}
+
+fn value_bundle(depth: usize) {
+    let source = format!(".a{{--x:{}}}", nested("f(", "1", ")", depth));
+    assert!(bundle("deep.css", source).contains("--x:"));
+}
+
 /// A probe that rejects every depth, which no search may accept.
 fn broken(_depth: usize) {
     panic!("this probe rejects every depth");
@@ -111,6 +126,9 @@ const PROBES: &[Probe] = &[
     ("rule_collection", rule_collection),
     ("stylesheet_bundle", stylesheet_bundle),
     ("module_bundle", module_bundle),
+    ("media_bundle", media_bundle),
+    ("selector_bundle", selector_bundle),
+    ("value_bundle", value_bundle),
     ("broken", broken),
 ];
 
@@ -135,6 +153,15 @@ fn css_pipelines_survive_authored_nesting() {
     ] {
         let limit = search(CHILD, name, LIBRARY_CAP);
         assert!(limit.depth >= SURVIVED, "{name}: {limit:?}");
+    }
+}
+
+/// Mokly supports at least 32 levels of nested at-rules, selector functions,
+/// and value functions in a bundled stylesheet.
+#[test]
+fn bundles_survive_authored_at_rule_selector_and_value_nesting() {
+    for name in ["media_bundle", "selector_bundle", "value_bundle"] {
+        assert_eq!(search(CHILD, name, SURVIVED).depth, SURVIVED, "{name}");
     }
 }
 

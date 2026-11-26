@@ -91,7 +91,8 @@ test(
 );
 
 // Rust unit tests cover the arguments and versions of pnpm 10 and Yarn
-// Classic. Yarn Berry, pnpm 11, and pnpm 12 run here for real.
+// Classic. Real pnpm 10 installs stay in the first test of this file, and real
+// Yarn Classic installs in the mirror and classic-paths tests.
 for (const manager of [managers[2], managers[3], managers[4]]) {
   test(
     `a cold ${manager.name} base installs offline without scripts and reuses its dependency cache`,

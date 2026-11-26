@@ -107,10 +107,16 @@ const HTML_COMPOSITION: &[Neutral] = &[
 /// 10,000 files or entries, or tens of megabytes. The Repository suite runs
 /// them on Linux.
 const STRESS: &[Neutral] = &[
-    Binary("mokly-catalogue::nesting_depth_tests"),
+    Test(
+        "mokly-catalogue::nesting_depth_tests",
+        "front_matter_of_any_depth_reaches_the_search_cap",
+    ),
     Binary("mokly-compare::deep_tree_tests"),
     Binary("mokly-compare::large_sources_tests"),
-    Binary("mokly-css::nesting_depth_tests"),
+    Test(
+        "mokly-css::nesting_depth_tests",
+        "mokly_reference_scanner_reaches_the_search_cap",
+    ),
     Binary("mokly-graph::deep_tree_tests"),
     Binary("mokly-html::deep_tree_tests"),
     Test(
@@ -149,7 +155,34 @@ const STRESS: &[Neutral] = &[
         "mokly-css",
         "containment::containment_tests::final_deep_path_owner_releases_on_an_ordinary_stack",
     ),
-    Module("mokly-css", "deep_scanner_tests"),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::boundaries_strip_only_top_level_html_comments_around_deep_blocks",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::deep_grouping_rules_scope_the_innermost_class",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::deep_nested_rules_and_wrappers_scope_every_local_name",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::integrity_compares_the_innermost_function_argument",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::module_checks_find_a_deep_value_rule_after_custom_property_blocks",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::normalization_keeps_separators_inside_deep_blocks",
+    ),
+    Test(
+        "mokly-css",
+        "deep_scanner_tests::references_keep_ranges_and_import_order_inside_deep_functions",
+    ),
     Test(
         "mokly-css",
         "has_depth_tests::very_deep_pages_keep_relational_evidence_and_match_other_selectors",

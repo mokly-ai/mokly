@@ -448,9 +448,12 @@ manifest and local dependency files with
 
 The Node tests in `tests/static_base_managers.test.ts` and
 `tests/static_base_registry.test.ts` run cold builds from local archives and
-from a local registry that requires the user token. They run Yarn Berry and
-the pinned pnpm 11 and 12 CLIs for real. The unit tests of this crate cover
-the arguments, versions, and environment of pnpm 10 and Yarn Classic. The
+from a local registry that requires the user token. They install with Yarn
+Berry and the pinned pnpm 11 and 12 CLIs. The unit tests of this crate cover
+the arguments, versions, and environment of pnpm 10 and Yarn Classic. One
+cold build still installs with the pinned pnpm 10 CLI, and
+`tests/static_base_manager_mirror.test.ts` and
+`tests/static_base_classic_paths.test.ts` install with Yarn Classic. The
 install environment leaves out `CI` and `GITHUB_ACTIONS`, so a CI install
 runs as a local one does. Pinned test CLIs come from development
 dependencies, and no test uses the internet.
