@@ -22,9 +22,19 @@ fn write(root: &Path, path: &str, text: &str) {
     fs::write(path, text).unwrap();
 }
 
+/// The commit identity of the fixture repositories. Each test Git command
+/// sets it, so no fixture runs `git config` processes for it.
+const IDENTITY: [(&str, &str); 4] = [
+    ("GIT_AUTHOR_NAME", "Fixture"),
+    ("GIT_AUTHOR_EMAIL", "fixture@example.test"),
+    ("GIT_COMMITTER_NAME", "Fixture"),
+    ("GIT_COMMITTER_EMAIL", "fixture@example.test"),
+];
+
 fn git(root: &Path, args: &[&str]) {
     let result = Command::new("git")
         .args(args)
+        .envs(IDENTITY)
         .current_dir(root)
         .output()
         .unwrap();
@@ -38,11 +48,6 @@ fn git(root: &Path, args: &[&str]) {
 fn fixture() -> TempDir {
     let root = TempDir::new().unwrap();
     git(root.path(), &["init", "-q"]);
-    git(root.path(), &["config", "user.name", "Fixture"]);
-    git(
-        root.path(),
-        &["config", "user.email", "fixture@example.test"],
-    );
     write(root.path(), ".gitignore", ".context/\nnode_modules/\n");
     write(root.path(), ".gitattributes", "package.json text eol=lf\n");
     write(
