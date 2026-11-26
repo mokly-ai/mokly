@@ -110,9 +110,6 @@
 .fo-ref-group > * {
   width: 100%;
 }
-.fo-ref-group > .fo-panel-foot {
-  margin-top: calc(-1 * var(--mk-space-1));
-}
 .fo-ref-head {
   display: flex;
   align-items: baseline;
