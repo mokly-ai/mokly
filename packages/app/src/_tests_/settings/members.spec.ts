@@ -14,21 +14,7 @@ import { pressWrite } from "../writes";
 
 import { manage, panelRole, panel } from "./pane-controls";
 
-test("members invites an address and lists it as pending", async ({ page }) => {
-  await signIn(page, freshEmail("members"));
-  const projectId = await createProject(page, "Member Org");
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=members"),
-  );
-  const invited = freshEmail("invited");
-  await page.getByLabel("Email").fill(invited);
-  await page.getByRole("button", { name: "Send invitation" }).click();
-  await expect(page.getByText(invited)).toBeVisible();
-  await expect(page.getByText("Invited", { exact: true })).toBeVisible();
-});
-
-test("a failed invitation revoke says so and offers one retry", async ({
+test("an invited address is listed as pending, and a failed revoke offers one retry", async ({
   page,
 }) => {
   await signIn(page, freshEmail("revoke-invite-fails"));
@@ -37,28 +23,36 @@ test("a failed invitation revoke says so and offers one retry", async ({
     page,
     await projectQueryPathFor(page, projectId, "settings=members"),
   );
-  await expect(page.getByLabel("Email")).toBeVisible();
-  await page.getByLabel("Email").fill(freshEmail("doomed-invite"));
-  await page.getByRole("button", { name: "Send invitation" }).click();
-  await expect(page.getByText("Invited", { exact: true })).toBeVisible();
+  await test.step("members invites an address and lists it as pending", async () => {
+    await expect(page.getByLabel("Email")).toBeVisible();
+    const invited = freshEmail("doomed-invite");
+    await page.getByLabel("Email").fill(invited);
+    await page.getByRole("button", { name: "Send invitation" }).click();
+    await expect(page.getByText(invited)).toBeVisible();
+    await expect(page.getByText("Invited", { exact: true })).toBeVisible();
+  });
 
-  await failWith(
-    page,
-    "**/v1/workspaces/*/members/*",
-    "DELETE",
-    "version-conflict",
-  );
-  const revoke = page.getByRole("button", { name: "Revoke invitation" });
-  await revoke.click();
-  await expect(page.getByRole("alert")).toContainText("This changed elsewhere");
-  await expect(
-    page.getByRole("button", { name: "Try again" }).first(),
-  ).toBeEnabled();
-  // The invitation is still there, which is the honest thing to show.
-  await expect(page.getByText("Invited", { exact: true })).toBeVisible();
+  await test.step("a failed invitation revoke says so and offers one retry", async () => {
+    await failWith(
+      page,
+      "**/v1/workspaces/*/members/*",
+      "DELETE",
+      "version-conflict",
+    );
+    const revoke = page.getByRole("button", { name: "Revoke invitation" });
+    await revoke.click();
+    await expect(page.getByRole("alert")).toContainText(
+      "This changed elsewhere",
+    );
+    await expect(
+      page.getByRole("button", { name: "Try again" }).first(),
+    ).toBeEnabled();
+    // The invitation is still there, which is the honest thing to show.
+    await expect(page.getByText("Invited", { exact: true })).toBeVisible();
+  });
 });
 
-test("a failed removal leaves no way back on the role form", async ({
+test("a failed removal or role change leaves the role form as it was", async ({
   page,
 }) => {
   await signIn(page, freshEmail("member-writes"));
@@ -73,66 +67,68 @@ test("a failed removal leaves no way back on the role form", async ({
     page,
     await projectQueryPathFor(page, projectId, "settings=members"),
   );
-  await manage(page, colleague);
-  const role = page.getByTestId("save-role");
-  await expect(role).toBeVisible();
+  await test.step("a failed removal leaves no way back on the role form", async () => {
+    await manage(page, colleague);
+    const role = page.getByTestId("save-role");
+    await expect(role).toBeVisible();
 
-  const roleWrites = await countRequests(
-    page,
-    "**/v1/workspaces/*/members/*",
-    "PATCH",
-  );
-  await failWith(page, "**/v1/workspaces/*/members/*", "DELETE", "unavailable");
-  await page.getByTestId("remove-member").click();
-  await page.getByTestId("confirm-remove-member").click();
-  await expect(page.getByRole("alert")).toContainText("Mokly is busy");
-  await expect(page.getByTestId("confirm-remove-member")).toHaveText(
-    "Try again",
-  );
-  // The reader changes their mind. The removal's failure goes with it, and the
-  // role form is untouched by an operation it did not make.
-  await page.getByRole("button", { name: "Keep access" }).click();
-  await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(role).toHaveText("Save role");
-  await expect(role).toBeDisabled();
-  expect(roleWrites()).toBe(0);
-});
+    const roleWrites = await countRequests(
+      page,
+      "**/v1/workspaces/*/members/*",
+      "PATCH",
+    );
+    await failWith(
+      page,
+      "**/v1/workspaces/*/members/*",
+      "DELETE",
+      "unavailable",
+    );
+    await page.getByTestId("remove-member").click();
+    await page.getByTestId("confirm-remove-member").click();
+    await expect(page.getByRole("alert")).toContainText("Mokly is busy");
+    await expect(page.getByTestId("confirm-remove-member")).toHaveText(
+      "Try again",
+    );
+    // The reader changes their mind. The removal's failure goes with it, and the
+    // role form is untouched by an operation it did not make.
+    await page.getByRole("button", { name: "Keep access" }).click();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(role).toHaveText("Save role");
+    await expect(role).toBeDisabled();
+    expect(roleWrites()).toBe(0);
+  });
 
-test("a failed role change stays on the role form", async ({ page }) => {
-  await signIn(page, freshEmail("role-writes"));
-  const projectId = await createProject(page, "Role Org");
-  const workspaceId = await currentWorkspaceId(page);
-  const colleague = freshEmail("colleague");
-  await addMember(page, workspaceId, colleague);
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=members"),
-  );
-  await manage(page, colleague);
+  await test.step("a failed role change stays on the role form", async () => {
+    await page.unrouteAll();
+    await failWith(
+      page,
+      "**/v1/workspaces/*/members/*",
+      "PATCH",
+      "unavailable",
+    );
+    await panelRole(page, "Admin").click();
+    const role = page.getByTestId("save-role");
+    await expect(role).toBeEnabled();
+    await role.click();
+    await expect(role).toHaveText("Try again");
 
-  await failWith(page, "**/v1/workspaces/*/members/*", "PATCH", "unavailable");
-  await panelRole(page, "Admin").click();
-  const role = page.getByTestId("save-role");
-  await expect(role).toBeEnabled();
-  await role.click();
-  await expect(role).toHaveText("Try again");
+    // The other control in the same panel is not the way back from this.
+    await page.getByTestId("remove-member").click();
+    const confirm = page.getByTestId("confirm-remove-member");
+    await expect(confirm).toHaveText("Remove");
+    await expect(
+      page.getByTestId("remove-member-modal").getByRole("alert"),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Keep access" }).click();
 
-  // The other control in the same panel is not the way back from this.
-  await page.getByTestId("remove-member").click();
-  const confirm = page.getByTestId("confirm-remove-member");
-  await expect(confirm).toHaveText("Remove");
-  await expect(
-    page.getByTestId("remove-member-modal").getByRole("alert"),
-  ).toHaveCount(0);
-  await page.getByRole("button", { name: "Keep access" }).click();
-
-  // And putting the role back leaves no retry the control will not take, and
-  // nothing of the failure it belonged to.
-  await panelRole(page, "Reviewer").click();
-  await expect(role).toHaveText("Save role");
-  await expect(role).toBeDisabled();
-  await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.locator(".fo-error-details")).toHaveCount(0);
+    // And putting the role back leaves no retry the control will not take, and
+    // nothing of the failure it belonged to.
+    await panelRole(page, "Reviewer").click();
+    await expect(role).toHaveText("Save role");
+    await expect(role).toBeDisabled();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(page.locator(".fo-error-details")).toHaveCount(0);
+  });
 });
 
 test("managing one member after another starts at rest", async ({ page }) => {

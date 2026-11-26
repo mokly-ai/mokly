@@ -64,9 +64,9 @@
   - The final review of the closed PR #39 found four such calls on 2026-10-12, and its branch `calummoore/untitled-v2` replaced them. `crates/mkc-api/tests/build_maintenance_tests.rs` landed on `main` after that and added another call.
   - On that branch, `plans/mokly-review-follow-ups.md:902-903` says that "process-runner and socket tests wait less than 10 seconds for expected states".
   - On that branch, `plans/mokly-review-follow-ups.md:904-905` says "replace the three-file GNU `timeout` guard with an ast-grep rule". Lines 900-901 flag another test that searches source text: `deterministic-policy-docs.test.ts` checks README wording.
+  - The build polling browser tests of the App waited on the real poll interval and on fixed one-second waits, the same class as the runner test waits. PR #584 moved them to the Playwright page clock and closed their follow-up item.
 - **Related:**
   - `plans/follow-ups/no-check-flags-breaking-migration-sql.md`, same code. Its CLI fixture runs through the runner of option B, so that work lands after this item or with it.
-  - `plans/follow-ups/polling-tests-wait-on-real-time.md`, same class as the runner test waits. Its build polling browser tests also wait on real time.
 - **Recommendation:** B. It stops the whole process group and keeps the output, which the publication smoke needs. C can reuse tested process-tree code, but it needs a new design and a check of the macOS cases.
 - **Action:** fix after merge, apply B, because the user approved the helper on 2026-10-12. The two open choices inside B still wait for the user. Condition 3 holds for the runner test waits, because each option raises a test time limit. Condition 6 holds for the timeout guard, because the guard is a custom check that the removal rule of the `testing` skill does not cover.
 

@@ -2,7 +2,6 @@ import { projectAddress } from "../addresses";
 import { expect, freshEmail, openDialog, signIn, test } from "../harness";
 import { currentUserId, grantProject } from "../members";
 import { createProject } from "../project-setup";
-import { captureReadableAddress } from "../readable-addresses-support";
 
 test("a project-only guest sees project settings without workspace panes", async ({
   page,
@@ -33,5 +32,4 @@ test("a project-only guest sees project settings without workspace panes", async
   ).toHaveAttribute("href", `${address.path}?settings=tokens`);
   await expect(rail.getByRole("link", { name: "Workspace" })).toHaveCount(0);
   await expect(rail.getByRole("link", { name: "Members" })).toHaveCount(0);
-  await captureReadableAddress(page, "desktop-project-only-settings");
 });

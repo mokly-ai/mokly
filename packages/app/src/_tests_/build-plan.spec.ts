@@ -7,7 +7,9 @@ import { build, buildId } from "./viewer/build-fixtures";
 
 /**
  * A build the plan refused, read by an owner, by everyone else, and while the
- * workspace read that tells them apart is still running or has failed.
+ * workspace read that tells them apart is still running or has failed. The
+ * owner's Open billing is also the plan-owner row of the shared build state
+ * table, which runs on the desktop and on a phone.
  */
 
 /** The build a free workspace's private project could not publish. */
@@ -39,55 +41,7 @@ async function holdWorkspace(
   });
 }
 
-test("a plan refusal offers an owner Billing and asks everyone else", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-plan");
-  const { double, projectId } = scenario;
-  const id = buildId(230);
-  double.builds.set(
-    id,
-    build({
-      id,
-      projectId,
-      state: "failed",
-      step: null,
-      canCancel: false,
-      failure: { step: null, cause: "plan-required", exitCode: null },
-    }),
-  );
-  await open(page, scenario.buildAt(id));
-  await expect(
-    page.getByRole("heading", {
-      name: "Publishing to private projects is on Team",
-    }),
-  ).toBeVisible();
-  for (const step of ["checkout", "install", "publish"]) {
-    await expect(page.locator(`[data-mkc-build-step="${step}"]`)).toContainText(
-      "Not run",
-    );
-  }
-  await page.getByTestId("build-open-billing").click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page).toHaveURL(/settings=billing/);
-
-  await page.route("**/v1/workspaces/*", async (route) => {
-    if (route.request().method() !== "GET") return route.continue();
-    const answer = await route.fetch();
-    const body = (await answer.json()) as { role: string };
-    return route.fulfill({
-      response: answer,
-      json: { ...body, role: "admin" },
-    });
-  });
-  await open(page, scenario.buildAt(id));
-  await expect(page.locator(".fo-build-line")).toHaveText(
-    "Ask an owner to upgrade to Team.",
-  );
-  await expect(page.getByTestId("build-open-billing")).toHaveCount(0);
-});
-
-test("a plan refusal waits for the workspace and retries a failed read", async ({
+test("a plan refusal waits for the workspace, retries a failed read and asks everyone but an owner to ask one", async ({
   page,
 }) => {
   const scenario = await buildScenario(page, "build-plan-read");
@@ -138,4 +92,20 @@ test("a plan refusal waits for the workspace and retries a failed read", async (
   await canvas.getByTestId("stage-retry").click();
   await expect(title).toBeVisible();
   await expect(billing).toBeVisible();
+
+  // Everyone but an owner is asked to ask one, with no way to Billing.
+  await page.route("**/v1/workspaces/*", async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const answer = await route.fetch();
+    const body = (await answer.json()) as { role: string };
+    return route.fulfill({
+      response: answer,
+      json: { ...body, role: "admin" },
+    });
+  });
+  await open(page, scenario.buildAt(id));
+  await expect(page.locator(".fo-build-line")).toHaveText(
+    "Ask an owner to upgrade to Team.",
+  );
+  await expect(billing).toHaveCount(0);
 });

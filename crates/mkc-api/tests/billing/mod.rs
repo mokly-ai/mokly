@@ -8,6 +8,7 @@ mod lifecycle_support;
 mod lifecycle_tests;
 mod payment_order_tests;
 mod price_resolution_tests;
+mod read_role_tests;
 mod review_fixes_support;
 mod review_fixes_tests;
 mod stripe_double;
