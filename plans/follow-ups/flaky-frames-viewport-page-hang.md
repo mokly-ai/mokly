@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-26, from the branch `calummoore/ci-speed-flaky-follow-ups-b-and-new-k3dt`, during its scan of the CI history.
 - **Location:** `tests/browser/frames_viewport.spec.ts:87`, the test "the compact layout picks the wide canvas's viewport, and its pick sets the wide toggles".
-- **Reason:** It failed once, in a run of a release branch, and its source is unknown.
+- **Reason:** It failed once, in a run of a release branch. On 2026-11-26 the user chose option A, a reproduction with a trace. The reproduction did not fail, so the source is still unknown.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -13,6 +13,13 @@
   - The failure text: "Error: expect(page).toHaveURL(expected) failed. Expected pattern: /\?viewport=mobile$/. Received string: """, then "Tearing down "context" exceeded the test timeout of 60000ms" and "browserContext.close: Test timeout of 60000ms exceeded".
   - The trace shows that the page stopped answering after `selectOption`. `toHaveURL` logged nothing for 60 seconds, and the close of the page timed out. The trace has no protocol error and no "Promise was collected" reply, so this is not the evaluate-promise failure of `plans/follow-ups/browser-evaluate-promise-collected.md`.
   - The test uses the viewer fixture of `packages/viewer/tests/browser_fixture.ts`.
+  - The trace of that run, from the artifact `browser-failures-node-22.15.0-shard-10-attempt-1`, adds these facts:
+    - `selectOption` ended 38 ms after it started, and its last page snapshot already has the address `?viewport=mobile`. So the pick and its address write ran.
+    - The page then made no snapshot and no screencast frame. The `toHaveURL` poll logged nothing until the test limit, 59 seconds later. Playwright's own address read never answered, so the renderer of the page stopped answering the protocol, not the viewer's address logic.
+    - The trace has no console error, no page error, and no failed request.
+  - On 2026-11-26, the branch `calummoore/ci-speed-flaky-decisions-k3dt` tried to reproduce it on a 4-CPU machine with 2 workers and four CPU spinners, at a load average of about 10, in Chromium 149:
+    - A probe of the test's steps passed 60 of 60 runs. When `toHaveURL` waited longer than 15 seconds, it would have paused the page's JavaScript five times and saved the stacks. It never needed to.
+    - The whole spec, with `--repeat-each=20` and `--trace=retain-on-failure`, passed 80 of 80 tests, so 20 of 20 runs of this test after the earlier tests of its spec. The CI shard also ran other specs first, which this run did not repeat.
 - **Problem:** The page of the test stopped answering Playwright, and no later step could read it.
 - **Impact if no action:** A passing change can fail the Browser suite now and then.
 - **Root question:** What stops the fixture page from answering after the viewport pick?
@@ -22,5 +29,5 @@
 - **Left out:** A retry or a longer time limit, because they hide a hung page.
 - **Wider fix:** None until the source is known.
 - **Previous examples:** None found.
-- **Recommendation:** A. One failure with a hung renderer can be a product loop in the viewer.
-- **Action:** ask the user, because the failure is not reproduced and its source is unknown.
+- **Recommendation:** B. 80 runs under load did not fail, and the CI trace points at a renderer that stopped answering the protocol, not at an assertion that read too early. The trace of the next failure, with the page's JavaScript stacks, would name the source.
+- **Action:** ask the user, because the failure is not reproduced and its source is unknown. When it fails again, save its trace, and read the page's JavaScript stacks through a CDP session with `Debugger.pause`, as the 2026-11-26 probe did.
