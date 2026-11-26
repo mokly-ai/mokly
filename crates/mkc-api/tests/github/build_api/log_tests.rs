@@ -35,9 +35,9 @@ fn log_windows_normalize_text_complete_only_at_the_end_and_keep_attempt_sequence
                     bytes,
                     created_at: Utc::now(),
                 },
-            )
-            .unwrap();
+            )?;
         }
+        Ok(())
     });
     finish(&app, project.id, id, BuildState::Failed);
     let first = read(&app, project.id, &format!("builds/{id}/log?limit=1"));
@@ -87,8 +87,8 @@ fn log_windows_normalize_text_complete_only_at_the_end_and_keep_attempt_sequence
                 bytes: b"old attempt".to_vec(),
                 created_at: Utc::now(),
             },
-        )
-        .unwrap();
+        )?;
+        Ok(())
     });
     finish(&app, project.id, retry_id, BuildState::Queued);
     let attempt = start(&app, project.id, retry_id);
@@ -102,8 +102,8 @@ fn log_windows_normalize_text_complete_only_at_the_end_and_keep_attempt_sequence
                 bytes: b"new attempt".to_vec(),
                 created_at: Utc::now(),
             },
-        )
-        .unwrap();
+        )?;
+        Ok(())
     });
     let retried = read(&app, project.id, &format!("builds/{retry_id}/log?after=1"));
     assert_eq!(retried["chunks"].as_array().unwrap().len(), 1);
@@ -131,9 +131,9 @@ fn log_retention_reports_elision_and_enforces_the_normalized_text_window() {
                     bytes: vec![0xff; 65_536],
                     created_at: Utc::now(),
                 },
-            )
-            .unwrap();
+            )?;
         }
+        Ok(())
     });
     finish(&app, project.id, id, BuildState::Failed);
     let mut after = 0;

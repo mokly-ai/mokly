@@ -14,6 +14,9 @@ import { git, write } from "./static_changes.js";
 
 const script = `node -e "require('node:fs').writeFileSync('lifecycle-ran', 'unexpected')"`;
 
+// Each pnpm fixture uses identical base manifests and local archives.
+const pnpmBaseLocks = new Map<Manager, Buffer>();
+
 export async function baseManagerFixture(
   manager: Manager,
   context: TestContext,
@@ -91,7 +94,15 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
       dependenciesMeta: { "mokly-cold-dependency": { built: true } },
     });
   await write(root, "package.json", manifest("1.0.0"));
-  await installFixture(root, manager, fixture.env);
+  const pnpmLockfile = path.join(root, "pnpm-lock.yaml");
+  const savedLockfile = pnpmBaseLocks.get(manager);
+  if (savedLockfile === undefined) {
+    await installFixture(root, manager, fixture.env);
+    if (managerName(manager) === "pnpm")
+      pnpmBaseLocks.set(manager, await fs.readFile(pnpmLockfile));
+  } else {
+    await fs.writeFile(pnpmLockfile, savedLockfile);
+  }
   if (mode === "constraints")
     await fs.rm(path.join(root, "historical-constraints-ran"), { force: true });
   if (mode === "paths")

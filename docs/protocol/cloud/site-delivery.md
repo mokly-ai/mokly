@@ -147,12 +147,13 @@ runners. The deterministic accessibility rules above are the required gate.
 
 ## Checks
 
-The site gate runs the build, the typecheck, the unit tests, the link check
-and the browser check, in that order; the Lighthouse budget runs apart from
-it. In CI the gate runs as shards, and each shard builds the site before its
-checks. A browser shard does not wait for the typecheck, the unit tests, or
-the link check of another shard, so a failure in one shard does not stop the
-others. Missing or stale site output fails rather than skips.
+The site gate runs the build, the unit tests, the link check and the browser
+check, in that order. The `cloud-typecheck` suite type-checks the site, and
+the Lighthouse budget runs apart from the gate. In CI the gate runs as shards,
+and each shard builds the site before its checks. A browser shard does not
+wait for the unit tests or the link check of another shard, so a failure in
+one shard does not stop the others. Missing or stale site output fails rather
+than skips.
 
 - The build fails when a setting is invalid, when a package document is
   missing or malformed, or when the generated site-segment inventory or a

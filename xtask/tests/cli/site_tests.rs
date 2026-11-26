@@ -14,7 +14,10 @@ fn site_stage_runs_the_complete_gate_and_propagates_output_failures() {
   "private": true,
   "scripts": {
     "build": "node -e \"require('node:fs').writeFileSync('workspace-built', 'ready')\"",
-    "site:check": "node scripts/site-check.mjs"
+    "site:build": "node -e \"\"",
+    "site:test": "node -e \"\"",
+    "site:links": "node -e \"\"",
+    "site:browser": "node scripts/site-check.mjs"
   }
 }"#,
     );
@@ -39,16 +42,16 @@ if (source !== output) throw new Error("site output stale");
     success(fixture.xtask(&args));
     fixture.write("apps/site/source.html", "<h1>Changed</h1>\n");
     failure(
-        fixture.run("npm", &["run", "site:check"]),
+        fixture.run("npm", &["run", "site:browser"]),
         "site output stale",
     );
-    failure(fixture.xtask(&args), "npm run site:check");
+    failure(fixture.xtask(&args), "npm run site:browser");
     fixture.write("apps/site/dist/index.html", "<h1>Changed</h1>\n");
     success(fixture.xtask(&args));
     fs::remove_file(fixture.root().join("apps/site/dist/index.html")).unwrap();
     failure(
-        fixture.run("npm", &["run", "site:check"]),
+        fixture.run("npm", &["run", "site:browser"]),
         "site output missing",
     );
-    failure(fixture.xtask(&args), "npm run site:check");
+    failure(fixture.xtask(&args), "npm run site:browser");
 }

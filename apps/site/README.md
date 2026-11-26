@@ -207,10 +207,10 @@ files. Root ESLint lints the TypeScript but does not parse `.astro` files;
 `npm run site:typecheck` checks them with `astro check`.
 `cargo xtask check` installs the single `package-lock.json`,
 builds and verifies mockups, then runs the complete site gate. CI runs the
-`cloud-site` suite as two shards, as the
+`cloud-site` suite as two shards. The
 [site shards](../../docs/protocol/cloud/repository-verification.md#mockup-and-site-shards)
-define: each shard builds the site and runs half of the browser tests, and
-shard 1 also runs the type, unit, and link checks. To repeat one shard, run
+say what each shard runs, and the [site checks](../../docs/protocol/cloud/site-delivery.md#checks)
+say which suite runs each check. To repeat one shard, run
 `cargo xtask check --suite cloud-site --shard 2/2` from the repository root. Lighthouse is a
 separate visible CI job and does not block the required aggregate. Workflow
 tests record reviewed immutable action pins, including the Electron download

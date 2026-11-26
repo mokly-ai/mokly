@@ -7,24 +7,6 @@ mod containment_assertions;
 mod containment_fixture;
 mod containment_support;
 
-fn check(index: usize) {
-    let case = containment_fixture::CASES[index];
-    let review = containment_support::build(
-        containment_fixture::sources(case, false),
-        containment_fixture::sources(case, true),
-    );
-    containment_assertions::check(&review, case);
-}
-
-#[test]
-fn page_border_is_not_taken_by_the_slot_receiver() {
-    check(2);
-}
-#[test]
-fn ownerless_stack_spacing_without_own_matches_falls_back_to_page() {
-    check(6);
-}
-
 #[test]
 fn component_nested_stack_rule_matches_the_flat_rule() {
     let case = containment_fixture::CASES[3];

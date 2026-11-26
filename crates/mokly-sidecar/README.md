@@ -284,7 +284,11 @@ lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
 identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and retries once under the
-[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Other
+[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Debug
+builds also have `Pool::with_test_render_deadline`, which replaces the
+deadline of render calls for process tests of a hanging render. Release builds
+do not compile it, so only the protocol defaults and `PoolOptions::timeout_ms`
+apply there. Other
 transport failures replace the process without a fallback render. A process
 recycles under the render-count and resident-memory rules of the
 [memory sampling contract](../../docs/protocol/mokly-sidecar-memory.md).

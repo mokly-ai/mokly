@@ -442,13 +442,19 @@ Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. Command tests pin
 every manager's complete scripts-off argument list.
 
+The `dependencies_tests` and `package_roots_tests` fixtures copy npm
+lockfiles from `tests/fixtures/`. To refresh a lockfile, use the test's
+manifest and local dependency files with
+`npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund`.
+
 On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
 base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
 It runs the pinned pnpm 10.34.7, 11.20.0, and 12.14.0 CLIs from the
 repository's development dependencies, with and without `CI` and
-`GITHUB_ACTIONS` in the parent environment. Run `npm ci` at the repository
-root before you run the crate tests. The test fails when a pinned CLI is
-missing.
+`GITHUB_ACTIONS` in the parent environment. The cases for one pnpm version
+read the same Git commit and use separate extraction and install caches.
+Two cases run at a time. Run `npm ci` at the repository root before you run
+the crate tests. The test fails when a pinned CLI is missing.
 
 The Node tests in `tests/static_base_managers.test.ts` run cold builds with
 pnpm and both Yarn families from local archives.

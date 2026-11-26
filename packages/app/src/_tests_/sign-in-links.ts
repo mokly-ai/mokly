@@ -1,7 +1,11 @@
+import { createHash } from "node:crypto";
+
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { magicLinkFor } from "./api-server";
+import { sql } from "./database-fixture";
+import { apiBind } from "./origins";
 
 /** What the API answered one sign-in link request with. */
 export interface LinkRequestAnswer {
@@ -10,17 +14,32 @@ export interface LinkRequestAnswer {
 }
 
 /**
- * Send one sign-in link request until the API admits it. The API admits
- * twenty link requests per peer address per minute, and a suite that signs in
- * for every test reaches that. Wait on the answer, then on the server's own
- * Retry-After, rather than pretending the limit is not there or guessing a
- * delay.
+ * Reopen the link admission window of the suite's own peer address. The API
+ * admits twenty link requests per peer address per minute, and every test
+ * signs in from the one loopback address the API binds, so twenty sign-ins of
+ * any tests in one minute would make the next test wait out the window. Each
+ * request starts from an empty window instead, as each test starts from its
+ * own data. This clears the row the limit keeps, keyed as `mkc-auth` keys it:
+ * the SHA-256 of `peer:` and the client address. The request still goes
+ * through the real admission.
+ */
+function reopenPeerWindow(): void {
+  const peer = apiBind.slice(0, apiBind.lastIndexOf(":"));
+  const key = createHash("sha256").update(`peer:${peer}`).digest("hex");
+  sql(`DELETE FROM auth_rate_limits WHERE key = '${key}'`);
+}
+
+/**
+ * Send one sign-in link request until the API admits it, each time from a
+ * reopened peer window. Should the API still refuse it, wait on the answer,
+ * then on the server's own Retry-After, rather than guessing a delay.
  */
 export async function admitLinkRequest<Answer extends LinkRequestAnswer>(
   page: Page,
   send: () => Promise<Answer>,
 ): Promise<Answer> {
   for (let attempt = 0; ; attempt += 1) {
+    reopenPeerWindow();
     const answer = await send();
     if (answer.status() === 202) return answer;
     expect(answer.status(), "the API admits or rate-limits the request").toBe(

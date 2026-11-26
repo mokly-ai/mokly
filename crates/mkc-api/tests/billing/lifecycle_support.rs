@@ -150,11 +150,7 @@ pub(super) fn assert_free_private_transition_is_refused(app: &Harness, workspace
     let workspace_id: OrganizationId = workspace.parse::<Uuid>().unwrap().into();
     let mut repository = None;
     app.queries(&mut |queries| {
-        repository = Some(seed_installed_repository(
-            queries,
-            workspace_id,
-            "mokly/free",
-        ));
+        repository = Some(seed_installed_repository(queries, workspace_id, "mokly/free").unwrap());
     });
     let repository: RepositoryId = repository.unwrap();
     let project = app.json(

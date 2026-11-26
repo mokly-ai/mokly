@@ -36,37 +36,26 @@ pub fn run(root: &Path, arguments: &[&str]) -> Output {
 
 /// Run the CLI with a temporary cache and an optional Node executable.
 pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Output {
-    run_with_timeout(root, arguments, node, None)
+    run_with_environment(root, arguments, node, &[])
 }
 
-pub fn run_with_timeout(
+/// Run the CLI with extra environment values, such as sidecar deadlines or
+/// the terminal width of a debug build.
+pub fn run_with_environment(
     root: &Path,
     arguments: &[&str],
     node: Option<&Path>,
-    timeout: Option<&str>,
+    environment: &[(&str, &str)],
 ) -> Output {
-    run_configured(root, arguments, node, timeout, "rich")
+    run_configured(root, arguments, node, environment, "rich")
 }
 
 pub fn run_configured(
     root: &Path,
     arguments: &[&str],
     node: Option<&Path>,
-    timeout: Option<&str>,
+    environment: &[(&str, &str)],
     mode: &str,
-) -> Output {
-    run_in(root, arguments, node, timeout, mode, None)
-}
-
-/// Run the CLI with a temporary cache. `columns` fixes the terminal width of a
-/// debug build, so that a test can keep long lines whole.
-pub fn run_in(
-    root: &Path,
-    arguments: &[&str],
-    node: Option<&Path>,
-    timeout: Option<&str>,
-    mode: &str,
-    columns: Option<&str>,
 ) -> Output {
     let cache = TempDir::new().unwrap();
     let cache_root = dunce::canonicalize(cache.path()).unwrap();
@@ -89,12 +78,7 @@ pub fn run_in(
     if let Some(node) = node {
         command.env("MOKLY_NODE_EXECUTABLE", node);
     }
-    if let Some(timeout) = timeout {
-        command.env("MOKLY_SIDECAR_TIMEOUT_MS", timeout);
-    }
-    if let Some(columns) = columns {
-        command.env("MOKLY_TEST_STATIC_COLUMNS", columns);
-    }
+    command.envs(environment.iter().copied());
     let output = command.output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     for line in stdout.lines().filter(|line| line.starts_with("  cache ")) {

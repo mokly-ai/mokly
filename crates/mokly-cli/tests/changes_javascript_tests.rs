@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::Output;
 
 mod changes_support;
-use changes_support::{base, run, run_in, run_with_node, write};
+use changes_support::{base, run, run_configured, run_with_node, write};
 
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],props:{},element:'ui-card',propSchema:{type:'object',additionalProperties:false,properties:{}},render:()=> <p className='card'>Before</p>});";
 const HOME: &str = "---\ntitle: Home\n---\n<h1 class=\"html-title\">Before</h1><ui-card></ui-card>";
@@ -22,7 +22,13 @@ fn dependencies(root: &Path) {
 /// Run a build in rich mode with lines wide enough that no path is shortened,
 /// so an input rejection names its full path in the failure output.
 fn run_full_width(root: &Path, arguments: &[&str]) -> Output {
-    run_in(root, arguments, None, None, "rich", Some("4096"))
+    run_configured(
+        root,
+        arguments,
+        None,
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
+        "rich",
+    )
 }
 
 #[test]
@@ -173,7 +179,18 @@ fn a_hanging_base_render_keeps_the_current_static_build_available() {
     ]);
     dependencies(root.path());
     fs::remove_file(root.path().join("specs/card.mockup.tsx")).unwrap();
-    let output = changes_support::run_with_timeout(root.path(), &["build"], None, Some("10000"));
+    // The sidecar start and the bundle calls keep a 10-second deadline. Only
+    // render calls take the debug render deadline, so both attempts of the
+    // hanging render end after one second.
+    let output = changes_support::run_with_environment(
+        root.path(),
+        &["build"],
+        None,
+        &[
+            ("MOKLY_SIDECAR_TIMEOUT_MS", "10000"),
+            ("MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS", "1000"),
+        ],
+    );
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -188,7 +205,7 @@ fn a_hanging_base_render_keeps_the_current_static_build_available() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("specs/card.mockup.tsx export card") && stderr.contains("exceeded 10000ms"),
+        stderr.contains("specs/card.mockup.tsx export card") && stderr.contains("exceeded 1000ms"),
         "{stderr}"
     );
     assert!(root.path().join("mokly-static/index.html").is_file());

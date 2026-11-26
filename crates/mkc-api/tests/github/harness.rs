@@ -11,6 +11,7 @@ use mkc_api::github_providers::SystemGitHubProviderFactory;
 use mkc_api::worker_intervals::WorkerIntervals;
 use mkc_domain::ids::UserId;
 use mkc_github_double::server::RecordedGitHub;
+use mkc_store_interface::error::Result as StoreResult;
 use mkc_store_interface::store::{Callback, Queries, Store};
 use mkc_store_interface::user::User;
 use mkc_store_pg::connection::{PgStoreFactory, StoreFactory};
@@ -132,6 +133,8 @@ impl Harness {
             runtime,
             intervals: WorkerIntervals {
                 github_delivery: QUICK_WORKER_PAUSE,
+                check_delivery: QUICK_WORKER_PAUSE,
+                build_claim: QUICK_WORKER_PAUSE,
                 ..WorkerIntervals::default()
             },
         };
@@ -188,13 +191,11 @@ impl Harness {
             .header("X-CSRF-Token", &self.csrf)
     }
 
-    pub(super) fn queries(&self, operation: &mut dyn FnMut(&mut dyn Queries)) {
-        self.store
-            .transaction(&mut Callback(&mut |queries| {
-                operation(queries);
-                Ok(())
-            }))
-            .unwrap();
+    /// Run one store transaction. The operation returns each store error, as
+    /// production callers do, so the store retries a serialization failure
+    /// against the API's own workers instead of the test failing on it.
+    pub(super) fn queries(&self, operation: &mut dyn FnMut(&mut dyn Queries) -> StoreResult<()>) {
+        self.store.transaction(&mut Callback(operation)).unwrap();
     }
 
     pub(super) fn replica_store(&self) -> Arc<dyn Store> {

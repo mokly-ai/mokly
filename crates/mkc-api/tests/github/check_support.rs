@@ -7,9 +7,12 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
+use diesel::sql_types::{Bool, Integer, Text, Uuid as SqlUuid};
+use diesel::{Connection, PgConnection, RunQueryDsl};
 use mkc_auth::runtime::{Runtime, SystemRuntime};
 use mkc_domain::ids::{ProjectId, PublicationId};
 use mkc_store_interface::error::Result;
+use mkc_store_interface::publication_event::EventKind;
 use reqwest::Method;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -35,6 +38,17 @@ impl Runtime for CheckRuntime {
     fn secret(&self) -> Result<String> {
         SystemRuntime.secret()
     }
+}
+
+/// One check event of a publication, as its outbox row holds it.
+#[derive(Clone, Debug, PartialEq, Eq, diesel::QueryableByName)]
+pub(super) struct EventRow {
+    #[diesel(sql_type = Integer)]
+    pub(super) attempts: i32,
+    #[diesel(sql_type = Integer)]
+    pub(super) permanent_failures: i32,
+    #[diesel(sql_type = Bool)]
+    pub(super) delivered: bool,
 }
 
 #[derive(Deserialize)]
@@ -134,22 +148,50 @@ impl Harness {
             .clone()
     }
 
+    /// Every event of one kind for one publication, as `event_rows` reads it.
+    pub(super) fn check_events(
+        &self,
+        publication: PublicationId,
+        kind: EventKind,
+    ) -> Vec<EventRow> {
+        event_rows(self._schema.scoped_url(), publication, kind)
+    }
+
     pub(super) fn check_events_are_delivered(&self, publication: PublicationId) -> bool {
         let mut done = false;
         self.queries(&mut |queries| {
-            let value = queries.publication(publication).unwrap().unwrap();
+            let value = queries.publication(publication)?.unwrap();
             done = queries
                 .pending_publication_events(
                     Utc::now() + chrono::Duration::days(1),
                     100,
                     Some(value.project_id),
-                )
-                .unwrap()
+                )?
                 .iter()
                 .all(|pending| pending.event.publication_id != publication);
+            Ok(())
         });
         done
     }
+}
+
+/// Every event of one kind for one publication, oldest first, delivered and
+/// dead-lettered ones included. The store reads only due events, so this reads
+/// the rows.
+pub(super) fn event_rows(
+    database: &str,
+    publication: PublicationId,
+    kind: EventKind,
+) -> Vec<EventRow> {
+    diesel::sql_query(
+        "SELECT attempts, permanent_failures, delivered_at IS NOT NULL AS delivered
+        FROM publication_events WHERE publication_id = $1 AND kind = $2
+        ORDER BY created_at, id",
+    )
+    .bind::<SqlUuid, _>(publication.0)
+    .bind::<Text, _>(kind.as_str())
+    .load(&mut PgConnection::establish(database).unwrap())
+    .unwrap()
 }
 
 pub(super) fn wait_until(mut condition: impl FnMut() -> bool) {

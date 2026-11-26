@@ -32,23 +32,21 @@ pub(super) fn app_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
 
 /// Every mockup shard builds the catalogue that the checks read.
 ///
-/// With three or more shards, shard 1 runs the checks without a browser,
-/// shard 2 runs the policy tests and the served suite, and the other shards
-/// split the disk suite. Two shards split the work into a part without a
-/// browser and a browser part. One shard, or none, runs the complete suite.
+/// The `cloud-typecheck` suite type-checks the mockup workspace, so this suite
+/// runs no type check. With three or more shards, shard 1 runs the
+/// determinism check, shard 2 runs the policy tests and the served suite,
+/// and the other shards split the disk suite. Two shards split the work into
+/// a part without a browser and a browser part. One shard, or none, runs the
+/// complete suite.
 pub(super) fn mockup_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
-        return built(["mockups:build", "mockups:test", "mockups:typecheck"]);
+        return built(["mockups:build", "mockups:test"]);
     };
-    let static_checks = ["test:determinism", "mockups:typecheck"];
     let mut commands = built(["mockups:build"]);
     match (shard.index(), shard.total()) {
-        (1, 2) => {
-            commands.extend(static_checks.map(mockups));
-            commands.push(mockups("test:policy"));
-        }
+        (1, 2) => commands.extend(["test:determinism", "test:policy"].map(mockups)),
         (2, 2) => commands.extend([mockup_disk(None), mockups("test:serve")]),
-        (1, _) => commands.extend(static_checks.map(mockups)),
+        (1, _) => commands.push(mockups("test:determinism")),
         (2, _) => commands.extend(["test:policy", "test:serve"].map(mockups)),
         _ => commands.push(mockup_disk(shard.after(MOCKUP_LEADING_SHARDS))),
     }
@@ -56,16 +54,17 @@ pub(super) fn mockup_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
 }
 
 /// Every site shard builds the site and runs one Playwright shard; shard 1
-/// also runs the type, unit, and link checks.
+/// also runs the unit and link checks. One shard, or none, runs them all.
+///
+/// The `cloud-typecheck` suite type-checks the site, so this suite runs no
+/// type check.
 pub(super) fn site_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
-        return built(["site:check"]);
+        return built(["site:build", "site:test", "site:links", "site:browser"]);
     };
     let mut commands = built(["site:build"]);
     if shard.is_first() {
-        commands.extend(
-            ["site:typecheck", "site:test", "site:links"].map(|script| npm(&["run", script])),
-        );
+        commands.extend(["site:test", "site:links"].map(|script| npm(&["run", script])));
     }
     let value = shard.to_string();
     commands.push(npm(&[

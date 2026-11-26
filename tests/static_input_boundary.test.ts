@@ -87,7 +87,13 @@ test(
 test(
   "each selected input kind aborts changed-generation installation and keeps the earlier output",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
+    const baseline = await fixture();
+    context.after(() => fs.rm(baseline, { recursive: true, force: true }));
+    const first = await build(baseline);
+    assert.equal(first.code, 0, first.stderr);
+    const baselineOutput = path.join(baseline, ".context/site");
+    const previous = await files(baselineOutput);
     for (const file of [
       "mokly.config.json",
       "renderer.ts",
@@ -101,9 +107,8 @@ test(
     ]) {
       const root = await fixture();
       try {
-        const first = await build(root);
-        assert.equal(first.code, 0, first.stderr);
-        const previous = await files(path.join(root, ".context/site"));
+        const output = path.join(root, ".context/site");
+        await fs.cp(baselineOutput, output, { recursive: true });
         await render(
           root,
           `fs.appendFileSync(${JSON.stringify(file)}, '\\n');`,
@@ -115,11 +120,7 @@ test(
           /\[mokly\/export-invalid\] Inputs changed during the build:/u,
         );
         assert.match(result.stderr, /Build again\./u);
-        assert.deepEqual(
-          await files(path.join(root, ".context/site")),
-          previous,
-          file,
-        );
+        assert.deepEqual(await files(output), previous, file);
       } finally {
         await fs.rm(root, { recursive: true, force: true });
       }
