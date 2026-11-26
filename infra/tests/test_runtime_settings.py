@@ -1,6 +1,5 @@
 """Runtime-setting documentation and Helm renders stay in exact parity."""
 
-from pathlib import Path
 import json
 import subprocess
 import sys
