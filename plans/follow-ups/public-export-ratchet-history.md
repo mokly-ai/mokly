@@ -7,7 +7,8 @@
 - **Location:** `docs/protocol/developer-test-commands.md:3`,
   `docs/protocol/verification-ratchets.md:101`,
   `scripts/verification/ratchets/git.mjs:139`, and
-  `tests/public_export_ratchet_git.test.ts:233`.
+  `tests/public_export_ratchet_git.test.ts:212`, the test "a release pull
+  request audits against the last released tags".
 - **Reason:** The failure came from the release tags of the local clone, not
   from the diff of PR #222, and it failed the same way on `origin/main`.
 
@@ -33,14 +34,17 @@
   - In a release pull request, `.release-please-manifest.json` at `HEAD`
     already holds the next version, which has no tag yet. The test "a
     release pull request audits against the last released tags", at
-    `tests/public_export_ratchet_git.test.ts:233`, requires the audit to use
+    `tests/public_export_ratchet_git.test.ts:212`, requires the audit to use
     the last released tags then.
   - The Repository suite runs the ratchet on the repository itself, through
     `scripts/verification/repository-ratchets.mjs`. Until 2026-11-26 the
     test "the repository public surface has complete release notes" in
     `tests/public_export_ratchet_git.test.ts` did so too. A test-scope
     decision of that date removed it, because the Repository suite fails on
-    the same break.
+    the same release-note break. Its check that no released package version
+    falls below its newest reachable release tag moved to
+    `tests/release_version_floor.test.ts`, which reads the local tags in the
+    same way.
   - CI checks out the full history with `fetch-depth: 0` in
     `.github/workflows/ci.yml`.
 - **Problem:**
