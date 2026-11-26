@@ -1,4 +1,4 @@
-//! Shard plans of the cloud suites that run Playwright: app, mockups, and site.
+//! Shard plans of the cloud suites: app, mockups, site, and infrastructure.
 
 use crate::command::CommandSpec;
 
@@ -77,6 +77,47 @@ pub(super) fn site_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
         &value,
     ]));
     commands
+}
+
+/// The infrastructure suite runs the contract and storage tests, then builds
+/// the API, catalogue, and app images.
+///
+/// With two or more shards, the suite has three parts: the tests, the API and
+/// catalogue images, and the app image. Part `p`, counted from 0, belongs to
+/// shard `p % N + 1`. The two Rust images stay in one part, because they share
+/// one cached build stage. A shard after the third runs nothing. One shard, or
+/// none, runs the complete suite.
+pub(super) fn infrastructure_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
+        let mut commands = infrastructure_tests();
+        commands.push(images(&[]));
+        return commands;
+    };
+    let parts = [
+        infrastructure_tests(),
+        vec![images(&["api", "catalogue"])],
+        vec![images(&["app"])],
+    ];
+    (0_u64..)
+        .zip(parts)
+        .filter(|(part, _)| part % shard.total() + 1 == shard.index())
+        .flat_map(|(_, commands)| commands)
+        .collect()
+}
+
+fn infrastructure_tests() -> Vec<CommandSpec> {
+    vec![
+        CommandSpec::new("node").args(["xtask/scripts/require-postgres-tools.mjs"]),
+        CommandSpec::new("python3")
+            .args(["infra/scripts/run-infrastructure-tests.py", "contracts"]),
+        CommandSpec::new("python3").args(["infra/scripts/run-infrastructure-tests.py", "storage"]),
+    ]
+}
+
+fn images(selection: &[&str]) -> CommandSpec {
+    CommandSpec::new("bash")
+        .args(["infra/scripts/check-image.sh"])
+        .args(selection.iter().copied())
 }
 
 fn mockups(script: &str) -> CommandSpec {
