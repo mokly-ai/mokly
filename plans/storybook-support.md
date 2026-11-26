@@ -3736,6 +3736,251 @@ decision 2 and options E to H to decision 3. The reports are under
   design note and its options check confirm that H breaks no requirement in
   force and needs no further decision.
 
+The design note of 2026-11-26 for the answer H, with its spike and its
+options check, found that H breaks requirements in force and needs the
+decisions below. The note, the spike, and the check are under
+`.context/storybook-support/track-i/` in the track I workspace. In each
+decision, the option "do not move to the reconciler" drops H, and that
+answer closes the other five.
+
+#### Track I decision 4: Where the reconciler comes from
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-rendering.md:48-56`,
+  `packages/mokly/src/sidecar/plugins.ts:152-162`.
+- **Background:** `@mokly/mokly` declares `react` and `react-dom` `>=19.0.0`
+  as peers and ships no private runtime. The sidecar loads both from the
+  project's configuration directory, so one React instance renders. H needs
+  `react-reconciler` too. Each reconciler release accepts its own React minor
+  and every later one, and a reconciler older than the project's React fails
+  on newer elements and hooks, such as `<ViewTransition>` on React 19.3.1.
+- **Problem:** A reconciler that Mokly ships is a private runtime, and one
+  release cannot render every React that `>=19.0.0` admits.
+- **Impact if no action:** Projects on another React minor fail or render
+  wrong, and each new React minor needs a Mokly release.
+- **Root question:** How does Mokly get a renderer that matches each
+  project's React version?
+- **Options:**
+  - **A.** Ship one pinned reconciler, narrow the React peers to its minor,
+    and drop the private-runtime rule. Effort: Small.
+  - **B.** Do not move to the reconciler, and choose another option of
+    decision 3, such as G. Effort: Medium.
+  - **C.** Resolve `react-reconciler` from the configuration directory, as
+    `react` is, check the pair against a table of React minors, and fail with
+    a message that names the version to install. It adds an install step and
+    a build error. Effort: Medium.
+  - **D.** Do C, but warn and render today's way without story component
+    uses when the package is missing or does not match. Such a project has no
+    usage evidence for story components. Effort: Medium.
+  - **E.** Ship one reconciler for each React minor and choose one at run
+    time. It ships private runtimes and needs a Mokly release for each minor.
+    Effort: Large.
+- **Left out:** `react-test-renderer`: it flushes only through `act`, which
+  production React does not export, and React 19 deprecated it.
+  `react-dom/client` with a fake DOM: decision 1 rejected a DOM emulator.
+- **Wider fix:** C.
+- **Previous examples:** Decision 22 fails `bundle` with a clear message when
+  the project lacks `vite`.
+- **Related:** Track I decision 9, whose option B limits the package to
+  catalogues with stories files.
+- **Recommendation:** D. It ships no private runtime, follows the project's
+  React, and a project without the package still builds.
+- **Action:** ask the user, because D adds a warning and an install step, and
+  without the package it records no use, but decision 13 records every use.
+
+#### Track I decision 5: Which store snapshot a render reads
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `docs/guides/authoring/storybook.md:288`,
+  `docs/protocol/mokly-storybook-failures.md:8-12`.
+- **Background:** Today's render reads `getServerSnapshot` of
+  `useSyncExternalStore`, and a store without it fails. The reconciler reads
+  `getSnapshot`, as a browser does. Libraries use the server snapshot as a
+  guard: Radix `useIsHydrated` returns `false` on a server.
+- **Problem:** Under H, browser code behind such guards runs in Node. A
+  `getSnapshot` that reads `window` fails with `window is not defined`, and
+  so does browser code behind a `useIsHydrated` guard. Both render today.
+- **Impact if no action:** Screens and stories that render today fail, and
+  the guide's advice to write server-safe code is no longer enough.
+- **Root question:** Under H, does a render show the state of a server render
+  or of a browser?
+- **Options:**
+  - **A.** Read `getSnapshot`, and change the guide and the failures page.
+    Guarded browser code fails in Node. Effort: Small.
+  - **B.** Wrap `useSyncExternalStore` on the project's React so that a
+    render reads `getServerSnapshot`, and fail with today's message without
+    one. The wrapper must be in place before any module captures the export.
+    Effort: Medium.
+  - **C.** Do not move to the reconciler, and choose another option of
+    decision 3, such as G. Effort: Medium.
+- **Left out:** Fall back to the server snapshot when `getSnapshot` throws: a
+  guard does not throw, and its browser code fails later. A switch for each
+  entry: no requirement covers it, and B keeps today's output.
+- **Wider fix:** B.
+- **Previous examples:** None found.
+- **Related:** Track I decision 6 decides what such a failure gives.
+- **Recommendation:** B. Screens and stories that render today keep
+  rendering, and the guide stays true.
+- **Action:** ask the user, because A follows a browser and B keeps today's
+  output, and the text of H named no rule for stores.
+
+#### Track I decision 6: Which outcomes fail a render
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-storybook-failures.md:8-12`,
+  `docs/protocol/mokly-sidecar.md:209-213`.
+- **Background:** Today a story fails when its own work throws, and a screen
+  fails with `render-failed`. Today's render also fails on a portal and on a
+  suspend without a boundary, and it shows the fallback with no error when a
+  child of a Suspense boundary throws. With effects off, the reconciler
+  reports only errors that reach the root.
+- **Problem:** A caught error, a portal, and a suspend without a boundary
+  look like successful renders under H.
+- **Impact if no action:** Reviewers see a fallback or an empty view as a
+  valid render, with no warning, and `--strict` passes.
+- **Root question:** Under H, which outcomes count as a failed story view or a
+  failed screen render?
+- **Options:**
+  - **A.** Accept what the reconciler gives, and change the failures page.
+    Effort: Small.
+  - **B.** Fail with today's messages on an error at the root, a portal, and
+    a suspend without a boundary, the last found through fiber fields. A
+    caught error still shows the fallback. An error inside Suspense now
+    fails. Effort: Medium.
+  - **C.** Do B, and also fail on a caught error that the boundary's fiber
+    field shows. Effort: Medium.
+  - **D.** Do not move to the reconciler, and choose another option of
+    decision 3, such as G. Effort: Medium.
+  - **E.** Do C, and render a failed view again today's way so that today's
+    result decides. It renders twice and breaks the rule that there is no
+    fallback render. Effort: Large.
+- **Left out:** Report caught errors through `onCaughtError`: with effects
+  off React never calls it.
+- **Wider fix:** C.
+- **Previous examples:** Track F's failed views.
+- **Related:** Track I decision 5.
+- **Recommendation:** C. It keeps the failed-views rule, and its one new
+  failure, an error inside Suspense, is one that the rule already requires.
+- **Action:** ask the user, because C fails builds that pass today when a
+  child of a Suspense boundary throws.
+
+#### Track I decision 7: Content that the tracking loses
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-component-changes.md:99-132`.
+- **Background:** Under H, Mokly finds supplied content in React's tree by
+  the identity of each element's props object and a `cloneElement` wrapper.
+  Text children are data in the use's digest. Decision 21 makes element
+  content slots of the use.
+- **Problem:** A component that re-creates a supplied element with new props,
+  such as `createElement(child.type, {...child.props})`, breaks the tracking.
+  The content then counts as the component's own output, in no slot and not
+  in the digest.
+- **Impact if no action:** After an edit of that content, Changes shows the
+  screen as unchanged, which breaks the rule that missing evidence never
+  means unchanged inputs.
+- **Root question:** How does Changes keep an edit of supplied content that
+  the tracking cannot find in the output?
+- **Options:**
+  - **A.** Accept the gap, and state it in the guide. Effort: Small.
+  - **B.** Add a canonical digest of the supplied elements to the use's
+    record. An edit inside a screen component in that content still drops
+    out, and normal edits show twice. Effort: Medium.
+  - **C.** Give a use no instance region when a supplied element has no
+    tracked fiber. Its whole output stays in the screen's comparison.
+    Effort: Medium.
+  - **D.** Do not move to the reconciler, and choose G, whose mirror elements
+    keep the mark when a child is re-created. Effort: Medium.
+- **Left out:** Match content by a second render: it fails when components
+  clone, repeat, or move content.
+- **Wider fix:** C.
+- **Previous examples:** Option D of track I decision 3.
+- **Recommendation:** C. No edit of a use's content can drop out, and the
+  noise touches only uses whose content the tracking loses.
+- **Action:** ask the user, because C applies the rule "no instance region for
+  a use with content", which decision 21 rejected, to those uses.
+
+#### Track I decision 8: Style owners of a story component use
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-sidecar-render-records.md:21-28`,
+  `packages/mokly/src/sidecar/styles.ts:89-121`.
+- **Background:** Mokly gives each styled-components and Emotion rule the
+  component whose render used it as its owner, and slot content keeps its
+  supplier. A Mokly scope element around each use and slot sets that owner.
+  H allows no Mokly element in the product's tree.
+- **Problem:** Under H nothing gives the rules of a story component use their
+  owner, so every such rule falls to the screen.
+- **Impact if no action:** An edit of a story component's own CSS shows as an
+  edit of each screen that uses it, and its Affected list misses them.
+- **Root question:** How does each style rule of a story component use get
+  its owner without a Mokly element around the use?
+- **Options:**
+  - **A.** Give every such rule the screen as owner. Effort: Small.
+  - **B.** After the render, give each rule the owner of the region whose
+    output carries its class: the component outside the slots, the supplier
+    inside one. A rule without a class keeps the owner of its `<style>`
+    element, or else the screen. Effort: Medium.
+  - **C.** Do not move to the reconciler, and choose another option of
+    decision 3, such as G. Effort: Medium.
+  - **D.** Find the rendering component through React's development-only
+    owner field when a library adds a rule, and use B in production builds.
+    Effort: Large.
+- **Left out:** None.
+- **Wider fix:** B.
+- **Previous examples:** Persistent native registries keep selector
+  attribution.
+- **Recommendation:** B. Every rule keeps an owner from public data in the
+  output, and the rule changes only for story component uses.
+- **Action:** ask the user, because B changes the style ownership rule of the
+  render records page.
+
+#### Track I decision 9: Which renders move to the reconciler
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design, from the design note of the answer H.
+- **Category:** Docs or spec.
+- **Location:** `packages/mokly/src/sidecar/render-markup.ts:48-56`.
+- **Background:** Story component uses occur only in a generation with
+  stories files, so the sidecar knows before each render whether a use can
+  occur. Client `useId` values differ from today's, and they shift when one
+  `useId` call is added earlier in the document.
+- **Problem:** If every render moves, catalogues without Storybook get new
+  bytes and new failure rules. If only renders with a use move, the sidecar
+  must find uses before the render.
+- **Impact if no action:** The build has no rule for the path of a render.
+- **Root question:** Which React renders take the reconciler, so that uses
+  render as in the product with the fewest unrelated changes?
+- **Options:**
+  - **A.** Move every React render. Effort: Small.
+  - **B.** Move every render of a generation that has stories files. Other
+    catalogues keep today's path. The first stories file changes the bytes of
+    every screen once. Effort: Small.
+  - **C.** Do not move to the reconciler, and choose another option of
+    decision 3, such as G. Effort: Medium.
+  - **D.** Move only a render that holds a story component use, found by a
+    first render or a static check of the module graph. Effort: Large.
+- **Left out:** Move only a render with a use that has content: a use without
+  content still gets a Mokly type and breaks `child.type` filters.
+- **Wider fix:** B.
+- **Previous examples:** The JSX shim records uses only when the generation
+  has stories files.
+- **Related:** Track I decision 4.
+- **Recommendation:** B. Catalogues without Storybook keep today's output
+  and need no reconciler.
+- **Action:** ask the user, because A keeps one path for all catalogues and B
+  keeps the other catalogues unchanged.
+
 ## Milestone 35: Story component usage
 
 Depends on: 34
