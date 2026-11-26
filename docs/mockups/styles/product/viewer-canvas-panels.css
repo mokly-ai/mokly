@@ -123,9 +123,24 @@
 [data-color-scheme] .fo-canvas-panel .fo-ref-detail {
   font-family: var(--mk-font-mono);
 }
-/* A quiet action under a group's rows keeps its label in line with them. */
-[data-color-scheme] .fo-canvas-panel .fo-ref-group > .fo-panel-foot {
-  margin-inline-start: calc(-1 * var(--mk-space-3));
+/* An icon-only control at the end of a group's line, such as the projects
+   panel's Workspace settings cog. It sits after the line's detail, its box
+   reaches into the gutter by the rows' own bleed, so it ends where their fill
+   does, and its height spills into the space above and below, so a line with
+   it keeps the height of a line without it. */
+[data-color-scheme] .fo-canvas-panel .fo-ref-head:has(> .fo-ref-head-action) {
+  align-items: center;
+}
+[data-color-scheme]
+  .fo-canvas-panel
+  .fo-ref-head:has(> .fo-ref-head-action)
+  > .fo-ref-name {
+  flex: 1 1 auto;
+}
+[data-color-scheme] .fo-canvas-panel .fo-ref-head-action {
+  display: inline-flex;
+  margin-block: calc(-1 * var(--mk-space-2));
+  margin-inline-end: calc(-1 * var(--mk-space-3));
 }
 
 /* A state inside a panel sits in a well on the muted surface, because the
@@ -142,6 +157,13 @@
    row while its content starts where the labels above it do. */
 [data-color-scheme] .fo-canvas-rows {
   margin-inline: calc(-1 * var(--mk-space-3));
+}
+/* A group sets each child to its full width, which would only move the rows
+   left by their bleed. Rows in a group stretch instead, so their fill reaches
+   into the gutter on both sides and their content spans the group's line. */
+[data-color-scheme] .fo-ref-group > .fo-canvas-rows {
+  justify-self: stretch;
+  width: auto;
 }
 [data-color-scheme] .fo-canvas-rows li:has(> .fo-canvas-row-current) {
   border-radius: var(--mk-radius-chrome);
