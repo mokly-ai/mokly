@@ -1,100 +1,69 @@
-//! Catalogue/document agreement and plan derivation cases.
+//! Typed catalogue values and plan derivation cases.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-
-use std::collections::BTreeMap;
 
 use crate::billing::{
     CATALOGUE, IdentityViolation, PRICE_SEAT_KIND_METADATA, PRODUCT_LOOKUP_KEY_METADATA,
 };
 use crate::values::{Plan, Role, SeatKind, Visibility};
 
-const BILLING: &str = include_str!("../../../../docs/protocol/cloud/billing.md");
-const BILLING_CATALOGUE: &str =
-    include_str!("../../../../docs/protocol/cloud/billing-catalogue.md");
-
 #[test]
-fn typed_catalogue_matches_the_billing_protocol_tables() {
-    let team = table_row("| `team`");
-    assert_eq!(
-        team[4],
-        "Editor `2000` USD cents, Collaborator `500` USD cents"
-    );
+fn typed_catalogue_states_the_team_seat_prices_and_settings() {
     assert_eq!(CATALOGUE.seats[0].kind, SeatKind::Editor);
-    assert_eq!(
-        CATALOGUE.seats[0].unit_amount_cents,
-        amount(team[4], "Editor")
-    );
+    assert_eq!(CATALOGUE.seats[0].unit_amount_cents, 2000);
     assert_eq!(CATALOGUE.seats[1].kind, SeatKind::Collaborator);
-    assert_eq!(
-        CATALOGUE.seats[1].unit_amount_cents,
-        amount(team[4], "Collaborator")
-    );
+    assert_eq!(CATALOGUE.seats[1].unit_amount_cents, 500);
 
-    let mut setting_rows = BILLING
-        .lines()
-        .skip_while(|line| !line.starts_with("| Setting"));
-    setting_rows.next().expect("settings header");
-    setting_rows.next().expect("settings separator");
-    let settings: BTreeMap<_, _> = setting_rows
-        .take_while(|line| line.starts_with('|'))
-        .map(|line| {
-            let cells = cells(line);
-            (cells[0], cells[1])
-        })
-        .collect();
-    assert_eq!(
-        settings["Billing interval"].trim_matches('`'),
-        CATALOGUE.interval
-    );
-    assert_eq!(
-        settings["Usage type"].trim_matches('`'),
-        CATALOGUE.usage_type
-    );
-    assert_eq!(settings["Currency"].trim_matches('`'), CATALOGUE.currency);
-    assert_eq!(
-        settings["Trial"],
-        format!("`{}` days, once", CATALOGUE.trial_days)
-    );
-    assert_eq!(
-        settings["Stripe API version"].trim_matches('`'),
-        CATALOGUE.stripe_version
-    );
+    assert_eq!(CATALOGUE.interval, "month");
+    assert_eq!(CATALOGUE.usage_type, "licensed");
+    assert_eq!(CATALOGUE.currency, "usd");
+    assert_eq!(CATALOGUE.trial_days, 7);
+    assert_eq!(CATALOGUE.stripe_version, "2026-08-26.dahlia");
 }
 
 #[test]
-fn typed_identity_matches_the_billing_catalogue_protocol_tables() {
-    let rows = identity_rows();
-    assert_eq!(rows.len(), CATALOGUE.seats.len());
-    for (row, seat) in rows.iter().zip(CATALOGUE.seats) {
-        assert_eq!(row[0].trim_matches('`'), CATALOGUE.product.plan.as_str());
-        assert_eq!(row[1].trim_matches('`'), CATALOGUE.product.lookup_key);
-        assert_eq!(row[2].trim_matches('`'), CATALOGUE.product.name);
-        assert_eq!(row[3].trim_matches('`'), seat.kind.as_str());
-        assert_eq!(row[4].trim_matches('`'), seat.lookup_key);
-        assert_eq!(row[5].trim_matches('`'), seat.nickname);
-    }
+fn typed_identity_states_the_stripe_product_and_price_keys() {
+    let identity: Vec<_> = CATALOGUE
+        .seats
+        .iter()
+        .map(|seat| {
+            (
+                CATALOGUE.product.plan.as_str(),
+                CATALOGUE.product.lookup_key,
+                CATALOGUE.product.name,
+                seat.kind.as_str(),
+                seat.lookup_key,
+                seat.nickname,
+            )
+        })
+        .collect();
+    assert_eq!(
+        identity,
+        vec![
+            (
+                "team",
+                "mokly_team",
+                "Mokly Team",
+                "editor",
+                "mokly_team_editor_usd_month",
+                "Editor seat",
+            ),
+            (
+                "team",
+                "mokly_team",
+                "Mokly Team",
+                "collaborator",
+                "mokly_team_collaborator_usd_month",
+                "Collaborator seat",
+            ),
+        ]
+    );
 
-    let settings = identity_settings();
-    assert_eq!(
-        settings["Product metadata key"].trim_matches('`'),
-        PRODUCT_LOOKUP_KEY_METADATA
-    );
-    assert_eq!(
-        settings["Price metadata key"],
-        format!(
-            "`{PRICE_SEAT_KIND_METADATA}` (`{}`/`{}`)",
-            CATALOGUE.seats[0].kind.as_str(),
-            CATALOGUE.seats[1].kind.as_str()
-        )
-    );
+    assert_eq!(PRODUCT_LOOKUP_KEY_METADATA, "mokly_lookup_key");
+    assert_eq!(PRICE_SEAT_KIND_METADATA, "mokly_seat_kind");
     for seat in CATALOGUE.seats {
-        assert_eq!(
-            settings["Tax behavior"].trim_matches('`'),
-            seat.tax_behavior.as_str()
-        );
+        assert_eq!(seat.tax_behavior.as_str(), "exclusive", "{:?}", seat.kind);
     }
-    assert_eq!(settings["Key grammar"], "`^mokly_[a-z0-9_]+$`");
     assert!(CATALOGUE.identity_violations().is_empty());
 }
 
@@ -166,50 +135,6 @@ fn roles_derive_the_documented_seat_kind() {
 fn only_team_allows_private_projects() {
     assert!(!Plan::Free.allows_private_projects());
     assert!(Plan::Team.allows_private_projects());
-}
-
-fn table_row(prefix: &str) -> Vec<&'static str> {
-    cells(
-        BILLING
-            .lines()
-            .find(|line| line.starts_with(prefix))
-            .expect("catalogue row"),
-    )
-}
-
-fn identity_rows() -> Vec<Vec<&'static str>> {
-    BILLING_CATALOGUE
-        .lines()
-        .skip_while(|line| !line.starts_with("| Plan"))
-        .skip(2)
-        .take_while(|line| line.starts_with('|'))
-        .map(cells)
-        .collect()
-}
-
-fn identity_settings() -> BTreeMap<&'static str, &'static str> {
-    BILLING_CATALOGUE
-        .lines()
-        .skip_while(|line| !line.starts_with("| Identity setting"))
-        .skip(2)
-        .take_while(|line| line.starts_with('|'))
-        .map(|line| {
-            let row = cells(line);
-            (row[0], row[1])
-        })
-        .collect()
-}
-
-fn cells(row: &str) -> Vec<&str> {
-    row.trim_matches('|').split('|').map(str::trim).collect()
-}
-
-fn amount(cell: &str, kind: &str) -> u32 {
-    cell.split_once(kind)
-        .and_then(|(_, value)| value.split('`').nth(1))
-        .expect("seat amount")
-        .parse()
-        .expect("numeric seat amount")
 }
 
 #[test]

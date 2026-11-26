@@ -109,7 +109,8 @@ and the typed client, and `cargo xtask openapi --check` and the
 | `MKC_STRIPE_PORT`               | The suite's billing provider double off `MKC_APP_PORT + 2` |
 | `MKC_GITHUB_PORT`               | The suite's recorded GitHub off `MKC_APP_PORT + 3`         |
 
-`MKC_APP_SHARD=<n>/<total>` runs only shard `n` of the browser suite. Without
+The browser suite runs each test once, with no retry, so a flaky test fails
+its job. `MKC_APP_SHARD=<n>/<total>` runs only shard `n` of the suite. Without
 it, or with an empty value, the suite runs every test. A malformed value fails
 the run. CI runs the suite as eight shards, each in its own job with its own
 API and database, as
