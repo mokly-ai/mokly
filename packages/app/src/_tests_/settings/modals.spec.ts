@@ -11,8 +11,8 @@ import {
 } from "../harness";
 import { addMember } from "../members";
 import { createProject } from "../project-setup";
-import { makePrivate } from "../visibility";
 
+import { holdsWhileSending, holdWrite } from "./held-writes";
 import { chooseRevoke, makeToken, rowMenu } from "./tokens";
 
 /**
@@ -106,35 +106,6 @@ test("the keyboard moves between a confirmation's two decisions", async ({
   await expect(page.getByText("Revoked")).toBeVisible();
 });
 
-/**
- * Hold one write until the test lets it go, so a confirmation can be asked
- * what it does while its write is in flight.
- */
-async function holdWrite(
-  page: Page,
-  url: string,
-  method: string,
-): Promise<() => void> {
-  let release: () => void = () => {};
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route(url, async (route) => {
-    if (route.request().method() !== method) return route.continue();
-    await held;
-    await route.continue();
-  });
-  return release;
-}
-
-/** Neither Escape nor a press outside abandons a write already sent. */
-async function holdsWhileSending(page: Page, question: string): Promise<void> {
-  const modal = page.getByRole("dialog", { name: question, exact: true });
-  await page.keyboard.press("Escape");
-  await page.mouse.click(10, 10);
-  await expect(modal).toBeVisible();
-}
-
 test("a token revoke holds while its write is in flight", async ({ page }) => {
   await tokensPane(page, "in-flight");
   await makeToken(page, "Slow");
@@ -185,35 +156,6 @@ test("a member removal holds while its write is in flight", async ({
   release();
   await expect(page.getByTestId("confirm-remove-member")).toHaveCount(0);
   await expect(page.getByText(colleague)).toHaveCount(0);
-});
-
-test("a visibility change holds while its write is in flight", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("visibility-flight"));
-  const projectId = await createProject(page, "Vis Org");
-  await makePrivate(page, projectId);
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=project"),
-  );
-  // The field waits in its frame while the settings scope loads.
-  await expect(page.getByLabel("Project name")).toBeEditable();
-  const name = await page.getByLabel("Project name").inputValue();
-
-  const release = await holdWrite(page, "**/v1/projects/*", "PATCH");
-  await page.getByTestId("change-visibility").click();
-  await page.getByTestId("confirm-visibility").click();
-  await expect(page.getByTestId("confirm-visibility")).toHaveText(
-    "Making public…",
-  );
-  await holdsWhileSending(page, "Make " + name + " public?");
-
-  release();
-  await expect(page.getByTestId("confirm-visibility")).toHaveCount(0);
-  await expect(page.getByTestId("change-visibility")).toHaveText(
-    "Make private",
-  );
 });
 
 test("declining the create modal discards the name it held", async ({
