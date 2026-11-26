@@ -8,7 +8,7 @@ use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 
 mod changes_support;
-use changes_support::{base, run, write};
+use changes_support::{base, run, run_configured, write};
 
 #[test]
 fn nested_configuration_aliases_and_bare_imports_use_working_dependencies_on_both_sides() {
@@ -120,6 +120,98 @@ fn changes_render_workspace_sources_when_only_the_head_has_a_build() {
     assert_eq!(index.changes_status, ChangesStatus::Ready);
     let comparison = published.join(index.comparison_url.0.unwrap());
     assert!(comparison.is_dir(), "{}", comparison.display());
+}
+
+const WARNINGS: &str = concat!(
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/bundled.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/loose.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/index.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/skin.css is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+);
+
+#[test]
+fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
+    let root = base(&[
+        (
+            ".gitignore",
+            "node_modules/\nmokly-static/\ngenerated/\npackages/theme/esm/\n",
+        ),
+        (
+            "packages/theme/package.json",
+            r#"{"name":"workspace-theme"}"#,
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p>Home</p>",
+        ),
+    ]);
+    let path = root.path();
+    let modules = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../node_modules");
+    link_directory(&modules, &path.join("node_modules"));
+    write(
+        path,
+        "mokly.config.json",
+        r#"{"review":{"base":"fixture-base"},"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["style.css"]}]}"#,
+    );
+    write(
+        path,
+        "postcss.mjs",
+        "import {value} from './generated/bundled.mjs'; const plugin = './generated/plugin.cjs'; export default {plugins:[require(plugin)(value)]};",
+    );
+    write(
+        path,
+        "generated/plugin.cjs",
+        "module.exports = value => ({postcssPlugin:'fixture', Declaration(decl) { if (decl.prop === '--fixture') decl.value = value; }});",
+    );
+    write(
+        path,
+        "generated/bundled.mjs",
+        "export const value = 'node-loaded';",
+    );
+    write(
+        path,
+        "style.css",
+        "@import './packages/theme/esm/skin.css'; @import './generated/loose.css'; @import './untracked.css'; p { --fixture: before }",
+    );
+    write(path, "generated/loose.css", ".loose { color: blue }");
+    write(path, "untracked.css", ".untracked { color: green }");
+    write(path, "packages/theme/esm/skin.css", ".theme { color: red }");
+    write(
+        path,
+        "packages/theme/esm/index.mjs",
+        "export const label = 'Built';",
+    );
+    write(
+        path,
+        "specs/page.mockup.ts",
+        "import {definePage} from '@mokly/mokly'; import {label} from '../packages/theme/esm/index.mjs'; import '../packages/theme/esm/skin.css'; export default definePage({title:'Page',description:'',relatedDocs:[],render:()=>`<!doctype html><html><head><title>Page</title></head><body>${label}</body></html>`});",
+    );
+
+    let run = |args: &[&str]| run_configured(path, args, None, None, "plain");
+    let build = run(&["build"]);
+    let stderr = String::from_utf8(build.stderr).unwrap();
+    assert_eq!(build.status.code(), Some(0), "{stderr}");
+    assert_eq!(stderr, WARNINGS);
+    let output = path.join("mokly-static");
+    let css = fs::read_to_string(output.join(namespace::generated("styles/style.css"))).unwrap();
+    for text in [".loose", ".untracked", ".theme", "node-loaded"] {
+        assert!(css.contains(text), "{css}");
+    }
+
+    let index = output.join(namespace::viewer("index.json"));
+    let written = fs::read(&index).unwrap();
+    let strict = run(&["build", "--strict"]);
+    assert_eq!(strict.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8(strict.stderr).unwrap(),
+        format!("{WARNINGS}[mokly/build-invalid] 4 build warnings with --strict\n")
+    );
+    assert_eq!(fs::read(index).unwrap(), written);
+
+    let disabled = run(&["build", "--strict", "--no-changes"]);
+    let stderr = String::from_utf8(disabled.stderr).unwrap();
+    assert_eq!(disabled.status.code(), Some(0), "{stderr}");
+    assert_eq!(stderr, "");
 }
 
 fn link_directory(target: &Path, link: &Path) {

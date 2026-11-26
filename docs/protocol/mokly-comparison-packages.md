@@ -1,6 +1,6 @@
 # Comparison Package Selection
 
-Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds the `moduleResolution.sourcePackages` hint of the failure message and the `ignored-module` warning.
+Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports.
 
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)
@@ -111,9 +111,13 @@ each repository file outside `node_modules` that Git ignores and that a
 bundled import or a CSS `@import` of the head loads. Changes runs in `build`
 and `publish` without `--no-changes`, and in Serve when it classifies
 Changes. A later base renders from the files that Git tracks, so it cannot
-load such a file. The message names the repository-relative path of the file.
-When a workspace package holds the file, the message also names
-`moduleResolution.sourcePackages`, because no entry can fix any other file. A file that Git neither tracks nor
+load such a file. `{path}` is the repository-relative POSIX path.
+`{package}` is the workspace package's `package.json` name.
+
+- Inside a workspace package, the message is `module {path} is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for {package}`.
+- Outside a workspace package, the message is `module {path} is ignored by Git, so a later base cannot load it`.
+
+A file that Git neither tracks nor
 ignores gives no warning, because a commit can still add it. A file that Node
 loads for a require gives no warning, because the base recovers its source
 after `MODULE_NOT_FOUND`. [Strict mode](./mokly-build-warnings.md#strict-mode)

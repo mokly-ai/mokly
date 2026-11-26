@@ -215,6 +215,7 @@ fn context_evidence(evidence: &mut ReadEvidence) -> ReadEvidence {
     ReadEvidence {
         coverage: evidence.coverage.clone(),
         inputs: private,
+        bundled_imports: BTreeSet::new(),
     }
 }
 

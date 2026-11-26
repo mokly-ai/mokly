@@ -62,6 +62,14 @@ pub struct Evidence {
     pub reads: Vec<Read>,
     /// Known module input names, including modules with no byte observation.
     pub modules: Vec<String>,
+    /// Local import paths from PostCSS bundles, without Node-loaded requires.
+    #[serde(
+        default,
+        rename = "bundledImports",
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    #[ts(optional, as = "Option<_>")]
+    pub bundled_imports: Vec<String>,
 }
 
 impl Default for Evidence {
@@ -70,6 +78,7 @@ impl Default for Evidence {
             coverage: "incomplete".into(),
             reads: Vec::new(),
             modules: Vec::new(),
+            bundled_imports: Vec::new(),
         }
     }
 }
@@ -105,5 +114,11 @@ impl Evidence {
                 .sum::<usize>()
             + self.modules.capacity() * size_of::<String>()
             + self.modules.iter().map(String::capacity).sum::<usize>()
+            + self.bundled_imports.capacity() * size_of::<String>()
+            + self
+                .bundled_imports
+                .iter()
+                .map(String::capacity)
+                .sum::<usize>()
     }
 }

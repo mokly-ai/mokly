@@ -247,16 +247,16 @@ Depends on: 3
 
 Depends on: 4, 5
 
-- [ ] Name `moduleResolution.sourcePackages` in the
+- [x] Name `moduleResolution.sourcePackages` in the
       `module {path} has no source in this side` message of
       `packages/mokly/src/sidecar/module-paths.ts` when the file is inside a
       workspace package, and in the matching Rust CSS message. Test both.
-- [ ] Give the `ignored-module` warning when Changes runs and a bundled or CSS
+- [x] Give the `ignored-module` warning when Changes runs and a bundled or CSS
       import of the head loads a repository file outside `node_modules` that
       Git ignores. Name the file and the override in the message. Use the file
       listing in `crates/mokly-compare/src/working_inputs.rs`. Test it in
       `build`, in `build --strict` and in Serve.
-- [ ] Run `build --strict` over the example catalogue and the cloud mockups.
+- [x] Run `build --strict` over the example catalogue and the cloud mockups.
       Fix or record each new warning.
 
 ## Milestone 7: End-to-end test and README files

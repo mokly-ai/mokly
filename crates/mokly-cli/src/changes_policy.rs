@@ -66,6 +66,7 @@ fn graph(error: &GraphError) -> Option<&'static str> {
             CssError::Internal(_) => None,
             CssError::RootRoute { .. }
             | CssError::Import { .. }
+            | CssError::WorkspaceImport { .. }
             | CssError::Asset { .. }
             | CssError::Transform { .. }
             | CssError::PostcssUnavailable { .. } => Some(VALIDATION),

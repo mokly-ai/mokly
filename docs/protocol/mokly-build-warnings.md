@@ -1,7 +1,5 @@
 # Build Warnings
 
-Status: Mokly does not give the `ignored-module` warning yet. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds it.
-
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is

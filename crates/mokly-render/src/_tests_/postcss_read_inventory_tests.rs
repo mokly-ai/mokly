@@ -66,6 +66,7 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
             digest: "observed".into(),
         })
         .collect(),
+        bundled_imports: Vec::new(),
     };
     let result = collect(
         &tree,

@@ -119,14 +119,14 @@ export const page = definePage({title:"Local",description:"",relatedDocs:[],rend
   }
 });
 
-test("a package without source uses its built file or reports its absence", async (context) => {
+test("a package without source uses its build or names its override", async (context) => {
   const { head, base, params } = await workspace(context);
   for (const side of [head, base]) {
     await write(side, "entry.mjs", 'export {value} from "local";');
     await write(
       side,
       "packages/local/package.json",
-      '{"name":"local","exports":"./dist/value.js"}',
+      '{"name":"workspace-local","exports":"./dist/value.js"}',
     );
   }
   await write(
@@ -147,7 +147,7 @@ test("a package without source uses its built file or reports its absence", asyn
   await assert.rejects(historical.call("bundle", params(base)), {
     code: "bundle-failed",
     message:
-      /module packages\/local\/dist\/value\.js has no source in this side/,
+      "entry.mjs:1:21: module packages/local/dist/value.js has no source in this side; set moduleResolution.sourcePackages for workspace-local",
   });
   await historical.call("shutdown");
 });

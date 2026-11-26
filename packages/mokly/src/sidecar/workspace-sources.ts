@@ -52,8 +52,7 @@ export class WorkspaceSources {
   }
 
   source(file: string): string | undefined {
-    if (!this.repositoryFile(file)) return undefined;
-    const pkg = this.packageRoot(path.dirname(file));
+    const pkg = this.package(file);
     if (pkg === null) return undefined;
     const { root, name } = pkg;
     const relative = logical(root, file);
@@ -68,6 +67,10 @@ export class WorkspaceSources {
       if (candidate !== undefined) return candidate;
     }
     return this.detectedSource(file, root, relative);
+  }
+
+  packageName(file: string): string | undefined {
+    return this.package(file)?.name;
   }
 
   private detectedSource(
@@ -132,6 +135,12 @@ export class WorkspaceSources {
     );
   }
 
+  private package(file: string): WorkspacePackage | null {
+    return this.repositoryFile(file)
+      ? this.packageRoot(path.dirname(file))
+      : null;
+  }
+
   private packageRoot(directory: string): WorkspacePackage | null {
     const cached = this.packages.get(directory);
     if (cached !== undefined) return cached;
@@ -144,14 +153,14 @@ export class WorkspaceSources {
       if (directory !== this.root)
         pkg = this.packageRoot(path.dirname(directory));
     } else if (manifest !== null) {
-      const name = this.packageName(manifest);
+      const name = this.manifestName(manifest);
       if (name !== undefined) pkg = { root: directory, name };
     }
     this.packages.set(directory, pkg);
     return pkg;
   }
 
-  private packageName(contents: string): string | undefined {
+  private manifestName(contents: string): string | undefined {
     try {
       const json: unknown = JSON.parse(contents.replace(/^\uFEFF/, ""));
       if (

@@ -15,6 +15,7 @@ import {
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
+import { bundledPostcssImports } from "./postcss-module.js";
 import { observeModulePaths } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
@@ -109,11 +110,14 @@ process.once("message", (workerData: WorkerData) => {
           id,
           result: {
             text: result.css,
-            readEvidence: readEvidence([
-              ...modules,
-              ...paths.resolvedDependencies,
-              ...loadedFiles(workerData.sourceRoot),
-            ]),
+            readEvidence: {
+              ...readEvidence([
+                ...modules,
+                ...paths.resolvedDependencies,
+                ...loadedFiles(workerData.sourceRoot),
+              ]),
+              bundledImports: bundledPostcssImports(),
+            },
             dependencies,
             unmappedDependencyDirectories: [
               ...paths.dependencyUsage.unmapped,

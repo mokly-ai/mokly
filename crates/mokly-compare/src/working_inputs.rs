@@ -1,5 +1,7 @@
 //! Dependency candidates and clean identities from Git's working-tree view.
 
+use std::collections::{BTreeSet, HashSet};
+
 use mokly_git::error;
 use mokly_git::identity::RepoPath;
 use mokly_git::repository::Repository;
@@ -99,6 +101,25 @@ impl WorkingInputs for SystemWorkingInputs {
         }
         Ok(inputs)
     }
+}
+
+/// Exclude tracked and unignored paths from the files consumed by the head.
+pub(crate) fn ignored_paths<'a>(
+    repository: &dyn Repository,
+    mut loaded: BTreeSet<&'a str>,
+) -> Result<BTreeSet<&'a str>> {
+    if loaded.is_empty() {
+        return Ok(loaded);
+    }
+    let paths = repository.working_paths().base()?;
+    let listed: HashSet<_> = paths.iter().map(RepoPath::as_str).collect();
+    loaded.retain(|path| {
+        !listed.contains(path)
+            && !path
+                .match_indices('/')
+                .any(|(end, _)| listed.contains(&path[..end]))
+    });
+    Ok(loaded)
 }
 
 #[cfg(test)]

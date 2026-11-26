@@ -1,7 +1,5 @@
 # Imported Stylesheet Diagnostics
 
-Status: Mokly does not name `moduleResolution.sourcePackages` in the two workspace package rows yet. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds it.
-
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`

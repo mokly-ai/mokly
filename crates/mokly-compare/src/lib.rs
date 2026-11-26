@@ -132,6 +132,7 @@ pub mod base_retention;
 pub mod base_selection;
 pub mod base_sources;
 pub mod comparison;
+mod ignored_modules;
 pub mod install_inputs;
 
 pub mod lookup;

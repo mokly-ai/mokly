@@ -10,6 +10,8 @@ use unimock::{MockFn, Unimock, matching};
 use crate::resolution::Resolution;
 use crate::resolver::{ImportResolver, SourceResolver};
 
+mod resolver_error_tests;
+
 fn resolver(files: &[&str]) -> SourceResolver {
     resolver_with_files(
         &files.iter().map(|file| (*file, "{}")).collect::<Vec<_>>(),

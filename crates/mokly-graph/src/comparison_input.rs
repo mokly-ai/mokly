@@ -1,13 +1,26 @@
 //! Retained-only inputs never read a source or report a speculative restore failure.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::sync::Arc;
+
+use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::Artifact;
 use crate::closure::Closure;
 use crate::comparison_proof::ContentIdentity;
 use crate::error::Result;
 use crate::types::ComparisonDocument;
+
+/// Prepared sources that a bundled import or stylesheet import reached.
+pub struct ModuleImports<'a> {
+    /// Ordered edges in the esbuild module graph, when the catalogue uses JavaScript.
+    pub modules: Option<&'a BTreeMap<String, Vec<String>>>,
+    /// CSS and bundled PostCSS imports, with their repository aliases.
+    pub stylesheet_inputs: &'a BTreeSet<String>,
+    /// Source tree of this generation for package manifest lookup.
+    pub tree: &'a dyn SourceTree,
+}
 
 /// Exact codec input and captured closure of a document whose restore cannot fail.
 /// This proof permits no source read, restoration, fallback, or diagnostic.

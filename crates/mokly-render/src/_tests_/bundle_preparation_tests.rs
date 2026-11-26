@@ -58,6 +58,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                                 coverage: Default::default(),
                                 reads: vec![],
                                 modules: vec!["/repo/postcss.mjs".into()],
+                                bundled_imports: Vec::new(),
                             },
                             dependencies: vec![Dependency {
                                 kind: DependencyKind::File,

@@ -6,6 +6,7 @@ import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js"
 import { DependencyUsage } from "./dependency-usage.js";
 import { missingFile } from "./file-digests.js";
 import { dependencyDirectory } from "./importer-resolution.js";
+import { ConfiguredModuleFiles } from "./module-configured-files.js";
 import { moduleRoots, moduleRootsSync } from "./module-roots.js";
 import type { ModuleRoots } from "./module-roots.js";
 import { inside, logical } from "./path-scope.js";
@@ -39,8 +40,7 @@ export class ModulePaths {
   readonly lookupDirectories = new Set<string>();
   readonly workspaceLookups = new WorkspaceLookups(this);
   private readonly workspace: WorkspaceSources;
-  private readonly configured: Set<string>;
-  private canonicalConfigured: Set<string> | undefined;
+  private readonly configured: ConfiguredModuleFiles;
   private readonly observed = new Set<string>();
 
   private constructor(
@@ -53,9 +53,7 @@ export class ModulePaths {
     readonly dependencyUsage: DependencyUsage,
     configured: readonly string[],
   ) {
-    this.configured = new Set(
-      configured.map((file) => path.resolve(sourceRoot, file)),
-    );
+    this.configured = new ConfiguredModuleFiles(sourceRoot, configured);
     this.workspace = new WorkspaceSources(
       sourceRoot,
       settings.resolveExtensions,
@@ -195,22 +193,11 @@ export class ModulePaths {
   }
 
   addConfigured(file: string): void {
-    this.configured.add(path.resolve(this.sourceRoot, file));
-    this.canonicalConfigured = undefined;
+    this.configured.add(file);
   }
 
   configuredFile(file: string): boolean {
-    if (this.configured.has(file)) return true;
-    this.canonicalConfigured ??= new Set(
-      [...this.configured].flatMap((candidate) => {
-        try {
-          return [fs.realpathSync(candidate)];
-        } catch {
-          return [];
-        }
-      }),
-    );
-    return this.canonicalConfigured.has(file);
+    return this.configured.has(file);
   }
 
   private candidate(real: string, specifier?: string) {
@@ -251,8 +238,17 @@ export class ModulePaths {
     return file;
   }
 
-  private missing(name: string): Error {
-    return new Error(`module ${name} has no source in this side`);
+  private missing(name: string, file?: string): Error {
+    const pkg =
+      file !== undefined && this.repositoryOwned(file)
+        ? this.workspace.packageName(file)
+        : undefined;
+    const message = `module ${name} has no source in this side`;
+    return new Error(
+      pkg === undefined
+        ? message
+        : `${message}; set moduleResolution.sourcePackages for ${pkg}`,
+    );
   }
 
   async resolve(file: string, specifier?: string): Promise<string> {
@@ -271,7 +267,7 @@ export class ModulePaths {
         (await fs.promises.stat(real)).isFile(),
       );
     } catch {
-      throw this.missing(candidate.name);
+      throw this.missing(candidate.name, candidate.file);
     }
   }
 

@@ -16,9 +16,6 @@ pub(crate) fn source(
     target: &Path,
     settings: &Resolution,
 ) -> Option<PathBuf> {
-    if !repository_path(repo_root, target) {
-        return None;
-    }
     let (package, name) = package_root(tree, repo_root, target)?;
     let relative = target.strip_prefix(package).ok()?;
     let mut layouts = settings
@@ -114,11 +111,23 @@ struct PackageName {
     name: String,
 }
 
+/// Read the nearest repository package name for a target on this side.
+pub fn workspace_package_name(
+    tree: &dyn SourceTree,
+    repo_root: &Path,
+    target: &Path,
+) -> Option<String> {
+    package_root(tree, repo_root, target).map(|(_, name)| name)
+}
+
 fn package_root<'a>(
     tree: &dyn SourceTree,
     repo_root: &Path,
     target: &'a Path,
 ) -> Option<(&'a Path, String)> {
+    if !repository_path(repo_root, target) {
+        return None;
+    }
     for directory in target
         .parent()?
         .ancestors()

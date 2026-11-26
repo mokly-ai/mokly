@@ -10,6 +10,13 @@ import { moduleContext } from "./postcss-context.js";
 import { postcssSource } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
 
+const importedInputs = new Set<string>();
+
+/** The worker retains the local inputs reached by its PostCSS bundles. */
+export function bundledPostcssImports(): string[] {
+  return [...importedInputs].sort();
+}
+
 /** Repository presets are local modules; installed plugins remain native imports. */
 export async function importPostcssModule(
   file: string,
@@ -76,10 +83,9 @@ export async function importPostcssModule(
   const module = await import(
     `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
   );
-  return {
-    module,
-    modules: Object.keys(compiled.metafile!.inputs).map((input) =>
-      path.resolve(path.dirname(file), input),
-    ),
-  };
+  const modules = Object.keys(compiled.metafile!.inputs).map((input) =>
+    path.resolve(path.dirname(file), input),
+  );
+  for (const input of modules) if (input !== file) importedInputs.add(input);
+  return { module, modules };
 }

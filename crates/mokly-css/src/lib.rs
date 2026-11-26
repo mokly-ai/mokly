@@ -26,6 +26,8 @@ mod source_position;
 mod workspace_sources;
 mod workspace_tsconfig;
 
+pub use workspace_sources::workspace_package_name;
+
 #[cfg(test)]
 #[path = "_tests_/compiler_tests.rs"]
 mod compiler_tests;

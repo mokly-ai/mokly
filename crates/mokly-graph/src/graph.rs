@@ -8,7 +8,6 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::names::ModuleNames;
-use mokly_css::paths;
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::canonical::compare_utf16;
@@ -26,7 +25,7 @@ use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{
     config_key, dependency_inputs, error, markdown_assets, markdown_sources, planning, styles,
-    stylesheet_keys, watch_rules,
+    stylesheet_jobs, stylesheet_keys, watch_rules,
 };
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -103,6 +102,7 @@ impl Graph {
         let mut imported_by = BTreeMap::new();
         let mut plugin_inputs = BTreeMap::new();
         let mut directories = BTreeSet::new();
+        let mut stylesheet_imports = BTreeSet::new();
         let mut stylesheet_resolution_files = BTreeSet::new();
         let mut stylesheet_resolution_roots = BTreeMap::new();
         let roots = styles::roots(&config, &self.inputs);
@@ -124,6 +124,14 @@ impl Graph {
         let roots: Vec<_> = roots.into_values().collect();
         let bundles = self.workers.stylesheets(&roots, self)?;
         for (root, bundle) in roots.into_iter().zip(bundles) {
+            stylesheet_imports.extend(
+                bundle
+                    .inputs
+                    .keys()
+                    .filter(|path| !root.local_css || **path != root.path)
+                    .chain(&bundle.read_evidence.bundled_imports)
+                    .cloned(),
+            );
             stylesheet_resolution_files.extend(bundle.resolution_files.iter().cloned());
             stylesheet_resolution_roots.extend(
                 bundle
@@ -172,35 +180,7 @@ impl Graph {
                         dependency_inputs::directory(path, &self.inputs.dependency_aliases)
                     }),
             );
-            for (route, asset) in bundle.assets {
-                names.insert(&route, true)?;
-                let asset_key = key(
-                    NodeKind::Stylesheet,
-                    &[route.as_bytes(), asset.digest.as_bytes()],
-                );
-                if resources
-                    .get(&route)
-                    .is_some_and(|previous| previous.key != asset_key)
-                {
-                    return Err(error::invalid(
-                        &route,
-                        format!(
-                            "CSS asset bytes disagree at {route}; keep shared asset inputs stable during the build"
-                        ),
-                    ));
-                }
-                resources
-                    .entry(route.clone())
-                    .or_insert_with(|| ResourcePlan {
-                        document_key: asset_key.clone(),
-                        key: asset_key,
-                        content_type: paths::content_type(&route)
-                            .unwrap_or("application/octet-stream")
-                            .into(),
-                        root: root.clone(),
-                        asset: Some(asset),
-                    });
-            }
+            stylesheet_jobs::register_assets(&root, bundle.assets, &mut names, &mut resources)?;
             catalogue.model.sources.extend(
                 bundle
                     .inputs
@@ -288,6 +268,7 @@ impl Graph {
                 generation_key,
                 matchers,
                 directories: directories.into_iter().collect(),
+                stylesheet_imports,
                 stylesheet_resolution_files,
                 stylesheet_resolution_roots,
             },
