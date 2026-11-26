@@ -20,6 +20,9 @@ format dependency.
 
 ### Key Code
 
+- `smoke_catalogue_origins.py` checks framing, CORS and both rollout admission
+  mismatch errors against the real catalogue server with the desktop flag on and off.
+  The `desktop_origin_tests` integration test runs this script with Postgres and `psql`.
 - `smoke_publications.py` runs the publication scenarios against real services.
 - `publication_exchange.py` builds three-file Plans and runs Blob and Complete.
   It also converts test uploads to current-only indexes and envelopes.

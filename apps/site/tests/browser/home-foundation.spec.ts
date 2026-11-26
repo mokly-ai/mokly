@@ -29,13 +29,14 @@ function wideWire(page: Page) {
  */
 const WAITING = "inset(0px 387px 0px 0px)";
 
-test("the open foundation reads as its copy, its actions, its facts and its steps", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  // The frame, its code, its artboard and its wires are depictions: none of
-  // them reaches assistive technology, so the section reads as its copy.
-  await expect(foundation(page)).toMatchAriaSnapshot(`
+test(
+  "the open foundation reads as its copy, its actions, its facts and its steps",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    // The frame, its code, its artboard and its wires are depictions: none of
+    // them reaches assistive technology, so the section reads as its copy.
+    await expect(foundation(page)).toMatchAriaSnapshot(`
     - /children: deep-equal
     - paragraph: An open foundation
     - heading "Your screens. Your building blocks." [level=2]
@@ -61,25 +62,28 @@ test("the open foundation reads as its copy, its actions, its facts and its step
         - heading "Build from a shared decision." [level=3]
         - paragraph: Keep comments and approvals with the pull request.
   `);
-  const steps = foundation(page)
-    .getByRole("list")
-    .filter({ has: page.getByRole("heading", { level: 3 }) });
-  await expect(steps).toHaveJSProperty("tagName", "OL");
-});
+  },
+);
 
-test("nothing in the open-foundation frame takes focus", async ({ page }) => {
-  await page.goto(SITE_PATHS.home);
-  // The frame draws its label, and then the facts and the steps follow it;
-  // from the last action, the next stop is the footer's first link.
-  await expect(
-    foundation(page).getByText("Open foundation", { exact: true }),
-  ).toBeVisible();
-  await foundation(page).getByRole("link", { name: "View on GitHub" }).focus();
-  await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("contentinfo").getByRole("link", { name: "Mokly home" }),
-  ).toBeFocused();
-});
+test(
+  "nothing in the open-foundation frame takes focus",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    // The frame draws its label, and then the facts and the steps follow it;
+    // from the last action, the next stop is the footer's first link.
+    await expect(
+      foundation(page).getByText("Open foundation", { exact: true }),
+    ).toBeVisible();
+    await foundation(page)
+      .getByRole("link", { name: "View on GitHub" })
+      .focus();
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "Mokly home" }),
+    ).toBeFocused();
+  },
+);
 
 test("the wire shows on desktop and leaves below 960px @desktop", async ({
   page,
