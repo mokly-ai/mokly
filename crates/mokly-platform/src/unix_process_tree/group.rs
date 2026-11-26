@@ -89,8 +89,11 @@ impl UnixGroup {
     }
 
     /// A dead leader's group can still contain owned children. The OS reserves
-    /// its group ID until the last member exits. A reused leader PID, however,
-    /// belongs to a different process and must never receive a group signal.
+    /// its group ID until the last member exits. A `ProcessTree` keeps the
+    /// leader unreaped, so its PID and group number stay reserved for every
+    /// signal of this guard. A reused leader PID, which only a guard used
+    /// without a tree can see, belongs to a different process and must never
+    /// receive a group signal.
     /// Return true when the root cannot anchor a walk or the group is gone.
     fn signal_group(&self, signal: i32) -> io::Result<bool> {
         match self.table.identity(self.root.pid) {

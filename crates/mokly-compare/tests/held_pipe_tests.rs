@@ -44,12 +44,26 @@ fn exists(pid: i32) -> bool {
         .success()
 }
 
+/// A zombie has exited. The spawner keeps the manager unreaped until its
+/// tree guard has sent its last signal.
+fn running(pid: i32) -> bool {
+    let output = process::Command::new("ps")
+        .args(["-o", "stat=", "-p", &pid.to_string()])
+        .stderr(Stdio::null())
+        .output()
+        .unwrap();
+    output.status.success()
+        && !String::from_utf8_lossy(&output.stdout)
+            .trim_start()
+            .starts_with('Z')
+}
+
 fn wait_manager_gone(pid: i32) {
     let deadline = Instant::now() + Duration::from_secs(10);
-    while exists(pid) && Instant::now() < deadline {
+    while running(pid) && Instant::now() < deadline {
         thread::yield_now();
     }
-    assert!(!exists(pid), "manager {pid} did not exit");
+    assert!(!running(pid), "manager {pid} did not exit");
 }
 
 struct Running {

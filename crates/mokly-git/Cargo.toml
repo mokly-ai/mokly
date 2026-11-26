@@ -26,3 +26,6 @@ workspace = true
 [dev-dependencies.mokly-platform]
 workspace = true
 features = ["mock"]
+
+[target."cfg(unix)".dev-dependencies]
+libc = "0.2.190"

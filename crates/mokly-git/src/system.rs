@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, Thread};
 use std::time::Duration;
 
-use mokly_platform::processes::{ProcessGroup, ProcessGroups};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree};
 
 use crate::cancellation::signal;
 use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, ProcessMode, Request};
@@ -74,19 +74,20 @@ impl SystemRunner {
             return Err(Error::Platform { source });
         }
         let mut child = command.spawn().git()?;
-        let group: Arc<dyn ProcessGroup> = match self.groups.attach(&child) {
-            Ok(group) => Arc::from(group),
+        let group = match self.groups.attach(&child) {
+            Ok(group) => group,
             Err(source) => {
                 let _ = child.kill();
                 let _ = child.wait();
                 return Err(Error::Platform { source });
             }
         };
-        let (Some(stdout), Some(stderr), Some(mut stdin)) =
-            (child.stdout.take(), child.stderr.take(), child.stdin.take())
-        else {
+        let pipes = (child.stdout.take(), child.stderr.take(), child.stdin.take());
+        // The tree reaps the root only when its last reference drops, after
+        // the final signal, so no signal can reach a reused group number.
+        let group = Arc::new(ProcessTree::new(child, group));
+        let (Some(stdout), Some(stderr), Some(mut stdin)) = pipes else {
             let _ = group.kill();
-            let _ = child.wait();
             return Err(Error::Internal(InternalError::Worker));
         };
         let output_done = AtomicBool::new(false);
@@ -132,10 +133,9 @@ impl SystemRunner {
             let child_completion = Completion::new(&child_done, &group);
             let mut waiter = Some(scope.spawn(move || {
                 let completion = child_completion;
-                let result = child.wait().git();
+                let result = completion.group.wait().git();
                 if result.is_err() {
                     let _ = completion.group.kill();
-                    let _ = child.wait();
                 }
                 result
             }));
@@ -230,11 +230,11 @@ impl SystemRunner {
 struct Completion<'a> {
     finished: &'a AtomicBool,
     supervisor: Thread,
-    group: Arc<dyn ProcessGroup>,
+    group: Arc<ProcessTree>,
 }
 
 impl<'a> Completion<'a> {
-    fn new(finished: &'a AtomicBool, group: &Arc<dyn ProcessGroup>) -> Self {
+    fn new(finished: &'a AtomicBool, group: &Arc<ProcessTree>) -> Self {
         Self {
             finished,
             supervisor: thread::current(),

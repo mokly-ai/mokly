@@ -49,9 +49,9 @@ Decision: the publication starts the pass. Rejected: a pass whenever no base
 call runs or waits, because sequential base calls leave short gaps. A pass in
 such a gap would replace the process that the next base call needs.
 
-For each process, the pass ends the old process and waits until it exits and
-is reaped. Only then does it start the new process, so the two processes
-never run at the same time. The new process completes its hello. While the
+For each process, the pass ends the old process and waits until it exits.
+Only then does it start the new process, so the two processes never run at
+the same time. The new process completes its hello. While the
 pool is idle, it then prepares the newest head generation and replays at most
 30 recent renders of that generation, under the
 [return warm-up rules](./mokly-sidecar-return-warmup.md). Otherwise it loads
@@ -59,7 +59,7 @@ generations on demand, as after a recycle. A failed start or hello leaves the
 slot empty. The next request that takes the slot then starts a process as
 usual.
 
-Decision: the pass waits for the reaping. Rejected: a start after the kill
+Decision: the pass waits for the exit. Rejected: a start after the kill
 signal alone, because the old and the new process could then run together
 beyond the pool size.
 

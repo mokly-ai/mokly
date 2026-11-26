@@ -3184,6 +3184,7 @@ name = "mokly-git"
 version = "0.14.0"
 dependencies = [
  "dunce",
+ "libc",
  "mokly-platform",
  "sha2",
  "tempfile",

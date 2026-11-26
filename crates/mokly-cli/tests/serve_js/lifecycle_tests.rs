@@ -48,12 +48,14 @@ pub(super) fn exists(pid: i32) -> bool {
     unsafe { libc::kill(pid, 0) == 0 }
 }
 
+/// The sidecar must have exited. Its tree reaps it only after the last signal,
+/// so it can still be a zombie when the listener is released.
 pub(super) async fn released_after_worker(host: &str, pid: i32) {
     tokio::time::timeout(Duration::from_secs(30), async {
         loop {
             if let Ok(listener) = std::net::TcpListener::bind(host) {
                 assert!(
-                    !exists(pid),
+                    !alive(pid),
                     "listener released while the sidecar remained live"
                 );
                 drop(listener);

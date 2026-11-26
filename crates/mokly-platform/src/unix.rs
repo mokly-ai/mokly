@@ -2,10 +2,11 @@
 
 use std::ffi::CString;
 use std::io;
+use std::mem::MaybeUninit;
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::process::CommandExt;
+use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::Path;
-use std::process::{Child, Command};
+use std::process::{Child, Command, ExitStatus};
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
@@ -89,6 +90,48 @@ pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
 /// The caller keeps the child unreaped while its PID anchors cleanup.
 pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
     unix_process_tree::kill_unattached(child, &SystemGroupSignal)
+}
+
+/// Block until the child exits, and leave it unreaped. `WNOWAIT` keeps the
+/// zombie, so its PID and its group number stay reserved until the reap.
+pub(crate) fn wait_exit(pid: u32) -> io::Result<ExitStatus> {
+    loop {
+        let mut info = MaybeUninit::<libc::siginfo_t>::zeroed();
+        // SAFETY: The PID names our own unreaped child. The zeroed buffer has
+        // the exact siginfo_t size and stays alive for the call. WNOWAIT
+        // reports the exit without reaping the child.
+        let result = unsafe {
+            libc::waitid(
+                libc::P_PID,
+                pid,
+                info.as_mut_ptr(),
+                libc::WEXITED | libc::WNOWAIT,
+            )
+        };
+        if result == 0 {
+            // SAFETY: The buffer started zeroed, a valid siginfo_t value, and
+            // the successful call wrote the record of the exited child.
+            let info = unsafe { info.assume_init() };
+            return exit_status(&info);
+        }
+        let source = io::Error::last_os_error();
+        if source.kind() != io::ErrorKind::Interrupted {
+            return Err(source);
+        }
+    }
+}
+
+/// Rebuild the wait status that `waitpid` would return from a child record.
+fn exit_status(info: &libc::siginfo_t) -> io::Result<ExitStatus> {
+    // SAFETY: waitid filled the child fields of this record for WEXITED.
+    let status = unsafe { info.si_status() };
+    let raw = match info.si_code {
+        libc::CLD_EXITED => (status & 0xff) << 8,
+        libc::CLD_KILLED => status & 0x7f,
+        libc::CLD_DUMPED => (status & 0x7f) | 0x80,
+        _ => return Err(io::Error::other("waitid reported no child exit")),
+    };
+    Ok(ExitStatus::from_raw(raw))
 }
 
 struct SystemGroupSignal;
