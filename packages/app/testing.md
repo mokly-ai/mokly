@@ -16,7 +16,8 @@ This is the testing guide for the [App package](./README.md).
   listed protocol doc names. The screens that only the desktop shell draws are
   rendered in Node, because no browser test can load the shell's origin, and
   so is each place that draws the write-failure fragment, with its writes
-  refused.
+  refused. The desktop connect screen is also mounted in a DOM, where a press
+  refuses only the request of the control that sent it.
 - The browser suite is `src/_tests_/**/*.spec.ts`: Playwright in real Chromium
   against the exported build, the real API with `MKC_MAILER=log`, the real
   catalogue server, one fresh blob directory and one isolated Postgres schema
