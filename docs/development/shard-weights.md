@@ -1,6 +1,6 @@
 # Shard Weights
 
-Six CI suites split their tests over parallel shard jobs. Four of them
+Five CI suites split their tests over parallel shard jobs. Four of them
 place whole test files or test units by measured weights, so that the shards
 of one suite end at about the same time. The weights are committed JSON
 files. A stale weight changes only the balance of the shards, never the set
@@ -15,7 +15,6 @@ one group spread too far apart, under the
 | Rust tests (`Repository (...)`, `Native (...)`) | `testSeconds` of `scripts/verification/rust-test-weights.json` | The logs of the passed Repository and native jobs of each run                     |
 | App (`App checks {n}/{total}`)                  | `packages/app/src/_tests_/browser-shard-weights.json`          | The logs of the App checks jobs of the newest run in which every App shard passed |
 | Mockup (`Mockup checks {n}/{total}`)            | None                                                           | Playwright's `--shard` splits the disk suite by test count                        |
-| Site (`Site checks {n}/{total}`)                | None                                                           | Playwright's `--shard` splits the browser specs by test count                     |
 
 ## Refresh Every Weight File
 
@@ -107,12 +106,14 @@ weight. The selected files keep their discovery order.
 [`rust-test-weights.json`](../../scripts/verification/rust-test-weights.json) holds two parts of the
 weight of each Rust test unit, such as `--test cli`, in seconds.
 `compileSeconds` is the build time of the unit's test targets in the report
-of `cargo test --no-run --timings`, times 1.5. `testSeconds` is the nextest
-time of the unit on the CI hosts: the median of each test over the runs that
-passed it, the sum over the tests of the unit on one host, then the mean over
-the Linux, macOS, and Windows hosts. The weight of a unit is the sum of its
-two parts. `xtask` embeds the file and assigns the units of the repository
-and native test shards by these weights, as the
+of `cargo test --no-run --timings`, times 1.5. Every host shares it.
+`testSeconds` holds one map for each CI host, `linux`, `macos`, and
+`windows`. Each map gives the nextest time of the unit on that host: the
+median of each test over the runs that passed it, then the sum over the
+tests of the unit. The weight of a unit on a host is its compile seconds
+plus its test seconds on that host. `xtask` embeds the file. The Repository
+test shards use the `linux` map, and the native test shards use the map of
+their own host, as the
 [test unit rule](../protocol/ci-verification-repository.md#test-units)
 says. A unit that neither part names gets `defaultSeconds`. `splits` runs
 a heavy unit, such as the render integration tests, as nextest slices on
@@ -127,10 +128,12 @@ node scripts/verification/rust-test-weights.mjs --compile
 ```
 
 `--run` reads the logs of the passed Repository and native jobs of each CI
-run and replaces `testSeconds`. Give the newest `main` runs. A run with a
-failed or unfinished test shard gives fewer samples of that shard's tests.
-When no given run passed a shard, its tests are missing from their unit on
-that host, so give runs in which every test shard passed. `--compile` builds every Rust test target in a new target directory
+run and replaces the `testSeconds` map of each host that those jobs measured.
+A host that no given run measured keeps its committed map. Give the newest
+`main` runs. A run with a failed or unfinished test shard gives fewer samples
+of that shard's tests on its host. When no given run passed a shard, its
+tests are missing from their unit on that host, so give runs in which every
+test shard passed. `--compile` builds every Rust test target in a new target directory
 under `.context/`, so that Cargo reuses no build, and replaces
 `compileSeconds` from its timing report. Cargo leaves a reused build out of
 the report. The compile part changes only when the build of a unit changes.

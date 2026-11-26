@@ -145,6 +145,7 @@ impl VerificationSuite {
                 | Self::CloudApp
                 | Self::CloudMockups
                 | Self::CloudSite
+                | Self::CloudInfrastructure
         )
     }
 }
@@ -228,7 +229,8 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional repository, viewer, browser, native, cloud application, mockup, or site shard.
+    /// Optional repository, viewer, browser, native, cloud application, mockup, site, or
+    /// infrastructure shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,
