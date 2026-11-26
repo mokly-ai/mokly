@@ -1,10 +1,10 @@
 # Frames viewport page stops replying after a pick
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-26, from the branch `calummoore/ci-speed-flaky-follow-ups-b-and-new-k3dt`, during its scan of the CI history.
 - **Location:** `tests/browser/frames_viewport.spec.ts:87`, the test "the compact layout picks the wide canvas's viewport, and its pick sets the wide toggles".
-- **Reason:** It failed once, in a run of a release branch. On 2026-11-26 the user chose option A, a reproduction with a trace. The reproduction did not fail, so the source is still unknown.
+- **Reason:** It failed once, in a run of a release branch. On 2026-11-26 the user chose option A, a reproduction with a trace. The reproduction did not fail, so the source is still unknown. On 2026-11-26 the user then chose option B: the item waits for the next failure.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -25,9 +25,9 @@
 - **Root question:** What stops the fixture page from answering after the viewport pick?
 - **Options:**
   - **A.** Repeat the test under load with a trace, and read the renderer state when the page stops answering. Then fix the source. Effort: Medium.
-  - **B.** Wait for a second failure before any work. Effort: Small.
+  - **B.** The user's choice on 2026-11-26: wait for a second failure before any work, and read it as the **Action** line says. Effort: Small.
 - **Left out:** A retry or a longer time limit, because they hide a hung page.
 - **Wider fix:** None until the source is known.
 - **Previous examples:** None found.
 - **Recommendation:** B. 80 runs under load did not fail, and the CI trace points at a renderer that stopped answering the protocol, not at an assertion that read too early. The trace of the next failure, with the page's JavaScript stacks, would name the source.
-- **Action:** ask the user, because the failure is not reproduced and its source is unknown. When it fails again, save its trace, and read the page's JavaScript stacks through a CDP session with `Debugger.pause`, as the 2026-11-26 probe did.
+- **Action:** fix after merge, when the next failure names the source. When it fails, save its trace, and read the page's JavaScript stacks through a CDP session with `Debugger.pause`, as the 2026-11-26 probe did.
