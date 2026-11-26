@@ -1,14 +1,15 @@
 # PostCSS build input recheck flakes
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-19, from the complete gate of
   `calummoore/fu-build-render-once-test-ekcm`.
 - **Location:** `crates/mokly-cli/tests/changes_javascript_tests.rs:74`,
   `crates/mokly-cli/tests/changes_support/mod.rs:54`, and
   `crates/mokly-static/src/fingerprint.rs:224`.
-- **Reason:** On 2026-11-20, 90 traced and untraced runs passed without a
-  rejection, so the source is unknown and the next step needs the user.
+- **Reason:** On 2026-11-26 the user chose option A, and the branch
+  `calummoore/ci-speed-flaky-decisions-a` applied it. The cause waits for the
+  next failure, which now prints the full rejected path.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -102,8 +103,9 @@
     so its workspace command failed. A full `npm run build` fixed that
     before the other load phase.
   - In the other load phase, the first workspace command failed an
-    unrelated test, which
-    `plans/follow-ups/flaky-catalogue-unread-body-starvation.md` records.
+    unrelated test, which the
+    [catalogue starvation item at its last commit](https://github.com/mokly-ai/mokly/blob/b343edfbc/plans/follow-ups/flaky-catalogue-unread-body-starvation.md)
+    records.
     In both load phases, the second workspace command was stopped after the
     complete runs ended. Neither phase completed the full workspace suite.
   - The trace code is removed, and clean test and native package builds
@@ -141,8 +143,13 @@
   investigation of 2026-11-20. B named no source in 90 runs. A makes a later
   failure print the full rejected path, so that the failure can name the
   dependency. C still needs a named source.
-- **Action:** ask the user, because option B named no source, and the user
-  asked to choose the next step, including A, for that result.
+- **Action:** fix after merge, apply C when a failure names the rejected
+  path, because the user chose A on 2026-11-26 to get that evidence first.
+- **Applied:** On 2026-11-26, the test started to run its build through
+  `run_full_width` in `crates/mokly-cli/tests/changes_javascript_tests.rs`.
+  It sets `MOKLY_TEST_STATIC_COLUMNS` to 4096, so the rich output of the
+  debug build no longer shortens a long path with `…`. Every assertion
+  stayed.
 
 **Reproduction, added 2026-11-20** from
 `calummoore/canvas-redesign-m1-cloud-viewer-mockups-1osn`: after an edit to

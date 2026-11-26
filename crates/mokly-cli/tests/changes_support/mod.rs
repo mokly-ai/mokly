@@ -39,7 +39,8 @@ pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Ou
     run_with_environment(root, arguments, node, &[])
 }
 
-/// Run the CLI with extra environment values, such as sidecar deadlines.
+/// Run the CLI with extra environment values, such as sidecar deadlines or
+/// the terminal width of a debug build.
 pub fn run_with_environment(
     root: &Path,
     arguments: &[&str],

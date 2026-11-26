@@ -12,7 +12,7 @@ use crate::error::{Error, Result};
 use crate::processes::ProcessGroup;
 #[cfg(target_os = "macos")]
 use crate::unix_group_members::{self, SystemMembers};
-use crate::unix_process_tree::{self, GroupSignal};
+use crate::unix_process_tree::{self, GroupOutcome, GroupSignal};
 
 /// Renames with Linux `renameat2(RENAME_NOREPLACE)` or macOS
 /// `renamex_np(RENAME_EXCL)`, and reads `errno` directly after the call. The
@@ -94,32 +94,30 @@ pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
 struct SystemGroupSignal;
 
 impl GroupSignal for SystemGroupSignal {
-    fn signal(&self, pid: i32, signal: i32) -> io::Result<bool> {
+    fn signal(&self, pid: i32, signal: i32) -> io::Result<GroupOutcome> {
         // SAFETY: The positive child PID identifies the process group created
         // by setsid or Command::process_group. No memory is accessed by kill.
         let result = unsafe { libc::kill(-pid, signal) };
         if result == 0 {
-            return Ok(false);
+            return Ok(GroupOutcome::Delivered);
         }
-        let source = io::Error::last_os_error();
-        if group_is_gone(&source, pid) {
-            return Ok(true);
-        }
-        Err(source)
+        refused(io::Error::last_os_error(), pid)
     }
 }
 
-fn group_is_gone(source: &io::Error, pid: i32) -> bool {
-    #[cfg(not(target_os = "macos"))]
-    let _ = pid;
-    if source.raw_os_error() == Some(libc::ESRCH) {
-        return true;
-    }
+/// Classify a failed group signal. On macOS, the member reader decides what a
+/// refusal leaves behind. Other hosts answer EPERM only for a real refusal.
+fn refused(source: io::Error, pid: i32) -> io::Result<GroupOutcome> {
     #[cfg(target_os = "macos")]
-    if source.raw_os_error() == Some(libc::EPERM) {
-        return unix_group_members::stopped(&SystemMembers, pid);
+    return unix_group_members::classify(&SystemMembers, source, pid);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = pid;
+        if source.raw_os_error() == Some(libc::ESRCH) {
+            return Ok(GroupOutcome::Gone);
+        }
+        Err(source)
     }
-    false
 }
 
 #[cfg(test)]

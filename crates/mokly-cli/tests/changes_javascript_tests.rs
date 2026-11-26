@@ -2,9 +2,10 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Output;
 
 mod changes_support;
-use changes_support::{base, run, run_with_node, write};
+use changes_support::{base, run, run_configured, run_with_node, write};
 
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],props:{},element:'ui-card',propSchema:{type:'object',additionalProperties:false,properties:{}},render:()=> <p className='card'>Before</p>});";
 const HOME: &str = "---\ntitle: Home\n---\n<h1 class=\"html-title\">Before</h1><ui-card></ui-card>";
@@ -16,6 +17,18 @@ fn dependencies(root: &Path) {
     std::os::unix::fs::symlink(modules, root.join("node_modules")).unwrap();
     #[cfg(windows)]
     std::os::windows::fs::symlink_dir(modules, root.join("node_modules")).unwrap();
+}
+
+/// Run a build in rich mode with lines wide enough that no path is shortened,
+/// so an input rejection names its full path in the failure output.
+fn run_full_width(root: &Path, arguments: &[&str]) -> Output {
+    run_configured(
+        root,
+        arguments,
+        None,
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
+        "rich",
+    )
 }
 
 #[test]
@@ -36,7 +49,7 @@ fn historical_postcss_relative_reads_change_only_the_owned_component() {
     ]);
     dependencies(root.path());
     write(root.path(), "tone.txt", "blue");
-    let output = run(root.path(), &["build"]);
+    let output = run_full_width(root.path(), &["build"]);
     assert_eq!(
         output.status.code(),
         Some(0),
