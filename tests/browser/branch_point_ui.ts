@@ -25,11 +25,11 @@ export type BranchPointHost = Pick<
  */
 const COMPACT_SEARCH_WIDTH = 560;
 
-/** The widths that a branch-point case can render at. */
-export const BRANCH_POINT_WIDTHS = [
-  { name: "desktop", width: 1280, height: 900 },
-  { name: "mobile", width: 390, height: 844 },
-] as const;
+/** The window sizes that a branch-point case can render at, by name. */
+export const BRANCH_POINT_WIDTHS = {
+  desktop: { width: 1280, height: 900 },
+  mobile: { width: 390, height: 844 },
+} as const;
 
 /** Inspect's head, which names the routed entry and holds its Details rows. */
 const HEAD = '[data-inspect-section="details"]';

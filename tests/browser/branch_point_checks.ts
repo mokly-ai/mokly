@@ -174,9 +174,9 @@ const CHECKS = {
 >;
 
 /** The name of a shared case that has browser checks. */
-export type BranchPointCase = keyof typeof CHECKS;
+export type BranchPointCaseName = keyof typeof CHECKS;
 
-function isCase(name: string): name is BranchPointCase {
+function isCase(name: string): name is BranchPointCaseName {
   return Object.hasOwn(CHECKS, name);
 }
 
@@ -192,3 +192,8 @@ export const BRANCH_POINT_CHECKS = branchPointCases.map(({ name }) => {
 });
 if (BRANCH_POINT_CHECKS.length !== Object.keys(CHECKS).length)
   throw new Error("Browser checks name a case that the shared set lacks");
+
+/** The title and the checks of one shared case. */
+export function branchPointCheck(name: BranchPointCaseName) {
+  return { title: name.replaceAll("-", " "), check: CHECKS[name] };
+}
