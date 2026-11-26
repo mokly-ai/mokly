@@ -156,8 +156,8 @@ lines in Git-visible text. It reads `.gitattributes` in one batch. `-text`
 preserves fixture bytes. The `whitespace` attribute can permit trailing
 whitespace or final blank lines while the other checks still apply.
 
-Hosted CI runs the Viewer and Browser suites on Node 22.15.0, and also on
-Node 24 for a Release Please pull request, under the
+Hosted CI runs the Viewer and Browser suites on Node 22.15.0. A Release
+Please pull request also runs the Viewer suite on Node 24, under the
 [runtime profiles](../docs/protocol/ci-workflow.md#runtime-profiles).
 `Required CI` validates the report aggregate under the
 [report evidence rules](../docs/protocol/ci-verification.md#inventory-and-report-evidence).
