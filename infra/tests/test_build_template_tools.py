@@ -91,14 +91,17 @@ class BuildTemplateProbeFixture:
 
 
 class BuildTemplateToolsTests(BuildTemplateProbeFixture, unittest.TestCase):
-    def test_two_real_python_files_on_path_fail(self):
-        other = self.scratch / "other-bin"
-        other.mkdir()
-        write_tool(other / "python3")
-        with patch.dict(os.environ, {"PATH": f"{self.bin}{os.pathsep}{other}"}):
-            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError,
-                                        "^python3 has multiple copies on PATH$"):
-                ASSERTION.verify(VERSION)
+    def test_duplicate_tools_on_path_fail(self):
+        for executable in ("node", "npm", "npx", "corepack", "python3", "git"):
+            with self.subTest(executable=executable):
+                other = self.scratch / f"other-{executable}-bin"
+                other.mkdir()
+                write_tool(other / executable)
+                with patch.dict(os.environ, {"PATH": f"{self.bin}{os.pathsep}{other}"}), self.assertRaises(
+                    ASSERTION.TemplateAssertionError
+                ) as caught:
+                    ASSERTION.verify(VERSION)
+                self.assertEqual(str(caught.exception), f"{executable} has multiple copies on PATH")
 
     def test_aliased_path_entry_passes_and_build_tools_run(self):
         alias = self.scratch / "alias-bin"
