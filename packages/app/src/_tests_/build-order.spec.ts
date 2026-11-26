@@ -87,7 +87,14 @@ test("the entry lists no reference again when the route holds its list", async (
   );
   const settle = async () => {
     await page.clock.runFor(1_000);
-    await settledReads(page);
+    // A read that the page starts from the work of the last one is counted
+    // by the next look, so look until two looks agree.
+    let started = await settledReads(page);
+    for (;;) {
+      const again = await settledReads(page);
+      if (again === started) return;
+      started = again;
+    }
   };
 
   // The route reads the pull request list for its chrome, and the entry

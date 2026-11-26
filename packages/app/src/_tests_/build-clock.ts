@@ -59,8 +59,8 @@ export async function nextPoll(page: Page): Promise<void> {
 /**
  * Let poll intervals pass on the page, one for each look, until `shown` is on
  * it. A build that a real worker moves reaches each state on the worker's own
- * time, so a test cannot tell which poll will read it; each look still waits
- * for the card's real read.
+ * time, so a test cannot tell which poll will read it. Each state the card
+ * shows still comes from one of its real reads.
  */
 export async function pollUntilShown(
   page: Page,
@@ -76,7 +76,8 @@ export async function pollUntilShown(
 
 /**
  * Wait until no counted read of the page is in flight, and return how many it
- * has started. A finished read has passed the build double, so the double has
+ * has started. Before one `nextPoll`, this lets the card's current poll end,
+ * because a poll interval that passes while a poll runs starts no read. A finished read has passed the build double, so the double has
  * counted it too. Each look first lets the page finish its current
  * task, so a read that a timer just started is already counted.
  */
@@ -85,9 +86,16 @@ export async function settledReads(page: Page): Promise<number> {
     page.evaluate(
       (name) =>
         new Promise<ReadCount>((resolve) => {
+          // Two hops: a task queued by the first, such as the effects of a
+          // render, runs before the count is read.
           const channel = new MessageChannel();
-          channel.port1.onmessage = () =>
-            resolve((window as unknown as Record<string, ReadCount>)[name]);
+          let hops = 0;
+          channel.port1.onmessage = () => {
+            hops += 1;
+            if (hops < 2) channel.port2.postMessage(null);
+            else
+              resolve((window as unknown as Record<string, ReadCount>)[name]);
+          };
           channel.port2.postMessage(null);
         }),
       counter,

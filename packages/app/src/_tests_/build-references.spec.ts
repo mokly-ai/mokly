@@ -1,5 +1,5 @@
 import { publicationPathFor } from "./addresses";
-import { installPollClock, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll, settledReads } from "./build-clock";
 import { advance } from "./build-double";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
@@ -42,6 +42,7 @@ test("a reference with nothing ready shows its running build", async ({
     publicationId: published.id,
     canCancel: false,
   });
+  await settledReads(page);
   await nextPoll(page);
   await page.waitForURL((url) =>
     url.pathname.endsWith("/publications/" + published.id),
@@ -85,6 +86,7 @@ test("an open pull request alias follows its build to the ready publication", as
     publicationId: published.id,
     canCancel: false,
   });
+  await settledReads(page);
   await nextPoll(page);
   await expect(page).toHaveURL(
     await publicationPathFor(page, projectId, published.id),

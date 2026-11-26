@@ -1,6 +1,11 @@
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
-import { attempt, buildPullRequest, pullRow } from "./viewer/build-fixtures";
+import {
+  attempt,
+  buildPullRequest,
+  pullRow,
+  summary,
+} from "./viewer/build-fixtures";
 
 /**
  * An open pull request from a fork with nothing published, as
@@ -24,9 +29,12 @@ test("a pull request from a fork says so, even where the plan refuses publishing
     visibility: "private",
   };
   double.pullRequests = [
+    // Neither its failed publication nor its failed build stands in for the
+    // card, on the stage or in the publication slot.
     pullRow({
       fork: true,
       newestPublication: attempt({ state: "failed" }),
+      newestBuild: summary({ state: "failed" }),
     }),
   ];
   await open(page, scenario.pullAt(buildPullRequest.number));

@@ -1,4 +1,4 @@
-import { installPollClock, nextPoll } from "./build-clock";
+import { installPollClock, nextPoll, settledReads } from "./build-clock";
 import { focusOutline, tokenOutline } from "./build-refusals";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
@@ -58,6 +58,7 @@ test("a read that answers after Cancel leaves the card, its status and focus in 
   double.holdBuildReads = new Promise((resolve) => {
     release = resolve;
   });
+  await settledReads(page);
   await nextPoll(page);
   await expect.poll(() => double.heldBuildReads).toBe(1);
   await page.getByTestId("build-cancel").focus();
