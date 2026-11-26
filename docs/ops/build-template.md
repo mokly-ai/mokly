@@ -226,8 +226,14 @@ without GitHub and PR enablement. Keep `scaling.minReplicas` at least two.
 Tune retention through the checked-in `maintenance.buildRetentionSeconds`
 chart value, default thirty days. Only prune receives that setting.
 
-The test repository must use Mokly 0.18.0 or later with a `mokly.config.json`
-configuration, and the project's config path must name that file.
+The test repository is the private
+[`mokly-ai/mokly-build-smoke`](https://github.com/mokly-ai/mokly-build-smoke).
+It holds one HTML screen with one variant, the published `@mokly/mokly` and a
+tracked `package-lock.json`, so a build runs `npm ci` and the repository's own
+`mokly` binary. Install each environment's GitHub App on it, and create the
+environment's project from it. Any test repository must use Mokly 0.18.0 or
+later with a `mokly.config.json` configuration, and the project's config path
+must name that file.
 Its install must keep optional dependencies, which hold the
 CLI's native binary. It publishes from a clean checkout. Ignore
 install files and every build output directory. A dirty checkout fails before
@@ -251,7 +257,8 @@ migration and maintenance must have no E2B key mount.
 The public API health route checks process, revision, database and migrations.
 It does not check E2B, the template or worker progress. Build availability
 means configuration and repository access are present, not provider readiness.
-On first enablement, request a build against a real installed test repository.
+On first enablement, request a build against the test repository with the
+environment's App installed.
 Require a published build, its ready publication on the catalogue origin,
 a completed GitHub check and removal of the attempt sandbox. Record the
 revision, build and publication IDs, check result, timings and UTC time.
@@ -412,5 +419,7 @@ said "Catalogue published." instead of "Catalogue ready to review.", because
 the published index had `changesStatus: "unavailable"`. On 2026-11-26,
 main-preview builds moved to the `mokly-build-v5` build reference. Later that
 day they moved to the `mokly-build-v6` build reference, through the Deploy
-run with ID 45818241716. No complete build proof is recorded yet. Record the
-first main-preview and production build proofs here.
+run with ID 45818241716. On `mokly-build-v6`, the test repository's pull request build at
+`c11aa3fe8` published at 2026-11-26T12:46:31Z with the check "Catalogue ready
+to review." (2 changed). No Re-run is recorded yet, so no complete build proof
+is recorded. Record the first main-preview and production build proofs here.
