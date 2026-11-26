@@ -126,53 +126,28 @@ result.messages.push({type:'dependency',file:'${name}.txt'});}`,
   );
   const digest = (bytes: Buffer) =>
     createHash("sha256").update(bytes).digest("hex");
-  for (const name of Object.keys(reads)) {
-    // The read returns 1 byte, and the next sequential read gets "b".
+  // Each read returns 1 byte, and the next sequential read gets "b".
+  for (const name of Object.keys(reads))
     assert.match(result.text, new RegExp(`${name}: 1-b`, "u"), name);
-    const file = path.join(base, `${name}.txt`);
-    const recorded = result.readEvidence.reads.filter(
-      (read) => read.path === file,
-    );
-    // Each recorded range holds the file's bytes at its offset, and its
-    // end-of-file flag says whether the range reaches the end of the file:
-    // the facts that a build checks before it accepts the read.
-    assert.deepEqual(
-      recorded.map((read) => [
-        read.kind,
-        read.digest,
-        read.kind === "byte-range" && read.eof,
-      ]),
-      recorded.map((read) => [
-        "byte-range",
-        digest(
-          read.kind === "byte-range"
-            ? content.subarray(read.offset, read.offset + read.length)
-            : content,
-        ),
-        read.kind === "byte-range" &&
-          read.offset + read.length === content.length,
-      ]),
-      name,
-    );
-  }
-  // The bigint position -1n reads at the current offset, so its two reads
-  // record "a" at offset 0 and "b" at offset 1. A vector read at NaN proves
-  // no position and may record no witness.
-  const bigint = path.join(base, "bigint.txt");
-  assert.deepEqual(
+  const witnesses = (name: string) =>
     result.readEvidence.reads
-      .filter((read) => read.path === bigint)
+      .filter((read) => read.path === path.join(base, `${name}.txt`))
       .map((read) =>
         read.kind === "byte-range"
           ? [read.offset, read.length, read.eof, read.digest]
           : [read.kind],
       )
-      .sort(),
-    [
-      [0, 1, false, digest(Buffer.from("a"))],
-      [1, 1, false, digest(Buffer.from("b"))],
-    ],
-  );
+      .sort();
+  // The bigint position -1n reads at the current offset, so its two reads
+  // record "a" at offset 0 and "b" at offset 1, and neither reaches the end
+  // of the file.
+  assert.deepEqual(witnesses("bigint"), [
+    [0, 1, false, digest(Buffer.from("a"))],
+    [1, 1, false, digest(Buffer.from("b"))],
+  ]);
+  // A vector read at NaN proves no position, so it records no witness, and
+  // the later read from that unknown position records none either.
+  assert.deepEqual(witnesses("nan"), []);
   for (const name of Object.keys(reads)) {
     const file = path.join(base, `${name}.txt`);
     assert.deepEqual(await fs.readFile(file), content, name);

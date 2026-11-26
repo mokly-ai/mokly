@@ -19,9 +19,8 @@ async function masks(page: Page, count: number) {
 }
 
 // The viewer scopes the inspection, so these cases run on one adapter. The
-// adapters have their own specs. An unavailable sibling takes the code path of
-// a pending one, and a viewer unit test covers both statuses.
-for (const sibling of ["pending", "mounting"] as const)
+// adapters have their own specs. Each sibling that is not ready runs.
+for (const sibling of ["pending", "unavailable", "mounting"] as const)
   test(`same-origin scoped inspection excludes ${sibling} sibling with Both visible`, async ({
     page,
   }) => {

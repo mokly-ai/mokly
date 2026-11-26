@@ -8,9 +8,9 @@ const start = evidenceFixture();
 // The viewer adopts the evidence, and the wrapper holds the adapter calls
 // after the real ones, so these cases run on one adapter. The adapters have
 // their own specs, and frame_readiness.spec.ts updates usage on both.
-// Unavailable evidence takes the code path of pending evidence, and a viewer
-// unit test covers both statuses.
-for (const evidence of ["empty", "pending"] as const) {
+// Each status that is not inspectable runs, because the pick reaches each
+// one through the live viewer.
+for (const evidence of ["empty", "pending", "unavailable"] as const) {
   test(`same-origin ${evidence} evidence ends invalid pick once and allows restart`, async ({
     page,
   }) => {

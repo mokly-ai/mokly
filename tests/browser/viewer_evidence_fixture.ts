@@ -36,12 +36,10 @@ export function evidenceFixture() {
     await page.goto(fixture.host.url);
     await page.addScriptTag({ url: `${fixture.host.url}/evidence.js` });
     await page.evaluate(
-      ({ model, details, origin, sibling }) =>
+      ({ model, details, sibling }) =>
         window.startEvidence(
           JSON.parse(model) as CatalogueReadModel,
           JSON.parse(details),
-          origin,
-          false,
           sibling ? "pending" : "ready",
         ),
       {
@@ -52,7 +50,6 @@ export function evidenceFixture() {
             detail,
           ]),
         ),
-        origin: fixture.frames.url,
         sibling,
       },
     );

@@ -4,9 +4,10 @@
  * `base`, so Details keep the "Comparison details" heading and the rest of
  * the evidence and show no branch-point sentence, and the Compared rail names
  * the branch point alone. One journey checks this wiring at the desktop
- * inspector size: a variant in Changes, then a screen that the reader
- * reaches by navigation. Unit tests of `@mokly/ui` and of the viewer cover
- * the heading and the rail for each kind of entry.
+ * inspector size: a variant set's full Details in Changes, then a screen
+ * that the reader reaches by navigation. Unit tests of `@mokly/ui` and of the
+ * viewer cover the heading, the rail, and a named base for each kind of
+ * entry.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -18,6 +19,8 @@ import {
   EXAMINED_LEAD,
   EXCLUDED_LEAD,
   SCREEN_TERMINAL,
+  VARIANT_EXCLUDED_LEAD,
+  VARIANT_TERMINAL,
   expectExcludedOnly,
   openChangesEvidence,
   openEvidence,
@@ -65,7 +68,13 @@ test.describe("desktop embedded Details", () => {
   test("an embedded screen reached by navigation stays without the branch-point sentence", async ({
     page,
   }) => {
-    await embeddedChanges(page, comparisonPaths.quietParent);
+    // The unchanged variant set's Changes Details: its excluded stylesheet,
+    // then its own status line.
+    await expectExcludedOnly(
+      await embeddedChanges(page, comparisonPaths.quietParent),
+      [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD, VARIANT_TERMINAL],
+      [sheets.theme],
+    );
     await navRow(page, comparisonPaths.unchanged).click();
     await expect(inspectTitle(page.locator("#viewer"))).toHaveText(
       "Stable screen",

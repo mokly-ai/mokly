@@ -16,74 +16,86 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-// The events start in the frame, so both adapters run. An unavailable sibling
-// takes the code path of a pending one. A viewer unit test and
-// frame_readiness.spec.ts cover the unavailable status.
-for (const cross of [false, true])
-  test(`${cross ? "postMessage" : "same-origin"} pending sibling keeps navigation without automatic inspection`, async ({
-    page,
-  }) => {
-    await page.goto(fixture.host.url);
-    await page.waitForFunction(() => Boolean(window.viewerHarness));
-    await page.evaluate((cross) => {
-      const host = window.viewerHarness.start("one", {
-        cross,
-        defaultSelection: { viewport: "both" },
+// The events start in the frame, so both adapters run, for each sibling
+// status that is not ready.
+for (const cross of [false, true]) {
+  for (const status of ["pending", "unavailable"] as const) {
+    test(`${cross ? "postMessage" : "same-origin"} ${status} sibling keeps navigation without automatic inspection`, async ({
+      page,
+    }) => {
+      await page.goto(fixture.host.url);
+      await page.waitForFunction(() => Boolean(window.viewerHarness));
+      await page.evaluate(
+        ({ cross, status }) => {
+          const host = window.viewerHarness.start("one", {
+            cross,
+            defaultSelection: { viewport: "both" },
+          });
+          const catalogue = structuredClone(
+            host.props.index,
+          ) as CatalogueReadModel;
+          for (const view of host.details["home"]!.views)
+            if (view.viewport === "desktop") view.usage = { status };
+          host.props.index = catalogue;
+          host.render();
+        },
+        { cross, status },
+      );
+      await page.waitForFunction(() =>
+        Boolean(window.viewerHarness.get("one").ref.current),
+      );
+      await page.evaluate(async () => {
+        const host = window.viewerHarness.get("one");
+        const usage = host.details["home"]!.views.find(
+          (view) => view.viewport === "mobile",
+        )!.usage;
+        if (usage.status !== "ready") throw new Error("Expected ready usage");
+        await host.ref.current.highlightInstance({
+          screenPath: "home",
+          viewport: "mobile",
+          colorScheme: "light",
+          key: usage.instances.find((instance) => instance.id === "action")!
+            .key,
+        });
+        host.events.length = 0;
       });
-      const catalogue = structuredClone(host.props.index) as CatalogueReadModel;
-      for (const view of host.details["home"]!.views)
-        if (view.viewport === "desktop") view.usage = { status: "pending" };
-      host.props.index = catalogue;
-      host.render();
-    }, cross);
-    await page.waitForFunction(() =>
-      Boolean(window.viewerHarness.get("one").ref.current),
-    );
-    await page.evaluate(async () => {
-      const host = window.viewerHarness.get("one");
-      const usage = host.details["home"]!.views.find(
-        (view) => view.viewport === "mobile",
-      )!.usage;
-      if (usage.status !== "ready") throw new Error("Expected ready usage");
-      await host.ref.current.highlightInstance({
-        screenPath: "home",
-        viewport: "mobile",
-        colorScheme: "light",
-        key: usage.instances.find((instance) => instance.id === "action")!.key,
-      });
-      host.events.length = 0;
-    });
-    const sibling = page.frameLocator(canvasFrame("desktop"));
-    await sibling.getByRole("button", { name: "Visible", exact: true }).hover();
-    await sibling.getByRole("button", { name: "Visible", exact: true }).click();
-    // The action screen's frames report hover. A pointer that rests over
-    // the canvas when the action document loads under it reports a hover
-    // of no instance when the canvas moves that frame. The pointer goes to
-    // the page's top-left corner, outside every canvas frame, before the
-    // keyboard opens the link.
-    await page.mouse.move(0, 0);
-    await sibling.getByRole("link", { name: "Open Action" }).press("Enter");
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
+      const sibling = page.frameLocator(canvasFrame("desktop"));
+      await sibling
+        .getByRole("button", { name: "Visible", exact: true })
+        .hover();
+      await sibling
+        .getByRole("button", { name: "Visible", exact: true })
+        .click();
+      // The action screen's frames report hover. A pointer that rests over
+      // the canvas when the action document loads under it reports a hover
+      // of no instance when the canvas moves that frame. The pointer goes to
+      // the page's top-left corner, outside every canvas frame, before the
+      // keyboard opens the link.
+      await page.mouse.move(0, 0);
+      await sibling.getByRole("link", { name: "Open Action" }).press("Enter");
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            window.viewerHarness
+              .get("one")
+              .events.filter((event) => event.name === "navigate"),
+          ),
+        )
+        .toEqual([
+          {
+            name: "navigate",
+            value: expect.objectContaining({ screenPath: "action" }),
+          },
+        ]);
+      expect(
+        await page.evaluate(() =>
           window.viewerHarness
             .get("one")
-            .events.filter((event) => event.name === "navigate"),
+            .events.filter((event) =>
+              ["error", "hover", "click"].includes(event.name),
+            ),
         ),
-      )
-      .toEqual([
-        {
-          name: "navigate",
-          value: expect.objectContaining({ screenPath: "action" }),
-        },
-      ]);
-    expect(
-      await page.evaluate(() =>
-        window.viewerHarness
-          .get("one")
-          .events.filter((event) =>
-            ["error", "hover", "click"].includes(event.name),
-          ),
-      ),
-    ).toEqual([]);
-  });
+      ).toEqual([]);
+    });
+  }
+}

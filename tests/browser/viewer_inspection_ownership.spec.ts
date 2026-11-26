@@ -21,19 +21,23 @@ test.beforeAll(async () => {
 test.afterAll(async () => fixture?.close());
 
 /**
- * One case for each operation that a replaced pick started: a geometry read,
- * a label read, a highlight, and a scroll. A frame change replaces the pick in
- * two cases and `cancelPick()` in the other two, and each case lets the old
- * work fail or succeed late. The wrapper holds the old work after the real
+ * Two cases for each operation that a replaced pick started: a geometry read,
+ * a label read, a highlight, and a scroll. Each operation runs once with a
+ * frame change and once with `cancelPick()`, and once with a late failure and
+ * once with a late success. The wrapper holds the old work after the real
  * adapter call, so the cases run on one adapter. Unit tests of
  * `InspectionWork`, the inspection controller, the geometry scheduler, and
  * `Picking` cover each operation with both late outcomes.
  */
 const CASES = [
   { operation: "geometry", fail: true, replacement: "frame" },
+  { operation: "geometry", fail: false, replacement: "request" },
   { operation: "labels", fail: false, replacement: "request" },
+  { operation: "labels", fail: true, replacement: "frame" },
   { operation: "highlight", fail: false, replacement: "frame" },
+  { operation: "highlight", fail: true, replacement: "request" },
   { operation: "scroll", fail: true, replacement: "request" },
+  { operation: "scroll", fail: false, replacement: "frame" },
 ] as const;
 
 for (const { operation, fail, replacement } of CASES)
