@@ -129,13 +129,19 @@ export async function runTiming(
   };
 }
 
-/** Budgets over the first-attempt fixture, with a 8.5 GB cache budget. */
+/**
+ * Budgets over the first-attempt fixture, with a 8.5 GB cache budget and one
+ * shard group that the fixture runs one shard of.
+ */
 export function defaultBudgets(mode: "warn" | "fail") {
   return {
     mode,
     wallClockMinutes: 13,
     slowestTests: 1,
     cache: { gigabytes: 8.5, largestEntries: 2 },
+    shardGroups: [
+      { name: "Browser", patterns: ["Browser *"], spreadMinutes: 2 },
+    ] as unknown,
     jobs: [
       { pattern: "Native *", minutes: 12 },
       { pattern: "Viewer *", minutes: 12 },

@@ -20,6 +20,7 @@
   "scripts": {
     "build": "node scripts/build/build.mjs",
     "clean": "node scripts/clean.mjs",
+    "ci:refresh-shard-weights": "node scripts/verification/refresh-shard-weights.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dependencies:check:rust": "node scripts/verification/audit-rust.mjs",
     "format": "prettier --write .",

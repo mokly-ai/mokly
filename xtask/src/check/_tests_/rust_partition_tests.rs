@@ -202,6 +202,12 @@ fn every_unit_runs_on_exactly_one_shard_for_every_total() {
     }
 }
 
+/// Fixed weights of the metadata units: `--lib` outweighs every other unit
+/// together, so it runs alone on the first of two shards, and
+/// `integration_tests` runs as three slices.
+const FIXTURE_WEIGHTS: &str = r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {"--lib": 100}, "testSeconds": {"--test integration_tests": 30}, "splits": {"--test integration_tests": 3}}"#;
+
+/// A check runner over the metadata units, placed by the fixture weights.
 fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
     let output = CommandRunnerOutputMock
         .next_call(
@@ -213,6 +219,7 @@ fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     )
+    .with_rust_test_weights(Weights::parse(FIXTURE_WEIGHTS).unwrap())
 }
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
@@ -238,7 +245,7 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
     .unwrap();
 }
 
-/// The embedded weights split `integration_tests` in three. One shard runs
+/// The fixture weights split `integration_tests` in three. One shard runs
 /// its whole units in one command and each slice in its own command, and a
 /// failed slice does not stop the next ones when the shard reports every
 /// failure.
