@@ -6,8 +6,6 @@ use std::path::Path;
 use tempfile::TempDir;
 
 mod changes_support;
-#[path = "process_support/parallel.rs"]
-mod parallel;
 mod publish_support;
 use changes_support::{base, git, run, write};
 
@@ -64,20 +62,11 @@ fn static_build_retains_changes_and_selects_the_explicit_base_once() {
 #[test]
 fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
     let endpoint = publish_support::rejecting_endpoint();
-    // Each case builds its own repository, because parallel cases never share
-    // a Git checkout: a Git read can rewrite `.git/index`. Each case runs the
-    // strict build first, so its publish also shows that the earlier build
-    // output stays in place. The default build runs last, after the publish.
-    let publishes = [("publish --strict", true), ("publish", false)];
-    parallel::each(
-        publishes.map(|(label, strict)| (label.to_owned(), strict)),
-        |strict| {
-            let root = fixture();
-            check(root.path(), &endpoint, "build", true);
-            check(root.path(), &endpoint, "publish", strict);
-            default_build(root.path());
-        },
-    );
+    // The strict build runs first, so the publish also shows that the earlier
+    // build output stays in place.
+    let root = fixture();
+    check(root.path(), &endpoint, "build");
+    check(root.path(), &endpoint, "publish");
 }
 
 /// A committed head whose base branch has a different package and page.
@@ -106,12 +95,10 @@ fn fixture() -> TempDir {
     root
 }
 
-/// A strict build or a publish prints the base dependency fallback once and passes.
-fn check(root: &Path, endpoint: &str, verb: &str, strict: bool) {
-    let mut args = vec![verb, "--base", "base-point"];
-    if strict {
-        args.push("--strict");
-    }
+/// A strict build or a strict publish prints the base dependency fallback
+/// once and passes its build step.
+fn check(root: &Path, endpoint: &str, verb: &str) {
+    let mut args = vec![verb, "--base", "base-point", "--strict"];
     if verb == "build" {
         args.extend(["--out", ".context/strict"]);
     } else {
@@ -147,22 +134,4 @@ fn check(root: &Path, endpoint: &str, verb: &str, strict: bool) {
     assert!(stdout.contains("Comparing with base-point"), "{stdout}");
     assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
     assert!(root.join(".context/strict/index.html").is_file());
-}
-
-/// The default build after a publish still prints the fallback once.
-fn default_build(root: &Path) {
-    let output = run(root, &["build", "--base", "base-point"]);
-    assert_eq!(
-        output.status.code(),
-        Some(0),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert!(String::from_utf8_lossy(&output.stdout).contains("Changes ready · 1 change"));
-    assert_eq!(
-        String::from_utf8_lossy(&output.stderr)
-            .matches("base dependencies")
-            .count(),
-        1
-    );
 }

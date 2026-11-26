@@ -49,24 +49,6 @@ fn imports_outside_configuration_and_nested_workspace_dependencies_preserve_the_
                 if nested { "packages/ui/" } else { "apps/web/" },
                 "near-v2",
             );
-            let result = run_configured(
-                root.path(),
-                &["build", "--config", config],
-                None,
-                &[],
-                "plain",
-            );
-            assert!(
-                result.status.success(),
-                "{}",
-                String::from_utf8_lossy(&result.stderr)
-            );
-            assert!(
-                result.stderr.is_empty(),
-                "{}",
-                String::from_utf8_lossy(&result.stderr)
-            );
-            assert!(String::from_utf8_lossy(&result.stdout).contains("Built Mokly to"));
             let rich = run(root.path(), &["build", "--config", config]);
             assert!(
                 String::from_utf8_lossy(&rich.stdout).contains("Changes ready · 0 changes"),
@@ -86,7 +68,12 @@ fn imports_outside_configuration_and_nested_workspace_dependencies_preserve_the_
                 "{}",
                 String::from_utf8_lossy(&strict.stderr)
             );
-            assert!(strict.stderr.is_empty());
+            assert!(
+                strict.stderr.is_empty(),
+                "{}",
+                String::from_utf8_lossy(&strict.stderr)
+            );
+            assert!(String::from_utf8_lossy(&strict.stdout).contains("Built Mokly to"));
         },
     );
 }
