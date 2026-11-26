@@ -63,6 +63,8 @@ test("a plan-refused pull request asks everyone but an owner to ask one", async 
   await expect(page.getByTestId("stage-open-billing")).toHaveCount(0);
   await expect(card.getByRole("button")).toHaveText(["Choose another branch"]);
   await expect(page.getByText("Publishing starts")).toHaveCount(0);
+  // The Team card sends no build request: the plan would refuse it.
+  expect(double.requests).toEqual([]);
 });
 
 test("the entry lists no reference again when the route holds its list", async ({
