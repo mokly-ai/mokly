@@ -16,7 +16,11 @@
   - The Access settings pane lists the access that a project inherits from its workspace, and the project's own grants. Above the lists, a Manage members control leads to the Members pane.
   - On `origin/main`, the drawn grant row ended in a trailing Manage link to `product/settings/members`.
   - On 2026-11-26 the user decided that each navigation list row is one link over the whole row, with no trailing Open or Details label.
-  - The same day, the user added this rule to the `product-ui` skill: "a row that goes to one place is the link as a whole, with no trailing 'Open' text; use a trailing control only for a second, different action".
+  - The same day, the section "Rows and click targets" of the shared `product-ui` skill (Firna-AI/skills, merged 2026-11-26) took these bullets:
+    - "A list row or a card that leads to one place is a link or a button as a whole. The title, the description, and the empty space are all part of the click target."
+    - "Do not add trailing text such as "Open", "View", or "Details" that repeats what the row does. Do not make such text the only link of the row."
+    - "Use a trailing control only for a second, different action on the same row. Examples are a three-dot menu, a toggle, and a "Select" choice on a row that itself opens something else. Put the control outside the row's link element. A click on the control must not trigger the row's link."
+    - "This applies to mockups and to product implementation alike."
   - The branch `calummoore/click-on-row-ux-0nhj` removed the trailing label from the drawn grant row. The row kept its `to`, so the whole row became a link to the Members pane.
   - The same branch removed `to` from the drawing's waiting grant row. Only the loaded grant row is a link now.
   - In the app, a grant row is no link. It shows the person's name and role only.

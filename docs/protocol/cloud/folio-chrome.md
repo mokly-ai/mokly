@@ -38,9 +38,9 @@ the last. A row is a status dot, a 13px title over a 12px muted state line, and
 right-aligned monospace metadata. A row that leads somewhere is one link over
 its whole frame, with the ink at 5% on hover and the focus outline inside its
 frame. It carries no trailing label, such as Open, because its title already
-names where it goes. A trailing control is only for a second, different
-action, such as a choice, and it wraps beneath the row when enlarged text
-needs the width.
+names where it goes. On such a row, a trailing control is only for a second,
+different action, such as a menu. It sits outside the link and wraps beneath
+the row when enlarged text needs the width.
 
 **Form**. One 460px column, 20px between fields. Labels, placeholders and
 helper text come from the control. A placeholder shows the shape of an answer

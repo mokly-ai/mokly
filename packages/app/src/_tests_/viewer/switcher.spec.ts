@@ -89,12 +89,25 @@ test("the switcher leads with its search and marks the reader's reference Curren
   await page.keyboard.press("Tab");
   await expect(panel.getByTestId("close-switcher")).toBeFocused();
 
-  // The whole row is the link: a press in the row's own padding, outside the
-  // link's content, still follows it.
+  // The whole row is the link: the pointer in the row's own padding, outside
+  // the link's content, shows the text at 5% over the row, and a press there
+  // follows the link. The reader's current row keeps its own fill.
+  const current = row("main");
+  const currentFill = await current.evaluate(
+    (node) => getComputedStyle(node).backgroundColor,
+  );
+  await current.hover({ position: { x: 4, y: 8 } });
+  await expect(current).toHaveCSS("background-color", currentFill);
   const topic = row("topic");
   const box = await topic.boundingBox();
   expect(box).not.toBeNull();
-  await topic.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
+  const padding = { x: 4, y: (box?.height ?? 0) / 2 };
+  await topic.hover({ position: padding });
+  await expect(topic).toHaveCSS(
+    "background-color",
+    "color(srgb 0.0509804 0.0784314 0.0627451 / 0.05)",
+  );
+  await topic.click({ position: padding });
   await expect(publicationReference(page)).toHaveText("topic");
 });
 

@@ -1,0 +1,33 @@
+# Share choice rows break the row rule
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 2 item 12.
+- **Location:** `packages/app/src/viewer/panels/share.tsx:72-96`, `docs/mockups/src/screens/product/viewer/share-screen.tsx:46-51` and `:85-97`, `docs/mockups/src/components/content-list.tsx:153-169`, `docs/protocol/cloud/shared-control-overlays.md:8-14`, `docs/protocol/cloud/folio-viewer.md:158-178`, and `docs/protocol/cloud/folio-chrome.md:183-186`.
+- **Reason:** A merged skill rule and the shipped Share panel disagree, and no user decision says which one wins.
+- **Category:** UX wording.
+
+- **Terms:**
+  - **Choice row:** a list row that the reader picks from a set, instead of a row that goes somewhere. The Share panel's screen rows are the only choice rows in the app.
+  - **Share panel:** the viewer panel that builds a link to the publication. Its "Screen" list sets which screen the link opens: the whole catalogue or one screen.
+  - **Selection composition:** the paragraph of `docs/protocol/cloud/folio-chrome.md` that says how a list the user chooses from looks.
+- **Background:**
+  - On 2026-11-26 the user decided that every navigation list row in the cloud app is one link over the whole row, with no trailing Open or Details label. The settings index, the switcher, History and Projects follow it.
+  - The same day, the section "Rows and click targets" of the shared `product-ui` skill (Firna-AI/skills, merged 2026-11-26) took this bullet: "A row whose only action is to choose the item is a button as a whole. It has no trailing "Select" button." The agent that wrote the skill change added this bullet in its own review round. The text that the user chose named only "a second, different action, such as a menu".
+  - Each Share screen row is not a link. Its only action is a quiet Select button at its end. The chosen row has the `signalSoft` fill and the mark Selected. The branch kept this form, because Share is not a navigation list.
+  - `shared-control-overlays.md` gives the content list a `choose` form that draws the row's action as a quiet button. The content list's Choice variant in `content-list.tsx` draws it. `folio-viewer.md` lists Share's rows among the Publication rows, with a choice at the row's end.
+  - The Selection composition says that a list the user chooses from is the registered options list, with an `accentSoft` row and a trailing check. Share's list does not follow it either.
+- **Problem:** The merged rule says that a choice-only row is one button. Share, the content list's Choice variant and two protocol docs end it in a trailing Select. A third protocol paragraph describes a different list again.
+- **Impact if no action:** The next choice list can copy any of the three forms. An agent that follows the skill changes Share without a decision, and an agent that follows the protocol breaks the skill.
+- **Root question:** Is a row whose only action is to choose pressed as a whole, or through a trailing quiet control, and which form do the docs state?
+- **Options:**
+  - **A.** Keep the trailing Select. Change the skill bullet so that a choice-only row may end in a quiet choice control. State that form once in `folio-chrome.md`. Effort: Small.
+  - **B.** Make each choice-only row one button over its whole frame, with no trailing Select. Change the shared row components of the app (`RowPress` and `PanelList`), their drawing copies, Share, and the content list's Choice variant. Update `shared-control-overlays.md` and `folio-viewer.md`. The chosen row keeps Selected. Effort: Medium.
+  - **C.** Draw Share's screen choice as the registered options list, as the Selection composition says. Each screen is one option, and the chosen screen gets `accentSoft` and the trailing check. Effort: Medium.
+  - **D.** Replace Share's screen list with the registered selector: a select field whose open surface is the options list. It costs one more press, but it works for a long catalogue. Effort: Medium.
+- **Left out:** Change nothing. The skill and the product keep disagreeing, so it fails the goal.
+- **Wider fix:** None. Any option leaves one stated form, which the skill or the protocol then holds.
+- **Previous examples:** `plans/follow-ups/member-rows-end-in-manage-control.md` records the same class for the Members list: a row whose only action is a trailing control.
+- **Related:** `plans/follow-ups/member-rows-end-in-manage-control.md`, the same class. One answer can settle both.
+- **Recommendation:** B. It follows the merged rule and gives the Share rows the same whole-row press that the user asked for in the navigation lists.
+- **Action:** ask the user, because B, C and D remove Share's Select control, which is on `origin/main`, and A changes a shared skill rule that the user merged.

@@ -12,7 +12,11 @@
   - **Managed member:** the view of one person inside the Members pane, with their role and the way they lose access.
 - **Background:**
   - On 2026-11-26 the user decided that each navigation list row is one link over the whole row, with no trailing Open or Details label. The decision named the settings index, the viewer switcher, History and Projects.
-  - The same day, the user added this rule to the `product-ui` skill: "a row that goes to one place is the link as a whole, with no trailing 'Open' text; use a trailing control only for a second, different action" (paraphrased).
+  - The same day, the section "Rows and click targets" of the shared `product-ui` skill (Firna-AI/skills, merged 2026-11-26) took these bullets:
+    - "A list row or a card that leads to one place is a link or a button as a whole. The title, the description, and the empty space are all part of the click target."
+    - "Do not add trailing text such as "Open", "View", or "Details" that repeats what the row does. Do not make such text the only link of the row."
+    - "Use a trailing control only for a second, different action on the same row. Examples are a three-dot menu, a toggle, and a "Select" choice on a row that itself opens something else. Put the control outside the row's link element. A click on the control must not trigger the row's link."
+    - "This applies to mockups and to product implementation alike."
   - In the app, `MemberRows` draws a quiet Manage `Action` at the end of each row. Its press calls `onSelect`, which opens the managed member inside the same pane. The waiting row draws a disabled Manage.
   - In the drawing, Manage is a link to the managed-member drawing, `product/settings/members` or `product/settings/members/identity`.
   - Manage is the only action of a member row.
@@ -27,6 +31,8 @@
 - **Left out:** None.
 - **Wider fix:** None. The `product-ui` rule of 2026-11-26 already states the class.
 - **Previous examples:** The navigation list rows, which ended in Open or Details until 2026-11-26.
-- **Related:** `plans/follow-ups/member-row-role-on-phones.md`: the same row and its phone grid. A change of the row's control changes that grid too, so do both in one change.
+- **Related:**
+  - `plans/follow-ups/member-row-role-on-phones.md`: the same row and its phone grid. A change of the row's control changes that grid too, so do both in one change.
+  - `plans/follow-ups/share-choice-rows-break-row-rule.md`: the same class, a row whose only action is a trailing control. One answer can settle both.
 - **Recommendation:** A. It follows the rule, and the pane keeps its inline management.
 - **Action:** ask the user, because the decision of 2026-11-26 names only the navigation lists, and A removes a drawn and shipped control on `origin/main`.

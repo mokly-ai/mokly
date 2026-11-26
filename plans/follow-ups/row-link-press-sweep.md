@@ -26,8 +26,9 @@
 - **Options:**
   - **A.** Change nothing more. The two app presses guard the shared rule. Effort: Small.
   - **B.** In the responsive sweep, read the list item's box of each row link on each product drawing. Check that `document.elementFromPoint` 4px from the item's left edge, at mid-height, returns the link or a node inside it. `docs/mockups/src/_tests_/workspace-overlays.ts:62-70` checks an options list this way. It is a test for the class, so it needs the user. Effort: Medium.
+  - **C.** Do B, and in the same sweep hover each row link's list item at the same point. Check that the list item's background is the text at 5% for the scheme: `color(srgb 0.0509804 0.0784314 0.0627451 / 0.05)` in light and `color(srgb 0.956863 0.956863 0.960784 / 0.05)` in dark. The app's switcher spec checks this for one row only. It is a test for the class, so it needs the user. Effort: Medium.
 - **Left out:** A test that reads `controls.css` and checks the text of the `::after` rule. It checks one rule's text, not the press, so a positioned wrapper elsewhere passes it. Fewer than three approaches are real, because the choice is between the two direct presses and a sweep of every row.
-- **Wider fix:** B.
+- **Wider fix:** C. It covers the press area and the hover fill of every drawn list in one sweep.
 - **Previous examples:** None found.
-- **Recommendation:** B. It checks the press on every drawn list, so a list with its own frame cannot lose it without notice.
-- **Action:** ask the user, because B adds a test for a whole class of defect, and the user approves each such test.
+- **Recommendation:** C. It checks the press and the hover on every drawn list, so a list with its own frame cannot lose either without notice.
+- **Action:** ask the user, because C adds a test for a whole class of defect, and the user approves each such test.
