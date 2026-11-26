@@ -36,19 +36,23 @@ tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
 It first removes the base image's Node, npm and corepack files, so no file of
 an older release stays beside the new ones.
 It enables corepack and supplies npm, Git, curl, coreutils, Python 3 and CA
-certificates. The image must keep glibc 2.28 or newer, because the pinned
+certificates. It keeps the base image's C and C++ toolchain: `gcc`, `g++`,
+`make`, `ld`, `pkg-config` and the development headers. An install script
+that compiles a native addon, for example through `node-gyp`, needs them.
+The image must keep glibc 2.28 or newer, because the pinned
 CLI's native binary has no musl build and no JavaScript fallback.
 The image must also keep Git 2.43 or newer. The CLI reads a comparison base
 with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
 the oldest Git with a recorded working comparison. Debian bookworm and
 bookworm-backports supply only Git 2.39.5, which exits 129 on `-Z`. So the Dockerfile builds the pinned Git source release from kernel.org,
 with its checked-in SHA-256 from kernel.org's `sha256sums.asc`, into
-`/usr/local`, and then removes the sources and the build packages. A process
+`/usr/local`, and then removes the sources. It builds Git with
+`USE_LIBPCRE2=1`, so Perl-compatible patterns such as `git grep -P` work.
+It removes no package after the build. The base image already holds each
+build package, and a purge of them with `--auto-remove` also removes the base
+image's toolchain, as release `mokly-build-v5` showed. A process
 that starts `git` by name gets that build from `/usr/local/bin`. The base
-image's Debian Git 2.39.5 stays at `/usr/bin/git`. The purge with
-`--auto-remove` also removes the base image's own compiler packages, so the
-image has no `gcc`, `g++`, `make` or `ld`. A dependency that compiles a native
-addon during `npm ci` then fails.
+image's Debian Git 2.39.5 stays at `/usr/bin/git`.
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
@@ -371,7 +375,31 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
   check, passed on 2026-11-26 with the build reference. That run came before
   the probe's Git check, and its UTC time and assertion commit are not
-  recorded.
+  recorded. It is superseded by `mokly-build-v6`, because it has no C
+  toolchain and its Git has no PCRE2: `git grep -P` with a real Perl pattern
+  exits 128. A rollback to it breaks each install that compiles a native addon.
+- `mokly-build-v6`, build reference
+  `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c` (template ID
+  `mm5vcm4xv7inkey7ad9p`, build ID `e58c1440-c5e2-406d-97a3-8d312416c61c`),
+  E2B team `firna`. It was built 2026-11-26T12:15Z with `e2b@2.64.0` through
+  `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `1ce3ed0be` with three changes: `libpcre2-dev` and `libpcre2-8-0` in the
+  Git build packages, `USE_LIBPCRE2=1` in the Git build, and no
+  `apt-get purge -y --auto-remove` step. Git 2.56.1, checksum
+  `f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f`. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, `gcc`, `g++`, `make` and `pkg-config` were on `PATH`, a
+  C file compiled, and
+  `npm install --build-from-source bufferutil@4.0.9` built its `.node` file.
+  `git grep -P` with a Perl lookahead worked,
+  `git cat-file --batch --filters -Z` exited 0, `npm ci` worked, and the
+  `--base origin/main` build of the smoke pull request gave
+  `changesStatus: "ready"`. The live probe from `main` at `1ce3ed0be`, with
+  its `npm ci` and Git checks, passed on 2026-11-26 with the build reference.
+  Its UTC time is not recorded.
 
 ### Environments
 
@@ -382,6 +410,7 @@ exited 1 with the broken-npm error of `mokly-build-v2`. Later that day, on
 `mokly-build-v3`, main-preview pull request builds published, but their check
 said "Catalogue published." instead of "Catalogue ready to review.", because
 the published index had `changesStatus: "unavailable"`. On 2026-11-26,
-main-preview builds moved to the `mokly-build-v5` build reference. No complete
-build proof is recorded yet. Record the first main-preview and production
-build proofs here.
+main-preview builds moved to the `mokly-build-v5` build reference. Later that
+day they moved to the `mokly-build-v6` build reference, through the Deploy
+run with ID 45818241716. No complete build proof is recorded yet. Record the
+first main-preview and production build proofs here.

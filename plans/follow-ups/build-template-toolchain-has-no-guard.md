@@ -1,0 +1,38 @@
+# No check keeps the template's compiler
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-keep-the-template-s-compiler-and-csnm`, the part of option E of the deleted item "The v5 build template has no compiler" that release `mokly-build-v6` did not ship.
+- **Location:** `docs/protocol/cloud/cloud-build-runner.md`, section "Template"; `infra/e2b/tests/assert_build_template.py`; `infra/tests/test_build_template.py`; `infra/e2b/build/e2b.Dockerfile:9` to line 13, the two `apt-get install` lines.
+- **Reason:** The guard adds a probe check, a new gate, and changes a requirement of the runner protocol, so it waits for the user.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Build template:** the E2B sandbox image, `mokly-build-v<N>`, in which Mokly Cloud runs the checkout, the install, and `mokly publish` of a customer repository. `infra/e2b/build/e2b.Dockerfile` defines it.
+  - **Template probe:** the live check of `docs/ops/build-template.md` that runs `infra/e2b/tests/assert_build_template.py` in a fresh sandbox of a candidate build reference before an operator enables it.
+  - **Native addon:** an npm dependency that compiles C or C++ code during install, through `node-gyp`, when no prebuilt binary fits.
+- **Background:**
+  - The template's base image is `e2bdev/base`, pinned by digest. It ships Debian bookworm's `build-essential`, `gcc`, `g++`, `make`, `binutils`, `pkg-config`, and development headers.
+  - Release `mokly-build-v5` (2026-11-26) built Git 2.56.1 from source and then ran `apt-get purge -y --auto-remove gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev`. A simulation of that purge on the pinned base removed 171 packages, `build-essential` and the whole toolchain included. v5 then had no `gcc`, `g++`, `make`, or `ld`, so a repository with a native addon without a prebuilt Linux x64 glibc binary failed at Install.
+  - The v5 probe passed, because it checks no compiler. A container check found the loss after the release was built.
+  - Release `mokly-build-v6` (build reference `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c`, 2026-11-26) dropped the purge and built Git with `USE_LIBPCRE2=1`. In a v6 sandbox, `gcc`, `g++`, `make`, and `pkg-config` were present, a C file compiled, `npm install --build-from-source bufferutil@4.0.9` built its `.node` file, and `git grep -P` with a Perl lookahead worked. Main-preview uses v6 since 2026-11-26.
+  - On 2026-11-26 the user chose to ship v6 without a new probe check, and left this guard open.
+  - The template contract in `docs/protocol/cloud/cloud-build-runner.md`, section "Template", lists `/bin/sh`, coreutils, Python 3, Git 2.43 or newer, curl, CA certificates, and Node with npm and corepack. It names no compiler and no optional Git feature. `docs/ops/build-template.md`, section "Release Prerequisites", records that the image keeps the base image's toolchain and that Git links PCRE2.
+  - The v6 Dockerfile names `gcc`, `libc6-dev`, and `make` only as Git build packages. It does not name `g++`, `build-essential`, or `pkg-config`. They stay only because the base holds them.
+- **Problem:** No requirement and no check keeps the C toolchain or Git's PCRE2 in later releases. A new base digest, a new cleanup step, or a different Git build can remove them again while the probe still passes.
+- **Impact if no action:** A later release can lose native addon builds or `git grep -P` again, as v5 did. Customer installs then fail on main-preview or production, and the failure shows as a `node-gyp` or Git error, not as a template problem.
+- **Root question:** How do later template releases keep the build tools that customer install scripts rely on?
+- **Options:**
+  - **A.** Change nothing. The runbook record and the release review are the only guard. Effort: Small.
+  - **B.** Add one sentence to the "Template" section of `docs/protocol/cloud/cloud-build-runner.md`: the template supplies a C and C++ toolchain with `make` and `pkg-config`, and its Git supports Perl-compatible patterns. No probe check. Effort: Small.
+  - **C.** B, plus a guard. The Dockerfile installs `build-essential` and `pkg-config` by name with the other template tools. The probe compiles, links, and runs a small C file, runs `make --version` and `pkg-config --version`, and runs `git grep -P` with a real Perl pattern, such as a lookahead, in a fresh repository. A plain pattern passes without PCRE2, so the check needs a real Perl pattern. Add local regressions in `infra/tests/test_build_template.py` for a missing compiler and a Git without PCRE2. Run the probe live against v6 before the merge. Effort: Medium.
+- **Left out:**
+  - A probe check without the contract sentence. The probe checks the contract, so a check without the requirement has no rule to enforce.
+  - State that cloud builds supply no toolchain. It drops support that v3 and v6 give, which the user chose to restore in v6.
+  - A different base image, such as a pinned Debian 13 image with packaged Git. It changes how the template gets its tools, not how a release keeps them, and `plans/follow-ups/build-template-keeps-a-second-git.md` holds it as its wider fix.
+- **Wider fix:** C. The requirement and the probe check fail a release that loses a tool, whatever the cause.
+- **Previous examples:** `mokly-build-v2` broke npm while `npm --version` passed the probe. The fix added a real `npm ci` to the probe. `mokly-build-v5` lost the toolchain while the probe passed.
+- **Related:** `plans/follow-ups/build-template-keeps-a-second-git.md` changes the same Dockerfile and needs a release. Its option D, a minimal Debian 13 image, must also keep the toolchain that this item protects.
+- **Recommendation:** C. It is the only option that fails the probe when a release loses a tool, as v5 did.
+- **Action:** ask the user, because B and C change a requirement of the runner protocol, and C adds a probe check, a new gate.
