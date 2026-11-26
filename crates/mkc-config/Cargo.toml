@@ -8,6 +8,7 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+mkc-auth = { workspace = true }
 mkc-file-store-interface = { workspace = true }
 mkc-domain = { workspace = true }
 internal-error.workspace = true

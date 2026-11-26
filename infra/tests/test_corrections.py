@@ -59,7 +59,7 @@ class CorrectionTests(unittest.TestCase):
         self.assertIn("USER 65532:65532", docker)
         self.assertIn('CMD ["serve"]', docker)
         entry = (ROOT / "infra/docker/entrypoint.sh").read_text()
-        self.assertIn('exec /usr/local/bin/mkc-api "$@"', entry)
+        self.assertIn('exec "${MKC_API_BIN:-/usr/local/bin/mkc-api}" "$@"', entry)
         cli = (ROOT / "crates/mkc-api/src/cli.rs").read_text()
         self.assertIn("Migrate", cli)
         self.assertIn("Serve", cli)

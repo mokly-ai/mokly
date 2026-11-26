@@ -1,0 +1,34 @@
+# A probe pass is not tied to its assertion
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-give-the-template-a-git-that-9abx`, the blocked wider fix of review finding 4 of round 1.
+- **Location:** `docs/ops/build-template.md`, sections "Verify The Streaming Boundary" and "Live Evidence"; `infra/e2b/tests/assert_build_template.py`.
+- **Reason:** The fix adds an enablement check, a new gate, which only the user approves.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Template probe:** the live check of `docs/ops/build-template.md` that runs `infra/e2b/tests/assert_build_template.py` through the E2B streaming process in a fresh sandbox of a candidate build reference.
+  - **Assertion revision:** the commit of `assert_build_template.py` that a probe run used.
+  - **Build reference:** `TEMPLATE_ID:BUILD_ID`, which starts exactly one template build. The environment app-config names it under `builds.template`.
+- **Background:**
+  - The runbook requires a probe pass before an operator enables a build reference. It asks for the result and the UTC time of each pass, and it does not require the assertion revision. The `mokly-build-v6` record names its assertion commit, `1ce3ed0be`. The earlier records do not.
+  - Two releases kept an older pass after the probe gained a check:
+    - `mokly-build-v3`: its recorded pass came before the probe's `npm ci` check.
+    - `mokly-build-v5`: its recorded pass, from `main` on 2026-11-26, came before the probe's Git check. Main-preview ran v5 until it moved to `mokly-build-v6` later that day. The v6 pass ran the probe from `main` at `1ce3ed0be`, which has the Git check.
+  - `plans/follow-ups/cloud-builds-never-ran-live.md` now says to run the current probe against the reference in use and to record the pass, the assertion commit, and the UTC time.
+- **Problem:** Nothing ties an enabled build reference to a pass of the current assertion, so a release can stay in use without one after the assertion changes.
+- **Impact if no action:** An operator can read an old pass as proof that the release meets the current contract, and a release that fails a new check stays enabled until someone runs the probe again.
+- **Root question:** How do operators know that each enabled build reference passes the current assertion?
+- **Options:**
+  - **A.** A rule in "Verify The Streaming Boundary": a change to the assertion records, for each enabled build reference, a pass of the new assertion or an open follow-up item for that run. Each probe record names the assertion commit. Effort: Small.
+  - **B.** Make enablement consume a verification receipt tied to the exact build reference and the assertion revision. The deploy checks that the receipt of the configured reference matches the current assertion. Effort: Large.
+  - **C.** Run the template assertion in each build sandbox before checkout, so each build proves its template against the current assertion. It adds seconds and a new failure to each build, and it changes the runner protocol. Effort: Large.
+- **Left out:**
+  - A local test. It has no E2B streaming process.
+- **Wider fix:** B. The receipt ties both inputs, so a pass cannot outlive its assertion.
+- **Previous examples:** v3 and v5, above.
+- **Related:** `plans/follow-ups/template-release-proves-no-comparison.md` adds a release step of the same kind.
+- **Recommendation:** B. It is the only option that does not depend on each operator following a rule. A is the cheap rule if the user declines a new check.
+- **Action:** ask the user, because B and C add a check that can stop a deploy or a build, and A adds a release rule.

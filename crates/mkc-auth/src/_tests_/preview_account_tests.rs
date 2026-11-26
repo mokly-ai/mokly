@@ -53,7 +53,7 @@ fn preview_account_is_created_once_and_reused_without_a_session() {
         }),
     ));
     let mut auth = service(queries, Arc::new(Unimock::new(())), runtime);
-    auth.preview_sign_in = Some(PreviewSignIn::new(&"a".repeat(64), expected.email.clone()));
+    auth.preview_sign_in = Some(PreviewSignIn::new(expected.email.clone(), None));
     for _ in 0..2 {
         let result = auth.preview_account();
         assert!(

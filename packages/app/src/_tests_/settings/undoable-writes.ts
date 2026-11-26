@@ -1,8 +1,10 @@
 import type { Page } from "@playwright/test";
 
-import { open, openDialog } from "../harness";
+import { previewSignInEmail } from "../api-server";
+import { open } from "../harness";
 
 import type { Subject } from "./subject";
+import { choose, fill, pane, press, restore } from "./write-steps";
 
 /**
  * Every write whose input the reader can undo.
@@ -63,44 +65,6 @@ export type UndoableWrite = WriteUnderTest &
 
 /** What a field a form owns says, unless that form declares its own sentence. */
 export const sharedFieldCopy = "Check the values and try again.";
-
-/**
- * The field a write is made from, named exactly.
- *
- * A loose label reaches anything that contains it, and the viewer's account
- * trigger carries the reader's own address as its accessible name — so an
- * address containing "name" makes `Name` two controls and the write is made
- * from whichever Playwright saw first.
- */
-export const field = (page: Page, label: string | RegExp) =>
-  typeof label === "string"
-    ? page.getByLabel(label, { exact: true })
-    : page.getByLabel(label);
-
-const fill = (label: string | RegExp, value: string) => async (page: Page) => {
-  await field(page, label).fill(value);
-};
-
-const restore =
-  (label: string | RegExp, saved: (subject: Subject) => string) =>
-  async (page: Page, subject: Subject) => {
-    await field(page, label).fill(saved(subject));
-  };
-
-const press = (name: string | RegExp) => async (page: Page) => {
-  await page.getByRole("button", { name, exact: true }).click();
-};
-
-/** Choose one of a row's own actions from its three-dot menu. */
-const choose = (row: RegExp, action: string) => async (page: Page) => {
-  await page.getByRole("button", { name: row }).first().click();
-  await page.getByRole("menuitem", { name: action, exact: true }).click();
-};
-
-/** Most of these controls are on a settings pane, reached by its address. */
-const pane = (name: string) => async (page: Page, subject: Subject) => {
-  await openDialog(page, `${subject.projectPath}?settings=${name}`);
-};
 
 export const writes: readonly UndoableWrite[] = [
   {
@@ -197,6 +161,23 @@ export const writes: readonly UndoableWrite[] = [
     settles: "resting",
     give: fill("Email", "undone-entry@example.com"),
     undo: fill("Email", ""),
+  },
+  {
+    // Sign in's password section, which the suite's API configures. Its input
+    // is the password, so clearing it is what there is to undo. Its field owns
+    // a refused password rather than `validation-failed`, which the section's
+    // own spec asserts.
+    where: "sign-in/password-entry",
+    control: "password-entry",
+    visit: async (page) => {
+      await open(page, "/sign-in");
+    },
+    resting: "Continue as " + previewSignInEmail,
+    url: "**/v1/auth/preview",
+    method: "POST",
+    settles: "resting",
+    give: fill("Password", "undone-password"),
+    undo: fill("Password", ""),
   },
   {
     // Check your email's other control. A reader with no pending link types

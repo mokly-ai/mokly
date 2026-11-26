@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read which optional operations have runtime configuration */
+        get: operations["getConfiguration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/session": {
         parameters: {
             query?: never;
@@ -66,7 +83,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange a configured preview credential for a session cookie. */
+        /** Exchange the preview password for a session cookie. */
         post: operations["verifyPreviewSignIn"];
         delete?: never;
         options?: never;
@@ -1263,6 +1280,15 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        /** @description The public configuration of optional API operations. */
+        Configuration: {
+            github: boolean;
+            billing: boolean;
+            previewPassword: {
+                /** Format: email */
+                account: string;
+            } | null;
+        };
         Connection: {
             /** Format: uri */
             authorizeUrl: string;
@@ -1619,7 +1645,12 @@ export interface components {
             url: string;
         };
         PreviewSignIn: {
-            secret: string;
+            /**
+             * Format: password
+             * @description Preview password, from 1 to 1024 UTF-8 bytes.
+             */
+            password: string;
+            returnTo?: string;
         };
         Project: {
             /**
@@ -2242,6 +2273,29 @@ export interface operations {
             };
         };
     };
+    getConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The optional configuration of this API. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Configuration"];
+                };
+            };
+            "4XX": components["responses"]["ErrorResponse"];
+            "5XX": components["responses"]["ErrorResponse"];
+        };
+    };
     getSession: {
         parameters: {
             query?: never;
@@ -2401,6 +2455,15 @@ export interface operations {
                 headers: {
                     /** @description Seconds until another request can be admitted. */
                     "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Preview sign-in configuration is absent, or the full password queue refused the attempt before peer admission. */
+            503: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content: {

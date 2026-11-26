@@ -11,8 +11,9 @@ use super::commands::{Step, browser_test_command, commands_for, steps_for};
 use super::native_scope::TestScope;
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{RustPart, cargo_metadata, nextest};
-use super::rust_partition::{Piece, Weights, shard_pieces};
+use super::rust_partition::{Piece, shard_pieces};
 use super::rust_targets::test_units;
+use super::rust_weights::{Host, WeightFile};
 use super::tasks::{Task, task_commands};
 
 /// Runs complete or selected repository verification.
@@ -37,7 +38,7 @@ pub(crate) struct DefaultCheckRunner {
     workspace: PathBuf,
     /// The Rust test weights of the test shards. `None` reads the committed
     /// weight file that the build embedded.
-    rust_test_weights: Option<Weights>,
+    rust_test_weights: Option<WeightFile>,
 }
 
 impl DefaultCheckRunner {
@@ -58,7 +59,7 @@ impl DefaultCheckRunner {
     /// Place the Rust test shards by fixed weights instead of the committed
     /// weight file, so that a weight refresh never changes a test result.
     #[cfg(test)]
-    pub(super) fn with_rust_test_weights(self, weights: Weights) -> Self {
+    pub(super) fn with_rust_test_weights(self, weights: WeightFile) -> Self {
         Self {
             rust_test_weights: Some(weights),
             ..self
@@ -160,20 +161,16 @@ impl CheckRunner for DefaultCheckRunner {
         let metadata = self
             .command_runner
             .output(&cargo_metadata().in_directory(self.workspace.clone()))?;
-        let embedded;
         let weights = match &self.rust_test_weights {
-            Some(weights) => weights,
-            None => {
-                embedded = Weights::embedded()?;
-                &embedded
-            }
+            Some(file) => file.host(Host::current()),
+            None => WeightFile::embedded()?.host(Host::current()),
         };
         let units = test_units(&metadata)?
             .into_iter()
             .filter(|(unit, packages)| !scope.leaves_out(unit, packages))
             .map(|(unit, _)| unit)
             .collect();
-        let pieces = shard_pieces(&units, weights, partition);
+        let pieces = shard_pieces(&units, &weights, partition);
         if pieces.is_empty() {
             eprintln!("Rust test shard {partition} has no test units");
             return Ok(());

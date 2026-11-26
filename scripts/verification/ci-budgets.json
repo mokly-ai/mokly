@@ -20,7 +20,7 @@
     { "pattern": "App checks*", "minutes": 10 },
     { "pattern": "Mockup checks*", "minutes": 10 },
     { "pattern": "Site checks*", "minutes": 10 },
-    { "pattern": "Workload image checks*", "minutes": 10 },
+    { "pattern": "Workload image checks*", "minutes": 6 },
     { "pattern": "Site Lighthouse*", "minutes": 10 }
   ],
   "shardGroups": [

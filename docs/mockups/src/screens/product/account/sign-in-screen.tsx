@@ -38,6 +38,37 @@ export function SignInAddressRefusedScreen(_props: { viewport: Viewport }) {
   return <EntryPage mode="sign-in" situation="address-refused" />;
 }
 
+/**
+ * Sign in where the configuration answer names a shared account: the password
+ * section under the email form, at rest. Every other drawing leaves it off.
+ */
+export function SignInPasswordScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="default" />;
+}
+
+/**
+ * The section before the reader types: the Email and Password fields are
+ * empty, so both of their actions wait disabled.
+ */
+export function SignInPasswordEmptyScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="empty" />;
+}
+
+/** The password the API refused, marked on the Password field. */
+export function SignInPasswordRefusedScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="password-refused" />;
+}
+
+/** Continue as the shared account while its write runs. */
+export function SignInPasswordSigningInScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="signing-in" />;
+}
+
+/** The password sign-in refused for another cause, beside its control. */
+export function SignInPasswordFailureScreen(_props: { viewport: Viewport }) {
+  return <EntryPage mode="sign-in" password="failure" />;
+}
+
 const macAppPath = "product/account/sign-in/mac-app";
 
 /**

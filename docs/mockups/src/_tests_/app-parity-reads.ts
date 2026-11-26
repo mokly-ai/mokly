@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { sample } from "../fixtures/product";
-import { denseViewerChrome } from "../fixtures/product-states";
+import { denseViewerChrome, previewPassword } from "../fixtures/product-states";
 import { publication } from "../fixtures/publications";
 
 import { ownerOf, repository } from "./app-owners";
@@ -95,7 +95,8 @@ export function source(path: string): string {
 /**
  * Fixture values a label may carry, so the literal around them is compared.
  * The publication pill's control draws the publication's day and short SHA
- * beside the branch.
+ * beside the branch, and sign in's password section names the shared account
+ * that the configuration answer gives.
  */
 const interpolated = [
   "Mokly Cloud",
@@ -112,6 +113,7 @@ const interpolated = [
   denseViewerChrome.email,
   publication.time.split(",")[0] ?? publication.time,
   publication.sha,
+  previewPassword.account,
 ];
 
 /**

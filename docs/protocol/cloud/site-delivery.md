@@ -149,10 +149,10 @@ runners. The deterministic accessibility rules above are the required gate.
 
 The site gate runs the build, the unit tests, the link check and the browser
 check, in that order. The `cloud-typecheck` suite type-checks the site, and
-the Lighthouse budget runs apart from the gate. In CI the gate runs as shards,
-and each shard builds the site before its checks. A browser shard does not
-wait for the unit tests or the link check of another shard, so a failure in
-one shard does not stop the others. Missing or stale site output fails rather
+the Lighthouse budget runs apart from the gate. In CI one job runs the whole
+gate. With site shards, each shard builds the site before its checks. A
+browser shard does not wait for the unit tests or the link check of another
+shard, so a failure in one shard does not stop the others. Missing or stale site output fails rather
 than skips.
 
 - The build fails when a setting is invalid, when a package document is
@@ -181,9 +181,8 @@ than skips.
 
 ## Continuous Integration
 
-The site gate runs in the required aggregate through its own parallel CI
-jobs, one for each
-[site shard](./repository-verification.md#mockup-and-site-shards). A separate Lighthouse job uses the same pinned Node, npm, lockfile
+The site gate runs in the required aggregate through its own CI job, as the
+[site shards](./repository-verification.md#mockup-and-site-shards) say. A separate Lighthouse job uses the same pinned Node, npm, lockfile
 and Chromium installation, builds the site, and runs the report-only budget,
 keeping its results on failure. The required aggregate does not depend on
 that job.

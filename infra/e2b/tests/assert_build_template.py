@@ -22,7 +22,7 @@ SECRET_KEYS = {
     "POSTMARK_SERVER_TOKEN", "MKC_DATABASE_URL", "MKC_STRIPE_SECRET_KEY",
     "MKC_STRIPE_WEBHOOK_SECRET", "MKC_GITHUB_CLIENT_SECRET",
     "MKC_GITHUB_PRIVATE_KEY", "MKC_GITHUB_WEBHOOK_SECRET",
-    "MKC_CATALOGUE_SIGNING_KEY", "MKC_PREVIEW_SIGN_IN_SECRET",
+    "MKC_CATALOGUE_SIGNING_KEY", "MKC_PREVIEW_SIGN_IN_VERIFIER",
 }
 CREDENTIAL_FILES = (
     ".mokly-git-credentials", ".git-credentials", ".netrc", ".npmrc",
@@ -39,6 +39,10 @@ NPM_PROBE_FILES = {
 }
 NPM_CLEAN_INSTALL = ["npm", "ci", "--offline", "--ignore-scripts", "--no-audit", "--no-fund",
                      "--no-update-notifier"]
+# Mokly reads a comparison base through NUL-terminated `cat-file` batches, which Git 2.42 added.
+# Git 2.43.0 is the oldest release with a recorded working comparison.
+GIT_MINIMUM = (2, 43)
+GIT_NUL_BATCH = ["git", "cat-file", "--batch", "--filters", "-Z"]
 
 
 class TemplateAssertionError(RuntimeError):
@@ -51,9 +55,10 @@ def require(condition, message):
 
 
 def command(argv, cwd=None):
-    """Run a bounded probe without a shell or environment replacement."""
+    """Run a bounded probe on empty stdin without a shell or environment replacement."""
     try:
-        result = subprocess.run(argv, capture_output=True, text=True, timeout=10, cwd=cwd)
+        result = subprocess.run(argv, capture_output=True, text=True, timeout=10, cwd=cwd,
+                                stdin=subprocess.DEVNULL)
     except (OSError, subprocess.TimeoutExpired) as error:
         raise TemplateAssertionError(f"{argv[0]} could not run") from error
     require(result.returncode == 0, f"{argv[0]} exited nonzero")
@@ -69,6 +74,19 @@ def verify_npm_clean_install(workspace):
             command(NPM_CLEAN_INSTALL, cwd=project)
     except (OSError, TemplateAssertionError) as error:
         raise TemplateAssertionError("npm ci of an empty project failed") from error
+
+
+def verify_git_base_reads(workspace):
+    """Require the Git release and the batch form that Mokly's base reader uses."""
+    version = re.match(r"git version (\d+)\.(\d+)", command(["git", "--version"]))
+    require(version is not None and tuple(map(int, version.groups())) >= GIT_MINIMUM,
+            "Mokly base reads require Git 2.43 or newer")
+    try:
+        with tempfile.TemporaryDirectory(dir=workspace) as repository:
+            command(["git", "init", "--quiet", repository])
+            command(GIT_NUL_BATCH, cwd=repository)
+    except (OSError, TemplateAssertionError) as error:
+        raise TemplateAssertionError("git cat-file --batch --filters -Z failed") from error
 
 
 def verify(node_version):
@@ -97,8 +115,9 @@ def verify(node_version):
     for executable in ("node", "npm", "corepack", "git", "curl", "sha256sum", "python3"):
         require(shutil.which(executable) is not None, f"{executable} is missing from PATH")
     require(command(["node", "--version"]) == "v" + node_version, "Node release differs from .nvmrc")
-    for executable in ("npm", "corepack", "git", "curl", "sha256sum", "python3"):
+    for executable in ("npm", "corepack", "curl", "sha256sum", "python3"):
         command([executable, "--version"])
+    verify_git_base_reads(workspace)
     verify_npm_clean_install(workspace)
     require(Path("/bin/sh").is_file() and os.access("/bin/sh", os.X_OK), "/bin/sh is missing")
     require(command(["/bin/sh", "-c", "printf shell-ok"]) == "shell-ok", "/bin/sh failed")

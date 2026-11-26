@@ -8,6 +8,7 @@ pub(crate) mod bodies;
 mod builds;
 mod catalogue_access;
 mod comments;
+mod configuration;
 pub(crate) mod deferred;
 pub mod document;
 mod enum_values;

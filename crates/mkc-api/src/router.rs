@@ -24,6 +24,7 @@ use crate::contract::document::ApiDoc;
 use crate::dispatch::{self, Dispatcher, WebhookHeaders};
 use crate::error::{ApiError, ApiErrorResultExt, Result};
 use crate::operation::Operation;
+use crate::payload::Reply;
 use crate::response;
 use crate::route_contract::routes;
 use crate::upload::UploadHandler;
@@ -166,12 +167,7 @@ impl RouterFactory {
                                     None
                                 },
                             };
-                            let result =
-                                tokio::task::spawn_blocking(move || dispatcher.dispatch(request))
-                                    .await
-                                    .context("dispatch API request")
-                                    .and_then(|result| result);
-                            response::render(result)
+                            response::render(dispatch_request(dispatcher, request).await)
                         }
                     },
                 ),
@@ -225,6 +221,17 @@ impl RouterFactory {
     }
 }
 
+/// Release the initial blocking worker before an async continuation.
+async fn dispatch_request(
+    dispatcher: Arc<dyn Dispatcher>,
+    request: dispatch::Request,
+) -> Result<Reply> {
+    let outcome = tokio::task::spawn_blocking(move || dispatcher.dispatch(request))
+        .await
+        .context("dispatch API request")??;
+    outcome.finish().await
+}
+
 fn body_error(error: axum::Error) -> ApiError {
     if error
         .source()
@@ -259,3 +266,11 @@ mod contract_tests;
 #[cfg(test)]
 #[path = "_tests_/router_inventory_tests.rs"]
 mod inventory_tests;
+
+#[cfg(test)]
+#[path = "_tests_/configuration_tests.rs"]
+mod configuration_tests;
+
+#[cfg(test)]
+#[path = "_tests_/preview_queue_tests.rs"]
+mod preview_queue_tests;

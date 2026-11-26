@@ -157,7 +157,7 @@ impl ConfiguredApplicationFactory {
             preview_sign_in: settings
                 .preview_sign_in
                 .as_ref()
-                .map(|config| PreviewSignIn::new(&config.secret, config.email.clone())),
+                .map(|config| PreviewSignIn::new(config.email.clone(), config.verifier.clone())),
         });
         let publishing = SystemPublishingFactory.create(
             &settings.publications,
@@ -267,6 +267,7 @@ impl ConfiguredApplicationFactory {
                 billing,
                 access: publishing.access,
                 viewer: publishing.viewer,
+                preview_hash_slots: Default::default(),
             }),
             github_worker: integration.worker,
             check_worker: integration.checks,

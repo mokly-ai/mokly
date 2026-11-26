@@ -1,79 +1,11 @@
 //! Weighted partition of the Mokly Rust test units into test shards.
 
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, BTreeSet};
-
-use serde::Deserialize;
-
-use crate::error::{ErrorResultExt, Result};
+use std::collections::BTreeSet;
 
 use super::request::Shard;
 use super::rust_targets::TestUnit;
-
-/// The measured unit weights, embedded when xtask builds.
-const WEIGHTS: &str = include_str!("../../../scripts/verification/rust-test-weights.json");
-
-/// Measured compile and test seconds of the Rust test units.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub(super) struct Weights {
-    /// The weight of a unit that neither map names, such as a new test.
-    default_seconds: u64,
-    /// The weight of the doc tests, which the first test shard also runs.
-    doc_seconds: u64,
-    /// The compile seconds of each unit, keyed by its Cargo target arguments.
-    compile_seconds: BTreeMap<String, u64>,
-    /// The test seconds of each unit, keyed like `compile_seconds`.
-    test_seconds: BTreeMap<String, u64>,
-    /// The number of nextest slices of a heavy unit, keyed like `compile_seconds`. Each
-    /// slice is one piece with an equal share of the unit's weight. `--lib`
-    /// never splits.
-    #[serde(default)]
-    splits: BTreeMap<String, u64>,
-}
-
-impl Weights {
-    /// Parse unit weights from the JSON text of the weight file.
-    pub(super) fn parse(text: &str) -> Result<Self> {
-        serde_json::from_str(text).context("parse Rust test weights")
-    }
-
-    /// Parse the weight file that the build embedded.
-    pub(super) fn embedded() -> Result<Self> {
-        Self::parse(WEIGHTS)
-    }
-
-    /// The compile seconds plus the test seconds of a unit. A unit that only
-    /// one map names counts zero for the other part.
-    fn of(&self, unit: &TestUnit) -> u64 {
-        let key = unit.key();
-        match (self.compile_seconds.get(&key), self.test_seconds.get(&key)) {
-            (None, None) => self.default_seconds,
-            (compile, test) => compile.copied().unwrap_or(0) + test.copied().unwrap_or(0),
-        }
-    }
-
-    /// The pieces of one unit and the weight of each piece.
-    fn pieces(&self, unit: &TestUnit) -> Vec<(Piece, u64)> {
-        let total = match unit {
-            TestUnit::Libraries => 1,
-            _ => self.splits.get(&unit.key()).copied().unwrap_or(1).max(1),
-        };
-        let weight = self.of(unit).div_ceil(total);
-        if total == 1 {
-            return vec![(Piece::whole(unit), weight)];
-        }
-        (1..=total)
-            .map(|index| {
-                let piece = Piece {
-                    unit: unit.clone(),
-                    slice: Some((index, total)),
-                };
-                (piece, weight)
-            })
-            .collect()
-    }
-}
+use super::rust_weights::Weights;
 
 /// A whole unit, or one nextest slice of a unit that the weights split.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -111,7 +43,7 @@ impl Piece {
 /// so this shard alone can save a complete Rust build cache. Then the
 /// heaviest piece goes first, each to the shard with the least weight so far;
 /// the lower shard wins a tie. The same units and weights give the same
-/// partition on every host.
+/// partition; each host passes the weights of its own test seconds.
 pub(super) fn partition(
     units: &BTreeSet<TestUnit>,
     weights: &Weights,
@@ -132,7 +64,7 @@ pub(super) fn partition(
         .max(1);
     let mut loads = vec![0_u64; count];
     let mut shards = vec![Vec::new(); count];
-    loads[0] = weights.doc_seconds;
+    loads[0] = weights.doc_seconds();
     for (piece, weight) in pieces {
         let lightest = if piece.unit == TestUnit::Libraries {
             0
