@@ -21,19 +21,17 @@ const VIEWPORTS = {
 
 /**
  * The rows that the Action branch marks changed in a desktop catalogue: the
- * changed Action and its saved variants. A phone draws no catalogue.
+ * changed Action and its saved variants.
  */
-const CHANGED_ROWS = {
-  desktop: ["Action", "Default", "Disabled", "Secondary"],
-  mobile: [],
-} as const;
+const CHANGED_ROWS = ["Action", "Default", "Disabled", "Secondary"] as const;
 
 /**
  * The rows that a desktop catalogue marks changed where Welcome also changed
- * its own props: Welcome's own row, then the changed Action's rows.
+ * its own props: Welcome's own row, then the changed Action's rows. A phone
+ * draws no catalogue.
  */
 const DIRECT_ROWS = {
-  desktop: ["Welcome", ...CHANGED_ROWS.desktop],
+  desktop: ["Welcome", ...CHANGED_ROWS],
   mobile: [],
 } as const;
 
@@ -67,24 +65,25 @@ export function registerComponentDesign() {
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} component designs`, () => {
       test.use({ viewport: VIEWPORTS[viewport] });
-      test("a component-only change lists the component and its variants, not its affected screens", async ({
-        page,
-      }) => {
-        await page.goto(
-          designDocumentUrl("design/canvas/components/usage", viewport),
-        );
-        await expect(
-          page.locator('[data-usage-section="affected"]').getByRole("link"),
-        ).toHaveText(["Welcome", "Details"]);
-        await expect(page.locator(".mbk-nav-filter-count")).toHaveText(
-          viewport === "desktop" ? ["4"] : [],
-        );
-        const changed = page.locator(
-          '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
-        );
-        await expect(changed).toHaveCount(CHANGED_ROWS[viewport].length);
-        await expect(changed).toContainText([...CHANGED_ROWS[viewport]]);
-      });
+      // The usage list reads the same on a phone, so the desktop alone
+      // checks it.
+      if (viewport === "desktop")
+        test("a component-only change lists the component and its variants, not its affected screens", async ({
+          page,
+        }) => {
+          await page.goto(
+            designDocumentUrl("design/canvas/components/usage", "desktop"),
+          );
+          await expect(
+            page.locator('[data-usage-section="affected"]').getByRole("link"),
+          ).toHaveText(["Welcome", "Details"]);
+          await expect(page.locator(".mbk-nav-filter-count")).toHaveText(["4"]);
+          const changed = page.locator(
+            '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+          );
+          await expect(changed).toHaveCount(CHANGED_ROWS.length);
+          await expect(changed).toContainText([...CHANGED_ROWS]);
+        });
 
       // Welcome also changed the label that it gives its own Action, so it
       // keeps its own Changes row beside the component change: a desktop

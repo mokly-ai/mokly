@@ -61,9 +61,12 @@ export const PAGE_EXCLUDED_LEAD =
   "This stylesheet changed, but none of the changed styles apply to this page.";
 export const PAGE_TERMINAL = "No changes to this page.";
 
+/** The window of the desktop inspector dock. */
+export const DESKTOP_INSPECTOR = { width: 1440, height: 1000 } as const;
+
 /** The desktop inspector dock and the mobile inspector sheet. */
 export const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
+  ["desktop", DESKTOP_INSPECTOR],
   ["mobile", { width: 390, height: 844 }],
 ] as const;
 

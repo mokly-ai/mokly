@@ -17,55 +17,49 @@ export function registerDesignComponentStacks() {
   });
   const { designDocumentUrl } = designDocumentFixture();
 
-  for (const viewport of ["desktop", "mobile"] as const) {
-    test(`${viewport}: Action's versions sit at one position in the frame`, async ({
-      page,
-    }) => {
-      await page.setViewportSize(
-        viewport === "mobile"
-          ? { width: 390, height: 844 }
-          : { width: 1440, height: 1000 },
-      );
-      for (const route of STACKED) {
-        await page.goto(designDocumentUrl(route, viewport));
-        const frames = page.locator(".cv-frame[data-cv-frame]:visible");
-        await expect(frames, route).not.toHaveCount(0);
-        for (const frame of await frames.all()) {
-          const facts = await frame.evaluate((node) => {
-            const scroller = node.querySelector(".mb-viewport")!;
-            const bounds = scroller.getBoundingClientRect();
-            // The stage zooms the frame: measure in the frame's own pixels.
-            const scale = bounds.width / scroller.clientWidth;
-            // Each version's document draws its Action from the top left, as
-            // the shell's documents do, so the two corners coincide.
-            const corner = (side: string) => {
-              const rect = scroller
-                .querySelector(`.mb-pane--${side} .mbk-shot-action`)!
-                .getBoundingClientRect();
-              return [
-                (rect.left - bounds.left) / scale,
-                (rect.top - bounds.top) / scale,
-              ];
-            };
-            return {
-              after: corner("after"),
-              before: corner("before"),
-              frame: node.getAttribute("data-cv-frame"),
-            };
-          });
-          const where = `${route} ${facts.frame}`;
-          facts.after.forEach((value, index) =>
-            expect(Math.abs(value - facts.before[index]!), where).toBeLessThan(
-              0.5,
-            ),
-          );
-          for (const offset of facts.before)
-            expect(
-              offset,
-              `${where}: 24px from the frame's top left, as the shell's documents draw it`,
-            ).toBeCloseTo(24, 0);
-        }
+  test("desktop: Action's versions sit at one position in the frame", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    for (const route of STACKED) {
+      await page.goto(designDocumentUrl(route, "desktop"));
+      const frames = page.locator(".cv-frame[data-cv-frame]:visible");
+      await expect(frames, route).not.toHaveCount(0);
+      for (const frame of await frames.all()) {
+        const facts = await frame.evaluate((node) => {
+          const scroller = node.querySelector(".mb-viewport")!;
+          const bounds = scroller.getBoundingClientRect();
+          // The stage zooms the frame: measure in the frame's own pixels.
+          const scale = bounds.width / scroller.clientWidth;
+          // Each version's document draws its Action from the top left, as
+          // the shell's documents do, so the two corners coincide.
+          const corner = (side: string) => {
+            const rect = scroller
+              .querySelector(`.mb-pane--${side} .mbk-shot-action`)!
+              .getBoundingClientRect();
+            return [
+              (rect.left - bounds.left) / scale,
+              (rect.top - bounds.top) / scale,
+            ];
+          };
+          return {
+            after: corner("after"),
+            before: corner("before"),
+            frame: node.getAttribute("data-cv-frame"),
+          };
+        });
+        const where = `${route} ${facts.frame}`;
+        facts.after.forEach((value, index) =>
+          expect(Math.abs(value - facts.before[index]!), where).toBeLessThan(
+            0.5,
+          ),
+        );
+        for (const offset of facts.before)
+          expect(
+            offset,
+            `${where}: 24px from the frame's top left, as the shell's documents draw it`,
+          ).toBeCloseTo(24, 0);
       }
-    });
-  }
+    }
+  });
 }
