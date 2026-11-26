@@ -37,8 +37,13 @@ impl Repository for GitRepository {
         ];
         if let Some(root) = root {
             if let Some(entries) = self
-                .presence(commit, &["-r", "-t", "-l"], std::slice::from_ref(root))
-                .and_then(|presence| presence.entries(limits))
+                .presence(
+                    commit,
+                    &["-r", "-t", "-l"],
+                    std::slice::from_ref(root),
+                    limits,
+                )
+                .map(|presence| presence.entries)
             {
                 return Ok(entries);
             }

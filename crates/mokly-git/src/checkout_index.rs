@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::batches::MAX_ARGUMENTS;
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::presence::attribute_paths;
@@ -38,9 +39,9 @@ impl GitRepository {
     }
 
     /// The whole-tree listing of `commit` for its checkout settings. Git prints the size of
-    /// a listed blob only when the object store holds it. So when each blob record has a
-    /// decimal size, the object check of the listed files and their attribute files can
-    /// find nothing missing, and it does not run. Any other size, such as `BAD` for a
+    /// a listed blob only when it can read it, after it follows replacement refs. So when
+    /// each blob record has a decimal size, the read finds each listed object, and the
+    /// object check of the listed files and their attribute files does not run. Any other size, such as `BAD` for a
     /// missing blob, runs the check as `Repository::list` does.
     pub(crate) fn settings_listing(&self, commit: &ObjectId) -> Result<Vec<Entry>> {
         let request = self.tree_request(&[
@@ -88,12 +89,14 @@ impl GitRepository {
         if entries.is_empty() {
             return Ok(false);
         }
-        let paths: Vec<_> = entries.iter().map(|entry| entry.path.clone()).collect();
-        if self
-            .presence(commit, &["-l"], &paths)
-            .is_some_and(|presence| presence.holds(entries))
-        {
-            return Ok(false);
+        if entries.len() <= MAX_ARGUMENTS {
+            let paths: Vec<_> = entries.iter().map(|entry| entry.path.clone()).collect();
+            if self
+                .presence(commit, &["-l"], &paths, Limits::default())
+                .is_some_and(|presence| presence.holds(entries))
+            {
+                return Ok(false);
+            }
         }
         self.fetch_checkout_objects(commit, entries)
     }

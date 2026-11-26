@@ -19,8 +19,8 @@ impl GitRepository {
         limits: Limits,
     ) -> Result<Vec<Entry>> {
         if let Some(entries) = self
-            .presence(commit, &["-l"], paths)
-            .and_then(|presence| presence.entries(limits))
+            .presence(commit, &["-l"], paths, limits)
+            .map(|presence| presence.entries)
         {
             return Ok(entries);
         }

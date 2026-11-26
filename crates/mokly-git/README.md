@@ -81,8 +81,10 @@ Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
 disabled. Without a promisor remote, the preflight is usually one plain sized
 `ls-tree` of the requested paths and their ancestor attribute files: when each
-blob record has a decimal size, every object is present, and the missing-object
-walk does not run. An exact lookup and a listing below a root take their
+blob record has a decimal size, Git can read every object, and the
+missing-object walk does not run. Like the read, the size follows replacement
+refs, so a replaced blob counts as present when its original is missing, which
+the walk alone reports as missing. An exact lookup and a listing below a root take their
 entries from that same listing, so each starts one Git process. The preflight
 takes this listing only when the paths fit one argument batch and no path lies
 below another listed path, so the listing prints each requested record as a
@@ -140,7 +142,8 @@ owns the source identity and the filter rule.
 
 The settings read of `source_key` and `checkout_identity` and a whole-tree
 `Repository::list` list the whole tree with blob sizes. Git prints a size only
-for a blob that the object store holds, and `BAD` for a missing blob. So when
+for a blob that it can read, after it follows replacement refs, and `BAD` for a
+missing blob. So when
 each blob record has a decimal size, the read skips the missing-object
 preflight, because the preflight could find nothing missing. Any other size
 runs the preflight.

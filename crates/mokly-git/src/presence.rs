@@ -11,27 +11,28 @@ use crate::tree::{self, Entry, Limits, Mode};
 
 /// A sized listing of requested paths together with the attribute files of their
 /// ancestors, in which each blob record has a decimal size. Git prints a size only
-/// for a blob that the object store holds, so each listed object is present.
+/// for a blob that it can read, so each listed object is present.
 pub(crate) struct Presence {
-    /// The records of the requested paths, as a listing of those paths alone prints them.
-    requested: Vec<u8>,
-    /// The object of each record of the listing.
-    objects: BTreeSet<ObjectId>,
+    /// The requested records, parsed within the caller's limits, as a listing of
+    /// those paths alone returns them.
+    pub(crate) entries: Vec<Entry>,
+    /// The listed attribute files that no requested path names.
+    attributes: Vec<Entry>,
 }
 
 impl Presence {
-    /// The requested records within `limits`, or `None` when they exceed them, so the
-    /// caller's own listing returns the typed error.
-    pub(crate) fn entries(&self, limits: Limits) -> Option<Vec<Entry>> {
-        tree::parse(&self.requested, limits).ok()
-    }
-
     /// Whether the listing proves each blob of `entries` present.
     pub(crate) fn holds(&self, entries: &[Entry]) -> bool {
+        let listed: BTreeSet<_> = self
+            .entries
+            .iter()
+            .chain(&self.attributes)
+            .map(|entry| &entry.object)
+            .collect();
         entries
             .iter()
             .filter(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
-            .all(|entry| self.objects.contains(&entry.object))
+            .all(|entry| listed.contains(&entry.object))
     }
 }
 
@@ -40,17 +41,18 @@ impl GitRepository {
     /// `ls-tree {flags} -z --full-tree {commit}` process. Returns `None`, so the caller
     /// runs its separate listings and the missing-object walk, when a promisor remote
     /// can fetch, when the paths need more than one argument batch, when a path lies
-    /// below another listed path, when the command or its parse fails, or when a blob
-    /// has no decimal size. The listing then prints each requested record exactly as a
-    /// listing of the requested paths alone does, and it prints each attribute record
-    /// that the walk would check.
+    /// below another listed path, when the command or its parse fails, when the
+    /// requested records exceed `limits`, or when a blob has no decimal size. The
+    /// listing then prints each requested record exactly as a listing of the requested
+    /// paths alone does, and it prints each attribute record that the walk would check.
     pub(crate) fn presence(
         &self,
         commit: &ObjectId,
         flags: &[&str],
         paths: &[RepoPath],
+        limits: Limits,
     ) -> Option<Presence> {
-        if !self.promisor_remotes.is_empty() || paths.is_empty() {
+        if !self.promisor_remotes.is_empty() || paths.is_empty() || paths.len() > MAX_ARGUMENTS {
             return None;
         }
         let requested: BTreeSet<_> = paths.iter().collect();
@@ -59,15 +61,6 @@ impl GitRepository {
             .iter()
             .filter(|path| !requested.contains(path))
             .collect();
-        let nested = paths.iter().any(|path| {
-            paths
-                .iter()
-                .chain(added.iter().copied())
-                .any(|other| other != path && (other.under(path) || path.under(other)))
-        });
-        if nested {
-            return None;
-        }
         let mut arguments = vec!["ls-tree"];
         arguments.extend_from_slice(flags);
         arguments.extend(["-z", "--full-tree", commit.as_str(), "--"]);
@@ -79,7 +72,7 @@ impl GitRepository {
             .collect();
         let mut batches =
             batches::split(&request.args, &listed, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES).ok()?;
-        if batches.len() != 1 {
+        if batches.len() != 1 || nested(paths, &added) {
             return None;
         }
         request.args = batches.pop()?;
@@ -87,16 +80,23 @@ impl GitRepository {
         if !tree::sizes_every_blob(&listing) {
             return None;
         }
-        let objects = tree::parse(&listing, Limits::default())
-            .ok()?
-            .into_iter()
-            .map(|entry| entry.object)
-            .collect();
+        let (requested, attributes) = split_records(&listing, &added)?;
         Some(Presence {
-            requested: requested_records(&listing, &added)?,
-            objects,
+            entries: tree::parse(&requested, limits).ok()?,
+            attributes: tree::parse(&attributes, Limits::default()).ok()?,
         })
     }
+}
+
+/// Whether a path of `paths` lies at or below another path of `paths` or `added`.
+/// The caller bounds both lists to one argument batch first.
+fn nested(paths: &[RepoPath], added: &[&RepoPath]) -> bool {
+    paths.iter().any(|path| {
+        paths
+            .iter()
+            .chain(added.iter().copied())
+            .any(|other| other != path && (other.under(path) || path.under(other)))
+    })
 }
 
 /// The root attribute file and the attribute file of each ancestor directory of `paths`.
@@ -113,13 +113,14 @@ pub(crate) fn attribute_paths(paths: &[RepoPath]) -> Result<BTreeSet<RepoPath>> 
     Ok(attributes)
 }
 
-/// The NUL-terminated records of `listing` that lie at or below no added path.
-/// Returns `None` for a listing that does not end its last record.
-fn requested_records(listing: &[u8], added: &[&RepoPath]) -> Option<Vec<u8>> {
+/// The NUL-terminated records of `listing` that lie at or below no added path, and the
+/// records that do. Returns `None` for a listing that does not end its last record.
+fn split_records(listing: &[u8], added: &[&RepoPath]) -> Option<(Vec<u8>, Vec<u8>)> {
     if listing.last().is_some_and(|byte| *byte != 0) {
         return None;
     }
     let mut requested = Vec::with_capacity(listing.len());
+    let mut attributes = Vec::new();
     for record in listing
         .split(|byte| *byte == 0)
         .filter(|record| !record.is_empty())
@@ -131,10 +132,13 @@ fn requested_records(listing: &[u8], added: &[&RepoPath]) -> Option<Vec<u8>> {
             path.strip_prefix(added)
                 .is_some_and(|rest| rest.is_empty() || rest.starts_with(b"/"))
         });
-        if !extra {
-            requested.extend_from_slice(record);
-            requested.push(0);
-        }
+        let part = if extra {
+            &mut attributes
+        } else {
+            &mut requested
+        };
+        part.extend_from_slice(record);
+        part.push(0);
     }
-    Some(requested)
+    Some((requested, attributes))
 }
