@@ -93,20 +93,7 @@ fn query(repository: &dyn Repository) {
     );
 }
 
-struct Expected {
-    mode: ProcessMode,
-    opens: usize,
-    trees_per_open: usize,
-    plain_per_open: usize,
-}
-
-fn assert_requests(requests: &[Request], expected: Expected) {
-    let Expected {
-        mode,
-        opens,
-        trees_per_open,
-        plain_per_open,
-    } = expected;
+fn assert_requests(requests: &[Request], mode: ProcessMode, opens: usize, trees_per_open: usize) {
     let trees: Vec<_> = requests
         .iter()
         .filter(|request| request.args[2] == "ls-tree")
@@ -118,7 +105,7 @@ fn assert_requests(requests: &[Request], expected: Expected) {
         .filter(|request| request.args[2] != "ls-tree")
         .map(|request| request.process_mode)
         .collect();
-    assert_eq!(plain, vec![ProcessMode::PlainGroup; plain_per_open * opens]);
+    assert_eq!(plain, vec![ProcessMode::PlainGroup; 6 * opens]);
     let configurations: Vec<_> = requests
         .iter()
         .filter(|request| request.args[2] == "config")
@@ -154,17 +141,7 @@ fn tree_reads_keep_plain_groups_without_a_promisor_remote() {
         for _ in 0..2 {
             query(factory.open(Path::new("/repo")).unwrap().as_ref());
         }
-        // The sized whole-tree listing proves its blob present, so neither query
-        // runs an object check, and the listing needs no attribute lookup.
-        assert_requests(
-            &requests.lock().unwrap(),
-            Expected {
-                mode: ProcessMode::PlainGroup,
-                opens: 2,
-                trees_per_open: 3,
-                plain_per_open: 4,
-            },
-        );
+        assert_requests(&requests.lock().unwrap(), ProcessMode::PlainGroup, 2, 4);
     }
 }
 
@@ -188,15 +165,7 @@ fn tree_reads_own_helpers_for_a_promisor_remote() {
         );
         let repository = opened.unwrap();
         query(repository.as_ref());
-        assert_requests(
-            &requests.lock().unwrap(),
-            Expected {
-                mode: ProcessMode::FullTree,
-                opens: 1,
-                trees_per_open: 6,
-                plain_per_open: 6,
-            },
-        );
+        assert_requests(&requests.lock().unwrap(), ProcessMode::FullTree, 1, 6);
     }
 }
 
@@ -225,15 +194,7 @@ fn partial_clone_remote_is_cached_for_tree_reads_and_explicit_fetches() {
         )));
         let repository = factory.open(Path::new("/repo")).unwrap();
         query(repository.as_ref());
-        assert_requests(
-            &requests.lock().unwrap(),
-            Expected {
-                mode: ProcessMode::FullTree,
-                opens: 1,
-                trees_per_open: 6,
-                plain_per_open: 6,
-            },
-        );
+        assert_requests(&requests.lock().unwrap(), ProcessMode::FullTree, 1, 6);
         missing.store(true, Ordering::SeqCst);
         assert_eq!(
             repository

@@ -39,12 +39,7 @@ impl Repository for GitRepository {
             args.push(root.as_str());
         }
         let request = self.tree_request(&args);
-        let listing = self.initial_tree_listing(&request)?;
-        let entries = tree::parse(&listing, limits)?;
-        if root.is_none() && self.proven().is_some() && tree::sizes_every_blob(&listing) {
-            self.keep_present(&entries);
-            return Ok(entries);
-        }
+        let entries = tree::parse(&self.initial_tree_listing(&request)?, limits)?;
         if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
             return tree::parse(&self.runner.run(&request)?.stdout, limits);
         }

@@ -12,7 +12,6 @@ use crate::disk::Disk;
 use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
-use crate::proven::Proven;
 use crate::source_key::CheckoutIdentity;
 use crate::tree::{Entry, Limits, text};
 
@@ -112,8 +111,6 @@ pub(crate) struct GitRepository {
     pub(crate) unavailable: Mutex<BTreeMap<String, String>>,
     /// Files whose own conversion reached its deadline: commit, blob, and path.
     pub(crate) timed_out: Mutex<BTreeSet<(ObjectId, ObjectId, RepoPath)>>,
-    /// Attribute lookups and present objects that this session already proved.
-    pub(crate) proven: Proven,
     pub(crate) directory: PathBuf,
     pub(crate) runner: Arc<dyn Runner>,
     pub(crate) disk: Arc<dyn Disk>,
@@ -130,7 +127,6 @@ impl Repositories for GitRepositories {
             promisor_remotes: Vec::new(),
             unavailable: Mutex::new(BTreeMap::new()),
             timed_out: Mutex::new(BTreeSet::new()),
-            proven: Proven::default(),
             directory: configured.clone(),
             runner: Arc::clone(&self.runner),
             disk: Arc::clone(&self.disk),

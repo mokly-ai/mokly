@@ -17,7 +17,6 @@ fn checkout_identity_preserves_the_existing_unfiltered_source_key() {
         promisor_remotes: Vec::new(),
         unavailable: Mutex::new(BTreeMap::new()),
         timed_out: Mutex::new(BTreeSet::new()),
-        proven: Default::default(),
         directory: "/repo".into(),
         disk: Arc::new(Unimock::new(())),
         runner: Arc::new(Unimock::new((

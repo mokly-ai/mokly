@@ -54,7 +54,9 @@ rest of its context. A timeout or a crash after its retry also fails every
 request of the context that already waits for its turn. The cache keeps a running byte charge, so
 an insert charges one record instead of recounting the cache. A context
 projects and hashes each of its private PostCSS inputs once, and its later
-results reuse those late digests.
+results reuse those late digests. Before it projects them, it hints the
+projections of its modules without a digest at once, so a base tree that has
+no listing yet looks them up in one batch.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency

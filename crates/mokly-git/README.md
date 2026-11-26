@@ -84,29 +84,6 @@ before conversion. Failed fetches name the remote and a recovery command. Tree
 listings retain directory and link modes. Regular files and all metadata nodes
 have independent count bounds.
 
-Without a promisor remote, a repository session keeps what it proved about a
-commit, because a commit's tree never changes and an object of a reachable
-commit stays in the object store:
-
-- The answer of each attribute-file lookup.
-- Each object that a preflight found, or that a listing gave a decimal size
-  for. Git prints a size only for a blob that the store holds, so an exact
-  lookup or an attribute lookup with a size for each blob needs no preflight
-  walk.
-- Each path with nothing below it. An exact lookup runs `ls-tree -t`, so Git
-  also prints each tree that it enters on the way to a requested path. An
-  ancestor that it does not print is missing or is not a directory. A later
-  lookup whose paths all lie below such a path returns no entries without a
-  process, so a PostCSS read inventory that asks for many ignored
-  `node_modules` files starts one command. The lookup leaves the entered trees
-  out of its result, so the result equals the listing without `-t`.
-
-So a stylesheet walk that reads each import alone starts one lookup and one
-conversion for each file. A whole-tree `list` that gives a decimal size for
-each blob skips the preflight, as the settings read does. A repository with a
-promisor remote keeps exact lookups without `-t` and checks each read again, so
-a fetch can restore an object that the store lost.
-
 Byte reads, extraction, and digests share a commit-pinned `cat-file --filters`
 context in the real repository. `--attr-source` selects the base attributes,
 also when the caller exports a different `GIT_ATTR_SOURCE`. Relative smudge
@@ -243,10 +220,6 @@ extraction cleanup after cancellation during a streamed copy.
   bases, changed paths, trees, blobs, and archives.
   [`src/repository_access.rs`](./src/repository_access.rs) implements
   `Repository` for the checkout that `GitRepositories::open` returns.
-- [`src/proven.rs`](./src/proven.rs) defines `Proven`, the attribute lookups,
-  present objects, and empty paths that a session without a promisor remote
-  reuses. [`src/lookup_scope.rs`](./src/lookup_scope.rs) runs the exact
-  lookups of such a session.
 - [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and
   derives the source key and the checkout identity from one hash of the
   checkout settings.

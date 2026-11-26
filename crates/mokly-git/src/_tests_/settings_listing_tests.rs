@@ -48,7 +48,6 @@ fn repository(listing: String, missing: String, checks: Arc<AtomicUsize>) -> Git
         promisor_remotes: Vec::new(),
         unavailable: Mutex::new(BTreeMap::new()),
         timed_out: Mutex::new(BTreeSet::new()),
-        proven: Default::default(),
         directory: "/repo".into(),
         disk: Arc::new(Unimock::new(())),
         runner: Arc::new(runner),

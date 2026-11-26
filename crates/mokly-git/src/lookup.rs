@@ -15,9 +15,6 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        if let Some(proven) = self.proven() {
-            return self.lookup_scoped(proven, commit, paths, limits);
-        }
         let entries = self.lookup_metadata(commit, paths, limits, false, false)?;
         if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
             return self.lookup_metadata(commit, paths, limits, true, false);
@@ -51,11 +48,7 @@ impl GitRepository {
             } else {
                 self.initial_tree_listing(&request)?
             };
-            let parsed = tree::parse(&output, limits)?;
-            if tree::sizes_every_blob(&output) {
-                self.keep_present(&parsed);
-            }
-            entries.extend(parsed);
+            entries.extend(tree::parse(&output, limits)?);
         }
         Ok(entries)
     }
