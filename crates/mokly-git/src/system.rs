@@ -80,6 +80,8 @@ impl SystemRunner {
         let group = match self.groups.attach(child) {
             Ok(tree) => Arc::new(tree),
             Err(mut failure) => {
+                // No guard exists, so stop the whole tree before the reap.
+                let _ = self.groups.kill_unattached(&failure.child);
                 let _ = failure.child.kill();
                 let _ = failure.child.wait();
                 return Err(Error::Platform {

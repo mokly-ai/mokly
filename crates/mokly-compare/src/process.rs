@@ -74,6 +74,8 @@ impl Spawner for SystemSpawner {
             Ok(tree) => Arc::new(tree),
             Err(failure) => {
                 let AttachFailure { mut child, source } = failure;
+                // No guard exists, so stop the whole tree before the reap.
+                let _ = self.groups.kill_unattached(&child);
                 let _ = child.kill();
                 thread::spawn(move || child.wait());
                 return Err(InternalError::Platform { source }.into());
