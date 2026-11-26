@@ -62,6 +62,10 @@
   - Commit `89760791f` of #501, on 2026-11-24, added separate bundled and Node-loaded paths when it added the recovery of workspace sources. It also protected configured modules through package imports. Its test used the same written path in the export and in the configuration. So the test passed with the defect of a linked configured module.
 - **Related:**
   - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md): shared wider fix. Its option B adds the evidence of a restored page-render require to this record.
+  - [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md): shared fix. Its option C builds its record of run-time loads into this record.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md): shared wider fix. Its option C records the files that the restored require loads, which this record can hold for the reuse evidence.
+  - [restored-require-module-cache.md](./restored-require-module-cache.md): same code. `sideRequire` reaches `resolveRequire` and `retryRequire`, and its option B changes how the restored require loads the files that they select.
+  - [ignored-module-path-spelling.md](./ignored-module-path-spelling.md): same code. Its option D turns the written path that this record gives the `ignored-module` warning into the Git spelling of that path.
   - [workspace-bundle-export-conditions.md](./workspace-bundle-export-conditions.md): work that waits. For a failed lookup, the record needs the active export target. Option F of that item selects it by a walk of the matched export key. Do that work first, or with the record.
   - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code. Its relative probes for synchronous requires give imports that the record must describe.
   - [postcss-relative-require-retry.md](./postcss-relative-require-retry.md): same code. The import form of the record also tells `resolveRequire` that a name is relative.

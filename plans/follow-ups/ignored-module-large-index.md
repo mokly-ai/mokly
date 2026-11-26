@@ -1,0 +1,55 @@
+# A large index hides ignored-module warnings
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from finding 192 of round 3 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** The index listing of `GitRepository::classify_working_paths` at `crates/mokly-git/src/working_path_status.rs:25` to line 34. `tree_request` at `crates/mokly-git/src/repository_command.rs:39`, which passes the bound at line 45. `DEFAULT_OUTPUT_LIMIT` at `crates/mokly-git/src/command.rs:15`. `capture` at `crates/mokly-git/src/pipes.rs:10`, with the bound at line 17 and the stop at lines 19 to 22. The `Runner` trait at `crates/mokly-git/src/command.rs:55`. The failure arm of `warnings` at `crates/mokly-compare/src/ignored_modules.rs:66` to line 72.
+- **Reason:** Only an index of about one million records meets the bound, and the fix needs a new streamed form in the `Runner` trait.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and a later base cannot load.
+  - **Git index:** Git's list of the files of the next commit, with the mode of each file, in `.git/index`.
+  - **Gitlink:** An index record with the mode `160000`. It holds the commit of a submodule, not a file.
+  - **Sidecar:** The Node process that runs the JavaScript, the PostCSS module, and the renderer of a catalogue for Mokly.
+- **Background:**
+  - On 2026-11-27 Cal chose one shared API in `crates/mokly-git` that gives the exact Git status of each loaded path. The `ignored-module` warning uses it. `GitRepository::classify_working_paths` in `crates/mokly-git/src/working_path_status.rs` implements it.
+  - The API needs the tracked paths and the gitlinks. Lines 25 to 34 read the whole index with `git ls-files -z --cached --format=%(objectmode)%x09%(path)`. They keep only the records that match a request, and the gitlinks.
+  - Each record holds a six-byte mode, a tab, the path, and a NUL byte.
+  - The Git runner keeps at most `DEFAULT_OUTPUT_LIMIT` of each listing, which is 64 MiB or 67,108,864 bytes. `tree_request` sets this bound. Above it, `capture` stops the process group of Git and returns `Error::OutputLimit`.
+  - The `Runner` trait already streams standard output into a writer, in `copy` at line 63 and `stream_cancellable_with_environment_timeout` at line 76 of `crates/mokly-git/src/command.rs`. Both bound every byte that passes, not only the bytes that the caller keeps. `RunnerMock`, which the trait declares at line 54, serves each method in tests.
+  - When the API fails with an error other than a cancel, `warnings` writes a debug log line and returns no warnings. The "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md` does not say what happens when Git cannot answer.
+  - A catalogue that needs the sidecar meets an earlier bound. Its base preparation lists the whole commit through `SourceInputs::read` at `crates/mokly-compare/src/inputs.rs:168`. It stops above 100,000 regular files, the `Limits` default at `crates/mokly-git/src/tree.rs:26`.
+  - So only a catalogue that needs no sidecar meets this failure with a base that works. `needs_sidecar` at `crates/mokly-cli/src/changes_base_sources.rs:125` gives the rule. A PostCSS module, a renderer, or a module or stories file needs the sidecar.
+- **Problem:**
+  - A probe on 2026-11-27 with Git 2.43.0 made an index of one million records with 60-byte paths. The listing with modes took 68,000,000 bytes, which is above the bound. The same index gave 61,000,000 bytes in a listing of names only.
+  - At 60-byte paths, the bound falls at about 987,000 records. Above it, the API fails, so the build loses every `ignored-module` warning, also for one ignored import.
+- **Impact if no action:** Unrelated tracked files can hide every `ignored-module` warning. A strict build then passes, and after the merge a later base cannot load the file, so Changes becomes unavailable.
+- **Root question:** How does the author learn of each loaded file that a later base cannot load, whatever the size of the Git index?
+- **Options:**
+  - **A.** Read the listing of names only first. Then ask for the modes of only the indexed paths and folders that the check needs. This restores the earlier range of about 1.1 million records of 60-byte paths, and it adds a Git call. Effort: Medium.
+  - **B.** Parse the index records while Git writes them. Keep only the records that match a request or a folder above a request. Git still reads the whole index. Effort: Medium.
+    - Add a streamed form to the `Runner` trait that bounds only the kept records, and serve it in `RunnerMock`.
+    - Keep the process group that stops Git on a failure, and bound the parser.
+  - **C.** Use a keyed index reader that looks up the requested files and the gitlinks above them. It must read each index format that Git writes, also sparse and split indexes. Effort: Large.
+  - **D.** Pass the requested paths to `git ls-files --cached` as literal pathspecs, in batches, so that Git lists only the records that they name. Effort: Medium.
+    - A probe with Git 2.43.0 showed two limits. A folder pathspec lists each record below the folder. A path inside a gitlink lists no record.
+    - So D must find the gitlinks above a request without a pathspec for each parent folder. The checkout folders that the disk walk finds can give them.
+  - **E.** When the status read fails for a reason other than a cancel, give one configuration warning that names the failure. `--strict` counts it. Effort: Small.
+    - No requirement covers this case, and the warning can fail a strict build, so only Cal can approve E.
+- **Left out:**
+  - Raise the output bound. A larger index then exceeds the new bound, and Mokly keeps more unrelated output in memory.
+  - Fail the build when the status read fails. The read is recoverable, and the repository rules prefer a warning that lets the build continue, which E gives.
+- **Wider fix:** B. The kept output then depends only on the requested paths, so no unrelated record can use up the bound. E adds the detection of every other failed status read, but it is blocked, because it adds a warning that `--strict` counts.
+- **Previous examples:** Commit `429d04c4d`, #553 of 2026-11-26, keeps the exact lookups of a base read to the requested paths, so that they never list the whole tree.
+- **Related:**
+  - [ignored-module-path-spelling.md](./ignored-module-path-spelling.md): same code, and this work waits for it. B must compare the index records with the path key of its option D, which is the Git spelling of each request. Apply that item first, or both in one branch.
+  - [ignored-module-path-spelling.md](./ignored-module-path-spelling.md) also has a shared wider fix. Its option E, an unresolved status, is the same kind of detection as E here. Cal can answer both together.
+  - [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md): same fixtures. A test of this fix must use fixture Git settings, so that the settings of the developer cannot change the result.
+  - [git-lookup-batch-hides-directory-record.md](./git-lookup-batch-hides-directory-record.md): same Git behaviour. A folder in a request makes Git print the records below it, which limits D here. Its option B keeps only the requested records, as B here does.
+  - [kept-base-freshness-edit-cost.md](./kept-base-freshness-edit-cost.md): same bound. `GitRepository::candidates` at `crates/mokly-git/src/access.rs:21` reads the whole listing `ls-files --cached --others --exclude-standard` under the same 64 MiB bound, so a large repository can make that check fail too. It keeps each record that is not a folder, so B does not help it.
+  - [input-failures-discard-warnings.md](./input-failures-discard-warnings.md): same impact. A failure there also loses the collected `ignored-module` warnings.
+- **Recommendation:** B. It keeps no unrelated index record, it uses one Git process for any number of paths, and it leaves the index formats to Git. E best protects the author, but only Cal can approve it.
+- **Action:** fix after merge, apply B, because only an index of about one million records meets the bound, and B needs a new `Runner` form.

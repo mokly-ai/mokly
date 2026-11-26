@@ -295,6 +295,12 @@
   `plans/follow-ups/link-target-kind-evidence.md` change the same capture
   code. They own changes after a completed capture, and this item owns
   changes during a compile.
+  [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md)
+  shares `reuse` in `compiled.ts`, and
+  [restored-require-module-cache.md](./restored-require-module-cache.md)
+  shares that file through `restore`. Both have the same stale-output
+  symptom. They own the run-time loads of a bundle, and this item owns
+  changes during a compile.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

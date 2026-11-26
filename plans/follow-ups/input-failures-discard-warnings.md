@@ -33,5 +33,6 @@
 - **Left out:** Printing each warning at once during the comparison. It breaks the current warning order and the cancellation rules.
 - **Wider fix:** B. A typed attempt result cannot drop the diagnostics of the attempt when the error category changes.
 - **Previous examples:** `BuildError::Comparison` and `BuildError::Rendering` already carry their warnings. Serve keeps the warnings of each attempt in `AttemptWarnings`.
+- **Related:** [ignored-module-large-index.md](./ignored-module-large-index.md): the same impact. A failed Git status read there also loses the `ignored-module` warnings. Its option E reports that failure, and B here keeps the warnings that a later failure drops.
 - **Recommendation:** B, changed from A by the finding check. It closes the two new exits and the three older exits with one reporting path.
 - **Action:** fix after merge, apply B, because B also closes the three older exits on `origin/main`, and the next run prints the warning.

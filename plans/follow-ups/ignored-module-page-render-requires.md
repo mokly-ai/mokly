@@ -22,6 +22,11 @@
 - **Left out:** a warning for every file that the sidecar process observes, because it also counts Mokly's own runtime files and template reads.
 - **Wider fix:** B, because one record then carries the evidence of every loader.
 - **Previous examples:** findings 2 and 80 of the same review, where PostCSS loads first escaped the warning.
+- **Related:**
+  - [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md): shared fix. Its option B records each repository file that a run-time require loads, and option A here can use the same record. Its option C and option B here both build into the record of `workspace-import-resolution-record.md`.
+  - [restored-require-module-cache.md](./restored-require-module-cache.md): work that waits. Node runs no load for a cached module, so a record of loads misses the files that a cached module loaded before. The record needs the fresh loads of that item.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md): shared fix. Its option C is the same record of run-time loads as option A here, and it gives the reuse checks a workspace build that only a run-time require loads.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): shared wider fix. Option B here builds the require evidence into its record.
 - **Recommendation:** A. It closes the gap with the existing render result and reuse record.
 - **Action:** fix after merge, apply A, because the evidence must pass through render reuse, which this change does not touch.
 - **Done when:** a page whose render requires an ignored repository file gives one `ignored-module` warning when Changes runs, also when Serve reuses the render. Remove the page-render require gap from the status line in `docs/protocol/mokly-comparison-packages.md`.
