@@ -8,7 +8,9 @@ use std::process::{Child, Command};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use mokly_platform::error::Result;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{
+    AttachFailure, ProcessGroup, ProcessGroups, ProcessTree, SystemProcessGroups,
+};
 
 /// The state of the root process when its guard sent one signal.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -54,16 +56,19 @@ impl ProcessGroups for Watched {
         SystemProcessGroups.configure_plain(command)
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
+        let pid = child.id();
         self.roots
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .push(child.id());
-        Ok(Box::new(WatchedGroup {
-            pid: child.id(),
-            inner: SystemProcessGroups.attach(child)?,
+            .push(pid);
+        let (child, inner) = SystemProcessGroups.attach(child)?.into_parts();
+        let group = WatchedGroup {
+            pid,
+            inner,
             states: Arc::clone(&self.states),
-        }))
+        };
+        Ok(ProcessTree::new(child, Box::new(group)))
     }
 
     fn kill_unattached(&self, child: &Child) -> Result<()> {

@@ -3262,6 +3262,7 @@ name = "mokly-platform"
 version = "0.14.0"
 dependencies = [
  "libc",
+ "mokly-platform",
  "tempfile",
  "thiserror",
  "tracing",

@@ -2,7 +2,7 @@
 
 use std::fs;
 use std::io;
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex, mpsc};
 
@@ -21,7 +21,7 @@ use crate::process_environment;
 use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
-use crate::process_reaper::Reaper;
+use crate::process_reaper::{Reaper, Root};
 use crate::process_startup::StartupTiming;
 use crate::process_threads::{PipeThreads, SystemPipeThreads};
 use crate::process_transport::{Deadlines, PipeTransport};
@@ -118,30 +118,42 @@ impl NodeFactory {
     fn spawn_owned(
         &self,
         launch: &Launch,
-        mut child: Reaper,
+        mut process: Child,
         startup: Arc<StartupTiming>,
     ) -> Result<Spawned> {
-        let Some(process) = child.child() else {
-            return Err(owned());
-        };
-        let group = match self.groups.attach(process) {
-            Ok(group) => group,
-            Err(source) => return Err(InternalError::Platform { source }.into()),
-        };
         let pid = process.id();
-        let stdin = process.stdin.take().expect("stdin is configured as a pipe");
-        let stdout = process
-            .stdout
-            .take()
-            .expect("stdout is configured as a pipe");
-        let stderr = process
-            .stderr
-            .take()
-            .expect("stderr is configured as a pipe");
+        let pipes = (
+            process.stdin.take(),
+            process.stdout.take(),
+            process.stderr.take(),
+        );
         // The tree reaps the child only when its last reference drops, after
         // the final signal, so no signal can reach a reused group number.
-        let Some(group) = child.own(group) else {
-            return Err(owned());
+        let (mut child, group) = match self.groups.attach(process) {
+            Ok(tree) => {
+                let tree = Arc::new(tree);
+                let root = Root::Tree(Arc::clone(&tree));
+                let groups = Arc::clone(&self.groups);
+                (Reaper::new(root, Arc::clone(&startup), groups), tree)
+            }
+            Err(failure) => {
+                // Its drop stops the unattached tree and reaps the child.
+                let _child = Reaper::new(
+                    Root::Child(failure.child),
+                    Arc::clone(&startup),
+                    Arc::clone(&self.groups),
+                );
+                return Err(InternalError::Platform {
+                    source: failure.source,
+                }
+                .into());
+            }
+        };
+        let (Some(stdin), Some(stdout), Some(stderr)) = pipes else {
+            return Err(InternalError::Io {
+                source: io::Error::other("the sidecar pipes are missing"),
+            }
+            .into());
         };
         let memory = Arc::from(self.memory.monitor(pid));
         let discover_memory = Arc::new(AtomicBool::new(false));
@@ -231,14 +243,6 @@ impl NodeFactory {
     }
 }
 
-/// Each spawn creates its own child, so a second owner is a broken invariant.
-fn owned() -> Error {
-    InternalError::Io {
-        source: io::Error::other("the sidecar child already has a process tree"),
-    }
-    .into()
-}
-
 impl WorkerFactory for NodeFactory {
     fn spawn(&self, launch: &Launch) -> std::result::Result<Spawned, SpawnFailure> {
         let command = match self.command(launch) {
@@ -247,7 +251,7 @@ impl WorkerFactory for NodeFactory {
         };
         let startup = Arc::new(StartupTiming::default());
         let child = match self.parent.spawn(command) {
-            Ok(child) => Reaper::new(child, Arc::clone(&startup), Arc::clone(&self.groups)),
+            Ok(child) => child,
             Err(_) => {
                 return Err(SpawnFailure::NotStarted(Error::Unavailable {
                     part: launch.node.display().to_string(),

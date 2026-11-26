@@ -14,7 +14,9 @@ use std::time::Instant;
 use mokly_git::control::{Clock, SystemClock, Token};
 use mokly_git::system::SystemRunner;
 use mokly_platform::error::Result;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{
+    AttachFailure, ProcessGroup, ProcessGroups, ProcessTree, SystemProcessGroups,
+};
 
 const HANG_GUARD: Duration = Duration::from_secs(10);
 
@@ -157,11 +159,13 @@ impl ProcessGroups for TrackedGroups {
         SystemProcessGroups.configure_plain(command)
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
-        let group: Arc<dyn ProcessGroup> = Arc::from(SystemProcessGroups.attach(child)?);
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
+        let pid = child.id();
+        let (child, group) = SystemProcessGroups.attach(child)?.into_parts();
+        let group: Arc<dyn ProcessGroup> = Arc::from(group);
         *self.group.lock().unwrap() = Some(group.clone());
-        self.pid.store(child.id(), Ordering::Release);
-        Ok(Box::new(SharedGroup(group)))
+        self.pid.store(pid, Ordering::Release);
+        Ok(ProcessTree::new(child, Box::new(SharedGroup(group))))
     }
 
     fn kill_unattached(&self, child: &Child) -> Result<()> {

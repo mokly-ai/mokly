@@ -2,7 +2,7 @@
 
 use std::process::{Child, Command};
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 #[cfg(unix)]
 use crate::unix;
 #[cfg(windows)]
@@ -27,12 +27,25 @@ pub trait ProcessGroups: Send + Sync {
     fn configure(&self, command: &mut Command) -> Result<()>;
     /// Configure a helper-free child in its own group without a Unix exec hook.
     fn configure_plain(&self, command: &mut Command) -> Result<()>;
-    /// Acquire the process-tree guard immediately after spawn. Give the child
-    /// and the guard to [`ProcessTree`], which reaps the child only after the
-    /// guard's last signal.
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>>;
+    /// Take the child immediately after spawn and acquire its tree guard. The
+    /// returned [`ProcessTree`] owns the child and reaps it only after the
+    /// guard's last signal, so no caller can reap the root early.
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure>;
     /// Stop a configured child's tree before its first reap when attachment fails.
     fn kill_unattached(&self, child: &Child) -> Result<()>;
+}
+
+/// A failed attachment, with the child that it gives back. No guard exists, so
+/// the caller stops the tree with [`ProcessGroups::kill_unattached`] and then
+/// reaps the child itself.
+#[derive(Debug, thiserror::Error)]
+#[error("[platform] could not attach the process tree")]
+pub struct AttachFailure {
+    /// The unreaped child of the failed attachment.
+    pub child: Child,
+    /// The cause of the failure.
+    #[source]
+    pub source: Error,
 }
 
 /// Host implementation: Unix process groups or Windows kill-on-close jobs.
@@ -55,11 +68,15 @@ impl ProcessGroups for SystemProcessGroups {
         Ok(())
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
         #[cfg(unix)]
-        return unix::attach(child);
+        let group = unix::attach(&child);
         #[cfg(windows)]
-        return windows::attach(child);
+        let group = windows::attach(&child);
+        match group {
+            Ok(group) => Ok(ProcessTree::new(child, group)),
+            Err(source) => Err(AttachFailure { child, source }),
+        }
     }
 
     fn kill_unattached(&self, child: &Child) -> Result<()> {

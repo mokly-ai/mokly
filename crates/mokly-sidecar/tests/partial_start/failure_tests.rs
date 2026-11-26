@@ -6,7 +6,8 @@ use std::sync::Arc;
 
 use mokly_platform::error;
 use mokly_platform::processes::{
-    ProcessGroup, ProcessGroupMock, ProcessGroups, ProcessGroupsMock, SystemProcessGroups,
+    AttachFailure, ProcessGroup, ProcessGroupMock, ProcessGroups, ProcessGroupsMock, ProcessTree,
+    SystemProcessGroups,
 };
 use mokly_sidecar::error::{Error, InternalError};
 use mokly_sidecar::process_clock::SystemClock;
@@ -36,8 +37,11 @@ fn attachment_failure_stops_and_reaps_the_created_tree() {
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, child| {
                 ready.ready(child.id());
-                Err(error::Error::Locked {
-                    path: "injected attachment failure".into(),
+                Err(AttachFailure {
+                    child,
+                    source: error::Error::Locked {
+                        path: "injected attachment failure".into(),
+                    },
                 })
             })),
         ProcessGroupsMock::kill_unattached
@@ -69,16 +73,17 @@ fn rejected_completion_thread_stops_and_reaps_the_created_tree() {
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, child| {
                 ready.ready(child.id());
-                let group: Arc<dyn ProcessGroup> = Arc::from(SystemProcessGroups.attach(child)?);
-                Ok(Box::new(Unimock::new(
-                    ProcessGroupMock::kill
-                        .some_call(matching!())
-                        .answers_arc(Arc::new(move |_| {
+                let (child, group) = SystemProcessGroups.attach(child)?.into_parts();
+                let group: Arc<dyn ProcessGroup> = Arc::from(group);
+                let guard =
+                    Unimock::new(ProcessGroupMock::kill.some_call(matching!()).answers_arc(
+                        Arc::new(move |_| {
                             let result = group.kill();
                             println!("attached tree kill: {result:?}");
                             result
-                        })),
-                )))
+                        }),
+                    ));
+                Ok(ProcessTree::new(child, Box::new(guard)))
             })),
     ));
     let trace = Trace::default();
@@ -108,13 +113,13 @@ fn partial_pipe_failure_keeps_the_startup_error_when_tree_kill_fails() {
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, child| {
                 ready.ready(child.id());
-                Ok(Box::new(Unimock::new(
-                    ProcessGroupMock::kill.some_call(matching!()).answers(&|_| {
+                let guard =
+                    Unimock::new(ProcessGroupMock::kill.some_call(matching!()).answers(&|_| {
                         Err(error::Error::Locked {
                             path: "injected tree kill failure".into(),
                         })
-                    }),
-                )))
+                    }));
+                Ok(ProcessTree::new(child, Box::new(guard)))
             })),
         ProcessGroupsMock::kill_unattached
             .some_call(matching!(_))

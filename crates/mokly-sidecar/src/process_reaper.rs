@@ -5,7 +5,7 @@ use std::process::Child;
 use std::sync::Arc;
 
 use mokly_platform::error;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree};
+use mokly_platform::processes::{ProcessGroups, ProcessTree};
 
 use crate::process_startup::StartupTiming;
 use crate::workers::WorkerControl;
@@ -16,7 +16,7 @@ pub(super) trait Reap {
     fn wait(&mut self) -> io::Result<()>;
 }
 
-/// The direct child before attachment, then the tree that owns its reap.
+/// The direct child of a failed attachment, or the tree that owns its reap.
 pub(super) enum Root {
     Child(Child),
     Tree(Arc<ProcessTree>),
@@ -61,12 +61,12 @@ struct Startup {
 
 impl Reaper {
     pub(super) fn new(
-        child: Child,
+        root: Root,
         timing: Arc<StartupTiming>,
         groups: Arc<dyn ProcessGroups>,
     ) -> Self {
         Self {
-            root: Some(Root::Child(child)),
+            root: Some(root),
             startup: Some(Startup {
                 timing,
                 groups,
@@ -83,28 +83,6 @@ impl Reaper {
 
     pub(super) fn started(&mut self) {
         self.startup = None;
-    }
-
-    /// The direct child while it is not attached yet.
-    pub(super) fn child(&mut self) -> Option<&mut Child> {
-        match &mut self.root {
-            Some(Root::Child(child)) => Some(child),
-            _ => None,
-        }
-    }
-
-    /// Hand the direct child and its guard to one tree, and return it.
-    pub(super) fn own(&mut self, group: Box<dyn ProcessGroup>) -> Option<Arc<ProcessTree>> {
-        let child = match self.root.take() {
-            Some(Root::Child(child)) => child,
-            root => {
-                self.root = root;
-                return None;
-            }
-        };
-        let tree = Arc::new(ProcessTree::new(child, group));
-        self.root = Some(Root::Tree(Arc::clone(&tree)));
-        Some(tree)
     }
 
     pub(super) fn wait(&mut self) {

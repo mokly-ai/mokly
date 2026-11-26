@@ -7,7 +7,7 @@ use mokly_git::command::{Request, Runner};
 use mokly_git::control::{SystemClock, Token};
 use mokly_git::system::SystemRunner;
 use mokly_platform::error::Result;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{AttachFailure, ProcessGroups, ProcessTree, SystemProcessGroups};
 
 struct CapturingGroups {
     inner: Arc<dyn ProcessGroups>,
@@ -43,7 +43,7 @@ impl ProcessGroups for CapturingGroups {
         self.inner.configure(command)
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
         self.inner.attach(child)
     }
 

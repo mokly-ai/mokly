@@ -13,8 +13,9 @@ pub(crate) fn assert_job_close_kills_child(groups: &dyn ProcessGroups, mut comma
     command.stdin(Stdio::piped()).stdout(Stdio::piped());
     let (mut child, mut reader) = {
         groups.configure(&mut command).unwrap();
-        let mut child = command.spawn().unwrap();
-        let _group = groups.attach(&child).unwrap();
+        let child = command.spawn().unwrap();
+        // The guard must close while the test still owns the child.
+        let (mut child, _group) = groups.attach(child).unwrap().into_parts();
         let mut reader = BufReader::new(child.stdout.take().unwrap());
         let mut ready = String::new();
         reader.read_line(&mut ready).unwrap();

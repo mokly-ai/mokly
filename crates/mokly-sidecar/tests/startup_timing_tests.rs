@@ -4,7 +4,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_platform::error;
-use mokly_platform::processes::{ProcessGroups, ProcessGroupsMock, SystemProcessGroups};
+use mokly_platform::processes::{
+    AttachFailure, ProcessGroups, ProcessGroupsMock, SystemProcessGroups,
+};
 use mokly_sidecar::error::{Error, InternalError};
 use mokly_sidecar::pool_options::Launch;
 use mokly_sidecar::process_clock::SystemClock;
@@ -67,9 +69,12 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
             .returns(Ok(())),
         ProcessGroupsMock::attach
             .next_call(matching!(_))
-            .answers(&|_, _| {
-                Err(error::Error::Locked {
-                    path: "private-root".into(),
+            .answers(&|_, child| {
+                Err(AttachFailure {
+                    child,
+                    source: error::Error::Locked {
+                        path: "private-root".into(),
+                    },
                 })
             }),
         ProcessGroupsMock::kill_unattached
