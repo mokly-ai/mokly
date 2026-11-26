@@ -45,6 +45,16 @@ On 2026-11-25 Cal answered the four decisions below:
 - Decision 4, C: the base failure message names the override, and a warning
   reports each file that the head loads and Git ignores.
 
+On 2026-11-27 Cal answered review finding 82, Git's file list misclassifies
+nested paths, with option C: a shared API in `mokly-git` gives the exact Git
+status of each path, and the `ignored-module` warning uses it. The warning then
+covers each loaded file that no commit can hold, and a file in a nested
+repository gets a message with its true cause. Rejected: keeping Git's folder
+entries in the parent-folder guess (A), asking Git about exact paths under the
+"ignored only" rule (B), which drops the only warning for a nested checkout
+import, and the same rule change without a shared API (D). Milestone 9 applies
+it.
+
 This plan does not change the detection rule outside the override, except that
 JavaScript now matches the detected layout against the declared export target,
 as CSS already did (design call of 2026-11-26). It does not build the base. The "Mokly base prepare command" workspace plans that
@@ -314,6 +324,44 @@ Depends on: 6
       for the code that this change adds. The READMEs of `mokly-compare`,
       `mokly-sidecar`, `mokly-render`, `mokly-graph`, `mokly-cli` and
       `mokly-source-interface` also name their new entry points.
+
+## Milestone 9: Exact Git path status for the ignored-module warning
+
+Depends on: 6
+
+Apply Cal's answer of 2026-11-27 to review finding 82. The warning asks one
+question: can a later base load this file? A later base renders only from the
+files that a commit holds.
+
+| File that the head loads        | Warning                                  |
+| ------------------------------- | ---------------------------------------- |
+| Tracked                         | No                                       |
+| New and not ignored             | No                                       |
+| Ignored                         | Yes, "is ignored by Git"                 |
+| In an unignored nested checkout | Yes, with the nested repository as cause |
+| In a tracked submodule          | Yes, with the submodule as cause         |
+
+- [ ] Update the Ignored Modules section of
+      `docs/protocol/mokly-comparison-packages.md`, the `ignored-module` row of
+      `docs/protocol/mokly-build-warnings.md`, and the warning sentence of
+      `docs/guides/authoring/config.md`: the rule of the table and the exact
+      message of each cause.
+- [ ] Add a shared API to `crates/mokly-git` that returns the exact Git status
+      of each path of a batch: tracked, untracked and not ignored, ignored,
+      inside a nested repository, or inside a submodule, with the repository
+      folder for the last two. Update `crates/mokly-git/README.md`.
+- [ ] Use the API in `crates/mokly-compare/src/ignored_modules.rs` and remove
+      the parent-folder guess of `working_inputs::ignored_paths`. Give a file
+      in a nested repository its own message without the `sourcePackages`
+      hint. Update `crates/mokly-compare/README.md`.
+- [ ] Test each row of the table at the API level and at the CLI level, and
+      the stale index case of finding 82. Run each new test that starts a
+      process 10 times.
+- [ ] Keep `ModulePaths.workspaceSource` and `WorkspaceSources.source` usable
+      from another caller that passes a bare import name. The Storybook
+      branch calls them from its Vite adapter after this branch merges.
+- [ ] Run the complete gate, commit, push, and review the change with the
+      `implementation-review` skill. Cal approved this fix round.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
