@@ -11,7 +11,7 @@ use mokly_graph::write_activity::{WriteActivity, WriteReadiness};
 use mokly_model::material::digest;
 
 use crate::render_identity::NativeIdentity;
-use crate::render_pending::{Shared, StoreObserver, StoreWarning, TraceStoreObserver};
+use crate::render_pending::{Shared, StoreObserver, StoreWarning};
 use crate::render_store::DocumentBackend;
 use crate::render_writer::{self, DocumentWriter, WriterLimits};
 
@@ -42,14 +42,6 @@ impl DocumentWriter {
     /// Bind a non-owning current-publication query after Serve creates its state.
     pub fn bind_readiness(&self, readiness: Arc<dyn WriteReadiness>) {
         self.shared.admission.bind(readiness);
-    }
-    /// Start one writer without using a render worker or a sidecar.
-    pub fn new(
-        backend: Arc<dyn DocumentBackend>,
-        cache: Arc<dyn RenderCache>,
-        limits: WriterLimits,
-    ) -> Self {
-        Self::observed(backend, cache, limits, Arc::new(TraceStoreObserver))
     }
 
     /// Compose terminal diagnostics at the command boundary before starting the writer.

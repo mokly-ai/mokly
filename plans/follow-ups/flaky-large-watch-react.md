@@ -10,8 +10,9 @@
   failed, called by `scripts/large/watch.ts:45` for ready Changes.
 - **Reason:** On 2026-11-03 the user chose option E, the reuse of compiled
   JavaScript across the edits, and asked for it in a later branch. On
-  2026-11-25, measurements showed that the React journey now takes 15 to 41
-  seconds, so the premise of E is gone and the next step needs the user.
+  2026-11-25 and 2026-11-26, measurements showed that the React journey
+  takes 15 to 24 seconds in CI and 54 to 102 seconds on two local CPUs, so
+  the premise of E needs a new look and the next step needs the user.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -68,20 +69,36 @@
       line of the passed React test, in one Playwright worker.
     - No sample came from the remote complete gate on Blacksmith Testbox
       machines, where the failure of 2026-10-26 happened.
-    - Local runs: on Linux, at branch commit `c256da97b`, which equals `main`
-      at `1f2f00024` outside two Rust test files. They used Node 24.22.1 and
-      one Playwright worker, after `npm run build`, with the command
-      `taskset -c 0,1 node scripts/verification/browser-developer.mjs tests/browser/large_watch.spec.ts`.
-      - Pinned to two CPUs, the html test passed in 13.7 seconds and the
-        React test in 28.0 seconds, as Playwright reported.
-      - On the same two CPUs, beside one busy loop on each CPU, the React
-        test passed in 41.0 seconds. In October, that load pushed the
-        journey past 300 seconds.
-    - The 300,000 ms guard allows more than seven times the slowest measured
-      duration. So these runs meet the three-times rule without the
-      exception, and E has no measured timeout left to prevent.
+    - Local runs on one Linux machine with 4 CPUs, Node 24.22.1, and one
+      Playwright worker, after `npm run build`. Each run used
+      `taskset -c 0,1 node scripts/verification/browser-developer.mjs tests/browser/large_watch.spec.ts`,
+      with `-g react` for the React test alone. `taskset` pins only the test
+      processes, so background processes of the machine could use the same
+      CPUs. Playwright reported each duration.
+      - First set, on 2026-11-25: `main` at `1f2f00024` plus a change to the
+        render document writer of `mokly-compare`, which added one counter and
+        one condition variable wake each time the writer waited. Pinned to two
+        CPUs, the html test passed in 13.7 seconds and the React test in 28.0
+        seconds. On the same two CPUs, beside one busy loop on each CPU, the
+        React test passed in 41.0 seconds.
+      - Second set, on 2026-11-26: `main` at `34ac2acef`, with no change.
+        Pinned to two CPUs, the html test passed in 24.4 seconds, and the React
+        test in 56.2 and 54.0 seconds in two runs. Beside one busy loop on each
+        CPU, the React test passed in 1.7 and 1.5 minutes, so about 90 to 102
+        seconds.
+      - The cause of the difference between the two sets is not known. One
+        possible cause, not confirmed: the first set reused compiled bundles
+        from the bundle disk cache, and the rebuild of the second set changed
+        the native binary.
+      - In October, one busy process per CPU pushed the journey past 300
+        seconds.
+    - The 300,000 ms guard allows about 12 times the slowest CI duration, about
+      5.3 times the slowest two-CPU duration alone, and about 2.9 times the
+      slowest two-CPU duration under load. So the typical durations meet the
+      three-times rule. Under one busy loop per CPU, the margin is about three
+      times.
     - These passes do not show the cause of the earlier timeouts, which
-      stays open.
+      stays open. No run used the remote complete gate.
     - The measurements did not count the compilations of the journey.
 - **Problem:**
   - On 2026-10-26, remote complete gate run `20261026T221539Z-992801`
@@ -98,15 +115,17 @@
     `docs/protocol/ci-test-timing.md:31` accepts rare timeouts from that
     cause. The waiting step does not prove the cause or exclude a lost
     watch event.
-- **Impact if no action:** The protocol keeps an exception that the test
-  no longer needs, and the item keeps a Large compile cache as planned work
-  that no measured timeout justifies.
+- **Impact if no action:** The protocol keeps an exception that the typical
+  durations no longer need, and the item keeps a Large compile cache as
+  planned work that no measured timeout shows.
 - **Root question:** What work should follow, now that the React journey
-  takes 15 to 41 seconds against its 300-second guard?
+  takes 15 to 24 seconds in CI and up to about 102 seconds on two loaded
+  CPUs, against its 300-second guard?
 - **Options:**
   - **F.** Close this item and drop E. Keep the exception paragraph in
     `docs/protocol/ci-test-timing.md`. The paragraph then describes a risk
-    that the measurements do not show. Effort: Small.
+    that no measured run showed. Under heavy load the margin is only about
+    three times, so the paragraph still names a real limit. Effort: Small.
   - **G.** Close this item and drop E. Remove the exception paragraph from
     `docs/protocol/ci-test-timing.md`, because the test meets the
     three-times rule. Keep the combined journey, its 300-second guard, and
@@ -114,8 +133,9 @@
     the normal rules. Effort: Small.
   - **E.** Keep the user's choice of 2026-11-03: reuse compiled JavaScript
     across the three edits, with a new compile cache in the render and
-    sidecar crates. It makes a fast journey faster and protects against no
-    measured timeout. Effort: Large.
+    sidecar crates. It makes the journey faster and widens the margin on
+    small loaded runners, where it is about three times. No measured run
+    timed out. Effort: Large.
 - **Left out:**
   - A longer time limit, a retry, or a sleep. The `testing` skill forbids
     them, because they hide the source.
@@ -159,8 +179,10 @@
     PostCSS preparation on 2026-11-21 and parked stored stylesheet records.
     E keeps compiled output across the edits of one process. So the plan for E
     reads the cache of PR #312 and that item first.
-- **Recommendation:** G. The measured durations meet the three-times rule,
-  so the exception and the compile cache protect nothing. The first
+- **Recommendation:** G. The typical durations of the measured setups meet
+  the three-times rule, so the exception no longer describes them. Under one
+  busy loop per CPU, the margin is only about three times, so E keeps some
+  value for small loaded runners. The first
   recommendation was C, and the user chose E on 2026-11-03, before the
   measurements of 2026-11-25.
 - **Action:** ask the user, because the user chose E on 2026-11-03, and G

@@ -1,5 +1,5 @@
 //! A supervision clock that reaches a conversion deadline only after a
-//! hanging filter has started.
+//! hanging filter has written its log line.
 
 use std::fs;
 use std::path::PathBuf;
@@ -10,7 +10,8 @@ use mokly_git::control::{Clock, SystemClock};
 
 /// Follows the system clock and jumps past the conversion deadline once for
 /// each line that the hanging filter writes to its log, so a hang ends at
-/// once while a fast conversion never reaches its deadline.
+/// once while a fast conversion never reaches its deadline. The filter shell
+/// writes its line just before it runs its hanging command.
 ///
 /// The jump happens in `pause`, which the runner calls only after it reads
 /// the start time of a command. A line that the filter writes before that
