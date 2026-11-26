@@ -166,7 +166,18 @@ fn a_hanging_base_render_keeps_the_current_static_build_available() {
     ]);
     dependencies(root.path());
     fs::remove_file(root.path().join("specs/card.mockup.tsx")).unwrap();
-    let output = changes_support::run_with_timeout(root.path(), &["build"], None, Some("10000"));
+    // The sidecar start and the bundle calls keep a 10-second deadline. Only
+    // render calls take the debug render deadline, so both attempts of the
+    // hanging render end after one second.
+    let output = changes_support::run_with_environment(
+        root.path(),
+        &["build"],
+        None,
+        &[
+            ("MOKLY_SIDECAR_TIMEOUT_MS", "10000"),
+            ("MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS", "1000"),
+        ],
+    );
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -181,7 +192,7 @@ fn a_hanging_base_render_keeps_the_current_static_build_available() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("specs/card.mockup.tsx export card") && stderr.contains("exceeded 10000ms"),
+        stderr.contains("specs/card.mockup.tsx export card") && stderr.contains("exceeded 1000ms"),
         "{stderr}"
     );
     assert!(root.path().join("mokly-static/index.html").is_file());
