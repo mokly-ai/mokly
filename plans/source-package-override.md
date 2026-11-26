@@ -263,20 +263,22 @@ Depends on: 4, 5
 
 Depends on: 6
 
-- [ ] Add a CLI test with a Git base whose workspace package holds `source/`
+- [x] Add a CLI test with a Git base whose workspace package holds `source/`
       only and whose working tree has a built `esm/`, modelled on
       `crates/mokly-cli/tests/changes_ancestor_tests.rs`. With the entry in
       both configurations, Changes must be available.
-- [ ] Add the cases of decision 1 to the same test: an entry only in the
+- [x] Add the cases of decision 1 to the same test: an entry only in the
       working configuration, a package whose source folder the head renames,
       and a wrong base entry that the working entry corrects.
-- [ ] Run the example mockup check and the cloud mockup check named in
+- [x] Run the example mockup check and the cloud mockup check named in
       `AGENTS.md`. This repository's configuration needs no entry, because
       the detection covers its packages.
-- [ ] Update `packages/mokly/README.md`,
+- [x] Update `packages/mokly/README.md`,
       `packages/mokly/src/sidecar/README.md`,
       `crates/mokly-catalogue/README.md` and `crates/mokly-css/README.md`
-      for the code that this change adds.
+      for the code that this change adds. The READMEs of `mokly-compare`,
+      `mokly-sidecar`, `mokly-render`, `mokly-graph`, `mokly-cli` and
+      `mokly-source-interface` also name their new entry points.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

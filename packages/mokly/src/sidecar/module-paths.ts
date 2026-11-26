@@ -223,7 +223,7 @@ export class ModulePaths {
     regular: boolean,
   ): string {
     if (candidate.mapped && (!inside(this.sourceRoot, real) || !regular))
-      throw this.missing(candidate.name);
+      throw this.missing(candidate.name, candidate.file);
     this.name(real);
     return this.observe(real);
   }
@@ -238,11 +238,10 @@ export class ModulePaths {
     return file;
   }
 
-  private missing(name: string, file?: string): Error {
-    const pkg =
-      file !== undefined && this.repositoryOwned(file)
-        ? this.workspace.packageName(file)
-        : undefined;
+  private missing(name: string, file: string): Error {
+    const pkg = this.repositoryOwned(file)
+      ? this.workspace.packageName(file)
+      : undefined;
     const message = `module ${name} has no source in this side`;
     return new Error(
       pkg === undefined
@@ -289,7 +288,7 @@ export class ModulePaths {
         )
           return this.observe(source);
       }
-      throw this.missing(target.name);
+      throw this.missing(target.name, target.file);
     }
   }
 }

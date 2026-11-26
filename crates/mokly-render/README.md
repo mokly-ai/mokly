@@ -409,7 +409,10 @@ view after the edit and counts real process starts and hello calls.
   each current entry and link before filtering unrelated ASCII names. It
   compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
-  extraction and dependency selection of a historical render.
+  extraction and dependency selection of a historical render. Its
+  `source_package_maps` gives the `sourcePackages` maps of one side in layout
+  order: the entries of its own configuration, then the working entries that a
+  base configuration keeps.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
   `DependencyUsage`, which records the dependency directories that renders
   read.

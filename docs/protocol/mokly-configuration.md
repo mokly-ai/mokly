@@ -235,6 +235,8 @@ Folders are POSIX paths relative to the package root, such as `esm` or
 `.`, for sources at the package root. Validation rejects a key that is not a
 bare package name, an empty map, and a build folder `.`, which would hold
 every file of the package. It also rejects a folder that is empty or
-absolute, or that has a `..` or `node_modules` segment. One pair with role
-names, such as `{ "dist": "esm", "src": "source" }`, was rejected, because it
-cannot state a second build folder.
+absolute, or that has a `..` or `node_modules` segment. It also rejects an
+entry that names one build folder twice after normalization, such as `esm`
+and `./esm`. One pair with role names, such as
+`{ "dist": "esm", "src": "source" }`, was rejected, because it cannot state a
+second build folder.

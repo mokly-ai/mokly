@@ -326,11 +326,31 @@ its requests and results. The paths below are relative to the package root.
   `${configDir}` prefix from the folder of the top-level configuration, as
   found. [`src/sidecar/config-json.ts`](./config-json.ts) parses JSON
   with comments and trailing commas.
-- [`module-paths.ts`](./module-paths.ts) maps resolved paths to the selected
-  source tree. [`workspace-sources.ts`](./workspace-sources.ts) finds matching
-  source files for workspace build targets. It uses `ConfigChain` to read
-  `rootDir` and `outDir`. [`workspace-lookups.ts`](./workspace-lookups.ts)
-  records the candidate files and directories that can change that choice.
+- [`src/sidecar/module-paths.ts`](./module-paths.ts) holds `ModulePaths`,
+  which maps resolved paths to the selected source tree. Its `resolve` and
+  `resolveSync` add the `moduleResolution.sourcePackages` hint, with the
+  package `name`, to the missing-source error of a target inside a workspace
+  package. `resolveSync` serves the requires that Node loads.
+  `ConfiguredModuleFiles` in
+  [`src/sidecar/module-configured-files.ts`](./module-configured-files.ts)
+  holds the configured entry, stories, renderer, and PostCSS files and each
+  added preview file. Its `has` matches the resolved or the canonical path of
+  each file. `ModulePaths` skips the workspace package source rule for these
+  files, so they keep their exact paths.
+  [`src/sidecar/workspace-sources.ts`](./workspace-sources.ts) holds
+  `WorkspaceSources`, which finds the source file of a workspace build target
+  under the
+  [workspace package source rule](../../../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+  It takes the `sourcePackages` maps of the request in layout order. It tries
+  the entry of each map for the package `name`, and then the detected layout,
+  for which it uses `ConfigChain` to read `rootDir` and `outDir`. Its
+  `packageName` gives the `name` of the workspace package that holds a file.
+  [`src/sidecar/workspace-lookups.ts`](./workspace-lookups.ts) holds
+  `WorkspaceLookups`, which records the candidate files and directories that
+  can change that choice. When the request has `sourcePackages` entries, it
+  also records each `package.json` that the package lookup reads. Its
+  `buildTarget` records the build target of each entry that `WorkspaceSources`
+  tries.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`
@@ -508,6 +528,14 @@ its requests and results. The paths below are relative to the package root.
   of its context, and that call takes the child, also after the child failed.
   `dispose` also stops a start whose path lookup still runs, so that start
   forks no child.
+- [`src/sidecar/postcss-module.ts`](./postcss-module.ts) holds
+  `importPostcssModule`, which bundles the PostCSS module or a plugin module of
+  the repository with esbuild, and `bundledPostcssImports`, which lists the
+  local files that those bundles reached in one child. The child adds that
+  list to the read evidence of each result as `bundledImports`, so the core
+  can check these files for the
+  [`ignored-module` warning](../../../../docs/protocol/mokly-comparison-packages.md#ignored-modules).
+  Files that Node loads, such as installed plugins, stay out of the list.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
   `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short

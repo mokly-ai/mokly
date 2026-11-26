@@ -461,6 +461,9 @@ changed.
   `validate_sources`, which selects the dependencies and validates the graph.
   `NativePhases::validate` prepares the graph without document work, and
   `NativePhases::admit` admits that work after head usage.
+  `NativeBase::source_generation` in that file loads the base configuration
+  and keeps the working `sourcePackages` entries beside it, in
+  `ResolvedModules.working_source_packages`.
   [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
   defines `SourceAdmission`, and
   [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)

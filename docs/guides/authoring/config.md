@@ -137,9 +137,10 @@ Mokly tries layouts in order for each file.
 The first layout that finds a source file wins. If Mokly reaches `false`, it
 uses the original package target and ends the search.
 
-An invalid entry causes a `config-invalid` error. When Changes reports
-`ignored-module`, a bundled import or CSS import in the head loaded a file
-that Git ignores. A later base may fail to load that file.
+An invalid entry causes a `config-invalid` error. An entry that names one
+build folder twice, such as `esm` and `./esm`, is invalid. When Changes
+reports `ignored-module`, a bundled import or CSS import in the head loaded a
+file that Git ignores. A later base may fail to load that file.
 
 ## Review and watch
 

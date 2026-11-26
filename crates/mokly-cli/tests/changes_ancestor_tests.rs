@@ -8,7 +8,10 @@ use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 
 mod changes_support;
+#[path = "changes_support/links.rs"]
+mod links;
 use changes_support::{base, run, run_configured, write};
+use links::link_directory;
 
 #[test]
 fn nested_configuration_aliases_and_bare_imports_use_working_dependencies_on_both_sides() {
@@ -212,13 +215,6 @@ fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
     let stderr = String::from_utf8(disabled.stderr).unwrap();
     assert_eq!(disabled.status.code(), Some(0), "{stderr}");
     assert_eq!(stderr, "");
-}
-
-fn link_directory(target: &Path, link: &Path) {
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(target, link).unwrap();
-    #[cfg(windows)]
-    std::os::windows::fs::symlink_dir(target, link).unwrap();
 }
 
 fn package(root: &Path, name: &str, label: &str) {

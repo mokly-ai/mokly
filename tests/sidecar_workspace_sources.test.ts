@@ -7,6 +7,7 @@ import type { TestContext } from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
+import { restore } from "../packages/mokly/src/sidecar/compiled.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
 
 import {
@@ -150,6 +151,31 @@ test("a package without source uses its build or names its override", async (con
       "entry.mjs:1:21: module packages/local/dist/value.js has no source in this side; set moduleResolution.sourcePackages for workspace-local",
   });
   await historical.call("shutdown");
+});
+
+test("Node-loaded requires suggest a source override for missing base builds", async (context) => {
+  const { head, base, params } = await workspace(context);
+  const manifest = '{"name":"workspace-local","exports":"./dist/value.cjs"}';
+  for (const side of [head, base])
+    await write(side, "packages/local/package.json", manifest);
+  await write(base, "entry.mjs", 'export const value = "Entry";');
+  await write(
+    head,
+    "packages/local/dist/value.cjs",
+    'module.exports = "Built";',
+  );
+
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const inputs = params(base);
+  inputs.moduleResolution.dependencyRoot = head;
+  const result = await sidecar.call<BundleResult>("bundle", inputs);
+  const runtime = restore(inputs, result.compiled, result.modules).require;
+  assert.throws(() => runtime("local"), {
+    message:
+      "module packages/local/dist/value.cjs has no source in this side; set moduleResolution.sourcePackages for workspace-local",
+  });
+  await sidecar.call("shutdown");
 });
 
 test("workspace imports preserve configured files and relative build paths", async (context) => {
