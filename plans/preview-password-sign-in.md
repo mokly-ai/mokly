@@ -135,8 +135,9 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   attempts. It checks at most two passwords at once and allows up to eight
   more attempts to wait without a blocking worker. The API reserves a place
   after the gate, Origin and body checks and before peer admission. It answers
-  503 `unavailable` when all places are in use. An attempt keeps its place
-  until its work ends, even if the caller disconnects. Each hash uses about
+  503 `unavailable` when all places are in use. A waiting attempt frees its
+  place when its request is dropped. An attempt keeps its place while its
+  admission, check or session work runs, even after the caller disconnects. Each hash uses about
   16 MiB with the chosen parameters. The queue limit bounds the backlog that
   a flood from many addresses can create.
   Cal answered "9 = B" for review finding 9 on 2026-11-26.
