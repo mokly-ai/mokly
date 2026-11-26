@@ -213,16 +213,17 @@ Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
 A stylesheet record key holds the stylesheet root, the configuration input,
-the resolved modules, and the module resolution settings. It holds the
+the resolved module paths, and the module resolution settings. It holds the
 physical paths of the selected dependency roots and of the repository roots
-of its side. It also holds the effective CSS resolver settings, which the
-resolver of the side uses: the configuration directory, aliases, dependency
-aliases, conditions, main fields, logical dependency roots, and extensions. A
-PostCSS record comes from a configuration with a PostCSS module. Its key also
-holds the physical source root of its side, so only a preparation on that
-root can reuse it. A plain CSS record comes from a configuration without a
-PostCSS module. Its key omits that root. Its stamp names each read, candidate
-probe, and absence that selected its inputs by logical path.
+of its side. It also holds the effective CSS resolver settings. These include
+the configuration directory, aliases, dependency aliases, conditions, main
+fields, logical dependency roots, extensions, and ordered source package
+layouts. A PostCSS record comes from a configuration with a PostCSS module.
+Its key also holds the physical source root of its side, so only a
+preparation on that root can reuse it. A plain CSS record comes from a
+configuration without a PostCSS module. Its key omits that root. Its stamp
+names each read, candidate probe, and absence that selected its inputs by
+logical path.
 
 `Runtime::for_base` gives each base runtime its own stylesheet store and a
 weak read-only reference to the stylesheet store of the original head
@@ -410,9 +411,9 @@ view after the edit and counts real process starts and hello calls.
   compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render. Its
-  `source_package_maps` gives the `sourcePackages` maps of one side in layout
-  order: the entries of its own configuration, then the working entries that a
-  base configuration keeps.
+  `source_package_maps` returns the authored layouts followed by the working
+  layouts. It omits empty maps. It also omits a working entry when the base has
+  the same entry or sets `false` for that package.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
   `DependencyUsage`, which records the dependency directories that renders
   read.

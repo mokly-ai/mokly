@@ -49,15 +49,8 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
             )),
         ));
     }
-    // Keep authored folder keys for duplicate detection before a JSON value discards them.
-    let decoded = if value.pointer("/moduleResolution/sourcePackages").is_some() {
-        serde_json::from_str(text)
-    } else {
-        serde_json::from_value(value)
-    };
-    let mut config: Config = match decoded {
+    let mut config: Config = match serde_json::from_value(value) {
         Ok(config) => config,
-        Err(error) if error.line() > 0 => return Err(json_error(path, &error, error.to_string())),
         Err(error) => return Err(invalid(format!("{path}: {error}"))),
     };
     if let Some(roots) = &config.roots {

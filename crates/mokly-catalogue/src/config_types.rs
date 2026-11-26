@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use mokly_model::axes::ColorScheme;
+use serde::de::value::MapAccessDeserializer;
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -108,16 +109,8 @@ impl<'de> Deserialize<'de> for SourcePackage {
                 Ok(SourcePackage::Disabled)
             }
 
-            fn visit_map<M: MapAccess<'de>>(self, mut map: M) -> Result<Self::Value, M::Error> {
-                let mut folders = BTreeMap::new();
-                while let Some((build, source)) = map.next_entry::<String, String>()? {
-                    if folders.insert(build.clone(), source).is_some() {
-                        return Err(de::Error::custom(format!(
-                            "moduleResolution.sourcePackages: duplicate build folder {build:?}"
-                        )));
-                    }
-                }
-                Ok(SourcePackage::Folders(folders))
+            fn visit_map<M: MapAccess<'de>>(self, map: M) -> Result<Self::Value, M::Error> {
+                BTreeMap::deserialize(MapAccessDeserializer::new(map)).map(SourcePackage::Folders)
             }
         }
 

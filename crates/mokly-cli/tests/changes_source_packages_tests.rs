@@ -8,7 +8,7 @@ use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{namespace, routes};
-use serde_json::json;
+use serde_json::{Value, json};
 use tempfile::TempDir;
 
 mod changes_support;
@@ -24,6 +24,49 @@ const STYLESHEET_PATH: &str = "app/style.css";
 fn changes_use_source_when_both_configurations_have_the_same_override() {
     let root = workspace(Some("source"));
     assert_changes_use_source(root.path());
+}
+
+#[test]
+fn identical_source_overrides_reuse_head_stylesheets_and_renders() {
+    let root = workspace_fixture(Some("source"), "@import '@acme/ui/skin.css';");
+    let output = run(
+        root.path(),
+        &["build", "--config", CONFIG_PATH, "--debug-timings"],
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(output.status.code(), Some(0), "{stderr}");
+    let index = read_index(&root.path().join("mokly-static"));
+    assert_eq!(index.changes_status, ChangesStatus::Ready, "{stderr}");
+
+    let timings: Vec<Value> = stderr
+        .lines()
+        .filter_map(|line| line.strip_prefix("[mokly:timing] "))
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    let starts = |stage: &str| {
+        timings
+            .iter()
+            .filter(|record| record["stage"] == stage && record["event"] == "start")
+            .count()
+    };
+    let base_capture = timings
+        .iter()
+        .find(|record| {
+            record["stage"] == "review.capture-side"
+                && record["side"] == "base"
+                && record["event"] == "counts"
+        })
+        .expect("the base captures its views");
+    let cache = timings
+        .iter()
+        .find(|record| {
+            record["stage"] == "render.cache" && record["parentId"] == base_capture["id"]
+        })
+        .expect("the base capture reports render cache counts");
+    assert_eq!(starts("css.bundle"), 1, "only the head compiles CSS");
+    assert_eq!(starts("render.fragment"), 2, "only the head renders JS");
+    assert_eq!(base_capture["views"], json!(2));
+    assert_eq!(cache["misses"], json!(0));
 }
 
 #[test]
@@ -86,7 +129,7 @@ fn workspace(base_source: Option<&str>) -> TempDir {
     workspace_with_stylesheet(base_source, "@import '@acme/ui/skin.css';")
 }
 
-fn workspace_with_stylesheet(base_source: Option<&str>, stylesheet: &str) -> TempDir {
+fn workspace_fixture(base_source: Option<&str>, stylesheet: &str) -> TempDir {
     let root = base(&[
         (
             ".gitignore",
@@ -123,6 +166,12 @@ fn workspace_with_stylesheet(base_source: Option<&str>, stylesheet: &str) -> Tem
         &path.join("packages/ui"),
         &path.join("app/node_modules/@acme/ui"),
     );
+    root
+}
+
+fn workspace_with_stylesheet(base_source: Option<&str>, stylesheet: &str) -> TempDir {
+    let root = workspace_fixture(base_source, stylesheet);
+    let path = root.path();
     write(
         path,
         "packages/ui/esm/index.js",

@@ -149,21 +149,52 @@ fn source_packages_reject_invalid_entries_with_the_setting_and_config_path() {
 }
 
 #[test]
-fn source_packages_reject_repeated_build_folders() {
-    for folders in [
-        r#"{"esm":"source","./esm":"other"}"#,
-        r#"{"esm":"source","esm":"other"}"#,
-    ] {
-        let value =
-            format!(r#"{{"moduleResolution":{{"sourcePackages":{{"@acme/ui":{folders}}}}}}}"#);
-        let issue = source_packages_issue(&value);
-        assert!(
-            issue.message.starts_with("moduleResolution.sourcePackages")
-                && issue.message.contains("duplicate build folder \"esm\""),
-            "{value}: {}",
-            issue.message
-        );
-    }
+fn source_packages_reject_build_folders_with_two_spellings() {
+    let text =
+        r#"{"moduleResolution":{"sourcePackages":{"@acme/ui":{"esm":"source","./esm":"other"}}}}"#;
+    let issue = source_packages_issue(text);
+    assert!(
+        issue.message.starts_with("moduleResolution.sourcePackages")
+            && issue.message.contains("duplicate build folder \"esm\""),
+        "{text}: {}",
+        issue.message
+    );
+}
+
+#[test]
+fn source_packages_keep_the_last_value_of_a_repeated_build_folder() {
+    let text =
+        r#"{"moduleResolution":{"sourcePackages":{"@acme/ui":{"esm":"source","esm":"other"}}}}"#;
+    let packages = parse(text, "mokly.config.json")
+        .map(|config| {
+            serde_json::to_value(config.module_resolution).unwrap()["sourcePackages"].clone()
+        })
+        .map_err(|error| error.to_string());
+    assert_eq!(packages, Ok(json!({"@acme/ui":{"esm":"other"}})));
+}
+
+#[test]
+fn repeated_color_schemes_keep_the_last_value_with_source_packages() {
+    let text = r#"{"colorSchemes":["light"],"colorSchemes":["light","dark"],"moduleResolution":{"sourcePackages":{}}}"#;
+    let schemes = parse(text, "mokly.config.json")
+        .map(|config| config.color_schemes)
+        .map_err(|error| error.to_string());
+    assert_eq!(
+        schemes,
+        Ok(Some(vec![ColorScheme::Light, ColorScheme::Dark]))
+    );
+}
+
+#[test]
+fn shipped_schema_describes_source_packages_at_the_field() {
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    let description = schema
+        .pointer("/properties/moduleResolution/properties/sourcePackages/description")
+        .and_then(Value::as_str);
+    assert!(
+        description.is_some_and(|text| !text.trim().is_empty()),
+        "the shipped schema must expose editor help for moduleResolution.sourcePackages"
+    );
 }
 
 fn source_packages_issue(text: &str) -> crate::diagnostic::Issue {

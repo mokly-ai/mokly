@@ -78,7 +78,7 @@ pub(crate) fn attempt(
     let settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
-        config.modules,
+        (&config.modules.renderer, &config.modules.postcss),
         config.postcss().map(|_| &side.source_root),
         side.module_resolution,
         dependency_roots(side),

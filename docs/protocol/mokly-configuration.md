@@ -12,8 +12,9 @@ stops at the filesystem root and reports every directory it searched when
 none is found. The configuration is data: the core reads it without Node.js,
 and no sidecar starts for it.
 
-The config's filesystem paths resolve relative to the config file, never
-relative to the installed package or a transient npx cache.
+The filesystem fields that resolve from the configuration file are listed
+under [Shape](#shape).
+
 Repository-matching globs operate on repo-relative POSIX paths. The core validates
 the file against the JSON Schema that the package ships as
 `@mokly/mokly/config.schema.json`; a `$schema` property that names it gives
@@ -82,9 +83,12 @@ Keeping the link path was rejected, because the sidecar's module graph names
 each module by its resolved path, so a link path would miss the module and
 its stylesheets.
 
-`roots[].files` globs are relative to their root; `watch.rules[].paths` are
-repository-relative POSIX globs; a stylesheet `match` matches catalogue
-entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
+`roots[].files` globs are relative to their root. `watch.rules[].paths` are
+repository-relative POSIX globs. A stylesheet `match` applies to catalogue
+entry routes of the form `path/index.html`. For the origin of
+`moduleResolution.sourcePackages` folders, see [Source Packages](#source-packages).
+
+Globs are case-sensitive POSIX globs:
 `*` does not cross `/`, and `**` can cross directories. Stylesheet matchers
 accept brace alternatives and character classes. A backslash does not escape
 a character. Root-file validation and expansion apply to `roots[].files`.
@@ -115,6 +119,7 @@ validation and placement rules, and
 
 ## Validation
 
+Mokly keeps the last value of a repeated JSON key.
 Configuration accepts only the declared fields. An undeclared field fails with
 `config-invalid` and `unknown configuration field: <field>`; no removed field
 has a warning or a migration. Validation also rejects, with `config-invalid`

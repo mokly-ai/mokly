@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Mokly configuration",
-  "description": "Data-only catalogue configuration. Paths resolve from this file.",
+  "description": "Data-only catalogue configuration. Paths resolve from this file by default.",
   "type": "object",
   "additionalProperties": false,
   "$defs": {
@@ -172,6 +172,7 @@
           }
         },
         "sourcePackages": {
+          "description": "Workspace package layouts. Build and source folders are relative to the package root.",
           "type": "object",
           "propertyNames": {
             "$ref": "#/$defs/barePackageSpecifier",

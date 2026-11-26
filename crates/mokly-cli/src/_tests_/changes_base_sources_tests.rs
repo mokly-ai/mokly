@@ -24,7 +24,10 @@ fn source_package_order_uses_base_then_working_without_sidecar_sources() {
     let path = "/repo/mokly.config.json";
     let working_config = ResolvedConfig {
         input: parse(
-            r#"{"moduleResolution":{"aliases":{"other":"working"},"sourcePackages":{"ui":{"esm":"working"}}}}"#,
+            r#"{"moduleResolution":{
+                "aliases":{"other":"working"},
+                "sourcePackages":{"ui":{"esm":"working"},"theme":{"esm":"working"}}
+            }}"#,
             path,
         )
         .unwrap(),
@@ -76,7 +79,7 @@ fn source_package_order_uses_base_then_working_without_sidecar_sources() {
     let settings = to_value(resolution(&sources.config)).unwrap();
     assert_eq!(
         settings["sourcePackages"],
-        json!([{"ui":false},{"ui":{"esm":"working"}}])
+        json!([{"ui":false,"theme":{"esm":"base"}},{"theme":{"esm":"working"}}])
     );
     assert_eq!(settings["aliases"], json!({"other":"base"}));
 }
@@ -95,13 +98,24 @@ fn base_tree() -> Unimock {
                 } else {
                     return Ok(None);
                 };
-                Ok(Some(Node { identity: path.into(), kind, lexical_kind: kind }))
+                Ok(Some(Node {
+                    identity: path.into(),
+                    kind,
+                    lexical_kind: kind,
+                }))
             }),
         SourceTreeMock::read
             .some_call(matching!((path) if *path == Path::new("/repo/mokly.config.json")))
-            .returns(Ok(br#"{"moduleResolution":{"aliases":{"other":"base"},"sourcePackages":{"ui":false}}}"#.to_vec())),
+            .returns(Ok(br#"{"moduleResolution":{
+                "aliases":{"other":"base"},
+                "sourcePackages":{"ui":false,"theme":{"esm":"base"}}
+            }}"#
+            .to_vec())),
         SourceTreeMock::children
             .some_call(matching!((path) if *path == Path::new("/repo/specs")))
-            .returns(Ok(vec![Child { name: "card.page.html".into(), kind: FileKind::File }])),
+            .returns(Ok(vec![Child {
+                name: "card.page.html".into(),
+                kind: FileKind::File,
+            }])),
     ))
 }

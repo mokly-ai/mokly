@@ -54,22 +54,26 @@ pub struct SideInputs {
     pub(crate) dependency_roots: Vec<PathBuf>,
 }
 
-/// Carry the side's authored map first and any retained working map second.
-/// A side with no overrides keeps the default resolution settings.
+/// Return the authored layouts first, followed by distinct, reachable working entries.
+/// The list omits empty maps.
 pub fn source_package_maps(config: &ResolvedConfig) -> Vec<SourcePackages> {
-    let authored = config.source_packages();
-    let working = config.modules.working_source_packages.as_ref();
-    if authored.is_none_or(ConfigSourcePackages::is_empty) && working.is_none() {
-        return Vec::new();
-    }
-    let mut maps = vec![authored.map(source_package_map).unwrap_or_default()];
-    maps.extend(working.map(source_package_map));
-    maps
+    let authored = source_package_map(config.source_packages());
+    let mut working = source_package_map(config.modules.working_source_packages.as_ref());
+    working.retain(|name, entry| match authored.get(name) {
+        Some(SourcePackage::Disabled) => false,
+        Some(authored_entry) => authored_entry != entry,
+        None => true,
+    });
+    [authored, working]
+        .into_iter()
+        .filter(|map| !map.is_empty())
+        .collect()
 }
 
-fn source_package_map(packages: &ConfigSourcePackages) -> SourcePackages {
+fn source_package_map(packages: Option<&ConfigSourcePackages>) -> SourcePackages {
     packages
-        .iter()
+        .into_iter()
+        .flatten()
         .map(|(name, entry)| {
             let entry = match entry {
                 ConfigSourcePackage::Disabled => SourcePackage::Disabled,

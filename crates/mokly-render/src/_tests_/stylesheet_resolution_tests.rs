@@ -38,14 +38,73 @@ fn source_package_order_for_head_contains_the_working_map() {
 }
 
 #[test]
-fn source_package_order_for_html_base_keeps_the_base_map_first() {
-    let mut base = config(r#"{"moduleResolution":{"sourcePackages":{"ui":false}}}"#);
-    let working = config(r#"{"moduleResolution":{"sourcePackages":{"ui":{"esm":"source"}}}}"#);
+fn source_package_order_for_html_base_keeps_distinct_reachable_entries() {
+    let mut base = config(
+        r#"{"moduleResolution":{"sourcePackages":{
+            "disabled":false,
+            "fallback":{"esm":"base"},
+            "same":{"esm":"source"},
+            "stop":{"esm":"base"}
+        }}}"#,
+    );
+    let working = config(
+        r#"{"moduleResolution":{"sourcePackages":{
+            "disabled":{"esm":"source"},
+            "fallback":{"esm":"working"},
+            "same":{"esm":"source"},
+            "stop":false,
+            "working-only":{"esm":"source"}
+        }}}"#,
+    );
     base.modules.working_source_packages = working.source_packages().cloned();
     let side = inputs(&base, None, 0);
     let expected: [SourcePackages; 2] = [
-        [("ui".into(), None)].into(),
-        [("ui".into(), Some([("esm".into(), "source".into())].into()))].into(),
+        [
+            ("disabled".into(), None),
+            (
+                "fallback".into(),
+                Some([("esm".into(), "base".into())].into()),
+            ),
+            (
+                "same".into(),
+                Some([("esm".into(), "source".into())].into()),
+            ),
+            ("stop".into(), Some([("esm".into(), "base".into())].into())),
+        ]
+        .into(),
+        [
+            (
+                "fallback".into(),
+                Some([("esm".into(), "working".into())].into()),
+            ),
+            ("stop".into(), None),
+            (
+                "working-only".into(),
+                Some([("esm".into(), "source".into())].into()),
+            ),
+        ]
+        .into(),
     ];
     assert_eq!(resolution(&side).source_packages, expected);
+}
+
+#[test]
+fn source_package_order_omits_empty_maps() {
+    let empty = r#"{"moduleResolution":{"sourcePackages":{}}}"#;
+    let disabled = r#"{"moduleResolution":{"sourcePackages":{"ui":false}}}"#;
+    let disabled_map: SourcePackages = [("ui".into(), None)].into();
+    for (base, working, expected) in [
+        (empty, disabled, vec![disabled_map.clone()]),
+        (disabled, empty, vec![disabled_map]),
+        (empty, empty, vec![]),
+    ] {
+        let mut base_config = config(base);
+        base_config.modules.working_source_packages = config(working).source_packages().cloned();
+        let side = inputs(&base_config, None, 0);
+        assert_eq!(
+            resolution(&side).source_packages,
+            expected,
+            "base {base}, working {working}"
+        );
+    }
 }
