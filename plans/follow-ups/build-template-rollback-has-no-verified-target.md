@@ -33,7 +33,7 @@
   - Change nothing. When the release in use fails, the runbook disables builds until a new release passes. It fails the goal, because the environment has no target.
   - Mark v5 as not eligible for a rollback from v6, the former option B. The current probe already fails v5.
   - Call v5 a degraded fallback in its record, the former option A. The current probe fails v5, so the runbook cannot use it.
-  - Add the toolchain and PCRE2 sentence to the contract, the former option D, and a build check to the probe, the former option E. Cal's answers of 2026-11-26 decided both. The template contract page and the probe now hold them.
+  - Add the toolchain and PCRE2 sentence to the contract, the former option D, and a build check to the probe, the former option E. Cal's answers of 2026-11-26 decided both. The template contract page holds the sentence, and the probe holds the build check. The former option E also ran `git grep -P`, which the probe does not run. `plans/follow-ups/build-template-probe-skips-git-perl-patterns.md` holds that gap.
   - Relax the probe for a rollback target. It breaks the one-copy and toolchain requirements that Cal decided on 2026-11-26.
   - A second app-config reference that the API starts when the first one fails. It still needs the verified target of A, and it adds new runner behaviour.
 - **Wider fix:** A. A fallback that each change of the probe or the contract verifies again stops such a change from retiring every target at once. B only stops an unverified target.
@@ -43,5 +43,6 @@
   - `plans/follow-ups/template-image-change-keeps-release-name.md`: its option D writes a release receipt for each build reference. One release record can serve A here and that option.
   - `plans/follow-ups/template-probe-pass-not-tied-to-assertion.md`: its options tie each enabled build reference to a pass of the current assertion. One rule can serve that item and the fallback of A here.
   - `plans/follow-ups/cloud-builds-never-ran-live.md`: its rollback step uses the rule that this item changes.
+  - `plans/follow-ups/build-template-probe-skips-git-perl-patterns.md`: its option C adds a Perl-pattern check to the probe, so a release whose Git lacks PCRE2 then fails as a rollback target.
 - **Recommendation:** A. It is the only option that gives a failing release a target. B best protects the `builds.template` field, and it waits for the bare template ID item.
 - **Action:** ask the user, because the options have real trade-offs: A costs a verified build for each release in use, and B adds a configuration rejection that can block an emergency rollback.

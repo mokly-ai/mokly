@@ -12,10 +12,11 @@ because Mokly's comparison build needs Git 2.43 or newer and Debian 12 has
 2.39.5. This change moves the template to `debian:trixie-slim`, pinned by
 digest. Trixie's own Git 2.47.3 meets the floor, so the Git build from source
 goes. The change adds `build-essential`, a probe check that each key tool
-exists once on `PATH`, and the release `mokly-build-v7`. Release
-`mokly-build-v6` on `main` is a different build on `e2bdev/base` (decision 6). It does not change
-the runner, the API, or main-preview's app-config. Cal switches main-preview
-from v6 to v7 after the merge.
+exists once on `PATH`, `pkgconf`, `libtool`, a native build check, and the
+release `mokly-build-v8` (decision 10). Release `mokly-build-v6` on `main` is a
+different build on `e2bdev/base` (decision 6). It does not change the runner,
+the API, or main-preview's app-config. Cal switches main-preview after the
+merge, as the post-merge follow-up says.
 
 The spike evidence is in `.context/spike-debian-base/report.md`. E2B
 provisions systemd, sudo, openssh-server, and its other agent packages on

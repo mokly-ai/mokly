@@ -50,9 +50,14 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
         return run
 
     def run_with_host_tools(self, argv, **kwargs):
-        """Run the probe's npm ci and Git checks with host tools, so they judge the real argv."""
+        """Run the probe's Git, npm ci, and native build commands with host tools."""
         if argv[0] == "git":
             return self.run_with_host_git(argv, **kwargs)
+        if argv[0] in ("make", "./probe"):
+            self.check_probe_call(kwargs)
+            environment = {"PATH": HOST_PATH, "HOME": str(self.scratch)}
+            kwargs["cwd"] = kwargs.get("cwd") or self.workspace
+            return HOST_RUN(argv, env=environment, **kwargs)
         if argv[:2] != ["npm", "ci"]:
             return self.run_command(argv, **kwargs)
         self.check_probe_call(kwargs)
@@ -77,7 +82,10 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
 
     def test_complete_template_passes_with_one_added_entry(self):
         with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_tools) as run:
-            ASSERTION.verify(VERSION)
+            try:
+                ASSERTION.verify(VERSION)
+            except ASSERTION.TemplateAssertionError as error:
+                self.fail(str(error))
         self.assertEqual(run.call_count, 18)
 
     def test_git_without_cat_file_nul_batches_fails(self):
