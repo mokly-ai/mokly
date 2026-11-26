@@ -354,7 +354,10 @@ its requests and results. The paths below are relative to the package root.
   `buildTarget` records the build target of each entry that `WorkspaceSources`
   tries. `marked` keeps the captured kind of each entry. Presence checks keep
   paths. Manifests, layout files, and workspace files loaded by the restored
-  Node require through resolved peers keep digests.
+  Node require through resolved peers keep digests. Recorded workspace builds
+  also keep digests when the emitted bundle leaves a `require` target unresolved,
+  uses the free `require` outside a direct call, imports the Node `module`
+  builtin, or references `getBuiltinModule`.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`

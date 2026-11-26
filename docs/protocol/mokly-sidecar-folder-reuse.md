@@ -37,8 +37,10 @@ regular-file path (`filePath`), a file digest, an absent file, or a link with
 its target. Directory membership stays in the live checks.
 The table can also hold [PnP package roots](#pnp-package-roots) and
 [workspace lookup files](./mokly-sidecar-modules.md#source-and-dependency-files).
-When a bundle leaves a Node `require` target unresolved, marked evidence
-keeps digests for the recorded workspace build files that the require could load.
+Marked evidence keeps digests for recorded workspace build files when a bundle
+leaves a `require` target unresolved or uses the free `require` outside a direct
+call. It also keeps these digests when the bundle imports the Node `module`
+builtin or references `getBuiltinModule`.
 The evidence keeps `complete` and `durable` false and the `uncaptured: "serveEdit"` marker.
 
 A reuse check compares each entry with the filesystem by the rules of the

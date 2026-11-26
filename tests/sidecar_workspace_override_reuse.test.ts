@@ -241,47 +241,59 @@ test("a workspace build loaded by the restored Node require ends edit reuse afte
   assert.equal(result.compiled.reuseEvidence.inputs[built]?.kind, "file");
 });
 
-test("a computed require ends edit reuse when it loads the build of an import that selected source", async (context) => {
-  const root = await nativeRoot(context);
-  const directory = path.join(root, pkg);
-  const built = path.join(directory, "esm/value.js");
-  await write(
-    path.join(root, "entry.mjs"),
-    `import { value } from "local";
-    const specifier = ["lo", "cal"].join("");
-    export const observed = [value, require(specifier)];`,
-  );
-  await write(
-    path.join(directory, "package.json"),
-    JSON.stringify({ name, exports: "./esm/value.js" }),
-  );
-  await write(built, 'module.exports = "Built";');
-  await write(
-    path.join(directory, "source/value.ts"),
-    'export const value = "Source";',
-  );
-  await link(directory, path.join(root, "node_modules/local"));
+for (const [scenario, setup, load] of [
+  ["", "", "require(specifier)"],
+  [" with require.call", "", "require.call(undefined, specifier)"],
+  [" with require?.()", "", "require?.(specifier)"],
+  [
+    " with createRequire",
+    'import { createRequire } from "node:module";',
+    "createRequire(__filename)(specifier)",
+  ],
+]) {
+  test(`a computed require${scenario} ends edit reuse when it loads the build of an import that selected source`, async (context) => {
+    const root = await nativeRoot(context);
+    const directory = path.join(root, pkg);
+    const built = path.join(directory, "esm/value.js");
+    await write(
+      path.join(root, "entry.mjs"),
+      `import { value } from "local";
+      ${setup}
+      const specifier = ["lo", "cal"].join("");
+      export const observed = [value, ${load}];`,
+    );
+    await write(
+      path.join(directory, "package.json"),
+      JSON.stringify({ name, exports: "./esm/value.js" }),
+    );
+    await write(built, 'module.exports = "Built";');
+    await write(
+      path.join(directory, "source/value.ts"),
+      'export const value = "Source";',
+    );
+    await link(directory, path.join(root, "node_modules/local"));
 
-  const params = nativeParams(root, {}, { sourcePackages: [working] });
-  const { result, generation } = await bundle(
-    params,
-    build,
-    undefined,
-    undefined,
-    "serveEdit",
-  );
-  const reused = () => reuse([generation], params, "serveEdit");
-  assert.deepEqual(moduleNames(result).sort(), [
-    "entry.mjs",
-    `${pkg}/source/value.ts`,
-  ]);
-  assert.deepEqual(evaluate(generation).entries["entry.mjs"]?.observed, [
-    "Source",
-    "Built",
-  ]);
-  assert.equal((await reused())?.runtimeKey, generation.runtimeKey);
+    const params = nativeParams(root, {}, { sourcePackages: [working] });
+    const { result, generation } = await bundle(
+      params,
+      build,
+      undefined,
+      undefined,
+      "serveEdit",
+    );
+    const reused = () => reuse([generation], params, "serveEdit");
+    assert.deepEqual(moduleNames(result).sort(), [
+      "entry.mjs",
+      `${pkg}/source/value.ts`,
+    ]);
+    assert.deepEqual(evaluate(generation).entries["entry.mjs"]?.observed, [
+      "Source",
+      "Built",
+    ]);
+    assert.equal((await reused())?.runtimeKey, generation.runtimeKey);
 
-  await write(built, 'module.exports = "Edit!";');
-  assert.equal((await reused())?.runtimeKey, undefined);
-  assert.equal(result.compiled.reuseEvidence.inputs[built]?.kind, "file");
-});
+    await write(built, 'module.exports = "Edit!";');
+    assert.equal((await reused())?.runtimeKey, undefined);
+    assert.equal(result.compiled.reuseEvidence.inputs[built]?.kind, "file");
+  });
+}
