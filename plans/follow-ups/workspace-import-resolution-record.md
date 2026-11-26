@@ -1,0 +1,59 @@
+# Each import path rebuilds workspace resolution facts
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from the wider fixes of findings 40, 41, 2, 4, 80, and 83 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `resolveImport`, `resolveRequire`, and `retryRequire` in `packages/mokly/src/sidecar/importer-resolution.ts`, `workspacePackage`, `workspaceTarget`, and `workspaceImport` in `packages/mokly/src/sidecar/workspace-imports.ts`, `ModulePaths.resolve`, `ModulePaths.resolveSync`, and `ModulePaths.missing` in `packages/mokly/src/sidecar/module-paths.ts`, `packages/mokly/src/sidecar/postcss-module.ts`, `packages/mokly/src/sidecar/postcss-resolution.ts`, `crates/mokly-css/src/resolver.rs`, `crates/mokly-css/src/workspace_sources.rs`, and `crates/mokly-compare/src/ignored_modules.rs`.
+- **Reason:** The record changes every workspace lookup path, also for detected packages and in the Rust CSS resolver, beyond the purpose of the branch.
+
+- **Source:** Review.
+- **Category:** Code structure.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **Workspace package:** A package whose `package.json` and files are in the repository, outside `node_modules`.
+  - **Layout order:** The folder layouts that a side tries, in order, to map a built file of a workspace package to its source file. The "Layout Order" section of `docs/protocol/mokly-comparison-packages.md` defines it.
+  - **Declared target:** The path that the `exports` or main field of a package names, before Mokly resolves links.
+  - **`ignored-module` warning:** The warning that Mokly gives, when Changes runs, for each repository file that the head loads and Git ignores.
+- **Background:**
+  - Four paths resolve a workspace import:
+    - bundled imports through esbuild
+    - requires that Node loads
+    - PostCSS plugin loads and their bundles
+    - CSS `@import` in the Rust CSS resolver
+  - The consumers of an import need some of the same facts:
+    - the side, head or base, whose files the import must use
+    - the declared target
+    - the canonical file, which is the real path that Mokly reads and records
+    - the import form: a package name, a relative path, or a require that Node loads
+    - the available fallback, which tells whether the layout order gives a source file on that side
+  - The consumers are the layout lookup, the reuse evidence, the failure hints, and the `ignored-module` warning. Each path derives the facts that its consumers need, apart from the other paths.
+  - Round 1 of the review of this branch found six defects of this class. The branch fixed each one where it occurred, on 2026-11-26:
+    - **Base imports used the working export.** A base exported `old-build/old.js` and the head exported `new-build/new.js`, with matching layouts on both sides. The base failed on `new-build/new.js`, because native lookup read the package through the link of the working installation. With a base `false` entry, an existing base build also failed when the working build was absent. The fix looks the package up again in the side's own package folder when its `package.json` differs from the installed copy. The CSS resolver now checks a kept target under the side's package root.
+    - **A linked build folder skipped the layout in JavaScript.** With `esm` linked to `release` and the entry `{ "esm": "source" }`, a JavaScript import loaded `release/skin.css`. A CSS `@import` of the same export loaded `source/skin.css`. The sidecar resolved the link before it matched the build folder. The fix passes the declared target whose real path equals the native result to the layout lookup.
+    - **The warning skipped relative requires.** The warning skipped every require that Node loads, because it assumed that a base recovers the source. Recovery covers only imports by package name, so an ignored `generated/plugin.cjs` that a relative require loaded got no warning. The fix sends the modules that Node loads as evidence, and it marks each one that Mokly's require reached by package name. The check skips only a marked module whose layout gives a source that Git tracks or does not ignore.
+    - **A relative import got a useless hint.** The warning and the failure messages named `moduleResolution.sourcePackages` for any file in a workspace package. No entry can change a relative import such as `./packages/theme/esm/skin.css`. The fix names the setting only for an import by package name of a target below a package subfolder. A `false` entry that ends the layout order also removes the hint.
+    - **Bundled PostCSS plugins escaped the warning.** The PostCSS bundler dropped the entry file of each bundle from its import evidence. The PostCSS configuration can name a workspace plugin in record form, or load it by a computed import. Such a plugin enters the bundler as an entry, so its ignored build file got no warning. The fix gives the bundler an explicit entry role.
+    - **Stylesheet records repeated the PostCSS import list.** The worker returned its cumulative `bundledImports` list with each stylesheet, and each cached record kept a copy. For 400 records that share 500 paths of 80 bytes, the copies add about 79 MiB to a cache of 64 MiB. The fix replaced the list with a tag on the `plugin_inputs` entry of each file that a PostCSS bundle reached.
+  - The record keeps the behaviour that the protocol pages state, so it needs no protocol change.
+- **Problem:** Each path derives part of the facts of a workspace import on its own. One consumer can then lose or misread a fact that another path already holds.
+- **Impact if no action:** Each new consumer, such as a new hint or a new evidence list, must derive the facts again and can repeat these defects. The result is a wrong file, a useless hint, or a missed warning, and a missed warning can cost Changes in a later pull request.
+- **Root question:** How does every consumer of a workspace import read the same facts about how that import resolved?
+- **Options:**
+  - **A.** Keep the six fixes of 2026-11-26 where they are. Each later consumer derives the facts that it needs, and a review must check each one. Effort: Small.
+  - **B.** Build one resolution record in the sidecar only. `resolveImport`, `resolveRequire`, and the PostCSS loaders return it, and the evidence that the sidecar sends to the core carries it. The Rust CSS resolver keeps its own derivation, so CSS and JavaScript can still disagree. Effort: Large.
+  - **C.** Build one resolution record for each workspace import, in the sidecar and in the Rust CSS resolver. It holds the side, the declared target, the canonical file, the import form, and the available fallback. The failure hints, the reuse evidence, and the `ignored-module` warning read only the record. Effort: Large.
+- **Left out:**
+  - Dependency views with workspace links to the files of each side. They fix only the side fact, and they add setup and cleanup to each base.
+  - A table of import forms and outcomes that both copies of the rule run. It finds a difference between the copies, but each consumer still derives the facts.
+- **Wider fix:** C. One owner keeps the package selection, the path mapping, the import form, and the fallback together, so no consumer derives them again.
+- **Previous examples:**
+  - [workspace-bundle-export-conditions.md](./workspace-bundle-export-conditions.md) records a difference between the native export selection and the recovery of a missing build.
+  - [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md) records an earlier case where an early link resolution lost a fact that a later lookup needed.
+  - Commit `89760791f` of #501, on 2026-11-24, added separate bundled and Node-loaded paths when it added the recovery of workspace sources.
+- **Related:**
+  - [workspace-bundle-export-conditions.md](./workspace-bundle-export-conditions.md): work that waits. For a failed lookup, the record needs the active export target. Option F of that item selects it by a walk of the matched export key. Do that work first, or with the record.
+  - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code. Its relative probes for synchronous requires give imports that the record must describe.
+  - [postcss-relative-require-retry.md](./postcss-relative-require-retry.md): same code. The import form of the record also tells `resolveRequire` that a name is relative.
+  - [ignored-module-nested-paths.md](./ignored-module-nested-paths.md): same code. The warning that reads the record must not give the hint for a file in a nested repository.
+- **Recommendation:** C. It gives every consumer one set of facts, in JavaScript and in CSS, so a new consumer cannot derive them wrongly.
+- **Action:** fix after merge, apply C, because the record changes every workspace lookup path in both languages, beyond the purpose of this branch.

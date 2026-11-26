@@ -1,0 +1,43 @@
+# Warning skips ignored plugin files of other types
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the wider fix, option E, of finding 81 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `crates/mokly-render/src/postcss_inventory.rs`, where the PostCSS dependency reports of a stylesheet enter its inventory, the `warnings` function in `crates/mokly-compare/src/ignored_modules.rs`, and the "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md`.
+- **Reason:** The option widens the user's warning rule of 2026-11-25, and `--strict` counts the new warnings.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and Git ignores.
+  - **PostCSS dependency report:** A `dependency` message that a PostCSS plugin returns for a file that it read. A `dir-dependency` message reports a scanned directory instead.
+  - **Tailwind:** A PostCSS plugin that inlines local CSS imports and reports each file that it reads.
+- **Background:**
+  - On 2026-11-25 the user chose to warn for each file that the head loads and Git ignores, because a later base cannot load it. The "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md` states the rule. `--strict` counts the warning.
+  - The rule names the files that a bundled import or a CSS `@import` of the head loads.
+  - Since 2026-11-26 the warning also counts each exact PostCSS dependency report of a stylesheet file. This covers a local `@import` that Tailwind inlines before Mokly's CSS bundler sees it. The message has no `sourcePackages` hint, because no entry can change a file that a plugin loads.
+  - The warning skips the files of a directory scan.
+  - A probe of the review with Tailwind 4.3.3 showed exact reports for each inlined `@import`, direct or nested. Tailwind also reported the targets of `@reference` and `@config`.
+- **Problem:** A plugin can read an ignored file of another type. Examples are a Tailwind `@config` script, an explicit `@source` file, and a data file of another plugin. The warning gives nothing for such a file.
+- **Impact if no action:** A later base can fail to compile the stylesheet, for example without its `@config` file. It can also render other CSS without an ignored `@source` file, and Changes then shows a difference that the pull request did not make.
+- **Root question:** How does the author learn that a later base lacks a file that a PostCSS plugin reads?
+- **Options:**
+  - **D.** Keep the state that option D left on 2026-11-26: count only the exact reports of stylesheet files. Effort: Small.
+  - **E.** Count each exact PostCSS dependency report that Git ignores, of any file type. Effort: Medium.
+    - Keep the files of directory scans out.
+    - Give these files the message without the `sourcePackages` hint.
+    - Change the rule and its decision text in the "Ignored Modules" section.
+    - Add a Tailwind case with an ignored `@config` file and an ignored explicit `@source` file.
+- **Left out:**
+  - A warning for each file of a directory scan too. Tailwind scans template trees, so the warning would name files that the stylesheet does not load.
+  - A list of the file types that count. A plugin can load or only scan files of the same type, and a report does not say which.
+  - A check render from the tracked files only. It cannot name an ignored file whose absence changes the CSS without an error, such as an `@source` file.
+  - Only two options remain, because Mokly either counts each exact report or keeps the limit to stylesheet files.
+- **Wider fix:** E. It treats every exact file that a plugin reads by one rule, whatever its type.
+- **Previous examples:** The renderer exclusion check, `validate` at `crates/mokly-render/src/postcss_nested.rs:27`, already joins exact plugin reports to nested CSS imports.
+- **Related:**
+  - [ignored-module-nested-paths.md](./ignored-module-nested-paths.md): options that change the same rule. Both widen the `ignored-module` rule of 2026-11-25, so answer them together.
+  - [postcss-inlined-package-imports.md](./postcss-inlined-package-imports.md): same cause. Tailwind also resolves a CSS package import itself, and the warning then names the inlined build file without the hint.
+- **Recommendation:** E. It reports each file that a plugin reads and a later base lacks, with the message that a stylesheet file already gets.
+- **Action:** ask the user, because E widens the warning rule of 2026-11-25, and `--strict` counts the new warnings, so a strict build can newly fail.

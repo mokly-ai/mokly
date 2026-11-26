@@ -1,0 +1,56 @@
+# Git's file list misclassifies nested paths
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from finding 82 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `ignored_paths` at `crates/mokly-compare/src/working_inputs.rs:107`, `GitRepository::candidates` at `crates/mokly-git/src/access.rs:20`, `candidate` at `crates/mokly-git/src/tree.rs:173`, the `warnings` function in `crates/mokly-compare/src/ignored_modules.rs`, and the "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md`.
+- **Reason:** The recommended option widens the user's warning rule of 2026-11-25 to files that Git does not ignore.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and Git ignores.
+  - **Nested checkout:** A directory in the working tree that is the working tree of another Git repository, and that the outer repository does not track.
+  - **Submodule:** A nested repository that the outer repository tracks as a gitlink, which is an index entry with the mode `160000`.
+  - **Git index:** The list of paths and file modes that Git stages for the next commit.
+- **Background:**
+  - Changes compares the head, which Mokly renders from the working tree, with a base, which Mokly renders from the files of a Git commit.
+  - On 2026-11-25 the user chose to warn for each file that the head loads and Git ignores, because a later base cannot load it. The "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md` states this rule. `--strict` counts the warning.
+  - `ignored_paths` receives the repository paths that the head loaded. It removes each path that `git ls-files -z --cached --others --exclude-standard` lists. It also removes each path that has a listed ancestor. This item calls that second step the ancestor rule.
+  - `GitRepository::candidates` runs that command. `candidate` drops each listed entry that ends in `/`.
+  - Git lists an unignored nested checkout as one entry that ends in `/`, such as `vendor/ds/`. The adapter drops that entry, so the check treats each file below it as ignored.
+  - Git lists a submodule as its gitlink path, such as `vendor/sub`. The ancestor rule then hides each file below the submodule.
+  - When a tracked file becomes a directory, the index can still list the old file path. The ancestor rule then hides each ignored file in the new directory until the index records the replacement.
+  - Base extraction omits gitlinks. So a later base cannot load a file below a nested checkout or a submodule either.
+  - Probes of the review on 2026-11-26:
+    - An import of `vendor/ds/skin.css` from an unignored nested checkout got the `ignored-module` warning, which says that Git ignores the file.
+    - An ignored `replaced/theme.css` got no warning while the index still listed the tracked file `replaced`.
+    - A commit of the outer repository recorded the nested checkout as a `160000` gitlink. The later base failed to load `./vendor/ds/skin.css`.
+  - No option applies before the answer. Option B alone would remove the only warning for imports from a nested checkout.
+- **Problem:** The check infers the ignore status from Git's listing, and it misreads three kinds of nested path. A file in an unignored nested checkout gets a warning that names a false cause. A file in a submodule, and an ignored file below a replaced tracked file, get no warning.
+- **Impact if no action:** A strict build fails for an import from a nested checkout, with a false cause. The message can also name `moduleResolution.sourcePackages`, which cannot help. A strict build passes for an import from a submodule, though a later base cannot load it.
+- **Root question:** How does Mokly find out, for each file that the head loads, whether a later base can load it, and give the true cause?
+- **Options:**
+  - **A.** Keep the listed entries that end in `/`, and tell them apart from indexed regular files. Use the entry type in the ancestor rule. The check still infers the ignore status from the listing. Effort: Medium.
+  - **B.** Ask Git for the ignore status of the loaded paths, and keep the current rule. Effort: Medium.
+    - Run `git ls-files -z --others --ignored --exclude-standard -- {paths}` in bounded chunks. Treat a returned entry that ends in `/` as a prefix of the paths below it.
+    - Do not use `git check-ignore`. It rejects `--literal-pathspecs`, and one path inside a submodule fails the whole batch.
+    - Handle the boundaries of nested working trees in the Git adapter. Add the nested checkout case to the tests.
+    - An import from a nested checkout then gets no warning, though a later base cannot load it.
+  - **C.** Add an exact path-status API to the Git adapter, for the warning check and the other working-tree callers. Each caller keeps its own rules for tracked, ignored, and nested paths. Effort: Large.
+  - **D.** Warn for each loaded file that is not a tracked or unignored regular file, by its exact path. Effort: Medium.
+    - Keep the entries that end in `/` and the gitlink entries only to name the cause.
+    - Give a file in a nested repository its own message, without the `sourcePackages` hint.
+    - Update the message rows of the "Ignored Modules" section.
+    - Add a test for each case in a new CLI test file, because `crates/mokly-cli/tests/changes_ancestor_tests.rs` is near the cap of 300 lines.
+    - `--strict` then also counts imports from a nested checkout or a submodule.
+- **Left out:**
+  - Removing the ancestor rule alone. It keeps the false cause for a nested checkout, and it loses the difference between a nested checkout and a submodule.
+  - A check render from the tracked files only. It finds a file that a later base cannot load, but it cannot give the cause, such as a nested repository or an ignore rule.
+- **Wider fix:** D. It decides by the exact path whether a later base can load the file, and it uses the listing only to name the cause.
+- **Previous examples:** Mokly's dependency discovery already treats nested clones and submodules as opaque directories. The "Dependency Identity" section of `docs/protocol/mokly-base-dependencies.md` states that rule.
+- **Related:**
+  - [ignored-plugin-file-reports.md](./ignored-plugin-file-reports.md): options that change the same rule. Both widen the `ignored-module` rule of 2026-11-25, so answer them together.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. Its shared record decides the `sourcePackages` hint, which a file in a nested repository must not get.
+- **Recommendation:** D. It checks the exact path that the warning names, and it gives the true cause, also for a submodule. If the user keeps the rule of 2026-11-25, B is the best option.
+- **Action:** ask the user, because D widens the warning rule of 2026-11-25 beyond ignored files, and `--strict` then counts submodule imports.

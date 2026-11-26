@@ -1,0 +1,38 @@
+# Plugin-inlined package imports skip the source rule
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the check of finding 81 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `Preparation::source` in `crates/mokly-css/src/compiler.rs`, whose PostCSS call is at line 143 at commit `7da557d5d`, the "Workspace Package Imports" section of `docs/protocol/mokly-configuration-imported-styles.md`, and the "Transform" section of `docs/protocol/mokly-imported-styles-postcss.md`.
+- **Reason:** The gap predates the branch for detected layouts, and its fix changes the text that every PostCSS plugin receives.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **Workspace source rule:** The rule in `docs/protocol/mokly-comparison-packages.md` that loads the source file of a workspace package where its export names a built file. The detected layout and `moduleResolution.sourcePackages` give the folders.
+  - **Tailwind:** A PostCSS plugin that inlines each local CSS `@import` itself, with its own package lookup.
+- **Background:**
+  - The "Workspace Package Imports" section of `docs/protocol/mokly-configuration-imported-styles.md` applies the workspace source rule to CSS `@import` targets.
+  - `Preparation::source` resolves each `@import` of a stylesheet with Mokly's resolver, but only to prune excluded renderer files. It passes the rest of the text to PostCSS with the authored `@import` names.
+  - After PostCSS, Mokly's CSS bundler follows the imports that remain in the output.
+  - Tailwind v4 inlines every local `@import` during PostCSS. So Mokly's resolver never resolves an import that Tailwind inlined.
+  - A probe of the review with Tailwind 4.3.3 imported a workspace package stylesheet by its package name. Tailwind inlined `packages/ui/dist/styles.css`, the built export target, and not its source.
+  - Since 2026-11-26 the `ignored-module` warning counts each exact plugin report of a stylesheet file. So when Git ignores the built file, the author gets a warning without the `sourcePackages` hint.
+- **Problem:** A PostCSS plugin that resolves CSS imports itself bypasses the workspace source rule. Neither the detected layout nor a `sourcePackages` entry applies to such an import, on the head or on a base.
+- **Impact if no action:** The head inlines a built file, which can be stale, in place of its source. A later base lacks an ignored build, so it can fail or render other CSS, and no `sourcePackages` entry can fix it.
+- **Root question:** How does a CSS package import that a PostCSS plugin inlines load the same file as an import that Mokly's bundler follows?
+- **Options:**
+  - **A.** State the limit in the "Workspace Package Imports" section. A plugin that resolves imports itself bypasses the rule, and authors import the source stylesheet by a relative path. This changes a requirement. Effort: Small.
+  - **B.** Before PostCSS runs, rewrite each kept `@import` whose target the workspace source rule maps to a source. Effort: Medium.
+    - The new name is the path of that source, relative to the importer.
+    - Every other import keeps its authored name. Each `layer()`, `supports()`, and media part stays.
+    - Tailwind's `@reference` and `@config` keep their own lookup.
+    - Add a Tailwind case for the head and for a base.
+  - **C.** Keep the text. After PostCSS, compare each exact plugin report with Mokly's resolution of the kept import tree. Fail or warn when a plugin read a build target that the layout order maps to another file. This adds a new failure or warning. Effort: Medium.
+- **Left out:** Mokly could put the text of the selected source into the stylesheet before PostCSS. That breaks the relative URLs and `@source` paths of the inlined file, and B gives the plugin the same file at its own path.
+- **Wider fix:** B. Mokly's resolver then chooses the file of every workspace package import, whichever tool inlines it.
+- **Previous examples:** The renderer exclusion check, `validate` at `crates/mokly-render/src/postcss_nested.rs:27`, already handles a plugin that inlines nested imports and so bypasses pruning.
+- **Related:** [ignored-plugin-file-reports.md](./ignored-plugin-file-reports.md): same cause. Both come from a plugin that reads files without Mokly's resolver.
+- **Recommendation:** B. It makes every plugin that inlines imports meet the existing rule, with no new failure.
+- **Action:** fix after merge, apply B, because the gap predates this branch for detected layouts, and the rewrite needs its own review and a Tailwind fixture.

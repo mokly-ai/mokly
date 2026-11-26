@@ -21,7 +21,10 @@
 - **Left out:** Skipping JSX sources would leave a Git base unable to load the package when its build is absent.
 - **Wider fix:** D. The existing compiler handles both import forms with one resolver and parser. E extends that support to the restored runtime.
 - **Previous examples:** The synchronous PostCSS path already shares its script loader table with `postcss-source.ts`.
-- **Related:** The relative probes need the stylesheet evidence in [PostCSS input evidence](./postcss-probes-external-reads-environment.md).
+- **Related:**
+  - The relative probes need the stylesheet evidence in [PostCSS input evidence](./postcss-probes-external-reads-environment.md).
+  - [postcss-relative-require-retry.md](./postcss-relative-require-retry.md): same code. A missed relative PostCSS require retries from the parent folder of each dependency root. The relative probes of option C must stay in the folder of the requiring file.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. Its shared record of each workspace import must describe the imports that the relative probes give.
 - **Recommendation:** C. It covers the confirmed two-file PostCSS source with a smaller change. D and E cover shared loading as separate design choices.
 - **Action:** fix after merge, apply C with the lookup evidence work. Review D and E if the implementation shares the full loader.
 - **Done when:** A computed PostCSS require of a missing workspace build loads a source that imports an extensionless or `.js`-suffixed TypeScript neighbor. A changed candidate ends stale reuse.

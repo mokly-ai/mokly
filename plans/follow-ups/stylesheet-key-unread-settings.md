@@ -1,0 +1,47 @@
+# Stylesheet cache key holds unread settings
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from the wider fix, option B, of finding 3 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `attempt` at `crates/mokly-render/src/stylesheets.rs:71`, which builds the key at line 78, `CachedStylesheets::lookup` at `crates/mokly-render/src/stylesheet_cache.rs:73`, `ContextLease` at `crates/mokly-render/src/leases.rs:28`, `source_package_maps` at `crates/mokly-render/src/side.rs:59`, and the stylesheet record key paragraph at `crates/mokly-render/README.md:215`.
+- **Reason:** A typed key needs a review of each stylesheet and PostCSS setting that the compiler reads, beyond the layout fix that the branch needed.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **Stylesheet record:** The cached compiled CSS of one stylesheet root, with the stamp of its inputs.
+- **Background:**
+  - A base can reuse a stylesheet record of the head. The lookup needs an equal key first, and only then checks the recorded inputs.
+  - Each record key starts with one settings string. `attempt` builds it with `format!` from the `Debug` text of these values:
+    - `config.input`, the whole authored configuration of the side
+    - the paths of the renderer module and the PostCSS module
+    - the source root of the side, when the configuration names a PostCSS module
+    - the whole `ModuleResolution` value of the side
+    - the CSS `Resolution` value, which repeats the aliases, conditions, main fields, extensions, and source package layouts
+    - the dependency roots and the repository roots of the side
+  - The same string identifies the configuration of a PostCSS context, in `ContextLease`.
+  - The base loads the `mokly.config.json` of the base commit, and the head loads the one of the working tree.
+  - Head reuse for the base came with commit `c6d2fffa4` of #385, on 2026-11-20.
+  - With the same `sourcePackages` entry on both sides, the head key held one layout map. The base key held two equal maps and a raw copy of the working map, so every base lookup missed. Commit `bdf7f0d0c` of 2026-11-26 fixed this case. `source_package_maps` now returns one canonical list, and the raw working map left the key.
+- **Problem:** The key still holds the whole authored configuration, with fields that the stylesheet compiler does not read, such as `review`, `watch`, and `schema`. A pull request that changes such a field makes every base lookup miss the head records.
+- **Impact if no action:** The base compiles each unchanged stylesheet again in every comparison of such a pull request. A later setting can enter the key in the same way, also when the compiler does not read it.
+- **Root question:** How does the stylesheet cache key hold exactly the settings that the compiler reads?
+- **Options:**
+  - **E.** Keep the state that option E left on 2026-11-26: one canonical layout list in a string key. Effort: Small.
+  - **F.** Remove `config.input` from the string, and add only the authored fields that the compiler reads. The string stays, so each new setting needs the same choice by hand. Effort: Small.
+  - **B.** Replace the string with a typed key. Effort: Medium.
+    - Build it from the values that the stylesheet compiler and the PostCSS context receive, and from nothing else.
+    - Derive the layout identity from the ordered layout choices of each package.
+    - Compare the key by value, or digest a canonical JSON form of it.
+    - Update the key paragraph of `crates/mokly-render/README.md`.
+  - **C.** Keep the strict key. On a miss for a different key, check the recorded import resolutions of the head record. Reuse the CSS when the sources and every resolution result still match. Effort: Large.
+- **Left out:**
+  - Options A and D of the review, which drop the redundant maps or keep the working map only when it differs. Option E, which the branch applied, covers both.
+  - A key without the layouts. A changed layout could then reuse a stylesheet whose selected source differs.
+- **Wider fix:** B. A key that Mokly builds from the input values of the compiler cannot hold a setting that the compiler does not read.
+- **Previous examples:**
+  - Commit `c6d2fffa4` of #385 added head stylesheet reuse for the base. Commit `940ddd742` of #384 made changes to resolver inputs invalidate the stylesheet cache. Both merged on 2026-11-20.
+  - The render environment in `crates/mokly-render/src/render_environment.rs` already digests a typed `Settings` value with the fields that a render reads.
+- **Recommendation:** B. It keeps unread settings out of the key, so a configuration change that the compiler ignores keeps head reuse.
+- **Action:** fix after merge, apply B, because the typed key needs a review of every setting that the compiler reads, beyond this branch.
