@@ -12,14 +12,19 @@ export function start(
   cwd: string,
   memoryStopKiB = DEFAULT_MEMORY_STOP_KIB,
   sidecarTimeoutMs?: number,
-  onOutputLine?: () => void,
+  options: {
+    onOutputLine?: () => void;
+    environment?: NodeJS.ProcessEnv;
+  } = {},
 ) {
+  const { onOutputLine, environment } = options;
   const child = spawn(process.execPath, args, {
     cwd,
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
+      ...environment,
       MOKLY_OUTPUT: "plain",
       ...(sidecarTimeoutMs === undefined
         ? {}

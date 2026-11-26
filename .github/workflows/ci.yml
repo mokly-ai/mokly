@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
-      node-matrix: ${{ steps.profile.outputs.node-matrix }}
+      viewer-node-matrix: ${{ steps.profile.outputs.viewer-node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
       viewer-shards: ${{ steps.shards.outputs.viewer }}
       viewer-shard-total: ${{ steps.shards.outputs.viewer-total }}
@@ -60,10 +60,10 @@ jobs:
         run: |
           echo "release-pull-request=$RELEASE_PULL_REQUEST" >> "$GITHUB_OUTPUT"
           if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
-            echo 'node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
+            echo 'viewer-node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
             echo 'verification-runtimes=node-22.15.0,node-24' >> "$GITHUB_OUTPUT"
           else
-            echo 'node-matrix=["22.15.0"]' >> "$GITHUB_OUTPUT"
+            echo 'viewer-node-matrix=["22.15.0"]' >> "$GITHUB_OUTPUT"
             echo 'verification-runtimes=node-22.15.0' >> "$GITHUB_OUTPUT"
           fi
       - name: Set up Node.js
@@ -162,7 +162,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        node: ${{ fromJSON(needs.profile.outputs.viewer-node-matrix) }}
         shard: ${{ fromJSON(needs.profile.outputs.viewer-shards) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -230,7 +230,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Every runtime profile runs the browser suite on Node 22.15.0 only.
+        node: ["22.15.0"]
         shard: ${{ fromJSON(needs.profile.outputs.browser-shards) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
@@ -245,7 +246,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node }}
           package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
@@ -286,7 +287,9 @@ jobs:
       # the downloads are one set on every image. It takes a restored package
       # from its archive folder instead of the mirror. The install runs in the
       # background while the next step builds. It holds a lock until it ends,
-      # so the wait step blocks on the lock instead of polling.
+      # so the wait step blocks on the lock instead of polling. The wait step
+      # streams the install log until the install shell exits, so a stalled
+      # install shows its last output in the job log.
       - &chromium-install-start
         name: Start Chromium install
         env:
@@ -299,14 +302,15 @@ jobs:
           exec 9> "$RUNNER_TEMP/chromium-install.lock"
           flock 9
           nohup bash -c 'npx playwright install --with-deps chromium > "$RUNNER_TEMP/chromium-install.log" 2>&1 9>&-; echo "$?" > "$RUNNER_TEMP/chromium-install.status"' < /dev/null > /dev/null 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/chromium-install.pid"
       - name: Build native and JavaScript packages
         run: npm run build
       # A missing status means that the install stopped before it ended.
       - &chromium-install-wait
         name: Wait for Chromium install
         run: |
+          tail -n +1 -F --pid="$(cat "$RUNNER_TEMP/chromium-install.pid")" "$RUNNER_TEMP/chromium-install.log" 2> /dev/null
           flock "$RUNNER_TEMP/chromium-install.lock" true
-          cat "$RUNNER_TEMP/chromium-install.log"
           test "$(cat "$RUNNER_TEMP/chromium-install.status")" = 0
       - name: Collect Chromium package downloads
         id: chromium-downloads
@@ -362,21 +366,20 @@ jobs:
       fail-fast: false
       matrix:
         # Shard 1 checks formatting and Clippy. Each later shard builds and
-        # runs one weighted share of the Rust test targets: five on macOS and
-        # six on Windows. Shard 2 also runs the doc tests.
+        # runs one weighted share of the Rust test targets of the native test
+        # scope: four on macOS and six on Windows. Shard 2 also runs the doc
+        # tests.
         include:
           - runner: macos-26
-            shard: 1/6
+            shard: 1/5
           - runner: macos-26
-            shard: 2/6
+            shard: 2/5
           - runner: macos-26
-            shard: 3/6
+            shard: 3/5
           - runner: macos-26
-            shard: 4/6
+            shard: 4/5
           - runner: macos-26
-            shard: 5/6
-          - runner: macos-26
-            shard: 6/6
+            shard: 5/5
           - runner: windows-2025
             shard: 1/7
           - runner: windows-2025
@@ -526,7 +529,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Every runtime profile runs static delivery on Node 22.15.0 only.
+        node: ["22.15.0"]
         # Each delivery mode runs in its own job on its own fresh build.
         mode: [static-http, file]
     env:
@@ -541,7 +545,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node }}
           package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
@@ -706,73 +710,56 @@ jobs:
             infrastructure: false
             rust_cache: true
           # Mockup shard 1 runs the checks without a browser, shard 2 the policy
-          # and served suites, and shards 3 to 6 split the disk browser suite.
-          - name: Mockup checks 1/6
+          # and served suites, and shards 3 to 5 split the disk browser suite.
+          - name: Mockup checks 1/5
             command: cloud-mockups
-            shard: "1/6"
+            shard: "1/5"
             install_dependencies: true
             browser_workspace: ""
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 2/6
+          - name: Mockup checks 2/5
             command: cloud-mockups
-            shard: "2/6"
+            shard: "2/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 3/6
+          - name: Mockup checks 3/5
             command: cloud-mockups
-            shard: "3/6"
+            shard: "3/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 4/6
+          - name: Mockup checks 4/5
             command: cloud-mockups
-            shard: "4/6"
+            shard: "4/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 5/6
+          - name: Mockup checks 5/5
             command: cloud-mockups
-            shard: "5/6"
+            shard: "5/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 6/6
-            command: cloud-mockups
-            shard: "6/6"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/mockups"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 1/2
+          # The site browser suite takes about three minutes, so one job runs
+          # the whole site suite.
+          - name: Site checks
             command: cloud-site
-            shard: "1/2"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/site"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 2/2
-            command: cloud-site
-            shard: "2/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false

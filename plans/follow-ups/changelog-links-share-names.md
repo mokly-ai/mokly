@@ -41,16 +41,15 @@
   - **B.** Change nothing. The release heading and the paragraph around each
     link name its target for a reader who reads in order. WCAG 2.4.9 is
     Level AAA. Effort: Small.
-  - **C.** Add a rule to the shared accessibility walk,
-    `apps/site/tests/browser/accessibility.ts`, which
-    `apps/site/tests/browser/pages.spec.ts` runs on every route: links on
-    one page with one accessible name open one target. Add the rule to
-    `docs/protocol/cloud/site-delivery.md`. It is a new gate, which needs
-    Cal's approval. These links fail it first. Effort: Large.
+  - **C.** Add a built HTML check in `apps/site/tests/pages.test.ts` for
+    links on the same page with one name in the markup and different targets.
+    Add the rule to `docs/protocol/cloud/site-delivery.md`. The check reuses
+    the Node route walk. It is a new gate and needs Cal's approval. These
+    links fail it first. Effort: Medium.
 - **Left out:** Fewer links, because each release needs its own details
   link.
-- **Wider fix:** C. It fails on every page where one name opens two
-  targets.
+- **Wider fix:** C. It checks every built page for links with one name in
+  the markup and different targets.
 - **Previous examples:** On 2026-11-24 the home and pricing pages had two
   **Get started** links with different targets. Cal chose to rename the
   link beside the open-source CLI to **Docs**, which opens the

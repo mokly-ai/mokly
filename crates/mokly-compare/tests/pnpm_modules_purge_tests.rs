@@ -8,6 +8,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 
 use mokly_compare::cache_types::Cache;
@@ -36,8 +37,7 @@ use support::{cache, git, storage};
 mod support;
 
 const VERSION_ENV: &str = "MOKLY_PNPM_PURGE_VERSION";
-const CI_ENV: &str = "MOKLY_PNPM_PURGE_CI";
-const ACTIONS_ENV: &str = "MOKLY_PNPM_PURGE_ACTIONS";
+const REPOSITORY_ENV: &str = "MOKLY_PNPM_PURGE_REPOSITORY";
 
 #[test]
 fn pnpm_versions_recreate_tracked_modules_without_a_tty_prompt() {
@@ -48,6 +48,7 @@ fn pnpm_versions_recreate_tracked_modules_without_a_tty_prompt() {
     ];
     let Some(version) = env::var_os(VERSION_ENV) else {
         let launchers = tempfile::tempdir().unwrap();
+        let root = dunce::canonicalize(launchers.path()).unwrap();
         for (version, relative_cli) in versions {
             let cli = cli_path(relative_cli);
             assert!(
@@ -55,47 +56,57 @@ fn pnpm_versions_recreate_tracked_modules_without_a_tty_prompt() {
                 "Pinned pnpm {version} CLI is missing at {}; run npm ci",
                 cli.display()
             );
-            let bin = launchers.path().join(version);
+            let bin = root.join(version);
             fs::create_dir(&bin).unwrap();
             write_launcher(&bin.join("pnpm"), &cli);
             let path = manager_path(&bin);
-            for (ci, actions) in [(false, false), (true, false), (false, true), (true, true)] {
-                let mut child = Command::new(env::current_exe().unwrap());
-                child
-                    .args([
-                        "--exact",
-                        "pnpm_versions_recreate_tracked_modules_without_a_tty_prompt",
-                        "--nocapture",
-                    ])
-                    .env(VERSION_ENV, version)
-                    .env(CI_ENV, if ci { "true" } else { "false" })
-                    .env(ACTIONS_ENV, if actions { "true" } else { "false" })
-                    .env("PATH", &path);
-                if ci {
-                    child.env("CI", "true");
-                } else {
-                    child.env_remove("CI");
-                }
-                if actions {
-                    child.env("GITHUB_ACTIONS", "true");
-                } else {
-                    child.env_remove("GITHUB_ACTIONS");
-                }
-                let output = child.output().unwrap();
-                assert!(
-                    output.status.success(),
-                    "pnpm {version} with CI={ci} GITHUB_ACTIONS={actions} failed:\n{}\n{}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr)
-                );
+            let repository = bin.join("repository");
+            prepare_repository(&repository, version);
+            for actions in [false, true] {
+                thread::scope(|scope| {
+                    for ci in [false, true] {
+                        let path = &path;
+                        let repository = &repository;
+                        scope.spawn(move || verify_install(version, path, repository, ci, actions));
+                    }
+                });
             }
         }
         return;
     };
 
-    let ci = env::var_os(CI_ENV).is_some_and(|value| value == "true");
-    let actions = env::var_os(ACTIONS_ENV).is_some_and(|value| value == "true");
-    run_install(&version.to_string_lossy(), ci, actions);
+    let repository = PathBuf::from(env::var_os(REPOSITORY_ENV).unwrap());
+    run_install(&version.to_string_lossy(), repository);
+}
+
+fn verify_install(version: &str, path: &str, repository: &Path, ci: bool, actions: bool) {
+    let mut child = Command::new(env::current_exe().unwrap());
+    child
+        .args([
+            "--exact",
+            "pnpm_versions_recreate_tracked_modules_without_a_tty_prompt",
+            "--nocapture",
+        ])
+        .env(VERSION_ENV, version)
+        .env(REPOSITORY_ENV, repository)
+        .env("PATH", path);
+    if ci {
+        child.env("CI", "true");
+    } else {
+        child.env_remove("CI");
+    }
+    if actions {
+        child.env("GITHUB_ACTIONS", "true");
+    } else {
+        child.env_remove("GITHUB_ACTIONS");
+    }
+    let output = child.output().unwrap();
+    assert!(
+        output.status.success(),
+        "pnpm {version} with CI={ci} GITHUB_ACTIONS={actions} failed:\n{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 fn cli_path(relative: &str) -> PathBuf {
@@ -127,28 +138,38 @@ fn manager_path(bin: &Path) -> String {
         .into_owned()
 }
 
-fn run_install(version: &str, _ci: bool, _actions: bool) {
-    let temporary = tempfile::tempdir().unwrap();
-    let root = dunce::canonicalize(temporary.path())
-        .unwrap()
-        .join("repository");
-    fs::create_dir(&root).unwrap();
-    git(&root, &["init", "-b", "main"]);
-    git(&root, &["config", "core.autocrlf", "false"]);
-    git(&root, &["config", "user.name", "Mokly Tests"]);
-    git(&root, &["config", "user.email", "tests@mokly.invalid"]);
-    write(&root, "package.json", package_json(version));
+/// Each environment reads this commit and extracts it into its own cache.
+fn prepare_repository(root: &Path, version: &str) {
+    fs::create_dir(root).unwrap();
+    git(root, &["init", "-b", "main"]);
+    git(root, &["config", "core.autocrlf", "false"]);
+    write(root, "package.json", package_json(version));
     write(
-        &root,
+        root,
         "dep/package.json",
         br#"{"name":"dep","version":"1.0.0","main":"index.js"}"#,
     );
-    write(&root, "dep/index.js", b"module.exports = 'dep';\n");
-    write(&root, "pnpm-lock.yaml", lockfile());
-    write(&root, "node_modules/.modules.yaml", b"{}\n");
-    write(&root, "node_modules/.pnpm/lock.yaml", b"{}\n");
-    git(&root, &["add", "-A"]);
-    git(&root, &["commit", "-m", "pnpm purge fixture"]);
+    write(root, "dep/index.js", b"module.exports = 'dep';\n");
+    write(root, "pnpm-lock.yaml", lockfile());
+    write(root, "node_modules/.modules.yaml", b"{}\n");
+    write(root, "node_modules/.pnpm/lock.yaml", b"{}\n");
+    git(root, &["add", "-A"]);
+    git(
+        root,
+        &[
+            "-c",
+            "user.name=Mokly Tests",
+            "-c",
+            "user.email=tests@mokly.invalid",
+            "commit",
+            "-m",
+            "pnpm purge fixture",
+        ],
+    );
+}
+
+fn run_install(version: &str, root: PathBuf) {
+    let temporary = tempfile::tempdir().unwrap();
     let commit =
         ObjectId::parse(String::from_utf8_lossy(&git(&root, &["rev-parse", "HEAD"])).trim())
             .unwrap();

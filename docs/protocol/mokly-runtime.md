@@ -229,6 +229,12 @@ and a step that fails does not skip the steps after it. `build`
 and `publish` check cancellation before and after the output transaction's
 commit point and never leave a partial output directory in place.
 
+A stop never signals a process outside the command that it stops. The direct
+child of the command stays unreaped until its last stop signal, so no other
+process can take its process ID or process group number. Decision: reap after
+cleanup. Rejected: skip the group signal of a gone child, because an orphan
+that the search did not find would then survive.
+
 ## No Writes
 
 No command writes into the repository except `build` into its output directory. Serve,

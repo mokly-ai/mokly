@@ -46,27 +46,20 @@ fn renamed_push_updates_storage_and_addresses_the_new_provider_name() {
         401
     );
     app.queries(&mut |queries| {
-        let stored = queries
-            .github_repository(project.repository)
-            .unwrap()
-            .unwrap();
+        let stored = queries.github_repository(project.repository)?.unwrap();
         assert_eq!(stored.full_name, "octocat/Hello-World");
         assert!(!stored.private);
+        Ok(())
     });
     let id = Uuid::now_v7();
     assert_eq!(app.webhook(id, "push", body.clone(), true).status(), 202);
     assert_eq!(app.wait_delivery(id, DeliveryStatus::Done).attempts, 1);
     app.queries(&mut |queries| {
-        let stored = queries
-            .github_repository(project.repository)
-            .unwrap()
-            .unwrap();
+        let stored = queries.github_repository(project.repository)?.unwrap();
         assert_eq!(stored.full_name, "octocat/Renamed");
         assert!(stored.private);
-        assert_eq!(
-            queries.github_branches(project.repository).unwrap().len(),
-            1
-        );
+        assert_eq!(queries.github_branches(project.repository)?.len(), 1);
+        Ok(())
     });
     let list = response_json(
         app.request(
@@ -137,16 +130,14 @@ fn repository_lifecycle_actions_reconcile_the_current_selection() {
             requests + 1
         );
         app.queries(&mut |queries| {
-            let stored = queries
-                .github_repository(project.repository)
-                .unwrap()
-                .unwrap();
+            let stored = queries.github_repository(project.repository)?.unwrap();
             assert_eq!(stored.active, action != "deleted");
             if stored.active {
                 assert_eq!(stored.full_name, format!("new-owner/{action}"));
                 assert_eq!(stored.private, action == "privatized");
             }
-            assert!(queries.project(project.id).unwrap().is_some());
+            assert!(queries.project(project.id)?.is_some());
+            Ok(())
         });
     }
 }
@@ -182,12 +173,10 @@ fn ignored_repository_actions_still_refresh_metadata_without_provider_requests()
         );
         app.wait_delivery(id, DeliveryStatus::Ignored);
         app.queries(&mut |queries| {
-            let stored = queries
-                .github_repository(project.repository)
-                .unwrap()
-                .unwrap();
+            let stored = queries.github_repository(project.repository)?.unwrap();
             assert_eq!(stored.full_name, name);
             assert!(stored.private);
+            Ok(())
         });
     }
     let mode = app.github.mode.lock().unwrap();
@@ -218,11 +207,11 @@ fn recorded_repository_edit_reconciles_the_current_default_branch() {
     app.queries(&mut |queries| {
         assert_eq!(
             queries
-                .github_repository(project.repository)
-                .unwrap()
+                .github_repository(project.repository)?
                 .unwrap()
                 .default_branch,
             "current-default"
         );
+        Ok(())
     });
 }

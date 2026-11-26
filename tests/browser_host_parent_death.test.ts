@@ -55,10 +55,10 @@ export const home=defineScreen({path:'home',title:'Home',description:'',relatedD
     } finally {
       try {
         if (killed)
-          await assert.rejects(
-            host.close(),
-            /Example Serve did not stop cleanly/,
-          );
+          await assert.rejects(host.close(), {
+            message:
+              /^Example Serve did not stop cleanly, exit code 1, signal null:\n/,
+          });
         else await host.close();
       } finally {
         killSurvivingSidecars(sidecars);

@@ -2,6 +2,7 @@
 
 use std::mem;
 use std::sync::atomic::Ordering;
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
@@ -171,13 +172,20 @@ pub(crate) fn run(
     backend: Arc<dyn DocumentBackend>,
     limits: WriterLimits,
     observer: Arc<dyn StoreObserver>,
+    idle: Option<Sender<()>>,
 ) {
+    let waiting = || {
+        if let Some(idle) = &idle {
+            let _ = idle.send(());
+        }
+    };
     loop {
         let (epoch, closed, allowed) = shared.admission.status();
         if closed {
             return;
         }
         if !allowed {
+            waiting();
             shared.admission.wait(epoch);
             continue;
         }
@@ -203,6 +211,7 @@ pub(crate) fn run(
             }
         };
         let Some(requests) = requests else {
+            waiting();
             shared.admission.wait(epoch);
             continue;
         };
@@ -244,6 +253,10 @@ pub(crate) fn run(
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/idle_writer.rs"]
+pub(crate) mod idle_writer;
 
 #[cfg(test)]
 #[path = "_tests_/render_writer_tests.rs"]

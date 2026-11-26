@@ -1,6 +1,6 @@
 # Shard Weights
 
-Six CI suites split their tests over parallel shard jobs. Four of them
+Five CI suites split their tests over parallel shard jobs. Four of them
 place whole test files or test units by measured weights, so that the shards
 of one suite end at about the same time. The weights are committed JSON
 files. A stale weight changes only the balance of the shards, never the set
@@ -15,7 +15,6 @@ one group spread too far apart, under the
 | Rust tests (`Repository (...)`, `Native (...)`) | `testSeconds` of `scripts/verification/rust-test-weights.json` | The logs of the passed Repository and native jobs of each run                     |
 | App (`App checks {n}/{total}`)                  | `packages/app/src/_tests_/browser-shard-weights.json`          | The logs of the App checks jobs of the newest run in which every App shard passed |
 | Mockup (`Mockup checks {n}/{total}`)            | None                                                           | Playwright's `--shard` splits the disk suite by test count                        |
-| Site (`Site checks {n}/{total}`)                | None                                                           | Playwright's `--shard` splits the browser specs by test count                     |
 
 ## Refresh Every Weight File
 

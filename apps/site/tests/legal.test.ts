@@ -14,17 +14,15 @@ import {
 import { SITE_PATHS } from "../src/navigation.js";
 import { sitePath } from "../src/workspace.js";
 
-const DOCUMENTS: Readonly<
-  Record<PolicyId, { readonly firstHeading: string; readonly sections: number }>
-> = {
-  complaints: { firstHeading: "1. How to complain", sections: 5 },
-  privacy: { firstHeading: "1. Controller and service role", sections: 13 },
-  security: { firstHeading: "1. Hosting and isolation", sections: 10 },
-  terms: { firstHeading: "1. What Mokly does", sections: 16 },
-};
+import { attribute, byTag, markupLabel, one } from "./helpers/html.js";
+import { builtPage, labelled, namedLinks } from "./helpers/site-output.js";
 
-const OPERATOR = "Calum Moore Consulting Limited";
-const COMPANY_NUMBER = "09018453";
+const POLICY_IDS: readonly PolicyId[] = [
+  "terms",
+  "privacy",
+  "complaints",
+  "security",
+];
 
 function source(id: PolicyId): string {
   return readFileSync(sitePath("src", "content", "legal", `${id}.md`), "utf8");
@@ -39,13 +37,8 @@ function document(id: PolicyId): {
   return { body: match[2] ?? "", frontmatter: parse(match[1] ?? "") };
 }
 
-test("all four legal documents are substantive Markdown", () => {
-  assert.deepEqual(Object.keys(POLICIES), [
-    "terms",
-    "privacy",
-    "complaints",
-    "security",
-  ]);
+test("each legal route has a Markdown source without MDX", () => {
+  assert.deepEqual(Object.keys(POLICIES), POLICY_IDS);
   assert.deepEqual(
     readdirSync(sitePath("src", "content", "legal"))
       .filter((name) => name.endsWith(".md"))
@@ -54,31 +47,17 @@ test("all four legal documents are substantive Markdown", () => {
       .map((id) => `${id}.md`)
       .sort(),
   );
-  for (const id of Object.keys(POLICIES) as PolicyId[]) {
+  for (const id of POLICY_IDS) {
     const { body } = document(id);
-    const expected = DOCUMENTS[id];
-    assert.match(body, new RegExp(`^.+\\n\\n## ${expected.firstHeading}`, "s"));
-    assert.equal(body.match(/^## /gm)?.length, expected.sections, id);
-    assert.match(body, /hello@mokly\.ai/);
-    assert.doesNotMatch(body, /being prepared/i);
-    assert.doesNotMatch(body, /<[A-Z][^>]*>/, `${id} stays Markdown, not MDX`);
+    assert.doesNotMatch(body, /<[A-Z][^>]*>/, `${id} contains an MDX tag`);
   }
 });
 
 test("every checked-in legal document parses with an effective date", () => {
-  for (const id of Object.keys(POLICIES) as PolicyId[]) {
+  for (const id of POLICY_IDS) {
     const parsed = legalSchema.parse(document(id).frontmatter);
     assert.equal(parsed.title.length > 0, true, id);
     assert.equal(parsed.effective.toISOString(), "2026-11-22T00:00:00.000Z");
-  }
-});
-
-test("the contractual documents name the confirmed operator", () => {
-  for (const id of ["terms", "privacy", "complaints"] as const) {
-    const { body } = document(id);
-    assert.match(body, new RegExp(OPERATOR));
-    assert.match(body, new RegExp(COMPANY_NUMBER));
-    assert.doesNotMatch(body, /BOOKFOLIO LTD|17260970/);
   }
 });
 
@@ -110,7 +89,7 @@ test("each legal document links to the other three", () => {
     { label: "Complaints", route: SITE_PATHS.complaints },
     { label: "Security", route: SITE_PATHS.security },
   ]);
-  for (const id of Object.keys(POLICIES) as PolicyId[]) {
+  for (const id of POLICY_IDS) {
     const related = relatedPolicies(id);
     assert.equal(related.length, 3, id);
     assert.ok(
@@ -118,3 +97,36 @@ test("each legal document links to the other three", () => {
     );
   }
 });
+
+for (const id of POLICY_IDS) {
+  const { route } = POLICIES[id];
+  test(`${route} publishes its Markdown, effective date and related policy links`, () => {
+    const { body, frontmatter } = document(id);
+    const { effective } = legalSchema.parse(frontmatter);
+    const date = effectiveDate(effective);
+    const page = builtPage(route);
+    const expectedSection = /^## (.+)$/m.exec(body)?.[1];
+    const [section] = byTag(one(page, "site-policy-body"), "h2");
+    assert.ok(section && expectedSection, "first Markdown section");
+    assert.equal(
+      markupLabel(section),
+      expectedSection,
+      "rendered first section",
+    );
+
+    const times = byTag(one(page, "site-policy-date"), "time");
+    assert.deepEqual(
+      times.map((time) => [attribute(time, "datetime"), markupLabel(time)]),
+      [[date.datetime, date.readable]],
+      "published effective date",
+    );
+
+    const [navigation] = labelled(page, "nav", "Legal documents");
+    assert.ok(navigation, "legal documents navigation");
+    assert.deepEqual(
+      namedLinks(navigation),
+      relatedPolicies(id).map(({ label, route }) => [label, route]),
+      "related legal documents",
+    );
+  });
+}

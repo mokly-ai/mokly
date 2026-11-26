@@ -105,22 +105,24 @@ because a wrong shard would skip tests in silence.
 
 ## Mockup and Site Shards
 
-CI runs the `cloud-mockups` suite as six jobs, Mockup checks 1/6 to 6/6, and
-the `cloud-site` suite as two jobs, Site checks 1/2 and 2/2. Each job builds
-the workspace and the catalogue or the site itself. No job depends on the
+CI runs the `cloud-mockups` suite as five jobs, Mockup checks 1/5 to 5/5, and
+the `cloud-site` suite as one job without a shard, Site checks. The site
+browser suite takes about three minutes, so a second site job would not
+shorten CI. Each job builds the workspace and the catalogue or the site
+itself. No job depends on the
 output of another job, and together the jobs of a suite run every check of
 the unsharded suite once.
 
 With `N` shards, where `N` is at least 3 for the mockups and at least 2 for
 the site, the shards hold these checks:
 
-| Shard                     | Checks                                               |
-| ------------------------- | ---------------------------------------------------- |
-| Mockup 1                  | Determinism and types, without a browser             |
-| Mockup 2                  | Policy tests and the served browser suite            |
-| Mockup `n`, from 3 to `N` | Shard `n - 2` of `N - 2` of the disk browser suite   |
-| Site 1                    | Types, unit tests, links, and browser shard 1 of `N` |
-| Site `n`, from 2 to `N`   | Browser shard `n` of `N`                             |
+| Shard                     | Checks                                             |
+| ------------------------- | -------------------------------------------------- |
+| Mockup 1                  | Determinism, without a browser                     |
+| Mockup 2                  | Policy tests and the served browser suite          |
+| Mockup `n`, from 3 to `N` | Shard `n - 2` of `N - 2` of the disk browser suite |
+| Site 1                    | Unit tests, links, and browser shard 1 of `N`      |
+| Site `n`, from 2 to `N`   | Browser shard `n` of `N`                           |
 
 With two mockup shards, shard 1 runs the checks without a browser and shard 2
 runs both browser suites. One shard runs the complete suite. The mockup and

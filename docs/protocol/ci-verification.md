@@ -42,7 +42,7 @@ before any subprocess starts.
 | Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order, and the [boundary check](./repository-layout.md#boundary).                                                                                                                                                                                                                   |
 | Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition; only shard 1 runs the type check. |
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                                                                   |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests of the [native test scope](./ci-verification-repository.md#native-test-scope), for the `mokly-*` crates and `xtask` only.                                                                                                                                     |
 | Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                                                                   |
 | Required CI      | Evaluate the results of the runtime profile job, every repository shard, every viewer and browser shard, and every static-delivery job on each runtime selected for the event, of every native job and shard, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                            |
 
@@ -104,10 +104,10 @@ Each worker attempts every assigned suite and reports each failure.
 | ---------------------- | ------------------------------------------------------------------------- |
 | `cloud-rust`           | Clippy, the workspace Mokly build, and tests of every `mkc-` crate        |
 | `cloud-migrations`     | SQL pairs, migration checksums, and the append-only base lock             |
-| `cloud-typecheck`      | Type checks of every cloud npm project                                    |
+| `cloud-typecheck`      | Type checks of every cloud npm project, mockups and the site included     |
 | `cloud-app`            | App logic, web export, and browser tests                                  |
-| `cloud-mockups`        | Mockup build, determinism, policy, browser smoke, and types               |
-| `cloud-site`           | Site build, types, unit tests, links, and browser checks                  |
+| `cloud-mockups`        | Mockup build, determinism, policy, and browser smoke                      |
+| `cloud-site`           | Site build, unit tests, links, and browser checks                         |
 | `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
 | `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
 | `cloud-emails`         | Email template drift and mutation tests                                   |

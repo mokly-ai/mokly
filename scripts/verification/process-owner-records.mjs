@@ -147,12 +147,10 @@ export async function removeOwnedOwnerRecords(registry, ownerId) {
       ownerDepth(snapshot.owners, right.ownerId) -
       ownerDepth(snapshot.owners, left.ownerId),
   );
+  // The closing markers stay for the life of the registry. A child that a
+  // closed parent left during its creation then fails its own second check,
+  // and a scan of the registry skips it until its cleanup removes it.
   for (const record of owned) await fs.rm(record.file, { force: true });
-  await Promise.all(
-    owned.map((record) =>
-      fs.rm(closingFile(registry, record.ownerId), { force: true }),
-    ),
-  );
 }
 
 export async function assertRealDirectory(directory, label) {
@@ -194,7 +192,9 @@ async function readRegistry(registry) {
     if (ownerMatch) owners.push(parseOwnerRecord(value, ownerMatch[1], file));
     else processes.push(parseProcessRecord(value, file));
   }
-  return validateRegistrySnapshot(owners, processes);
+  return validateRegistrySnapshot(owners, processes, (ownerId) =>
+    exists(closingFile(registry, ownerId)),
+  );
 }
 
 function parseOwnerRecord(value, filenameId, file) {

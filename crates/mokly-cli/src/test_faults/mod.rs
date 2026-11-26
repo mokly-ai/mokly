@@ -142,6 +142,9 @@ impl SourceTree for InjectedTree {
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         self.inner.prefetch(paths)
     }
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        self.inner.hint_projections(paths);
+    }
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.inner.read_public(path)
     }

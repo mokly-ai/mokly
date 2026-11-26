@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   copyFile,
+  cp,
   mkdir,
   readFile,
   rm,
@@ -42,7 +43,7 @@ const fontSource = "source/assets/fonts/Geist-Variable.woff2";
  * Buildable source with an imported stylesheet that loads a binary font, the
  * root Git ignore rules and an `origin` remote. Builds write `mokly-static/`.
  */
-export async function outputFixture() {
+export async function outputFixture(seed?: string) {
   const root = scratchDirectory(
     path.join(repository, ".context", "generated-output-"),
   );
@@ -69,48 +70,52 @@ export async function outputFixture() {
       path.join(root, "mokly.config.json"),
       ...args,
     ]);
-  await write(
-    ".gitignore",
-    (await readFile(path.join(repository, ".gitignore"), "utf8")) +
-      "\n/node_modules\n",
-  );
-  await write("package.json", '{"private":true}');
-  await symlink(
-    path.join(repository, "node_modules"),
-    path.join(root, "node_modules"),
-    "dir",
-  );
-  await write(
-    "mokly.config.json",
-    JSON.stringify({
-      repoRoot: ".",
-      roots: [{ dir: "entries", files: ["**/*.mockup.tsx"] }],
-      moduleResolution: { packageRoots: ["."] },
-      review: { base: "main" },
-    }),
-  );
-  await write(
-    "source/fixture.css",
-    '@font-face { font-family: Fixture; src: url("./assets/fonts/Geist-Variable.woff2") format("woff2"); }\nmain { font-family: Fixture; }\n',
-  );
-  await write(
-    "entries/screen.mockup.tsx",
-    `import {defineScreen} from '@mokly/mokly'; import '../source/fixture.css'; export default defineScreen({title:'Screen',description:'Fixture',relatedDocs:[],render:(_props,context)=><main>{context.viewport}</main>});`,
-  );
-  await mkdir(path.dirname(path.join(root, fontSource)), { recursive: true });
-  await copyFile(
-    path.join(repository, authoredFont),
-    path.join(root, fontSource),
-  );
-  await git("init", "-b", "main");
-  await git("config", "user.email", "fixture@example.com");
-  await git("config", "user.name", "Fixture");
-  await git(
-    "remote",
-    "add",
-    "origin",
-    "https://github.com/fixture/catalogue.git",
-  );
+  if (seed === undefined) {
+    await write(
+      ".gitignore",
+      (await readFile(path.join(repository, ".gitignore"), "utf8")) +
+        "\n/node_modules\n",
+    );
+    await write("package.json", '{"private":true}');
+    await symlink(
+      path.join(repository, "node_modules"),
+      path.join(root, "node_modules"),
+      "dir",
+    );
+    await write(
+      "mokly.config.json",
+      JSON.stringify({
+        repoRoot: ".",
+        roots: [{ dir: "entries", files: ["**/*.mockup.tsx"] }],
+        moduleResolution: { packageRoots: ["."] },
+        review: { base: "main" },
+      }),
+    );
+    await write(
+      "source/fixture.css",
+      '@font-face { font-family: Fixture; src: url("./assets/fonts/Geist-Variable.woff2") format("woff2"); }\nmain { font-family: Fixture; }\n',
+    );
+    await write(
+      "entries/screen.mockup.tsx",
+      `import {defineScreen} from '@mokly/mokly'; import '../source/fixture.css'; export default defineScreen({title:'Screen',description:'Fixture',relatedDocs:[],render:(_props,context)=><main>{context.viewport}</main>});`,
+    );
+    await mkdir(path.dirname(path.join(root, fontSource)), { recursive: true });
+    await copyFile(
+      path.join(repository, authoredFont),
+      path.join(root, fontSource),
+    );
+    await git("init", "-b", "main");
+    await git("config", "user.email", "fixture@example.com");
+    await git("config", "user.name", "Fixture");
+    await git(
+      "remote",
+      "add",
+      "origin",
+      "https://github.com/fixture/catalogue.git",
+    );
+  } else {
+    await cp(seed, root, { recursive: true, verbatimSymlinks: true });
+  }
   return {
     root,
     write,

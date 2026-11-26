@@ -43,7 +43,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 It indexes configured roots and exact requested paths and retains every tree
 mode. `GitTree` implements `dyn SourceTree` over that index, so the catalogue
 applies its roots, globs, and source rules to base files. Exact projections use
-cached metadata and bounded path queries. Catalogue inventories and planning
+cached metadata and bounded path queries. `SourceTree::hint_projections` loads
+the metadata of many exact paths with one query, and leaves out a path that has
+a descendant in the set; a failed hint loads nothing, so each projection runs
+its own query and keeps its own error. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
@@ -167,6 +170,12 @@ owns the install environment, the manager executables, the bounds, and the
 stops. `NodeExecutable` resolves the shim-supplied Node or searches absolute
 `PATH` entries. The CLI uses the same resolver for rendering and for the
 scripts-on runtime probe.
+
+`SystemSpawner` gives each manager to a `ProcessTree` of `mokly-platform`. The
+tree reaps the manager only after its last tree signal. Both output readers
+share the tree. When the stop grace ends while a process that the stop did not
+end still holds the output, the install abandons the readers, and the exited
+manager stays unreaped until that process closes the output.
 
 `Resolved` returns the primary `node_modules` path, the complete
 `ModuleResolution` value, and typed `repository_roots` for sidecar mapping.
@@ -433,13 +442,19 @@ Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. Command tests pin
 every manager's complete scripts-off argument list.
 
+The `dependencies_tests` and `package_roots_tests` fixtures copy npm
+lockfiles from `tests/fixtures/`. To refresh a lockfile, use the test's
+manifest and local dependency files with
+`npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund`.
+
 On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
 base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
 It runs the pinned pnpm 10.34.7, 11.20.0, and 12.14.0 CLIs from the
 repository's development dependencies, with and without `CI` and
-`GITHUB_ACTIONS` in the parent environment. Run `npm ci` at the repository
-root before you run the crate tests. The test fails when a pinned CLI is
-missing.
+`GITHUB_ACTIONS` in the parent environment. The cases for one pnpm version
+read the same Git commit and use separate extraction and install caches.
+Two cases run at a time. Run `npm ci` at the repository root before you run
+the crate tests. The test fails when a pinned CLI is missing.
 
 The Node tests in `tests/static_base_managers.test.ts` run cold builds with
 pnpm and both Yarn families from local archives.

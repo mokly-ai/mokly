@@ -62,9 +62,10 @@ fn retry_schedule_and_expired_leases_recover_without_losing_deliveries() {
             assert_eq!(delivery.last_failure, Some(Failure::Unavailable));
             assert!(delivery.due_at >= delivery.received_at + Duration::seconds(5));
             app.queries(&mut |queries| {
-                let mut current = queries.github_delivery(id).unwrap().unwrap();
+                let mut current = queries.github_delivery(id)?.unwrap();
                 current.due_at = Utc::now() - Duration::seconds(1);
-                queries.save_github_delivery(&current).unwrap();
+                queries.save_github_delivery(&current)?;
+                Ok(())
             });
             break;
         }
@@ -79,20 +80,19 @@ fn retry_schedule_and_expired_leases_recover_without_losing_deliveries() {
         let id = Uuid::now_v7();
         let now = Utc::now();
         app.queries(&mut |queries| {
-            queries
-                .save_github_delivery(&Delivery {
-                    id,
-                    event: "ping".into(),
-                    body: fixtures::delivery("ping"),
-                    received_at: now,
-                    due_at: now,
-                    attempts,
-                    status: DeliveryStatus::Processing,
-                    lease: Some(Uuid::now_v7()),
-                    lease_until: Some(now - Duration::seconds(1)),
-                    last_failure: None,
-                })
-                .unwrap()
+            queries.save_github_delivery(&Delivery {
+                id,
+                event: "ping".into(),
+                body: fixtures::delivery("ping"),
+                received_at: now,
+                due_at: now,
+                attempts,
+                status: DeliveryStatus::Processing,
+                lease: Some(Uuid::now_v7()),
+                lease_until: Some(now - Duration::seconds(1)),
+                last_failure: None,
+            })?;
+            Ok(())
         });
         let delivery = app.wait_delivery(id, expected);
         assert!(delivery.lease.is_none());

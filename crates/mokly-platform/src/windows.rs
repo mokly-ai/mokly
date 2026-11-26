@@ -3,13 +3,13 @@
 use std::io;
 use std::mem::{size_of, zeroed};
 use std::os::windows::ffi::OsStrExt;
-use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
+use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle};
 use std::os::windows::process::CommandExt;
 use std::path::Path;
 use std::process::{Child, Command};
 use std::ptr::null;
 
-use windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE;
+use windows_sys::Win32::Foundation::{INVALID_HANDLE_VALUE, WAIT_OBJECT_0};
 use windows_sys::Win32::Storage::FileSystem::MoveFileExW;
 use windows_sys::Win32::System::Console::GenerateConsoleCtrlEvent;
 use windows_sys::Win32::System::Diagnostics::ToolHelp::{
@@ -21,8 +21,8 @@ use windows_sys::Win32::System::JobObjects::{
     SetInformationJobObject, TerminateJobObject,
 };
 use windows_sys::Win32::System::Threading::{
-    CREATE_NEW_PROCESS_GROUP, CREATE_SUSPENDED, OpenThread, ResumeThread, THREAD_SUSPEND_RESUME,
-    TerminateProcess,
+    CREATE_NEW_PROCESS_GROUP, CREATE_SUSPENDED, INFINITE, OpenThread, ResumeThread,
+    THREAD_SUSPEND_RESUME, TerminateProcess, WaitForSingleObject,
 };
 
 use crate::error::{Error, IoResult, Result};
@@ -103,6 +103,17 @@ pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
     // has not resumed before job attachment and cannot create a descendant.
     if unsafe { TerminateProcess(child.as_raw_handle(), 1) } == 0 {
         return Err(io::Error::last_os_error()).platform();
+    }
+    Ok(())
+}
+
+/// Block until the process exits. The caller keeps its `Child`, and so the
+/// handle, alive for the whole wait.
+pub(crate) fn wait_exit(process: RawHandle) -> io::Result<()> {
+    // SAFETY: The caller owns the Child of this process handle and does not
+    // drop it before this call returns. An infinite wait reads no memory.
+    if unsafe { WaitForSingleObject(process, INFINITE) } != WAIT_OBJECT_0 {
+        return Err(io::Error::last_os_error());
     }
     Ok(())
 }

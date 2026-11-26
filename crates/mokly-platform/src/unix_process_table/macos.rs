@@ -10,8 +10,8 @@ pub(crate) struct SystemTable;
 
 impl ProcessTable for SystemTable {
     fn identity(&self, pid: i32) -> io::Result<Option<ProcessIdentity>> {
-        match info(pid) {
-            Ok(info) => Ok(Some(identity(pid, &info))),
+        match bsd_info(pid) {
+            Ok(info) => Ok(Some(bsd_identity(pid, &info))),
             Err(error) if error.raw_os_error() == Some(libc::ESRCH) => Ok(None),
             Err(error) => Err(error),
         }
@@ -30,9 +30,9 @@ impl ProcessTable for SystemTable {
             }
             let mut children = Vec::new();
             for &child in &pids[..count] {
-                match info(child) {
+                match bsd_info(child) {
                     Ok(info) if info.pbi_ppid == pid as u32 => {
-                        children.push(identity(child, &info));
+                        children.push(bsd_identity(child, &info));
                     }
                     Ok(_) => {}
                     Err(error) if error.raw_os_error() == Some(libc::ESRCH) => {}
@@ -59,7 +59,8 @@ impl ProcessTable for SystemTable {
     }
 }
 
-fn identity(pid: i32, info: &libc::proc_bsdinfo) -> ProcessIdentity {
+/// The identity of one process record from `bsd_info`.
+pub(crate) fn bsd_identity(pid: i32, info: &libc::proc_bsdinfo) -> ProcessIdentity {
     ProcessIdentity {
         pid,
         start: u128::from(info.pbi_start_tvsec) * 1_000_000 + u128::from(info.pbi_start_tvusec),
@@ -68,7 +69,7 @@ fn identity(pid: i32, info: &libc::proc_bsdinfo) -> ProcessIdentity {
 
 /// Include exited children until reaping so fast commands can still attach.
 /// XNU enables zombie lookup when the BSD-info argument is nonzero.
-fn info(pid: i32) -> io::Result<libc::proc_bsdinfo> {
+pub(crate) fn bsd_info(pid: i32) -> io::Result<libc::proc_bsdinfo> {
     let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
     let expected = size_of::<libc::proc_bsdinfo>() as i32;
     // SAFETY: libproc receives a correctly aligned buffer of the exact size.
