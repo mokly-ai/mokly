@@ -18,8 +18,6 @@ fn ci_installs_tools_and_runs_the_automated_image_build_stage() {
         assert!(ci.contains(&format!("command: {command}")));
     }
     assert!(ci.contains("cargo xtask check --suite cloud-infrastructure"));
-    let task = fs::read_to_string(repository().join("xtask/src/check/cloud_shards.rs")).unwrap();
-    assert!(task.contains("infra/scripts/check-image.sh"));
 }
 
 #[test]

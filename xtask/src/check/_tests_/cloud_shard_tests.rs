@@ -12,8 +12,32 @@ fn displays(suite: VerificationSuite, shard: Option<&str>) -> Vec<String> {
     CheckRequest::new(Some(suite), shard, None).unwrap();
     commands_for(suite, shard, DependencyAudit::Baseline)
         .iter()
-        .map(|command| command.display().replacen(STRICT, "", 1))
+        .map(|command| {
+            let display = command.display();
+            match display.strip_prefix(STRICT) {
+                Some(inner) => inner.to_owned(),
+                None => panic!("{display} must run through the skip validator"),
+            }
+        })
         .collect()
+}
+
+#[test]
+fn every_cloud_command_of_every_shard_runs_through_the_skip_validator() {
+    let shards = [None, Some("1/1"), Some("1/2"), Some("2/2")]
+        .into_iter()
+        .chain(["1/3", "2/3", "3/3", "4/4"].map(Some))
+        .chain(["1/8", "5/8", "8/8"].map(Some));
+    let mut checked = 0;
+    for shard in shards {
+        for suite in VerificationSuite::CLOUD {
+            let parsed = shard.map(|value| Shard::from_str(value).unwrap());
+            if CheckRequest::new(Some(suite), parsed, None).is_ok() {
+                checked += displays(suite, shard).len();
+            }
+        }
+    }
+    assert!(checked > 0);
 }
 
 #[test]

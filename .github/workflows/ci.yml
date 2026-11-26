@@ -832,18 +832,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The three cloud-infrastructure shards run at the same time. Only
-          # the test shard installs npm dependencies and Postgres. The API and
-          # catalogue images share one build stage, so they share a shard.
+          # Row n runs cloud-infrastructure shard n of the row count, so the
+          # rows always cover every part of the suite. Only shard 1 runs the
+          # tests, so only it installs npm dependencies and Postgres.
           - name: Workload image checks (tests)
-            shard: "1/3"
-            tests: true
           - name: Workload image checks (API and catalogue)
-            shard: "2/3"
-            tests: false
           - name: Workload image checks (app)
-            shard: "3/3"
-            tests: false
     steps:
       - name: Check out the source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -856,14 +850,14 @@ jobs:
           node-version-file: .nvmrc
           package-manager-cache: false
       - name: Restore npm download cache
-        if: matrix.tests
+        if: strategy.job-index == 0
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install npm and dependencies
-        if: matrix.tests
+        if: strategy.job-index == 0
         run: |
           npm install --global npm@11.21.0
           npm ci
@@ -878,7 +872,7 @@ jobs:
           cache-bin: false
           save-if: false
       - name: Install bounded-storage host tools
-        if: matrix.tests
+        if: strategy.job-index == 0
         run: |
           # The runner image ships these packages. Install only the missing ones.
           missing=()
@@ -903,8 +897,9 @@ jobs:
         run: bash infra/scripts/start-buildkit.sh
       - name: Verify storage behavior and workload images
         env:
-          SHARD: ${{ matrix.shard }}
-        run: cargo xtask check --suite cloud-infrastructure --shard "$SHARD"
+          JOB_INDEX: ${{ strategy.job-index }}
+          JOB_TOTAL: ${{ strategy.job-total }}
+        run: cargo xtask check --suite cloud-infrastructure --shard "$((JOB_INDEX + 1))/$JOB_TOTAL"
       - name: Retain image BuildKit diagnostics
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

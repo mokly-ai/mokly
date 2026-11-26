@@ -46,10 +46,11 @@ numeric ID and main workflow refs. An empty value trusts only this repository.
 Three image jobs run the three
 [infrastructure shards](./cloud/repository-verification.md#infrastructure-shards)
 of `cloud-infrastructure` at the same time: Workload image checks (tests),
-(API and catalogue), and (app). Only the tests job installs the npm
-dependencies and Postgres. Each job starts its own layered BuildKit. One job
-for the whole suite was rejected, because it runs the parts one after another
-and sets the CI wall clock.
+(API and catalogue), and (app). Job `n` of `N` runs shard `n/N`, with `n`
+and `N` from its matrix position, so the jobs always cover every part. Only
+the tests job installs the npm dependencies and Postgres. Each job starts its
+own layered BuildKit. One job for the whole suite was rejected, because it
+runs the parts one after another and sets the CI wall clock.
 
 ## Cloud Testbox Tools
 
