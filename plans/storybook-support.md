@@ -3428,12 +3428,17 @@ own lines of this plan.
   so `Café` gives `cafe`. Then each run of characters other than `a` to `z`
   and `0` to `9` becomes one hyphen, and the ends lose their hyphens. An
   empty result goes on to the next prop. Without a value, the id is the
-  segment alone. Track I decision 1 settles whether a story component use
-  also takes `moklyInstance`. Reason: the segment keeps uses of two
+  segment alone. Changed on 2026-11-26 by the answer E to track I decision
+  1: a story component use takes no `moklyInstance`. A wrapper takes its id
+  from `moklyInstance`, then from `key` with the same form, then from the
+  segment alone. An HTML component element takes `mokly-instance`, then the
+  segment. Reason: the segment keeps uses of two
   components with one key apart, every value becomes a valid id, and
   translated labels keep their letters.
 - I5. An id that its input scope already holds gets the first free number
-  from 2, such as `button-2`. The first use keeps the id without a number.
+  from 2, such as `button-2`. Changed on 2026-11-26 by the answer E to track
+  I decision 1: this holds for story component uses, wrappers, and HTML
+  component elements alike. The first use keeps the id without a number.
   Each numbered use raises the warning of I6. A later named use whose id
   equals an earlier number also gets a number. Reason: keys repeat across two
   lists of one screen, and a warning keeps the build going where an error
@@ -3442,7 +3447,9 @@ own lines of this plan.
   rendered entry, so that the views of one entry give one warning for each
   use. Its message names the id, the component path, the invocation site
   when the record has one, and asks for a `key` that is unique in the input
-  scope. `--strict` counts it. An unnamed repeat inside a product component
+  scope. Changed on 2026-11-26 by the answer E to track I decision 1: on a
+  wrapper it asks for `moklyInstance`, and on an HTML component element for
+  `mokly-instance`. `--strict` counts it. An unnamed repeat inside a product component
   gives one warning in each entry that renders that component. Reason:
   decision 19 lets strict CI fail on a repeated use without a name, and the
   `props-unsafe-integer` invocation warning already uses the rendered entry.
@@ -3454,7 +3461,9 @@ own lines of this plan.
   no new configuration error.
 - I8. The props digest of a use holds each prop whose value is data under
   the entry props contract. Function props stay out of it, as decision 21
-  says. Track I decision 2 settles the other values that are not data.
+  says. Changed on 2026-11-26 by the answer E to track I decision 2: every
+  other value records without a failure, in the forms that the answer
+  gives.
   Track I decision 3 settles how the content of a use stays in Changes. The
   stories entry's prop schema does not validate a use. Reason: the schema
   describes the stories' args, not every prop of the component, and a product
@@ -3466,7 +3475,9 @@ own lines of this plan.
   checks. Track G adds story fields to the same record in Milestone 27, so
   the merge of the two tracks keeps one sign of a stories entry. Reason: a
   forged record keeps failing validation, and one field carries both rules.
-- I10. Track I decision 3 settles how a use renders its content.
+- I10. Track I decision 3 settles how a use renders its content. Its answer,
+  H, waits for the design note under
+  `.context/storybook-support/track-i/` in the track I workspace.
 
 The options check of 2026-11-25 for these calls and for track I decision 1
 added options D and E to decision 1, changed I2, I4, I5, I6, I7, and I9, and
@@ -3536,6 +3547,11 @@ decision 2 and options E to H to decision 3. The reports are under
 - **Action:** ask the user, because B, D, and E remove the duplicate-id
   build error of wrappers on `origin/main`, and decision 19 names only story
   component uses.
+- **Answer:** E, chosen by the user on 2026-11-26. Wrappers and HTML
+  component elements also get the numbered fallback with the
+  `instance-numbered` warning, and a wrapper also takes its name from `key`,
+  after `moklyInstance`. The user approved the removal of the duplicate-id
+  build error of wrappers and HTML component elements on `origin/main`.
 
 #### Track I decision 2: Values that are neither data nor functions
 
@@ -3605,6 +3621,9 @@ decision 2 and options E to H to decision 3. The reports are under
 - **Action:** ask the user, because decision 21 names only function props,
   and A, B, D, and E weaken the rule that missing input evidence never means
   unchanged inputs.
+- **Answer:** E, chosen by the user on 2026-11-26. Every prop value records
+  without a failure. An element inside a value follows the answer to track I
+  decision 3.
 
 #### Track I decision 3: The content of a use and faithful rendering
 
@@ -3698,6 +3717,12 @@ decision 2 and options E to H to decision 3. The reports are under
 - **Action:** ask the user, because G adds a field to the `mokly` parameter
   that no requirement covers, A and B break the faithful rendering that
   decision 13 assumes, and no option is clearly best.
+- **Answer:** H, chosen by the user on 2026-11-26: the wider fix, at Large
+  effort, over the recommended G. Under H, the Radix `asChild`,
+  `Children.toArray`, `typeof children === "string"`, and `child.type` cases
+  render as in the product, and each one gets a test. Before the build, a
+  design note and its options check confirm that H breaks no requirement in
+  force and needs no further decision.
 
 ## Milestone 35: Story component usage
 
