@@ -135,8 +135,12 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
 
   /** Keep native resolution targets and links without reading their contents. */
   nativeTarget(file: string): string | undefined {
-    this.observed.add(file);
     const captured = this.capture.canonicalFile(file);
+    if (
+      captured !== undefined ||
+      this.capture.inputs.get(file)?.kind === "absent"
+    )
+      this.observed.add(file);
     if (this.capture.complete) return captured;
     try {
       return fs.realpathSync.native(file);

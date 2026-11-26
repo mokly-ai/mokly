@@ -25,6 +25,7 @@ export interface WorkspacePackage {
   manifest: PackageJson;
   subpath: string;
   retry: boolean;
+  lookups: readonly string[];
 }
 
 type WorkspaceImportOptions = Pick<
@@ -91,17 +92,19 @@ export function workspacePackage(
     if (!paths.repositoryOwned(mapped)) return;
     const root = fs.realpathSync.native(mapped);
     if (!paths.repositoryOwned(root)) return;
+    const mappedPackage = root !== installation;
     const contents = paths.workspaceLookups.manifest(
       path.join(root, "package.json"),
-      true,
+      mappedPackage,
     );
     if (contents == null) return;
     const manifest = parsePackageJson(contents);
     const [manifestName] = manifest.values("name");
     if (typeof manifestName !== "string" || !manifestName) return;
-    for (const file of lookups) paths.workspaceLookups.packageLookup(file);
+    if (mappedPackage)
+      for (const file of lookups) paths.workspaceLookups.packageLookup(file);
     const retry =
-      root !== installation &&
+      mappedPackage &&
       (selected === undefined ||
         paths.workspaceLookups.installationManifest(
           path.join(located, "package.json"),
@@ -113,10 +116,16 @@ export function workspacePackage(
       manifest,
       subpath: "." + name.slice(identifier.length),
       retry,
+      lookups,
     };
   } catch {
     // Unsupported or unreadable package data leaves the native lookup in place.
   }
+}
+
+function recordPackage(paths: ModulePaths, pkg: WorkspacePackage): void {
+  paths.workspaceLookups.metadata(path.join(pkg.root, "package.json"));
+  for (const file of pkg.lookups) paths.workspaceLookups.packageLookup(file);
 }
 
 /** Exports use native self-reference. Ordinary packages use native directory lookup. */
@@ -152,6 +161,7 @@ export function workspaceImport(
       targets.push(target);
     }
     if (!source) return;
+    recordPackage(paths, pkg);
     return { file: paths.observe(source), targets };
   } catch {
     // Unsupported or unreadable package data leaves the native diagnostic in place.
@@ -168,14 +178,20 @@ export function workspaceTarget(
   const real = fs.realpathSync.native(selected);
   const original = paths.location(real).file;
   try {
+    const targets = [
+      ...buildTargets(pkg.manifest, nativeRoot, pkg.subpath, []),
+    ].filter((target) => inside(nativeRoot, target));
+    // The ordinary layout and folder rules record same-side canonical selections.
+    if (
+      pkg.root === pkg.installation &&
+      !targets.some(
+        (target) => target !== real && existingPath(target) === real,
+      )
+    )
+      return original;
+    recordPackage(paths, pkg);
     let declared: string | undefined;
-    for (const target of buildTargets(
-      pkg.manifest,
-      nativeRoot,
-      pkg.subpath,
-      [],
-    )) {
-      if (!inside(nativeRoot, target)) continue;
+    for (const target of targets) {
       if (paths.workspaceLookups.nativeTarget(target) !== real) continue;
       if (declared !== undefined) return original;
       declared = path.join(pkg.root, path.relative(nativeRoot, target));
@@ -218,11 +234,15 @@ function packageLocation(
 }
 
 function contains(directory: string, selected: string): boolean {
+  const real = existingPath(directory);
+  return real !== undefined && inside(real, selected);
+}
+
+function existingPath(file: string): string | undefined {
   try {
-    return inside(fs.realpathSync.native(directory), selected);
+    return fs.realpathSync.native(file);
   } catch (error) {
     if (!missingFile(error)) throw error;
-    return false;
   }
 }
 
