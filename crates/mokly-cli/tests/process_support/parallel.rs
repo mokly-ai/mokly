@@ -7,11 +7,12 @@ use std::thread;
 /// Run `check` once for each labelled case, with at most one case per
 /// available core at a time.
 ///
-/// The caller keeps the cases independent: no case reads or writes a file
-/// that another case writes. Each case runs on a thread named after its
-/// label, so a failed assertion names its case. A failed case does not stop
-/// the other cases. The call panics after every case has ended and names
-/// each failed case.
+/// Each case builds its own fixture, so no case reads or writes a file that
+/// another case writes. Parallel cases never share a Git checkout, because
+/// Git can rewrite `.git/index` during a read. Each case runs on a thread
+/// named after its label, so a failed assertion names its case. A failed case
+/// does not stop the other cases. The call panics after every case has ended
+/// and names each failed case.
 pub(crate) fn each<T: Send>(
     cases: impl IntoIterator<Item = (String, T)>,
     check: impl Fn(T) + Sync,
