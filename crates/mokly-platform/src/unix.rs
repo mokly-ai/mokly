@@ -8,6 +8,8 @@ use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 use crate::error::{Error, Result};
 use crate::processes::ProcessGroup;
@@ -94,6 +96,11 @@ pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
 
 /// Block until the child exits, and leave it unreaped. `WNOWAIT` keeps the
 /// zombie, so its PID and its group number stay reserved until the reap.
+///
+/// macOS also reports a stopped child to a wait for `WEXITED` alone, and with
+/// `WNOWAIT` it repeats that report until the child continues or ends. The
+/// tree guard stops the group before each signal, so a stop report waits a
+/// short pause and then waits again.
 pub(crate) fn wait_exit(pid: u32) -> io::Result<ExitStatus> {
     loop {
         let mut info = MaybeUninit::<libc::siginfo_t>::zeroed();
@@ -110,9 +117,13 @@ pub(crate) fn wait_exit(pid: u32) -> io::Result<ExitStatus> {
         };
         if result == 0 {
             // SAFETY: The buffer started zeroed, a valid siginfo_t value, and
-            // the successful call wrote the record of the exited child.
+            // the successful call wrote the record of the child.
             let info = unsafe { info.assume_init() };
-            return exit_status(&info);
+            match exit_status(&info) {
+                Some(status) => return Ok(status),
+                None => thread::sleep(STOP_PAUSE),
+            }
+            continue;
         }
         let source = io::Error::last_os_error();
         if source.kind() != io::ErrorKind::Interrupted {
@@ -121,17 +132,21 @@ pub(crate) fn wait_exit(pid: u32) -> io::Result<ExitStatus> {
     }
 }
 
+/// The pause before the next wait after a report of a stopped child.
+const STOP_PAUSE: Duration = Duration::from_millis(5);
+
 /// Rebuild the wait status that `waitpid` would return from a child record.
-fn exit_status(info: &libc::siginfo_t) -> io::Result<ExitStatus> {
-    // SAFETY: waitid filled the child fields of this record for WEXITED.
+/// Return `None` for a report of a stop or a continue, which is no exit.
+fn exit_status(info: &libc::siginfo_t) -> Option<ExitStatus> {
+    // SAFETY: waitid filled the child fields of this record.
     let status = unsafe { info.si_status() };
     let raw = match info.si_code {
         libc::CLD_EXITED => (status & 0xff) << 8,
         libc::CLD_KILLED => status & 0x7f,
         libc::CLD_DUMPED => (status & 0x7f) | 0x80,
-        _ => return Err(io::Error::other("waitid reported no child exit")),
+        _ => return None,
     };
-    Ok(ExitStatus::from_raw(raw))
+    Some(ExitStatus::from_raw(raw))
 }
 
 struct SystemGroupSignal;

@@ -57,7 +57,9 @@ so a later `SIGKILL` reaches a descendant whose parent died after the
 
 `ProcessTree` takes the child and its guard, and callers keep it until their
 last signal. Its `wait` blocks until the child exits and leaves the child
-unreaped; on Unix it uses `waitid` with `WNOWAIT`. The unreaped child keeps
+unreaped; on Unix it uses `waitid` with `WNOWAIT`. macOS also reports a
+stopped child to that wait, so a stop report leads to a short pause and a new
+wait. The unreaped child keeps
 its PID, so no new process can take that PID or the group number while the
 guard can still signal. The tree reaps the child only when it drops, after
 the guard. A child that still runs at that point is reaped on its own thread
