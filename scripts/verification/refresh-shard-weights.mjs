@@ -142,7 +142,9 @@ async function main(argv) {
   await fs.rm(SCRATCH, { recursive: true, force: true });
   const lines = [`Runs, newest first: ${runIds.join(", ")}.`];
   lines.push(await refreshReportWeights(request.repository, runIds));
-  const units = await refreshTestSeconds(request, runIds);
+  const units = Object.entries(await refreshTestSeconds(request, runIds))
+    .map(([host, count]) => `${count} on ${host}`)
+    .join(", ");
   lines.push(
     `Rust tests: testSeconds of ${units} units. Refresh compileSeconds with \`node scripts/verification/rust-test-weights.mjs --compile\` after a build change.`,
   );

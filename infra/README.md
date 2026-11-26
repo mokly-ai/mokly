@@ -115,14 +115,17 @@ The preview-platform contract test pulls the two pinned charts into `.context/`
 and renders those local archives; it reports an explicit skip if the first pull
 cannot reach the chart repositories. Platform scripts also require OpenSSL for
 the certificate checks and the system `libpsl` runtime for the ICANN/private
-suffix validation, which finishes before any provider call. Run
+suffix validation, which finishes before any provider call. The build template
+test runs the template probe's Git checks with the host Git, so it needs Git
+2.43 or newer, the template's own floor. Run
 `python3 infra/scripts/run-infrastructure-tests.py contracts` to replay the
 preview lifecycle's recorded Cloudflare, gcloud, Helm, kubectl and API-log
 fixtures and the workspace Mokly CLI's recorded capture output without cloud
 credentials.
 
 Build all three images with `bash infra/scripts/check-image.sh` after
-installing and starting standalone BuildKit with `start-buildkit.sh`. The
+installing and starting standalone BuildKit with `start-buildkit.sh`. Pass
+`api`, `catalogue`, or `app` to build only the named images, in the order given. The
 launcher uses the pinned `buildkit-runc` and requires a layered snapshotter by
 default; a machine deliberately provisioned with enough space for full parent
 copies can set `MKC_BUILDKIT_REQUIRE_LAYERED=false`. On a startup failure it
