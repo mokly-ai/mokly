@@ -6,7 +6,7 @@ import type { Billing, SeatKind, SeatUsage } from "../../api/types";
  * The plan catalogue in `docs/protocol/cloud/billing.md` is its one source of truth,
  * and the billing read does not carry it: every amount on the pane is the
  * API's own, and this is the single catalogue value the product states for
- * itself. A logic test parses the same table and holds this constant to it.
+ * itself.
  */
 export const trialDays = 7;
 

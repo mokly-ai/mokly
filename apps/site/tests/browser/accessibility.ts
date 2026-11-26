@@ -34,7 +34,7 @@ export async function focusGlows(page: Page): Promise<string[]> {
  * focus in its own document, so it matches neither :focus nor :focus-visible,
  * and the box around it draws its focus.
  */
-async function assertFocusGlow(page: Page): Promise<void> {
+export async function assertFocusGlow(page: Page): Promise<void> {
   const glows = await focusGlows(page);
   // Two islands show controls once the browser is idle: Copy in each code
   // panel's head and the controls of each HTML sample. Wait for them, so the
@@ -105,23 +105,4 @@ async function assertFocusGlow(page: Page): Promise<void> {
     expect(misses).toEqual([]);
   }
   await page.emulateMedia({ forcedColors: "none" });
-}
-
-/** Deterministic accessibility checks shared by every published route. */
-export async function assertAccessibility(page: Page): Promise<void> {
-  await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.locator("main")).toHaveCount(1);
-  await expect(page.locator("html")).toHaveAttribute("lang", /\S+/);
-  await expect(
-    page.locator('img:not([alt]):not([aria-hidden="true"])'),
-  ).toHaveCount(0);
-  for (const role of ["button", "link"] as const) {
-    await expect(page.getByRole(role, { name: /^\s*$/ })).toHaveCount(0);
-  }
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
-  await assertFocusGlow(page);
 }

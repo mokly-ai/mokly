@@ -37,8 +37,8 @@ fn mixed_history_pages_ties_and_filters_and_omits_own_failed_uploads_for_every_r
     let timed = schedule(&app, &project, "timed", 6, None, at);
     finish(&app, project.id, timed, BuildState::TimedOut);
     app.queries(&mut |q| {
-        q.insert_publication(&old).unwrap();
-        q.insert_publication(&newest).unwrap();
+        q.insert_publication(&old)?;
+        q.insert_publication(&newest)?;
         for state in [PublicationState::Uploading, PublicationState::Failed] {
             let mut upload = publication(project.id, "topic", 8, at + Duration::seconds(1));
             upload.build_id = Some(failed);
@@ -47,8 +47,9 @@ fn mixed_history_pages_ties_and_filters_and_omits_own_failed_uploads_for_every_r
             upload.changes = None;
             upload.failure =
                 (state == PublicationState::Failed).then_some(PublicationFailure::InvalidBundle);
-            q.insert_publication(&upload).unwrap();
+            q.insert_publication(&upload)?;
         }
+        Ok(())
     });
     let first = read(&app, project.id, "history?branch=topic&limit=1");
     assert_eq!(first["items"][0]["kind"], "build");
@@ -147,7 +148,8 @@ fn history_cursor_rejects_another_project_and_does_not_need_its_anchor_row() {
     let newer = schedule(&app, &project, "topic", 2, None, at + Duration::seconds(1));
     finish(&app, project.id, newer, BuildState::Failed);
     app.queries(&mut |q| {
-        q.insert_publication(&older).unwrap();
+        q.insert_publication(&older)?;
+        Ok(())
     });
     let first = read(&app, project.id, "history?limit=1");
     let cursor = first["nextCursor"].as_str().unwrap();
@@ -167,8 +169,8 @@ fn history_cursor_rejects_another_project_and_does_not_need_its_anchor_row() {
         "validation-failed",
     );
     app.queries(&mut |q| {
-        q.prune_builds(Utc::now() + Duration::seconds(1), 100)
-            .unwrap();
+        q.prune_builds(Utc::now() + Duration::seconds(1), 100)?;
+        Ok(())
     });
     assert_eq!(
         id(&read(

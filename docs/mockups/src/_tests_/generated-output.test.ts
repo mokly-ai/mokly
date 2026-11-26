@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { cp, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after, before } from "node:test";
 import { promisify } from "node:util";
 
 import { readCatalogueIndex } from "@mokly/viewer";
@@ -23,6 +23,12 @@ import {
 
 const screen = "entries/screen.mockup.tsx";
 
+let seed: Awaited<ReturnType<typeof outputFixture>>;
+before(async () => {
+  seed = await outputFixture();
+});
+after(() => seed?.cleanup());
+
 /** The fixture screen in the 0.14.0 form, which current validation refuses. */
 const earlierScreen =
   "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Screen',description:'Fixture',dependencies:[],relatedDocs:[],mobile:<main>Mobile</main>,desktop:<main>Desktop</main>});\n";
@@ -35,7 +41,7 @@ async function builtIndex(root: string, output: string) {
 }
 
 test("a base whose sources fail current validation leaves Changes unavailable and the build still succeeds", async (t) => {
-  const fixture = await outputFixture();
+  const fixture = await outputFixture(seed.root);
   t.after(fixture.cleanup);
   const current = await readFile(path.join(fixture.root, screen), "utf8");
   await fixture.write(screen, earlierScreen);
@@ -82,7 +88,7 @@ test("a base whose sources fail current validation leaves Changes unavailable an
 });
 
 test("mockups:check validates without reading or replacing local output", async (t) => {
-  const fixture = await outputFixture();
+  const fixture = await outputFixture(seed.root);
   t.after(fixture.cleanup);
   const manifest = await readFile(
     path.join(repository, "apps/mockups/package.json"),
@@ -107,7 +113,9 @@ test("mockups:check validates without reading or replacing local output", async 
     ignored: [...checkout.ignored, ".context/"].sort(),
   });
   await assert.rejects(readdir(fixture.output), { code: "ENOENT" });
-  await fixture.cli("build", "--strict", "--no-changes");
+  await cp(path.join(fixture.root, ".context/mockups-check"), fixture.output, {
+    recursive: true,
+  });
   assert.equal(
     sha256(await readFile(path.join(fixture.output, fixture.generatedFont))),
     sha256(await readFile(fixture.sourceFont)),

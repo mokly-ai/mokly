@@ -287,7 +287,9 @@ jobs:
       # the downloads are one set on every image. It takes a restored package
       # from its archive folder instead of the mirror. The install runs in the
       # background while the next step builds. It holds a lock until it ends,
-      # so the wait step blocks on the lock instead of polling.
+      # so the wait step blocks on the lock instead of polling. The wait step
+      # streams the install log until the install shell exits, so a stalled
+      # install shows its last output in the job log.
       - &chromium-install-start
         name: Start Chromium install
         env:
@@ -300,14 +302,15 @@ jobs:
           exec 9> "$RUNNER_TEMP/chromium-install.lock"
           flock 9
           nohup bash -c 'npx playwright install --with-deps chromium > "$RUNNER_TEMP/chromium-install.log" 2>&1 9>&-; echo "$?" > "$RUNNER_TEMP/chromium-install.status"' < /dev/null > /dev/null 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/chromium-install.pid"
       - name: Build native and JavaScript packages
         run: npm run build
       # A missing status means that the install stopped before it ended.
       - &chromium-install-wait
         name: Wait for Chromium install
         run: |
+          tail -n +1 -F --pid="$(cat "$RUNNER_TEMP/chromium-install.pid")" "$RUNNER_TEMP/chromium-install.log" 2> /dev/null
           flock "$RUNNER_TEMP/chromium-install.lock" true
-          cat "$RUNNER_TEMP/chromium-install.log"
           test "$(cat "$RUNNER_TEMP/chromium-install.status")" = 0
       - name: Collect Chromium package downloads
         id: chromium-downloads
@@ -639,73 +642,56 @@ jobs:
             infrastructure: false
             rust_cache: true
           # Mockup shard 1 runs the checks without a browser, shard 2 the policy
-          # and served suites, and shards 3 to 6 split the disk browser suite.
-          - name: Mockup checks 1/6
+          # and served suites, and shards 3 to 5 split the disk browser suite.
+          - name: Mockup checks 1/5
             command: cloud-mockups
-            shard: "1/6"
+            shard: "1/5"
             install_dependencies: true
             browser_workspace: ""
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 2/6
+          - name: Mockup checks 2/5
             command: cloud-mockups
-            shard: "2/6"
+            shard: "2/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 3/6
+          - name: Mockup checks 3/5
             command: cloud-mockups
-            shard: "3/6"
+            shard: "3/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 4/6
+          - name: Mockup checks 4/5
             command: cloud-mockups
-            shard: "4/6"
+            shard: "4/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 5/6
+          - name: Mockup checks 5/5
             command: cloud-mockups
-            shard: "5/6"
+            shard: "5/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 6/6
-            command: cloud-mockups
-            shard: "6/6"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/mockups"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 1/2
+          # The site browser suite takes about three minutes, so one job runs
+          # the whole site suite.
+          - name: Site checks
             command: cloud-site
-            shard: "1/2"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/site"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 2/2
-            command: cloud-site
-            shard: "2/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false

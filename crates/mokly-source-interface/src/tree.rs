@@ -83,6 +83,10 @@ pub trait SourceTree: Send + Sync {
     fn prefetch(&self, _paths: &[PathBuf]) -> Result<()> {
         Ok(())
     }
+    /// Hint exact paths that later projections ask for, so that an adapter can load
+    /// their metadata together. It reads no bytes and reports no error: each later
+    /// projection keeps its own answer and its own error.
+    fn hint_projections(&self, _paths: &[PathBuf]) {}
     /// Read public resource bytes without retaining them in a source snapshot.
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.read(path)

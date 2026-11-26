@@ -79,3 +79,63 @@ test("preview comments update only the Actions bot and report the PR head", asyn
     }
   }
 });
+
+test("a Pages preview create that GitHub saves twice leaves one comment", async () => {
+  // A retried create saves a second copy when GitHub loses the first reply.
+  const workflow = parse(
+    await fs.readFile(".github/workflows/preview.yml", "utf8"),
+  ) as { jobs: Record<string, { steps: Step[] }> };
+  const step = Object.values(workflow.jobs)
+    .flatMap((job) => job.steps)
+    .find((candidate) => candidate.env?.DEPLOY_STATUS);
+  assert.ok(step?.with?.script);
+  const AsyncFunction = Object.getPrototypeOf(async () => {})
+    .constructor as new (
+    ...args: string[]
+  ) => (...args: unknown[]) => Promise<void>;
+  const marker = "<!-- mokly-preview -->";
+  const comments: Array<{ id: number; user: { login: string }; body: string }> =
+    [];
+  const github = {
+    paginate: async () => [...comments],
+    rest: {
+      issues: {
+        listComments: () => {},
+        updateComment: async () => {
+          assert.fail("no owned comment exists before the create");
+        },
+        createComment: async ({ body }: { body: string }) => {
+          for (const id of [5, 6])
+            comments.push({ id, user: { login: "github-actions[bot]" }, body });
+        },
+        deleteComment: async ({ comment_id }: { comment_id: number }) => {
+          comments.splice(
+            comments.findIndex((comment) => comment.id === comment_id),
+            1,
+          );
+        },
+      },
+    },
+  };
+  await new AsyncFunction("process", "github", "context", step.with.script)(
+    {
+      env: {
+        MOKLY_COMMENT_MARKER: marker,
+        DEPLOY_STATUS: "success",
+        PREVIEW_BRANCH: "pr-3",
+        PREVIEW_URL: "https://pr-3.example.com",
+      },
+    },
+    github,
+    {
+      payload: { pull_request: { number: 3, head: { sha: "actual-head" } } },
+      serverUrl: "https://github.com",
+      repo: { owner: "team", repo: "site" },
+      runId: 7,
+    },
+  );
+  assert.deepEqual(
+    comments.map((comment) => comment.id),
+    [5],
+  );
+});

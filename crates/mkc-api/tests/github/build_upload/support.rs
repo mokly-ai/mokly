@@ -50,23 +50,21 @@ pub(super) fn start(
     let bearer = format!("mkb_{}{}", Uuid::now_v7().simple(), Uuid::now_v7().simple());
     let grant = Uuid::now_v7();
     app.queries(&mut |queries| {
-        let mut value = queries.project(project.id).unwrap().unwrap();
+        let mut value = queries.project(project.id)?.unwrap();
         value.visibility = Visibility::Public;
-        queries.save_project(&value).unwrap();
-        queries
-            .schedule_build(&NewBuild {
-                id,
-                project_id: project.id,
-                repository_id: project.repository,
-                trigger: BuildTrigger::Request,
-                branch: branch.clone(),
-                head_sha: head.clone(),
-                pull_request: pull,
-                base_ref: None,
-                config_path: value.config_path,
-                created_at: at,
-            })
-            .unwrap();
+        queries.save_project(&value)?;
+        queries.schedule_build(&NewBuild {
+            id,
+            project_id: project.id,
+            repository_id: project.repository,
+            trigger: BuildTrigger::Request,
+            branch: branch.clone(),
+            head_sha: head.clone(),
+            pull_request: pull,
+            base_ref: None,
+            config_path: value.config_path,
+            created_at: at,
+        })?;
         let started = queries
             .start_build(
                 id,
@@ -77,23 +75,19 @@ pub(super) fn start(
                     lease_expires_at: at + Duration::minutes(2),
                     deadline_at: at + Duration::minutes(15),
                 },
-            )
-            .unwrap()
+            )?
             .unwrap();
-        assert!(
-            queries
-                .mint_build_grant(&BuildUploadGrant {
-                    id: grant,
-                    build_id: id,
-                    attempt: started.attempt,
-                    token_digest: Sha256::digest(bearer.as_bytes()).into(),
-                    expires_at: started.deadline_at.unwrap(),
-                    consumed_at: None,
-                    outcome: None,
-                    created_at: at,
-                })
-                .unwrap()
-        );
+        assert!(queries.mint_build_grant(&BuildUploadGrant {
+            id: grant,
+            build_id: id,
+            attempt: started.attempt,
+            token_digest: Sha256::digest(bearer.as_bytes()).into(),
+            expires_at: started.deadline_at.unwrap(),
+            consumed_at: None,
+            outcome: None,
+            created_at: at,
+        })?);
+        Ok(())
     });
     Attempt {
         id,
@@ -206,10 +200,10 @@ pub(super) fn outcome(app: &Harness, attempt: &Attempt) -> Option<UploadOutcome>
     let mut result = None;
     app.queries(&mut |queries| {
         result = queries
-            .build_grant(&Sha256::digest(attempt.bearer.as_bytes()).into())
-            .unwrap()
+            .build_grant(&Sha256::digest(attempt.bearer.as_bytes()).into())?
             .unwrap()
             .outcome;
+        Ok(())
     });
     result
 }

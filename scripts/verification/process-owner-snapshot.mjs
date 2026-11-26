@@ -6,22 +6,27 @@ import fs from "node:fs/promises";
 /**
  * Cleanup removes process records before owners, and child owners before
  * parents. A scan can retain a child's bytes after its parent disappears.
- * Discard that observation only when the child file is also gone. A record
- * still on disk with broken ancestry remains an error and keeps resources.
- * This checks the sampled graph once; it does not retry the registry scan.
+ * Discard that observation when the child file is also gone, or when the
+ * missing parent has closed: a child created while its parent closed fails its
+ * second open check, and its own cleanup removes its record. A record still on
+ * disk with broken ancestry and no closed parent remains an error and keeps
+ * resources. This checks the sampled graph once; it does not retry the
+ * registry scan.
  * @param {OwnerRecord[]} owners
  * @param {ProcessRecord[]} processes
+ * @param {(ownerId: string) => Promise<boolean>} hasClosed whether an owner
+ *   wrote its closing marker, which stays for the life of the registry
  */
-export async function validateRegistrySnapshot(owners, processes) {
+export async function validateRegistrySnapshot(owners, processes, hasClosed) {
   const byId = new Map(owners.map((owner) => [owner.ownerId, owner]));
   const retainedOwners = [];
   for (const owner of owners) {
     const missing = missingParent(byId, owner);
     if (missing === undefined) retainedOwners.push(owner);
-    else
+    else if (!(await hasClosed(missing.parentId)))
       await requireRemoved(
         owner.file,
-        `Verification owner ${missing} has no parent`,
+        `Verification owner ${missing.ownerId} has no parent`,
       );
   }
   const ownerIds = new Set(retainedOwners.map((owner) => owner.ownerId));
@@ -42,7 +47,8 @@ export async function validateRegistrySnapshot(owners, processes) {
  * descendants. A cycle is invalid even when its records are disappearing.
  * @param {Map<string, OwnerRecord>} owners
  * @param {OwnerRecord} owner
- * @returns {string | undefined}
+ * @returns {{ownerId: string, parentId: string} | undefined} the sampled
+ *   owner whose parent is missing, and that parent
  */
 function missingParent(owners, owner) {
   const visited = new Set();
@@ -55,7 +61,8 @@ function missingParent(owners, owner) {
     visited.add(current.ownerId);
     if (current.parentId === null) return;
     const parent = owners.get(current.parentId);
-    if (!parent) return current.ownerId;
+    if (!parent)
+      return { ownerId: current.ownerId, parentId: current.parentId };
     current = parent;
   }
 }

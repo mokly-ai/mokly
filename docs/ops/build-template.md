@@ -33,6 +33,8 @@ The registry confirms an OCI index with Linux amd64 and arm64 images.
 The tag's [Docker Hub record](https://hub.docker.com/v2/repositories/e2bdev/base/tags/latest)
 provides its release source; the Dockerfile digest fixes the image. It installs the exact `.nvmrc` Node
 tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
+It first removes the base image's Node, npm and corepack files, so no file of
+an older release stays beside the new ones.
 It enables corepack and supplies npm, git, curl, coreutils, Python 3 and CA
 certificates. The image must keep glibc 2.28 or newer, because the pinned
 CLI's native binary has no musl build and no JavaScript fallback.
@@ -105,7 +107,8 @@ E2B's process service supplies `HOME` and `PATH` itself, so a pass does not
 prove that a value set only by the template reaches the process. It also checks the tools,
 `/bin/sh`, user identity, `/workspace` ownership and writes, known credential
 environment names and credential files, and absence of cloud secret mounts.
-It also requires glibc 2.28 or newer.
+It also requires glibc 2.28 or newer. It runs an offline `npm ci` of an empty
+project, so an npm install that mixes files of two releases fails the probe.
 The E2B team key stays in the operator process.
 
 Set the candidate build reference from the generated configuration:
@@ -281,10 +284,38 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   The probe printed
   `PASS live build template: assertion completed and candidate destroyed` on
   2026-11-24T13:46Z with the bare template ID, and again on 2026-11-25 with
-  the build reference through the adapter pinned at `5d856db`.
+  the build reference through the adapter pinned at `5d856db`. It is not a
+  release, because its npm is broken. The Dockerfile unpacked the Node tarball
+  over `/usr/local` of `e2bdev/base`, which already held an older Node and npm.
+  So `/usr/local/lib/node_modules/npm/lib` held files of npm 11 and of the
+  older npm. `npm --version` printed 11.19.0, but `npm config list` failed,
+  and `npm ci` failed with
+  `npm error Class extends value undefined is not a constructor or null`. The
+  probe of that time checked npm only with `npm --version`, which passes on
+  such a mixed install, so it passed. Do not deploy it or roll back to it.
+- `mokly-build-v3`, build reference
+  `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` (template ID
+  `1zj5lunxulyowh6ewmy3`, build ID `9dffde05-0e34-4afd-91f3-ac771fd52705`),
+  E2B team `firna`. It was built 2026-11-26T00:40:38Z with `e2b@2.64.0`
+  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `e1b372b7d`, which matches `main`, plus the removal of the base image's
+  Node, npm and corepack files before the Node tarball is unpacked. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, npm's `lib` held only npm 11 files, `npm config list`
+  worked, `npm ci` of a lockfile with `@mokly/mokly` 0.21.0 succeeded, and
+  `mokly build --strict --no-changes` built the catalogue. The probe printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  2026-11-26 with the build reference. That run came before the probe's
+  `npm ci` check.
 
 ### Environments
 
-No environment has builds enabled yet. On 2026-11-24, main-preview had one
-enabled `mkc-main-preview-e2b-api-key` version, and production had no
-version. Record the first main-preview and production build proofs here.
+On 2026-11-24, main-preview had one enabled `mkc-main-preview-e2b-api-key`
+version, and production had no version. On 2026-11-26, main-preview cloud
+builds passed checkout and failed at Install: `npm ci --no-audit --no-fund`
+exited 1 with the broken-npm error of `mokly-build-v2`. No cloud build has
+passed on an environment yet. Record the first main-preview and production
+build proofs here.

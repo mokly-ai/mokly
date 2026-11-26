@@ -40,13 +40,16 @@ fn plain_groups_keep_the_session_and_signal_members_after_reaping() {
         } else {
             SystemProcessGroups.configure(&mut command).unwrap();
         }
-        let mut child = command.spawn().unwrap();
-        let group = match SystemProcessGroups.attach(&child) {
-            Ok(group) => group,
-            Err(error) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                panic!("attachment failed: {error}");
+        let child = command.spawn().unwrap();
+        // The test reaps the root before the last group signal, so it takes
+        // the child and the guard out of the tree.
+        let (mut child, group) = match SystemProcessGroups.attach(child) {
+            Ok(tree) => tree.into_parts(),
+            Err(failure) => {
+                let mut unattached = failure.stop(&SystemProcessGroups);
+                let _ = unattached.child.kill();
+                let _ = unattached.child.wait();
+                panic!("attachment failed: {}", unattached.source);
             }
         };
         let stdout = child.stdout.take().unwrap();

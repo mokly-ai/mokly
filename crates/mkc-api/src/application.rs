@@ -77,7 +77,7 @@ pub struct ConfiguredApplicationFactory {
     pub runtime: Arc<dyn Runtime>,
     /// Build provider factory; tests inject a runner without E2B access.
     pub builds: Arc<dyn BuildProviderFactory>,
-    /// Webhook delivery loop pauses; production uses the one-second defaults.
+    /// Worker loop pauses; production uses the defaults.
     pub intervals: WorkerIntervals,
 }
 

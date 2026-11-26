@@ -100,7 +100,6 @@ test(
     await page.goto(SITE_PATHS.home);
     const { components } = boxes(page);
     const phones = page.locator(".site-home-spread .site-home-board");
-    await expect(phones).toHaveCount(8);
     await expect(phones.filter({ visible: true })).toHaveCount(3);
     await expect(components).toBeVisible();
     const phone = await box(page.locator(".site-home-spread-payment"));

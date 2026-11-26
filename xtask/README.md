@@ -288,6 +288,11 @@ The CLI integration fixtures use the built workspace packages and host native
 binary. After `npm ci`, prepare those outputs before standalone crate tests.
 Repository and Native prepare these outputs before their Rust tests.
 
+The Mokly contract fixture tests run the generator in private repositories.
+Checks that edit the generated files use separate byte copies of the output.
+The viewer corpus checks start from a copy of the checked-in fixtures and
+regenerate after each edit. Independent generator calls run concurrently.
+
 Run the crate tests directly when you change command orchestration:
 
 ```bash

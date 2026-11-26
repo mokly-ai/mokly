@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { StringDecoder } from "node:string_decoder";
 
-import { start, waitFor } from "./process.js";
+import { waitFor } from "./process.js";
 import type { Running } from "./process.js";
 import { finishRun } from "./run_output.js";
 
@@ -34,9 +34,7 @@ export async function resetRenderStore(namespace: string) {
 /** Use only complete announcements from children owned by one benchmark call. */
 export function renderStorePreparation(
   root: string,
-  serveArguments: string[],
-  memoryStopKiB: number,
-  sidecarTimeoutMs?: number,
+  startServe: () => Running,
 ) {
   let latest: Announcement | undefined;
   const preparations: RenderStorePreparation[] = [];
@@ -71,12 +69,7 @@ export function renderStorePreparation(
 
   async function discover(scenario: string) {
     const name = `${scenario}-cache-discovery`;
-    const running = start(
-      serveArguments,
-      root,
-      memoryStopKiB,
-      sidecarTimeoutMs,
-    );
+    const running = startServe();
     const announcement = observe(running, name);
     try {
       await waitFor(

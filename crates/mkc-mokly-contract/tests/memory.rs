@@ -16,18 +16,28 @@ use mkc_mokly_contract::scanned_archive::ScannedArchive;
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
+/// `count` paths of 1,023 bytes and `segments` one-character segments: three
+/// base-36 digits of the index, then `a` segments, the fourth padded with `a`
+/// to the length.
+///
+/// Each path is written into one buffer, because a vector of segment strings
+/// for each of 20,000 deep paths takes seconds in a debug build.
 fn files(count: usize, segments: usize) -> ArchiveFiles {
     let alphabet = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    // One-character segments and their separators take 2 * segments - 1 bytes.
+    let padding = 1023 - (2 * segments - 1);
     (0..count)
         .map(|index| {
-            let mut parts = vec!["a".to_owned(); segments];
+            let mut path = Vec::with_capacity(1023);
             for digit in 0..3 {
-                parts[digit] =
-                    char::from(alphabet[(index / 36_usize.pow(digit as u32)) % 36]).to_string();
+                path.push(alphabet[(index / 36_usize.pow(digit as u32)) % 36]);
+                path.push(b'/');
             }
-            let padding = 1023 - parts.join("/").len();
-            parts[3].push_str(&"a".repeat(padding));
-            let path = parts.join("/");
+            path.resize(path.len() + 1 + padding, b'a');
+            for _ in 4..segments {
+                path.extend_from_slice(b"/a");
+            }
+            let path = String::from_utf8(path).unwrap();
             assert_eq!(path.len(), 1023);
             (path, Vec::new().into())
         })

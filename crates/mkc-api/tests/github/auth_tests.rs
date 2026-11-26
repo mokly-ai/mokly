@@ -43,12 +43,13 @@ fn connect_and_install_keep_the_session_user_when_verified_github_email_differs(
     );
     app.install_project();
     app.queries(&mut |queries| {
-        let linked = queries.user_github_identity(app.user).unwrap().unwrap();
+        let linked = queries.user_github_identity(app.user)?.unwrap();
         assert_eq!(linked.github_user_id, 1);
         assert_eq!(
-            queries.user(app.user).unwrap().unwrap().email,
+            queries.user(app.user)?.unwrap().email,
             "octocat@example.com"
         );
-        assert!(queries.find_user("personal@example.com").unwrap().is_none());
+        assert!(queries.find_user("personal@example.com")?.is_none());
+        Ok(())
     });
 }

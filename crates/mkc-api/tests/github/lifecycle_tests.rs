@@ -24,12 +24,10 @@ fn deleting_a_reconnected_workspace_keeps_the_prior_workspaces_project() {
         .unwrap()
         .into();
     app.queries(&mut |queries| {
-        let mut installation = queries
-            .github_installation(project.installation)
-            .unwrap()
-            .unwrap();
+        let mut installation = queries.github_installation(project.installation)?.unwrap();
         installation.organization_id = Some(id);
-        queries.save_github_installation(&installation).unwrap();
+        queries.save_github_installation(&installation)?;
+        Ok(())
     });
     let response = app
         .request(Method::DELETE, &format!("/v1/workspaces/{id}"))
@@ -38,14 +36,12 @@ fn deleting_a_reconnected_workspace_keeps_the_prior_workspaces_project() {
         .unwrap();
     assert_eq!(response.status(), 204, "{}", response.text().unwrap());
     app.queries(&mut |queries| {
-        assert!(queries.organization(id).unwrap().is_none());
-        assert!(queries.project(project.id).unwrap().is_some());
-        let installation = queries
-            .github_installation(project.installation)
-            .unwrap()
-            .unwrap();
+        assert!(queries.organization(id)?.is_none());
+        assert!(queries.project(project.id)?.is_some());
+        let installation = queries.github_installation(project.installation)?.unwrap();
         assert!(installation.organization_id.is_none());
         assert!(!installation.connected);
+        Ok(())
     });
 }
 
@@ -59,10 +55,10 @@ fn suspended_installation_stays_visible_and_allows_another_installation_start() 
     let mut workspace = None;
     app.queries(&mut |queries| {
         workspace = queries
-            .github_installation(project.installation)
-            .unwrap()
+            .github_installation(project.installation)?
             .unwrap()
             .organization_id;
+        Ok(())
     });
     let workspace = workspace.unwrap();
     app.github.mode.lock().unwrap().suspended = true;
@@ -115,13 +111,13 @@ fn suspended_installation_stays_visible_and_allows_another_installation_start() 
     );
     app.queries(&mut |queries| {
         let mut member = queries
-            .members(workspace)
-            .unwrap()
+            .members(workspace)?
             .into_iter()
             .find(|member| member.user_id == Some(app.user))
             .unwrap();
         member.role = Role::Member;
-        queries.save_member(&member).unwrap();
+        queries.save_member(&member)?;
+        Ok(())
     });
     let denied = response_json(
         app.request(Method::POST, "/v1/github/installations")
@@ -133,13 +129,13 @@ fn suspended_installation_stays_visible_and_allows_another_installation_start() 
     assert_eq!(denied["error"]["reason"], "permission-denied");
     app.queries(&mut |queries| {
         let mut member = queries
-            .members(workspace)
-            .unwrap()
+            .members(workspace)?
             .into_iter()
             .find(|member| member.user_id == Some(app.user))
             .unwrap();
         member.role = Role::Owner;
-        queries.save_member(&member).unwrap();
+        queries.save_member(&member)?;
+        Ok(())
     });
     app.github.mode.lock().unwrap().suspended = false;
     app.send("installation", "installation", DeliveryStatus::Done);
