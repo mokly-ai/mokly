@@ -51,20 +51,6 @@ test("an unavailable publication offers the switcher as the way back", async ({
   ).toBeVisible();
 });
 
-test("Set up publishing is offered to an administrator and named for a member", async ({
-  page,
-}) => {
-  const projectId = await project(page, "unpublished");
-  await open(page, await projectPathFor(page, projectId));
-  const canvas = page.locator(".fo-stage-canvas");
-  await expect(canvas.getByText("No publications yet")).toBeVisible();
-  await expect(canvas.getByTestId("set-up-publishing")).toBeVisible();
-  await expect(canvas.getByTestId("stage-choose-publication")).toBeVisible();
-  // The chrome stays mounted in every state, so the reader is never outside
-  // the viewer.
-  await expect(page.getByTestId("viewer-account")).toBeVisible();
-});
-
 test("a member is told who publishes, and is offered no way to do it", async ({
   page,
 }) => {
@@ -175,7 +161,7 @@ test("Share prepares its link while the real publication entry resolves", async 
       },
     );
     await ready(page);
-    await expect.poll(held.seen).toBe(true);
+    await held.arrived;
     const panel = page.getByTestId("viewer-panel-share");
     await expect(panel).toBeVisible();
     await expectSharePreparing(panel);

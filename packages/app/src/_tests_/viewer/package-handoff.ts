@@ -5,19 +5,21 @@ import { expect, open } from "../harness";
 
 import { publishedViewerReady } from "./support";
 
+/**
+ * Hold one route until the test releases it. `arrived` settles once the first
+ * request is held, so a test waits for the request itself rather than polling
+ * for it.
+ */
 function requestGate() {
-  let release: () => void = () => undefined;
-  let seen = false;
-  const pending = new Promise<void>((resolve) => {
-    release = resolve;
-  });
+  const gate = Promise.withResolvers<void>();
+  const arrived = Promise.withResolvers<void>();
   return {
     hold: async () => {
-      seen = true;
-      await pending;
+      arrived.resolve();
+      await gate.promise;
     },
-    release: () => release(),
-    seen: () => seen,
+    release: () => gate.resolve(),
+    arrived: arrived.promise,
   };
 }
 
@@ -43,11 +45,11 @@ export async function openHeldPackage(
   page: Page,
   projectId: string,
   publicationId: string,
-  accessSeen: () => boolean,
+  accessArrived: Promise<void>,
 ): Promise<void> {
   await open(page, await publicationPathFor(page, projectId, publicationId));
   await expect(page.getByTestId("viewer-share")).toBeVisible();
-  await expect.poll(accessSeen).toBe(true);
+  await accessArrived;
 }
 
 /**
@@ -73,7 +75,7 @@ export async function releaseAccessDuringPress(
   });
   handoff.access.release();
   await confirmed;
-  await expect.poll(handoff.catalogue.seen).toBe(true);
+  await handoff.catalogue.arrived;
   handoff.catalogue.release();
   await indexed;
   await page.evaluate(
@@ -90,7 +92,7 @@ export async function finishPackageHandoff(
   page: Page,
   handoff: Awaited<ReturnType<typeof holdPackageHandoff>>,
 ): Promise<void> {
-  await expect.poll(handoff.catalogue.seen).toBe(true);
+  await handoff.catalogue.arrived;
   handoff.catalogue.release();
   await publishedViewerReady(page);
 }
