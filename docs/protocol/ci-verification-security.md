@@ -155,10 +155,11 @@ sccache alone saves about the same time, but it needs storage secrets, fork
 pull requests build without it, and every holder of a write key could change
 what CI reads. Its GitHub Actions store also exceeds GitHub's cache upload
 rate limit on a cold run. A trial on 4 CPUs measured no gain over the
-dependency cache: a cold build that read a local sccache with 99.7 % hits
-took 159 seconds, against 154 seconds for a build after a dependency cache
-restore. On top of that restore, a local sccache saved 32 seconds of the
-workspace crate builds, and a remote store adds network time to each hit.
+dependency cache: a cold build that read sccache on R2 with 99.6 % hits took
+208 seconds, against about 157 seconds after a dependency cache restore. On
+top of that restore, sccache on R2 for the workspace crates took 109 seconds.
+A manual run therefore also uses sccache on R2 for the workspace crates, to
+measure that gain on the CI runners before a decision.
 
 ## Testbox Key And Secret Boundary
 

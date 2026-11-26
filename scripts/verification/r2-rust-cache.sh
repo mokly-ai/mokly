@@ -104,7 +104,7 @@ restore() {
 # Remove every build of a workspace target, the top-level outputs, and the
 # incremental data, so the entry holds dependency builds only.
 clean() {
-  local names profile entry base
+  local names
   names=$(cargo metadata --no-deps --format-version 1 | node -e '
     let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
       const names = new Set();
@@ -114,8 +114,10 @@ clean() {
       }
       console.log([...names].join("\n"));
     });')
-  for profile in "$target"/*/; do
-    [ -d "$profile/deps" ] || continue
+  # A profile directory holds `deps`. The xtask alias and the native build
+  # nest theirs, for example `target/xtask/debug`.
+  find "$target" -maxdepth 4 -type d -name deps 2> /dev/null | while read -r deps; do
+    profile=$(dirname "$deps")
     find "$profile" -maxdepth 1 -type f -delete
     rm -rf "$profile/incremental" "$profile/examples"
     for entry in "$profile"/deps/* "$profile"/build/* "$profile"/.fingerprint/*; do

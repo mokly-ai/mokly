@@ -442,6 +442,27 @@ jobs:
           KEY: ${{ steps.r2-key.outputs.key }}
           RESTORE_PREFIX: ${{ steps.r2-key.outputs.restore-prefix }}
         run: bash scripts/verification/r2-rust-cache.sh restore "$KEY" "$RESTORE_PREFIX"
+      # A manual run also tries sccache on R2 for the workspace crates, on top
+      # of the dependency cache. The first manual run fills it, and a later one
+      # reads it. The server holds the key, so later steps never see it.
+      - name: Install sccache
+        if: steps.r2.outputs.enabled == 'true' && github.event_name == 'workflow_dispatch'
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: sccache@0.14.0
+          fallback: none
+      - name: Start sccache on R2
+        if: steps.r2.outputs.enabled == 'true' && github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_CACHE_WRITE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_CACHE_WRITE_SECRET_ACCESS_KEY }}
+          SCCACHE_REGION: auto
+          SCCACHE_S3_KEY_PREFIX: ci-trial/sccache/${{ runner.os }}
+          SCCACHE_IDLE_TIMEOUT: 0
+        run: |
+          SCCACHE_BUCKET="$R2_CACHE_BUCKET" SCCACHE_ENDPOINT="$R2_CACHE_ENDPOINT" sccache --start-server
+          echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
       - name: Install cargo-nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:
@@ -493,6 +514,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_CACHE_WRITE_SECRET_ACCESS_KEY }}
           KEY: ${{ steps.r2-key.outputs.key }}
         run: bash scripts/verification/r2-rust-cache.sh save "$KEY"
+      - name: Show sccache statistics
+        if: always() && steps.r2.outputs.enabled == 'true' && github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: sccache --show-stats
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }}, ${{ matrix.mode }})
     needs: [profile]
