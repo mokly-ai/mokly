@@ -9,6 +9,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::error::{Error, InternalError};
 use crate::processes::ProcessGroup;
 use crate::unix_process_table::{ChildrenMock, IdentityMock, ProcessIdentity, SignalMock};
+use crate::unix_process_tree::GroupOutcome;
 
 use super::{GroupSignalMock, UnixGroup};
 
@@ -45,7 +46,7 @@ fn kill_signals_every_process_in_a_deep_chain() {
     let groups = Unimock::new(
         GroupSignalMock::signal
             .some_call(matching!(1, _))
-            .answers(&|_, _, _| Ok(false)),
+            .answers(&|_, _, _| Ok(GroupOutcome::Delivered)),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
     let result = ProcessGroup::kill(&group);
@@ -96,7 +97,7 @@ fn a_reaped_root_with_no_retained_descendants_does_no_table_walk() {
             .some_call(matching!(1, _))
             .answers_arc(Arc::new(move |_, _, _| {
                 captured.fetch_add(1, Ordering::Relaxed);
-                Ok(false)
+                Ok(GroupOutcome::Delivered)
             })),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
@@ -128,7 +129,7 @@ fn a_read_failure_still_signals_the_group() {
             .some_call(matching!(1, _))
             .answers_arc(Arc::new(move |_, _, signal| {
                 captured.lock().unwrap().push(signal);
-                Ok(false)
+                Ok(GroupOutcome::Delivered)
             })),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
@@ -165,7 +166,7 @@ fn a_reused_root_pid_never_receives_a_group_signal() {
             .some_call(matching!(1, _))
             .answers_arc(Arc::new(move |_, _, signal| {
                 captured.lock().unwrap().push(signal);
-                Ok(false)
+                Ok(GroupOutcome::Delivered)
             })),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
@@ -228,7 +229,7 @@ fn kill_walks_retained_children_after_the_root_dies() {
                 if signal == libc::SIGTERM {
                     terminated.store(true, Ordering::Relaxed);
                 }
-                Ok(false)
+                Ok(GroupOutcome::Delivered)
             })),
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));

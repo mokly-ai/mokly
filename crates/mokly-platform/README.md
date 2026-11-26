@@ -158,8 +158,14 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   `/proc/{pid}/task/{tid}/children`, scans `/proc/*/stat` when those files are
   absent, and signals through a pidfd with a `kill` fallback.
   [`macos.rs`](./src/unix_process_table/macos.rs) uses libproc.
-- [`src/unix_group_members.rs`](./src/unix_group_members.rs) confirms that a
-  macOS group has no live member before a permission result counts as stopped.
+- [`src/unix_group_members.rs`](./src/unix_group_members.rs) reads the members
+  of a macOS group after a group signal fails with a permission result. With no
+  member left, the group counts as stopped. Members that are only exiting need
+  no signal. Each other live member is reported as still needing the signal.
+- [`src/unix_process_tree/outcome.rs`](./src/unix_process_tree/outcome.rs)
+  defines `GroupOutcome`. macOS refuses a group signal while each member is
+  exiting or still in a fork, so a refused signal goes to each live member by
+  its own identity. A member that refuses its own signal keeps the error.
 - [`tests/process_tree/fixture.rs`](./tests/process_tree/fixture.rs) defines
   `Tree`, which starts a helper process tree for a test and cleans it up.
   [`unix_helpers.rs`](./tests/process_tree/unix_helpers.rs) holds the helper

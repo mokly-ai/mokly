@@ -3,7 +3,10 @@
 use std::io;
 use std::mem::{MaybeUninit, size_of, size_of_val};
 
-use super::Members;
+use super::{Member, Members};
+
+/// `PROC_FLAG_INEXIT` of `<sys/proc_info.h>`: the process has begun to exit.
+const PROC_FLAG_INEXIT: u32 = 4;
 
 /// Darwin process table queries, including members reaped during inspection.
 pub(crate) struct SystemMembers;
@@ -25,7 +28,7 @@ impl Members for SystemMembers {
         Ok(count as usize)
     }
 
-    fn live(&self, pgid: i32, pid: i32) -> io::Result<bool> {
+    fn state(&self, pgid: i32, pid: i32) -> io::Result<Member> {
         let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
         let expected = size_of::<libc::proc_bsdinfo>() as i32;
         // SAFETY: libproc receives a correctly aligned buffer of expected bytes.
@@ -42,7 +45,7 @@ impl Members for SystemMembers {
         if size != expected {
             let error = io::Error::last_os_error();
             return if error.raw_os_error() == Some(libc::ESRCH) {
-                Ok(false)
+                Ok(Member::Gone)
             } else if error.raw_os_error() == Some(0) {
                 Err(io::ErrorKind::UnexpectedEof.into())
             } else {
@@ -51,6 +54,12 @@ impl Members for SystemMembers {
         }
         // SAFETY: the full structure was initialized, as the exact size proves.
         let info = unsafe { info.assume_init() };
-        Ok(info.pbi_pgid == pgid as u32 && info.pbi_status != libc::SZOMB)
+        if info.pbi_pgid != pgid as u32 || info.pbi_status == libc::SZOMB {
+            Ok(Member::Gone)
+        } else if info.pbi_flags & PROC_FLAG_INEXIT != 0 {
+            Ok(Member::Exiting)
+        } else {
+            Ok(Member::Live)
+        }
     }
 }

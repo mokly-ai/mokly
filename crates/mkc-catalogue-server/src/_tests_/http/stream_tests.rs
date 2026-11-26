@@ -220,20 +220,21 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
             );
         }
 
-        let ordinary = tokio::time::timeout(
-            Duration::from_millis(200),
-            service.clone().oneshot(
+        // Both requests settle while the test still holds the eight unread
+        // responses. A starved request never settles, and the CI job timeout
+        // ends the run, so no wall-clock limit decides the result.
+        let ordinary = service
+            .clone()
+            .oneshot(
                 Request::builder()
                     .uri("/ordinary.json")
                     .header("Host", locations().authority(ID))
                     .body(Body::empty())
                     .unwrap(),
-            ),
-        )
-        .await;
-        let access = tokio::time::timeout(
-            Duration::from_millis(200),
-            service.oneshot(
+            )
+            .await;
+        let access = service
+            .oneshot(
                 Request::builder()
                     .method("POST")
                     .uri("/_access")
@@ -242,11 +243,12 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
                     .header("Content-Type", "application/json")
                     .body(Body::from(r#"{"grant":"grant"}"#))
                     .unwrap(),
-            ),
-        )
-        .await;
+            )
+            .await;
         assert!(ordinary.is_ok(), "ordinary file request was starved");
         assert!(access.is_ok(), "access exchange was starved");
+        assert_eq!(ordinary.unwrap().status(), StatusCode::OK);
+        assert_eq!(access.unwrap().status(), StatusCode::NO_CONTENT);
         assert_eq!(slow.len(), 8);
     });
 }
