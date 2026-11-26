@@ -24,6 +24,7 @@ import { git, write } from "../helpers/static_changes.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
 import { commitBaseSources } from "./serve_comparison_git.js";
+import { describeRead, readyLog } from "./serve_ready_log.js";
 
 /**
  * The waits between index reads while a publication is pending. A watched
@@ -122,19 +123,29 @@ export async function serveComparisonCatalogue(
       predicate?: ReadyPredicate,
     ): Promise<CatalogueReadModel> => {
       let accepted: Awaited<ReturnType<typeof index>> | undefined;
+      const reads = readyLog();
       try {
         await expect
           .poll(
             async () => {
-              const current = await index();
-              if (
-                current.revision <= after ||
-                current.changesStatus !== "ready"
-              )
-                return false;
-              if (expectedBase && current.baseCommit !== expectedBase)
-                return false;
-              if (predicate && !(await predicate(current))) return false;
+              const current = await reads.step("reading the index", index);
+              const read = describeRead(current);
+              const counted =
+                current.revision > after &&
+                current.changesStatus === "ready" &&
+                (!expectedBase || current.baseCommit === expectedBase);
+              if (!counted || !predicate) reads.record(read);
+              const matched =
+                counted && predicate
+                  ? await reads.step(
+                      "checking the caller's predicate",
+                      async () => predicate(current),
+                      read,
+                    )
+                  : undefined;
+              if (matched !== undefined)
+                reads.record(`${read}, predicate ${matched}`);
+              if (!counted || matched === false) return false;
               accepted = current;
               return true;
             },
@@ -142,8 +153,13 @@ export async function serveComparisonCatalogue(
           )
           .toBe(true);
       } catch (cause) {
+        const wanted = [
+          `a revision above ${after} with changesStatus ready`,
+          ...(expectedBase ? [`baseCommit ${expectedBase}`] : []),
+          ...(predicate ? ["the caller's predicate"] : []),
+        ].join(", ");
         throw new Error(
-          `Serve comparison did not become ready:\n${host?.diagnostics?.()}`,
+          `Serve comparison did not become ready. Wanted ${wanted}.\n${reads.report(cause)}\nServe output:\n${host?.diagnostics?.()}`,
           { cause },
         );
       }

@@ -1,7 +1,8 @@
 //! Node process composition with inherited environment and whole-tree ownership.
 
 use std::fs;
-use std::process::{Command, Stdio};
+use std::io;
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex, mpsc};
 
@@ -20,7 +21,7 @@ use crate::process_environment;
 use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
-use crate::process_reaper::Reaper;
+use crate::process_reaper::{Reaper, retire_unattached};
 use crate::process_startup::StartupTiming;
 use crate::process_threads::{PipeThreads, SystemPipeThreads};
 use crate::process_transport::{Deadlines, PipeTransport};
@@ -117,31 +118,37 @@ impl NodeFactory {
     fn spawn_owned(
         &self,
         launch: &Launch,
-        mut child: Reaper,
+        mut process: Child,
         startup: Arc<StartupTiming>,
     ) -> Result<Spawned> {
-        let group = match self.groups.attach(&child.child) {
-            Ok(group) => group,
-            Err(source) => return Err(InternalError::Platform { source }.into()),
+        let pid = process.id();
+        let pipes = (
+            process.stdin.take(),
+            process.stdout.take(),
+            process.stderr.take(),
+        );
+        // The tree reaps the child only when its last reference drops, after
+        // the final signal, so no signal can reach a reused group number.
+        let (mut child, group) = match self.groups.attach(process) {
+            Ok(tree) => {
+                let tree = Arc::new(tree);
+                let groups = Arc::clone(&self.groups);
+                let reaper = Reaper::new(Arc::clone(&tree), Arc::clone(&startup), groups);
+                (reaper, tree)
+            }
+            Err(failure) => {
+                let source = retire_unattached(failure, &startup, self.groups.as_ref());
+                return Err(InternalError::Platform { source }.into());
+            }
         };
-        let pid = child.child.id();
+        let (Some(stdin), Some(stdout), Some(stderr)) = pipes else {
+            return Err(InternalError::Io {
+                source: io::Error::other("the sidecar pipes are missing"),
+            }
+            .into());
+        };
         let memory = Arc::from(self.memory.monitor(pid));
         let discover_memory = Arc::new(AtomicBool::new(false));
-        let stdin = child
-            .child
-            .stdin
-            .take()
-            .expect("stdin is configured as a pipe");
-        let stdout = child
-            .child
-            .stdout
-            .take()
-            .expect("stdout is configured as a pipe");
-        let stderr = child
-            .child
-            .stderr
-            .take()
-            .expect("stderr is configured as a pipe");
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);
@@ -236,7 +243,7 @@ impl WorkerFactory for NodeFactory {
         };
         let startup = Arc::new(StartupTiming::default());
         let child = match self.parent.spawn(command) {
-            Ok(child) => Reaper::new(child, Arc::clone(&startup), Arc::clone(&self.groups)),
+            Ok(child) => child,
             Err(_) => {
                 return Err(SpawnFailure::NotStarted(Error::Unavailable {
                     part: launch.node.display().to_string(),

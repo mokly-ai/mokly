@@ -172,6 +172,7 @@ mod use_case_impact;
 pub mod source_failures;
 
 mod git_failures;
+mod git_hint;
 mod git_prefetch;
 
 mod owned_style_chain_source;
