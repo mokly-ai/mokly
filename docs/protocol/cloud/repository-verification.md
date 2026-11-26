@@ -114,13 +114,13 @@ the unsharded suite once.
 With `N` shards, where `N` is at least 3 for the mockups and at least 2 for
 the site, the shards hold these checks:
 
-| Shard                     | Checks                                               |
-| ------------------------- | ---------------------------------------------------- |
-| Mockup 1                  | Determinism and types, without a browser             |
-| Mockup 2                  | Policy tests and the served browser suite            |
-| Mockup `n`, from 3 to `N` | Shard `n - 2` of `N - 2` of the disk browser suite   |
-| Site 1                    | Types, unit tests, links, and browser shard 1 of `N` |
-| Site `n`, from 2 to `N`   | Browser shard `n` of `N`                             |
+| Shard                     | Checks                                             |
+| ------------------------- | -------------------------------------------------- |
+| Mockup 1                  | Determinism, without a browser                     |
+| Mockup 2                  | Policy tests and the served browser suite          |
+| Mockup `n`, from 3 to `N` | Shard `n - 2` of `N - 2` of the disk browser suite |
+| Site 1                    | Unit tests, links, and browser shard 1 of `N`      |
+| Site `n`, from 2 to `N`   | Browser shard `n` of `N`                           |
 
 With two mockup shards, shard 1 runs the checks without a browser and shard 2
 runs both browser suites. One shard runs the complete suite. The mockup and

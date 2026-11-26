@@ -104,10 +104,10 @@ Each worker attempts every assigned suite and reports each failure.
 | ---------------------- | ------------------------------------------------------------------------- |
 | `cloud-rust`           | Clippy, the workspace Mokly build, and tests of every `mkc-` crate        |
 | `cloud-migrations`     | SQL pairs, migration checksums, and the append-only base lock             |
-| `cloud-typecheck`      | Type checks of every cloud npm project                                    |
+| `cloud-typecheck`      | Type checks of every cloud npm project; no other cloud suite repeats them |
 | `cloud-app`            | App logic, web export, and browser tests                                  |
-| `cloud-mockups`        | Mockup build, determinism, policy, browser smoke, and types               |
-| `cloud-site`           | Site build, types, unit tests, links, and browser checks                  |
+| `cloud-mockups`        | Mockup build, determinism, policy, and browser smoke                      |
+| `cloud-site`           | Site build, unit tests, links, and browser checks                         |
 | `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
 | `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
 | `cloud-emails`         | Email template drift and mutation tests                                   |

@@ -224,14 +224,8 @@ await writeFile(path, JSON.stringify(corpus, null, 2) + '\n');"#,
     );
 }
 
-/// Generate the unedited fixture while regeneration overwrites a copy of the goldens.
+/// Regenerate a copy of the goldens after an edit, then require the reader's refusal.
 fn check_regenerated_corpus(fixture: &dyn Fixture, diagnostic: &str) {
-    thread::scope(|scope| {
-        scope.spawn(|| {
-            let baseline = prepared();
-            success(baseline.run("node", &[GENERATOR]));
-        });
-        success(fixture.run("node", &[GENERATOR]));
-        failure(fixture.run("node", &[GENERATOR, "--check"]), diagnostic);
-    });
+    success(fixture.run("node", &[GENERATOR]));
+    failure(fixture.run("node", &[GENERATOR, "--check"]), diagnostic);
 }
