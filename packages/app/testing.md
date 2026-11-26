@@ -14,7 +14,9 @@ This is the testing guide for the [App package](./README.md).
   check, one import group per module, the no-shared-selector rule between
   `public/app.css` and the catalogue stylesheets, and every `symbol()` a
   listed protocol doc names. The screens that only the desktop shell draws are
-  rendered in Node, because no browser test can load the shell's origin.
+  rendered in Node, because no browser test can load the shell's origin, and
+  so is each place that draws the write-failure fragment, with its writes
+  refused.
 - The browser suite is `src/_tests_/**/*.spec.ts`: Playwright in real Chromium
   against the exported build, the real API with `MKC_MAILER=log`, the real
   catalogue server, one fresh blob directory and one isolated Postgres schema
