@@ -7,11 +7,7 @@ import type { ElectronApplication, Page } from "@playwright/test";
 import type * as Scratch from "../../../../apps/_tests_/scratch.mjs";
 import { catalogueOrigin } from "../../../app/src/_tests_/origins";
 
-import {
-  chromiumLogging,
-  keepOutput,
-  printCaptureFailure,
-} from "./electron-output";
+import { chromiumLog, keepLog, printCaptureFailure } from "./electron-output";
 
 // The app harness loads this shared MJS helper through CommonJS. Use the same
 // loader so Playwright never tries to register it as both CJS and ESM.
@@ -27,16 +23,21 @@ export async function launch(
   profile: string,
   address?: string,
 ): Promise<ElectronApplication> {
+  const log = chromiumLog(profile);
   const electron = await _electron.launch({
-    args: [".", `--user-data-dir=${profile}`, ...(address ? [address] : [])],
+    args: [
+      ".",
+      `--user-data-dir=${profile}`,
+      ...log.args,
+      ...(address ? [address] : []),
+    ],
     cwd: process.cwd(),
     env: {
       ...process.env,
-      ...chromiumLogging,
       MKC_DESKTOP_CATALOGUE_SOURCE: `http://*.localhost:${new URL(catalogueOrigin).port}`,
     },
   });
-  keepOutput(electron);
+  keepLog(electron, log.file);
   const page = await electron.firstWindow();
   await page.waitForURL((url) => url.protocol === "mokly-app:");
   if (!address)
@@ -89,7 +90,7 @@ export async function follow(
   );
 }
 
-/** Save a capture; when it fails, print the Electron output before the error. */
+/** Save a capture; when it fails, print the Chromium log before the error. */
 export async function screenshot(page: Page, name: string): Promise<void> {
   try {
     await page.screenshot({

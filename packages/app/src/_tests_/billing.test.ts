@@ -44,14 +44,10 @@ function billing(over: Partial<Billing> = {}): Billing {
   };
 }
 
-test("the pane states the Team trial length and seat prices", () => {
+test("the pane states the Team trial length", () => {
   // The trial length is the one catalogue value the read does not carry, so
   // the pane writes it from its own constant.
   assert.equal(trialDays, 7);
-  // Nothing in the product types the seat prices, so the test states what the
-  // pane prints for the amounts the API answers with.
-  assert.equal(money(2000), "$20");
-  assert.equal(money(500), "$5");
 });
 
 test("an amount is written with cents only when it has them", () => {

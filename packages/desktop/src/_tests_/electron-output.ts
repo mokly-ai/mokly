@@ -1,59 +1,60 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import type {
   BrowserContext,
   ElectronApplication,
   Page,
 } from "@playwright/test";
 
-/** How many of the last output lines each Electron process keeps. */
-const keptLines = 200;
+/** How many of the last Chromium log lines a failed capture prints. */
+const printedLines = 200;
 
-const outputs = new WeakMap<BrowserContext, string[]>();
-
-/**
- * The environment that makes Electron write Chromium's own log, such as a GPU
- * process exit or a lost context, to its standard error.
- */
-export const chromiumLogging = { ELECTRON_ENABLE_LOGGING: "1" };
+const logFiles = new WeakMap<BrowserContext, string>();
+let launches = 0;
 
 /**
- * Keep the last lines that the Electron process writes, so that a failed
- * capture can print what Chromium said before it. Playwright already reads
- * both pipes, so this listener adds no back-pressure.
+ * The switches that make Chromium write its own log, such as a GPU process
+ * exit or a lost context, to a file of this launch from the process start.
+ * Each launch gets its own file, so a second launch of one profile does not
+ * mix its lines with the first.
  */
-export function keepOutput(electron: ElectronApplication): void {
-  const lines: string[] = [];
-  outputs.set(electron.context(), lines);
-  const child = electron.process();
-  for (const [name, stream] of [
-    ["stdout", child.stdout],
-    ["stderr", child.stderr],
-  ] as const) {
-    let partial = "";
-    stream?.on("data", (chunk: Buffer) => {
-      const parts = (partial + chunk.toString("utf8")).split("\n");
-      partial = parts.pop() ?? "";
-      for (const line of parts) {
-        lines.push(`[electron ${name}] ${line}`);
-        if (lines.length > keptLines) lines.shift();
-      }
-    });
+export function chromiumLog(profile: string): {
+  args: string[];
+  file: string;
+} {
+  launches += 1;
+  const file = join(profile, `chromium-${process.pid}-${launches}.log`);
+  return { args: ["--enable-logging=file", `--log-file=${file}`], file };
+}
+
+/** Remember the log file of a launched application for its windows. */
+export function keepLog(electron: ElectronApplication, file: string): void {
+  logFiles.set(electron.context(), file);
+}
+
+/** The last lines of the page's Chromium log, or why there are none. */
+function logTail(page: Page): string[] {
+  const file = logFiles.get(page.context());
+  if (!file)
+    return ["The page is not an Electron window, so it has no Chromium log."];
+  try {
+    const lines = readFileSync(file, "utf8").trimEnd().split("\n");
+    const tail = lines.slice(-printedLines);
+    return [`Last ${tail.length} lines of the Chromium log ${file}:`, ...tail];
+  } catch (error) {
+    return [`The Chromium log ${file} could not be read: ${String(error)}`];
   }
 }
 
-/** Print the kept Electron output of the page's application and the error. */
+/** Print the Chromium log of the page's application and the capture error. */
 export function printCaptureFailure(
   page: Page,
   name: string,
   error: unknown,
 ): void {
-  const lines = outputs.get(page.context());
-  const output = lines
-    ? [`Last ${lines.length} lines of Electron output:`, ...lines]
-    : ["The page is not an Electron window, so no Electron output is kept."];
+  const message = error instanceof Error ? error.message : String(error);
   console.error(
-    [
-      `Screenshot "${name}" failed: ${error instanceof Error ? error.message : String(error)}`,
-      ...output,
-    ].join("\n"),
+    [`Screenshot "${name}" failed: ${message}`, ...logTail(page)].join("\n"),
   );
 }
