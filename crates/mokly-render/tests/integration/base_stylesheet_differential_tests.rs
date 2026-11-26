@@ -123,7 +123,7 @@ fn an_earlier_absent_extension_candidate_prevents_head_reuse() {
 }
 
 #[test]
-fn changed_package_entries_and_versions_reject_cached_resolution() {
+fn changed_package_style_and_exports_entries_reject_cached_resolution() {
     for field in ["style", "exports"] {
         let original = match field {
             "exports" => {
