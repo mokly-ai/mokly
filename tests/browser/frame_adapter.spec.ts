@@ -11,6 +11,11 @@ import {
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
+interface TimeoutTestWindow extends Window {
+  silentLoaded: boolean;
+  timeoutCode: string | null;
+}
+
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
 test.beforeAll(async () => {
   fixture = await crossOriginFixture();
@@ -213,19 +218,53 @@ test("view swaps, disposal, and absent probe timeouts discard old work", async (
   await expect(
     page.frameLocator("#frame").locator("[data-mokly-overlay]"),
   ).toHaveCount(0);
-  const timeout = await page.evaluate(async (origin) => {
+  // The absent probe's deadline starts when the frame loads. The clock runs
+  // it to its end without a real wait.
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
+  await page.evaluate(async (origin) => {
     const { postMessageAdapter } = (await import(
       `${location.origin}/test-adapters.js`
     )) as typeof PostAdapter;
-    return postMessageAdapter({ frameOrigin: origin })
-      .mount(document.querySelector<HTMLIFrameElement>("#frame")!, {
+    const state = window as unknown as TimeoutTestWindow;
+    const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
+    state.timeoutCode = null;
+    state.silentLoaded = false;
+    // This listener and the adapter's run in one load dispatch, so the
+    // adapter has started its deadline when a later check reads the flag.
+    frame.addEventListener(
+      "load",
+      () => {
+        state.silentLoaded = true;
+      },
+      { once: true },
+    );
+    void postMessageAdapter({ frameOrigin: origin })
+      .mount(frame, {
         url: new URL("/static/mokly-generated/silent/index.html", origin),
         usage: { status: "unavailable" },
       })
       .then(
-        () => "unexpected",
-        (error: { code: string }) => error.code,
+        () => {
+          state.timeoutCode = "unexpected";
+        },
+        (error: { code: string }) => {
+          state.timeoutCode = error.code;
+        },
       );
   }, fixture.frames.url);
-  expect(timeout).toBe("timeout");
+  await expect(page.frameLocator("#frame").getByText("No probe")).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as unknown as TimeoutTestWindow).silentLoaded,
+      ),
+    )
+    .toBe(true);
+  const timeout = () =>
+    page.evaluate(() => (window as unknown as TimeoutTestWindow).timeoutCode);
+  await page.clock.runFor(4_999);
+  expect(await timeout()).toBeNull();
+  await page.clock.runFor(1);
+  await expect.poll(timeout).toBe("timeout");
 });

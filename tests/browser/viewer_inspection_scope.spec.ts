@@ -14,104 +14,97 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-async function masks(page: Page, cross: boolean, count: number) {
+async function masks(page: Page, count: number) {
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(count);
-  if (cross) {
-    const frames = page.locator("iframe[data-mokly-fragment-frame]");
-    for (let i = 0; i < (await frames.count()); i++)
-      await expect(
-        frames.nth(i).contentFrame().locator("[data-mokly-overlay]"),
-      ).toHaveCount(0);
-  }
 }
 
-for (const cross of [false, true]) {
-  for (const sibling of ["pending", "unavailable", "mounting"] as const) {
-    test(`${cross ? "postMessage" : "same-origin"} scoped inspection excludes ${sibling} sibling with Both visible`, async ({
-      page,
-    }) => {
-      await page.goto(fixture.host.url);
-      await startInspection(page, cross, sibling);
-      await page.evaluate(() => {
-        const probe = window.inspectionProbe;
-        void window.viewerHarness
-          .get("one")
-          .ref.current.highlightInstance(probe.instance)
-          .then(
-            () => {
-              probe.outcome = "highlighted";
-            },
-            () => {
-              probe.outcome = "rejected";
-            },
-          );
-      });
-      await expect
-        .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
-        .toBe("highlighted");
-      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-        1,
-      );
-      await masks(page, cross, 1);
-      await page.evaluate(async () => {
-        const probe = window.inspectionProbe;
-        await window.viewerHarness
-          .get("one")
-          .ref.current.scrollToInstance(probe.instance);
-        probe.emit({ type: "geometry" });
-      });
-      await releaseInspection(page, false);
-      expect(
-        await page.evaluate(() =>
-          window.viewerHarness
-            .get("one")
-            .events.filter((event) => event.name === "error"),
-        ),
-      ).toEqual([]);
-      expect(
-        await page.evaluate(() =>
-          window.inspectionProbe.calls.filter(
-            (call) => call.viewport === "desktop" && call.operation !== "off",
-          ),
-        ),
-      ).toEqual([]);
-      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-        1,
-      );
-      await masks(page, cross, 1);
-
-      await page.evaluate(() => {
-        const probe = window.inspectionProbe;
-        probe.hold = "list";
-        probe.waiting = false;
-        void window.viewerHarness
-          .get("one")
-          .ref.current.highlightInstance(probe.instance)
-          .then(
-            () => {
-              probe.outcome = "unexpected success";
-            },
-            () => {
-              probe.outcome = "rejected";
-            },
-          );
-      });
-      await page.waitForFunction(() => window.inspectionProbe.waiting);
-      await releaseInspection(page, true);
-      await expect
-        .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
-        .toBe("rejected");
-      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-        0,
-      );
-      await masks(page, cross, 0);
-      expect(
-        await page.evaluate(() =>
-          window.viewerHarness
-            .get("one")
-            .events.filter((event) => event.name === "error"),
-        ),
-      ).toHaveLength(1);
+// The viewer scopes the inspection, so these cases run on one adapter. The
+// adapters have their own specs. An unavailable sibling takes the code path of
+// a pending one, and a viewer unit test covers both statuses.
+for (const sibling of ["pending", "mounting"] as const)
+  test(`same-origin scoped inspection excludes ${sibling} sibling with Both visible`, async ({
+    page,
+  }) => {
+    await page.goto(fixture.host.url);
+    await startInspection(page, sibling);
+    await page.evaluate(() => {
+      const probe = window.inspectionProbe;
+      void window.viewerHarness
+        .get("one")
+        .ref.current.highlightInstance(probe.instance)
+        .then(
+          () => {
+            probe.outcome = "highlighted";
+          },
+          () => {
+            probe.outcome = "rejected";
+          },
+        );
     });
-  }
-}
+    await expect
+      .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
+      .toBe("highlighted");
+    await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
+      1,
+    );
+    await masks(page, 1);
+    await page.evaluate(async () => {
+      const probe = window.inspectionProbe;
+      await window.viewerHarness
+        .get("one")
+        .ref.current.scrollToInstance(probe.instance);
+      probe.emit({ type: "geometry" });
+    });
+    await releaseInspection(page, false);
+    expect(
+      await page.evaluate(() =>
+        window.viewerHarness
+          .get("one")
+          .events.filter((event) => event.name === "error"),
+      ),
+    ).toEqual([]);
+    expect(
+      await page.evaluate(() =>
+        window.inspectionProbe.calls.filter(
+          (call) => call.viewport === "desktop" && call.operation !== "off",
+        ),
+      ),
+    ).toEqual([]);
+    await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
+      1,
+    );
+    await masks(page, 1);
+
+    await page.evaluate(() => {
+      const probe = window.inspectionProbe;
+      probe.hold = "list";
+      probe.waiting = false;
+      void window.viewerHarness
+        .get("one")
+        .ref.current.highlightInstance(probe.instance)
+        .then(
+          () => {
+            probe.outcome = "unexpected success";
+          },
+          () => {
+            probe.outcome = "rejected";
+          },
+        );
+    });
+    await page.waitForFunction(() => window.inspectionProbe.waiting);
+    await releaseInspection(page, true);
+    await expect
+      .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
+      .toBe("rejected");
+    await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
+      0,
+    );
+    await masks(page, 0);
+    expect(
+      await page.evaluate(() =>
+        window.viewerHarness
+          .get("one")
+          .events.filter((event) => event.name === "error"),
+      ),
+    ).toHaveLength(1);
+  });

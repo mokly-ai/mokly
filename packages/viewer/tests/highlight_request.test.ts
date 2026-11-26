@@ -8,8 +8,10 @@ import type { InstanceRef } from "../src/host/types.js";
 import {
   frameHasInstance,
   frameInstanceRef,
+  frameEntryKeys,
   frameTargetKeys,
   matchFrameInstances,
+  validFrameUsage,
 } from "../src/shell/frame_instances.js";
 import type { ShellFrameSession } from "../src/shell/frame_registry.js";
 
@@ -129,4 +131,29 @@ test("component variant frames match the documented instance reference shape", (
 
   assert.equal(matchFrameInstances([variant], [instance]).length, 1);
   assert.deepEqual(frameInstanceRef(variant, alpha), instance);
+});
+
+test("frames with pending or unavailable usage are not inspectable", () => {
+  const cases = [
+    { status: "ready", usage, inspectable: true, keys: [alpha, beta] },
+    {
+      status: "pending",
+      usage: { status: "pending" },
+      inspectable: false,
+      keys: [],
+    },
+    {
+      status: "unavailable",
+      usage: { status: "unavailable" },
+      inspectable: false,
+      keys: [],
+    },
+  ] as const;
+  for (const { status, usage: frameUsage, inspectable, keys } of cases) {
+    const frame = session("mobile", 1);
+    frame.usage = frameUsage;
+    assert.equal(validFrameUsage(frame), inspectable, status);
+    assert.deepEqual(frameEntryKeys(frame), keys, status);
+    assert.equal(frameHasInstance(frame, alpha), inspectable, status);
+  }
 });
