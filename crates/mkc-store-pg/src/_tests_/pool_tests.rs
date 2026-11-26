@@ -14,7 +14,7 @@ use mkc_store_interface::store::{Callback, Store};
 use mkc_test_pg::scratch_schema::ScratchSchema;
 use scheduled_thread_pool::ScheduledThreadPool;
 
-use super::{PgStore, PgStoreFactory, StoreFactory, open_pool, pool_builder};
+use super::{PgStore, open_pool, pool_builder};
 use crate::runtime::SystemRuntime;
 
 #[derive(diesel::QueryableByName)]
@@ -57,8 +57,10 @@ fn serial_calls_reuse_one_session() {
     assert_eq!(sessions.count, 1);
 }
 
-/// `connect` fails when the database is unreachable, so a command fails at
-/// startup and not at its first query.
+/// The pool that `connect` opens fails when the database is unreachable, so a
+/// command fails at startup and not at its first query. The test shortens the
+/// five-second acquisition timeout of `pool_builder`, which r2d2 otherwise
+/// waits out while every attempt is refused.
 #[test]
 fn connect_fails_when_the_database_is_unreachable() {
     let closed_port = TcpListener::bind("127.0.0.1:0")
@@ -66,11 +68,9 @@ fn connect_fails_when_the_database_is_unreachable() {
         .local_addr()
         .unwrap()
         .port();
-    let factory = PgStoreFactory {
-        runtime: Arc::new(SystemRuntime),
-    };
-    let result = factory.connect(&format!(
-        "postgres://postgres@127.0.0.1:{closed_port}/mkc?connect_timeout=1"
-    ));
+    let result = open_pool(
+        pool_builder().connection_timeout(Duration::from_millis(100)),
+        &format!("postgres://postgres@127.0.0.1:{closed_port}/mkc?connect_timeout=1"),
+    );
     assert!(matches!(result, Err(Error::Internal(_))));
 }
