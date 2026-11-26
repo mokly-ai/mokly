@@ -105,9 +105,11 @@ because a wrong shard would skip tests in silence.
 
 ## Mockup and Site Shards
 
-CI runs the `cloud-mockups` suite as six jobs, Mockup checks 1/6 to 6/6, and
-the `cloud-site` suite as two jobs, Site checks 1/2 and 2/2. Each job builds
-the workspace and the catalogue or the site itself. No job depends on the
+CI runs the `cloud-mockups` suite as five jobs, Mockup checks 1/5 to 5/5, and
+the `cloud-site` suite as one job without a shard, Site checks. The site
+browser suite takes about three minutes, so a second site job would not
+shorten CI. Each job builds the workspace and the catalogue or the site
+itself. No job depends on the
 output of another job, and together the jobs of a suite run every check of
 the unsharded suite once.
 
