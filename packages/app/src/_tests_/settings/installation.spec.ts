@@ -9,9 +9,8 @@ import { createProject } from "../project-setup";
  * What the Workspace pane says about the GitHub accounts it connects.
  *
  * The pane names the accounts in one fact and leaves acting on them to the
- * GitHub accounts pane, which owners and admins reach from the fact. Each
- * state is a provider observation rather than anything an endpoint creates,
- * so it is planted where reconciliation would put it and read back through
+ * GitHub accounts pane, which owners and admins reach from the fact. The
+ * account is the one that creating the project installed, read back through
  * the real API.
  */
 

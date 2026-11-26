@@ -22,7 +22,7 @@ export const periodEndsOn = "15 Oct";
  * page is Stripe's own, so a test that only needs a subscribed workspace
  * asks for the session rather than leaving for it.
  */
-export async function startCheckoutThrough(
+async function startCheckoutThrough(
   page: Page,
   workspaceId: string,
 ): Promise<string> {

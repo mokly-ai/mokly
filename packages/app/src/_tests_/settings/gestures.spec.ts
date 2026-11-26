@@ -32,9 +32,9 @@ test("opening the dialog costs one entry, and the browser's back gesture defends
   });
 
   await test.step("the browser's back gesture confirms before discarding a draft", async () => {
-    // A bookmark, a shared link or a typed address loads the surface as the
-    // first document in its own history, so back leaves the document and only
-    // the browser can hold it.
+    // A bookmark, a shared link or a typed address loads the surface as a
+    // document of its own, so back leaves the document and only the browser
+    // can hold it.
     await openDialog(
       page,
       await projectQueryPathFor(page, projectId, "settings=account"),
