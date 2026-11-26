@@ -105,7 +105,7 @@ continue.
 | A. Mockups               | #339 and #506, merged | Milestones 1 and 1a | None                                                                                  |
 | B. Story reading         | #492 and #508, merged | Milestones 2 to 8   | None                                                                                  |
 | C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
-| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Track D decision 6                                                                    |
+| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Answer B of track D decision 6, after the source package override merges into `main`  |
 | J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
 | E. Storybook folders     | Not yet               | In progress         | Milestones 18 to 22                                                                   |
 | F. Failed stories        | #524, merged          | Milestones 23 to 25 | Two follow-up items that wait for the user                                            |
@@ -157,9 +157,6 @@ option. None has an answer yet, so no option applies.
   [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
-- [Track D decision 6](#track-d-decision-6-workspace-package-sources-under-vite):
-  workspace package sources under Vite, raised on 2026-11-25. A branch from
-  this branch applies its answer.
 
 ### Follow-up items that wait for the user
 
@@ -2901,9 +2898,15 @@ probe, rewrote the root question, and added options D, E, and F.
   step pass the import name, as the esbuild call does, so both sides load the
   matching source. This changes design call D9. A working tree with no build
   still fails under Vite, because the user did not choose C. The base build
-  stays in the base prepare command plan. The order of B and the
+  stays in the base prepare command plan.
+- **Order:** chosen by the user on 2026-11-27. The
   `moduleResolution.sourcePackages` change on branch
-  `calummoore/mokly-source-package-override-jkum` waits for the user.
+  `calummoore/mokly-source-package-override-jkum` rewrites the same source
+  step, so it merges into `main` first. A branch from this branch then merges
+  `main` and applies B on top of it. That branch adds Vite rows for
+  `sourcePackages` to `tests/fixtures/workspace-sources.json`, so that one
+  source rule covers both compile paths. Reason: one source step, tested once
+  for both paths, with no second pass over the same code.
 
 - [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the
