@@ -18,11 +18,14 @@ operator commands below remain available for investigation and recovery.
    Deployment smoke and the sample project seed must pass; open the run to see
    a failing check. The seed step prints the seed Job's log, which names the
    failed step and its reason. Rerun the workflow to seed again.
-3. Sign in as the shared account `preview@mokly.ai`. This public repository
-   gets no **Open preview** link. Open **App**
+3. Sign in as the shared account `preview@mokly.ai`. Open **App**
    (`https://pr-N.preview.D/sign-in`, where `D` is `MKC_DOMAIN`, `mokly.ai`),
-   and request a link for that address on Sign in. Then
-   [read the link](#read-a-sign-in-link), or ask an operator to read it. Only
+   type the [preview password](#preview-password) from the team's password
+   manager in **Password**, and select **Continue as preview@mokly.ai**. When
+   Sign in shows no **Password** field, request a link for that address on
+   Sign in, and [read the link](#read-a-sign-in-link), or ask an operator to
+   read it. A missing field usually means that the deploy found no verifier,
+   and the run then shows a warning. Only
    the shared account can open **Sample project**, because the seed creates
    that private **Mokly Cloud** project in its workspace. The publication carries this PR's mockups and its
    comparison against `main`. The viewer cannot load a private comparison, so
@@ -33,13 +36,10 @@ operator commands below remain available for investigation and recovery.
    need first.
 
 There is one comment marked `<!-- mokly-preview -->`. It shows App, API,
-Catalogue, the tested commit and a link to check results. Open preview appears
-after a successful deploy when seed sign-in was accepted and the event confirms
-the repository is private. That link signs in the shared account without a
-request. Anyone who can read the PR can use it until the preview is removed.
-Sample project appears only with a completed seed proof. A failed capture or
-later seed step can therefore keep Open preview without claiming the sample
-project succeeded. Catalogue shows
+Catalogue, the tested commit and a link to check results, and it carries no
+credential. Sample project appears only with a completed seed proof, so a
+failed capture or later seed step never claims that the sample project
+succeeded. Catalogue shows
 `p-<publication-id>.pr-N.preview.C` as a pattern; the base suffix alone is not
 a publication. `C` is `MKC_CATALOGUE_BASE_DOMAIN`
 (`moklyusercontent.com`). Updates replace the same comment. A failed update
@@ -58,14 +58,16 @@ mean the app namespace is retained, or the reverse.
 
 ## Read A Sign-In Link
 
-Previews deliver every sign-in link to restricted API logs, also the link of
-the shared account. A reviewer with namespace pod/log access, authenticated
-kubectl and the repository checkout runs:
+Previews deliver every sign-in link to restricted API logs. Read a link to
+review as another address, for example to test sign up or an invitation, or
+as the shared account when its preview has no verifier. A reviewer with
+namespace pod/log access, authenticated kubectl and the repository checkout
+runs:
 
 ```sh
 export MKC_DOMAIN=mokly.ai
 python3 infra/scripts/preview-link.py preview-pr-123 \
-  --email preview@mokly.ai
+  --email you@example.com
 ```
 
 Use your PR number and the address you just entered in the app. To review as
@@ -78,7 +80,7 @@ request. For a known request time, add `--since-time 2026-09-22T12:00:00Z`.
 the same command.
 Do not post the URL in the PR or workflow logs: it signs in as that address.
 A reviewer without log access asks an authorized operator to retrieve their
-link privately. No password or per-PR GitHub App setup is required.
+link privately. No per-PR GitHub App setup is required.
 
 For rollout diagnostics, an operator can inspect the namespace:
 
@@ -90,6 +92,39 @@ kubectl -n mkc-preview-pr-123 logs deployment/api -c api --since=10m
 API logs contain sign-in links; keep them restricted.
 [Script interfaces](../protocol/cloud/preview-scripts.md) define exact flags and
 error behavior.
+
+## Preview Password
+
+One preview password signs in the shared account in every preview, and the
+team keeps it in its password manager. Each preview holds only its verifier,
+which every deploy copies from the Secret Manager ID
+`mkc-preview-sign-in-password`, as
+[Preview sign-in](../protocol/cloud/preview-sign-in.md) defines. To create
+the password and its first verifier, authenticate `gcloud` as an operator and
+run from the repository checkout in a secure shell:
+
+```sh
+umask 077
+python3 -c 'import secrets; print(secrets.token_urlsafe(24))' > /secure/preview-password
+python3 infra/scripts/preview-lifecycle.py preview-verifier \
+  < /secure/preview-password | tr -d '\n' > /secure/preview-verifier
+gcloud secrets versions add mkc-preview-sign-in-password \
+  --project=mokly-508518 --data-file=/secure/preview-verifier
+```
+
+The password has 32 characters and 192 random bits, so a leaked verifier does
+not give it back. The verifier command warns on a password shorter than 20
+characters. Save the password in the password manager, then delete both
+files. Each labelled PR takes the verifier at its next deploy; rerun its
+**Preview** workflow to deploy it now. A deploy that finds no verifier, or a
+malformed one, warns on the run, and that preview accepts no password until a
+later deploy finds a valid verifier.
+
+To rotate the password, for example after a leak, run the same commands for a
+new password, replace the password in the password manager, and rerun the
+**Preview** workflow of each labelled PR. A preview accepts the old password
+until its rerun. Sessions that the old password signed in stay valid; to end
+them, cycle the label as [Cleanup And Recovery](#cleanup-and-recovery) says.
 
 ## Shared Platform Prerequisites
 
@@ -116,7 +151,7 @@ Each PR owns the following resources; none needs an operator provisioning step:
 | API, catalogue, app and Postgres 16, one replica each   | Label lifecycle                                          |
 | Postgres PVC `data-postgres-0`, 2 GiB                   | Preserved across pushes; deleted with namespace          |
 | Secrets `postgres-credentials`, `catalogue-signing-key` | Generated once; preserved across pushes                  |
-| Secret `preview-sign-in`                                | Generated once; the shared account's sign-in secret      |
+| Secret `preview-sign-in`                                | The preview password's verifier; copied on each deploy   |
 | Certificate/Secret `catalogue-tls`                      | Let's Encrypt `*.pr-N.preview.C`; retained across pushes |
 | DNS-only A `*.pr-N.preview.C`                           | Preview workflow creates/deletes it                      |
 | Objects under `pr-N/` in the shared bucket              | Deleted with the namespace database during cleanup       |
@@ -208,12 +243,12 @@ For an operator retry, run the same destroy command with the inputs in the
 [script contract](../protocol/cloud/preview-scripts.md). No Terraform apply or
 per-PR cloud cleanup follows it.
 
-If an Open preview link leaks, or the sample data needs a reset, remove the
-`preview` label and wait for cleanup to pass before adding it again. Namespace
-deletion removes the database, the Secret and every session created from it;
-re-adding the label creates a new namespace and link, and the seed runs on an
-empty database. Each cycle issues a new catalogue certificate, so keep it for
-rare resets within the [certificate limits](#costs-and-certificate-limits).
+If the sample data needs a reset, or the sessions of a preview must end, remove
+the `preview` label and wait for cleanup to pass before adding it again.
+Namespace deletion removes the database, the Secrets and every session;
+re-adding the label creates a new namespace, and the seed runs on an empty
+database. Each cycle issues a new catalogue certificate, so keep it for rare
+resets within the [certificate limits](#costs-and-certificate-limits).
 
 The destroy command needs the common region/domain/zone/shared-address/shared-
 bucket inputs, but no revision or image input and no ready preview platform. It

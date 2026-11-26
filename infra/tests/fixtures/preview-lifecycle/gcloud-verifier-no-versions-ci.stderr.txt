@@ -1,0 +1,1 @@
+ERROR: (gcloud.secrets.versions.access) NOT_FOUND: Secret [projects/123456789012/secrets/mkc-preview-sign-in-password] not found or has no versions. This command is authenticated as deploy@example.invalid using the credentials in /runner/gha-creds.json, specified by the [auth/credential_file_override] property.

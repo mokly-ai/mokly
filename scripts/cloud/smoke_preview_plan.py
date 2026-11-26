@@ -1,9 +1,9 @@
 """Initial preview-account plans through the real API and isolated Postgres."""
 
-import secrets
 import sys
 import uuid
 
+from smoke_api import PREVIEW_PASSWORD, preview_settings
 from smoke_support import Api
 
 
@@ -32,15 +32,14 @@ def create_catalogue_project(api, session, slug, expected_plan, expected_visibil
 
 
 def preview_plan(executable, plan):
-    secret = secrets.token_hex(32)
     email = "preview-" + str(uuid.uuid4()) + "@example.com"
-    settings = {"MKC_PREVIEW_SIGN_IN_SECRET": secret,
-                "MKC_PREVIEW_SIGN_IN_EMAIL": " " + email.upper() + " "}
+    settings = preview_settings(" " + email.upper() + " ")
     if plan is not None:
         settings["MKC_PREVIEW_SIGN_IN_PLAN"] = plan
     api = Api(executable, overrides=settings, isolated_database=True)
     try:
-        issued, headers = api.call("POST", "/v1/auth/preview", {"secret": secret})
+        issued, headers = api.call("POST", "/v1/auth/preview", {"password": PREVIEW_PASSWORD})
+        assert issued["returnTo"] == "/dashboard"
         assert issued["session"]["user"]["email"] == email
         preview = {"cookie": headers["Set-Cookie"].split(";")[0],
                    "csrf": issued["session"]["csrfToken"]}

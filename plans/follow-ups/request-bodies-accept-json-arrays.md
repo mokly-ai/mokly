@@ -1,0 +1,35 @@
+# Request bodies accept JSON arrays
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from the check of finding 7 of the round 1 review of the branch `calummoore/preview-password-sign-in-jofl`, as a new problem outside its scope.
+- **Location:** `crates/mkc-api/src/endpoints.rs:38-43` (`body`), `crates/mkc-api/src/github_dispatch.rs:145-150` (its twin), `crates/mkc-api/src/desktop_grant_dispatch.rs:26` and `:39`, `crates/mkc-api/src/endpoints.rs:65-70` (the leading `{` check of the preview exchange), `crates/mkc-api/src/project_input.rs:10-16`, `crates/mkc-api/src/builds/input.rs:14-20`, `crates/mkc-api/src/_tests_/endpoints_tests.rs:64`, and `docs/protocol/cloud/rest-transport.md:5`.
+- **Reason:** Both `body` helpers are unchanged from `origin/main`, so the fix belongs to a separate branch.
+- **Category:** Docs or spec.
+
+- **Terms:**
+  - **`body` helper:** the function that decodes a JSON request body into its request type with `serde_json::from_slice`. `crates/mkc-api/src/endpoints.rs:38` and `crates/mkc-api/src/github_dispatch.rs:145` hold one each.
+- **Background:**
+  - OpenAPI declares every JSON request body as an object. `docs/protocol/cloud/rest-transport.md:5` says "JSON objects reject unknown fields", and each request struct carries `#[serde(deny_unknown_fields)]`.
+  - The locked serde_json 1.0.154 decodes a struct from a JSON array as well as from an object. Its `deserialize_struct` calls `visit_seq` when the value starts with `[`.
+  - The locked serde_derive 1.0.229 gives every struct without `#[serde(flatten)]` a `visit_seq`, which reads the fields in their declaration order. `deny_unknown_fields` does not apply to that form. A missing trailing element fails, unless its field has `#[serde(default)]`.
+  - So `["reader@example.com", null]` decodes into the email-link request, and `POST /v1/auth/magic-links` sends a link for it.
+  - The untagged request enums `CreateProject`, in `crates/mkc-api/src/project_input.rs:10-16`, and `RequestBuild`, in `crates/mkc-api/src/builds/input.rs:14-20`, decode their inner structs in the same way.
+  - Both `body` helpers pass the bytes to serde unchanged. The desktop grant dispatcher uses `endpoints::body` too, in `crates/mkc-api/src/desktop_grant_dispatch.rs:26` and `:39`.
+  - Only the preview exchange checks that the first byte that is not white space is `{`, in `endpoints.rs:65-70`. So it refuses an array with `validation-failed` before admission. The branch `calummoore/preview-password-sign-in-jofl` added that check.
+  - The catalogue grant body decodes into a map, which refuses an array. `catalogue_grants_reject_unknown_fields_and_nonobjects` in `crates/mkc-api/src/_tests_/endpoints_tests.rs:64` checks that `[]` and `null` fail.
+- **Problem:** Every other JSON request accepts a JSON array in place of the object that OpenAPI declares. The order of the struct's fields then becomes part of the wire format, and the unknown-field rule does not apply.
+- **Impact if no action:** The API accepts request shapes that the published contract refuses. A change of field order in a request struct silently changes the meaning of an array body.
+- **Root question:** How can every JSON request body that the API accepts have the object shape that OpenAPI declares?
+- **Options:**
+  - **A.** Check for a leading `{` in both `body` helpers, as the preview exchange does, and drop the preview-only check. An array then fails with `validation-failed`. Add an array case to the tests of one endpoint for each helper. Effort: Small.
+  - **B.** Merge the two helpers into one decoder that refuses anything but a JSON object before it decodes the request type. It can decode into `serde_json::Map` first. The JSON dispatcher, the GitHub dispatcher and the desktop grant dispatcher all use it, and the preview-only check goes. Effort: Small.
+  - **C.** Validate each request body against its OpenAPI schema at runtime, before decoding. It also refuses an explicit null where the schema declares a non-null field. Effort: Large.
+- **Left out:**
+  - Change nothing. The runtime and the contract stay apart, so it fails the goal.
+  - Write a `Deserialize` that accepts only a map for each request struct. It repeats one rule in every struct, so B is better on every point.
+- **Wider fix:** B. One decoder for every JSON body refuses an array in one place, so a new endpoint cannot skip the rule.
+- **Previous examples:** The leading `{` check of the preview exchange, added on 2026-11-25, and the catalogue grant's map body with its test.
+- **Related:** `plans/follow-ups/optional-request-fields-accept-null.md`, a shared wider fix: option C here, runtime validation against the schema, also refuses an explicit null in an optional field.
+- **Recommendation:** B. It refuses arrays for every JSON body in one place and replaces the preview exchange's own check.
+- **Action:** ask the user, because option B refuses request bodies that the API accepts today, a new rejection that the always-on rules leave to the user.

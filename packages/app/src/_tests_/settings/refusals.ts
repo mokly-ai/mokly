@@ -9,7 +9,8 @@ import { chooseRepository, createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import type { Subject } from "./subject";
-import { field, writes } from "./undoable-writes";
+import { writes } from "./undoable-writes";
+import { field } from "./write-steps";
 
 /**
  * Every control the write-failure rule in `folio-chrome.md` covers, and how to

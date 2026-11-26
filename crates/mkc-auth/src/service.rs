@@ -11,7 +11,8 @@ use mkc_store_interface::user::User;
 use uuid::Uuid;
 
 use crate::error::Result;
-use crate::runtime::{Runtime, hash};
+use crate::preview_verifier::PreviewVerifier;
+use crate::runtime::Runtime;
 
 /// Public acknowledgement, identical for existing and new accounts.
 pub struct LinkIssued {
@@ -38,6 +39,12 @@ pub struct SessionIssued {
     pub credential: String,
 }
 
+/// Verify one admitted preview password on a blocking worker.
+pub type PreviewPasswordCheck = Box<dyn FnOnce(&str) -> Result<PreviewSessionIssue> + Send>;
+
+/// Issue a session on a blocking worker after the preview password matches.
+pub type PreviewSessionIssue = Box<dyn FnOnce() -> Result<SessionIssued> + Send>;
+
 /// One-use sign-in exchange result with its validated navigation destination.
 pub struct LinkVerified {
     /// Issued session and credential.
@@ -54,21 +61,18 @@ pub struct DesktopGrantIssued {
     pub expires_at: DateTime<Utc>,
 }
 
-/// Hashed preview credential and normalized account identity.
+/// Normalized preview account identity and its optional password verifier.
 pub struct PreviewSignIn {
-    /// Digest retained for constant-time comparison.
-    pub(crate) secret_hash: String,
+    /// Optional verifier for the account's password.
+    pub(crate) verifier: Option<PreviewVerifier>,
     /// Normalized account identity.
     pub(crate) email: String,
 }
 
 impl PreviewSignIn {
-    /// Prepare validated configuration without retaining the plaintext credential.
-    pub fn new(secret: &str, email: String) -> Self {
-        Self {
-            secret_hash: hash(secret),
-            email,
-        }
+    /// Prepare the shared account from validated configuration.
+    pub fn new(email: String, verifier: Option<PreviewVerifier>) -> Self {
+        Self { verifier, email }
     }
 }
 
@@ -85,12 +89,18 @@ pub trait Authenticator: Send + Sync {
     ) -> Result<LinkIssued>;
     /// Consume a link and atomically issue the session.
     fn verify(&self, token: &str, previous: Option<&str>) -> Result<LinkVerified>;
-    /// Report whether preview sign-in has validated runtime configuration.
+    /// Report whether the shared preview account has validated runtime configuration.
     fn preview_sign_in_available(&self) -> bool;
+    /// Report the configured account email when a preview password verifier is present.
+    fn preview_password_account(&self) -> Option<&str>;
     /// Find or create the configured preview account without issuing a session.
     fn preview_account(&self) -> Result<User>;
-    /// Admit and verify a configured preview credential, then issue a session.
-    fn preview(&self, secret: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued>;
+    /// Commit peer admission and return the work for one password check.
+    fn preview(
+        self: Arc<Self>,
+        previous: Option<String>,
+        peer: &str,
+    ) -> Result<PreviewPasswordCheck>;
     /// Authorize a desktop window from an authenticated browser session.
     fn issue_desktop_grant(
         &self,

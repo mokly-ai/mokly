@@ -3,14 +3,14 @@ import { connectInstallationPath } from "./paths";
 
 /** The authentication landings whose address arrives carrying provider input. */
 export type CallbackLanding =
-  "email" | "preview" | "desktop" | "github-callback" | "github-install";
+  "email" | "desktop" | "github-callback" | "github-install";
 
 /** Where a landing's provider input arrives in its address. */
 export type CallbackCarrier = "fragment" | "query";
 
 /**
  * Each landing's public route and the part of its address the provider's input
- * arrives in: email and preview links and the desktop app's grant address
+ * arrives in: email links and the desktop app's grant address
  * carry credentials in the fragment, and GitHub returns its values in the
  * query.
  */
@@ -19,7 +19,6 @@ export const callbackLandings: Record<
   { route: string; carrier: CallbackCarrier }
 > = {
   email: { route: "/auth/email/callback", carrier: "fragment" },
-  preview: { route: "/auth/preview/callback", carrier: "fragment" },
   desktop: { route: "/auth/desktop/callback", carrier: "fragment" },
   "github-callback": { route: "/auth/github/callback", carrier: "query" },
   "github-install": { route: "/auth/github/install", carrier: "query" },

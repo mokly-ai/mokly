@@ -9,7 +9,7 @@ pub(crate) fn body(operation: Operation) -> Value {
         Operation::RequestBuild => json!({"branch":"main"}),
         Operation::SendMagicLink => json!({"email":"person@example.com"}),
         Operation::VerifyMagicLink => json!({"token":"fixture"}),
-        Operation::VerifyPreviewSignIn => json!({"secret":"fixture"}),
+        Operation::VerifyPreviewSignIn => json!({"password":"fixture"}),
         Operation::IssueDesktopGrant => {
             json!({"challenge":"_-BU_nrgy23GXDr5th1SCfQ5hR20PQulmXM33xVGaOs"})
         }
