@@ -7,7 +7,8 @@ import { expect } from "./harness";
  * The parts every row of the shared build state table uses: what a row is,
  * the two surfaces it runs on, and the parts of the build card a row reads.
  * `build-states.ts` lists the rows; `build-states.spec.ts` runs them on the
- * desktop and `build-states-mobile.spec.ts` on a phone.
+ * desktop, and `build-states-mobile.spec.ts` runs on a phone the rows that use
+ * a phone's own way in.
  */
 
 /** Where a row runs, and the ways in that differ between the two surfaces. */
