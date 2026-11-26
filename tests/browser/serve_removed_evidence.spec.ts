@@ -36,6 +36,9 @@ test("background baselines reconcile removed rows and invalidate changed histori
   page,
   changes,
 }) => {
+  // A hang guard of three times the journey on a loaded 4-CPU machine, about
+  // 23 seconds, as docs/protocol/ci-test-timing.md asks: 180 seconds.
+  test.slow();
   const { removedScreen, removedPage, removedComponent } = changes.paths;
   // Two private bases: one before the component existed, and one where the
   // removed page had another title. Both join the history for base moves.
@@ -156,6 +159,9 @@ test("a background baseline places a removed variant under its parent", async ({
   page,
   changes,
 }) => {
+  // A hang guard of three times the journey on a loaded 4-CPU machine, about
+  // 23 seconds, as docs/protocol/ci-test-timing.md asks: 180 seconds.
+  test.slow();
   // A private base where Plain screen had one variant; the head has none, so
   // the parent's variant list exists only while that base is the baseline.
   // The variant has no props, so the parent's own fields stay unchanged.

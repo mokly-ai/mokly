@@ -5,7 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 192.
 - **Location:** `tests/static_base_manager_mirror.test.ts:14`.
 - **Reason:** The fallback happened once, the rerun passed, and nobody knows its
-  source.
+  source. On 2026-11-26 the user chose option A, a reproduction first. The
+  reproduction did not fail.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -22,6 +23,11 @@
   tier is not 2, at `tests/static_base_manager_mirror.test.ts:64-65`. The
   probe records only what the install writes to standard output and
   standard error, at `tests/helpers/base_manager_tools.ts:190-196`.
+  - On 2026-11-26, the branch `calummoore/ci-speed-flaky-decisions-k3dt` ran
+    the test 30 times with
+    `node --import tsx --test tests/static_base_manager_mirror.test.ts`, on a
+    4-CPU machine with four CPU spinners, at a load average of 7 to 10. It
+    passed 30 of 30 runs, none skipped, each in about 6 seconds.
 - **Problem:** The test fell back to tier three instead of tier two once on
   hosted CI, in PR #200 run 40194214551, attempt 1. The unchanged rerun
   passed. The failure text was `3 !== 2`, after the CLI warning
@@ -34,8 +40,8 @@
 - **Root question:** How should the test make a tier fallback explain its
   cause?
 - **Options:**
-  - **A.** Find the cause from a reproduction with the manager output
-    captured. Effort: Small.
+  - **A.** Done on 2026-11-26: reproduce with the manager output captured.
+    It passed 30 of 30 runs under load.
   - **B.** Apply A, and also print the manager output in the failure
     message. The test already prints the manager output as a diagnostic.
     Effort: Small.
@@ -45,8 +51,9 @@
 - **Previous examples:** The cold manager tests in
   `tests/static_base_managers.test.ts` already report the manager output as
   a test diagnostic when a build does not reach tier two.
-- **Recommendation:** A. A reproduction names the source before the test
-  changes. The manager output diagnostic of B is already in place.
+- **Recommendation:** Wait for the next failure. The manager output
+  diagnostic of B is already in place. The next failure also needs the
+  install's exit status or signal, which the probe does not record yet.
 - **Action:** ask the user, because the failure has not been reproduced and its
   source is unknown, and the flaky-test rule gives such a failure this outcome.
 
