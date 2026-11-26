@@ -1,3 +1,4 @@
+import { suiteRuntimes } from "../verification/aggregate.mjs";
 import ciShards from "../verification/ci-shards.json" with { type: "json" };
 
 const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
@@ -7,9 +8,15 @@ export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
   "node-22.15.0",
   "node-24",
 ]);
-/** One report per viewer and browser shard on each release runtime. */
+const RELEASE_SUITE_RUNTIMES = suiteRuntimes(RELEASE_VERIFICATION_RUNTIMES);
+/**
+ * One report per shard of each suite on each runtime that the release
+ * profile selects for it: the viewer on both release runtimes, and the
+ * browser on Node 22.15.0.
+ */
 export const VERIFICATION_REPORT_COUNT =
-  RELEASE_VERIFICATION_RUNTIMES.length * (ciShards.viewer + ciShards.browser);
+  RELEASE_SUITE_RUNTIMES.viewer.length * ciShards.viewer +
+  RELEASE_SUITE_RUNTIMES.browser.length * ciShards.browser;
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 

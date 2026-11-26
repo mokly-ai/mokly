@@ -2,6 +2,9 @@
 # test binaries of all selected crates in parallel. The gate commands live in
 # `xtask/src/check/commands.rs` and `xtask/src/check/cloud_commands.rs`.
 # Doc tests do not run here; the gate runs them with `cargo test --doc`.
+# The native suite passes a filter that leaves out platform-neutral tests on
+# macOS and Windows. Its list lives in `xtask/src/check/native_scope.rs`, so
+# xtask can also skip the build of a test binary that the list leaves out.
 
 # The CI install steps install this exact version, and the cloud-toolchain-pins
 # suite rejects drift from the pin table of docs/protocol/cloud/repository-layout.md.

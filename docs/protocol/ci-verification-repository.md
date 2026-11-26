@@ -107,6 +107,23 @@ Rejected: one test build per platform in a `cargo nextest archive` that the
 test shards download. The test shards would start only after that build job,
 so the build, the upload, and the download all stay on the critical path.
 
+### Native Test Scope
+
+The Native suite leaves out a reviewed list of platform-neutral Rust tests.
+The Repository suite still runs every Rust test on Linux, and the Native
+suite runs every doc test. The list excludes; a new test runs on every
+platform until a change adds it to the list. A test stays in the Native
+suite when it touches paths, links, file names or their case, line endings,
+processes and signals, file watching, sockets and ports, stack depth,
+temporary folders, Git subprocesses, the sidecar Node process, or locks.
+Every test of `mokly-platform`, `mokly-git`, `mokly-sidecar`, `mokly-watch`,
+`mokly-catalogue`, `mokly-static`, and `mokly-server` stays. A test leaves
+only when it checks pure logic, such as Changes classification, CSS
+attribution, the catalogue model, HTML repair, or scale counts. When in doubt,
+the test stays. A test unit that the list leaves out as a whole is not built.
+Decision: an exclude list, because an include list would run new platform
+code on Linux only.
+
 ### Test Units
 
 A test unit is one Cargo target selection: `--lib` for the unit tests of
