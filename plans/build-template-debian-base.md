@@ -70,6 +70,24 @@ Cal answered the spike items on 2026-11-26.
    release, and the template must not be deleted, because that deletes
    main-preview's live build.
 
+7. Template contract page: B (answer to the runner page item). Move the
+   template contract to its own protocol page under `docs/protocol/cloud/`,
+   and keep a short linking "Template" section in `cloud-build-runner.md`.
+   Rejected: rewrapping six paragraphs to stay under the 250-line cap.
+8. Native build proof: D. The probe compiles and links a small C and C++
+   program offline through `make`'s default rules, with the `cc`, `g++`,
+   `ar`, and `ld` that node-gyp uses. Rejected: a forced addon build, which
+   needs the network and passes the 10-second limit.
+9. Rollback item: B. Rescope it to "a failing release has no verified
+   rollback target", with its options C and F as the main options.
+10. Build helpers: B. Add `pkgconf` and `libtool`, and release
+    `mokly-build-v8` before the switch. v7 is superseded by v8.
+11. Stale follow-ups: B. Name the selection rule "the newest release whose
+    record passes the current probe", add a control run where needed, and
+    require the full build reference in every proof record.
+12. Debian fixes: C. The release script passes `skipCache: true`, because
+    the E2B step cache is shared across template names.
+
 Design calls, my calls on 2026-11-26:
 
 - The `FROM` tag is the dated tag, such as `trixie-20261123-slim`, so that the
@@ -168,6 +186,39 @@ Depends on: 5. Starts after `main` with PR #571 merges into this branch.
       `.context/build-template-debian-base/gate-full-4.log` and round 3 of the
       findings file.
 
+## Milestone 8: Template contract page and follow-ups
+
+Depends on: 6.
+
+- [ ] New protocol page for the template contract, and a short linking
+      "Template" section in `docs/protocol/cloud/cloud-build-runner.md`.
+- [ ] Rescope and rename the rollback follow-up item.
+- [ ] Name the selection rule and the full build reference in the stale
+      follow-up items.
+
+## Milestone 9: Probe build proof, build helpers, and no step cache
+
+Depends on: 6. Runs with Milestone 8.
+
+- [ ] Dockerfile: add `pkgconf` and `libtool`.
+- [ ] Probe: compile and link a C and a C++ program through `make`'s default
+      rules, and require `pkg-config` and `libtool`, with a regression for
+      each missing tool that fails first.
+- [ ] `infra/e2b/build/build-template.mjs` passes `skipCache: true`, with a
+      regression in `infra/tests/test_build_template_release.py`.
+- [ ] `infra/e2b/build/e2b.toml`: `template_name = "mokly-build-v8"`.
+
+## Milestone 10: Release `mokly-build-v8`
+
+Depends on: 8 and 9.
+
+- [ ] Resolve the trixie digest again, and confirm that the name is free.
+- [ ] Build v8 without the step cache, run the live probe, the smoke build,
+      the comparison build, a forced native addon build, `git grep -P`,
+      `pkg-config --version`, and `libtool --version`.
+- [ ] Runbook: the v8 record, v7 superseded, and the cache paragraph.
+- [ ] Run the gate, review the new changes, and push.
+
 ## Milestone 7: Plan deletion and pull request
 
 Depends on: every other milestone
@@ -180,5 +231,5 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Cal switches main-preview's build template from v6 to the v7 build reference
+- [ ] Cal switches main-preview's build template from v6 to the v8 build reference
       and confirms one comparison build with `changesStatus: "ready"`.
