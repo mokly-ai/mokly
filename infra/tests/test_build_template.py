@@ -23,6 +23,9 @@ VERSION = (ROOT / ".nvmrc").read_text().strip()
 HOST_PATH = os.environ.get("PATH", "")
 HOST_NPM = shutil.which("npm")
 HOST_RUN = subprocess.run
+HOST_GIT = shutil.which("git")
+# Debian bookworm's Git: it predates `cat-file -Z`, which Mokly's base reader needs.
+OLD_GIT_VERSION = "git version 2.39.5"
 
 
 def pinned_base_images(dockerfile):
@@ -59,9 +62,9 @@ class BuildTemplateTests(unittest.TestCase):
         scratch = tempfile.TemporaryDirectory()
         self.addCleanup(scratch.cleanup)
         self.scratch = Path(scratch.name)
-        (self.scratch / "project").mkdir()
-        npm_project = MagicMock()
-        npm_project.__enter__.return_value = str(self.scratch / "project")
+        # Stands in for the sandbox's /workspace: a folder outside every Git repository.
+        self.workspace = self.scratch / "workspace"
+        self.workspace.mkdir()
         patches = (
             patch.dict(os.environ, self.environment, clear=True),
             patch.object(ASSERTION.os, "getuid", return_value=1000),
@@ -75,7 +78,7 @@ class BuildTemplateTests(unittest.TestCase):
             patch.object(Path, "exists", return_value=False),
             patch.object(Path, "is_symlink", return_value=False),
             patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
-            patch.object(ASSERTION.tempfile, "TemporaryDirectory", return_value=npm_project),
+            patch.object(ASSERTION.tempfile, "TemporaryDirectory", side_effect=self.new_directory),
             patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
             patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
         )
@@ -83,18 +86,46 @@ class BuildTemplateTests(unittest.TestCase):
         for item in patches:
             self.addCleanup(item.stop)
 
+    def new_directory(self, **kwargs):
+        """Give each probe directory its own new folder, as a fresh sandbox does."""
+        directory = Path(tempfile.mkdtemp(dir=self.workspace))
+        context = MagicMock()
+        context.__enter__.return_value = str(directory)
+        return context
+
     def check_probe_call(self, kwargs):
         self.assertNotIn("env", kwargs)
         self.assertNotIn("shell", kwargs)
         self.assertEqual(kwargs["timeout"], 10)
+        self.assertIs(kwargs["stdin"], subprocess.DEVNULL)
 
     def run_command(self, argv, **kwargs):
         self.check_probe_call(kwargs)
-        output = "v" + VERSION if argv[0] == "node" else "shell-ok"
+        if argv[0] == "node":
+            output = "v" + VERSION
+        elif argv == ["git", "--version"]:
+            output = "git version 2.43.0"
+        else:
+            output = "shell-ok"
         return SimpleNamespace(returncode=0, stdout=output)
 
-    def run_with_host_npm(self, argv, **kwargs):
-        """Run the probe's npm ci with the host's clean npm, so npm judges the generated project."""
+    def fake_git(self, version, cat_file_status):
+        """Answer the probe's Git calls like a Git that prints `version`."""
+        def run(argv, **kwargs):
+            if argv == ["git", "--version"]:
+                self.check_probe_call(kwargs)
+                return SimpleNamespace(returncode=0, stdout=version)
+            if argv[:2] == ["git", "cat-file"]:
+                self.check_probe_call(kwargs)
+                return SimpleNamespace(returncode=cat_file_status, stdout="",
+                                       stderr="error: unknown switch `Z'")
+            return self.run_command(argv, **kwargs)
+        return run
+
+    def run_with_host_tools(self, argv, **kwargs):
+        """Run the probe's npm ci and Git checks with host tools, so they judge the real argv."""
+        if argv[0] == "git":
+            return self.run_with_host_git(argv, **kwargs)
         if argv[:2] != ["npm", "ci"]:
             return self.run_command(argv, **kwargs)
         self.check_probe_call(kwargs)
@@ -106,10 +137,46 @@ class BuildTemplateTests(unittest.TestCase):
                        "npm_config_globalconfig": str(npm_home / "global-npmrc")}
         return HOST_RUN([HOST_NPM, *argv[1:]], env=environment, **kwargs)
 
+    def run_with_host_git(self, argv, **kwargs):
+        self.check_probe_call(kwargs)
+        self.assertIsNotNone(HOST_GIT, "this test needs git on PATH")
+        # The probe starts in /workspace, so a Git call without its own directory runs there,
+        # and the search stops at the scratch folder instead of finding the Mokly checkout.
+        environment = {"PATH": HOST_PATH, "HOME": str(self.scratch),
+                       "GIT_CEILING_DIRECTORIES": str(self.scratch),
+                       "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull}
+        kwargs["cwd"] = kwargs.get("cwd") or self.workspace
+        return HOST_RUN([HOST_GIT, *argv[1:]], env=environment, **kwargs)
+
     def test_complete_template_passes_with_one_added_entry(self):
-        with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_npm) as run:
+        with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_tools) as run:
             ASSERTION.verify(VERSION)
-        self.assertEqual(run.call_count, 9)
+        self.assertEqual(run.call_count, 11)
+
+    def test_git_without_cat_file_nul_batches_fails(self):
+        # Bookworm's Git 2.39.5 exits 129 on `cat-file -Z`, so Mokly cannot read a base.
+        cases = [(OLD_GIT_VERSION, 129, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.42.4", 0, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.39.5 (Apple Git-154)", 0, "^Mokly base reads require Git 2.43"),
+                 ("not a version", 0, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.43.0", 129, "^git cat-file --batch --filters -Z failed$"),
+                 ("git version 2.56.1", 128, "^git cat-file --batch --filters -Z failed$")]
+        for version, status, message in cases:
+            with self.subTest(version=version, status=status), patch.object(
+                ASSERTION.subprocess, "run", side_effect=self.fake_git(version, status)
+            ):
+                with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, message):
+                    ASSERTION.verify(VERSION)
+
+    def test_git_2_43_or_newer_with_cat_file_nul_batches_passes(self):
+        for version in ("git version 2.43.0", "git version 2.56.1",
+                        "git version 2.45.0.windows.1", "git version 3.0.0"):
+            with self.subTest(version=version), patch.object(
+                ASSERTION.subprocess, "run", side_effect=self.fake_git(version, 0)
+            ) as run:
+                ASSERTION.verify(VERSION)
+                self.assertIn(["git", "cat-file", "--batch", "--filters", "-Z"],
+                              [call.args[0] for call in run.call_args_list])
 
     def test_npm_with_files_of_two_releases_fails(self):
         # A Node tarball unpacked over an older npm prints its version but cannot run npm ci.
