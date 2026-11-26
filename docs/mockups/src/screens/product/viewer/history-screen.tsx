@@ -22,11 +22,10 @@ function destination(entry: HistoryEntry) {
         entry.state === "failed"
           ? "product/viewer/standalone/build/failed"
           : "product/viewer/standalone/build",
-      action: "Details",
     };
   return entry.state === "failed"
-    ? { to: "product/viewer/standalone/failed", action: "Details" }
-    : { to: "product/viewer/standalone", action: "Open" };
+    ? { to: "product/viewer/standalone/failed" }
+    : { to: "product/viewer/standalone" };
 }
 
 /** What one row says it is, in the words publications and builds share. */
@@ -91,7 +90,6 @@ function HistoryPage({
                   status: "neutral",
                   sha: "",
                   to: "product/viewer/standalone",
-                  action: "Open",
                   waiting: true,
                 },
               ]}

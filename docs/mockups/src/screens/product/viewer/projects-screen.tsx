@@ -73,7 +73,7 @@ function Workspaces({ state }: { state: ScreenState }) {
                     addresses.root + "/" + workspace.slug + "/" + project.slug,
                   ...(project.name === sample.project
                     ? { current: true, mark: "Current" }
-                    : { to: "product/viewer/standalone", action: "Open" }),
+                    : { to: "product/viewer/standalone" }),
                 }))}
               />
             )
@@ -122,7 +122,6 @@ function WaitingWorkspace() {
               title: "",
               detail: "",
               to: "product/viewer/standalone",
-              action: "Open",
               waiting: true,
             },
           ]}

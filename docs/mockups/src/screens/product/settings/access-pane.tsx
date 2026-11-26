@@ -37,7 +37,6 @@ function Grants({ state }: { state: ScreenState }) {
                 ? {
                     ...waitingPerson,
                     to: "product/settings/members",
-                    action: "Manage",
                   }
                 : {
                     id: "sam",
@@ -45,7 +44,6 @@ function Grants({ state }: { state: ScreenState }) {
                     detail: membership.selected.email,
                     meta: "Reviewer",
                     to: "product/settings/members",
-                    action: "Manage",
                   },
             ]}
           />

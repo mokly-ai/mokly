@@ -14,7 +14,6 @@ const waitingRef: WaitingPanelRow = {
   detail: "",
   status: true,
   sha: true,
-  action: "Open",
 };
 
 /**

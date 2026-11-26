@@ -86,7 +86,7 @@ function rowFor(
   projectSlug: string,
   current: PublicationRef | undefined,
 ): PanelRow {
-  const { state, href, details } = rowTarget(row, workspaceSlug, projectSlug);
+  const { state, href } = rowTarget(row, workspaceSlug, projectSlug);
   const detail = detailFor(state);
   const shown: PanelRow = {
     id: row.ref.kind + ":" + row.title,
@@ -98,7 +98,7 @@ function rowFor(
   };
   return sameReference(row.ref, current)
     ? { ...shown, current: true, mark: "Current" }
-    : { ...shown, href, action: details ? "Details" : "Open" };
+    : { ...shown, href };
 }
 
 function matching(rows: readonly PanelRow[], search: string): PanelRow[] {

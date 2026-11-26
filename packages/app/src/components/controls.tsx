@@ -73,25 +73,32 @@ export function PersonAvatar({
   );
 }
 
+/**
+ * Where a row leads. A row that goes to one place is the link as a whole, so
+ * it carries no label of its own: its title already names where it goes. A
+ * row whose choice changes what its panel shows, rather than going anywhere,
+ * ends in a quiet control with its label and is not openable in a second tab.
+ * A row with neither leads nowhere.
+ */
+export type RowTarget =
+  | {
+      href?: string;
+      /** Takes the destination's place, for a row whose owner drives the move. */
+      onFollow?: () => void;
+      action?: never;
+      onChoose?: never;
+    }
+  | { onChoose: () => void; action: string; href?: never; onFollow?: never };
+
 /** One row of a shared content list. */
-export interface ContentRow {
+export type ContentRow = {
   id: string;
   title: string;
   detail?: string;
   meta?: string;
   mono?: boolean;
   status?: StatusTone;
-  href?: string;
-  action?: string;
-  /** Takes the destination's place, for a row whose owner drives the move. */
-  onFollow?: () => void;
-  /**
-   * A row whose action changes what the panel is showing rather than going
-   * anywhere, so it is a control rather than a destination and is not
-   * openable in a second tab.
-   */
-  onChoose?: () => void;
-}
+} & RowTarget;
 
 /**
  * One row of a list whose read runs: the row's own frame, with a bar in place
@@ -100,7 +107,26 @@ export interface ContentRow {
  */
 export type WaitingContentRow = WaitingRow & { id: string; waiting: true };
 
-/** The shared rows a panel lists, with an optional destination at the right. */
+/**
+ * A row's content, as the link of a row that goes somewhere: the whole row
+ * takes the click, and the link reaches the row's full frame.
+ */
+export function RowLink({
+  row,
+  children,
+}: {
+  row: RowTarget;
+  children: ReactNode;
+}) {
+  if (row.href === undefined) return children;
+  return (
+    <AppLink href={row.href} onPress={row.onFollow} className="row-link">
+      {children}
+    </AppLink>
+  );
+}
+
+/** The shared rows a panel lists; a row that goes somewhere is a link. */
 export function ContentList({
   label,
   rows,
@@ -121,28 +147,30 @@ export function ContentList({
           <WaitingListRow row={row} size={size} />
         ) : (
           <div className="content-list-row">
-            <ListItem
-              size={size}
-              title={row.title}
-              description={row.detail}
-              leading={
-                row.status ? (
-                  <StatusDot tone={statusTones[row.status]} size="sm" />
-                ) : undefined
-              }
-              trailing={
-                row.meta ? (
-                  <span
-                    className={
-                      "row-meta" + (row.mono ? " mono-value" : " numeric")
-                    }
-                  >
-                    {row.meta}
-                  </span>
-                ) : undefined
-              }
-            />
-            {row.onChoose && row.action ? (
+            <RowLink row={row}>
+              <ListItem
+                size={size}
+                title={row.title}
+                description={row.detail}
+                leading={
+                  row.status ? (
+                    <StatusDot tone={statusTones[row.status]} size="sm" />
+                  ) : undefined
+                }
+                trailing={
+                  row.meta ? (
+                    <span
+                      className={
+                        "row-meta" + (row.mono ? " mono-value" : " numeric")
+                      }
+                    >
+                      {row.meta}
+                    </span>
+                  ) : undefined
+                }
+              />
+            </RowLink>
+            {row.onChoose && (
               <Action
                 label={row.action}
                 tone="quiet"
@@ -150,17 +178,6 @@ export function ContentList({
                 onPress={row.onChoose}
                 testID={"choose-" + row.id}
               />
-            ) : (
-              row.href &&
-              row.action && (
-                <AppLink
-                  href={row.href}
-                  onPress={row.onFollow}
-                  className="list-destination"
-                >
-                  <span>{row.action}</span>
-                </AppLink>
-              )
             )}
           </div>
         )

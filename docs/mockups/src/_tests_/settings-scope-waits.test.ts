@@ -24,10 +24,10 @@ import {
   destination,
   drawnPage,
   facts,
-  links,
   linksIn,
   pendingLabels,
   placeholderRows,
+  rowLinks,
   sectionHeadings,
   waitRegion,
 } from "./drawn-page";
@@ -52,14 +52,14 @@ test("the settings index waits with every section and pane an owner sees", () =>
       where,
     );
     // Each pane's name and summary are known, so they stay text; where each
-    // row leads needs the scope, so Open is text with no link.
+    // row leads needs the scope, so no row is a link yet.
     assert.deepEqual(
       byClass(held, "content-list-row").map(label),
       byClass(loaded.main, "content-list-row").map(label),
       where,
     );
-    assert.equal(links(loaded, "Open").length, 9, where);
-    assert.deepEqual(links(page, "Open").map(destination), [], where);
+    assert.equal(rowLinks(loaded).length, 9, where);
+    assert.deepEqual(rowLinks(page).map(destination), [], where);
     assert.equal(byClass(held, "fo-wait-text").length, 0, where);
   }
 });

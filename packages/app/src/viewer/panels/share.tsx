@@ -28,10 +28,9 @@ const waitingScreens: WaitingPanelRow[] = [
     id: "whole-catalogue",
     waiting: true,
     title: "Whole catalogue",
-    action: "Select",
     choose: true,
   },
-  { id: "waiting", waiting: true, title: "", action: "Select", choose: true },
+  { id: "waiting", waiting: true, title: "", choose: true },
 ];
 
 function ScreenChoice({

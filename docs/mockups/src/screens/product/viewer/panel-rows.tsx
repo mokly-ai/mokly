@@ -18,8 +18,9 @@ type TitleForm = "plain" | "reference" | "pullRequest";
 /**
  * One row of a panel's list: the switcher's references, History's
  * publications and builds, Share's screens and the projects panel's
- * projects. The row the reader is on takes the signal-soft fill, and its
- * `mark` says so in place of a destination.
+ * projects. A row that leads somewhere is the link as a whole. The row the
+ * reader is on takes the signal-soft fill, and its `mark` says so at the
+ * row's end.
  */
 export interface PanelRow {
   id: string;
@@ -31,17 +32,19 @@ export interface PanelRow {
   sha?: string;
   /** Whether this is the row the reader is on. */
   current?: boolean;
-  /** What the row's end says in place of a destination, such as Current. */
+  /** What the row's end says for the row the reader is on, such as Current. */
   mark?: string;
+  /** Where the row leads: the whole row is the link, unless it is a choice. */
   to?: string;
+  /** The label of a choice's quiet button. */
   action?: string;
   /** The destination is a choice inside the panel, so a quiet button. */
   choose?: boolean;
   /**
    * The row while the list's read runs, in its own frame: an empty title,
    * detail or SHA is the answer's, so it draws as a bar, and the row's end
-   * keeps its known label as text with no link, or its choice as a
-   * placeholder.
+   * draws its choice as a placeholder. A row that leads somewhere is no link
+   * yet, because its target needs the answer.
    */
   waiting?: boolean;
 }
@@ -75,16 +78,15 @@ function Title({ title, form = "plain" }: Pick<PanelRow, "title" | "form">) {
 }
 
 /**
- * The row's end: the mark of the row the reader is on, its choice, its
- * destination, or an empty column that keeps the SHAs in line.
+ * The row's end: the mark of the row the reader is on, its choice, or an
+ * empty column that keeps the SHAs in line.
  */
 function End({ row }: { row: PanelRow }) {
   if (row.mark !== undefined)
     return (
       <span className="fo-canvas-row-end fo-canvas-row-mark">{row.mark}</span>
     );
-  if (row.to === undefined) return <span className="fo-canvas-row-end" />;
-  if (row.choose)
+  if (row.to !== undefined && row.choose)
     return (
       <span className="fo-canvas-row-end fo-canvas-row-choice">
         <Action
@@ -96,15 +98,31 @@ function End({ row }: { row: PanelRow }) {
         />
       </span>
     );
-  return (
-    <MockLink className="list-destination fo-canvas-row-end" to={row.to}>
-      <span>{row.action ?? "Open"}</span>
-    </MockLink>
-  );
+  return <span className="fo-canvas-row-end" />;
 }
 
-/** One loaded row: the package's list row with the row's end beside it. */
+/**
+ * One loaded row: the package's list row, the link as a whole when the row
+ * leads somewhere, with the row's end beside it.
+ */
 function Row({ row, size }: { row: PanelRow; size: Size }) {
+  const item = (
+    <ListItem
+      size={size}
+      title={<Title title={row.title} form={row.form} />}
+      description={row.detail}
+      leading={
+        row.status ? (
+          <StatusDot moklyInstance={"row-" + row.id} tone={row.status} />
+        ) : undefined
+      }
+      trailing={
+        row.sha === undefined ? undefined : (
+          <span className="row-meta mono-value">{row.sha}</span>
+        )
+      }
+    />
+  );
   return (
     <div
       className={
@@ -113,21 +131,13 @@ function Row({ row, size }: { row: PanelRow; size: Size }) {
           : "content-list-row"
       }
     >
-      <ListItem
-        size={size}
-        title={<Title title={row.title} form={row.form} />}
-        description={row.detail}
-        leading={
-          row.status ? (
-            <StatusDot moklyInstance={"row-" + row.id} tone={row.status} />
-          ) : undefined
-        }
-        trailing={
-          row.sha === undefined ? undefined : (
-            <span className="row-meta mono-value">{row.sha}</span>
-          )
-        }
-      />
+      {row.to !== undefined && !row.choose ? (
+        <MockLink className="row-link" to={row.to}>
+          {item}
+        </MockLink>
+      ) : (
+        item
+      )}
       <End row={row} />
     </div>
   );
@@ -181,14 +191,12 @@ function WaitingRow({ row, size }: { row: PanelRow; size: Size }) {
           )
         }
       />
-      {row.to === undefined ? null : row.choose ? (
+      {row.to !== undefined && row.choose ? (
         <span className="fo-canvas-row-end fo-canvas-row-choice">
           <ControlPlaceholder size="sm" width={64} />
         </span>
       ) : (
-        <span className="list-destination fo-canvas-row-end">
-          {row.action ?? "Open"}
-        </span>
+        <span className="fo-canvas-row-end" />
       )}
     </div>
   );

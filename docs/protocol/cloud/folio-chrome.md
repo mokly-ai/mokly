@@ -35,8 +35,12 @@ dialog sets its sections tighter, as its **Dialog** composition in
 **Record row**. Rows live in a `surface` panel with a 10px radius, a hairline
 and `shadow.small`; the package draws the hairline between rows and never after
 the last. A row is a status dot, a 13px title over a 12px muted state line, and
-right-aligned monospace metadata. A destination link sits at the right of the
-same row and wraps beneath it when enlarged text needs the width.
+right-aligned monospace metadata. A row that leads somewhere is one link over
+its whole frame, with a muted fill on hover and the focus outline inside its
+frame. It carries no trailing label, such as Open, because its title already
+names where it goes. A trailing control is only for a second, different
+action, such as a choice, and it wraps beneath the row when enlarged text
+needs the width.
 
 **Form**. One 460px column, 20px between fields. Labels, placeholders and
 helper text come from the control. A placeholder shows the shape of an answer

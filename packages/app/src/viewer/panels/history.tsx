@@ -62,7 +62,6 @@ function publicationRow(
             context.projectSlug,
             publication.id,
           ),
-          action: state === "failed" ? "Details" : "Open",
         }),
   };
 }
@@ -87,7 +86,6 @@ function buildRow(build: Build, context: RowContext): PanelRow {
       ? {}
       : {
           href: buildPath(context.workspaceSlug, context.projectSlug, build.id),
-          action: "Details",
         }),
   };
 }
@@ -109,7 +107,6 @@ const waitingEntry: WaitingPanelRow = {
   detail: "",
   status: true,
   sha: true,
-  action: "Open",
 };
 
 /**

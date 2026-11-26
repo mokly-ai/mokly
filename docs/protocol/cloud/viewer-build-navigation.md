@@ -51,8 +51,8 @@ The history panel reads `listHistory` for its reference, one page as before.
 Publication entries are unchanged. A build entry reads Publishing now while
 `queued` or `running` and Unable to publish once `failed` or `timed-out` — the
 words a publication entry uses — with its creation time and short SHA, and
-opens the build route through Details. The build the stage shows is where the
-reader already is, so its entry carries no Details.
+opens the build route. The build the stage shows is where the reader already
+is, so its entry is no link.
 
 A switcher row takes its state from the newer of `newestPublication` and
 `newestBuild`: an active build reads Publishing now; a failed or timed-out
@@ -63,9 +63,9 @@ ready publication still wins over a newer build, and a reference with none
 opens the stage the
 [reference order](./viewer-builds.md#references-without-a-ready-publication)
 chooses. A row with no ready publication whose
-state is Unable to publish offers Details: a failed publication opens its own
-details, as before. A row whose newest build failed opens that build's address
-through Details, including on a closed pull request, a fork pull request or a
+state is Unable to publish opens its failed attempt instead: a failed
+publication opens its own details. A row whose newest build failed opens that
+build's address, including on a closed pull request, a fork pull request or a
 plan-refused project, where the reference's own stage shows another card. In
 the switcher drawing, Alex's `alex/bun-migration` row opens its failed build's
 drawing, `product/viewer/standalone/build/lockfile`.
@@ -110,6 +110,6 @@ A logic matrix, `packages/app/src/_tests_/viewer/stage-plan.test.ts`, covers eve
 reference kind, both values of `publishingAllowed`, and both values of
 `buildsAvailable`. It proves that the waiting card appears only when the plan
 allows publishing, and that a plan-refused open pull request shows the card a
-branch shows. Switcher logic tests, `switcher-row.test.ts`, cover Details on
-closed, fork and plan-refused rows and on an ordinary row under the
-[Details rule](#history-and-switcher).
+branch shows. Switcher logic tests, `switcher-row.test.ts`, cover the failed
+row on closed, fork and plan-refused references and on an ordinary row under
+the [failed-row rule](#history-and-switcher).

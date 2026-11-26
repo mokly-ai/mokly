@@ -112,12 +112,11 @@ function Workspaces({
                     projectPath(project.workspaceSlug, project.slug),
                   ),
                   // The project the reader is in takes the signal-soft fill
-                  // and says Current in place of a destination.
+                  // and says Current; every other project is a link.
                   ...(project.id === currentProjectId
                     ? { current: true, mark: "Current" }
                     : {
                         href: projectPath(project.workspaceSlug, project.slug),
-                        action: "Open",
                         onFollow: () => onOpenProject(project),
                       }),
                 }))}
@@ -166,7 +165,6 @@ function WaitingWorkspace() {
               waiting: true,
               title: "",
               detail: "",
-              action: "Open",
             },
           ]}
         />

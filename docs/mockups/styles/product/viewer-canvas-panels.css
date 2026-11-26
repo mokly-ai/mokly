@@ -143,8 +143,10 @@
 [data-color-scheme] .fo-canvas-rows {
   margin-inline: calc(-1 * var(--mk-space-3));
 }
-[data-color-scheme] .fo-canvas-rows li:has(> .fo-canvas-row-current) {
+[data-color-scheme] .fo-canvas-rows li {
   border-radius: var(--mk-radius-chrome);
+}
+[data-color-scheme] .fo-canvas-rows li:has(> .fo-canvas-row-current) {
   background: var(--mk-color-signal-soft);
 }
 [data-color-scheme] .fo-canvas-rows .content-list-row {
@@ -169,23 +171,16 @@
   font-weight: var(--mk-font-semibold);
 }
 
-/* The row's end: its destination, its choice or its mark, in one column of
-   one width, so the short SHAs before it line up; a phone's narrower column
-   leaves the row's title more room. A destination keeps its 44px target,
-   which reaches into the row's own padding, and a choice's quiet control
+/* The row's end: its choice or its mark, in one column of one width, empty on
+   a row that is a link, so the short SHAs before it line up; a phone's
+   narrower column leaves the row's title more room. A choice's quiet control
    reaches past the column by its own padding, so its label ends where the
    other ends do. */
-[data-color-scheme] .fo-canvas-rows .list-destination,
 [data-color-scheme] .fo-canvas-row-end {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 4.5rem;
-}
-[data-color-scheme] .fo-canvas-rows .list-destination {
-  margin-block: calc(-1 * var(--mk-space-3));
-  color: var(--mk-color-text-secondary);
-  font-weight: var(--mk-font-semibold);
 }
 [data-color-scheme] .fo-canvas-row-choice {
   margin-inline-end: calc(-1 * var(--mk-space-3));
@@ -223,7 +218,6 @@
   [data-color-scheme] .fo-canvas-row-reference {
     font-size: var(--mk-type-ui-size);
   }
-  [data-color-scheme] .fo-canvas-rows .list-destination,
   [data-color-scheme] .fo-canvas-row-end {
     min-width: 3rem;
   }

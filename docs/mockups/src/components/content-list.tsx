@@ -18,7 +18,7 @@ const tones = {
 export const contentListInput = componentInput({
   ...componentMetadata(
     "Content list",
-    "Shared rows with a status, aligned metadata and optional destination links.",
+    "Shared rows with a status, aligned metadata, and a whole-row link or a choice.",
   ),
   propSchema: {
     type: "object",
@@ -36,7 +36,9 @@ export const contentListInput = componentInput({
             id: { type: "string" },
             title: { type: "string" },
             detail: { type: "string" },
+            /** Where the row leads: the whole row is the link. */
             to: { type: "string" },
+            /** The label of a choice's control; only a choice has one. */
             action: { type: "string" },
             status: { enum: ["neutral", "success", "warning", "danger"] },
             meta: { type: "string" },
@@ -61,7 +63,6 @@ export const contentListInput = componentInput({
         title: "Mokly Cloud",
         detail: "mokly-ai/mokly-cloud",
         to: "product/settings/project",
-        action: "Settings",
       },
     ],
   },
@@ -75,50 +76,53 @@ export const contentListInput = componentInput({
         itemKey={(row) => row.id}
         size={size}
         testID="firna-content-list"
-        renderItem={(row) =>
-          row.waiting ? (
-            <WaitingListRow row={row} size={size} />
-          ) : (
+        renderItem={(row) => {
+          if (row.waiting) return <WaitingListRow row={row} size={size} />;
+          const item = (
+            <ListItem
+              size={size}
+              title={row.title}
+              description={row.detail}
+              leading={
+                row.status ? (
+                  <StatusDot tone={tones[row.status]} size="sm" />
+                ) : undefined
+              }
+              trailing={
+                row.meta ? (
+                  <span
+                    className={
+                      "row-meta" + (row.mono ? " mono-value" : " numeric")
+                    }
+                  >
+                    {row.meta}
+                  </span>
+                ) : undefined
+              }
+            />
+          );
+          return (
             <div className="content-list-row">
-              <ListItem
-                size={size}
-                title={row.title}
-                description={row.detail}
-                leading={
-                  row.status ? (
-                    <StatusDot tone={tones[row.status]} size="sm" />
-                  ) : undefined
-                }
-                trailing={
-                  row.meta ? (
-                    <span
-                      className={
-                        "row-meta" + (row.mono ? " mono-value" : " numeric")
-                      }
-                    >
-                      {row.meta}
-                    </span>
-                  ) : undefined
-                }
-              />
-              {row.to &&
-                (row.choose ? (
-                  <MockLink asChild to={row.to}>
-                    <Button
-                      moklyInstance={"choose-" + row.id}
-                      label={row.action ?? "Select"}
-                      tone="quiet"
-                      size="sm"
-                    />
-                  </MockLink>
-                ) : (
-                  <MockLink className="list-destination" to={row.to}>
-                    <span>{row.action ?? "Open"}</span>
-                  </MockLink>
-                ))}
+              {row.to && !row.choose ? (
+                <MockLink className="row-link" to={row.to}>
+                  {item}
+                </MockLink>
+              ) : (
+                item
+              )}
+              {row.to && row.choose && (
+                <MockLink asChild to={row.to}>
+                  <Button
+                    moklyInstance={"choose-" + row.id}
+                    label={row.action ?? "Select"}
+                    tone="quiet"
+                    size="sm"
+                  />
+                </MockLink>
+              )}
             </div>
-          )
-        }
+          );
+        }}
       />
     );
   },
@@ -134,7 +138,6 @@ export const contentListInput = componentInput({
             title: "Mokly Cloud",
             detail: "mokly-ai/mokly-cloud",
             to: "product/settings/project",
-            action: "Settings",
           },
         ],
       },

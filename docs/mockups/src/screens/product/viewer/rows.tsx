@@ -90,7 +90,6 @@ export function RefGroup(
                   status: "neutral",
                   sha: "",
                   to: "product/viewer/standalone",
-                  action: "Open",
                   waiting: true,
                 },
               ]
@@ -122,11 +121,11 @@ function refRows({
     ...(ref.name === current
       ? { current: true, mark: "Current" }
       : ref.ready
-        ? { to: destination, action: "Open" }
+        ? { to: destination }
         : ref.state === "failed"
-          ? { to: failedDetails(ref), action: "Details" }
+          ? { to: failedDetails(ref) }
           : ref.state === "publishing"
-            ? { to: building, action: "Open" }
-            : { to: unpublished, action: "Open" }),
+            ? { to: building }
+            : { to: unpublished }),
   }));
 }

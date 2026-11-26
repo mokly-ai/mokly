@@ -2,9 +2,8 @@ import { createListStyles, List, ListItem } from "@firna/ui/list";
 import { useSharedUiTheme } from "@firna/ui/theme";
 
 import { Action } from "../../components/action";
-import { AppLink } from "../../components/app-link";
-import { StateDot } from "../../components/controls";
-import type { StatusTone } from "../../components/controls";
+import { RowLink, StateDot } from "../../components/controls";
+import type { RowTarget, StatusTone } from "../../components/controls";
 import { WaitingDot } from "../../components/placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { useCompact } from "../../layout/viewport";
@@ -18,10 +17,10 @@ type TitleForm = "plain" | "reference" | "pullRequest";
 /**
  * One row of a panel's list: the switcher's references, History's
  * publications and builds, Share's screens and the projects panel's projects.
- * The row the reader is on takes the signal-soft fill, and its `mark` says so
- * in place of a destination.
+ * A row that goes somewhere is the link as a whole. The row the reader is on
+ * takes the signal-soft fill, and its `mark` says so at the row's end.
  */
-export interface PanelRow {
+export type PanelRow = {
   id: string;
   title: string;
   form?: TitleForm;
@@ -31,24 +30,16 @@ export interface PanelRow {
   sha?: string;
   /** Whether this is the row the reader is on. */
   current?: boolean;
-  /** What the row's end says in place of a destination, such as Current. */
+  /** What the row's end says for the row the reader is on, such as Current. */
   mark?: string;
-  href?: string;
-  action?: string;
-  /** Takes the destination's place, for a row whose owner drives the move. */
-  onFollow?: () => void;
-  /**
-   * A row whose action changes what the panel is showing rather than going
-   * anywhere, so it is a quiet control rather than a destination.
-   */
-  onChoose?: () => void;
-}
+} & RowTarget;
 
 /**
  * One row while the list's read runs, in the loaded row's own frame: an empty
  * title or detail is the answer's, so it draws as a bar, a detail that is
- * absent draws no line, and the row's end keeps its known label as text with
- * no link, or its choice as a placeholder.
+ * absent draws no line, and the row's end draws its choice as a placeholder.
+ * A row that goes somewhere is no link yet, because its target needs the
+ * answer.
  */
 export interface WaitingPanelRow {
   id: string;
@@ -59,7 +50,7 @@ export interface WaitingPanelRow {
   status?: boolean;
   /** Whether the loaded row carries a short SHA. */
   sha?: boolean;
-  action?: string;
+  /** Whether the row ends in a control that chooses. */
   choose?: boolean;
 }
 
@@ -93,15 +84,15 @@ function Title({ title, form = "plain" }: Pick<PanelRow, "title" | "form">) {
 }
 
 /**
- * The row's end: the mark of the row the reader is on, its choice, its
- * destination, or an empty column that keeps the SHAs in line.
+ * The row's end: the mark of the row the reader is on, its choice, or an
+ * empty column that keeps the SHAs in line.
  */
 function End({ row }: { row: PanelRow }) {
   if (row.mark !== undefined)
     return (
       <span className="fo-canvas-row-end fo-canvas-row-mark">{row.mark}</span>
     );
-  if (row.onChoose && row.action)
+  if (row.onChoose)
     return (
       <span className="fo-canvas-row-end fo-canvas-row-choice">
         <Action
@@ -113,20 +104,13 @@ function End({ row }: { row: PanelRow }) {
         />
       </span>
     );
-  if (row.href && row.action)
-    return (
-      <AppLink
-        href={row.href}
-        onPress={row.onFollow}
-        className="list-destination fo-canvas-row-end"
-      >
-        <span>{row.action}</span>
-      </AppLink>
-    );
   return <span className="fo-canvas-row-end" />;
 }
 
-/** One loaded row: the package's list row with the row's end beside it. */
+/**
+ * One loaded row: the package's list row, the link as a whole when the row
+ * goes somewhere, with the row's end beside it.
+ */
 function Row({ row, size }: { row: PanelRow; size: Size }) {
   return (
     <div
@@ -136,17 +120,19 @@ function Row({ row, size }: { row: PanelRow; size: Size }) {
           : "content-list-row"
       }
     >
-      <ListItem
-        size={size}
-        title={<Title title={row.title} form={row.form} />}
-        description={row.detail}
-        leading={row.status ? <StateDot tone={row.status} /> : undefined}
-        trailing={
-          row.sha === undefined ? undefined : (
-            <span className="row-meta mono-value">{row.sha}</span>
-          )
-        }
-      />
+      <RowLink row={row}>
+        <ListItem
+          size={size}
+          title={<Title title={row.title} form={row.form} />}
+          description={row.detail}
+          leading={row.status ? <StateDot tone={row.status} /> : undefined}
+          trailing={
+            row.sha === undefined ? undefined : (
+              <span className="row-meta mono-value">{row.sha}</span>
+            )
+          }
+        />
+      </RowLink>
       <End row={row} />
     </div>
   );
@@ -200,12 +186,12 @@ function WaitingRow({ row, size }: { row: WaitingPanelRow; size: Size }) {
           ) : undefined
         }
       />
-      {row.action === undefined ? null : row.choose ? (
+      {row.choose ? (
         <span className="fo-canvas-row-end fo-canvas-row-choice">
           <ControlPlaceholder size="sm" width={64} />
         </span>
       ) : (
-        <span className="list-destination fo-canvas-row-end">{row.action}</span>
+        <span className="fo-canvas-row-end" />
       )}
     </div>
   );

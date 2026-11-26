@@ -32,7 +32,6 @@ function SectionIndex({ waiting = false }: { waiting?: boolean }) {
                   title: pane.title,
                   detail: pane.summary,
                   to: paneScreenPath(pane.id),
-                  action: "Open",
                   ...(waiting ? { waiting: true } : {}),
                 }))}
             />

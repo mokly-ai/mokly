@@ -80,6 +80,16 @@ export function links(page: DrawnPage, name: string): Element[] {
   );
 }
 
+/** Every list row that is a link as a whole. */
+export function rowLinks(page: DrawnPage): Element[] {
+  return elements(
+    page.main,
+    (element) =>
+      element.tagName === "a" &&
+      (attribute(element, "class") ?? "").split(" ").includes("row-link"),
+  );
+}
+
 /** The catalogue destination one link leads to, or nothing for a real `href`. */
 export function destination(link: Element): string | undefined {
   return attribute(link, "data-mokly-link");

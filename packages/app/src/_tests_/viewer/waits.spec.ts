@@ -169,7 +169,7 @@ test("each panel waits in its own groups, with one placeholder row in each list"
   await expect(
     panel.getByRole("list", { name: "Pull requests" }),
   ).toBeVisible();
-  await expect(panel.getByText("Open", { exact: true })).toHaveCount(2);
+  await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
   read.release();
   await expect(
     panel.getByRole("listitem").filter({ hasText: "main" }),
@@ -186,7 +186,7 @@ test("each panel waits in its own groups, with one placeholder row in each list"
   await expect(
     panel.getByRole("list", { name: "Publications of main" }),
   ).toBeVisible();
-  await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
+  await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
   read.release();
   await expect(panel.getByText("Current publication")).toBeVisible();
   await page.getByTestId("close-history").click();
@@ -199,7 +199,7 @@ test("each panel waits in its own groups, with one placeholder row in each list"
   await expectOneHeading(page, "Projects");
   await expect(heardIn(panel)).toHaveText("Loading projects…");
   await expect(panel.getByRole("list", { name: "Projects" })).toBeVisible();
-  await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
+  await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
   read.release();
   await expect(panel.getByText(made.workspaceName)).toBeVisible();
   await page.getByTestId("close-projects").click();

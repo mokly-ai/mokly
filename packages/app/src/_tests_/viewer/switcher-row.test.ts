@@ -82,14 +82,13 @@ test("Details on a failed build opens its address where the stage shows another 
           name,
         );
       const target = rowTarget(pullRefRow(pull), workspace, project);
-      assert.equal(target.details, true, name);
       assert.equal(target.href, failedBuildAddress, name);
       assert.equal(target.state.state, "failed", name);
       assert.equal(target.state.headSha, failedBuild.headSha, name);
     }
 });
 
-test("Details on a failed build opens its address while the plan refuses", () => {
+test("a failed build's row opens its address while the plan refuses", () => {
   const branch = branchRow("topic", { newestBuild: failedBuild });
   const pull = pullRow({ newestBuild: failedBuild });
   for (const [row, shown] of [
@@ -104,12 +103,11 @@ test("Details on a failed build opens its address while the plan refuses", () =>
       fork: false,
     });
     const target = rowTarget(shown, workspace, project);
-    assert.equal(target.details, true, shown.title);
     assert.equal(target.href, failedBuildAddress, shown.title);
   }
 });
 
-test("Details on an ordinary failed or timed-out build opens its address too", () => {
+test("an ordinary failed or timed-out build's row opens its address too", () => {
   for (const state of ["failed", "timed-out"] as const) {
     const build = { ...failedBuild, state };
     const row = branchRow("topic", { newestBuild: build });
@@ -118,12 +116,11 @@ test("Details on an ordinary failed or timed-out build opens its address too", (
       buildId: build.id,
     });
     const target = rowTarget(branchRefRow(row), workspace, project);
-    assert.equal(target.details, true, state);
     assert.equal(target.href, buildPath(workspace, project, build.id));
   }
 });
 
-test("Details on a failed publication opens its own details", () => {
+test("a failed publication's row opens its own details", () => {
   const failed = attempt({ state: "failed" });
   const target = rowTarget(
     branchRefRow(branchRow("topic", { newestPublication: failed })),
@@ -137,7 +134,6 @@ test("Details on a failed publication opens its own details", () => {
       publishedAt: failed.publishedAt,
       fromBuild: false,
     },
-    details: true,
     href: publicationPath(workspace, project, failed.id),
   });
   // A failed publication newer than a failed build is what the row says.
@@ -172,7 +168,6 @@ test("a row with a ready publication or nothing failed opens its reference", () 
   ];
   for (const row of opened) {
     const target = rowTarget(branchRefRow(row), workspace, project);
-    assert.equal(target.details, false);
     assert.equal(target.href, branchPath(workspace, project, "topic"));
   }
   const pull = rowTarget(
@@ -180,12 +175,11 @@ test("a row with a ready publication or nothing failed opens its reference", () 
     workspace,
     project,
   );
-  assert.equal(pull.details, false);
   assert.equal(pull.href, pullRequestPath(workspace, project, 14));
 });
 
 /**
- * The reader's row, which says Current in place of a destination, as the
+ * The reader's row, which says Current at its end, as the
  * Publication row composition of `folio-viewer.md` gives it: the reference of
  * the same kind, and the same branch name or pull request number.
  */

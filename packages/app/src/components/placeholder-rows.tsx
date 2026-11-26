@@ -135,9 +135,7 @@ export interface WaitingRow {
   /** Whether the loaded row ends with metadata, in mono where it is an id. */
   meta?: boolean;
   mono?: boolean;
-  /** The label of the row's way on, when it has one. */
-  action?: string;
-  /** Whether that way on is a control that chooses, not a destination. */
+  /** Whether the row ends in a control that chooses. */
   choose?: boolean;
 }
 
@@ -145,9 +143,9 @@ export interface WaitingRow {
  * A content-list row while the list's read runs: the package's own row, with
  * a bar in place of each text that the answer supplies and its control in
  * placeholder form. An empty title or detail is the answer's, so it draws as a
- * bar; one the caller already knows stays text. A destination's label is
- * known, so it draws as text with no link, because its target needs the
- * answer. `size` is the density `ContentList` gives its rows.
+ * bar; one the caller already knows stays text. A row that goes somewhere is
+ * no link yet, because its target needs the answer. `size` is the density
+ * `ContentList` gives its rows.
  */
 export function WaitingListRow({
   row,
@@ -179,12 +177,7 @@ export function WaitingListRow({
           ) : undefined
         }
       />
-      {row.action !== undefined &&
-        (row.choose ? (
-          <ControlPlaceholder size="sm" width={64} />
-        ) : (
-          <span className="list-destination">{row.action}</span>
-        ))}
+      {row.choose && <ControlPlaceholder size="sm" width={64} />}
     </div>
   );
 }

@@ -158,9 +158,9 @@ test("the compact index reaches the project panes", async ({ page }) => {
   await createProject(page, "Index Org");
   await open(page, "/settings");
   await expect(page.getByRole("heading", { name: "Project" })).toBeVisible();
-  const tokens = page.getByRole("link", { name: "Open" }).nth(4);
+  const tokens = page.getByRole("link", { name: /Publishing tokens/ });
   await expect(tokens).toBeVisible();
-  await page.getByText("Tokens that publish this project").click();
+  await tokens.click();
   await expect(page.getByText("Publishing tokens").first()).toBeVisible();
 });
 

@@ -59,11 +59,11 @@ export const history: BuildStateRow = {
     const rows = panel.getByRole("listitem");
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText("Publishing now");
-    await expect(rows.nth(0).getByText("Details")).toHaveCount(0);
+    await expect(rows.nth(0).getByRole("link")).toHaveCount(0);
     await expect(rows.nth(1)).toContainText("Ready");
     await expect(rows.nth(2)).toContainText("Unable to publish");
     await expect(rows.nth(2)).toContainText("8b3f0c2");
-    await rows.nth(2).getByText("Details").click();
+    await rows.nth(2).getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(failed));
     await expect(
       cardTitle(page, "Unable to publish this branch"),
@@ -144,16 +144,16 @@ export const switcher: BuildStateRow = {
     await expect(row("topic")).toContainText("Unable to publish");
     await expect(row("topic")).toContainText("8b3f0c2");
     await expect(row("#14")).toContainText("octocat · Unable to publish");
-    await row("topic").getByText("Details").click();
+    await row("topic").getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(failed));
     await expect(page.locator(".fo-build-line")).toHaveText(
       "Mokly couldn’t accept this catalogue.",
     );
 
     // The closed pull request's own address shows its closed card, so its
-    // Details opens the failed build itself.
+    // row opens the failed build itself.
     await page.getByTestId("viewer-publication").click();
-    await row("#14").getByText("Details").click();
+    await row("#14").getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(closed));
     await expect(
       cardTitle(page, "Unable to publish this pull request"),

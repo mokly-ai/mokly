@@ -129,8 +129,8 @@ export function WaitingDot() {
  * a bar in place of each text that the answer supplies and its control in
  * placeholder form. An empty title or detail is the answer's, so it draws as a
  * bar; one the caller already knows, such as a settings pane's own name in the
- * settings index, stays text. A destination's label is known, so it draws as
- * text with no link, because its target needs the answer.
+ * settings index, stays text. A row that leads somewhere is no link yet,
+ * because its target needs the answer.
  */
 export function WaitingListRow({
   row,
@@ -140,7 +140,6 @@ export function WaitingListRow({
     title: string;
     detail?: string;
     to?: string;
-    action?: string;
     status?: string;
     meta?: string;
     mono?: boolean;
@@ -171,12 +170,7 @@ export function WaitingListRow({
           )
         }
       />
-      {row.to &&
-        (row.choose ? (
-          <ControlPlaceholder size="sm" width={64} />
-        ) : (
-          <span className="list-destination">{row.action ?? "Open"}</span>
-        ))}
+      {row.to && row.choose && <ControlPlaceholder size="sm" width={64} />}
     </div>
   );
 }

@@ -78,7 +78,7 @@ test("the switcher leads with its search and marks the reader's reference Curren
   const panel = page.getByTestId("viewer-panel-switcher");
   const row = (name: string) =>
     panel.getByRole("listitem").filter({ hasText: name });
-  await expect(row("topic").getByRole("link", { name: "Open" })).toBeVisible();
+  await expect(row("topic").getByRole("link")).toBeVisible();
   await expect(row("main")).toContainText("Current");
   await expect(row("main").getByRole("link")).toHaveCount(0);
 

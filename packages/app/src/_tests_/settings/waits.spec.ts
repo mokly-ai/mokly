@@ -134,16 +134,16 @@ test("settings waits draw the rail and the pane's own layout", async ({
   read.release();
   await expect(dialog.getByLabel("Email")).toBeEditable();
 
-  // The settings index while the scope loads: every pane named, and each
-  // row's Open as words, because where it leads needs the scope.
+  // The settings index while the scope loads: every pane named, and no row a
+  // link yet, because where it leads needs the scope.
   read = await openHeld(page, pane(""), /^\/v1\/workspaces$/);
   await expectTitle(page, "Settings");
   await expect(heardName(page)).toHaveText("Loading settings…");
   await expect(dialog.getByText("Name, address and projects")).toBeVisible();
-  await expect(dialog.getByText("Open").first()).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Open" })).toHaveCount(0);
+  const paneLinks = dialog.getByRole("listitem").getByRole("link");
+  await expect(paneLinks).toHaveCount(0);
   read.release();
-  await expect(dialog.getByRole("link", { name: "Open" })).toHaveCount(9);
+  await expect(paneLinks).toHaveCount(9);
 
   // The members read: the pane's headings name the workspace, one row stands
   // for the people, and the invite form and its controls wait.
