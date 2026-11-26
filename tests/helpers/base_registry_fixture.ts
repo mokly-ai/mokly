@@ -38,13 +38,16 @@ export type RegistryAttack = {
  * A cold base whose locked dependency comes from a local registry. The
  * project configuration selects the registry and the user configuration
  * holds its token, so a tier-two install proves that the manager reads both.
- * With `attack`, the committed Yarn Berry base also tries to read a secret.
+ * It supports pnpm and Yarn Berry. With `attack`, the committed Yarn Berry
+ * base also tries to read a secret.
  */
 export async function baseRegistryFixture(
   manager: Manager,
   context: TestContext,
   attack?: RegistryAttack,
 ) {
+  if (manager.name === "Yarn Classic")
+    throw new Error("The registry fixture supports pnpm and Yarn Berry only");
   if (attack && manager.name !== "Yarn Berry")
     throw new Error("Only a Yarn Berry registry fixture carries an attack");
   const fixture = await coldBaseFixture(2, context, { install: false });
