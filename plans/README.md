@@ -8,6 +8,10 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
+- [Create project in a modal over the viewer](./create-project-modal.md) —
+  open Create project from the viewer as a panel over the viewer, without the
+  onboarding steps.
+
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
