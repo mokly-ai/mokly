@@ -43,23 +43,25 @@ test("style wrappers match unwrapped CommonJS imports in the same Mokly bundle",
       );
     }
   }
-  for (const [name, type, extension] of [
+  const kinds = [
     ["commonjs", "commonjs", "js"],
     ["mjs", "commonjs", "mjs"],
     ["mts", "module", "mts"],
     ["tsx-module", "module", "tsx"],
     ["module", "module", "js"],
     ["require", "commonjs", "cjs"],
-  ] as const) {
-    const sourceRoot = path.join(root, name!);
-    await fs.mkdir(sourceRoot);
+  ] as const;
+  // One bundle holds every module kind. Each entry keeps its own folder and
+  // `package.json` type, and esbuild chooses the interop for each importer.
+  const sourceRoot = path.join(root, "kinds");
+  for (const [name, type, extension] of kinds) {
+    await fs.mkdir(path.join(sourceRoot, name), { recursive: true });
     await fs.writeFile(
-      path.join(sourceRoot, "package.json"),
+      path.join(sourceRoot, name, "package.json"),
       JSON.stringify({ type }),
     );
-    const file = `entry.${extension}`;
     await fs.writeFile(
-      path.join(sourceRoot, file),
+      path.join(sourceRoot, name, `entry.${extension}`),
       [
         ...libraries.flatMap(([binding, library]) =>
           [
@@ -77,22 +79,30 @@ test("style wrappers match unwrapped CommonJS imports in the same Mokly bundle",
         "export const styledType = typeof styled; export const styledDivType = typeof styled?.div;",
       ].join("\n"),
     );
-    const { generation } = await bundle(
-      bundleParams({
-        sourceRoot,
-        entryFiles: [file],
-        renderer: null,
-        storiesFiles: [],
-        moduleResolution: {
-          ...bundleParams().moduleResolution,
-          mainFields: ["main"],
-          packageRoots: [root, path.resolve(".")],
-        },
-      }),
-      build,
-    );
-    generation.maps = {};
-    const result = evaluate(generation).entries[file]!;
+  }
+  const files = kinds.map(
+    ([name, , extension]) => `${name}/entry.${extension}`,
+  );
+  const { generation } = await bundle(
+    bundleParams({
+      sourceRoot,
+      entryFiles: files,
+      renderer: null,
+      storiesFiles: [],
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        mainFields: ["main"],
+        packageRoots: [root, path.resolve(".")],
+      },
+    }),
+    build,
+  );
+  generation.maps = {};
+  const { entries } = evaluate(generation);
+  for (const [[name], file] of kinds.map(
+    (kind, index) => [kind, files[index]!] as const,
+  )) {
+    const result = entries[file]!;
     if (name === "tsx-module") {
       assert.equal(
         result.styledType,

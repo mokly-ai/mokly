@@ -80,25 +80,37 @@ test(
   },
 );
 
-const cases: ReadonlyArray<{ tier: DependencyTier; title: string }> = [
+/**
+ * `rebuilds` names the outputs of the repeated builds that must reuse the
+ * source entry. The source key does not depend on the tier, so one tier
+ * repeats the build.
+ */
+const cases: ReadonlyArray<{
+  tier: DependencyTier;
+  title: string;
+  rebuilds: readonly string[];
+}> = [
   {
     tier: 1,
     title:
       "a cold base build reuses working dependencies when identities match",
+    rebuilds: [],
   },
   {
     tier: 2,
     title:
       "a cold base build installs locked dependencies offline without lifecycle scripts",
+    rebuilds: [".context/repeated"],
   },
   {
     tier: 3,
     title:
       "a strict cold base build warns and uses working dependencies when the offline install fails",
+    rebuilds: [],
   },
 ];
 
-for (const { tier, title } of cases) {
+for (const { tier, title, rebuilds } of cases) {
   test(title, { timeout: 120_000 }, async (context) => {
     const fixture = await coldBaseFixture(tier, context, {
       nodeModules: await workingModules(),
@@ -261,16 +273,18 @@ for (const { tier, title } of cases) {
     await absent(
       path.join(root, "node_modules/mokly-cold-dependency/lifecycle-ran"),
     );
-    const repeated = await command(
-      root,
-      "build",
-      ["--base=HEAD", "--out=.context/repeated", "--sidecars=1"],
-      "plain",
-      env,
-      context.signal,
-    ).result;
-    assert.equal(repeated.code, 0, repeated.stderr);
-    assert.deepEqual(await children(sources), sourceEntries);
+    for (const out of rebuilds) {
+      const repeated = await command(
+        root,
+        "build",
+        ["--base=HEAD", `--out=${out}`, "--sidecars=1"],
+        "plain",
+        env,
+        context.signal,
+      ).result;
+      assert.equal(repeated.code, 0, repeated.stderr);
+      assert.deepEqual(await children(sources), sourceEntries);
+    }
     assert.equal(await git(root, "status", "--porcelain"), working);
   });
 }
