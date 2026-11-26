@@ -133,24 +133,30 @@ that a comparison works. It requires `cc`, `c++` and `make`. It requires that
 file on `PATH`.
 The E2B team key stays in the operator process.
 
-Choose the build reference to probe:
+Choose the build reference to probe, and set `CANDIDATE_REFERENCE` to it:
 
-- A new candidate uses the `build_reference` of its generated
-  `$TEMPLATE_DIRECTORY/e2b.toml`, as the commands below read it.
+- A new candidate reads the `build_reference` of its generated
+  `$TEMPLATE_DIRECTORY/e2b.toml`:
+
+  ```sh
+  CANDIDATE_REFERENCE=$(sed -n 's/^build_reference = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
+  ```
+
 - A recheck of a release in use takes the environment's `builds.template`
-  value and changes no configuration. Set `CANDIDATE_REFERENCE` to that
-  value instead of reading the generated file.
-- A production promotion uses the reference that passed the main-preview proof.
-- A rollback uses only a previous reference whose release meets the current
+  value and changes no configuration.
+- A production promotion takes the reference that passed the main-preview proof.
+- A published release that the target environment does not run yet takes the
+  build reference from its record in [Live Evidence](#live-evidence).
+- A rollback also takes the build reference from its record. It uses only a
+  previous reference whose release meets the current
   [template contract](../protocol/cloud/cloud-build-runner.md#template). When
   no recorded release meets it, disable builds as the last section says,
   then publish and verify a new release.
 
-Set the candidate build reference from the generated configuration:
+Then probe that reference:
 
 ```sh
 set -eu
-CANDIDATE_REFERENCE=$(sed -n 's/^build_reference = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
 test -n "$CANDIDATE_REFERENCE"
 export MKC_E2B_API_KEY="$(cat /secure/e2b-api-key)"
 export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_REFERENCE"
