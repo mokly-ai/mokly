@@ -79,42 +79,39 @@ async function expectMobileFrames(
   }
 }
 
+// The viewer sets the scheme of each frame, and the document sets the scheme
+// of its controls, so the pairing runs on one adapter. The adapters have their
+// own specs.
 for (const canvas of [true, false])
-  for (const adapter of ["same-origin", "postMessage"] as const) {
-    test(`${canvas ? "" : "below the layout breakpoint, "}${adapter} frames keep every Light/Dark theme and preview pairing independent`, async ({
-      page,
-    }) => {
-      if (!canvas) await page.setViewportSize(NARROW_WINDOW);
-      await page.goto(dualFixture.host.url);
-      await page.waitForFunction(() => Boolean(window.viewerHarness));
-      for (const theme of ["light", "dark"] as const) {
-        for (const preview of ["light", "dark"] as const) {
-          const id = `${adapter}-${theme}-${preview}`;
-          await page.evaluate(
-            ({ cross, id, preview, theme }) => {
-              const host = window.viewerHarness.start(id, {
-                cross,
-                defaultSelection: { colorScheme: preview },
-              });
-              host.setTheme(theme);
-            },
-            { cross: adapter === "postMessage", id, preview, theme },
-          );
-          await page.waitForFunction(
-            (id) => window.viewerHarness.get(id).ref.current !== null,
-            id,
-          );
-          const root = page.locator(`#${id} .mokly-viewer`);
-          await expect(root).toHaveAttribute("data-mokly-theme", theme);
-          await expect(root).toHaveAttribute(
-            "data-mokly-color-scheme",
-            preview,
-          );
-          await expectMobileFrames(page, id, preview, canvas);
-        }
+  test(`${canvas ? "" : "below the layout breakpoint, "}same-origin frames keep every Light/Dark theme and preview pairing independent`, async ({
+    page,
+  }) => {
+    if (!canvas) await page.setViewportSize(NARROW_WINDOW);
+    await page.goto(dualFixture.host.url);
+    await page.waitForFunction(() => Boolean(window.viewerHarness));
+    for (const theme of ["light", "dark"] as const) {
+      for (const preview of ["light", "dark"] as const) {
+        const id = `same-origin-${theme}-${preview}`;
+        await page.evaluate(
+          ({ id, preview, theme }) => {
+            const host = window.viewerHarness.start(id, {
+              defaultSelection: { colorScheme: preview },
+            });
+            host.setTheme(theme);
+          },
+          { id, preview, theme },
+        );
+        await page.waitForFunction(
+          (id) => window.viewerHarness.get(id).ref.current !== null,
+          id,
+        );
+        const root = page.locator(`#${id} .mokly-viewer`);
+        await expect(root).toHaveAttribute("data-mokly-theme", theme);
+        await expect(root).toHaveAttribute("data-mokly-color-scheme", preview);
+        await expectMobileFrames(page, id, preview, canvas);
       }
-    });
-  }
+    }
+  });
 
 test("embedded Auto follows the host system without moving its preview", async ({
   page,

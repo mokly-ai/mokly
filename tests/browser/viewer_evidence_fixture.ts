@@ -30,16 +30,18 @@ export function evidenceFixture() {
   });
   test.afterAll(async () => fixture?.close());
 
-  return async function start(page: Page, cross: boolean, sibling = false) {
+  // Every case uses the same-origin adapter: the cases check the viewer, and
+  // the adapters have their own specs.
+  return async function start(page: Page, sibling = false) {
     await page.goto(fixture.host.url);
     await page.addScriptTag({ url: `${fixture.host.url}/evidence.js` });
     await page.evaluate(
-      ({ model, details, origin, cross, sibling }) =>
+      ({ model, details, origin, sibling }) =>
         window.startEvidence(
           JSON.parse(model) as CatalogueReadModel,
           JSON.parse(details),
           origin,
-          cross,
+          false,
           sibling ? "pending" : "ready",
         ),
       {
@@ -51,7 +53,6 @@ export function evidenceFixture() {
           ]),
         ),
         origin: fixture.frames.url,
-        cross,
         sibling,
       },
     );
@@ -62,20 +63,12 @@ export function evidenceFixture() {
   };
 }
 
-export async function presentation(page: Page, cross: boolean, count: number) {
+export async function presentation(page: Page, count: number) {
   await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
     count,
   );
   const overlays = page.locator(".mbk-highlight-layer");
   await expect(overlays).toHaveCount(count);
-  if (cross) {
-    for (const viewport of ["mobile", "desktop"]) {
-      const overlay = page
-        .frameLocator(`iframe[data-workspace-frame="${viewport}"]`)
-        .locator("[data-mokly-overlay]");
-      await expect(overlay).toHaveCount(0);
-    }
-  }
   for (let index = 0; index < count; index++) {
     await expect(overlays.nth(index)).toHaveAttribute(
       "data-highlight-viewport",
