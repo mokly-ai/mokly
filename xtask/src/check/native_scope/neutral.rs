@@ -54,14 +54,6 @@ pub(super) const CHANGES_CLASSIFICATION: &[Neutral] = &[
     Binary("mokly-cli::changes_names_tests"),
     Binary("mokly-compare::engine_tests"),
     Test(
-        "mokly-cli::changes_build_tests",
-        "base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagnostic",
-    ),
-    Test(
-        "mokly-cli::changes_build_tests",
-        "strict_mode_ignores_fixed_historical_authoring_warnings",
-    ),
-    Test(
         "mokly-cli::changes_edge_tests",
         "a_catalogue_added_after_the_base_has_every_current_entry_added",
     ),
@@ -100,7 +92,8 @@ pub(super) const CHANGES_CLASSIFICATION: &[Neutral] = &[
 ];
 
 /// Scale proofs. The tests count operations, such as Git read requests, over
-/// generated catalogues of two sizes and assert no elapsed time.
+/// generated catalogues, at two sizes or under cache eviction, and assert no
+/// elapsed time.
 pub(super) const SCALE_COUNTS: &[Neutral] = &[
     Binary("mokly-compare::planning_io_tests"),
     Binary("mokly-compare::scale_engine_tests"),
@@ -108,13 +101,24 @@ pub(super) const SCALE_COUNTS: &[Neutral] = &[
 
 /// Authoring rules of the catalogue model: component declarations, control
 /// bounds, slot order, warnings, validation codes, render diagnostics, and
-/// design contracts.
+/// design contracts, also for the base side of Changes. A diagnostic names
+/// its source by a logical path. The kept
+/// `changes_javascript_tests::historical_javascript_validation_keeps_typed_diagnostics_and_current_build`
+/// checks that a base diagnostic path keeps that form on every platform.
 pub(super) const AUTHORING_RULES: &[Neutral] = &[
     Binary("mokly-cli::design_behaviour_tests"),
     Binary("mokly-cli::unsafe_html_warning_tests"),
     Module(RENDER, "integration::declaration_tests"),
     Module(RENDER, "integration::review_validation_tests"),
     Module(RENDER, "integration::slot_order_tests"),
+    Test(
+        "mokly-cli::changes_build_tests",
+        "base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagnostic",
+    ),
+    Test(
+        "mokly-cli::changes_build_tests",
+        "strict_mode_ignores_fixed_historical_authoring_warnings",
+    ),
     Binary("mokly-cli::ignore_warning_tests"),
     Test(
         "mokly-cli::review_render_tests",

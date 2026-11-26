@@ -4,8 +4,9 @@
 //!
 //! The native suite repeats the Rust tests on macOS and Windows to find
 //! platform defects. The Repository suite still runs every test on Linux. The
-//! list below excludes; it does not include. A new test therefore runs on
-//! every platform until someone adds it here.
+//! lists of `native_scope/neutral.rs` and `native_scope/stress.rs` exclude;
+//! they do not include. A new test therefore runs on every platform until
+//! someone adds it to a list.
 //!
 //! A test that is not a stress test stays on every platform when it touches
 //! paths, links, file names or their case, line endings, processes and
