@@ -282,6 +282,12 @@ The GitHub suite starts [`mkc-github-double`](../mkc-github-double/README.md)
 in-process and points the configured GitHub origins at it, so the production
 provider composition runs against recorded answers over real HTTP.
 
+The API's workers run beside each GitHub test and write the same rows as the
+test's own transactions. A `Harness::queries` operation returns each store
+error with `?`, as production callers do, so the store retries a
+serialization failure. Do not unwrap a store result inside the operation: a
+conflict with a worker then fails the test instead of retrying.
+
 `github_tests` and `billing_tests` include the shared test server support,
 `tests/support/server.rs`, with `#[path]`. Include it in the same way in each
 new binary that runs a test server on a thread. The support binds the API
@@ -358,7 +364,7 @@ setting or test detection that selects the fake runner. The
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.
 - [contract/_tests_/response_validation.rs](./src/contract/_tests_/response_validation.rs) — the shared schema validator for unit and integration HTTP responses.
-- [worker_intervals.rs](./src/worker_intervals.rs) — `WorkerIntervals`, the pause of the GitHub and billing webhook delivery loops after a poll that finds no work. The default holds the production second; the GitHub and billing test harnesses set 20 ms for their own delivery loop.
+- [worker_intervals.rs](./src/worker_intervals.rs) — `WorkerIntervals`, the pause of each polling worker loop: the GitHub and billing webhook delivery loops, the check delivery loop and the build claim loop. The default holds the production pauses: one second, five seconds and two seconds. The billing harness sets 20 ms for its delivery loop, and the GitHub harness sets 20 ms for its delivery, check delivery and build claim loops.
 - [views/](./src/views/) — response schema modules preserve component names and required nullable fields beside the serde wire types.
 - [router.rs](./src/router.rs) — `RouterFactory::build` registers document paths and methods by their `Operation` IDs from one in-memory `ApiDoc`, and grants credentialed CORS to exactly the admitted app and desktop origins.
 - [route_contract.rs](./src/route_contract.rs) — validates operation IDs, methods, duplicate routes and anonymous-read capabilities before registration.
@@ -394,7 +400,7 @@ setting or test detection that selects the fake runner. The
 - [builds/views.rs](./src/builds/views.rs), [builds/state.rs](./src/builds/state.rs) and [builds/step.rs](./src/builds/step.rs) — build schemas and API-owned value mappings, with a nullable `BuildStep`.
 - [builds/history.rs](./src/builds/history.rs) — derives tagged history entries and closes their variant schemas without repeating their fields.
 - [build_providers.rs](./src/build_providers.rs) and [build_runtime.rs](./src/build_runtime.rs) — build composition and loops.
-- [check_runtime.rs](./src/check_runtime.rs) — check batches and five-second polling.
+- [check_runtime.rs](./src/check_runtime.rs) — check batches and their polling loop.
 - [billing/service.rs](./src/billing/service.rs) — `BillingService` and `DatabaseBillingService`, the authorized billing read, the owner-only Checkout and Portal sessions and the durable webhook acceptance.
 - [billing_providers.rs](./src/billing_providers.rs) — `BillingProviderFactory` and `SystemBillingProviderFactory`, the composition of the Stripe transport, the short-deadline verification transport and the signature verifier.
 - [github_providers.rs](./src/github_providers.rs) — `GitHubProviderFactory` and `SystemGitHubProviderFactory`, the composition of the `mkc-github` adapters against GitHub's official origins.

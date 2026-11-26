@@ -5,6 +5,8 @@ use std::path::Path;
 use std::process::Output;
 
 mod diagnostic_support;
+#[path = "process_support/parallel.rs"]
+mod parallel;
 
 use diagnostic_support::fixture::{Fixture, fixture, write};
 
@@ -25,7 +27,7 @@ fn failure(root: &Fixture, expected: &str) {
 
 #[test]
 fn postcss_failures_use_exact_catalogued_codes_and_logical_paths() {
-    for (module, expected) in [
+    let cases = [
         (
             "throw new Error('configuration exploded'); export default {};",
             "[mokly/config-invalid] could not load postcss module postcss.mjs: configuration exploded; default-export an object with plugins\n",
@@ -82,7 +84,9 @@ fn postcss_failures_use_exact_catalogued_codes_and_logical_paths() {
             "export default {plugins:{'./throwing-plugin.cjs':{}}};",
             "[mokly/config-invalid] could not load PostCSS plugin ./throwing-plugin.cjs from postcss.mjs: factory exploded; install and configure it in the consumer repository\n",
         ),
-    ] {
+    ];
+    let cases = cases.map(|case| (case.0.to_owned(), case));
+    parallel::each(cases, |(module, expected)| {
         let root = fixture();
         write(
             root.path(),
@@ -102,7 +106,7 @@ fn postcss_failures_use_exact_catalogued_codes_and_logical_paths() {
             "---\ntitle: A\n---\n<p>A</p>",
         );
         failure(&root, expected);
-    }
+    });
 }
 
 #[test]

@@ -3,6 +3,7 @@
 use std::fs;
 
 use super::base_styles_tests::{compare, consumer};
+use super::parallel_cases;
 #[path = "../../../../tests/rust/registry_assertions.rs"]
 mod registry_assertions;
 #[path = "../../../../tests/rust/registry_fixture.rs"]
@@ -10,12 +11,20 @@ mod registry_fixture;
 
 #[test]
 fn registry_owner_matrix_for_styled_components_and_emotion() {
+    let mut cases = Vec::new();
     for emotion in [false, true] {
         for edit in [
             registry_fixture::Edit::Stack,
             registry_fixture::Edit::Supplier,
             registry_fixture::Edit::ButtonAndStack,
         ] {
+            cases.push((emotion, edit));
+        }
+    }
+    parallel_cases::run(
+        &cases,
+        |(emotion, edit)| format!("registry emotion={emotion} {edit:?}"),
+        |&(emotion, edit)| {
             let base = consumer("'black'");
             let head = consumer("'black'");
             for (target, changed) in [(&base, false), (&head, true)] {
@@ -24,6 +33,6 @@ fn registry_owner_matrix_for_styled_components_and_emotion() {
                 }
             }
             registry_assertions::check(&compare(&base, &head).review, edit);
-        }
-    }
+        },
+    );
 }

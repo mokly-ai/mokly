@@ -34,8 +34,9 @@ impl Harness {
         );
         let state = start["state"].as_str().unwrap().to_owned();
         self.queries(&mut |queries| {
-            let flow = queries.github_oauth_flow(&hash(&state)).unwrap().unwrap();
+            let flow = queries.github_oauth_flow(&hash(&state))?.unwrap();
             assert_eq!(flow.return_to, RETURN_TO);
+            Ok(())
         });
         let callback = json!({"code":"fixture-code","state":start["state"],"codeVerifier":start["codeVerifier"]});
         let response = self

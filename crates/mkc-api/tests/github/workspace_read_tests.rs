@@ -10,13 +10,13 @@ use super::harness::{Harness, json as response_json};
 fn role(app: &Harness, workspace: OrganizationId, role: Role) {
     app.queries(&mut |queries| {
         let mut member = queries
-            .members(workspace)
-            .unwrap()
+            .members(workspace)?
             .into_iter()
             .find(|member| member.user_id == Some(app.user))
             .unwrap();
         member.role = role;
-        queries.save_member(&member).unwrap();
+        queries.save_member(&member)?;
+        Ok(())
     });
 }
 
@@ -76,13 +76,8 @@ fn bound_installation_reads_cover_roles_suspension_disconnect_and_guests() {
     let project = app.install_project();
     let mut workspace = None;
     app.queries(&mut |queries| {
-        workspace = Some(
-            queries
-                .project(project.id)
-                .unwrap()
-                .unwrap()
-                .organization_id,
-        );
+        workspace = Some(queries.project(project.id)?.unwrap().organization_id);
+        Ok(())
     });
     let workspace = workspace.unwrap();
     for suspended in [false, true] {
@@ -109,22 +104,22 @@ fn bound_installation_reads_cover_roles_suspension_disconnect_and_guests() {
     let mut member = None;
     app.queries(&mut |queries| {
         member = queries
-            .members(workspace)
-            .unwrap()
+            .members(workspace)?
             .into_iter()
             .find(|member| member.user_id == Some(app.user));
-        queries.delete_member(member.as_ref().unwrap().id).unwrap();
+        queries.delete_member(member.as_ref().unwrap().id)?;
+        Ok(())
     });
     for direct_role in [Role::Admin, Role::Member, Role::Reviewer] {
         app.queries(&mut |queries| {
             let mut grant = queries
-                .grants(project.id)
-                .unwrap()
+                .grants(project.id)?
                 .into_iter()
                 .find(|grant| grant.user_id == app.user)
                 .unwrap();
             grant.role = direct_role;
-            queries.save_grant(&grant).unwrap();
+            queries.save_grant(&grant)?;
+            Ok(())
         });
         assert_guest(&app, workspace, project.id);
     }
@@ -141,7 +136,8 @@ fn bound_installation_reads_cover_roles_suspension_disconnect_and_guests() {
     app.queries(&mut |queries| {
         let mut member = member.clone().unwrap();
         member.role = Role::Owner;
-        queries.insert_member(&member).unwrap();
+        queries.insert_member(&member)?;
+        Ok(())
     });
     assert_eq!(
         app.request(
@@ -155,12 +151,10 @@ fn bound_installation_reads_cover_roles_suspension_disconnect_and_guests() {
     );
     read_binding(&app, workspace, "absent");
     app.queries(&mut |queries| {
-        let installation = queries
-            .github_installation(project.installation)
-            .unwrap()
-            .unwrap();
+        let installation = queries.github_installation(project.installation)?.unwrap();
         assert!(!installation.connected);
         assert!(installation.organization_id.is_none());
+        Ok(())
     });
 }
 

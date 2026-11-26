@@ -1,3 +1,5 @@
+import type { GitHubRequest } from "./ci-timing-jobs.mjs";
+
 /** The CI host of a Rust test job name, or null for another job. */
 export function testHost(jobName: string): "linux" | "macos" | "windows" | null;
 
@@ -24,3 +26,15 @@ export function testSeconds(
 
 /** The rounded compile weight of each unit from a cargo timing report. */
 export function compileSeconds(html: string): Record<string, number>;
+
+/**
+ * Replace `testSeconds` from the passed Rust test jobs of the given runs;
+ * resolve to the number of units.
+ */
+export function refreshTestSeconds(
+  request: GitHubRequest,
+  runIds: readonly string[],
+): Promise<number>;
+
+/** The plain-text log of one Actions job. */
+export function jobLog(request: GitHubRequest, jobId: number): Promise<string>;

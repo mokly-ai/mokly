@@ -4,6 +4,8 @@ use std::fs;
 use std::path::Path;
 
 mod changes_support;
+#[path = "process_support/parallel.rs"]
+mod parallel;
 mod publish_support;
 use changes_support::{base, git, run, write};
 
@@ -81,7 +83,7 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
     );
     commit(root.path());
     let endpoint = publish_support::rejecting_endpoint();
-    for (verb, strict) in [("build", true), ("publish", true), ("publish", false)] {
+    let check = |verb: &str, strict: bool| {
         let mut args = vec![verb, "--base", "base-point"];
         if strict {
             args.push("--strict");
@@ -121,7 +123,17 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
         assert!(stdout.contains("Comparing with base-point"), "{stdout}");
         assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
         assert!(root.path().join(".context/strict/index.html").is_file());
-    }
+    };
+    check("build", true);
+    // A publish stages its output outside the repository, so the two
+    // publishes share no files. A publish reads the repository status, and
+    // the default build writes its output reservation into the repository,
+    // so the default build runs after the publishes.
+    let publishes = [("publish --strict", true), ("publish", false)];
+    parallel::each(
+        publishes.map(|(label, strict)| (label.to_owned(), strict)),
+        |strict| check("publish", strict),
+    );
     let output = run(root.path(), &["build", "--base", "base-point"]);
     assert_eq!(
         output.status.code(),

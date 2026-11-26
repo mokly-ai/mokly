@@ -98,7 +98,10 @@ fn typecheck_stage_rejects_invalid_types_in_every_workspace() {
     fixture.tools();
     for path in workspaces {
         fixture.write(&format!("{path}/package.json"), &format!(r#"{{"name":"fixture-{}","private":true,"scripts":{{"typecheck":"tsc --noEmit"}}}}"#, path.replace('/', "-")));
-        fixture.write(&format!("{path}/tsconfig.json"), r#"{"compilerOptions":{"strict":true,"types":[],"ignoreDeprecations":"6.0"},"include":["src"]}"#);
+        fixture.write(
+            &format!("{path}/tsconfig.json"),
+            r#"{"compilerOptions":{"strict":true,"types":[],"lib":["ES5"],"skipLibCheck":true,"ignoreDeprecations":"6.0"},"include":["src"]}"#,
+        );
         fixture.write(
             &format!("{path}/src/index.ts"),
             "export const ready = true;\n",

@@ -72,9 +72,10 @@ fn push_waits_for_a_repository_selection_delivery_that_arrives_later() {
         DeliveryStatus::Done,
     );
     app.queries(&mut |queries| {
-        let mut delivery = queries.github_delivery(id).unwrap().unwrap();
+        let mut delivery = queries.github_delivery(id)?.unwrap();
         delivery.due_at = Utc::now();
-        queries.save_github_delivery(&delivery).unwrap();
+        queries.save_github_delivery(&delivery)?;
+        Ok(())
     });
     assert_eq!(app.wait_delivery(id, DeliveryStatus::Done).attempts, 2);
 }

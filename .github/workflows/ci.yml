@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
-      node-matrix: ${{ steps.profile.outputs.node-matrix }}
+      viewer-node-matrix: ${{ steps.profile.outputs.viewer-node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
       viewer-shards: ${{ steps.shards.outputs.viewer }}
       viewer-shard-total: ${{ steps.shards.outputs.viewer-total }}
@@ -60,10 +60,10 @@ jobs:
         run: |
           echo "release-pull-request=$RELEASE_PULL_REQUEST" >> "$GITHUB_OUTPUT"
           if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
-            echo 'node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
+            echo 'viewer-node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
             echo 'verification-runtimes=node-22.15.0,node-24' >> "$GITHUB_OUTPUT"
           else
-            echo 'node-matrix=["22.15.0"]' >> "$GITHUB_OUTPUT"
+            echo 'viewer-node-matrix=["22.15.0"]' >> "$GITHUB_OUTPUT"
             echo 'verification-runtimes=node-22.15.0' >> "$GITHUB_OUTPUT"
           fi
       - name: Set up Node.js
@@ -162,7 +162,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        node: ${{ fromJSON(needs.profile.outputs.viewer-node-matrix) }}
         shard: ${{ fromJSON(needs.profile.outputs.viewer-shards) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -230,7 +230,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Every runtime profile runs the browser suite on Node 22.15.0 only.
+        node: ["22.15.0"]
         shard: ${{ fromJSON(needs.profile.outputs.browser-shards) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
@@ -245,7 +246,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node }}
           package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
@@ -358,21 +359,20 @@ jobs:
       fail-fast: false
       matrix:
         # Shard 1 checks formatting and Clippy. Each later shard builds and
-        # runs one weighted share of the Rust test targets: five on macOS and
-        # six on Windows. Shard 2 also runs the doc tests.
+        # runs one weighted share of the Rust test targets of the native test
+        # scope: four on macOS and six on Windows. Shard 2 also runs the doc
+        # tests.
         include:
           - runner: macos-26
-            shard: 1/6
+            shard: 1/5
           - runner: macos-26
-            shard: 2/6
+            shard: 2/5
           - runner: macos-26
-            shard: 3/6
+            shard: 3/5
           - runner: macos-26
-            shard: 4/6
+            shard: 4/5
           - runner: macos-26
-            shard: 5/6
-          - runner: macos-26
-            shard: 6/6
+            shard: 5/5
           - runner: windows-2025
             shard: 1/7
           - runner: windows-2025
@@ -458,7 +458,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Every runtime profile runs static delivery on Node 22.15.0 only.
+        node: ["22.15.0"]
         # Each delivery mode runs in its own job on its own fresh build.
         mode: [static-http, file]
     env:
@@ -473,7 +474,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node }}
           package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
