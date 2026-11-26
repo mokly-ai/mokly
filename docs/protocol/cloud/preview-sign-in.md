@@ -123,24 +123,29 @@ optional, and requires an admitted Origin; like the magic-link exchange, it
 cannot require a session CSRF token. The shared optional-operation gate runs
 first. Without the shared account's configuration the endpoint answers 503
 `operation-unavailable`, as unconfigured GitHub operations do, even when the
-Origin and the body are invalid. Once configured, it validates Origin, then
-its JSON body, then admission.
+Origin and the body are invalid. Once configured, it validates Origin and
+the JSON body in that order. It then reserves a place before per-IP
+admission.
 
 A body without `password`, or with a password outside 1 to 1024 UTF-8 bytes,
 fails with `validation-failed` and consumes no admission, because it cannot
 match.
 [REST transport](./rest-transport.md) refuses unknown fields, such as
-`secret`. Every attempt that passes the Origin and body checks consumes
-admission: at most 20 per selected peer IP per 60 seconds in a persistent
-fixed window. A rejected admission answers 429 `rate-limited` with a positive
-`Retry-After` in seconds.
+`secret`. An attempt with a place goes through admission. A persistent fixed
+window allows at most 20 attempts per selected peer IP per 60 seconds. A
+rejected admission answers 429 `rate-limited` with a positive `Retry-After`
+in seconds.
 
 The API checks the password as sent, without trimming, against the verifier,
 and compares the hashes in constant time. A wrong password, and any password
 while the API has no verifier, answers `magic-link-invalid`, which already
-covers a refused preview credential. The password is never logged. One API
-process checks at most two passwords at once, and further attempts wait, so
-the memory of concurrent checks stays far below the API's limit.
+covers a refused preview credential. The password is never logged.
+
+One API process has ten places for attempts. It checks at most two
+passwords at once and allows up to eight further attempts to wait. When all
+ten places are in use, the API answers 503 `unavailable` before admission.
+Unbounded waiting was rejected, because a flood from many addresses could
+then exhaust memory or push a reviewer's wait past the proxy's deadline.
 
 On success one transaction finds or creates the user with the configured
 email, revokes a supplied existing session and issues a session exactly as

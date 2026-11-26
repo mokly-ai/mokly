@@ -131,9 +131,15 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   password against the verifier in constant time and never logs it. The gate,
   the Origin check, the admission of 20 attempts per peer IP per 60 seconds,
   and the session issue stay as today.
-- **Bounded hashing, my call.** One API process checks at most two passwords
-  at once. Further attempts wait. Reason: each check uses about 16 MiB with
-  the chosen parameters, and the API's memory limit is 1 GiB.
+- **Bounded hashing.** Each API process has ten places for preview password
+  attempts. It checks at most two passwords at once and allows up to eight
+  more attempts to wait without a blocking worker. The API reserves a place
+  after the gate, Origin and body checks and before peer admission. It answers
+  503 `unavailable` when all places are in use. An attempt keeps its place
+  until its work ends, even if the caller disconnects. Each hash uses about
+  16 MiB with the chosen parameters. The queue limit bounds the backlog that
+  a flood from many addresses can create.
+  Cal answered "9 = B" for review finding 9 on 2026-11-26.
 - **Configuration answer.** A public endpoint, `GET /v1/configuration`, says
   which optional configuration this API has (decision 4, F). It answers a
   typed object with one field for each optional configuration that the API's

@@ -2461,6 +2461,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description Preview sign-in configuration is absent, or the full password queue refused the attempt before peer admission. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             "4XX": components["responses"]["ErrorResponse"];
             "5XX": components["responses"]["ErrorResponse"];
         };

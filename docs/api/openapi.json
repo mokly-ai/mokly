@@ -433,6 +433,16 @@
           "4XX": {
             "$ref": "#/components/responses/ErrorResponse"
           },
+          "503": {
+            "description": "Preview sign-in configuration is absent, or the full password queue refused the attempt before peer admission.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "5XX": {
             "$ref": "#/components/responses/ErrorResponse"
           }
@@ -445,6 +455,7 @@
           "operation-unavailable",
           "payload-too-large",
           "rate-limited",
+          "unavailable",
           "validation-failed"
         ]
       }
