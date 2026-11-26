@@ -1,16 +1,17 @@
 //! Running API uploads reach GitHub and verified Re-run deliveries retain their identity.
 
-use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use std::sync::{Arc, Mutex};
 
 use chrono::Utc;
 use mkc_domain::ids::PublicationId;
 use mkc_store_interface::github_state::DeliveryStatus;
 use mkc_store_interface::publication_event::EventKind;
+use mkc_store_interface::store::Callback;
 use serde_json::{Value, json};
 use uuid::Uuid;
 
-use super::check_support::{CheckRuntime, EventRow, wait_until};
+use super::check_support::{CheckRuntime, EventRow, event_rows, wait_until};
 use super::fixtures;
 use super::harness::Harness;
 
@@ -22,8 +23,50 @@ fn rerequest(app: &Harness, event: &str, publication: PublicationId) {
     let id = Uuid::now_v7();
     let bytes = serde_json::to_vec(&body).unwrap();
     assert_eq!(app.webhook(id, event, bytes.clone(), true).status(), 202);
-    app.wait_delivery(id, DeliveryStatus::Done);
+    let original = app.wait_delivery(id, DeliveryStatus::Done);
     assert_eq!(app.webhook(id, event, bytes, true).status(), 202);
+    // The duplicate leaves the completed delivery as it was, so it schedules
+    // no second rerequest.
+    let duplicate = app.delivery(id).unwrap();
+    assert_eq!(
+        (
+            duplicate.status,
+            duplicate.attempts,
+            duplicate.received_at,
+            duplicate.due_at
+        ),
+        (
+            original.status,
+            original.attempts,
+            original.received_at,
+            original.due_at
+        )
+    );
+}
+
+/// What the store holds when GitHub receives the next check update: the
+/// check's rerequest flag and the publication's rerequest events.
+type AtUpdate = Arc<Mutex<Option<(bool, Vec<EventRow>)>>>;
+
+fn at_next_update(app: &Harness, publication: PublicationId) -> AtUpdate {
+    let seen = AtUpdate::default();
+    let (store, database, out) = (
+        app.store.clone(),
+        app._schema.scoped_url().to_owned(),
+        seen.clone(),
+    );
+    app.github.mode.lock().unwrap().check_update_hook = Some(Box::new(move || {
+        let mut rerequested = true;
+        store
+            .transaction(&mut Callback(&mut |queries| {
+                rerequested = queries.github_check(4)?.unwrap().rerequested;
+                Ok(())
+            }))
+            .unwrap();
+        let rows = event_rows(&database, publication, EventKind::Rerequest);
+        *out.lock().unwrap() = Some((rerequested, rows));
+    }));
+    seen
 }
 
 #[test]
@@ -57,29 +100,32 @@ fn upload_creates_a_live_check_and_both_rerun_events_update_the_same_run() {
         assert_eq!(stored.head_sha, "a".repeat(40));
         Ok(())
     });
+    let delivered = EventRow {
+        attempts: 1,
+        permanent_failures: 0,
+        delivered: true,
+    };
     for (event, updates) in [("check_run", 1), ("check_suite", 2)] {
+        let at_update = at_next_update(&app, publication);
         rerequest(&app, event, publication);
         let updated = app.wait_check(publication, updates);
         assert_eq!(updated["id"], first["id"]);
         assert_eq!(updated["output"], first["output"]);
         wait_until(|| app.check_events_are_delivered(publication));
-        // The rerequest cleared the check's flag and queued one fresh event. A
-        // claim adds one attempt, so a delivered event with one attempt and no
-        // permanent failure was queued with none, and the duplicate webhook
-        // queued nothing. The rows are read once delivered, because a check
-        // pass can claim an event before a poll sees it pending.
-        app.queries(&mut |queries| {
-            assert!(!queries.github_check(4)?.unwrap().rerequested);
-            Ok(())
+        // When GitHub receives the update, the rerequest has already cleared
+        // the check's flag and queued one fresh event, which this delivery
+        // claimed once: a claim adds one attempt, so it was queued with none.
+        // The snapshot is taken at the provider, because a 20 ms check pass
+        // can claim an event before a poll sees it pending.
+        let mut claimed = vec![delivered.clone(); updates - 1];
+        claimed.push(EventRow {
+            delivered: false,
+            ..delivered.clone()
         });
-        let delivered = EventRow {
-            attempts: 1,
-            permanent_failures: 0,
-            delivered: true,
-        };
+        assert_eq!(at_update.lock().unwrap().take(), Some((false, claimed)));
         assert_eq!(
             app.check_events(publication, EventKind::Rerequest),
-            vec![delivered; updates]
+            vec![delivered.clone(); updates]
         );
     }
     let mode = app.github.mode.lock().unwrap();

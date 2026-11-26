@@ -148,23 +148,13 @@ impl Harness {
             .clone()
     }
 
-    /// Every event of one kind for one publication, oldest first, delivered
-    /// and dead-lettered ones included. The store reads only due events, so
-    /// this reads the rows.
+    /// Every event of one kind for one publication, as `event_rows` reads it.
     pub(super) fn check_events(
         &self,
         publication: PublicationId,
         kind: EventKind,
     ) -> Vec<EventRow> {
-        diesel::sql_query(
-            "SELECT attempts, permanent_failures, delivered_at IS NOT NULL AS delivered
-            FROM publication_events WHERE publication_id = $1 AND kind = $2
-            ORDER BY created_at, id",
-        )
-        .bind::<SqlUuid, _>(publication.0)
-        .bind::<Text, _>(kind.as_str())
-        .load(&mut PgConnection::establish(self._schema.scoped_url()).unwrap())
-        .unwrap()
+        event_rows(self._schema.scoped_url(), publication, kind)
     }
 
     pub(super) fn check_events_are_delivered(&self, publication: PublicationId) -> bool {
@@ -183,6 +173,25 @@ impl Harness {
         });
         done
     }
+}
+
+/// Every event of one kind for one publication, oldest first, delivered and
+/// dead-lettered ones included. The store reads only due events, so this reads
+/// the rows.
+pub(super) fn event_rows(
+    database: &str,
+    publication: PublicationId,
+    kind: EventKind,
+) -> Vec<EventRow> {
+    diesel::sql_query(
+        "SELECT attempts, permanent_failures, delivered_at IS NOT NULL AS delivered
+        FROM publication_events WHERE publication_id = $1 AND kind = $2
+        ORDER BY created_at, id",
+    )
+    .bind::<SqlUuid, _>(publication.0)
+    .bind::<Text, _>(kind.as_str())
+    .load(&mut PgConnection::establish(database).unwrap())
+    .unwrap()
 }
 
 pub(super) fn wait_until(mut condition: impl FnMut() -> bool) {
