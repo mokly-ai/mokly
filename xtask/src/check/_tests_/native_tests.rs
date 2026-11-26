@@ -134,12 +134,19 @@ fn native_build_failure_prevents_tests() {
     ));
 }
 
-/// The complete suite and the first test shard both keep going after failed tests.
+/// The complete suite and the library shard keep going after a failed check or
+/// failed tests, so the doc tests still run and the suite fails with the first
+/// failure.
 #[test]
 fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
     let complete = native_nextest().display();
-    let first = "cargo xtask rust-test-shard --partition 1/2 --no-fail-fast --native";
-    for (shard, nextest) in [(None, complete.as_str()), (Some("2/3"), first)] {
+    let library = "cargo xtask rust-test-shard --partition 1/3 --no-fail-fast --native";
+    let format = "cargo fmt --all -- --check";
+    for (shard, nextest) in [
+        (None, complete.as_str()),
+        (Some("1/3"), library),
+        (Some("1/3"), format),
+    ] {
         let observed = Arc::new(Mutex::new(Vec::new()));
         let captured = observed.clone();
         let failing = nextest.to_owned();

@@ -67,27 +67,25 @@ fn test_shard(
     expected
 }
 
+/// Native shard 1 runs the lints and the library shard, test partition 1, and
+/// each later shard runs the test partition of its own index.
 #[test]
-fn native_shard_one_lints_and_later_shards_split_the_tests_and_only_the_library_shard_skips_the_builds()
- {
+fn native_shard_one_lints_and_runs_the_library_shard_and_later_shards_build_and_split_the_rest() {
     let native = VerificationSuite::Native;
+    let options = " --no-fail-fast";
+    let lints = ["cargo fmt --all -- --check".to_owned(), CLIPPY.to_owned()];
+    let library = test_shard(Before::Preflight, "1/3", options, " --native", true);
     assert_eq!(
         display(native, Some("1/3")),
-        ["cargo fmt --all -- --check", CLIPPY]
+        [&lints[..], &library[..]].concat()
     );
-    let options = " --no-fail-fast";
     assert_eq!(
         display(native, Some("2/3")),
-        test_shard(Before::Preflight, "1/2", options, " --native", true)
+        test_shard(Before::Builds(&[]), "2/3", options, " --native", false)
     );
     assert_eq!(
         display(native, Some("3/3")),
-        test_shard(Before::Builds(&[]), "2/2", options, " --native", false)
-    );
-    // A single test shard runs every unit, so it builds first.
-    assert_eq!(
-        display(native, Some("2/2")),
-        test_shard(Before::Builds(&[]), "1/1", options, " --native", true)
+        test_shard(Before::Builds(&[]), "3/3", options, " --native", false)
     );
     assert_eq!(display(native, Some("1/1")), display(native, None));
 }
@@ -154,9 +152,16 @@ fn the_shards_of_a_suite_run_every_command_and_test_partition_of_the_complete_su
                 missing.is_empty(),
                 "{suite} {total} shards miss {missing:?}"
             );
-            let expected: Vec<_> = (1..total)
-                .map(|index| format!("{index}/{}", total - 1))
-                .collect();
+            // Repository shard 1 runs no test partition; native shard 1 runs
+            // the first one.
+            let expected: Vec<_> = match suite {
+                VerificationSuite::Native => (1..=total)
+                    .map(|index| format!("{index}/{total}"))
+                    .collect(),
+                _ => (1..total)
+                    .map(|index| format!("{index}/{}", total - 1))
+                    .collect(),
+            };
             assert_eq!(partitions, expected, "{suite} with {total} shards");
         }
     }

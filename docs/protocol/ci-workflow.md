@@ -94,8 +94,8 @@ keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
 Clippy, and the complete Rust tests run in the repository shards. The native
 shards run them for the `mokly-*` crates and `xtask` only. Repository and
-native shard 1 run the checks, and each later shard runs one partition of the
-Rust tests, under the
+native shard 1 run the checks, native shard 1 also runs the library tests, and
+the other shards run the other partitions of the Rust tests, under the
 [shard rule](./ci-verification-repository.md#suite-shards). Native jobs, except the library shard, build the
 checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
 integration tests use matching sidecar sources. Every

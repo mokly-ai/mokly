@@ -84,33 +84,34 @@ elsewhere.
 ## Suite Shards
 
 The repository and native suites accept `--shard INDEX/TOTAL`. No shard, or
-one shard of one, runs the complete suite. With two or more shards, shard 1
-runs the checks and each later shard runs Rust tests:
+one shard of one, runs the complete suite. With two or more shards, each
+shard runs one test partition of the [test unit rule](#test-units):
 
 - Repository shard 1 runs every item of the
   [repository list](#repository-boundary) except the cargo-nextest
-  preflight, the builds of item 10, and the Rust tests of item 11.
-- Native shard 1 checks Rust formatting and runs Clippy.
-- Each later shard runs the cargo-nextest preflight and the builds of item 10.
-  Then it runs its share of the Mokly Rust test units under the
-  [test unit rule](#test-units). The first test shard, shard 2, also runs
-  the doc tests. A repository test shard first installs the root npm
-  lockfile.
-- With two or more test shards, the first test shard is the library shard.
-  It runs only the preflight, the library unit tests, and the doc tests. These
-  tests read no npm package and no native binary, so it runs no npm install
-  and none of the builds of item 10. On `main` it builds the native binary
-  before its Rust build cache saves, so the saved entry stays complete.
+  preflight, the builds of item 10, and the Rust tests of item 11. Repository
+  shard `k`, from 2, runs test partition `k - 1` of `TOTAL - 1`.
+- Native shard 1 checks Rust formatting, runs Clippy, and runs test partition
+  1 of `TOTAL`. Native shard `k`, from 2, runs test partition `k` of `TOTAL`.
+- Test partition 1 of two or more is the library shard. It runs only the
+  preflight, the library unit tests, and the doc tests. These read no npm
+  package and no native binary, so it runs no npm install and none of the
+  builds of item 10. On `main` it builds the native binary before its Rust
+  build cache saves, so the saved entry stays complete.
+- Every other test partition runs the preflight and the builds of item 10,
+  then its share of the units. A repository test shard first installs the
+  root npm lockfile. A native test partition keeps the `--no-fail-fast`
+  behaviour of the complete native suite, and native shard 1 also runs its
+  tests after a failed check.
 
-The shards of a suite together run every check and every test of the
-complete suite exactly once. Only the npm install, the preflight, and the
-builds repeat on the test shards. A native test shard keeps the
-`--no-fail-fast` behaviour of the complete native suite.
-
-Decision: the checks run on their own shard, so no test shard waits for them.
-Rejected: one test build per platform in a `cargo nextest archive` that the
-test shards download. The test shards would start only after that build job,
-so the build, the upload, and the download all stay on the critical path.
+The shards of a suite together run every check and every test once. Decision:
+the repository checks run on their own shard, so no test shard waits for them.
+Native shard 1 runs the checks with the library shard, because both read no
+npm package and ended about 3 minutes early, and macOS runs at most five jobs
+at a time. Rejected for the repository suite: its checks shard keeps its own
+Rust cache entry, and one job cannot keep two entries. Rejected: one test
+build per platform in a `cargo nextest archive` that the test shards download.
+The test shards would wait for that build, its upload, and its download.
 
 ### Native Test Scope
 
@@ -146,20 +147,19 @@ The other units go to the other test shards by weight, the heaviest first,
 each to the shard with the least weight so far. Decision: keep `--lib` whole
 on a shard without builds. Rejected: a `--lib` slice by crate on each shard,
 because `-p "mokly-*" -p xtask --lib` builds every library test binary, 85 to
-112 seconds on the native hosts, on each shard that runs a slice. `scripts/verification/rust-test-weights.json`
-holds the measured compile seconds of each unit, the measured test seconds of
-each unit on each CI host, a default for a unit that it does not name, and
-the doc test weight of the first test shard. Each host places its units by
-its own test seconds.
-The weight file can split a heavy unit other than `--lib` into nextest
-slices, `--partition slice:{k}/{n}` of that unit alone. Each slice goes to a
-shard like a unit, and the shard runs it in its own nextest command, so every
-test of the unit runs exactly once. The same units and weights give the same
+112 seconds on the native hosts, on each shard that runs a slice.
+`scripts/verification/rust-test-weights.json` holds the measured compile
+seconds of each unit, the measured test seconds of each unit on each CI host,
+a default for a unit that it does not name, and the doc test weight of the
+first test shard. Each host places its units by its own test seconds. The
+weight file can split a heavy unit other than `--lib` into nextest slices,
+`--partition slice:{k}/{n}` of that unit alone. Each slice goes to a shard
+like a unit, and the shard runs it in its own nextest command, so every test
+of the unit runs exactly once. The same units and weights give the same
 partition on every run of a host. Decision: keep test seconds for each host,
 because one mean over the hosts left one Windows test shard about 3 minutes
 slower than the others. A weight changes only the balance, never the set of
-tests. A shard without
-units runs no nextest command.
+tests. A shard without units runs no nextest command.
 
 Each test shard selects `-p "mokly-*" -p xtask` and adds the target
 arguments of its units, so it compiles only the test binaries of its units.

@@ -95,11 +95,13 @@ These jobs own a cache entry and save it: the Repository checks shard, the
 Repository test shards, the cloud Rust partition, the app shards, the test
 shards of each native host, and the two Stripe catalogue jobs of the deploy
 workflow. Jobs that build the same artifacts, such as the app shards, share
-one entry. Of the Repository and native test shards, only the first saves,
+one entry. Of the Repository and native shards, only the library shard saves,
 under the [test unit rule](./ci-verification-repository.md#test-units),
 because a smaller shard would save an entry that lacks dependencies of the
-others. A Clippy build entry for each native host was rejected, because it
-would add one more entry for each host to a total near the 10 GB limit.
+others. The native library shard also runs Clippy, so its entry holds the
+Clippy output too. A separate Clippy build entry for each native host was
+rejected, because it would add one more entry for each host to a total near
+the 10 GB limit.
 
 A reader restores the entry of an owner that holds some or all of its
 dependency builds, and never saves. Every other Linux CI job that builds only `xtask` and
@@ -108,8 +110,7 @@ and Workspace checks (infrastructure) partitions included. The desktop
 partition and the image job restore the app entry. These readers need no
 dependency build that their entry lacks. The Workspace checks (contracts)
 partition restores the cloud Rust entry, which lacks some of its dependency
-builds. The native lint shard of each host restores the test entry of its
-host, so Clippy reuses its build scripts and procedural macros. Only the owner
+builds. Only the owner
 saves its entry: a cache key cannot change after its first save, so an entry
 that a reader saved first would lack the builds of the owner until the key
 changes. A separate saved entry for a reader was rejected, because it adds its

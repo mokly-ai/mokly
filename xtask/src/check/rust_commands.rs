@@ -5,8 +5,8 @@ use crate::command::CommandSpec;
 use super::native_scope::TestScope;
 use super::request::Shard;
 
-/// Leading shards of a sharded repository or native suite that run checks
-/// instead of Rust tests.
+/// Leading shards of a sharded repository suite that run checks instead of
+/// Rust tests.
 const CHECK_SHARDS: u64 = 1;
 
 /// The JavaScript packages that the Mokly Rust tests run, in build order.
@@ -18,7 +18,7 @@ const PACKAGES: [&str; 5] = [
     "@mokly/mokly",
 ];
 
-/// The part of a repository or native suite that one selection runs.
+/// The part of a repository suite that one selection runs.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum RustPart {
     /// No shard, or one shard of one: the complete suite.
@@ -30,7 +30,7 @@ pub(super) enum RustPart {
 }
 
 impl RustPart {
-    /// Select the part of a repository or native suite for an optional shard.
+    /// Select the part of a repository suite for an optional shard.
     pub(super) fn of(shard: Option<Shard>) -> Self {
         match shard.filter(|shard| shard.total() > 1) {
             None => Self::Complete,
@@ -130,21 +130,27 @@ pub(super) fn cargo_metadata() -> CommandSpec {
 }
 
 /// Build the host binary, then run the Rust tests of the native scope. A
-/// sharded suite runs the formatting and Clippy checks on shard 1 and one
-/// weighted share of the test units on each later shard; the first test shard
-/// also runs the doc tests. The doc tests also run after failed tests, so one
-/// job reports both kinds of failure.
+/// sharded suite splits the test units over all of its shards: shard 1 is the
+/// library shard, which also runs the formatting and Clippy checks, and each
+/// later shard runs one weighted share of the other units. The library shard
+/// runs the library unit tests and the doc tests without the npm packages and
+/// the native binary. Its checks and tests all run when one of them fails, so
+/// one job reports every kind of failure.
 pub(super) fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
-    match RustPart::of(shard) {
-        RustPart::Complete => {
+    match shard.filter(|shard| shard.total() > 1) {
+        None => {
             let mut commands = vec![require_nextest(), build_native()];
             commands.extend(rust_lints());
             commands.extend(package_builds());
             commands.extend(rust_tests(true, TestScope::Native));
             commands
         }
-        RustPart::Checks => rust_lints().into(),
-        RustPart::Tests(tests) => test_shard(tests, true, TestScope::Native),
+        Some(shard) if shard.is_first() => rust_lints()
+            .into_iter()
+            .map(CommandSpec::keep_going)
+            .chain(test_shard(shard, true, TestScope::Native))
+            .collect(),
+        Some(shard) => test_shard(shard, true, TestScope::Native),
     }
 }
 
