@@ -157,6 +157,9 @@
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): the same
     class of missing live input. A change of the live-input format can serve
     both items.
+  - [unused-build-files-disable-edit-reuse.md](./unused-build-files-disable-edit-reuse.md):
+    shared wider fix. Its option C uses one typed observation model for full
+    and edit capture, as option E here does.
 - **Recommendation:** C. It covers retargets on lookup paths and consumed
   paths with the link targets that captured evidence already records. B
   misses a retarget with the same names, and D removes reuse for linked

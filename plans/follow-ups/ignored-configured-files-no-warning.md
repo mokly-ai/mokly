@@ -1,0 +1,50 @@
+# Configured files that Git ignores get no warning
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from the check of finding 103 in round 2 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `stylesheet_imports` at `crates/mokly-graph/src/comparison_input.rs:36`, `importPostcssModule` at `packages/mokly/src/sidecar/postcss-module.ts:103`, the `warnings` function in `crates/mokly-compare/src/ignored_modules.rs`, and the "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md`.
+- **Reason:** The fix changes two warning inputs and a protocol list and needs new CLI cases, and the review had no fix round left.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and Git ignores.
+  - **Configured stylesheet:** A local file that a `stylesheets`, `lightStylesheets`, or `darkStylesheets` rule of `mokly.config.json` names.
+  - **Configured PostCSS module:** The module that the `postcss` field of `mokly.config.json` names.
+- **Background:**
+  - On 2026-11-25 the user chose a warning for each repository file outside `node_modules` that the head loads and Git ignores. The reason is that a later base cannot load such a file. The warning runs when Changes runs, and `--strict` counts it. The decision text in the "Ignored Modules" section says: "Mokly warns about each ignored file that the head loads".
+  - The section counts bundled imports, CSS `@import`, modules that Node loads for PostCSS, and exact stylesheet reports of PostCSS plugins. It does not name the configured files. A list change that adds them follows the decision of 2026-11-25, so it needs no new decision.
+  - `stylesheet_imports` drops the root path of each local stylesheet root from the warning input. `local_css` marks a configured stylesheet and a stylesheet that a component declares, so both roots stay out. The `@import` targets of these roots still count.
+  - `importPostcssModule` skips the configured PostCSS module when it records the import source of each bundled file. The worker then reports the module without a source, the inventory gives it no import kind, and the warning skips it.
+  - Both skips came with commit `34f301052` of the same branch, on 2026-11-26. That commit made the PostCSS bundler tell the configured module from plugin entries.
+  - A later base renders from the files that Git tracks, and its configuration names the same files. `validate_inputs` in `crates/mokly-catalogue/src/config_inputs.rs` checks the configured stylesheets, the renderer, and the PostCSS module against the files of the side. For a missing stylesheet or renderer, it fails with `config-invalid` and `{setting}: {value} does not exist`. For a missing PostCSS module, the message says that the module must be an existing regular file. Changes then becomes unavailable.
+  - A read of the code suggests the same gap for the configured renderer, but nobody ran that case. The JavaScript part of the check reads only the import lists of the module graph. The graph omits Mokly's virtual entry, and only the virtual entry imports the renderer.
+- **Problem:** A configured stylesheet, a stylesheet that a component declares, or a configured PostCSS module that Git ignores gets no `ignored-module` warning.
+- **Impact if no action:** A strict build passes with such a file. After the merge, each later base fails to load it, and Changes becomes unavailable.
+- **Root question:** How does an author learn, before the merge, that a later base cannot load a configured file that the head loads?
+- **Options:**
+  - **A.** Count the local stylesheet roots and the configured PostCSS module as exact loads. Effort: Small.
+    - Keep the root path of a local stylesheet root in `stylesheet_imports`.
+    - Record the configured PostCSS module as a bundled import in `importPostcssModule`.
+    - Give these files the message without the `sourcePackages` hint, because no entry can change a configured path.
+    - Add the configured files to the list of counted loads in the "Ignored Modules" section.
+    - Add CLI cases for an ignored configured stylesheet, an ignored component stylesheet, and an ignored configured PostCSS module.
+    - Add a case for an ignored configured renderer. When it shows the same gap, count the renderer in the same change.
+  - **B.** Let the warning check add the configured paths of the head's resolved configuration to the loaded paths, apart from the render evidence. It also warns for a configured stylesheet that no page loads. Effort: Small.
+  - **C.** Give each file that a head render reports a role, such as configured, import, plugin report, or Node load. Let `ignored_modules::warnings` alone decide which roles count, so that no producer can drop a load. Effort: Large.
+- **Left out:**
+  - A `config-invalid` error for an ignored configured file. It is a new rejection, and the always-on rules say to warn and continue on recoverable input.
+  - A check when the configuration loads, outside Changes. The warning runs only when Changes runs, because only a comparison needs the base.
+- **Wider fix:** C. The rule of which loads count then has one owner, so a new load path cannot skip the warning.
+- **Previous examples:**
+  - On 2026-11-26 the review of the same branch found these loads that escaped the warning. Each fix changed one producer.
+    - relative PostCSS requires
+    - bundled PostCSS plugins
+    - exact stylesheet reports of PostCSS plugins
+    - one file that PostCSS loads both by package name and by a relative path
+  - The same review found a startup preload that got a false warning.
+  - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md) records the restored page-render requires that skip the warning.
+- **Recommendation:** A. It removes the two skips and uses the evidence that the check already reads. C best protects the codebase.
+- **Action:** fix after merge, apply A, because the fix needs new CLI cases and a protocol list change, and the review had no fix round left.

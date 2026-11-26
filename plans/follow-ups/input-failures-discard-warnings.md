@@ -1,0 +1,37 @@
+# Input failures discard collected warnings
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from finding 163 of round 2 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `CatalogueBuild::classify_changes` at `crates/mokly-cli/src/build_changes.rs:45`, its caller at `crates/mokly-cli/src/build_prepare.rs:87`, `Changes::classify_base` at `crates/mokly-compare/src/base_classification.rs:46`, `warning_records` at `crates/mokly-cli/src/build_output.rs:85`, `Builder::prepare` at `crates/mokly-cli/src/static_build.rs:178`, and the input capture at `crates/mokly-cli/src/build_prepare.rs:54`.
+- **Reason:** The recommended option changes the failure path of every build phase, and the build already stops safely, so the fix can wait.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and Git ignores.
+  - **Input check:** The check of a static build that reads its inputs again before it writes the output. A changed input fails the build with `export-invalid` and "Build again".
+- **Background:**
+  - The "Reporting" section of `docs/protocol/mokly-build-warnings.md` says: "Configuration, registry, and render warnings discovered before a failure print before the failure diagnostic."
+  - `build_prepare.rs:86` starts one list with the render warnings, and `classify_changes` adds to it. Since 2026-11-26, `classify_base` adds the `ignored-module` warnings of the head to the list before it prepares the base.
+  - When base preparation reports a changed input, `classify_changes` returns `BuildError::Static` at `build_changes.rs:49`. When the input check on the failure path fails, it returns `BuildError::Static` at line 56. That error holds only the input failure, and the `?` at `build_prepare.rs:87` drops the list.
+  - `warning_records` gives the warnings of a `Strict`, `Comparison`, `Catalogue`, or `Rendering` error, and nothing for another error.
+  - `BuildError::Comparison` already keeps the list, at `build_changes.rs:65`. The test at `crates/mokly-cli/src/_tests_/changes_checkpoint_tests.rs:97` checks the changed-input error alone.
+  - Three older exits on `origin/main` drop warnings in the same way:
+    - `Builder::prepare` returns `BuildError::Static` when `transaction.protect` fails at `static_build.rs:178`. Line 179 prints the render warnings only after that call, so all warnings are lost.
+    - `warning_records` does not read the `primary` error of `BuildError::Shutdown`, which a failed render shutdown adds.
+    - `warning_records` does not read the `primary` error of `BuildError::Cleanup`, which a failed output cleanup adds.
+  - Also on `origin/main`, outside the scope of the review, the input capture at `build_prepare.rs:54` returns `BuildError::Static` and drops the catalogue warnings in `prepared.warnings`.
+- **Problem:** Base preparation can report a changed input, or the input check on the failure path can fail. The build then returns an error without the warnings that it already collected, and the reporter has no record of them.
+- **Impact if no action:** The failed attempt prints the input error and loses the warnings about other problems. An example is an ignored file that a later base cannot load. The author learns of such a problem only on a later run.
+- **Root question:** How does a failed build or publish attempt print every warning that it collected before its failure diagnostic, whatever error ends it?
+- **Options:**
+  - **A.** Attach the collected warnings to the static errors that `classify_changes` returns. Move `warnings.extend(changes_diagnostics::warnings(&source))` above both exits. Extend the input rejection test to assert the warning and the typed error of both exits. Effort: Small.
+  - **B.** Carry the warnings in one build attempt result that pairs them with the outcome. Every preparation failure then uses the same reporting path, also the protect failure, `Shutdown`, `Cleanup`, and the input capture. Effort: Medium.
+  - **C.** Keep one warning scope for each build or publish run, as `AttemptWarnings` in `crates/mokly-cli/src/serve_warnings.rs` does for each Serve attempt. Each producer adds its warnings to the scope, and the scope prints them before the failure diagnostic. Effort: Large.
+- **Left out:** Printing each warning at once during the comparison. It breaks the current warning order and the cancellation rules.
+- **Wider fix:** B. A typed attempt result cannot drop the diagnostics of the attempt when the error category changes.
+- **Previous examples:** `BuildError::Comparison` and `BuildError::Rendering` already carry their warnings. Serve keeps the warnings of each attempt in `AttemptWarnings`.
+- **Recommendation:** B, changed from A by the finding check. It closes the two new exits and the three older exits with one reporting path.
+- **Action:** fix after merge, apply B, because B also closes the three older exits on `origin/main`, and the next run prints the warning.

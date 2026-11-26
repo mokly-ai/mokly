@@ -43,5 +43,7 @@
 - **Previous examples:**
   - Commit `c6d2fffa4` of #385 added head stylesheet reuse for the base. Commit `940ddd742` of #384 made changes to resolver inputs invalidate the stylesheet cache. Both merged on 2026-11-20.
   - The render environment in `crates/mokly-render/src/render_environment.rs` already digests a typed `Settings` value with the fields that a render reads.
+- **Related:**
+  - [source-layout-rust-types.md](./source-layout-rust-types.md): same code. It gives the layouts one Rust type and one ordered list for each side. The typed key derives its layout identity from that list, so do that item first, or do both together.
 - **Recommendation:** B. It keeps unread settings out of the key, so a configuration change that the compiler ignores keeps head reuse.
 - **Action:** fix after merge, apply B, because the typed key needs a review of every setting that the compiler reads, beyond this branch.

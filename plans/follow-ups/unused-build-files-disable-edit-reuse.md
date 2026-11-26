@@ -1,0 +1,51 @@
+# Unused build files disable Serve edit reuse
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from finding 133 of round 2 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `WorkspaceSources.source` at `packages/mokly/src/sidecar/workspace-sources.ts:62`, `WorkspaceLookups.candidate`, `nativeTarget`, and `marked` at `packages/mokly/src/sidecar/workspace-lookups.ts:109`, `:137`, and `:193`, `workspaceTarget` at `packages/mokly/src/sidecar/workspace-imports.ts:195`, `markedFileEvidence` at `packages/mokly/src/sidecar/marked-file-evidence.ts:10`, `readMetadata` and `markedCurrent` at `packages/mokly/src/sidecar/physical-input-reader.ts:41` and `:205`, the entry kind filter of `reuse` at `packages/mokly/src/sidecar/compiled.ts:150`, `ReuseEvidence::serve_edit` at `crates/mokly-sidecar/src/compiled.rs:92`, and the "Private Folder Files" section of `docs/protocol/mokly-sidecar-folder-reuse.md`.
+- **Reason:** The recommended option changes the digest rule of 2026-11-19 for the marked edit evidence, and no user decision covers that change.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Serve edit marker:** The `uncaptured: "serveEdit"` mark on the reuse evidence of a Serve edit compile. With it, a later edit can reuse the bundle while the live checks of the bundle pass.
+  - **Marked edit evidence:** The private table of files in the reuse evidence of a compile with the Serve edit marker. A later edit compares each entry with the disk.
+  - **Metadata reader:** `readMetadata` in `packages/mokly/src/sidecar/physical-input-reader.ts`. It reads and hashes a whole file, and it fails for a file above 1 MiB.
+  - **Path-only entry:** A `filePath` entry of the reuse evidence. It records that a regular file exists at a real path, without its bytes.
+  - **Source layout:** A `moduleResolution.sourcePackages` entry, or the layout that Mokly detects, that maps a build folder of a workspace package to its source folder.
+- **Background:**
+  - After its first state, Serve compiles each head edit in the `serveEdit` capture mode. Such a compile records no full capture. It keeps the Serve edit marker and the marked edit evidence. The "Capture Modes" section of `docs/protocol/mokly-sidecar-recipes.md` gives the mode.
+  - The "Private Folder Files" section of `docs/protocol/mokly-sidecar-folder-reuse.md` says: "Each entry records a present file with its digest, an absent file, or a link with its target." This rule comes from the decision of the performance orchestrator of 2026-11-19 in that section. This item calls it the digest rule.
+  - The "Source And Dependency Files" section of `docs/protocol/mokly-sidecar-modules.md` adds the probes of each tried source layout to the same evidence. It also adds each `package.json` that the package root search reads.
+  - A source layout can select a small source file in place of a built export. `WorkspaceSources.source` then records the location of the build file through `buildTarget`, because a file that appears or goes at that path can change the selection. `buildTarget` and `candidate` make a path-only entry in the capture. `workspaceTarget` records each declared export target through `nativeTarget` in the same way.
+  - `WorkspaceLookups.marked` gives every observed path to `markedFileEvidence`. That function calls `PhysicalInputs.file`, which reads the whole file through the metadata reader and stores its digest. A file above 1 MiB fails the read, and the compile loses the marker.
+  - Three copies of one entry kind rule accept only `file`, `absent`, and `link` entries in marked edit evidence. The copies are `markedCurrent` in the sidecar, the filter of `reuse` in `compiled.ts`, and `ReuseEvidence::serve_edit` in the core. The copy in `compiled.ts` is on `origin/main`. Both reuse readers already check `filePath` entries of full captures.
+  - A probe of the review on 2026-11-26: an unused `esm/value.js` of 1.1 MiB removed the marker, though the bundle used `source/value.ts` and no input changed. A one-line build kept the marker. The reuse test at `tests/sidecar_workspace_override_reuse.test.ts:33` uses a one-line build, so it misses the limit.
+  - The same read removes the marker in three more cases:
+    - A linked export file above 1 MiB, with no `sourcePackages` entry. `workspaceTarget` records the declared target through `nativeTarget`. This case came with commit `7da557d5d` of the same branch.
+    - A used source file above 1 MiB under the detected layout. `candidate` records it. This case is on `origin/main`.
+    - A `package.json` above 1 MiB that the package root search reads. The fix of 2026-11-26 in commit `d22a5fe82` records each such manifest. The bytes of a manifest decide the package name, so every option keeps its digest. Such a manifest still removes the marker under the byte bound of the "Metadata Bounds" section of `docs/protocol/mokly-sidecar-folder-reuse.md`.
+- **Problem:** The marked edit evidence reads and hashes each file that a workspace lookup observes, also when only its location can change the selection. A build file above 1 MiB then removes the marker, though the bundle does not use the file.
+- **Impact if no action:** Warm Serve edits compile the bundle again when they could reuse it. Smaller unused builds also add reads and hashing to each edit reuse check.
+- **Root question:** How should Serve verify a workspace target without reading bytes that cannot affect selection?
+- **Options:**
+  - **A.** Allow the path-only entry for workspace targets in the marked edit evidence. Keep the digests of manifests, and keep absent files and links. Update the entry kind rule in the sidecar and in the core. Cover an unused build above the metadata limit. Effort: Medium.
+  - **B.** Verify the identity of a workspace target in the live checks, beside the folder membership. This adds a path observation to the result that the core and the sidecar each check. Effort: Large.
+  - **C.** Use one typed observation model for full and edit capture. The lookup states whether it used the bytes or only the path, and both modes keep that difference. Effort: Large.
+  - **D.** In `WorkspaceLookups.marked`, keep the kind of entry that the capture recorded. Effort: Medium.
+    - Build files, native targets, and source candidates stay path-only entries. Manifests and layout files keep their digests.
+    - Accept `filePath` in all three copies of the entry kind rule. Give the two TypeScript copies one shared check.
+    - Change the digest rule of the "Private Folder Files" section and its decision text.
+    - Test a build above 1 MiB in three cases: unused, kept by a `false` entry, and behind a linked `esm` folder.
+    - D also covers the linked export file and the used source file above 1 MiB.
+- **Left out:**
+  - A higher metadata limit. It keeps the read cost.
+  - No observation of the build file. A file that appears at that path could then change the selection without notice.
+- **Wider fix:** C. The record type tells content checks from path checks in both capture modes.
+- **Previous examples:** Commit `35e271b4e` of the same branch, on 2026-11-26, restored edit reuse where speculative workspace lookups sent folders through the metadata reader.
+- **Related:**
+  - [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md): shared wider fix. Its option E moves the sidecar and the core to one shared path-and-link observation model, as option C here does.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. That work adds lookups to `WorkspaceLookups`. Do this item first, or record each new check of a file location as a path-only entry.
+- **Recommendation:** D, changed from A by the finding check. It keeps the path-only entry that both reuse readers already check, and it covers every lookup that records only a location. C best protects future lookup paths.
+- **Action:** ask the user, because A and D change the digest rule of 2026-11-19 in the "Private Folder Files" section, and no user decision covers it.
