@@ -9,7 +9,7 @@ The CI workflow runs the [cloud suites](./ci-verification.md#cloud-suites) in
 cloud jobs on GitHub-hosted `ubuntu-24.04`, under the
 [runner rule](./ci-workflow.md#job-execution).
 [Required CI](./ci-workflow.md#required-ci) requires
-each partition, the image check and the provider-plan result. Linux builds
+each partition, each image job and the provider-plan result. Linux builds
 and tests every crate. Each job that
 builds the `mkc-` crates provides `libpq`, and each job that runs their
 database tests provides Postgres. The native jobs on macOS and Windows leave
@@ -29,8 +29,7 @@ partitions pass their shard to `cloud-app` and `cloud-mockups`, as the
 [cloud shards](./cloud/repository-verification.md#app-shards) define. One
 site partition runs the whole `cloud-site` suite. Only
 partitions that run database tests start Postgres, and only partitions that
-run a browser install Chromium. The image job runs
-`cloud-infrastructure`. Each partition uses the shared `cargo xtask check
+run a browser install Chromium. Each partition uses the shared `cargo xtask check
 --suite` entry point. No workflow runs the removed cloud stage runner.
 
 Cloud workers use Node 24.21.0 and npm 11.21.0. Testboxes also retain Node
@@ -41,6 +40,16 @@ runs a suite. It clears the Electron skip setting only for a desktop worker.
 Foundation can retain the old repository during cutover with
 `MKC_LEGACY_REPOSITORY_ID`. Its trust pairs each repository name with its own
 numeric ID and main workflow refs. An empty value trusts only this repository.
+
+## Image Jobs
+
+Three image jobs run the three
+[infrastructure shards](./cloud/repository-verification.md#infrastructure-shards)
+of `cloud-infrastructure` at the same time: Workload image checks (tests),
+(API and catalogue), and (app). Only the tests job installs the npm
+dependencies and Postgres. Each job starts its own layered BuildKit. One job
+for the whole suite was rejected, because it runs the parts one after another
+and sets the CI wall clock.
 
 ## Cloud Testbox Tools
 

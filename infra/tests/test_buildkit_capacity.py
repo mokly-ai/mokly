@@ -87,6 +87,30 @@ class BuildkitCapacityTests(unittest.TestCase):
             ):
                 self.assertIn(f"BuildKit capacity ({phase})", result.stdout)
 
+    def test_image_gate_builds_only_the_selected_images_in_order(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            environment = self.fixture(temporary)
+            result = subprocess.run(
+                ["/bin/bash", "infra/scripts/check-image.sh", "app", "api"], cwd=ROOT,
+                env=environment, capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                Path(environment["MKC_TEST_BUILD_LOG"]).read_text().splitlines(),
+                ["build-app.sh", "build-api.sh"])
+            self.assertIn("BuildKit capacity (image gate entry)", result.stdout)
+            self.assertNotIn("catalogue image", result.stdout)
+
+    def test_image_gate_rejects_an_unknown_image_before_any_build(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            environment = self.fixture(temporary)
+            result = subprocess.run(
+                ["/bin/bash", "infra/scripts/check-image.sh", "api", "worker"], cwd=ROOT,
+                env=environment, capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn("Unknown workload image: worker", result.stderr)
+            self.assertFalse(Path(environment["MKC_TEST_BUILD_LOG"]).exists())
+            self.assertNotIn("BuildKit capacity", result.stdout)
+
     def test_image_gate_reports_capacity_at_the_failure_boundary(self):
         with tempfile.TemporaryDirectory() as temporary:
             environment = self.fixture(temporary, failed_build="build-api.sh")

@@ -1,4 +1,4 @@
-//! Mockup and site shard plans.
+//! Mockup, site, and infrastructure shard plans.
 
 use std::str::FromStr;
 
@@ -115,6 +115,42 @@ fn site_shards_split_the_browser_suite_and_check_units_and_links_once() {
                 "npm run site:links",
                 "npm run site:browser",
             ]
+        );
+    }
+}
+
+#[test]
+fn infrastructure_shards_split_the_tests_the_rust_images_and_the_app_image() {
+    let tests = [
+        "node xtask/scripts/require-postgres-tools.mjs",
+        "python3 infra/scripts/run-infrastructure-tests.py contracts",
+        "python3 infra/scripts/run-infrastructure-tests.py storage",
+    ];
+    let rust_images = "bash infra/scripts/check-image.sh api catalogue";
+    let app_image = "bash infra/scripts/check-image.sh app";
+    let suite = VerificationSuite::CloudInfrastructure;
+    assert_eq!(displays(suite, Some("1/3")), tests);
+    assert_eq!(displays(suite, Some("2/3")), [rust_images]);
+    assert_eq!(displays(suite, Some("3/3")), [app_image]);
+    let mut first_of_two = tests.to_vec();
+    first_of_two.push(app_image);
+    assert_eq!(displays(suite, Some("1/2")), first_of_two);
+    assert_eq!(displays(suite, Some("2/2")), [rust_images]);
+    assert!(displays(suite, Some("4/4")).is_empty());
+}
+
+#[test]
+fn one_infrastructure_shard_and_no_shard_run_the_complete_suite() {
+    let complete = [
+        "node xtask/scripts/require-postgres-tools.mjs",
+        "python3 infra/scripts/run-infrastructure-tests.py contracts",
+        "python3 infra/scripts/run-infrastructure-tests.py storage",
+        "bash infra/scripts/check-image.sh",
+    ];
+    for shard in [None, Some("1/1")] {
+        assert_eq!(
+            displays(VerificationSuite::CloudInfrastructure, shard),
+            complete
         );
     }
 }
