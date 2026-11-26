@@ -43,7 +43,12 @@ with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
 the oldest Git with a recorded working comparison. Debian bookworm and
 bookworm-backports supply only Git 2.39.5, which exits 129 on `-Z`. So the Dockerfile builds the pinned Git source release from kernel.org,
 with its checked-in SHA-256 from kernel.org's `sha256sums.asc`, into
-`/usr/local`, and then removes the sources and the build packages.
+`/usr/local`, and then removes the sources and the build packages. A process
+that starts `git` by name gets that build from `/usr/local/bin`. The base
+image's Debian Git 2.39.5 stays at `/usr/bin/git`. The purge with
+`--auto-remove` also removes the base image's own compiler packages, so the
+image has no `gcc`, `g++`, `make` or `ld`. A dependency that compiles a native
+addon during `npm ci` then fails.
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
@@ -117,9 +122,10 @@ prove that a value set only by the template reaches the process. It also checks 
 environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer. It runs an offline `npm ci` of an empty
 project, so an npm install that mixes files of two releases fails the probe.
-It requires Git 2.43 or newer and runs `git cat-file --batch --filters -Z` on
-empty input in a new repository, so a Git that cannot read a comparison base
-fails the probe.
+It requires that the `git` on the process `PATH` reports 2.43 or newer and
+accepts `git cat-file --batch --filters -Z` on empty input in a new
+repository. It reads no file and runs no comparison, so a pass does not prove
+that a comparison works.
 The E2B team key stays in the operator process.
 
 Set the candidate build reference from the generated configuration:
@@ -344,9 +350,12 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   In a sandbox of it, `git` was `/usr/local/bin/git` 2.56.1, an HTTPS
   `git ls-remote` worked, `git cat-file --batch --filters -Z` exited 0,
   `npm ci` worked, and the `--base origin/main` build of the same pull request
-  gave `changesStatus: "ready"`. The live probe from `main`, with its `npm ci`
+  gave `changesStatus: "ready"`. A container check of the pinned base on
+  2026-11-26 found that the Dockerfile's purge leaves no `gcc`, `g++`, `make`
+  or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
   check, passed on 2026-11-26 with the build reference. That run came before
-  the probe's Git check.
+  the probe's Git check, and its UTC time and assertion commit are not
+  recorded.
 
 ### Environments
 

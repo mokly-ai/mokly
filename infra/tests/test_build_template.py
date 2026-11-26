@@ -62,9 +62,9 @@ class BuildTemplateTests(unittest.TestCase):
         scratch = tempfile.TemporaryDirectory()
         self.addCleanup(scratch.cleanup)
         self.scratch = Path(scratch.name)
-        (self.scratch / "project").mkdir()
-        npm_project = MagicMock()
-        npm_project.__enter__.return_value = str(self.scratch / "project")
+        # Stands in for the sandbox's /workspace: a folder outside every Git repository.
+        self.workspace = self.scratch / "workspace"
+        self.workspace.mkdir()
         patches = (
             patch.dict(os.environ, self.environment, clear=True),
             patch.object(ASSERTION.os, "getuid", return_value=1000),
@@ -78,13 +78,20 @@ class BuildTemplateTests(unittest.TestCase):
             patch.object(Path, "exists", return_value=False),
             patch.object(Path, "is_symlink", return_value=False),
             patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
-            patch.object(ASSERTION.tempfile, "TemporaryDirectory", return_value=npm_project),
+            patch.object(ASSERTION.tempfile, "TemporaryDirectory", side_effect=self.new_directory),
             patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
             patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
         )
         self.mocks = [item.start() for item in patches]
         for item in patches:
             self.addCleanup(item.stop)
+
+    def new_directory(self, **kwargs):
+        """Give each probe directory its own new folder, as a fresh sandbox does."""
+        directory = Path(tempfile.mkdtemp(dir=self.workspace))
+        context = MagicMock()
+        context.__enter__.return_value = str(directory)
+        return context
 
     def check_probe_call(self, kwargs):
         self.assertNotIn("env", kwargs)
@@ -133,8 +140,12 @@ class BuildTemplateTests(unittest.TestCase):
     def run_with_host_git(self, argv, **kwargs):
         self.check_probe_call(kwargs)
         self.assertIsNotNone(HOST_GIT, "this test needs git on PATH")
+        # The probe starts in /workspace, so a Git call without its own directory runs there,
+        # and the search stops at the scratch folder instead of finding the Mokly checkout.
         environment = {"PATH": HOST_PATH, "HOME": str(self.scratch),
+                       "GIT_CEILING_DIRECTORIES": str(self.scratch),
                        "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull}
+        kwargs["cwd"] = kwargs.get("cwd") or self.workspace
         return HOST_RUN([HOST_GIT, *argv[1:]], env=environment, **kwargs)
 
     def test_complete_template_passes_with_one_added_entry(self):

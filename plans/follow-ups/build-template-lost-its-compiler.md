@@ -1,0 +1,38 @@
+# The v5 build template has no compiler
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-give-the-template-a-git-that-9abx`, a new problem of the round 1 check of review finding 2.
+- **Location:** `infra/e2b/build/e2b.Dockerfile:23` to line 24, the `apt-get purge -y --auto-remove` of the Git build packages; `docs/ops/build-template.md`, sections "Release Prerequisites" and "Live Evidence".
+- **Reason:** The fix needs a new E2B template release, a credentialed probe, and a change of the build reference of main-preview, which the branch that found it was told not to do.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Build template:** the E2B sandbox image, `mokly-build-v<N>`, in which Mokly Cloud runs the checkout, the install, and `mokly publish` of a customer repository. `infra/e2b/build/e2b.Dockerfile` defines it.
+  - **Build reference:** `TEMPLATE_ID:BUILD_ID`, which starts exactly one template build. The environment app-config names it under `builds.template`.
+  - **Native addon:** an npm dependency that compiles C or C++ code during install, through `node-gyp`, when no prebuilt binary fits.
+- **Background:**
+  - The template's base image is `e2bdev/base`, pinned by digest. It ships Debian bookworm's `build-essential`, `gcc`, `g++`, `make`, and `binutils`.
+  - Release `mokly-build-v5` (build reference `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8`, built 2026-11-26) builds Git 2.56.1 from source. Before the build it installs `gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev`. After the build it runs `apt-get purge -y --auto-remove gcc libc6-dev make libcurl4-openssl-dev libexpat1-dev zlib1g-dev`.
+  - On 2026-11-26, a check ran the Dockerfile's apt commands in a throwaway container of the pinned base. Afterwards `cc`, `gcc`, `g++`, `make`, and `ld` were missing. A simulation of the purge listed 171 removed packages. `build-essential` depends on `gcc` and `make`, so the purge removes it and `--auto-remove` removes the rest.
+  - `mokly-build-v3` (build reference `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705`) purged nothing, so it kept the compiler. v3 cannot compare, because its Git 2.39.5 rejects `git cat-file --batch --filters -Z`.
+  - Main-preview builds use the v5 reference since 2026-11-26. Production has no builds.
+  - The template contract in `docs/protocol/cloud/cloud-build-runner.md`, section "Template", lists `/bin/sh`, coreutils, Python 3, Git 2.43 or newer, curl, CA certificates, and Node with npm and corepack. It names no compiler.
+  - The template probe, `infra/e2b/tests/assert_build_template.py`, checks no compiler.
+  - The Install step of the runner runs the repository's own `npm ci` or the lockfile's package manager in the sandbox.
+- **Problem:** v5 lost the compiler that v3 had. A customer repository with a native addon that has no prebuilt binary for Linux x64 glibc fails at Install.
+- **Impact if no action:** Such a repository gets no cloud build on main-preview, and later on production, while the same repository built on v3. The failure shows as an install error from `node-gyp`, not as a template problem.
+- **Root question:** Should the build template supply a C and C++ toolchain to customer installs?
+- **Options:**
+  - **A.** Publish a new release whose Dockerfile purges only the packages that the Git build added and the base did not have, for example by recording `apt-mark showmanual` before the install, or by building Git in a separate Docker stage and copying `/usr/local` into the final image. Add a probe check that `cc --version` and `make --version` run. Record the toolchain in the "Template" section of the runner protocol. Effort: Medium.
+  - **B.** A without the probe check and without the protocol line. The compiler comes back, but nothing keeps it. Effort: Small.
+  - **C.** Keep v5 as it is, and state in the runner protocol and in the CI guide that cloud builds have no compiler, so a repository with a native addon must ship prebuilt binaries. Effort: Small.
+- **Left out:**
+  - Reinstall only `build-essential` after the purge. It is A's result with a less exact rule, and a later edit of the purge list can remove it again.
+  - Roll main-preview back to v3. It restores the compiler but loses every comparison.
+- **Wider fix:** A. A multi-stage build keeps every build-only package out of the final image by construction, and the probe check and the protocol line keep the toolchain a requirement.
+- **Previous examples:** `mokly-build-v2` broke npm by unpacking Node over the base's older npm, and its probe passed. The fix added a real `npm ci` to the probe. `plans/follow-ups/build-template-keeps-a-second-git.md` holds a second case of the base's own tools that the template changes.
+- **Related:** `plans/follow-ups/build-template-keeps-a-second-git.md`. Both fixes need a new template release, so one release can carry both.
+- **Recommendation:** A. It restores what v3 had, keeps it as a stated requirement, and the multi-stage build also prevents the next case.
+- **Action:** ask the user, because A changes a requirement of the runner protocol, adds a probe check, and needs a credentialed template release.
