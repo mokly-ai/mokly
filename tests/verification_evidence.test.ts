@@ -50,8 +50,27 @@ test("aggregate accepts every viewer and browser shard per runtime", () => {
         viewer: 3,
         browser: 4,
       }),
-    { message: "missing or extra CI evidence: expected 14 reports" },
+    { message: "missing or extra CI evidence: expected 10 reports" },
   );
+});
+
+test("the release profile accepts browser evidence on Node 22.15.0 only", () => {
+  const release = ["node-22.15.0", "node-24"];
+  assert.throws(
+    () =>
+      validateCiReports(
+        ciReports(release, TOTALS, release),
+        COMMIT,
+        release,
+        TOTALS,
+      ),
+    { message: "missing or extra CI evidence: expected 8 reports" },
+  );
+  const moved = structuredClone(ciReports(release, TOTALS));
+  shardsOf(moved, "browser")[0]!.runtime = "node-24";
+  assert.throws(() => validateCiReports(moved, COMMIT, release, TOTALS), {
+    message: "unexpected CI evidence group",
+  });
 });
 
 test("viewer evidence rejects incomplete inventories and unsuccessful test runs", () => {
@@ -150,16 +169,6 @@ test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes
     change(shardsOf(reports, "browser"));
     assert.throws(() => validate(reports));
   }
-});
-
-test("aggregate rejects a viewer and browser Node version mismatch", () => {
-  const runtimes = ["node-22.15.0", "node-24"];
-  const reports = structuredClone(ciReports(runtimes, TOTALS));
-  for (const report of shardsOf(reports, "browser"))
-    if (report.runtime === "node-24") report.nodeVersion = "24.22.0";
-  assert.throws(() => validateCiReports(reports, COMMIT, runtimes, TOTALS), {
-    message: "suites used different Node versions",
-  });
 });
 
 test("aggregate names the failing browser runtime and shard detail", () => {
