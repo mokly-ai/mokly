@@ -38,7 +38,11 @@ arm64 images. The dated tag names the one image that the digest fixes.
 
 The Dockerfile upgrades the installed Debian packages. Then it installs
 `build-essential`, CA certificates, coreutils, curl, Git, Python 3 and
-`xz-utils` from Debian. It installs the exact `.nvmrc` Node tarball with its
+`xz-utils` from Debian. The installed packages stay in the image.
+`build-essential` brings in `gcc`, `g++`, `make`, `ld` and the C library
+development headers through its dependencies.
+
+The Dockerfile installs the exact `.nvmrc` Node tarball with its
 checked-in SHA-256 from Node's release `SHASUMS256.txt`. The tarball supplies
 npm and corepack, and the Dockerfile enables corepack. The base has no Node,
 npm, Python or Git of its own, so the image holds one copy of each. E2B's
@@ -50,9 +54,11 @@ binary has no musl build and no JavaScript fallback.
 The image must also keep Git 2.43 or newer. The CLI reads a comparison base
 with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
 the oldest Git with a recorded working comparison. Debian trixie's Git 2.47.3
-meets that floor, and Debian's security updates cover it. The image must keep
-a C compiler, a C++ compiler and `make`, so that a dependency can compile a
-native addon during `npm ci`.
+meets that floor, and Debian's security updates cover it. The package installs
+`/usr/bin/git`, which supports Perl-compatible patterns in `git grep -P`.
+The image must keep a C compiler, a C++ compiler and `make`, so that a dependency
+can compile a native addon during `npm ci`. For example, an install script can
+call `node-gyp`.
 
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
@@ -233,8 +239,14 @@ without GitHub and PR enablement. Keep `scaling.minReplicas` at least two.
 Tune retention through the checked-in `maintenance.buildRetentionSeconds`
 chart value, default thirty days. Only prune receives that setting.
 
-The test repository must use Mokly 0.18.0 or later with a `mokly.config.json`
-configuration, and the project's config path must name that file.
+The test repository is the private
+[`mokly-ai/mokly-build-smoke`](https://github.com/mokly-ai/mokly-build-smoke).
+It holds one HTML screen with one variant, the published `@mokly/mokly` and a
+tracked `package-lock.json`, so a build runs `npm ci` and the repository's own
+`mokly` binary. Install each environment's GitHub App on it, and create the
+environment's project from it. Any test repository must use Mokly 0.18.0 or
+later with a `mokly.config.json` configuration, and the project's config path
+must name that file.
 Its install must keep optional dependencies, which hold the
 CLI's native binary. It publishes from a clean checkout. Ignore
 install files and every build output directory. A dirty checkout fails before
@@ -258,7 +270,8 @@ migration and maintenance must have no E2B key mount.
 The public API health route checks process, revision, database and migrations.
 It does not check E2B, the template or worker progress. Build availability
 means configuration and repository access are present, not provider readiness.
-On first enablement, request a build against a real installed test repository.
+On first enablement, request a build against the test repository with the
+environment's App installed.
 Require a published build, its ready publication on the catalogue origin,
 a completed GitHub check and removal of the attempt sandbox. Record the
 revision, build and publication IDs, check result, timings and UTC time.
@@ -382,35 +395,58 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
   check, passed on 2026-11-26 with the build reference. That run came before
   the probe's Git check, and its UTC time and assertion commit are not
-  recorded. The live probe from commit `0ad58e724` failed against v5 on
+  recorded. It is superseded by `mokly-build-v6`, because it has no C
+  and C++ toolchain and its Git has no PCRE2: `git grep -P` with a real Perl pattern
+  exits 128. A rollback to it breaks each install that compiles a native addon.
+
+  The live probe from commit `0ad58e724` failed against v5 on
   2026-11-26. Its script, run by hand on v5, printed
   `FAIL build template: python3 has multiple copies on PATH`. Beside Debian's
   Python and Git, v5 also holds the base's own Python and the Git source build.
+
 - `mokly-build-v6`, build reference
-  `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` (template ID
-  `mm5vcm4xv7inkey7ad9p`, build ID `b63ce806-b4a9-4567-a406-89300f259d8b`),
-  E2B team `firna`. It was built 2026-11-26T12:43:06Z, in 1m10s, with
-  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`, from the
-  Dockerfile at `0ad58e724`. Node 24.21.0, checksum
+  `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c` (template ID
+  `mm5vcm4xv7inkey7ad9p`, build ID `e58c1440-c5e2-406d-97a3-8d312416c61c`),
+  E2B team `firna`. It was built 2026-11-26T12:15Z with `e2b@2.64.0` through
+  `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `1ce3ed0be` with three changes: `libpcre2-dev` and `libpcre2-8-0` in the
+  Git build packages, `USE_LIBPCRE2=1` in the Git build, and no
+  `apt-get purge -y --auto-remove` step. Git 2.56.1, checksum
+  `f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f`. Node
+  24.21.0, checksum
   `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
-  2 vCPU, 4096 MiB, base
-  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
-  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
-  gcc 14.2.0 and GNU Make 4.4.1, and `git` was `/usr/bin/git` 2.47.3. Each of
-  `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
-  `PATH`. The root filesystem used 746 MiB, and `gh` was absent. An HTTPS
-  `git ls-remote` worked. In the smoke repository `mokly-ai/mokly-build-smoke`
-  at `d5fe94d`, with `@mokly/mokly` 0.21.0, `npm ci` succeeded and
-  `mokly build --strict` built the catalogue. After a one-commit change,
-  `mokly build --config mokly.config.json --strict --base origin/main` gave
-  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
-  source, `npm_config_build_from_source=true npm install utf-8-validate@6.0.5`,
-  compiled its native addon. `git grep -P` with a lookahead pattern worked,
-  and `git cat-file --batch --filters -Z` exited 0 in the repository. These
-  checks ran from 2026-11-26T12:43:44Z to 12:44:08Z. The live probe from
-  commit `0ad58e724`, with its Git, compiler and one-copy checks, printed
-  `PASS live build template: assertion completed and candidate destroyed` at
-  2026-11-26T12:43:32Z with the build reference.
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, `gcc`, `g++`, `make` and `pkg-config` were on `PATH`, a
+  C file compiled, and
+  `npm install --build-from-source bufferutil@4.0.9` built its `.node` file.
+  `git grep -P` with a Perl lookahead worked,
+  `git cat-file --batch --filters -Z` exited 0, `npm ci` worked, and the
+  `--base origin/main` build of the smoke pull request gave
+  `changesStatus: "ready"`. The live probe from `main` at `1ce3ed0be`, with
+  its `npm ci` and Git checks, passed on 2026-11-26 with the build reference.
+  Its UTC time is not recorded.
+
+  On 2026-11-26 at 15:27 UTC, the current assertion script run by hand in a
+  sandbox of this v6 build printed `FAIL build template: python3 has multiple copies on PATH`.
+
+- E2B team `firna` built the Debian candidate
+  `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` on
+  2026-11-26T12:43:06Z in 1m10s from the Dockerfile at `0ad58e724` on the pinned
+  trixie base above, with v6's SDK, build script, Node version and checksum,
+  2 vCPU and 4096 MiB. Reusing `mokly-build-v6` gave the candidate v6's
+  template ID, so that bare ID starts this unreleased build, which `mokly-build-v7`
+  supersedes. The `0ad58e724` probe, with Git, compiler and one-copy `PATH` checks
+  for `node`, `npm`, `npx`, `corepack`, `python3` and `git`, printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  this reference at 2026-11-26T12:43:32Z, and sandbox checks from 12:43:44Z to
+  12:44:08Z confirmed Debian 13, glibc 2.41, Python 3.13.5, gcc 14.2.0, GNU Make
+  4.4.1, `/usr/bin/git` 2.47.3, 746 MiB of root filesystem use, the absence of
+  `gh`, HTTPS `git ls-remote`, `npm ci` and a strict catalogue build in
+  `mokly-ai/mokly-build-smoke` at `d5fe94d` with `@mokly/mokly` 0.21.0,
+  `changesStatus: "ready"` in a strict comparison against `origin/main` after
+  one commit with base `d5fe94d`, a forced source build of `utf-8-validate@6.0.5`,
+  a `git grep -P` lookahead match, and exit 0 from `git cat-file --batch --filters -Z`.
 
 ### Environments
 
@@ -421,6 +457,9 @@ exited 1 with the broken-npm error of `mokly-build-v2`. Later that day, on
 `mokly-build-v3`, main-preview pull request builds published, but their check
 said "Catalogue published." instead of "Catalogue ready to review.", because
 the published index had `changesStatus: "unavailable"`. On 2026-11-26,
-main-preview builds moved to the `mokly-build-v5` build reference. No complete
-build proof is recorded yet. Record the first main-preview and production
-build proofs here.
+main-preview builds moved to the `mokly-build-v5` build reference. Later that
+day they moved to the `mokly-build-v6` build reference, through the Deploy
+run with ID 45818241716. On `mokly-build-v6`, the test repository's pull request build at
+`c11aa3fe8` published at 2026-11-26T12:46:31Z with the check "Catalogue ready
+to review." (2 changed). No Re-run is recorded yet, so no complete build proof
+is recorded. Record the first main-preview and production build proofs here.

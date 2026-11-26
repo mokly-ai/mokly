@@ -25,6 +25,6 @@
 - **Left out:** Pinning by a tag, because E2B tags can move.
 - **Wider fix:** B.
 - **Previous examples:** Mokly Cloud deploys workload images by immutable digest (`docs/ops/deploy.md:28`).
-- **Related:** `build-deny-rules-e2b-rejects.md` also adds a validation of the builds group; decide them together.
+- **Related:** `build-deny-rules-e2b-rejects.md` also adds a validation of the builds group; decide them together. Option F of `build-template-rollback-can-pick-v5.md` adds a list of qualified build references to the same `builds.template` check, so decide that option with this item.
 - **Recommendation:** B. It blocks a bare ID wherever it comes from.
 - **Action:** ask the user, because B adds a new configuration rejection.

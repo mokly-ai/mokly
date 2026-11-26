@@ -3,8 +3,8 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from the branch `calummoore/builds-give-the-template-a-git-that-9abx`, review finding 2 of round 1.
-- **Location:** `infra/e2b/build/e2b.Dockerfile:8` to line 10, the first `apt-get install` that names `git`; `infra/e2b/build/e2b.Dockerfile:11` to line 25, the Git source build; `docs/ops/build-template.md`, section "Release Prerequisites".
-- **Reason:** Every fix needs a new E2B template release, and the branch that found it had to keep the Dockerfile byte for byte the one of release `mokly-build-v5`.
+- **Location:** `infra/e2b/build/e2b.Dockerfile:8` to line 10, the first `apt-get install` that names `git`; `infra/e2b/build/e2b.Dockerfile:11` to line 23, the Git source build; `docs/ops/build-template.md`, section "Release Prerequisites".
+- **Reason:** Every fix needs a new E2B template release, and release `mokly-build-v6` shipped only the compiler and PCRE2 fixes.
 
 - **Source:** Review.
 - **Category:** Code structure.
@@ -13,11 +13,12 @@
   - **Debian Git:** the Git 2.39.5 of Debian bookworm's `git` package, at `/usr/bin/git`.
 - **Background:**
   - The Mokly CLI reads a comparison base with `git cat-file --batch --filters -Z`. Git 2.42 added `-Z`, and Git 2.41 added `--attr-source`, which the same request passes. Debian Git exits 129 on `-Z`. bookworm-backports has no newer Git.
-  - Release `mokly-build-v5` (2026-11-26) builds Git 2.56.1 from source into `/usr/local`. The cloud runner and the CLI start `git` by name, and the process `PATH` finds `/usr/local/bin/git` first. A v5 sandbox showed `git` at `/usr/local/bin/git` 2.56.1.
+  - Releases `mokly-build-v5` and `mokly-build-v6` (2026-11-26) build Git 2.56.1 from source into `/usr/local`. The cloud runner and the CLI start `git` by name, and the process `PATH` finds `/usr/local/bin/git` first. A v5 sandbox showed `git` at `/usr/local/bin/git` 2.56.1. Main-preview uses v6 since 2026-11-26.
   - The pinned `e2bdev/base` already holds Debian Git as a manually installed package. The Dockerfile also names `git` in its first `apt-get install`. So Debian Git stays at `/usr/bin/git`.
   - A check on 2026-11-26 purged the `git` package in a container of the pinned base. The purge removed only `git`, `git-man`, `libcurl3-gnutls`, and `liberror-perl`. No installed package depends on `git`.
   - E2B's own Debian provisioning profile lists the `git` package as a base dependency "for running envd and sdk commands" (`provision.md` and `packages/orchestrator/pkg/template/build/phases/base/distro/distro.go` in `e2b-dev/infra`, read 2026-11-26). Provisioning runs before the Dockerfile, and the pinned SDK `e2b@2.64.0` starts `git` by name, so a purge in the Dockerfile still holds today.
-  - Debian Git is the only Git in v5 with PCRE2: it links `libpcre2-8`, and `git grep -P 'Mokly(?= Cloud)'` works there. The source build has no `USE_LIBPCRE`, as `plans/follow-ups/build-template-git-lacks-pcre.md` says.
+  - Debian Git links `libpcre2-8`, and `git grep -P 'Mokly(?= Cloud)'` works there. In v5 it was the only Git with PCRE2. v6 builds the source Git with `USE_LIBPCRE2=1`, so a purge of Debian Git no longer removes `git grep -P`.
+  - v6 also dropped v5's `apt-get purge -y --auto-remove` of the Git build packages, because that purge removed the base image's C and C++ toolchain. A purge of only the `git` package does not touch the toolchain.
   - A purge of `git` also removes Debian's `git-shell`, `scalar`, `git-receive-pack`, `git-upload-pack`, and `git-upload-archive` from `/usr/bin`. The Git 2.56.1 source build installs each of them in `/usr/local/bin`. `/bin` links to `usr/bin`, so `/bin/git` is the same path as `/usr/bin/git`.
   - The base has the same pattern for other tools: its own Python 3.11.6 at `/usr/local/bin/python3`, which `PATH` finds first, beside Debian's 3.11.2 at `/usr/bin/python3`, and a global yarn 1.22.19 under `/usr/local/lib/node_modules/yarn`.
   - `docs/ops/build-template.md` records that Debian Git stays at `/usr/bin/git`.
@@ -25,16 +26,16 @@
 - **Impact if no action:** Nothing that Mokly runs today uses `/usr/bin/git`. A customer script or a tool that names `/usr/bin/git` gets a Git that cannot read a comparison base.
 - **Root question:** Which Git should a build process get, whatever path it uses to start Git?
 - **Options:**
-  - **A.** In the next template release, purge the `git` package of the base, remove `git` from the first `apt-get install`, and link `/usr/bin/git` to `/usr/local/bin/git`. Ship it with the PCRE fix of `plans/follow-ups/build-template-git-lacks-pcre.md`, or the purge removes the only Git with `git grep -P`. Verify that `/usr/bin/git --version` equals `git --version`, the helper commands, an HTTPS checkout, and a comparison. Effort: Medium.
+  - **A.** In the next template release, purge the `git` package of the base, remove `git` from the first `apt-get install`, and link `/usr/bin/git` to `/usr/local/bin/git`. v6 already has the PCRE2 fix, so the purge keeps `git grep -P`. In the same release, install `build-essential` and `pkg-config` by name with the other template tools, so the Dockerfile no longer keeps the C and C++ toolchain only because the base holds it. Verify that `/usr/bin/git --version` equals `git --version`, the helper commands, an HTTPS checkout, and a comparison. Effort: Medium.
   - **B.** In the next release, build a Debian package from the pinned Git source, with Debian's build options, so that one package owns the system Git files. Effort: Large.
   - **E.** In the release of A, add a local package named `git`, built with `dpkg-deb` and versioned above Debian's `1:2.39.5-0+deb12u3`, that owns the `/usr/bin` links to the pinned build. apt and E2B's `dpkg-query` check then see `git` as installed, and a later package that depends on `git` does not bring Debian Git back. It does not fix PCRE. Effort: Medium.
-  - **C.** Keep v5 and the record in the runbook until another change needs a release. Effort: Small, already applied.
-  - **D.** Publish a release on a pinned, minimal Debian 13 image, which packages Git 2.47.3, and install each tool once. Remove the Git source build. This changes the `e2bdev/base` rule in `docs/protocol/cloud/cloud-build-runner.md`, `docs/protocol/cloud/repository-layout.md`, and the `e2b_base` check in `xtask/src/policy/build_pins.rs`. Effort: Large.
+  - **C.** Keep v6 and the record in the runbook until another change needs a release. Effort: Small, already applied.
+  - **D.** Publish a release on a pinned, minimal Debian 13 image, which packages Git 2.47.3, and install each tool once, `build-essential` and `pkg-config` included. Remove the Git source build. This changes the `e2bdev/base` rule in `docs/protocol/cloud/cloud-build-runner.md`, `docs/protocol/cloud/repository-layout.md`, and the `e2b_base` check in `xtask/src/policy/build_pins.rs`. Effort: Large.
 - **Left out:**
   - Change `PATH`. `/usr/bin/git` stays reachable.
-  - A probe check that every Git in the image meets the floor. It detects the case only, and it fails the enabled v5.
+  - A probe check that every Git in the image meets the floor. It detects the case only, and it fails the enabled v6.
 - **Wider fix:** D. It removes the shared cause of the Git, Python, and npm duplicates: the base already holds tools that the template installs again.
 - **Previous examples:** `mokly-build-v2` unpacked Node over the base's older npm and broke npm. The v3 Dockerfile removes the base's Node, npm, and corepack files first.
-- **Related:** `plans/follow-ups/build-template-lost-its-compiler.md` and `plans/follow-ups/build-template-git-lacks-pcre.md` also need a new release, so one release can carry all three fixes. A purge of Debian Git without the PCRE fix removes `git grep -P` from the image.
-- **Recommendation:** A, with the PCRE fix, in the same release as the compiler fix, so the release and rollout cost is paid once. D best protects the codebase.
+- **Related:** `plans/follow-ups/build-template-toolchain-has-no-guard.md` would add a probe check that builds a native addon with the C and C++ toolchain and runs `git grep -P`. A release for A or D must pass that check when it exists, and D must keep the toolchain.
+- **Recommendation:** A, in the next template release, because v6 already carries the PCRE2 fix that A needs. D best protects the codebase.
 - **Action:** ask the user, because every option except C needs a credentialed template release, and D changes protocol requirements.
