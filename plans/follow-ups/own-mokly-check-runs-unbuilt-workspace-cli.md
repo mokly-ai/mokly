@@ -1,0 +1,33 @@
+# Own Mokly check runs the unbuilt workspace CLI
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the failed `Mokly` check of pull request 563 (branch `calummoore/preview-password-sign-in-jofl`).
+- **Location:** `docs/protocol/cloud/cloud-build-runner.md` (Install and Publish), `crates/mkc-build-sandbox/src/publish.rs`, `packages/mokly/bin/mokly.mjs`, the root `package.json`.
+- **Reason:** The failure exists on `origin/main` and every open pull request, and each fix changes either the repository's install or the runner's behaviour, which the user decides.
+
+- **Category:** Product bug.
+- **Terms:**
+  - **Own Mokly check:** the `Mokly` GitHub check that Mokly Cloud's `main-preview` environment posts on this repository after a cloud build of the dogfood catalogue (the root `mokly.config.json`).
+  - **Runner:** `crates/mkc-build-sandbox`, which checks out the commit, installs, and runs `mokly publish` in a cloud sandbox.
+  - **Workspace CLI:** the `@mokly/mokly` package under `packages/mokly`, which npm links into `node_modules/.bin/mokly` because it is a workspace of this repository.
+- **Background:**
+  - The runner installs with `npm ci --no-audit --no-fund`. Lifecycle scripts are the consumer's build (`docs/protocol/cloud/cloud-build-runner.md`, Install).
+  - It then uses the first `node_modules/.bin/mokly` it finds and probes `mokly --version`; a nonzero exit ends the run as `UnsupportedMoklyVersion`, and the check says "Update Mokly to version 0.18.0 or later." Only when no candidate has a CLI does it use `npm exec --yes --package=@mokly/mokly@latest`.
+  - In this repository `npm ci` links the workspace CLI, but `packages/mokly/bin/mokly.mjs` imports `packages/mokly/dist/runtime.mjs`, which exists only after `npm run build`. That build also builds the host native target with Rust. No install script runs it.
+  - The probe fails with `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/workspace/repo/packages/mokly/dist/runtime.mjs'`. On 2026-11-26 the check failed this way on `origin/main` (`663506daf`, `42693d7a6`) and on pull requests 561 to 566.
+- **Problem:** Every commit of this repository gets a failed `Mokly` check with advice that does not help, and the dogfood catalogue never publishes.
+- **Impact if no action:** Every pull request shows a red required-looking check, and the team never sees its own Changes view.
+- **Root question:** How does a cloud build of this repository get a working Mokly CLI?
+- **Options:**
+  - **A.** Add a root `prepare` lifecycle script that builds the workspace packages that the CLI needs, so `npm ci` in the sandbox produces a working CLI. Every developer `npm ci` then also builds, and the sandbox needs Rust for the native target, or the script must skip the native build and the CLI must find a native binary another way. Effort: Medium.
+  - **B.** Let the runner fall back to `@mokly/mokly@latest` when the repository's CLI cannot start (the probe prints `[mokly/cli-invalid]` or the Node module is missing). It changes runner behaviour for every customer and publishes with a version the repository did not choose, which `plans/follow-ups/runner-reports-missing-native-package-as-old-mokly.md` option C already weighs. Effort: Medium.
+  - **C.** Turn off cloud builds for this repository's project until the dogfood publication is set up, so no check posts. No code change; the dogfood proof waits. Effort: Small.
+- **Left out:** Moving `mokly.config.json` below a directory without `node_modules`, because the runner searches every ancestor up to the install directory, which is the repository root.
+- **Wider fix:** B, because any workspace or monorepo customer with an unbuilt local CLI meets the same failure.
+- **Previous examples:** `plans/follow-ups/runner-reports-missing-native-package-as-old-mokly.md` (a broken install reported as an old version).
+- **Related:**
+  - `plans/follow-ups/dogfood-catalogue-not-published-from-ci.md`: the dogfood publication that this check would prove.
+  - `plans/follow-ups/runner-reports-missing-native-package-as-old-mokly.md`: same probe, same misleading copy.
+- **Recommendation:** C now, then A or B with the dogfood task. C stops a red check that no branch can fix, at no risk.
+- **Action:** ask the user, because A changes every developer install and B changes runner behaviour for every customer.
