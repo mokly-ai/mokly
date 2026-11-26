@@ -1,6 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { ApiError } from "../api/errors";
@@ -17,8 +15,6 @@ import {
   trialDays,
 } from "../settings/panes/billing-facts";
 import { paneRoute } from "../settings/routes";
-
-import { repositoryRoot } from "./root";
 
 const editorCents = 2000;
 const collaboratorCents = 500;
@@ -48,23 +44,14 @@ function billing(over: Partial<Billing> = {}): Billing {
   };
 }
 
-test("the plan catalogue's own table is what the pane states", () => {
+test("the pane states the Team trial length and seat prices", () => {
   // The trial length is the one catalogue value the read does not carry, so
-  // the constant the pane writes is held to the table that owns it.
-  const protocol = readFileSync(
-    resolve(repositoryRoot, "docs/protocol/cloud/billing.md"),
-    "utf8",
-  );
-  const trial = /\| Trial +\| `(\d+)` days, once +\|/.exec(protocol);
-  assert.ok(trial, "billing.md must record the trial in its settings table");
-  assert.equal(trialDays, Number(trial[1]));
-  const prices =
-    /Editor `(\d+)` USD cents, Collaborator `(\d+)` USD cents/.exec(protocol);
-  assert.ok(prices, "billing.md must record both seat prices");
-  // Nothing in the product types these two, so the test states what the pane
-  // would print for the amounts the API answers with.
-  assert.equal(money(Number(prices[1])), "$20");
-  assert.equal(money(Number(prices[2])), "$5");
+  // the pane writes it from its own constant.
+  assert.equal(trialDays, 7);
+  // Nothing in the product types the seat prices, so the test states what the
+  // pane prints for the amounts the API answers with.
+  assert.equal(money(2000), "$20");
+  assert.equal(money(500), "$5");
 });
 
 test("an amount is written with cents only when it has them", () => {

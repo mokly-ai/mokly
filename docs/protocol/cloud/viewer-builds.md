@@ -65,8 +65,8 @@ commands and exit codes stay in the output and the check:
 | `infrastructure`            | Mokly couldn’t run this build.                                        |
 | `repository-unavailable`    | Mokly can’t reach this repository; check the GitHub installation.     |
 
-The application's copy test reads this table. The check summary and the
-catalogue's build fixtures use the same `output-limit` sentence, which names
+The check summary and the catalogue's build fixtures use the same
+`output-limit` sentence, which names
 the [stream failure limit](./cloud-build-runner.md#budgets), not the retained
 output shown below. The `unsupported-mokly-version` sentence names the
 runner's minimum CLI version. No cause reports stale generated files, because
