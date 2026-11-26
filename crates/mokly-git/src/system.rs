@@ -74,18 +74,19 @@ impl SystemRunner {
             return Err(Error::Platform { source });
         }
         let mut child = command.spawn().git()?;
-        let group = match self.groups.attach(&child) {
-            Ok(group) => group,
-            Err(source) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(Error::Platform { source });
-            }
-        };
         let pipes = (child.stdout.take(), child.stderr.take(), child.stdin.take());
         // The tree reaps the root only when its last reference drops, after
         // the final signal, so no signal can reach a reused group number.
-        let group = Arc::new(ProcessTree::new(child, group));
+        let group = match self.groups.attach(child) {
+            Ok(tree) => Arc::new(tree),
+            Err(mut failure) => {
+                let _ = failure.child.kill();
+                let _ = failure.child.wait();
+                return Err(Error::Platform {
+                    source: failure.source,
+                });
+            }
+        };
         let (Some(stdout), Some(stderr), Some(mut stdin)) = pipes else {
             let _ = group.kill();
             return Err(Error::Internal(InternalError::Worker));

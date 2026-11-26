@@ -29,21 +29,39 @@ pub struct ProcessTree {
 /// The unreaped root process. Its drop reaps it.
 struct Root {
     child: Mutex<Option<Child>>,
-    #[cfg(unix)]
     pid: u32,
 }
 
 impl ProcessTree {
-    /// Take the child and the guard that `ProcessGroups::attach` returned
-    /// for it. The caller must not have reaped the child.
+    /// Join an unreaped child and the guard of its tree. Implementations of
+    /// `ProcessGroups::attach` build their tree here. Only they can create a
+    /// host guard, and they take the child before they return it.
     pub fn new(child: Child, group: Box<dyn ProcessGroup>) -> Self {
         Self {
             group,
             root: Root {
-                #[cfg(unix)]
                 pid: child.id(),
                 child: Mutex::new(Some(child)),
             },
+        }
+    }
+
+    /// The process ID of the root. It stays reserved while the tree lives.
+    pub fn id(&self) -> u32 {
+        self.root.pid
+    }
+
+    /// Give back the child and its guard, so that a test double can wrap the
+    /// guard or a guard test can control the child. The caller then owns the
+    /// rule that the reap follows the last signal.
+    #[cfg(any(test, feature = "mock"))]
+    pub fn into_parts(self) -> (Child, Box<dyn ProcessGroup>) {
+        let Self { group, root } = self;
+        let child = root.lock().take();
+        match child {
+            Some(child) => (child, group),
+            // `new` stores the child, and only the drop of the root takes it.
+            None => unreachable!("a live process tree holds its root"),
         }
     }
 

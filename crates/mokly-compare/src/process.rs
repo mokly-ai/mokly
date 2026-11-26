@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::{self, JoinHandle};
 
 use mokly_git::control::Clock;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree};
+use mokly_platform::processes::{AttachFailure, ProcessGroup, ProcessGroups};
 
 use crate::commands::{Child, Command, Output, POLL_INTERVAL, STOP_GRACE, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
@@ -67,18 +67,18 @@ impl Spawner for SystemSpawner {
             Ok(process) => process,
             Err(_) => return Err(Error::CommandUnavailable),
         };
-        let group = match self.groups.attach(&process) {
-            Ok(group) => group,
-            Err(source) => {
-                let _ = process.kill();
-                thread::spawn(move || process.wait());
-                return Err(InternalError::Platform { source }.into());
-            }
-        };
         let pipes = (process.stdout.take(), process.stderr.take());
         // The tree reaps the manager only when its last reference drops, after
         // the final signal, so no signal can reach a reused group number.
-        let tree = Arc::new(ProcessTree::new(process, group));
+        let tree = match self.groups.attach(process) {
+            Ok(tree) => Arc::new(tree),
+            Err(failure) => {
+                let AttachFailure { mut child, source } = failure;
+                let _ = child.kill();
+                thread::spawn(move || child.wait());
+                return Err(InternalError::Platform { source }.into());
+            }
+        };
         let group: Arc<dyn ProcessGroup> = tree.clone();
         let (Some(stdout), Some(stderr)) = pipes else {
             let _ = group.kill();

@@ -1,22 +1,25 @@
-# Forced kill reap waits without a deadline
+# Exit wait after forced kill has no deadline
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the failed-reap options check of the first-edit
   warm sidecars plan, branch `calummoore/mokly-first-edit-warm-sidecars-8npz`.
 - **Location:** `crates/mokly-sidecar/src/process_clock.rs:63-65`,
-  `crates/mokly-sidecar/src/process_control.rs:58-62`,
-  `crates/mokly-sidecar/src/pool_recycle.rs:46-50`,
+  `crates/mokly-sidecar/src/process_control.rs:68-72`,
+  `crates/mokly-sidecar/src/pool_recycle.rs:49-53`,
   `crates/mokly-sidecar/src/pool_shutdown.rs:45` and line 83, and
-  `crates/mokly-sidecar/src/pool_return.rs:119`.
+  `crates/mokly-sidecar/src/pool_return.rs:140`.
 - **Reason:** Shutdown, cancellation, and recycle on `main` share this wait,
   so a fix changes stop behaviour outside the warm sidecars change.
 
 - **Source:** Review.
 - **Category:** Product bug.
 - **Terms:**
-  - **Reap:** wait for the exit of a child process and collect its exit
-    status.
+  - **Exit wait:** the wait for the exit report of the direct child of a
+    sidecar. The completion thread of the sidecar sends that report on the
+    exit channel when the child exits. The child then stays unreaped until
+    its `ProcessTree` drops, after the last signal of its tree guard, so its
+    process ID and group number stay reserved.
   - **Forced kill:** the kill of the whole process tree of a sidecar through
     `ProcessControl::kill`. On Unix it sends SIGKILL to the process group.
   - **Uninterruptible sleep:** a process state in which a process acts on no
@@ -24,21 +27,24 @@
     network file system is one example.
 - **Background:**
   - `ProcessControl::finish`, at
-    `crates/mokly-sidecar/src/process_control.rs:58-70`, waits for the exit of
+    `crates/mokly-sidecar/src/process_control.rs:68-80`, waits for the exit of
     a sidecar until a deadline. When the process has not exited by then, it
-    sends the forced kill and calls `Wait::reaped`, at lines 61-62.
+    sends the forced kill and calls `Wait::reaped`, at lines 71-72.
   - `SystemClock::reaped`, at `crates/mokly-sidecar/src/process_clock.rs:63-65`,
-    waits on the reaper channel with no deadline. Its doc comment says: "Wait
-    for the reaper after forced termination, without another graceful
-    period."
+    waits on the exit channel with no deadline. Despite its name and its doc
+    comment ("Wait for the reaper after forced termination, without another
+    graceful period."), it does not wait for a reap. The completion thread
+    waits through `ProcessTree::wait`, which leaves the child unreaped, and
+    then reports the exit. The tree reaps the child later, when its last
+    reference drops.
   - These callers run `finish`:
     - Cancellation in `Pool::cancel_busy`, at
       `crates/mokly-sidecar/src/pool_shutdown.rs:45`.
     - Graceful shutdown in `Pool::stop`, at line 83 of the same file. Forced
       termination in that function only sends the kill.
-    - Recycle, at `crates/mokly-sidecar/src/pool_recycle.rs:46-50`.
+    - Recycle, at `crates/mokly-sidecar/src/pool_recycle.rs:49-53`.
     - The return pass in `Pool::retire_return`, at
-      `crates/mokly-sidecar/src/pool_return.rs:119`.
+      `crates/mokly-sidecar/src/pool_return.rs:140`.
   - A process in uninterruptible sleep does not exit after the forced kill
     until its kernel operation ends. `finish` then does not return:
     - Shutdown or cancellation of the command waits without end.
@@ -50,6 +56,9 @@
     `docs/protocol/mokly-sidecar-lifecycle.md` says that a process tree that
     still runs at the deadline is killed. No page says what happens when the
     kill does not end the process.
+  - The reap is not part of this wait. A bound on the wait therefore leaves
+    the unreaped child in its `ProcessTree`, which reaps it after it exits and
+    the tree drops.
   - The failed-reap options check of 2026-11-18 found this wait. It left the
     wait out of the warm sidecars change, because recycle and shutdown on
     `main` share it. Nobody reproduced a process that ignores SIGKILL.
@@ -63,9 +72,9 @@
   - **A.** Change nothing. The wait keeps the process bound and the rule that
     a sidecar never outlives its binary, at the cost of a possible hang.
     Effort: Small.
-  - **B.** Bound the reap wait after the forced kill. After the deadline,
+  - **B.** Bound the exit wait after the forced kill. After the deadline,
     report the process on stderr and continue. The pool keeps that slot out
-    of use, as the return pass does after a failed reap. Shutdown then exits,
+    of use, as the return pass does after a failed exit wait. Shutdown then exits,
     and the killed process ends when the kernel lets it. Effort: Medium.
   - **C.** Bound the wait only for shutdown and cancellation, so that the
     command can always exit. Keep the unbounded wait in recycle and the return
@@ -74,7 +83,8 @@
 - **Left out:** Another kill signal, because the process already has SIGKILL
   pending. A longer graceful period, because the wait follows a forced kill,
   and more time does not end a process that ignores SIGKILL.
-- **Wider fix:** B. One bounded rule covers every caller of the forced reap.
+- **Wider fix:** B. One bounded rule covers every caller of the exit wait
+  after a forced kill.
 - **Previous examples:** A stopped base install waited without a bound for
   output pipes that its descendants held. Its fix bounds that wait. After the
   last stop signal, the install waits up to a short grace period for the
@@ -85,10 +95,10 @@
   change the sidecar code of this item.
 - **Related:**
   - [root-switch-reap-wait.md](./root-switch-reap-wait.md): its shared
-    end-and-reap step would inherit this wait.
+    stop-and-exit-wait step would inherit this wait.
   - [serve-pause-warm-head.md](./serve-pause-warm-head.md), the same code:
-    the worker-only request cancellation of its option B kills and reaps one
-    worker, so a fix here changes how that cancellation ends.
+    the worker-only request cancellation of its option B kills one worker and
+    waits for its exit, so a fix here changes how that cancellation ends.
 - **Recommendation:** B. One bounded wait keeps every caller live and reports
   the stuck process, and the pending kill still ends it when the kernel lets
   it.

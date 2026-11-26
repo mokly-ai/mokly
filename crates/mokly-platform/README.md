@@ -31,8 +31,12 @@ guard releases the lock and leaves the lock file intact. The guard unlocks
 before it closes the file, so a child process that another thread starts at
 that moment cannot keep the lock until its exec.
 
-`ProcessGroups` configures a child before spawn, then attaches an ownership
-guard immediately after spawn. The caller retains the child and its pipes.
+`ProcessGroups` configures a child before spawn. Immediately after spawn,
+`attach` takes the child, creates its ownership guard, and returns a
+`ProcessTree` that owns both. The caller takes the pipes before `attach`. A
+failed attachment returns an `AttachFailure` that gives the child back with
+the cause. No guard exists then, so the caller stops the tree with
+`kill_unattached` and reaps the child itself.
 `configure` starts a new Unix session, so the child leads its own group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
 keeps a parent link to it while it runs. `configure_plain` uses
@@ -55,8 +59,9 @@ to each found descendant, also one in a new session. After `SIGTERM`, it sends
 so a later `SIGKILL` reaches a descendant whose parent died after the
 `SIGTERM`.
 
-`ProcessTree` takes the child and its guard, and callers keep it until their
-last signal. Its `wait` blocks until the child exits and leaves the child
+`attach` is the only way to get a host guard, and it never gives the child
+back with one. So no caller can reap the root while its guard can still
+signal. Callers keep the `ProcessTree` until their last signal. Its `wait` blocks until the child exits and leaves the child
 unreaped; on Unix it uses `waitid` with `WNOWAIT`. macOS also reports a
 stopped child to that wait, so a stop report leads to a short pause and a new
 wait. The unreaped child keeps
@@ -134,6 +139,11 @@ observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
 attaches to the unreaped child and stops it. The `ProcessTree` tests check that
 the root stays unreaped through `wait` and `kill`, and that the drop reaps it.
 Consumers enable the `mock` feature to use every public trait with unimock.
+The feature also adds `ProcessTree::into_parts`, which gives back the child and
+the guard. Test doubles use it to wrap the host guard, and the guard tests use
+it to control the child. Production builds do not enable the feature, so they
+cannot call it. The integration tests of this crate enable it through a
+dev-dependency on the crate itself.
 
 ### Key Code
 
@@ -141,9 +151,10 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   which move a file or directory only when the destination is absent.
 - [`src/locks.rs`](./src/locks.rs) defines `Locks` and `SystemLocks`, which
   acquire nonblocking shared and exclusive `FileLock` guards.
-- [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups` and
-  `SystemProcessGroups`, which configure a child before spawn and return a
-  `ProcessGroup` guard that terminates or kills the whole tree.
+- [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups`,
+  `SystemProcessGroups`, and `AttachFailure`. They configure a child before
+  spawn and attach it to a `ProcessTree` whose `ProcessGroup` guard
+  terminates or kills the whole tree.
 - [`src/processes/tree.rs`](./src/processes/tree.rs) defines `ProcessTree`,
   which owns a child and its guard, waits for the exit without a reap, and
   reaps the child after the guard drops.
