@@ -130,9 +130,9 @@ admission, navigation and the share action's write to the system clipboard.
 It presses **Continue in browser**, captures the connect address, issues a grant
 through the real browser page and API, and delivers it through a second launch.
 It also opens a used grant, then a valid grant on the same callback route, and
-proves that a new document signs in.
-It reads the clipboard from the main process and awaits the result. It saves
-screenshots under `.context/m5/`.
+proves that a new document signs in. It reads the clipboard from the main
+process and awaits the result. It saves screenshots under `.context/m5/`. A
+failed capture prints Electron's last 200 output lines, with Chromium's log.
 `MKC_API_PORT`, `MKC_APP_PORT`, `MKC_CATALOGUE_PORT` and `MKC_STRIPE_PORT`
 move the complete stack when the default ports are busy. Rebuild after
 changing ports because Expo bakes the API origin into the export.

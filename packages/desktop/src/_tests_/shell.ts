@@ -7,6 +7,12 @@ import type { ElectronApplication, Page } from "@playwright/test";
 import type * as Scratch from "../../../../apps/_tests_/scratch.mjs";
 import { catalogueOrigin } from "../../../app/src/_tests_/origins";
 
+import {
+  chromiumLogging,
+  keepOutput,
+  printCaptureFailure,
+} from "./electron-output";
+
 // The app harness loads this shared MJS helper through CommonJS. Use the same
 // loader so Playwright never tries to register it as both CJS and ESM.
 const { scratchDirectory } = createRequire(import.meta.url)(
@@ -26,9 +32,11 @@ export async function launch(
     cwd: process.cwd(),
     env: {
       ...process.env,
+      ...chromiumLogging,
       MKC_DESKTOP_CATALOGUE_SOURCE: `http://*.localhost:${new URL(catalogueOrigin).port}`,
     },
   });
+  keepOutput(electron);
   const page = await electron.firstWindow();
   await page.waitForURL((url) => url.protocol === "mokly-app:");
   if (!address)
@@ -81,8 +89,16 @@ export async function follow(
   );
 }
 
+/** Save a capture; when it fails, print the Electron output before the error. */
 export async function screenshot(page: Page, name: string): Promise<void> {
-  await page.screenshot({ path: resolve("../../.context/m5", name + ".png") });
+  try {
+    await page.screenshot({
+      path: resolve("../../.context/m5", name + ".png"),
+    });
+  } catch (error) {
+    printCaptureFailure(page, name, error);
+    throw error;
+  }
 }
 
 export async function signedInEmail(page: Page, api: string): Promise<string> {
