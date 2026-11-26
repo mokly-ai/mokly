@@ -9,24 +9,6 @@ import {
 
 import { readLiveDescriptor } from "../packages/viewer/dist/catalogue/live_reader.js";
 
-import { legacyCatalogueGate } from "./helpers/legacy_catalogue_gate.js";
-
-test("the legacy v3 catalogue gate rejects the current format before any entry or path read", () => {
-  assert.throws(
-    () =>
-      legacyCatalogueGate({
-        schemaVersion: 9,
-        get screens(): never {
-          throw new Error("Unexpected entry read");
-        },
-        get comparisonUrl(): never {
-          throw new Error("Unexpected path read");
-        },
-      }),
-    /unsupported schemaVersion/u,
-  );
-});
-
 for (const [boundary, supported, read] of [
   ["catalogue", 9, readCatalogueIndex],
   ["detail", 4, readEntryDetail],

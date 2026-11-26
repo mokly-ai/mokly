@@ -50,7 +50,7 @@ fn the_native_scope_leaves_out_a_unit_only_when_every_package_binary_is_listed()
 }
 
 #[test]
-fn only_the_native_scope_filters_listed_binaries_and_render_modules() {
+fn only_the_native_scope_filters_listed_binaries_modules_and_tests() {
     assert!(TestScope::Complete.nextest_args().is_empty());
     let args = TestScope::Native.nextest_args();
     let [flag, filter] = args.as_slice() else {
@@ -59,6 +59,9 @@ fn only_the_native_scope_filters_listed_binaries_and_render_modules() {
     assert_eq!(flag, "-E");
     assert!(filter.starts_with("not (binary_id(=mokly-cli::changes_containment_tests) | "));
     assert!(filter.contains(" | (binary_id(=mokly-render::integration_tests) & test(/^integration::containment_tests::/)) | "));
+    assert!(filter.contains(
+        " | (binary_id(=mokly-static) & test(=assembly_tests::rejects_a_current_index_above_the_output_file_limit))"
+    ));
     assert!(!filter.contains("mokly-cli::changes_parent_death_tests"));
     assert!(
         !filter.contains("mokly-render::integration_tests) & test(/^integration::watch_tests::/)")

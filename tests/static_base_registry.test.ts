@@ -8,7 +8,8 @@ import { baseRegistryFixture } from "./helpers/base_registry_fixture.js";
 import { command } from "./helpers/static_publication.js";
 import { timings } from "./helpers/static_timings.js";
 
-for (const manager of managers) {
+// Rust unit tests cover the registry arguments of pnpm 10 and Yarn Classic.
+for (const manager of [managers[2], managers[3], managers[4]]) {
   test(
     `a cold ${manager.name} base installs from its configured registry with user credentials`,
     { timeout: 120_000 },

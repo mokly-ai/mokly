@@ -15,7 +15,7 @@ import { branchRow, build, buildId } from "./viewer/build-fixtures";
  */
 
 /** Hold every request posted to one address until the row lets it through. */
-async function holdRequest(page: Page, url: string) {
+export async function holdRequest(page: Page, url: string) {
   const arrived = Promise.withResolvers<void>();
   const answer = Promise.withResolvers<void>();
   await page.route(url, async (route) => {
