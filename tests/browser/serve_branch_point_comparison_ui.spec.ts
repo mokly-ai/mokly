@@ -1,11 +1,10 @@
 /**
- * The branch-point cases' rendered references through Serve at desktop and
- * mobile widths, under the branch-point lookup contract. One Serve per
+ * The branch-point case that Serve alone exercises, under the branch-point
+ * lookup contract: Side by side on a moved variant starts an on-demand
+ * capture, and its comparison details show the saved props. One Serve per
  * worker serves the shared comparison fixture, whose sources include the
- * branch-point cases. The checks only read it. Each Side by side waits for
- * its comparison response. The first Side by side of an entry starts an
- * on-demand capture, and a later run of that entry reads the stored
- * comparison while Serve keeps it.
+ * branch-point cases. The check only reads it, and Side by side waits for its
+ * comparison response. The branch copy runs every case.
  */
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
@@ -37,4 +36,6 @@ const test = base.extend<object, { servedBranch: Served }>({
   },
 });
 
-registerBranchPointCases(test, serveMovedHost);
+registerBranchPointCases(test, serveMovedHost, [
+  { name: "moved-variant", width: "desktop" },
+]);

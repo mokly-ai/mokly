@@ -174,15 +174,15 @@ const CHECKS: Readonly<
 };
 
 /**
- * Each case of `tests/fixtures/branch_point_cases.json` with its checks and
- * the title that starts its test names. A case without checks, or checks
+ * Each case of `tests/fixtures/branch_point_cases.json` with its name, its
+ * checks, and the title that starts its test names. A case without checks, or checks
  * without a case, stops the spec from loading, so the browser runs every
  * shared case.
  */
 export const BRANCH_POINT_CHECKS = branchPointCases.map(({ name }) => {
   const check = CHECKS[name];
   if (!check) throw new Error(`No browser checks for the case ${name}`);
-  return { title: name.replaceAll("-", " "), check };
+  return { name, title: name.replaceAll("-", " "), check };
 });
 if (BRANCH_POINT_CHECKS.length !== Object.keys(CHECKS).length)
   throw new Error("Browser checks name a case that the shared set lacks");
