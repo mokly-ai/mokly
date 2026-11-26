@@ -38,27 +38,20 @@ fn repository(mock: Unimock) -> GitRepository {
     }
 }
 
-/// The attribute-file lookup and the object presence check that precede a conversion.
+/// The sized listing of the entries and their attribute files that proves their
+/// objects present before a conversion.
 fn preflight(entries: &[Entry]) -> impl unimock::Clause {
-    let present = entries
+    let listing = entries
         .iter()
-        .map(|entry| format!("{}\n", entry.object))
+        .map(|entry| format!("100644 blob {} 2\t{}\0", entry.object, entry.path))
         .collect::<String>()
         .into_bytes();
-    (
-        RunnerMock::run
-            .next_call(matching!((request) if request.args.iter().any(|arg| arg == "ls-tree")))
-            .returns(Ok(Output {
-                stdout: Vec::new(),
-                stderr: Vec::new(),
-            })),
-        RunnerMock::run
-            .next_call(matching!((request) if request.args.iter().any(|arg| arg == "rev-list")))
-            .returns(Ok(Output {
-                stdout: present,
-                stderr: Vec::new(),
-            })),
-    )
+    RunnerMock::run
+        .next_call(matching!((request) if request.args.iter().any(|arg| arg == "ls-tree")))
+        .returns(Ok(Output {
+            stdout: listing,
+            stderr: Vec::new(),
+        }))
 }
 
 fn batch(request: &Request) -> bool {

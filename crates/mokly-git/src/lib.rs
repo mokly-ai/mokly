@@ -24,6 +24,7 @@ pub mod tree;
 pub mod access;
 
 mod lookup;
+mod presence;
 mod repository_access;
 mod repository_command;
 

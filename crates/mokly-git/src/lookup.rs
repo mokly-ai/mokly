@@ -9,14 +9,23 @@ use crate::repository::GitRepository;
 use crate::tree::{self, Entry, Limits};
 
 impl GitRepository {
+    /// Looks up exact paths. Without a promisor remote, one sized listing of the paths
+    /// and their attribute files usually returns the entries and proves their objects
+    /// present. Otherwise the paths list alone, and the missing-object walk follows.
     pub(crate) fn lookup_paths(
         &self,
         commit: &ObjectId,
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
+        if let Some(entries) = self
+            .presence(commit, &["-l"], paths)
+            .and_then(|presence| presence.entries(limits))
+        {
+            return Ok(entries);
+        }
         let entries = self.lookup_metadata(commit, paths, limits, false, false)?;
-        if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+        if self.fetch_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
             return self.lookup_metadata(commit, paths, limits, true, false);
         }
         Ok(entries)

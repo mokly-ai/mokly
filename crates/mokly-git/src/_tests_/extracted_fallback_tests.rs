@@ -50,21 +50,14 @@ fn repository(runner: Unimock, disk: Unimock) -> GitRepository {
     }
 }
 
+/// The sized listing of the entry and its attribute files that proves its object present.
 fn preflight(entry: &Entry) -> impl unimock::Clause {
-    (
-        RunnerMock::run
-            .next_call(matching!((request) if request.args.iter().any(|arg| arg == "ls-tree")))
-            .returns(Ok(Output {
-                stdout: Vec::new(),
-                stderr: Vec::new(),
-            })),
-        RunnerMock::run
-            .next_call(matching!((request) if request.args.iter().any(|arg| arg == "rev-list")))
-            .returns(Ok(Output {
-                stdout: format!("{}\n", entry.object).into_bytes(),
-                stderr: Vec::new(),
-            })),
-    )
+    RunnerMock::run
+        .next_call(matching!((request) if request.args.iter().any(|arg| arg == "ls-tree")))
+        .returns(Ok(Output {
+            stdout: format!("100644 blob {} 2\t{}\0", entry.object, entry.path).into_bytes(),
+            stderr: Vec::new(),
+        }))
 }
 
 fn single_file(request: &Request, name: &str, object: char) -> bool {

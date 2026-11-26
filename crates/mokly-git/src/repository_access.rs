@@ -36,11 +36,21 @@ impl Repository for GitRepository {
             "--",
         ];
         if let Some(root) = root {
+            if let Some(entries) = self
+                .presence(commit, &["-r", "-t", "-l"], std::slice::from_ref(root))
+                .and_then(|presence| presence.entries(limits))
+            {
+                return Ok(entries);
+            }
             args.push(root.as_str());
         }
         let request = self.tree_request(&args);
-        let entries = tree::parse(&self.initial_tree_listing(&request)?, limits)?;
-        if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+        let listing = self.initial_tree_listing(&request)?;
+        let entries = tree::parse(&listing, limits)?;
+        if root.is_none() && self.whole_listing_proves(&listing, limits) {
+            return Ok(entries);
+        }
+        if self.fetch_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
             return tree::parse(&self.runner.run(&request)?.stdout, limits);
         }
         Ok(entries)

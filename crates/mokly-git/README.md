@@ -79,8 +79,17 @@ Untracked additions never infer a rename.
 
 Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
-disabled. One serialized `fetch --stdin` request retrieves each missing set
-before conversion. Failed fetches name the remote and a recovery command. Tree
+disabled. Without a promisor remote, the preflight is usually one plain sized
+`ls-tree` of the requested paths and their ancestor attribute files: when each
+blob record has a decimal size, every object is present, and the missing-object
+walk does not run. An exact lookup and a listing below a root take their
+entries from that same listing, so each starts one Git process. The preflight
+takes this listing only when the paths fit one argument batch and no path lies
+below another listed path, so the listing prints each requested record as a
+listing of those paths alone does. Any other case, a `BAD` size, and any
+failure run the separate listings and the `rev-list` walk, which keep their
+results and typed errors. One serialized `fetch --stdin` request retrieves each
+missing set before conversion. Failed fetches name the remote and a recovery command. Tree
 listings retain directory and link modes. Regular files and all metadata nodes
 have independent count bounds.
 
@@ -129,12 +138,12 @@ upstream, also changes the digest. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
 owns the source identity and the filter rule.
 
-The settings read of `source_key` and `checkout_identity` lists the whole tree
-with blob sizes. Git prints a size only for a blob that the object store
-holds, and `BAD` for a missing blob. So when each blob record has a decimal
-size, the read skips the missing-object preflight, because the preflight
-could find nothing missing. Any other size runs the preflight, as
-`Repository::list` does.
+The settings read of `source_key` and `checkout_identity` and a whole-tree
+`Repository::list` list the whole tree with blob sizes. Git prints a size only
+for a blob that the object store holds, and `BAD` for a missing blob. So when
+each blob record has a decimal size, the read skips the missing-object
+preflight, because the preflight could find nothing missing. Any other size
+runs the preflight.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
@@ -238,6 +247,9 @@ extraction cleanup after cancellation during a streamed copy.
   the decoder that splits its output at the sentinel records.
   [`src/checkout_files.rs`](./src/checkout_files.rs) defines `BatchFiles`, with
   `MemoryFiles` for reads and `DirectoryFiles` for the extraction.
+- [`src/presence.rs`](./src/presence.rs) defines `Presence`, the sized
+  listing that proves requested objects and their attribute files present
+  without the missing-object walk.
 - [`src/tree.rs`](./src/tree.rs) and [`src/changes.rs`](./src/changes.rs)
   define the tree `Entry` and `Limits` records and the changed-path `Change`
   records.
