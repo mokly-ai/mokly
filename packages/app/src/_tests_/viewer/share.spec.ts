@@ -2,12 +2,12 @@ import { failWith } from "../api-responses";
 import { expect, open, test } from "../harness";
 import { apiOrigin, appOrigin } from "../origins";
 
+import { holdViewerRead } from "./held-reads";
 import {
   canvasFrame,
   expectSharePreparing,
   expectShownViewport,
   expectViewportToggles,
-  holdViewerRead,
   makePublic,
   publishedViewerReady,
   publishedProject,

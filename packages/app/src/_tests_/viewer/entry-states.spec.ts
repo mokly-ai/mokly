@@ -15,11 +15,8 @@ import { apiOrigin } from "../origins";
 import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
-import {
-  expectSharePreparing,
-  holdViewerRead,
-  publishedProject,
-} from "./support";
+import { holdViewerRead } from "./held-reads";
+import { expectSharePreparing, publishedProject } from "./support";
 
 /** A signed-in reader with a project whose entry state this test exercises. */
 async function project(page: Page, label: string): Promise<string> {

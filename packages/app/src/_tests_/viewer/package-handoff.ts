@@ -3,7 +3,8 @@ import type { ElementHandle, Page } from "@playwright/test";
 import { publicationPathFor } from "../addresses";
 import { expect, open } from "../harness";
 
-import { arrival, publishedViewerReady } from "./support";
+import { arrival } from "./held-reads";
+import { publishedViewerReady } from "./support";
 
 /**
  * Hold one route until the test releases it. `arrived()` settles once the first

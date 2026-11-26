@@ -2,11 +2,11 @@ import { defaultPageSize } from "../../data/publications";
 import { expect, open, test as base } from "../harness";
 import { apiOrigin } from "../origins";
 
+import { holdViewerRead } from "./held-reads";
 import { retainedFixture } from "./retained-fixture";
 import {
   canvasFrame,
   expectSharePreparing,
-  holdViewerRead,
   makePublic,
   openSettingsFromAccount,
   publishedViewerReady,
