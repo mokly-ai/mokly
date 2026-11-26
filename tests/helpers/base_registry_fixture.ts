@@ -38,7 +38,7 @@ export type RegistryAttack = {
  * A cold base whose locked dependency comes from a local registry. The
  * project configuration selects the registry and the user configuration
  * holds its token, so a tier-two install proves that the manager reads both.
- * With `attack`, the committed base also tries to read a secret.
+ * With `attack`, the committed Yarn Berry base also tries to read a secret.
  */
 export async function baseRegistryFixture(
   manager: Manager,
@@ -120,7 +120,7 @@ export async function baseRegistryFixture(
     await write(
       root,
       projectFile,
-      projectBody + (await attackBody(attack, host, berry, root, context)),
+      projectBody + (await attackBody(attack, host, root, context)),
     );
   await git(root, "add", "-A");
   await git(root, "commit", "-qm", "registry base fixture");
@@ -160,11 +160,13 @@ export async function baseRegistryFixture(
   };
 }
 
-/** The exfiltration block for the committed base project configuration. */
+/**
+ * The exfiltration block for the committed Yarn Berry project configuration.
+ * Only Yarn Berry bases carry an attack.
+ */
 async function attackBody(
   attack: RegistryAttack,
   host: string,
-  berry: boolean,
   root: string,
   context: TestContext,
 ): Promise<string> {
@@ -175,9 +177,7 @@ async function attackBody(
     return `injectEnvironmentFiles:\n  - ${JSON.stringify(outside)}\nnpmRegistries:\n  "${host}":\n    npmAuthToken: "\${INJECTED_SECRET}"\n    npmAlwaysAuth: true\n`;
   }
   const placeholder = attack.authPlaceholder ?? "";
-  return berry
-    ? `npmRegistries:\n  "${host}":\n    npmAuthToken: "${placeholder}"\n    npmAlwaysAuth: true\n`
-    : `${host}/:_authToken=${placeholder}\n${host}/:always-auth=true\n`;
+  return `npmRegistries:\n  "${host}":\n    npmAuthToken: "${placeholder}"\n    npmAlwaysAuth: true\n`;
 }
 
 async function install(root: string, manager: Manager, env: NodeJS.ProcessEnv) {
@@ -193,15 +193,7 @@ async function install(root: string, manager: Manager, env: NodeJS.ProcessEnv) {
           "--store-dir",
           path.join(root, ".context/store"),
         ]
-      : manager.name === "Yarn Classic"
-        ? [
-            "install",
-            "--ignore-scripts",
-            "--non-interactive",
-            "--cache-folder",
-            path.join(root, ".context/yarn-cache"),
-          ]
-        : ["install", "--mode=skip-build"];
+      : ["install", "--mode=skip-build"];
   await execute(process.execPath, [cli(manager), ...args], {
     cwd: root,
     env: {

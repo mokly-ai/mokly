@@ -90,7 +90,9 @@ test(
   },
 );
 
-for (const manager of managers) {
+// Rust unit tests cover the arguments and versions of pnpm 10 and Yarn
+// Classic. Yarn Berry, pnpm 11, and pnpm 12 run here for real.
+for (const manager of [managers[2], managers[3], managers[4]]) {
   test(
     `a cold ${manager.name} base installs offline without scripts and reuses its dependency cache`,
     { timeout: 120_000 },
@@ -161,22 +163,21 @@ for (const manager of managers) {
   );
 }
 
-for (const manager of [managers[0], managers[1]])
-  test(
-    `a cold ${manager.name} base warns when its manager is missing`,
-    { timeout: 120_000 },
-    async (context) => {
-      const fixture = await baseManagerFixture(manager, context, "missing");
-      const result = await build(fixture, context.signal);
-      assert.equal(result.tier, 3);
-      assert.match(result.diagnostics, /base dependencies at/u);
-      assert.ok(
-        result.diagnostics.includes("package manager or lockfile unavailable"),
-        result.diagnostics,
-      );
-      assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
-    },
-  );
+test(
+  "a cold pnpm base warns when its manager is missing",
+  { timeout: 120_000 },
+  async (context) => {
+    const fixture = await baseManagerFixture(managers[0], context, "missing");
+    const result = await build(fixture, context.signal);
+    assert.equal(result.tier, 3);
+    assert.match(result.diagnostics, /base dependencies at/u);
+    assert.ok(
+      result.diagnostics.includes("package manager or lockfile unavailable"),
+      result.diagnostics,
+    );
+    assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
+  },
+);
 
 test(
   "a cold Yarn Berry base disables constraints code from the historical tree",
@@ -197,7 +198,7 @@ test(
   },
 );
 
-for (const manager of [managers[0], managers[3], managers[4]]) {
+for (const manager of [managers[3], managers[4]]) {
   test(
     `a ${manager.name} base keeps configured install paths inside its private entry`,
     { timeout: 120_000 },
