@@ -1,8 +1,10 @@
 """Local regression checks for the candidate assertion; no provider access."""
 
+from functools import partial
 import os
 import re
 from pathlib import Path
+import shlex
 import shutil
 from types import SimpleNamespace
 import subprocess
@@ -18,6 +20,7 @@ HOST_PATH = os.environ.get("PATH", "")
 HOST_NPM = shutil.which("npm")
 HOST_RUN = subprocess.run
 HOST_GIT = shutil.which("git")
+HOST_AR = shutil.which("ar")
 # Debian bookworm's Git: it predates `cat-file -Z`, which Mokly's base reader needs.
 OLD_GIT_VERSION = "git version 2.39.5"
 
@@ -49,13 +52,14 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
             return self.run_command(argv, **kwargs)
         return run
 
-    def run_with_host_tools(self, argv, **kwargs):
+    def run_with_host_tools(self, argv, *, make_path, **kwargs):
         """Run the probe's Git, npm ci, and native build commands with host tools."""
         if argv[0] == "git":
             return self.run_with_host_git(argv, **kwargs)
         if argv[0] in ("make", "./probe"):
             self.check_probe_call(kwargs)
-            environment = {"PATH": HOST_PATH, "HOME": str(self.scratch)}
+            path = make_path if argv[0] == "make" else HOST_PATH
+            environment = {"PATH": path, "HOME": str(self.scratch)}
             kwargs["cwd"] = kwargs.get("cwd") or self.workspace
             return HOST_RUN(argv, env=environment, **kwargs)
         if argv[:2] != ["npm", "ci"]:
@@ -81,12 +85,25 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
         return HOST_RUN([HOST_GIT, *argv[1:]], env=environment, **kwargs)
 
     def test_complete_template_passes_with_one_added_entry(self):
-        with patch.object(ASSERTION.subprocess, "run", side_effect=self.run_with_host_tools) as run:
+        self.assertIsNotNone(HOST_AR, "this test needs ar on PATH")
+        host_bin = self.scratch / "host-bin"
+        host_bin.mkdir()
+        marker = self.scratch / "ar-succeeded"
+        wrapper = host_bin / "ar"
+        real_ar = shlex.quote(os.path.abspath(HOST_AR))
+        wrapper.write_text(f'#!/bin/sh\n{real_ar} "$@" && : > {shlex.quote(str(marker))}\n')
+        wrapper.chmod(0o755)
+        make_path = f"{host_bin}{os.pathsep}{HOST_PATH}"
+        with patch.object(
+            ASSERTION.subprocess, "run",
+            side_effect=partial(self.run_with_host_tools, make_path=make_path),
+        ) as run:
             try:
                 ASSERTION.verify(VERSION)
             except ASSERTION.TemplateAssertionError as error:
                 self.fail(str(error))
         self.assertEqual(run.call_count, 18)
+        self.assertTrue(os.path.isfile(marker), "host ar did not write its success marker")
 
     def test_git_without_cat_file_nul_batches_fails(self):
         # Bookworm's Git 2.39.5 exits 129 on `cat-file -Z`, so Mokly cannot read a base.
