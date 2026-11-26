@@ -34,8 +34,9 @@ import {
  * and builds in History and the switcher. Each record is keyed by the application's own union, so a state,
  * action or request control the application gains fails to compile here until
  * it names the row that shows it. `build-states.spec.ts` runs every row on the
- * desktop and `build-states-mobile.spec.ts` runs every row on a phone, so no
- * state reaches only one surface.
+ * desktop. `build-states-mobile.spec.ts` runs on a phone the two rows whose
+ * steps differ there, and walks every state a card draws to see that none
+ * scrolls sideways.
  */
 
 /** The row that shows each build state. */
@@ -93,7 +94,7 @@ export const otherRows = {
   switcher,
 } as const satisfies Record<string, BuildStateRow>;
 
-/** Every row once, in the order both surfaces run them. */
+/** Every row once, in the order the desktop runs them. */
 export const buildStates: readonly BuildStateRow[] = [
   ...new Set<BuildStateRow>([
     ...Object.values(stateRows),

@@ -112,9 +112,12 @@ until a row shows it. The rows are in `build-state-cards.ts`,
 `build-state-readers.ts`, `build-state-refusals.ts`, `build-state-busy.ts` and
 `build-state-lists.ts`, with the two surfaces and the card's parts in
 `build-state-parts.ts`.
-`build-states.spec.ts` runs every row on the desktop and
-`build-states-mobile.spec.ts` on a phone at 390px, with the page the row ends
-on checked at 320px too.
+`build-states.spec.ts` runs every row on the desktop.
+`build-states-mobile.spec.ts` runs on a phone at 390px the two rows whose steps
+differ there: History opens from More, and Open billing opens Billing as a
+route. Its other test walks every state a build card or the publishing card
+draws, listed in `build-card-states.ts` and `build-stage-states.ts`, and names
+each state that scrolls sideways at 390px or 320px.
 
 `build-api.spec.ts` follows a real build instead of the double. It alone swaps
 the ordinary API for the test-only `fake-build-api` example of `mkc-api`. The
