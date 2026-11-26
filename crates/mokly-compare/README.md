@@ -43,7 +43,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 It indexes configured roots and exact requested paths and retains every tree
 mode. `GitTree` implements `dyn SourceTree` over that index, so the catalogue
 applies its roots, globs, and source rules to base files. Exact projections use
-cached metadata and bounded path queries. Catalogue inventories and planning
+cached metadata and bounded path queries. `SourceTree::hint_projections` loads
+the metadata of many exact paths with one query, and leaves out a path that has
+a descendant in the set; a failed hint loads nothing, so each projection runs
+its own query and keeps its own error. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
