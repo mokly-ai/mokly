@@ -1,6 +1,6 @@
 # Comparison Package Selection
 
-Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports.
+Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports. The `ignored-module` warning misses Git-ignored files that only a page-render `require` loads. See the [page-render require follow-up](../../plans/follow-ups/ignored-module-page-render-requires.md).
 
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)

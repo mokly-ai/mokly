@@ -1,5 +1,7 @@
 # Imported CSS Configuration
 
+Status: A stylesheet that a PostCSS plugin inlines through its own package lookup bypasses the layout order. See the [PostCSS package import follow-up](../../plans/follow-ups/postcss-inlined-package-imports.md).
+
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.

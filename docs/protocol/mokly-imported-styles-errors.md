@@ -91,5 +91,8 @@ diagnostic of the [referenced closure](./mokly-public-closure.md):
 
 A sidecar failure while `processCss` runs, that is a crash, a timeout, or a
 protocol error, uses the [fail-closed codes](./mokly-sidecar.md#fail-closed-rules)
-of the sidecar contract. The [build warning record](./mokly-build-warnings.md)
-carries no stylesheet warning; every stylesheet problem is an error.
+of the sidecar contract. The stylesheet processing described on this page
+reports its diagnostics as errors.
+
+Changes can report a Git-ignored stylesheet with
+[`ignored-module`](./mokly-comparison-packages.md#ignored-modules).

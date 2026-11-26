@@ -1,7 +1,7 @@
 # Plugin-inlined package imports skip the source rule
 
 - **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-26, from the check of finding 81 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
 - **Location:** `Preparation::source` in `crates/mokly-css/src/compiler.rs`, whose PostCSS call is at line 143 at commit `7da557d5d`, the "Workspace Package Imports" section of `docs/protocol/mokly-configuration-imported-styles.md`, and the "Transform" section of `docs/protocol/mokly-imported-styles-postcss.md`.
 - **Reason:** The gap predates the branch for detected layouts, and its fix changes the text that every PostCSS plugin receives.
@@ -36,3 +36,8 @@
 - **Related:** [ignored-plugin-file-reports.md](./ignored-plugin-file-reports.md): same cause. Both come from a plugin that reads files without Mokly's resolver.
 - **Recommendation:** B. It makes every plugin that inlines imports meet the existing rule, with no new failure.
 - **Action:** fix after merge, apply B, because the gap predates this branch for detected layouts, and the rewrite needs its own review and a Tailwind fixture.
+- **Done when:**
+  - A PostCSS plugin inlines the stylesheet that the workspace layout order selects.
+  - Remove the status line from `docs/protocol/mokly-configuration-imported-styles.md`.
+  - Remove the relative-path workaround sentence from Workspace packages in `docs/guides/authoring/config.md`.
+  - In `crates/mokly-cli/tests/changes_ancestor_tests.rs`, remove the expected warning for `packages/plugin-theme/dist/skin.css` and check for the source selector `.source` in place of `.plugin-theme`.

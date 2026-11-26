@@ -24,4 +24,4 @@
 - **Previous examples:** findings 2 and 80 of the same review, where PostCSS loads first escaped the warning.
 - **Recommendation:** A. It closes the gap with the existing render result and reuse record.
 - **Action:** fix after merge, apply A, because the evidence must pass through render reuse, which this change does not touch.
-- **Done when:** a page whose render requires an ignored repository file gives one `ignored-module` warning when Changes runs, also when Serve reuses the render.
+- **Done when:** a page whose render requires an ignored repository file gives one `ignored-module` warning when Changes runs, also when Serve reuses the render. Remove the page-render require gap from the status line in `docs/protocol/mokly-comparison-packages.md`.

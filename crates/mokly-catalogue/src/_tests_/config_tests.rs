@@ -117,6 +117,22 @@ fn source_packages_normalize_build_and_source_folders_and_keep_false() {
 }
 
 #[test]
+fn source_packages_accept_names_with_npm_punctuation() {
+    let packages = json!({
+        "@acme/-theme": false,
+        "@acme~/ui": {"esm": "source"},
+        "theme(": false,
+    });
+    let value = json!({"moduleResolution":{"sourcePackages":packages}});
+    let parsed = parse(&value.to_string(), "mokly.config.json")
+        .map(|config| {
+            serde_json::to_value(config.module_resolution).unwrap()["sourcePackages"].clone()
+        })
+        .map_err(|error| error.to_string());
+    assert_eq!(parsed, Ok(packages));
+}
+
+#[test]
 fn source_packages_reject_invalid_entries_with_the_setting_and_config_path() {
     let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
     let validator = jsonschema::validator_for(&schema).unwrap();

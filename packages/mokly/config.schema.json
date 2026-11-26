@@ -175,7 +175,7 @@
           "description": "Workspace package layouts. Build and source folders are relative to the package root.",
           "type": "object",
           "propertyNames": {
-            "$ref": "#/$defs/barePackageSpecifier",
+            "pattern": "^(?:@[A-Za-z0-9._~!*'()-]+/)?(?!\\.)[A-Za-z0-9._~!*'()-]+$",
             "not": {
               "pattern": "^(?:@[^/]+/)?[^@/]+/"
             }
