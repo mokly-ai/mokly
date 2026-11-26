@@ -24,7 +24,7 @@ Terraform contracts, Helm, and toolchain pins. Splitting them keeps each
 partition well below the slowest job, because one partition that ran every
 suite in sequence set the CI wall clock. A partition that only reads a Rust
 build cache of another partition does not save it, so the split adds no
-cache entry. Desktop has a partition. Eight app partitions and five mockup
+cache entry. Desktop has a partition. Seven app partitions and five mockup
 partitions pass their shard to `cloud-app` and `cloud-mockups`, as the
 [cloud shards](./cloud/repository-verification.md#app-shards) define. One
 site partition runs the whole `cloud-site` suite. Only
