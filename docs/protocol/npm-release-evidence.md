@@ -38,15 +38,16 @@ candidate is skipped so an older valid run for the same tree can still apply.
 Ordinary `main` push CI contains only the Node 22.15 profile, so its
 otherwise successful tag-commit run is unavailable for publishing. The usual
 applicable candidate is the associated Release Please pull-request run, whose
-trusted same-repository profile adds Node 24 and produces the viewer and
-browser reports of [both runtimes](./ci-workflow.md#required-ci).
+trusted same-repository profile adds the Node 24 viewer reports of the
+[release profile](./ci-workflow.md#runtime-profiles).
 
 ## Identity And Completeness Proof
 
 The release checkout supplies the tagged commit and its tree. The downloaded
 artifact names
 must match the CI verification namespace, be unexpired, and yield exactly one
-report per viewer and browser shard on each of `node-22.15.0` and `node-24`.
+report per viewer shard on each of `node-22.15.0` and `node-24` and one report
+per browser shard on `node-22.15.0`.
 All reports must name one full
 commit SHA. The ordinary single-runtime profile is complete ordinary CI evidence,
 but it is not release evidence and therefore classifies as absent here.

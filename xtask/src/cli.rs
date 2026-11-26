@@ -103,6 +103,9 @@ pub(crate) enum Command {
         /// Report every failed test instead of stopping at the first.
         #[arg(long)]
         no_fail_fast: bool,
+        /// Leave out the platform-neutral tests that the native suite skips.
+        #[arg(long)]
+        native: bool,
     },
     /// Print the available executor without warming boxes or running suites.
     Executor {
