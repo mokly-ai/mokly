@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 import subprocess
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -50,6 +51,10 @@ class BuildTemplateTests(unittest.TestCase):
             ASSERTION.PROBE_KEY: ASSERTION.PROBE_VALUE,
         }
         self.account = SimpleNamespace(pw_name="user", pw_dir="/home/user")
+        project = tempfile.TemporaryDirectory()
+        self.addCleanup(project.cleanup)
+        npm_project = MagicMock()
+        npm_project.__enter__.return_value = project.name
         patches = (
             patch.dict(os.environ, self.environment, clear=True),
             patch.object(ASSERTION.os, "getuid", return_value=1000),
@@ -63,6 +68,7 @@ class BuildTemplateTests(unittest.TestCase):
             patch.object(Path, "exists", return_value=False),
             patch.object(Path, "is_symlink", return_value=False),
             patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
+            patch.object(ASSERTION.tempfile, "TemporaryDirectory", return_value=npm_project),
             patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
             patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
         )
@@ -74,12 +80,32 @@ class BuildTemplateTests(unittest.TestCase):
         self.assertNotIn("env", kwargs)
         self.assertNotIn("shell", kwargs)
         self.assertEqual(kwargs["timeout"], 10)
+        if argv[:2] == ["npm", "ci"]:
+            return self.npm_clean_install(Path(kwargs["cwd"]))
         output = "v" + VERSION if argv[0] == "node" else "shell-ok"
         return SimpleNamespace(returncode=0, stdout=output)
 
+    def npm_clean_install(self, project):
+        """Like npm ci: it installs only a project that has a manifest and a lockfile."""
+        complete = all((project / name).read_text() for name in ("package.json", "package-lock.json"))
+        return SimpleNamespace(returncode=0 if complete else 1, stdout="")
+
     def test_complete_template_passes_with_one_added_entry(self):
         ASSERTION.verify(VERSION)
-        self.assertEqual(self.mocks[-1].call_count, 8)
+        self.assertEqual(self.mocks[-1].call_count, 9)
+
+    def test_npm_with_files_of_two_releases_fails(self):
+        # A Node tarball unpacked over an older npm prints its version but cannot run npm ci.
+        def mixed_npm(argv, **kwargs):
+            if argv[:2] == ["npm", "ci"]:
+                return SimpleNamespace(returncode=1, stdout="", stderr=(
+                    "npm error Class extends value undefined is not a constructor or null"))
+            return self.run_command(argv, **kwargs)
+
+        with patch.object(ASSERTION.subprocess, "run", side_effect=mixed_npm):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError,
+                                        "^npm ci of an empty project failed$"):
+                ASSERTION.verify(VERSION)
 
     def test_native_cli_requires_glibc_2_28_or_newer(self):
         cases = [("glibc 2.27", False), ("glibc 2.28", True),

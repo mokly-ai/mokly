@@ -9,7 +9,7 @@
 
 - **Terms:**
   - **E2B:** The sandbox provider that runs each cloud build attempt in a one-shot sandbox.
-  - **Build template:** The E2B template `mokly-build-v<N>` that `infra/e2b/build/` defines and `docs/ops/build-template.md` releases. The verified release is `mokly-build-v2`.
+  - **Build template:** The E2B template `mokly-build-v<N>` that `infra/e2b/build/` defines and `docs/ops/build-template.md` releases. The verified release is `mokly-build-v3`. `mokly-build-v2` is not a release, because its npm is broken.
 - **Background:** The list below gives the facts.
   - PR #45 added cloud builds on 2026-10-20. The worker runs the repository's own `mokly publish` in a sandbox and posts build checks.
   - Every repository check runs without E2B.
@@ -17,7 +17,7 @@
   - The repository cannot show whether a resource, a key or a live build exists outside it.
   - Builds default to off, and PR previews cannot enable them. The preview seed of PR #81 starts no background worker, so a preview seed proves no sandbox build.
 - **Task:** Prove cloud builds live, first on `main-preview`, then on production.
-  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v2` build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
+  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v3` build reference `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
   - With the installed App and a test repository, push to the default branch and open a pull request.
   - Watch the check move from queued to a Changes result, and press Re-run.
   - Record the result in the "Live Evidence" section of `docs/ops/build-template.md`.
