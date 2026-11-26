@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { projectAddress } from "./addresses";
+import { stateDocumentViolations } from "./document-policy";
 import { expect, freshEmail, open, openDialog, signIn, test } from "./harness";
 import { createProject } from "./project-setup";
 import { expectScreenPolicy } from "./screen-policy";
@@ -122,4 +123,28 @@ test("compact targets clear 44px on every account screen", async ({ page }) => {
     const box = await page.getByRole("button", { name }).boundingBox();
     expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(44);
   }
+});
+
+test("rendered state policy rejects silent and repeated state copy", async ({
+  page,
+}) => {
+  await page.setContent(
+    '<main data-mkc-screen="screen"><h1>Signing you in</h1>' +
+      '<div class="fo-wait" aria-busy="true"><div class="fo-state fo-wait-state"><h2 class="fo-state-title"><span class="fo-pending-label fo-wait-name">Signing you in…</span></h2></div></div>' +
+      '<section class="fo-state fo-state-problem"><span class="fo-state-glyph">!</span>' +
+      '<div class="fo-state-action">Retry</div><details><summary>Details</summary></details></section></main>',
+  );
+  expect(await page.evaluate(stateDocumentViolations)).toEqual([
+    "visible pending label repeats screen heading",
+    "error state needs announced copy",
+  ]);
+});
+
+test("rendered state policy accepts hidden state copy", async ({ page }) => {
+  await page.setContent(
+    '<main data-mkc-screen="screen"><h1>Signing you in</h1>' +
+      '<div class="fo-wait" aria-busy="true"><span class="fo-pending-label fo-sr-only" role="status">Signing you in…</span><div class="fo-state fo-wait-state"></div></div>' +
+      '<section class="fo-state fo-state-problem"><span class="fo-sr-only">Sign-in failed</span></section></main>',
+  );
+  expect(await page.evaluate(stateDocumentViolations)).toEqual([]);
 });

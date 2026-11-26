@@ -1,5 +1,7 @@
+import { createWorkspacePath } from "../../navigation/paths";
 import { projectPathFor, projectQueryPathFor } from "../addresses";
 import { expect, freshEmail, openDialog, signIn, test } from "../harness";
+import { apiOrigin, appOrigin } from "../origins";
 import { createProject } from "../project-setup";
 
 const panes = [
@@ -74,6 +76,26 @@ test("every pane opens over the viewer, and the account, access and a failed pan
     const identity = page.locator(".fo-account-header .review-account");
     await expect(identity.locator("span").last()).toHaveText("Cal Moore");
     await expect(identity).toHaveAttribute("title", email);
+  });
+
+  await test.step("a project named only by the settings query opens in the dialog", async () => {
+    const stored = await page.evaluate(
+      async ([id, origin]) => {
+        const answer = await fetch(`${origin}/v1/projects/${id}`, {
+          credentials: "include",
+        });
+        return ((await answer.json()) as { name: string }).name;
+      },
+      [projectId, apiOrigin] as const,
+    );
+    const address = new URL(createWorkspacePath, appOrigin);
+    address.searchParams.set("settings", "project");
+    address.searchParams.set("settingsProject", projectId);
+    await openDialog(page, address.pathname + address.search);
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { level: 1 }),
+    ).toHaveText("Project");
+    await expect(page.getByLabel("Project name")).toHaveValue(stored);
   });
 
   await test.step("a pane that cannot load keeps the dialog and offers one retry", async () => {
