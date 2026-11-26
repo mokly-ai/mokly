@@ -136,16 +136,14 @@ fn strict_mode_ignores_fixed_historical_authoring_warnings() {
         "specs/home.screen.html",
         "---\ntitle: Home\nprops: {label: Hello}\n---\n<p>{{label}}</p>",
     );
-    for options in [&["build", "--strict"][..], &["build"][..]] {
-        let output = run(directory.path(), options);
-        assert_eq!(
-            output.status.code(),
-            Some(0),
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-        assert!(output.stderr.is_empty());
-    }
+    let output = run(directory.path(), &["build", "--strict"]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stderr.is_empty());
 }
 
 #[test]

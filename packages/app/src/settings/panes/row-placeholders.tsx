@@ -18,8 +18,9 @@ import { useCompact } from "../../layout/viewport";
  */
 
 /**
- * A row's three-dot trigger, whose name the answer supplies: a placeholder in
- * the trigger's square box, the package's compact control under a pointer and
+ * A row's three-dot trigger, or another compact icon-only control such as the
+ * projects panel's Workspace settings cog, whose presence the answer decides:
+ * a placeholder in the control's square box, the package's compact control under a pointer and
  * the touch target on a compact surface, as `RowMenu` draws it.
  */
 export function MenuTriggerPlaceholder() {
