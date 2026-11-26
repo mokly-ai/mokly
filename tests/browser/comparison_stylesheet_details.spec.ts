@@ -85,6 +85,10 @@ test.describe("desktop stylesheet Details", () => {
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     const evidence = await openChangesEvidence(page);
     await expect(evidence.getByText(FILES_LEAD, { exact: true })).toBeVisible();
+    // The reader sees the reason of the first file in the list.
+    await expect(
+      evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
+    ).toBeVisible();
     await expect
       .poll(() => evidenceFiles(evidence))
       .toEqual([

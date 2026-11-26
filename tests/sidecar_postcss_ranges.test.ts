@@ -130,12 +130,18 @@ result.messages.push({type:'dependency',file:'${name}.txt'});}`,
     // The read returns 1 byte, and the next sequential read gets "b".
     assert.match(result.text, new RegExp(`${name}: 1-b`, "u"), name);
     const file = path.join(base, `${name}.txt`);
-    // Each recorded range holds the file's bytes at its offset.
     const recorded = result.readEvidence.reads.filter(
       (read) => read.path === file,
     );
+    // Each recorded range holds the file's bytes at its offset, and its
+    // end-of-file flag says whether the range reaches the end of the file:
+    // the facts that a build checks before it accepts the read.
     assert.deepEqual(
-      recorded.map((read) => [read.kind, read.digest]),
+      recorded.map((read) => [
+        read.kind,
+        read.digest,
+        read.kind === "byte-range" && read.eof,
+      ]),
       recorded.map((read) => [
         "byte-range",
         digest(
@@ -143,9 +149,32 @@ result.messages.push({type:'dependency',file:'${name}.txt'});}`,
             ? content.subarray(read.offset, read.offset + read.length)
             : content,
         ),
+        read.kind === "byte-range" &&
+          read.offset + read.length === content.length,
       ]),
       name,
     );
+  }
+  // The bigint position -1n reads at the current offset, so its two reads
+  // record "a" at offset 0 and "b" at offset 1. A vector read at NaN proves
+  // no position and may record no witness.
+  const bigint = path.join(base, "bigint.txt");
+  assert.deepEqual(
+    result.readEvidence.reads
+      .filter((read) => read.path === bigint)
+      .map((read) =>
+        read.kind === "byte-range"
+          ? [read.offset, read.length, read.eof, read.digest]
+          : [read.kind],
+      )
+      .sort(),
+    [
+      [0, 1, false, digest(Buffer.from("a"))],
+      [1, 1, false, digest(Buffer.from("b"))],
+    ],
+  );
+  for (const name of Object.keys(reads)) {
+    const file = path.join(base, `${name}.txt`);
     assert.deepEqual(await fs.readFile(file), content, name);
   }
 });

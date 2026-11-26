@@ -45,10 +45,12 @@ async function frameSource(
 
 // From 900px wide, the canvas shows each mockup's Light frame beside its
 // Dark frame, and each frame keeps its own scheme whatever the Appearance.
-// This case wires the shell's frames to the mockup documents. The document
-// facts of every Canvas view, and of the light-only design, are checked by
-// `appearanceViolations` in `tests/design_catalogue.test.ts`.
-test("desktop: each canvas frame keeps a selected screen in its own mockup scheme through the preview toggle", async ({
+// This case wires the shell's frames to the mockup documents, and it reads
+// what only a browser computes: the painted root of each layout and the
+// accessible Dark toggle of the light-only design. The document facts of
+// every Canvas view are checked by `appearanceViolations` in
+// `tests/design_catalogue.test.ts`.
+test("each canvas frame keeps a selected screen in its own mockup scheme, paints each layout, and names the light-only fallback", async ({
   page,
 }) => {
   const viewport = "desktop";
@@ -82,4 +84,29 @@ test("desktop: each canvas frame keeps a selected screen in its own mockup schem
   // The scheme choices keep the address, which names the chosen viewport.
   await expect(row).toHaveAttribute("aria-current", "page");
   await expect(page).toHaveURL(`/view/${entryPath}/?viewport=${viewport}`);
+
+  // The compact Mobile artboards paint their own root in each scheme.
+  await chooseViewport(page, "mobile");
+  for (const scheme of SCHEMES)
+    await expect
+      .poll(() => artboard(page, "mobile", scheme))
+      .toEqual({
+        appearance: scheme,
+        background: await canvasColor(scheme, "--cv-background"),
+      });
+
+  // A light-only inner screen: each frame's Frames filter disables Dark and
+  // names the fallback to a reader.
+  await page.goto("/view/design/canvas/inspect/unchanged/");
+  for (const shown of ["desktop", "mobile"] as const) {
+    await chooseViewport(page, shown);
+    for (const scheme of SCHEMES) {
+      const dark = page
+        .frameLocator(canvasFrame(shown, scheme))
+        .getByRole("group", { name: "Frames", exact: true })
+        .getByRole("checkbox", { name: /^Dark/u });
+      await expect(dark).toBeDisabled();
+      await expect(dark).toHaveAccessibleName(/light only/iu);
+    }
+  }
 });

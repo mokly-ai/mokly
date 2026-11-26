@@ -1,8 +1,9 @@
 /**
  * Changes loading in Serve keeps the navigation layout, All, and the Changes
- * selection through preparing, pending, ready with changes, ready with none,
- * and unavailable states. The incomplete states are emulated on real watched
- * publications; the ready states are Serve's own classification.
+ * selection through a pending first load, a preparing first load, pending,
+ * ready with changes, ready with none, and unavailable states. The incomplete
+ * states are emulated on real watched publications; the ready states are
+ * Serve's own classification.
  */
 
 import { expect } from "@playwright/test";
@@ -28,12 +29,6 @@ test("Changes loading and preparing keep the navigation layout, All, and the Cha
   const publish = (title: string) =>
     changes.edit(CONSUMER_SOURCE, consumerSource(title), consumerTitled(title));
   const emulation = await emulateChangesStatus(page);
-  emulation.set("preparing");
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`/view/${changes.paths.changed}/`);
-  await page
-    .locator("html")
-    .evaluate((root) => root.setAttribute("data-test-retained", "true"));
   const all = page.locator('[data-filter="all"]');
   const changesFilter = page.locator('[data-filter="changed"]');
   const spinner = changesFilter.locator(".mbk-nav-spinner");
@@ -41,6 +36,26 @@ test("Changes loading and preparing keep the navigation layout, All, and the Cha
   const tree = page.locator("[data-mokly-nav-scroll]");
   const status = page.locator("[data-nav-status]");
   const search = page.locator("[data-mokly-search]");
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // A first load while detection is pending.
+  emulation.set("pending");
+  await page.goto(`/view/${changes.paths.changed}/`);
+  await expect(all).toBeVisible();
+  await expect(spinner).toBeVisible();
+  await expect(navRow(page, changes.paths.changed)).toBeVisible();
+  await changesFilter.click();
+  await expect(status).toBeVisible();
+  await expect(status).toContainText("Checking for changes");
+  await expect(page.locator("a[data-nav-row]:visible")).toHaveCount(0);
+  await all.click();
+  await expect(status).toBeHidden();
+
+  emulation.set("preparing");
+  await page.goto(`/view/${changes.paths.changed}/`);
+  await page
+    .locator("html")
+    .evaluate((root) => root.setAttribute("data-test-retained", "true"));
 
   // The first load prepares the comparison.
   await expect(all).toBeVisible();
@@ -110,6 +125,8 @@ test("Changes loading and preparing keep the navigation layout, All, and the Cha
   emulation.set("preparing");
   await publish("Consumer prepared");
   await expect(filter).toHaveAttribute("data-changes-status", "preparing");
+  // A ready index that becomes incomplete keeps Changes selected.
+  await expect(changesFilter).toHaveAttribute("aria-pressed", "true");
   await expect(status.locator(".mbk-nav-status-title")).toHaveText(
     "Preparing comparison",
   );
@@ -129,6 +146,7 @@ test("Changes loading and preparing keep the navigation layout, All, and the Cha
   await expect(page.locator(".mbk-nav-spinner")).toHaveCount(0);
   await expect(status.locator(".mbk-nav-status-detail")).toHaveCount(0);
   await expect(changesFilter.locator(".mbk-nav-filter-count")).toHaveText("—");
+  await expect(changesFilter).toHaveAttribute("aria-pressed", "true");
   await all.click();
   await expect(status).toBeHidden();
   expect(await filter.boundingBox()).toEqual(initialFilter);

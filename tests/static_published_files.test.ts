@@ -5,10 +5,11 @@
  */
 
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+
+import { runCaptured } from "../scripts/verification/process.mjs";
 
 import { consumer, shim } from "./helpers/mokly_serve.js";
 
@@ -28,6 +29,17 @@ async function inventory(root: string): Promise<string[]> {
     );
 }
 
+/** Whether nothing, not even a directory or a link, exists at `entry`. */
+async function absent(entry: string): Promise<boolean> {
+  try {
+    await fs.lstat(entry);
+    return false;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+    throw error;
+  }
+}
+
 test(
   "a build without Changes holds the published files and no source, live route, or extensionless address",
   { timeout: 60_000 },
@@ -37,16 +49,18 @@ test(
       "specs/screens/welcome.screen.html":
         "---\ntitle: Welcome\n---\n<h1>Welcome</h1>",
     });
-    const built = spawnSync(
+    // The awaited runner leaves the event loop free, so the test timeout can
+    // abort the build, and the runner then ends its whole process group.
+    const built = await runCaptured(
       process.execPath,
       [shim, "build", "--no-changes", "--out", "output"],
       {
         cwd: root,
-        encoding: "utf8",
         env: { ...process.env, MOKLY_OUTPUT: "plain" },
+        signal: context.signal,
       },
     );
-    assert.equal(built.status, 0, built.stderr);
+    assert.equal(built.exitCode, 0, built.stderr);
     const files = await inventory(path.join(root, "output"));
     for (const file of [
       "mokly-viewer/index.json",
@@ -64,6 +78,8 @@ test(
       "mokly-viewer/index",
       "static/mokly-generated/screens/welcome/index.mobile",
     ])
-      assert.equal(files.includes(file), false, file);
+      // No entry of any type: no file, no directory with an index document,
+      // and no link at the address.
+      assert.equal(await absent(path.join(root, "output", file)), true, file);
   },
 );

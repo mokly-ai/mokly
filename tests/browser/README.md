@@ -226,7 +226,8 @@ instead. The tests of one file share one Serve of the default catalogue, and
 each spec closes it with `test.afterAll(closeReadOnlyCatalogue)`. Its
 `changes` fixture holds only the named paths, the URL, the base and head
 commits, and `index`. It has no source root, no `edit`, and no base move, so
-a test cannot change what the next test reads. A test of these files that
+no test changes the sources or the base of the next test. Serve's selection
+cache is shared, as the next paragraph says. A test of these files that
 edits a source or moves the base imports the private `test` of
 `serve_comparison_test.ts`, as the new-evidence test of
 `serve_comparison_renewal_panes` does. Every other spec keeps the private

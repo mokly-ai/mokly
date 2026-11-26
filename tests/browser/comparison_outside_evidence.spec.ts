@@ -171,7 +171,6 @@ test.describe("desktop component and screen evidence", () => {
     await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
     // The paragraphs come from the entry detail; then the list stays empty.
     await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
-    await expect(evidence.locator("ul > li")).toHaveText([sheets.theme]);
     await expect(evidence.locator("li")).toHaveText([sheets.theme]);
     await expectNoStatusWords(evidence);
     // The canvas keeps the current frames, and no frame compares.

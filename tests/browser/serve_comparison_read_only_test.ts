@@ -7,8 +7,9 @@ type WritableCatalogue = Awaited<ReturnType<typeof serveComparisonCatalogue>>;
 
 /**
  * The read-only view of a shared Serve comparison catalogue: no source root,
- * no edit, and no base move, so a test cannot change what the next test of
- * the file reads.
+ * no edit, and no base move, so no test changes the sources or the base of
+ * the next test of the file. Serve's selection cache stays shared, as the
+ * doc comment of `test` says.
  */
 export type ReadOnlyComparisonCatalogue = Readonly<
   Pick<WritableCatalogue, "baseCommit" | "headCommit" | "index" | "url"> & {

@@ -3,9 +3,17 @@ import os from "node:os";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
+/**
+ * A head and a base source root under one temporary root. The root is its
+ * physical path, as the sidecar resolves it, so that the paths of its read
+ * witnesses compare equal also where the temporary directory is a link.
+ */
 export async function sidecarSources(context: TestContext) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-side-sources-"));
-  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const created = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-side-sources-"),
+  );
+  context.after(() => fs.rm(created, { recursive: true, force: true }));
+  const root = await fs.realpath(created);
   const head = path.join(root, "head");
   const base = path.join(root, "base");
   await fs.mkdir(head);
