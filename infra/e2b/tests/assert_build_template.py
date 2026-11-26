@@ -2,6 +2,7 @@
 """Verify a fresh candidate through the workload streaming-process boundary."""
 
 import argparse
+import json
 import os
 from pathlib import Path
 import pwd
@@ -30,6 +31,14 @@ CREDENTIAL_FILES = (
     ".config/gcloud/credentials.db", ".config/gcloud/access_tokens.db",
     ".ssh/id_rsa", ".ssh/id_ed25519", ".ssh/id_ecdsa", ".ssh/id_dsa",
 )
+NPM_PROBE_NAME = "mokly-template-probe"
+NPM_PROBE_FILES = {
+    "package.json": {"name": NPM_PROBE_NAME, "private": True},
+    "package-lock.json": {"name": NPM_PROBE_NAME, "lockfileVersion": 3, "requires": True,
+                          "packages": {"": {"name": NPM_PROBE_NAME}}},
+}
+NPM_CLEAN_INSTALL = ["npm", "ci", "--offline", "--ignore-scripts", "--no-audit", "--no-fund",
+                     "--no-update-notifier"]
 
 
 class TemplateAssertionError(RuntimeError):
@@ -41,14 +50,25 @@ def require(condition, message):
         raise TemplateAssertionError(message)
 
 
-def command(argv):
+def command(argv, cwd=None):
     """Run a bounded probe without a shell or environment replacement."""
     try:
-        result = subprocess.run(argv, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(argv, capture_output=True, text=True, timeout=10, cwd=cwd)
     except (OSError, subprocess.TimeoutExpired) as error:
         raise TemplateAssertionError(f"{argv[0]} could not run") from error
     require(result.returncode == 0, f"{argv[0]} exited nonzero")
     return result.stdout.strip()
+
+
+def verify_npm_clean_install(workspace):
+    """Install an empty project offline; npm with files of two releases fails here."""
+    try:
+        with tempfile.TemporaryDirectory(dir=workspace) as project:
+            for name, content in NPM_PROBE_FILES.items():
+                Path(project, name).write_text(json.dumps(content) + "\n")
+            command(NPM_CLEAN_INSTALL, cwd=project)
+    except (OSError, TemplateAssertionError) as error:
+        raise TemplateAssertionError("npm ci of an empty project failed") from error
 
 
 def verify(node_version):
@@ -79,6 +99,7 @@ def verify(node_version):
     require(command(["node", "--version"]) == "v" + node_version, "Node release differs from .nvmrc")
     for executable in ("npm", "corepack", "git", "curl", "sha256sum", "python3"):
         command([executable, "--version"])
+    verify_npm_clean_install(workspace)
     require(Path("/bin/sh").is_file() and os.access("/bin/sh", os.X_OK), "/bin/sh is missing")
     require(command(["/bin/sh", "-c", "printf shell-ok"]) == "shell-ok", "/bin/sh failed")
     require(not SECRET_KEYS.intersection(os.environ), "credential environment entry exists")
