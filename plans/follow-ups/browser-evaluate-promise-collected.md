@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-26, from the branch `worktree-agent-a283e6ee0f721cf64`, which fixed the item "Viewer pick test loses its page to a navigation".
+- **Added:** 2026-11-26, from the branch `calummoore/ci-speed-flaky-follow-ups-b-and-new-k3dt`, which fixed the item "Viewer pick test loses its page to a navigation".
 - **Location:** The asynchronous page functions of 32 files under `tests/browser/`. The most are in `viewer_lifecycle.spec.ts` and `same_origin_identity.spec.ts`, six each, and in `same_origin_adapter.spec.ts`, three.
 - **Reason:** The branch fixed the two specs whose failures CI and local runs showed, and each other spec needs its own conversion and repeat runs.
 
