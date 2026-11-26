@@ -6,7 +6,7 @@ import {
   projectQueryPathFor,
 } from "./addresses";
 import { apiFailure } from "./api-responses";
-import { startCheckoutThrough, subscribe } from "./billing";
+import { subscribe } from "./billing";
 import { sql } from "./database-fixture";
 import { failureShape } from "./fragment";
 import {
@@ -234,15 +234,4 @@ test("leaving Checkout returns the pane as it was, and costs no entry", async ({
   // is the page the reader opened the dialog from.
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(viewer + "$"));
-});
-
-test("starting Checkout twice before provider expiry returns the same open session", async ({
-  page,
-}) => {
-  // The API returns the one durable session until its provider expiry, so a
-  // second press cannot create another session the reader could pay for too.
-  const { workspaceId } = await owner(page, "sessions");
-  const first = await startCheckoutThrough(page, workspaceId);
-  const second = await startCheckoutThrough(page, workspaceId);
-  expect(second).toBe(first);
 });

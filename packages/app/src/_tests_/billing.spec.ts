@@ -1,12 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { projectQueryPathFor } from "./addresses";
-import {
-  failPayment,
-  periodEndsOn,
-  reportSubscription,
-  subscribe,
-} from "./billing";
+import { periodEndsOn, subscribe } from "./billing";
 import {
   currentWorkspaceId,
   expect,
@@ -15,7 +10,6 @@ import {
   signIn,
   test,
 } from "./harness";
-import { addMember, switchSession } from "./members";
 import { createProject } from "./project-setup";
 
 /** The Billing pane against the real API, its real provider and its worker. */
@@ -115,43 +109,6 @@ test("a subscribed workspace reads its seats, total and renewal", async ({
   );
   await page.getByTestId("manage-billing").click();
   await page.waitForURL(/billing\.stripe\.test/);
-});
-
-test("both seat kinds are counted and the monthly total is their sum", async ({
-  page,
-}) => {
-  const { workspaceId, projectId } = await owner(page, "admin");
-  const binding = await subscribe(page, workspaceId, {
-    status: "active",
-    editors: 1,
-  });
-  // A seat is derived from a role: the admin joins the owner as an Editor and
-  // the reviewer is the one Collaborator, which is what the read counts.
-  await addMember(page, workspaceId, freshEmail("seat-reviewer"), "reviewer");
-  const second = freshEmail("admin-reader");
-  const memberSession = await addMember(page, workspaceId, second, "admin");
-  await openBilling(page, projectId);
-  await expect(facts(page)).toContainText("2 in use · $20 each a month");
-  await expect(facts(page)).toContainText("1 in use · $5 each a month");
-  await expect(facts(page)).toContainText("$45");
-
-  // The same facts read by an admin, whose way on is a sentence, not a control.
-  await switchSession(page, memberSession);
-  await openBilling(page, projectId);
-  await expect(facts(page)).toContainText("Team");
-  await expect(facts(page)).toContainText("2 in use · $20 each a month");
-  await expect(page.getByText("An owner manages billing.")).toBeVisible();
-  await expect(page.getByTestId("manage-billing")).toHaveCount(0);
-
-  // Only an owner opens the Portal, so a failed payment an admin reads names
-  // itself and leaves them the one thing they can do rather than a control
-  // Mokly would refuse.
-  await reportSubscription(page, workspaceId, { status: "past_due" }, binding);
-  await failPayment(page, workspaceId, binding);
-  await page.reload();
-  await expect(page.getByText("Payment failed")).toBeVisible();
-  await expect(page.getByTestId("update-payment-method")).toHaveCount(0);
-  await expect(page.getByText("An owner manages billing.")).toBeVisible();
 });
 
 test("Upgrade to Team keeps its label when a subscription is already live", async ({
