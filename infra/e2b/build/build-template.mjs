@@ -92,6 +92,7 @@ async function release() {
       debug: false,
       cpuCount: Number(cpuCount),
       memoryMB: Number(memoryMb),
+      skipCache: true,
       onBuildLogs: defaultBuildLogger(),
     },
   );

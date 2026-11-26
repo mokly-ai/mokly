@@ -4,7 +4,15 @@ import { workspaceAddress } from "./addresses";
 import { apiFailure } from "./api-responses";
 import { installedRepository, releaseRecordedGitHub } from "./database-fixture";
 import { answerGitHubPages, startGitHubFlow } from "./github-installation";
-import { expect, freshEmail, open, ready, signIn, test } from "./harness";
+import {
+  expect,
+  freshEmail,
+  open,
+  ready,
+  signIn,
+  walkSignIn,
+  test,
+} from "./harness";
 import {
   chooseRepository,
   createProject,
@@ -126,7 +134,7 @@ test("a signed-out return signs in and comes back to the connect situation", asy
   const returnTo = new URL(page.url()).searchParams.get("returnTo");
   expect(returnTo).toBe("/install?installationId=1");
 
-  await signIn(page, freshEmail("connect-signed-out"), returnTo ?? "");
+  await walkSignIn(page, freshEmail("connect-signed-out"), returnTo ?? "");
   await atConnectSituation(page, 1);
 });
 

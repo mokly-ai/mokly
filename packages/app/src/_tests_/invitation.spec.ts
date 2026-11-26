@@ -11,6 +11,7 @@ import {
   openDialog,
   openMagicLink,
   signIn,
+  walkSignIn,
   test,
 } from "./harness";
 import { createProject } from "./project-setup";
@@ -138,7 +139,7 @@ test("an accepted invitation survives a failed workspace read", async ({
     return route.fulfill({ status, contentType: "application/json", body });
   });
 
-  await signIn(page, invited, returnTo);
+  await walkSignIn(page, invited, returnTo);
   await expect(
     page.getByRole("heading", { name: "Invitation accepted" }),
   ).toBeVisible();

@@ -87,10 +87,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Shard 1 runs every check except the Mokly Rust tests. Shards 2 to 5
+        # Shard 1 runs every check except the Mokly Rust tests. Shards 2 to 4
         # each build and run one weighted share of the Rust test targets, and
         # shard 2 also runs the doc tests.
-        shard: [1/5, 2/5, 3/5, 4/5, 5/5]
+        shard: [1/4, 2/4, 3/4, 4/4]
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -571,72 +571,62 @@ jobs:
             infrastructure: false
             rust_cache: true
             rust_cache_key: cloud-app
-          - name: App checks 1/8
+          - name: App checks 1/7
             command: cloud-app
-            shard: "1/8"
+            shard: "1/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 2/8
+          - name: App checks 2/7
             command: cloud-app
-            shard: "2/8"
+            shard: "2/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 3/8
+          - name: App checks 3/7
             command: cloud-app
-            shard: "3/8"
+            shard: "3/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 4/8
+          - name: App checks 4/7
             command: cloud-app
-            shard: "4/8"
+            shard: "4/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 5/8
+          - name: App checks 5/7
             command: cloud-app
-            shard: "5/8"
+            shard: "5/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 6/8
+          - name: App checks 6/7
             command: cloud-app
-            shard: "6/8"
+            shard: "6/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 7/8
+          - name: App checks 7/7
             command: cloud-app
-            shard: "7/8"
+            shard: "7/7"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 8/8
-            command: cloud-app
-            shard: "8/8"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/app"
-            postgres: true
-            infrastructure: false
-            rust_cache: true
-          # Mockup shard 1 runs the checks without a browser, shard 2 the policy
-          # and served suites, and shards 3 to 5 split the disk browser suite.
           - name: Mockup checks 1/5
             command: cloud-mockups
             shard: "1/5"

@@ -18,7 +18,7 @@ import {
   signIn,
   test,
 } from "./harness";
-import { createProject, repositoryField } from "./project-setup";
+import { walkToProject, repositoryField } from "./project-setup";
 import { atRepositoryStep, installSecondAccount } from "./setup-walks";
 
 /**
@@ -68,7 +68,7 @@ test("the repository step lists only its own workspace's installation", async ({
   page,
 }) => {
   await signIn(page, freshEmail("two-installations"));
-  await createProject(page, "First Install Org");
+  await walkToProject(page, "First Install Org");
   const first = await workspaceAddress(page, await currentWorkspaceId(page));
 
   const secondId = await createWorkspace(page, "Second Install Org");

@@ -75,8 +75,8 @@ migrations and every assertion.
 
 ## App Shards
 
-CI runs the `cloud-app` suite as eight jobs. Job `n` runs shard `n/8`, and its
-name shows the shard, as in App checks 2/8. Each job runs on its own fresh
+CI runs the `cloud-app` suite as seven jobs. Job `n` runs shard `n/7`, and its
+name shows the shard, as in App checks 2/7. Each job runs on its own fresh
 runner with its own Postgres. It builds the web app itself and starts its own
 API. No job depends on the build of another job.
 

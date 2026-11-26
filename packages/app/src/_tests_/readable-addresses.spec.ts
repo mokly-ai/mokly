@@ -3,7 +3,6 @@ import { installApp } from "./github-installation";
 import { expect, open, test } from "./harness";
 import { chooseRepository } from "./project-setup";
 import {
-  captureReadableAddress,
   createWorkspaceStep,
   reachRepositoryStep,
   requestGate,
@@ -132,7 +131,6 @@ test("onboarding creates the exact workspace and project addresses the reader ed
   await expect(page.locator(".fo-address-preview")).toContainText(
     `/${workspaceSlug}`,
   );
-  await captureReadableAddress(page, "desktop-create-workspace");
   await page.getByTestId("create-workspace").click();
   await page.waitForURL((url) => url.pathname === "/install");
   await installApp(page);
@@ -143,7 +141,6 @@ test("onboarding creates the exact workspace and project addresses the reader ed
   await expect(page.locator(".fo-address-preview")).toContainText(
     `/${workspaceSlug}/${projectSlug}`,
   );
-  await captureReadableAddress(page, "desktop-create-project");
   await page.getByTestId("create-project").click();
   await page.waitForURL(
     (url) => url.pathname === `/${workspaceSlug}/${projectSlug}/setup`,
