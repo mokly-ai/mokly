@@ -5,7 +5,7 @@
 - **Added:** 2026-10-30, from the post-merge notes of the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
 - **Location:** `docs/ops/build-template.md`, section "Live Evidence", and `infra/e2b/build/`.
 - **Reason:** The proof needs an E2B account, a published template and the installed App, which no repository check uses.
-- **Checked:** 2026-11-24. The template `mokly-build-v2` (build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`) passed the live probe, and the "Live Evidence" section of `docs/ops/build-template.md` records it. The API deployments of main-preview and production had no build settings, so builds were off in both. The main-preview Secret Manager secret `mkc-main-preview-e2b-api-key` had one enabled version. The production secret had no version. The agent token could not read or write the GitHub Actions variables, because GitHub answered HTTP 403.
+- **Checked:** 2026-11-26. The main-preview build proof on `mokly-build-v8` is recorded in "Live Evidence" of `docs/ops/build-template.md`. Production is not proven. 2026-11-24: The template `mokly-build-v2` (build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`) passed the live probe, and the "Live Evidence" section of `docs/ops/build-template.md` records it. The API deployments of main-preview and production had no build settings, so builds were off in both. The main-preview Secret Manager secret `mkc-main-preview-e2b-api-key` had one enabled version. The production secret had no version. The agent token could not read or write the GitHub Actions variables, because GitHub answered HTTP 403.
 
 - **Terms:**
   - **E2B:** The sandbox provider that runs each cloud build attempt in a one-shot sandbox.
@@ -16,7 +16,7 @@
   - On 2026-10-30, `docs/ops/build-template.md` said that no E2B candidate had been published or verified, and that no cloud resource or key had been provisioned.
   - The repository cannot show whether a resource, a key or a live build exists outside it.
   - Builds default to off, and PR previews cannot enable them. The preview seed of PR #81 starts no background worker, so a preview seed proves no sandbox build.
-- **Task:** Prove cloud builds live, first on `main-preview`, then on production.
+- **Task:** Prove cloud builds live on production. The main-preview proof is recorded: on 2026-11-26, on `mokly-build-v8`, a pull request build of the test repository published a ready comparison and its Re-run delivered the same result, in "Live Evidence" of `docs/ops/build-template.md`. The steps below are the procedure; follow them for production.
   - First choose the newest release whose record passes the current probe, in "Live Evidence" of `docs/ops/build-template.md`. On 2026-11-26 that is `mokly-build-v8`, build reference `gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291`. Its record holds a pass of the current probe at 2026-11-26T17:49:11Z. Probe the chosen release with the current assertion by its full build reference, `TEMPLATE_ID:BUILD_ID`, as "Verify The Streaming Boundary" says for a published release. Record the pass in that release's record with the full build reference, the commit of the assertion, and the UTC time. Rotate or enable `main-preview` builds only after that pass.
 
     On 2026-11-26, `builds.template` in `MKC_MAIN_PREVIEW_APP_CONFIG` held the v6 reference above. The recorded v6 pass ran the probe from `main` at `1ce3ed0be`. That probe requires Git 2.43 or newer and runs `git cat-file --batch --filters -Z`. Its UTC time is not recorded. On v6, the smoke repository's pull request build at `c11aa3fe8` published at 12:46:31 UTC. Its check said "Catalogue ready to review." and reported two changes.
@@ -27,11 +27,10 @@
   - Watch the check of the build that this push started move from queued to a Changes result. The build must have published its own catalogue: the publication of its `publicationId` has a `buildId` equal to the build ID, and the build log's result line starts with "Published Mokly catalogue.". A ready publication from another producer, such as a CI upload of the same head, can stand in for the build, and its check then shows that upload's comparison. On such a mismatch, push another commit. Then press Re-run, which proves only the re-delivery of the stored result.
   - Record the result, with the full build reference of the template, in the "Live Evidence" section of `docs/ops/build-template.md`.
   - Repeat the proof on production after promotion. First add a version to `mkc-production-e2b-api-key` and set `MKC_PRODUCTION_APP_CONFIG` with its own deployment ID. Record the timings of a cold install against the 15-minute budget.
-- **Impact if no action:** Production has no cloud builds, so its users cannot use the product's default onboarding path. On 2026-11-26 a main-preview build on `mokly-build-v6` published a ready comparison. Its Re-run, the proof on `mokly-build-v8`, and the production proof are still due.
+- **Impact if no action:** Production has no cloud builds, so its users cannot use the product's default onboarding path.
 - **Needs:** The effort counts code changes only. The operator work of provisioning and the live runs has no sized patch. An E2B team key, the template release, a GitHub test repository with the App installed, and access to both stable environments.
 - **Done when:** The "Live Evidence" section records a successful build, check and Re-run on both environments. Each record gives the full build reference of the template, `TEMPLATE_ID:BUILD_ID`, its source revision, the environment, the publication receipts, the check URLs and the cold-install timings.
 - **Related:**
   - `plans/follow-ups/dogfood-catalogue-not-published-from-ci.md` can use cloud builds once they run.
-  - `plans/follow-ups/build-template-rollback-has-no-verified-target.md`: after the switch to v8, no earlier release passes the current probe, so the rollback step above can only disable builds.
 
 Source: [the post-merge notes](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/cloud-builds.md?plain=1#L2245-L2275) of the deleted plan.

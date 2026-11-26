@@ -30,6 +30,6 @@
 - **Previous examples:**
   - The proposal of the former follow-up item on the template's compiler guard, before the fix on 2026-11-26, changed the Dockerfile and probed only v6.
   - On 2026-11-26 two different images were built under the name `mokly-build-v6`. One was `main`'s `e2bdev/base` build `e58c1440` at 12:15Z. The other was the Debian build `b63ce806` of the branch `calummoore/builds-spike-a-plain-debian-base-for-the-aa76` at 12:43Z. Each branch had changed `template_name` from v5 to v6 against its own `origin/main`. The two builds share the template ID `mm5vcm4xv7inkey7ad9p`, so the bare ID starts the newer one.
-- **Related:** `plans/follow-ups/build-template-rollback-has-no-verified-target.md`: its option A records a verified fallback reference for each release. One release record can serve D here and that option.
+- **Related:** None. On 2026-11-26 Cal decided that no verified fallback release is kept, so a failing release disables builds.
 - **Recommendation:** B. It catches a Dockerfile change that keeps its name, with the files that the change already edits, although it checks only that the name differs. D best protects the codebase.
 - **Action:** ask the user, because B, C, and D add a check that can stop a merge or a deploy.
