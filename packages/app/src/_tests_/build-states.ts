@@ -4,13 +4,8 @@ import type { BuildAction } from "../viewer/build-action";
 import type { RequestControl } from "../viewer/request-controls";
 
 import { cancelBusy, publishBusy, tryAgainBusy } from "./build-state-busy";
-import {
-  failed,
-  follow,
-  published,
-  superseded,
-  timedOut,
-} from "./build-state-cards";
+import { follow, published, superseded, timedOut } from "./build-state-cards";
+import { failed } from "./build-state-failed";
 import { history, switcher } from "./build-state-lists";
 import type { BuildStateRow } from "./build-state-parts";
 import {

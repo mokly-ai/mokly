@@ -1,4 +1,5 @@
 import { branchPathFor, publicationPathFor } from "./addresses";
+import { installPollClock, pollUntilShown } from "./build-clock";
 import { releaseBuild, test } from "./fake-build-api";
 import { expect, freshEmail, open, signIn } from "./harness";
 import { createProject } from "./project-setup";
@@ -9,6 +10,7 @@ test("a real API build publishes this branch and opens its catalogue", async ({
 }) => {
   await signIn(page, freshEmail("real-build"));
   const projectId = await createProject(page, "Real Build Org");
+  await installPollClock(page);
   await open(page, await branchPathFor(page, projectId, "feature/catalogue"));
   await expect(
     page.getByRole("heading", { name: "No publications yet" }),
@@ -20,21 +22,27 @@ test("a real API build publishes this branch and opens its catalogue", async ({
   await expect(
     page.getByRole("heading", { name: "Publishing this branch" }),
   ).toBeVisible();
-  await expect(page.getByTestId("build-output")).toContainText(
-    "Recorded build output",
+  const output = page.getByTestId("build-output");
+  await pollUntilShown(
+    page,
+    output.filter({ hasText: "Recorded build output" }),
   );
+  await expect(output).toContainText("Recorded build output");
   const publishStep = page
     .getByRole("list", { name: "Steps" })
     .getByRole("listitem")
     .filter({ hasText: "Publish" });
+  await pollUntilShown(page, publishStep.filter({ hasText: "Running" }));
   await expect(publishStep).toContainText("Running");
   await expect(page.getByTestId("build-cancel")).toBeVisible();
   await expect(publicationReference(page)).toHaveText("feature/catalogue");
 
   await releaseBuild(buildId ?? "");
-  await expect(
-    page.getByRole("heading", { name: "Published this branch" }),
-  ).toBeVisible();
+  const published = page.getByRole("heading", {
+    name: "Published this branch",
+  });
+  await pollUntilShown(page, published);
+  await expect(published).toBeVisible();
   await expect(publishStep).toContainText("Done");
   await page.getByTestId("build-open-catalogue").click();
   await expect(page).toHaveURL(

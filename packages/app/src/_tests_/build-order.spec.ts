@@ -1,21 +1,18 @@
 import type { Page } from "@playwright/test";
 
+import { installPollClock, settledReads } from "./build-clock";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
-import {
-  branchRow,
-  build,
-  buildId,
-  buildPullRequest,
-  pullRow,
-  summary,
-} from "./viewer/build-fixtures";
+import { branchRow, buildPullRequest, pullRow } from "./viewer/build-fixtures";
 
 /**
  * The order a reference with no ready publication chooses its stage in, as
  * `viewer-builds.md` gives it: a queued or running build first for every
  * plan, then a closed pull request's card, then a fork's, for every project
- * and plan, then the plan's cards and the rest.
+ * and plan, then the plan's cards and the rest. The order itself is checked
+ * in `viewer/reference-stage.test.ts`, `viewer/stage-plan.test.ts` and
+ * `viewer/entry-resolution.test.ts`; these tests check what a reader of a
+ * refused plan is asked, and the lists the entry reads.
  */
 
 /** A project on a plan that refuses publishing, as the double reports it. */
@@ -39,59 +36,6 @@ async function stageTitle(page: Page, path: string): Promise<string> {
   await expect(title).toHaveCount(1);
   return (await title.textContent()) ?? "";
 }
-
-test("while the plan refuses, a running build, a closed card and a fork card come first", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-order-plan");
-  const { double, projectId } = scenario;
-  double.project = refused;
-  const id = buildId(151);
-  double.builds.set(id, build({ id, projectId }));
-  double.branches = [
-    branchRow("topic", { newestBuild: summary({ id, state: "running" }) }),
-  ];
-  expect(await stageTitle(page, scenario.branchAt("topic"))).toBe(
-    "Publishing this branch",
-  );
-  await expect(page.locator(".fo-top-state")).toContainText("Publishing now");
-
-  // A finished build gives way to the plan's own card.
-  double.branches = [
-    branchRow("topic", { newestBuild: summary({ id, state: "failed" }) }),
-  ];
-  expect(await stageTitle(page, scenario.branchAt("topic"))).toBe(
-    "Publishing to private projects is on Team",
-  );
-
-  // An open pull request of the project's repository gets the Team card a
-  // branch gets, because its check publishes nothing on this plan, and its
-  // failed build gives way to the card too.
-  const pull = scenario.pullAt(buildPullRequest.number);
-  for (const row of [
-    pullRow(),
-    pullRow({ newestBuild: summary({ id, state: "failed" }) }),
-  ]) {
-    double.pullRequests = [row];
-    expect(await stageTitle(page, pull)).toBe(
-      "Publishing to private projects is on Team",
-    );
-    await expect(page.getByText("Publishing starts")).toHaveCount(0);
-    await expect(page.getByTestId("stage-open-billing")).toBeVisible();
-    await expect(
-      page
-        .locator(".fo-stage-card")
-        .getByRole("button", { name: "Choose another branch" }),
-    ).toBeVisible();
-    await expect(page.locator(".fo-build")).toHaveCount(0);
-  }
-  double.pullRequests = [pullRow({ state: "closed" })];
-  expect(await stageTitle(page, pull)).toBe("This pull request is closed");
-  double.pullRequests = [pullRow({ fork: true })];
-  expect(await stageTitle(page, pull)).toBe("This pull request is from a fork");
-  await expect(page.getByText("Publishing starts")).toHaveCount(0);
-  expect(double.requests).toEqual([]);
-});
 
 test("a plan-refused pull request asks everyone but an owner to ask one", async ({
   page,
@@ -134,6 +78,24 @@ test("the entry lists no reference again when the route holds its list", async (
     if (path === prefix + "pull-requests") lists.push("pull requests");
     if (path === prefix + "branches") lists.push("branches");
   });
+  // A second list read would come from the page's own work or one of its
+  // timers, so each check lets a second pass on the page's clock and waits
+  // until no list read is in flight before it reads the list of reads.
+  await installPollClock(
+    page,
+    String.raw`^/v1/projects/[^/]+/(branches|pull-requests)$`,
+  );
+  const settle = async () => {
+    await page.clock.runFor(1_000);
+    // A read that the page starts from the work of the last one is counted
+    // by the next look, so look until two looks agree.
+    let started = await settledReads(page);
+    for (;;) {
+      const again = await settledReads(page);
+      if (again === started) return;
+      started = again;
+    }
+  };
 
   // The route reads the pull request list for its chrome, and the entry
   // takes the alias's row from it.
@@ -141,7 +103,7 @@ test("the entry lists no reference again when the route holds its list", async (
   expect(await stageTitle(page, scenario.pullAt(buildPullRequest.number))).toBe(
     "This pull request is from a fork",
   );
-  await page.waitForTimeout(1_000);
+  await settle();
   expect(lists).toEqual(["pull requests"]);
 
   // A completed list with no row for the alias is not read again.
@@ -149,7 +111,7 @@ test("the entry lists no reference again when the route holds its list", async (
   expect(await stageTitle(page, scenario.pullAt(99))).toBe(
     "No publication yet",
   );
-  await page.waitForTimeout(1_000);
+  await settle();
   expect(lists).toEqual(["pull requests"]);
 
   // The route reads no branch list, so a branch alias lists branches once.
@@ -158,6 +120,6 @@ test("the entry lists no reference again when the route holds its list", async (
   expect(await stageTitle(page, scenario.branchAt("topic"))).toBe(
     "No publications yet",
   );
-  await page.waitForTimeout(1_000);
+  await settle();
   expect(lists).toEqual(["branches"]);
 });
