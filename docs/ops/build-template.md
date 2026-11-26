@@ -8,6 +8,9 @@ PR previews always keep builds disabled. The contract is
 ## Release Prerequisites
 
 Use an authorized operator shell. Install the repository's Node and npm pins.
+Also install the libpq development files, such as Debian's `libpq-dev`,
+because the live probe's `cargo test` links libpq. Without them, the probe's
+build fails with `unable to find library -lpq`.
 This procedure uses the `e2b@2.64.0` SDK through
 `infra/e2b/build/build-template.mjs`. E2B builds the Dockerfile remotely, so
 the shell needs no Docker. The SDK build needs only the team key. The script
@@ -26,38 +29,38 @@ Helm values, logs or a release report. Disable shell tracing.
 writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
 definition as a provider configuration.
 
-The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template).
-The pin was resolved from Docker Hub's `e2bdev/base:latest` tag on 2026-10-10:
-`sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
-The registry confirms an OCI index with Linux amd64 and arm64 images.
-The tag's [Docker Hub record](https://hub.docker.com/v2/repositories/e2bdev/base/tags/latest)
-provides its release source; the Dockerfile digest fixes the image. It installs the exact `.nvmrc` Node
-tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
-It first removes the base image's Node, npm and corepack files, so no file of
-an older release stays beside the new ones.
-It enables corepack and supplies npm, Git, curl, coreutils, Python 3 and CA
-certificates. The image must keep glibc 2.28 or newer, because the pinned
-CLI's native binary has no musl build and no JavaScript fallback.
+The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template),
+`debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+The digest was resolved on 2026-11-26 from the tag's
+[Docker Hub record](https://hub.docker.com/v2/repositories/library/debian/tags/trixie-20261123-slim).
+The registry confirms the digest, an OCI index that includes Linux amd64 and
+arm64 images. The dated tag names the one image that the digest fixes.
+
+The Dockerfile upgrades the installed Debian packages. Then it installs
+`build-essential`, CA certificates, coreutils, curl, Git, Python 3 and
+`xz-utils` from Debian. It installs the exact `.nvmrc` Node tarball with its
+checked-in SHA-256 from Node's release `SHASUMS256.txt`. The tarball supplies
+npm and corepack, and the Dockerfile enables corepack. The base has no Node,
+npm, Python or Git of its own, so the image holds one copy of each. E2B's
+build adds systemd, sudo, openssh-server, chrony and its other agent packages
+to any Debian image, so the base needs nothing else.
+
+The image must keep glibc 2.28 or newer, because the pinned CLI's native
+binary has no musl build and no JavaScript fallback.
 The image must also keep Git 2.43 or newer. The CLI reads a comparison base
 with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
-the oldest Git with a recorded working comparison. Debian bookworm and
-bookworm-backports supply only Git 2.39.5, which exits 129 on `-Z`. So the Dockerfile builds the pinned Git source release from kernel.org,
-with its checked-in SHA-256 from kernel.org's `sha256sums.asc`, into
-`/usr/local`, and then removes the sources and the build packages. A process
-that starts `git` by name gets that build from `/usr/local/bin`. The base
-image's Debian Git 2.39.5 stays at `/usr/bin/git`. The purge with
-`--auto-remove` also removes the base image's own compiler packages, so the
-image has no `gcc`, `g++`, `make` or `ld`. A dependency that compiles a native
-addon during `npm ci` then fails.
+the oldest Git with a recorded working comparison. Debian trixie's Git 2.47.3
+meets that floor, and Debian's security updates cover it. The image must keep
+a C compiler, a C++ compiler and `make`, so that a dependency can compile a
+native addon during `npm ci`.
+
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
 is baked into the image.
 
 Before a Node update, change `.nvmrc` and the Dockerfile version and checksum
-together. Before a Git update, change the Dockerfile's Git version and
-checksum together. Run `cargo xtask toolchain-pins` and the local template
-regressions.
+together. Run `cargo xtask toolchain-pins` and the local template regressions.
 An E2B base or tool change also requires a new template release and assertion.
 The [build toolchain checks](../protocol/cloud/repository-layout.md#build-toolchain-checks)
 reject an unpinned base before release.
@@ -125,7 +128,9 @@ project, so an npm install that mixes files of two releases fails the probe.
 It requires that the `git` on the process `PATH` reports 2.43 or newer and
 accepts `git cat-file --batch --filters -Z` on empty input in a new
 repository. It reads no file and runs no comparison, so a pass does not prove
-that a comparison works.
+that a comparison works. It requires `cc`, `c++` and `make`. It requires that
+`node`, `npm`, `npx`, `corepack`, `python3` and `git` each resolve to one real
+file on `PATH`.
 The E2B team key stays in the operator process.
 
 Choose the build reference to probe:
@@ -371,7 +376,35 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
   check, passed on 2026-11-26 with the build reference. That run came before
   the probe's Git check, and its UTC time and assertion commit are not
-  recorded.
+  recorded. The live probe from commit `0ad58e724` failed against v5 on
+  2026-11-26. Its script, run by hand on v5, printed
+  `FAIL build template: python3 has multiple copies on PATH`. Beside Debian's
+  Python and Git, v5 also holds the base's own Python and the Git source build.
+- `mokly-build-v6`, build reference
+  `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` (template ID
+  `mm5vcm4xv7inkey7ad9p`, build ID `b63ce806-b4a9-4567-a406-89300f259d8b`),
+  E2B team `firna`. It was built 2026-11-26T12:43:06Z, in 1m10s, with
+  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`, from the
+  Dockerfile at `0ad58e724`. Node 24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base
+  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
+  gcc 14.2.0 and GNU Make 4.4.1, and `git` was `/usr/bin/git` 2.47.3. Each of
+  `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
+  `PATH`. The root filesystem used 746 MiB, and `gh` was absent. An HTTPS
+  `git ls-remote` worked. In the smoke repository `mokly-ai/mokly-build-smoke`
+  at `d5fe94d`, with `@mokly/mokly` 0.21.0, `npm ci` succeeded and
+  `mokly build --strict` built the catalogue. After a one-commit change,
+  `mokly build --config mokly.config.json --strict --base origin/main` gave
+  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
+  source, `npm_config_build_from_source=true npm install utf-8-validate@6.0.5`,
+  compiled its native addon. `git grep -P` with a lookahead pattern worked,
+  and `git cat-file --batch --filters -Z` exited 0 in the repository. These
+  checks ran from 2026-11-26T12:43:44Z to 12:44:08Z. The live probe from
+  commit `0ad58e724`, with its Git, compiler and one-copy checks, printed
+  `PASS live build template: assertion completed and candidate destroyed` at
+  2026-11-26T12:43:32Z with the build reference.
 
 ### Environments
 

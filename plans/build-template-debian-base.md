@@ -109,17 +109,17 @@ Depends on: none. Starts with Milestone 1.
 
 Depends on: 2.
 
-- [ ] Build `mokly-build-v6` from the final Dockerfile with the release script.
-- [ ] Live probe, smoke build, comparison build, and a forced native addon
+- [x] Build `mokly-build-v6` from the final Dockerfile with the release script.
+- [x] Live probe, smoke build, comparison build, and a forced native addon
       build from source. Evidence in `.context/build-template-debian-base/`.
 
 ## Milestone 4: Runbook and records
 
 Depends on: 3.
 
-- [ ] `docs/ops/build-template.md`: the base pin source, the libpq
+- [x] `docs/ops/build-template.md`: the base pin source, the libpq
       prerequisite, no old-Node or Git-source text, and the v6 release record.
-- [ ] `plans/follow-ups/cloud-builds-never-ran-live.md`: name the live release.
+- [x] `plans/follow-ups/cloud-builds-never-ran-live.md`: name the live release.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
