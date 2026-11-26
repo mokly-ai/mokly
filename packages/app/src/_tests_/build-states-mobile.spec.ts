@@ -1,14 +1,6 @@
-import type { CardState } from "./build-card-parts";
-import { buildCardStates } from "./build-card-states";
+import { phases } from "./build-card-walk";
 import { scrollsSideways } from "./build-refusals";
 import { buildScenario } from "./build-scenario";
-import {
-  becomeReviewer,
-  leaveWorkspace,
-  outsiderStates,
-  reviewerStates,
-  stageStates,
-} from "./build-stage-states";
 import { history } from "./build-state-lists";
 import { phone } from "./build-state-parts";
 import { planOwner } from "./build-state-readers";
@@ -20,7 +12,8 @@ import { expect, test } from "./harness";
  * rows: History opens from More, and Open billing opens Billing as a route.
  * Those two rows run here too. Every other row reads the same card at every
  * width, so the phone checks only that no card scrolls sideways, in every
- * state a card draws, at the suite's 390px and at 320px.
+ * state a card draws, at the suite's 390px and at 320px. `build-card-walk.ts`
+ * keys those states by the same unions as the desktop rows.
  */
 
 for (const row of [planOwner, history])
@@ -38,8 +31,9 @@ for (const row of [planOwner, history])
 test("no card scrolls sideways on a phone, in any state", async ({ page }) => {
   const scenario = await buildScenario(page, "build-mobile-card-widths");
   const overflowing: string[] = [];
-  const walk = async (states: readonly CardState[]) => {
-    for (const state of states) {
+  for (const phase of phases) {
+    await phase.enter(page, scenario);
+    for (const state of phase.states) {
       await page.setViewportSize({ width: 390, height: 844 });
       const release = await state.show(page, scenario);
       for (const width of [390, 320]) {
@@ -49,12 +43,6 @@ test("no card scrolls sideways on a phone, in any state", async ({ page }) => {
       }
       if (release) await release();
     }
-  };
-
-  await walk([...stageStates, ...buildCardStates]);
-  await becomeReviewer(page, scenario);
-  await walk(reviewerStates);
-  await leaveWorkspace(page);
-  await walk(outsiderStates);
+  }
   expect(overflowing, "the states that scroll sideways").toEqual([]);
 });

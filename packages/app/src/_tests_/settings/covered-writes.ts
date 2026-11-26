@@ -27,8 +27,6 @@ export const coveredElsewhere: Readonly<
   refusal: {
     "members/confirm-remove-member":
       "settings/members.spec.ts: a failed removal leaves no way back on the role form",
-    "project/confirm-visibility":
-      "plan.spec.ts: making a project private on the free plan is refused in its modal",
     "tokens/confirm-revoke":
       "settings/tokens.spec.ts: a failed token revoke says so and offers one retry",
   },

@@ -10,14 +10,20 @@ import { branchRow, build, buildId, pullRow } from "./viewer/build-fixtures";
  * The parts of the card state lists that `build-states-mobile.spec.ts` walks
  * on a phone to see that no card scrolls sideways: what a state is, the builds
  * the states set, and the ways onto a build card and the publishing card.
- * `build-card-states.ts` lists the build card's states and
- * `build-stage-states.ts` the publishing card's.
+ * `build-card-states.ts` holds the build card's states,
+ * `build-stage-states.ts` the publishing card's, and `build-card-walk.ts`
+ * keys them by the application's unions.
  */
+
+/** Who reads the card: the project's owner, a reviewer, or an outsider. */
+export type Reader = "owner" | "reviewer" | "outsider";
 
 /** One state a card draws, reached in the walk's one signed-in project. */
 export interface CardState {
   /** The state, as a failure of the walk names it. */
   name: string;
+  /** The reader the state is drawn for, which sets the walk's phase. */
+  reader: Reader;
   /**
    * Put the reader on the state and wait until it is drawn. A state that
    * holds a request returns how to let it through once it has been read.
