@@ -214,6 +214,23 @@ test("a member reads the accounts in both panes and is offered no action", async
     await expect(fact).toContainText(installedAccount);
     await expect(fact.getByRole("button", { name: "Manage" })).toHaveCount(0);
   });
+
+  await test.step("a member is not shown the Billing pane at all", async () => {
+    await expect(
+      page
+        .getByRole("navigation", { name: "Settings sections" })
+        .getByRole("link", { name: "Billing" }),
+    ).toHaveCount(0);
+    // An address they may not read opens the first pane they may, rather than
+    // failing the surface they asked for.
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=billing"),
+    );
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { level: 1 }),
+    ).toHaveText("Account");
+  });
 });
 
 test("the pane says when the accounts could not load", async ({ page }) => {
