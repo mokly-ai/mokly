@@ -130,9 +130,9 @@ Depends on: 3.
       prerequisite, no old-Node or Git-source text, and the v6 release record.
 - [x] `plans/follow-ups/cloud-builds-never-ran-live.md`: name the live release.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 5: Verification, commit, and review
 
-Depends on: every other milestone
+Depends on: 2, 3, and 4
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Evidence: `.context/build-template-debian-base/gate-full-3.log` and
@@ -144,11 +144,6 @@ Depends on: every other milestone
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report. Findings file:
       `.context/reviews/calummoore/builds-spike-a-plain-debian-base-for-the-aa76/findings.md`.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
-      plan".
-- [ ] Open the pull request. Its description gives the decisions and the
-      design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds.
 
 ## Milestone 6: Release `mokly-build-v7` after the v6 merge
 
@@ -170,6 +165,16 @@ Depends on: 5. Starts after `main` with PR #571 merges into this branch.
 - [x] Reconcile the follow-up items that PR #571 added or kept with this
       change.
 - [ ] Run the gate checks again, review the merge, and push.
+
+## Milestone 7: Plan deletion and pull request
+
+Depends on: every other milestone
+
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
 
 ## Post-merge follow-up (non-blocking)
 
