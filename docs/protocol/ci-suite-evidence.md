@@ -181,8 +181,8 @@ identify the expected failure. No sleep synchronizes an assertion.
 totals. The runtime profile job reads this file and publishes the shard matrices.
 The report aggregate and [remote verification](./remote-verification.md) read
 the same file, so a shard count change is one edit. Decision: shard the viewer
-suite until each job takes about 7 to 9 minutes, and the browser suite until
-each job takes about 7 minutes or less, including setup. GitHub-hosted
+and browser suites until each job takes about 7 minutes or less, including
+setup. The viewer jobs took 5.3 to 9 minutes with two shards. GitHub-hosted
 runners for this public repository cost nothing, so a shard adds no cost;
 each shard repeats about 4 minutes of setup, build, and browser global setup. The [worker count](#test-concurrency)
 of a shard does not change.
@@ -212,12 +212,14 @@ longest shard shortest, and it charges that build once to each such shard.
 The other shards skip the build. Every
 discovered test must run, including tests without a prior duration sample.
 Rebalancing targets shard durations within 15 percent of each other.
+The [CI timing report](./ci-duration-budgets.md#shard-balance) warns when the
+shards of one run spread more than their budget.
 Durations stay observations, not passing conditions for tests.
 The count bound runs wherever shard
 reports are validated: `Required CI`, the remote Testbox gate, and release
 evidence validation, where a shard above the limit makes the evidence invalid
 and stops the publish. The local sequential gate runs unsharded and does not
-apply it. The [verification script reference](../../scripts/verification/README.md#browser-partitioning)
+apply it. The [shard weights guide](../development/shard-weights.md#browser-partitioning)
 describes the scheduling inputs and discovery boundary.
 
 ## Viewer Shard Balance
@@ -232,6 +234,8 @@ shard runs its files with the same
 the [required type check](./developer-type-checks.md#required-type-check),
 so each runtime type checks once. The viewer suite has no test-count bound.
 Rebalancing targets shard durations within 15 percent of each other.
+The [CI timing report](./ci-duration-budgets.md#shard-balance) warns when the
+shards of one run spread more than their budget.
 
 Coverage, assertion deadlines, worker limits, audits, and zero-retry behavior
 are never relaxed to meet a timing target. Job hang guards follow the

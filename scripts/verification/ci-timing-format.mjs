@@ -23,3 +23,8 @@ export function cell(text) {
 export function escapeCommand(text) {
   return text.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
 }
+
+/** A job name as a table cell, linked to the job when it has a URL. */
+export function jobCell(job) {
+  return job.url ? `[${cell(job.name)}](${job.url})` : cell(job.name);
+}

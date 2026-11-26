@@ -21,7 +21,7 @@ fn publish_codes_keep_their_causes_and_exit_codes() {
                 exit_code: exit,
                 cli_error: Some(MoklyCliCode::parse(code)),
             };
-            let result = finish(&outcome, None, 1, at);
+            let result = finish(&outcome, None, at).resolve(1, at).0;
             assert_eq!(result.state, BuildState::Failed);
             assert_eq!(result.failure_cause.unwrap().as_str(), cause);
             assert_eq!(result.exit_code, exit);
@@ -35,7 +35,10 @@ fn publish_codes_keep_their_causes_and_exit_codes() {
                 (UploadOutcome::Accepted, None),
             ] {
                 assert_eq!(
-                    finish(&outcome, Some(upload), 1, at).failure_cause,
+                    finish(&outcome, Some(upload), at)
+                        .resolve(1, at)
+                        .0
+                        .failure_cause,
                     expected
                 );
             }
@@ -186,7 +189,7 @@ fn every_runner_outcome_maps_to_the_lifecycle_table() {
             None,
         ),
     ] {
-        let result = finish(&outcome, upload, 1, at);
+        let result = finish(&outcome, upload, at).resolve(1, at).0;
         assert_eq!(
             (result.state, result.failure_cause, result.exit_code),
             (state, cause, exit),

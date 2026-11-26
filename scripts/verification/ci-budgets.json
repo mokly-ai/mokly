@@ -22,5 +22,43 @@
     { "pattern": "Site checks*", "minutes": 10 },
     { "pattern": "Workload image checks*", "minutes": 10 },
     { "pattern": "Site Lighthouse*", "minutes": 10 }
+  ],
+  "shardGroups": [
+    {
+      "name": "Repository",
+      "patterns": ["Repository (shard */*)"],
+      "exclude": ["Repository (shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Native macOS",
+      "patterns": ["Native (macos-*, shard */*)"],
+      "exclude": ["Native (macos-*, shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Native Windows",
+      "patterns": ["Native (windows-*, shard */*)"],
+      "exclude": ["Native (windows-*, shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Viewer",
+      "patterns": ["Viewer (Node *, shard */*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Browser",
+      "patterns": ["Browser (Node *, shard */*)"],
+      "spreadMinutes": 2
+    },
+    { "name": "App", "patterns": ["App checks */*"], "spreadMinutes": 2 },
+    {
+      "name": "Mockup disk suite",
+      "patterns": ["Mockup checks */*"],
+      "exclude": ["Mockup checks 1/*", "Mockup checks 2/*"],
+      "spreadMinutes": 2,
+      "weighted": false
+    }
   ]
 }

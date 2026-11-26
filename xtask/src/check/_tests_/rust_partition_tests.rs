@@ -99,10 +99,13 @@ fn units_are_the_default_nextest_targets_of_the_mokly_packages() {
     assert_eq!(test_units(&metadata()).unwrap(), expected);
 }
 
+/// A unit weighs its compile seconds plus its test seconds, and a part that
+/// only the other map names counts zero: here `heavy` weighs 10, `light` 4,
+/// and `--lib` 6. The unknown unit `new` takes the default weight of 5.
 #[test]
 fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 2, "docSeconds": 5, "units": {"--test heavy": 10, "--test light": 4, "--lib": 6}}"#,
+        r#"{"defaultSeconds": 5, "docSeconds": 5, "compileSeconds": {"--test heavy": 6, "--lib": 6}, "testSeconds": {"--test heavy": 4, "--test light": 4}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [
@@ -115,8 +118,8 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
     assert_eq!(
         whole(partition(&units, &weights, 2)),
         [
-            vec![TestUnit::Libraries, test("new")],
-            vec![test("heavy"), test("light")]
+            vec![TestUnit::Libraries, test("light")],
+            vec![test("heavy"), test("new")]
         ]
     );
 }
@@ -126,7 +129,7 @@ fn the_heaviest_units_spread_first_and_unknown_units_take_the_default_weight() {
 #[test]
 fn the_library_unit_tests_run_on_the_first_shard() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {"--test heavy": 10, "--lib": 1}}"#,
+        r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {"--test heavy": 10, "--lib": 1}, "testSeconds": {}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [test("heavy"), TestUnit::Libraries].into();
@@ -140,7 +143,10 @@ fn the_library_unit_tests_run_on_the_first_shard() {
 /// still get a shard of its own.
 #[test]
 fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
-    let weights = Weights::parse(r#"{"defaultSeconds": 1, "docSeconds": 5, "units": {}}"#).unwrap();
+    let weights = Weights::parse(
+        r#"{"defaultSeconds": 1, "docSeconds": 5, "compileSeconds": {}, "testSeconds": {}}"#,
+    )
+    .unwrap();
     let units: BTreeSet<_> = [test("a"), test("b")].into();
     assert_eq!(
         whole(partition(&units, &weights, 3)),
@@ -153,7 +159,7 @@ fn the_doc_tests_leave_room_for_one_unit_on_each_later_shard() {
 #[test]
 fn a_split_unit_runs_each_slice_on_its_own_shard() {
     let weights = Weights::parse(
-        r#"{"defaultSeconds": 1, "docSeconds": 0, "units": {"--test heavy": 10}, "splits": {"--test heavy": 2}}"#,
+        r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {}, "testSeconds": {"--test heavy": 10}, "splits": {"--test heavy": 2}}"#,
     )
     .unwrap();
     let units: BTreeSet<_> = [test("heavy")].into();
@@ -196,6 +202,12 @@ fn every_unit_runs_on_exactly_one_shard_for_every_total() {
     }
 }
 
+/// Fixed weights of the metadata units: `--lib` outweighs every other unit
+/// together, so it runs alone on the first of two shards, and
+/// `integration_tests` runs as three slices.
+const FIXTURE_WEIGHTS: &str = r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {"--lib": 100}, "testSeconds": {"--test integration_tests": 30}, "splits": {"--test integration_tests": 3}}"#;
+
+/// A check runner over the metadata units, placed by the fixture weights.
 fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
     let output = CommandRunnerOutputMock
         .next_call(
@@ -207,6 +219,7 @@ fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     )
+    .with_rust_test_weights(Weights::parse(FIXTURE_WEIGHTS).unwrap())
 }
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
@@ -232,9 +245,9 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
     .unwrap();
 }
 
-/// The embedded weights split `integration_tests` in two. One shard runs its
-/// whole units in one command and each slice in its own command, and a
-/// failed slice does not stop the next one when the shard reports every
+/// The fixture weights split `integration_tests` in three. One shard runs
+/// its whole units in one command and each slice in its own command, and a
+/// failed slice does not stop the next ones when the shard reports every
 /// failure.
 #[test]
 fn each_slice_of_a_split_unit_runs_in_its_own_command() {
@@ -245,7 +258,7 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
             .next_call(matching!((spec) if spec.display() == WHOLE))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((spec) if spec.display() == format!("{SLICE}1/2")))
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}1/3")))
             .answers(&|_, spec| {
                 Err(Error::CommandFailed {
                     command: spec.display(),
@@ -253,13 +266,16 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
                 })
             }),
         CommandRunnerRunMock
-            .next_call(matching!((spec) if spec.display() == format!("{SLICE}2/2")))
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}2/3")))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}3/3")))
             .returns(Ok(())),
     ))
     .rust_test_shard(Shard::from_str("1/1").unwrap(), true);
     assert!(matches!(
         failed,
-        Err(Error::CommandFailed { command, .. }) if command == format!("{SLICE}1/2")
+        Err(Error::CommandFailed { command, .. }) if command == format!("{SLICE}1/3")
     ));
 }
 

@@ -75,8 +75,8 @@ viewer shard, one `browser-INDEX-of-TOTAL` command per browser shard, plus
 `static-delivery`. Each shard command passes `--shard INDEX/TOTAL`, also when
 the total is 1.
 [`ci-shards.json`](../../scripts/verification/ci-shards.json) holds both
-totals, which CI also uses: 2 viewer and 10 browser shards now, so a complete
-run has 21 commands and 12 reports. An invalid file makes remote verification
+totals, which CI also uses: 3 viewer and 14 browser shards now, so a complete
+run has 26 commands and 17 reports. An invalid file makes remote verification
 unavailable before any box warms up. The delivery command builds the source
 and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
 fingerprint check, so index readers see the same tree as a committed

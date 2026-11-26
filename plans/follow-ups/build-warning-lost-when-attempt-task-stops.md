@@ -1,0 +1,31 @@
+# Build warning lost when the attempt task stops
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from finding 4 of the review of the branch `calummoore/builds-log-why-an-attempt-ends-as-9iep`.
+- **Location:** `crates/mkc-publications/src/build_worker/execution.rs:20-42` and `:82-95`, `crates/mkc-api/src/build_runtime.rs:20-55`.
+- **Reason:** The loss needs a renewal tick or a shutdown inside a window of a few database round trips, and the fix rule defers a rare product bug that is not High.
+
+- **Terms:**
+  - **Attempt:** One run of a cloud build in a sandbox.
+  - **Lease:** The time-limited ownership of a running attempt. The worker renews it every 30 seconds.
+  - **Infrastructure ending:** An attempt that ends as an infrastructure retry, or as the final `failed` (`infrastructure`) result after the fifth attempt.
+  - **Finalization:** The transaction that records the attempt's ending and clears its lease.
+- **Background:**
+  - `docs/protocol/cloud/cloud-build-lifecycle.md` requires one warning, with a safe reason, after each committed infrastructure ending.
+  - `run_attempt` in `execution.rs` races the whole attempt future, finalization included, against a 30-second renewal timer.
+  - `finalize_attempt` runs the finalizer on a blocking task. The finalizer returns the warning of a committed ending. The async attempt future logs it after the blocking task joins.
+  - When the timer fires while finalization runs, the worker renews first. Finalization can commit and clear the lease before the renewal query runs. Renewal then returns `false`, and `run_attempt` returns and drops the attempt future, with the warning in it.
+  - A deploy's shutdown has the same effect. The API drops the build loop, and its `JoinSet` aborts the attempt task, while the blocking finalization still commits.
+- **Problem:** A committed infrastructure ending can end with no warning line.
+- **Impact if no action:** An operator can see a retry or a final "Build couldn't run" with no log line that says why, in the rare case of the timing above.
+- **Root question:** How can each committed infrastructure ending keep its warning when the worker stops the attempt after the commit?
+- **Options:**
+  - **A.** Log inside the blocking finalization task, after the transaction returns. Carry the caller's `tracing` dispatcher into that task, as `crates/mokly-graph/src/worker_context.rs` does, so the worker tests in `crates/mkc-publications/src/_tests_/build_worker/warning_tests.rs` still capture the event. This covers renewal and shutdown. Effort: Small.
+  - **B.** Take finalization out of the renewal race: `execute_owned` returns the attempt result, the renewal loop races only that, and finalization runs after the loop. A regression test fires the renewal timer from the finalization fence read. This covers renewal only. Effort: Small.
+  - **C.** Do B and A together. Effort: Medium.
+- **Left out:** Waiting for finalization in the failed-renewal branch, because B is better on every point. Storing the warning for later delivery, because it changes the persistence contract and needs a migration.
+- **Wider fix:** C. It removes the race and ties the log line to the task that commits.
+- **Previous examples:** `crates/mkc-publications/src/_tests_/build_worker/renewal_tests.rs` shows that a failed renewal drops pending work.
+- **Recommendation:** C. A alone covers both triggers. B also stops a renewal from running against a lease that finalization clears.
+- **Action:** fix after merge, apply C, because the loss is rare and the fix rule defers a rare product bug that is not High.

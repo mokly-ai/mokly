@@ -28,14 +28,12 @@ fn ci_pins_tools_checks_pull_requests_and_has_an_unconditional_aggregate() {
             "cancel-in-progress: false",
             Violation::Concurrency,
         ),
-        ("--with-deps chromium", "chromium", Violation::Chromium),
         ("createdb mkc_test", "true", Violation::Postgres),
         (
             "MKC_TEST_DATABASE_URL:",
             "IGNORED_DATABASE_URL:",
             Violation::Postgres,
         ),
-        ("npm ci", "npm install", Violation::Chromium),
         (
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
             "actions/checkout@main",

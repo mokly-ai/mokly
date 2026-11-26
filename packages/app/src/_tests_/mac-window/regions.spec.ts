@@ -179,6 +179,15 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.setViewportSize({ width: 1440, height: 900 });
+  // The avatar lies over the account Button, so no press on it moves the
+  // window, at its middle neither.
+  await emulateMacWindow(page, "start");
+  await expectTakesClicksThroughout(
+    page,
+    page.getByTestId("viewer-account"),
+    "the account control",
+  );
+  await clearMacWindow(page);
   const account = await openAccountMenu(page);
   await expectTakesClicks(account, "the account menu");
   await account

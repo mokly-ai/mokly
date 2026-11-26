@@ -42,9 +42,10 @@ Public test commands and strict evidence rules live in the
   that a commit has every CI suite report for each runtime profile.
 - [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
   job runs. It reads the jobs of the run, compares each run time with
-  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, lists
-  the slowest tests of the downloaded reports, and compares the Actions cache
-  total with its budget, under the
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path,
+  compares the shards of each shard group, lists the slowest tests of the
+  downloaded reports, and compares the Actions cache total with its budget,
+  under the
   [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
   [`ci-timing-cache.mjs`](./ci-timing-cache.mjs) reads and reports the cache
   list. Run the report locally on saved API responses with
@@ -132,89 +133,12 @@ review the resulting lockfile. Audit it explicitly with
 tool through `npm run dependencies:check:rust`. The tool source stays pinned
 unless its version and archive checksum are updated together.
 
-## Browser partitioning
+## Shard weights
 
-The strict runner discovers the complete Playwright inventory before selecting
-a shard. Both hosted CI and the remote executor call this runner. It assigns
-whole specs by descending estimated cost to the least-cost shard that has
-room under the existing test-count cap. If greedy placement exceeds the cap,
-a deterministic capacity search retries whole-file placements, largest test
-counts first. It retains the weighted assignment when that assignment fits.
-If no complete nonempty assignment fits, every spec still executes and the
-aggregate reports its existing count-limit failure.
-
-[`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. The Playwright reporter records a
-`wallMs` for each observed test: the time that its worker slot spent since
-the previous test ended. That time includes the hooks, fixtures, and worker
-restarts before the test. For each report and `specFile`, the weight sums
-`wallMs` and divides by the observed test count. The committed weight is the
-median of these per-test costs over the reports, rounded to three decimal
-places.
-
-Specs go in order of their larger share of the total estimated cost or of
-the total test count. Specs with many tests therefore take their places
-before the count cap fills.
-
-[`browser-host-needs.mjs`](./browser-host-needs.mjs) marks the specs whose
-static relative import graph reaches `tests/browser/static_test.ts`, the only
-reader of the copied static example. For each count of copy shards, placement
-puts the marked specs on those shards first, each charged
-`COPIED_HOST_SETUP_MS` once, then the other specs on all shards. It keeps the
-count with the shortest longest shard. A shard without a marked spec passes
-`MOKLY_PLAYWRIGHT_COPIED_HOST=skip`, so global setup skips that build. Removed
-specs leave the weights unused, and new specs take the median weight.
-
-The scheduler multiplies each weight by the current discovered test count.
-New specs use the median known per-test weight. Removed specs cannot enter
-the assignment because discovery owns membership. File names break ties in
-stable string order. Scheduling weights are estimates, never elapsed-time assertions.
-
-The strict runner passes escaped exact file patterns to Playwright instead
-of its count-based `--shard` selection. The reporter must observe the same
-test IDs as independent discovery. Unsharded strict runs and developer
-Playwright selection keep their complete or requested inventories.
-
-## Viewer partitioning
-
-A strict viewer run with `--shard INDEX/TOTAL` discovers every Node test file
-and runs only the files of its shard. It assigns whole files by descending
-measured duration to the shard with the least estimated work.
-[`viewer-shard-weights.json`](./viewer-shard-weights.json) holds the median
-measured duration of each file in milliseconds. A new file uses the median
-weight. The selected files keep their discovery order.
-
-## Rust test weights
-
-[`rust-test-weights.json`](./rust-test-weights.json) holds the weight of each
-Rust test unit, such as `--test cli`, in seconds: its compile CPU time from
-`cargo test --no-run --timings` times 1.5, plus its mean nextest test time
-on the three CI hosts. `xtask` embeds the file and assigns the units of the
-repository and native test shards by these weights, as the
-[test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
-says. A unit that the file does not name gets `defaultSeconds`. `splits` runs
-a heavy unit, such as the render integration tests, as nextest slices on
-separate shards. A stale
-weight changes only the balance of the shards, never the set of tests.
-
-## Shard totals and weight refresh
-
-[`ci-shards.json`](./ci-shards.json) holds the viewer and browser shard
-totals. The CI matrices, [`aggregate.mjs`](./aggregate.mjs), and remote
-verification read it, so a shard count change is one edit.
-
-Refresh both weight files from passed CI reports:
-
-```bash
-gh run download {run} -R mokly-ai/mokly -p 'verification-*' -D .context/shard-reports/{run}
-node scripts/verification/shard-weights.mjs --reports .context/shard-reports
-```
-
-Download several runs into separate directories. The script reads every
-report under the directory, skips reports that did not pass, and writes both
-weight files. Compare the shard durations of the next CI run with the
-targets of the
-[shard balance rules](../../docs/protocol/ci-suite-evidence.md#viewer-shard-balance).
+The [shard weights guide](../../docs/development/shard-weights.md) describes
+the browser, viewer, and Rust test placement, the weight files, and their
+refresh. `npm run ci:refresh-shard-weights -- --runs {n}` refreshes every
+weight file from the newest green `main` runs.
 
 ### Key code
 
@@ -230,6 +154,13 @@ targets of the
   viewer partitions.
 - [`shard-weights.mjs`](./shard-weights.mjs) computes both weight files from
   downloaded reports.
+- [`rust-test-weights.mjs`](./rust-test-weights.mjs) computes the Rust test
+  weights from CI job logs and a cargo timing report.
+- [`refresh-shard-weights.mjs`](./refresh-shard-weights.mjs) runs
+  `npm run ci:refresh-shard-weights`. It finds the newest green `main` runs
+  and calls the refresh code of each suite.
+- [`ci-timing-shards.mjs`](./ci-timing-shards.mjs) reports the spread of each
+  shard group in the `CI timing` summary.
 
 ## Remote delivery
 
