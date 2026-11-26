@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::artifacts::Artifacts;
+use crate::check::native_scope::TestScope;
 use crate::check::request::CheckRequest;
 use crate::check::runner::CheckRunner;
 use crate::check::tasks::Task;
@@ -64,7 +65,16 @@ impl Xtask for Application {
             Command::RustTestShard {
                 partition,
                 no_fail_fast,
-            } => self.check_runner.rust_test_shard(partition, no_fail_fast),
+                native,
+            } => {
+                let scope = if native {
+                    TestScope::Native
+                } else {
+                    TestScope::Complete
+                };
+                self.check_runner
+                    .rust_test_shard(partition, no_fail_fast, scope)
+            }
             Command::BuildNative => self.artifacts.build_native(),
             Command::GenerateTypes => self.artifacts.generate_types(),
             Command::CheckGeneratedTypes => self.artifacts.check_generated_types(),

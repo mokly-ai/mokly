@@ -5,9 +5,8 @@
 
 use std::fs;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-use mokly_git::control::{Clock, Token};
+use mokly_git::control::Token;
 use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
@@ -15,32 +14,15 @@ use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
 
+#[path = "support/hang_clock.rs"]
+mod hang_clock;
 #[expect(
     dead_code,
     reason = "these cases compose a runner with their own clock"
 )]
 mod support;
+use hang_clock::HangClock;
 use support::Fixture;
-
-/// Follows the system clock and jumps past the conversion deadline once for
-/// each line that the hanging filter writes to its log, so a hang ends at
-/// once while a fast conversion never reaches its deadline.
-struct HangClock {
-    start: Instant,
-    log: std::path::PathBuf,
-}
-
-impl Clock for HangClock {
-    fn now(&self) -> Duration {
-        let hangs =
-            fs::read(&self.log).map_or(0, |log| log.iter().filter(|byte| **byte == b'\n').count());
-        self.start.elapsed() + Duration::from_secs(121) * hangs as u32
-    }
-
-    fn pause(&self, duration: Duration) {
-        std::thread::sleep(duration);
-    }
-}
 
 /// A repository whose `b.txt` filter hangs while `armed` exists, or always.
 fn hanging(always: bool) -> (Fixture, ObjectId, Arc<dyn Repository>) {
@@ -65,10 +47,7 @@ fn hanging(always: bool) -> (Fixture, ObjectId, Arc<dyn Repository>) {
         runner: Arc::new(SystemRunner {
             groups: Arc::new(SystemProcessGroups),
             cancellation: Arc::new(Token::default()),
-            clock: Arc::new(HangClock {
-                start: Instant::now(),
-                log: fixture.root().join("hang.log"),
-            }),
+            clock: Arc::new(HangClock::new(fixture.root().join("hang.log"))),
         }),
         disk: Arc::new(SystemDisk),
     };

@@ -3,6 +3,7 @@
 use crate::command::CommandSpec;
 
 use super::cloud_commands::cloud_commands;
+use super::native_scope::TestScope;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{
     RustPart, design_matrix_clippy, native_commands, require_nextest, rust_lints, rust_tests,
@@ -95,14 +96,14 @@ fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> 
             steps.extend(
                 test_builds()
                     .into_iter()
-                    .chain(rust_tests(false))
+                    .chain(rust_tests(false, TestScope::Complete))
                     .map(Step::Run),
             );
             steps
         }
         RustPart::Checks => repository_checks(dependency_audit, false),
         RustPart::Tests(tests) => std::iter::once(npm(&["ci"]))
-            .chain(test_shard(tests, false))
+            .chain(test_shard(tests, false, TestScope::Complete))
             .map(Step::Run)
             .collect(),
     }
