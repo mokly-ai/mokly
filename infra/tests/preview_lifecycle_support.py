@@ -23,6 +23,10 @@ class LifecycleDouble:
         self.log = self.directory / "calls"
         self.state = self.directory / "state"
         self.state.mkdir()
+        self.runner_temp = self.directory / "runner-temp"
+        self.runner_temp.mkdir()
+        self.tmpdir = self.directory / "tmp"
+        self.tmpdir.mkdir()
         self.checkout = self.directory / "checkout"
         self.checkout.mkdir()
         (self.checkout / "infra").symlink_to(ROOT / "infra", target_is_directory=True)
@@ -242,8 +246,8 @@ exit 93
         environment = dict(
             os.environ,
             PATH=str(self.directory) + ":" + os.environ["PATH"],
-            RUNNER_TEMP=str(self.directory),
-            TMPDIR=str(self.directory),
+            RUNNER_TEMP=str(self.runner_temp),
+            TMPDIR=str(self.tmpdir),
             CALLS=str(self.log),
             DOUBLE_STATE=str(self.state),
             LIFECYCLE_FIXTURES=str(LIFECYCLE_FIXTURES),

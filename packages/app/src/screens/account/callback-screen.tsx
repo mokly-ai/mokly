@@ -41,7 +41,7 @@ const refusals: Partial<Record<ApiError["reason"], FailedState>> = {
  * Why the landing could not sign the reader in: its fragment held no single
  * token, so it sent no request, or the exchange failed with this error.
  */
-type CallbackFailure =
+export type CallbackFailure =
   { missing: true; error?: never } | { missing?: never; error: ApiError };
 
 /**
@@ -53,17 +53,13 @@ function failedState(error: ApiError | undefined): FailedState {
 }
 
 /**
- * A landing that could not sign the reader in: the heading of its state, the
- * request for another link with an API failure's request details, and Back to
- * sign in as the one way on.
+ * The body of a landing that could not sign the reader in: the request for
+ * another link with an API failure's request details, and Back to sign in as
+ * the one way on.
  */
-export function CallbackRecovery({ error }: CallbackFailure) {
+function CallbackRecovery({ error }: { error?: ApiError }) {
   return (
-    <AccountShell
-      screen="account-callback"
-      title={headings[failedState(error)]}
-      identity={{ kind: "none" }}
-    >
+    <>
       <StateMessage
         title="Request another sign-in link"
         error
@@ -80,6 +76,36 @@ export function CallbackRecovery({ error }: CallbackFailure) {
           href={signInPath}
         />
       </div>
+    </>
+  );
+}
+
+/**
+ * The email landing in each of its states: one account shell, whose heading
+ * and body follow the state. Without a failure, the landing waits for the
+ * exchange. A failure draws the heading of its state over the recovery.
+ *
+ * The wait and every failure are the same shell element, so when a failure
+ * replaces the wait, the frame around the panel, with its skip link, header
+ * and footer, stays in place, and so does focus.
+ */
+export function EmailLanding({ failure }: { failure?: CallbackFailure }) {
+  return (
+    <AccountShell
+      screen="account-callback"
+      title={failure ? headings[failedState(failure.error)] : "Signing you in"}
+      identity={{ kind: "none" }}
+    >
+      {failure ? (
+        <CallbackRecovery error={failure.error} />
+      ) : (
+        // Success replaces the route, so the landing waits as one state card
+        // in its placeholder form. The heading already says Signing you in,
+        // so the card's title is a bar and screen readers hear the name.
+        <Pending label="Signing you in" labelMode="screen-reader-only">
+          <StatePlaceholder />
+        </Pending>
+      )}
     </AccountShell>
   );
 }
@@ -88,8 +114,7 @@ export function CallbackRecovery({ error }: CallbackFailure) {
 export function CallbackScreen() {
   const router = useRouter();
   const { adopt } = useSession();
-  const [error, setError] = useState<ApiError | undefined>();
-  const [missing, setMissing] = useState(false);
+  const [failure, setFailure] = useState<CallbackFailure | undefined>();
   const mounted = useRef(true);
   const started = useRef(false);
 
@@ -107,7 +132,7 @@ export function CallbackScreen() {
     started.current = true;
     const token = one(takeCallbackInput("email"), "token");
     if (!token) {
-      setMissing(true);
+      setFailure({ missing: true });
       return;
     }
     async function exchange(value: string) {
@@ -117,26 +142,12 @@ export function CallbackScreen() {
         adopt(issued.session);
         replaceAddress(router, validateReturnTo(issued.returnTo));
       } catch (caught: unknown) {
-        if (mounted.current) setError(asApiError(caught) ?? unexpectedError());
+        if (!mounted.current) return;
+        setFailure({ error: asApiError(caught) ?? unexpectedError() });
       }
     }
     void exchange(token);
   }, [adopt, router]);
 
-  if (missing) return <CallbackRecovery missing />;
-  if (error) return <CallbackRecovery error={error} />;
-  return (
-    <AccountShell
-      screen="account-callback"
-      title="Signing you in"
-      identity={{ kind: "none" }}
-    >
-      {/* Success replaces the route, so the landing waits as one state card
-          in its placeholder form. The heading already says Signing you in,
-          so the card's title is a bar and screen readers hear the name. */}
-      <Pending label="Signing you in" labelMode="screen-reader-only">
-        <StatePlaceholder />
-      </Pending>
-    </AccountShell>
-  );
+  return <EmailLanding failure={failure} />;
 }

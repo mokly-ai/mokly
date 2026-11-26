@@ -1,6 +1,5 @@
 """End-to-end shell ordering, rollback and retry behavior for PR previews."""
 
-from pathlib import Path
 import tempfile
 import unittest
 
@@ -75,9 +74,13 @@ class DeployShellTests(unittest.TestCase):
                 and "--secret=mkc-preview-sign-in-password" in line
             ]
             self.assertEqual(len(fetches), 2)
+            runner_temp = double.runner_temp.resolve()
             for fetch in fetches:
-                file = Path(fetch.split("--out-file=", 1)[1])
-                self.assertTrue(file.is_relative_to(Path(temporary)))
+                file = double.checkout / fetch.split("--out-file=", 1)[1]
+                self.assertTrue(
+                    file.resolve().is_relative_to(runner_temp),
+                    f"verifier download path is outside RUNNER_TEMP: {file}",
+                )
                 self.assertFalse(file.exists())
         self.assertEqual(calls.count("verifier file mode=600"), 2)
         self.assertEqual(calls.count("create -f "), 1)

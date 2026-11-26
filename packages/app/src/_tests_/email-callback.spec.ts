@@ -59,3 +59,41 @@ test("a duplicate email token is refused and removed from the URL", async ({
   await expectEmailRecovery(page, "the link without one token");
   expect(requests).toBe(0);
 });
+
+/**
+ * Hold the landing's exchange until the test lets it through, so the test can
+ * act while the landing waits. The real API then answers it.
+ */
+async function holdExchange(page: Page) {
+  const sent = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  await page.route("**/v1/auth/callback", async (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    sent.resolve();
+    await release.promise;
+    return route.continue();
+  });
+  return { sent: sent.promise, release: () => release.resolve() };
+}
+
+test("a link refused after the wait keeps the skip link focused", async ({
+  page,
+}) => {
+  const exchange = await holdExchange(page);
+  // Well formed, and no link was ever issued with it, so the API refuses it
+  // as `magic-link-invalid`.
+  await page.goto(`/auth/email/callback#token=${"0".repeat(64)}`);
+  await exchange.sent;
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Signing you in" }),
+  ).toBeVisible();
+  const skip = page.getByRole("link", { name: "Skip to content" });
+  await skip.focus();
+  await expect(skip, "focused during the wait").toBeFocused();
+
+  exchange.release();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "This link isn’t valid" }),
+  ).toBeVisible();
+  await expect(skip, "focus stays on the skip link").toBeFocused();
+});

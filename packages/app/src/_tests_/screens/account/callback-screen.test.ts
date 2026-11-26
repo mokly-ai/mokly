@@ -2,12 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { createElement } from "react";
-import type { ComponentProps } from "react";
 
 import { ApiError } from "../../../api/errors";
 import type { ApiCode } from "../../../api/errors";
 import { signInPath } from "../../../navigation/paths";
-import type { CallbackRecovery } from "../../../screens/account/callback-screen";
+import type { CallbackFailure } from "../../../screens/account/callback-screen";
 import { tabAt, withWindow } from "../../page-window";
 import { seen } from "../../press-doubles";
 import { draw } from "../../server-render";
@@ -34,7 +33,7 @@ function refused(code: ApiCode, reason: string, status: number) {
  */
 const rows: readonly {
   row: string;
-  failure: ComponentProps<typeof CallbackRecovery>;
+  failure: CallbackFailure;
   heading: string;
   details: string | undefined;
 }[] = [
@@ -71,13 +70,13 @@ const rows: readonly {
 ];
 
 /** What one failed landing draws in a tab, and where pressing each action goes. */
-async function landing(failure: ComponentProps<typeof CallbackRecovery>) {
-  const { CallbackRecovery } =
+async function landing(failure: CallbackFailure) {
+  const { EmailLanding } =
     await import("../../../screens/account/callback-screen");
   const page = { location: tabAt() };
   const { html, buttons } = draw(
     page,
-    createElement(CallbackRecovery, failure),
+    createElement(EmailLanding, { failure }),
   );
   withWindow(page, () => {
     for (const button of buttons) button.onPress?.();

@@ -5,7 +5,7 @@
 use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use axum::Router;
 use axum::body::{Body, to_bytes};
@@ -23,6 +23,7 @@ use serde_json::Value;
 use tokio::runtime::Builder;
 use tokio::sync::Semaphore;
 use tokio::task::spawn_blocking;
+use tokio::time::timeout;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::contract::response_capture::checked;
@@ -37,15 +38,17 @@ use super::contract_tests::factory;
 
 #[test]
 fn health_answers_while_admitted_preview_password_attempts_wait() {
+    let admitted = Arc::new(AtomicUsize::new(0));
+    let (router, slots) = router(admitted.clone());
     Builder::new_current_thread()
         .max_blocking_threads(1)
+        .enable_time()
         .build()
         .unwrap()
         .block_on(async {
-            let admitted = Arc::new(AtomicUsize::new(0));
-            let (router, slots) = router(admitted.clone());
             let attempts = {
                 let _held = slots.try_acquire_many(2).unwrap();
+                let worker_timeout = Duration::from_secs(30);
                 let mut attempts: Vec<_> = (1..=3)
                     .map(|peer| {
                         Box::pin(checked(
@@ -66,7 +69,10 @@ fn health_answers_while_admitted_preview_password_attempts_wait() {
                     );
                 }
                 let admission_fence = spawn_blocking(|| ());
-                admission_fence.await.unwrap();
+                timeout(worker_timeout, admission_fence)
+                    .await
+                    .map_err(|_| "timed out waiting for the preview admission fence")?
+                    .unwrap();
                 assert_eq!(admitted.load(Ordering::SeqCst), 3);
                 for attempt in &mut attempts {
                     assert!(
@@ -74,7 +80,13 @@ fn health_answers_while_admitted_preview_password_attempts_wait() {
                         "a preview attempt answered before the hash permits were released"
                     );
                 }
-                let health = checked(router, request(Operation::GetHealth, 1, Body::empty())).await;
+                let health_reply = checked(
+                    router.clone(),
+                    request(Operation::GetHealth, 1, Body::empty()),
+                );
+                let health = timeout(worker_timeout, health_reply)
+                    .await
+                    .map_err(|_| "timed out waiting for the health reply")?;
                 assert_eq!(health.status(), StatusCode::OK);
                 for attempt in &mut attempts {
                     assert!(
@@ -91,7 +103,9 @@ fn health_answers_while_admitted_preview_password_attempts_wait() {
                 let body: Value = serde_json::from_slice(&bytes).unwrap();
                 assert_eq!(body["error"]["reason"], "magic-link-invalid");
             }
-        });
+            Ok::<(), &str>(())
+        })
+        .unwrap();
 }
 
 fn router(admitted: Arc<AtomicUsize>) -> (Router, Arc<Semaphore>) {

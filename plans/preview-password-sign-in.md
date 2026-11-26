@@ -218,14 +218,18 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   it uses build optimized in debug builds too. Reason: the tests and the
   local stack check passwords with production parameters, and one
   unoptimized check took 4.75 s against 0.48 s optimized.
-- **Deploy.** The release job reads the verifier with
-  `gcloud secrets versions access` into a private mode-0600 runner-temporary
-  file, as it reads the DNS token. It writes Secret `preview-sign-in` when the
-  value differs, before the Helm upgrade. When Helm did not roll the API pod,
-  for example on a rerun with the same image, the deploy restarts the API
-  Deployment and waits for the rollout. Reason, my call: the API reads its
-  settings at startup, and the API pod uses the `Recreate` strategy, so a
-  second roll after Helm's roll costs downtime.
+- **Deploy.** The release job reads the verifier into a private
+  runner-temporary file and writes Secret `preview-sign-in` when the value
+  differs, before the Helm upgrade. The Deploy section of
+  `docs/protocol/cloud/preview-sign-in.md` holds the current rule for how the
+  API loads a changed verifier. Reason: the API reads its settings at startup,
+  and its pod uses the `Recreate` strategy, so the change must reach the pod in
+  exactly one replacement. My call on 2026-11-25, from the round 1 review fix
+  of the rotation finding: a rollout marker in the API pod template replaces
+  the pod in Helm's own upgrade. It supersedes two earlier calls: the restart
+  of the API Deployment when Helm did not roll the pod (2026-11-24), and the
+  Milestone 5 call that kept the previous API pod UID on the Secret
+  (2026-11-25). A pod that was still starting could miss both.
 - **Missing verifier.** A missing or malformed verifier gives a warning
   annotation on the workflow run, and the deploy writes no verifier (decision
   5, D). An existing verifier in Secret `preview-sign-in` is then deleted, so
