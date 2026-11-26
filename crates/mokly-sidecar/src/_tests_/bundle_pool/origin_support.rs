@@ -63,6 +63,7 @@ fn response(value: serde_json::Value) -> Frame {
 
 fn graph() -> Arc<Vec<Module>> {
     Arc::new(vec![Module {
+        package_import: None,
         path: "entry.ts".into(),
         imports: vec!["shared.ts".into()],
         digest: Some("entry-digest".into()),

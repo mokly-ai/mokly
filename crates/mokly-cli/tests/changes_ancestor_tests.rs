@@ -3,14 +3,18 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use mokly_model::namespace;
+use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
+use mokly_model::{namespace, routes};
 
 mod changes_support;
+#[path = "changes_support/ignored_modules.rs"]
+mod ignored_modules;
 #[path = "changes_support/links.rs"]
 mod links;
 use changes_support::{base, run, run_configured, write};
+use ignored_modules::warning_fixture;
 use links::link_directory;
 
 #[test]
@@ -127,69 +131,29 @@ fn changes_render_workspace_sources_when_only_the_head_has_a_build() {
 
 const WARNINGS: &str = concat!(
     "[mokly/warning] configuration \"mokly.config.json\": module generated/bundled.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/computed.mjs is ignored by Git, so a later base cannot load it\n",
     "[mokly/warning] configuration \"mokly.config.json\": module generated/loose.css is ignored by Git, so a later base cannot load it\n",
-    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/index.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
-    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/skin.css is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/native.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/native.json is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/plugin.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/direct.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/nested.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/reference.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/disabled/dist/index.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/plugin-theme/dist/skin.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/record/esm/index.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for record-plugin\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/ignored-source.cjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/index.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/package.css is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/package.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/skin.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/root.cjs is ignored by Git, so a later base cannot load it\n",
 );
 
 #[test]
 fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
-    let root = base(&[
-        (
-            ".gitignore",
-            "node_modules/\nmokly-static/\ngenerated/\npackages/theme/esm/\n",
-        ),
-        (
-            "packages/theme/package.json",
-            r#"{"name":"workspace-theme"}"#,
-        ),
-        (
-            "specs/home.screen.html",
-            "---\ntitle: Home\n---\n<p>Home</p>",
-        ),
-    ]);
+    let root = warning_fixture();
     let path = root.path();
-    let modules = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../node_modules");
-    link_directory(&modules, &path.join("node_modules"));
-    write(
-        path,
-        "mokly.config.json",
-        r#"{"review":{"base":"fixture-base"},"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["style.css"]}]}"#,
-    );
-    write(
-        path,
-        "postcss.mjs",
-        "import {value} from './generated/bundled.mjs'; const plugin = './generated/plugin.cjs'; export default {plugins:[require(plugin)(value)]};",
-    );
-    write(
-        path,
-        "generated/plugin.cjs",
-        "module.exports = value => ({postcssPlugin:'fixture', Declaration(decl) { if (decl.prop === '--fixture') decl.value = value; }});",
-    );
-    write(
-        path,
-        "generated/bundled.mjs",
-        "export const value = 'node-loaded';",
-    );
-    write(
-        path,
-        "style.css",
-        "@import './packages/theme/esm/skin.css'; @import './generated/loose.css'; @import './untracked.css'; p { --fixture: before }",
-    );
-    write(path, "generated/loose.css", ".loose { color: blue }");
-    write(path, "untracked.css", ".untracked { color: green }");
-    write(path, "packages/theme/esm/skin.css", ".theme { color: red }");
-    write(
-        path,
-        "packages/theme/esm/index.mjs",
-        "export const label = 'Built';",
-    );
-    write(
-        path,
-        "specs/page.mockup.ts",
-        "import {definePage} from '@mokly/mokly'; import {label} from '../packages/theme/esm/index.mjs'; import '../packages/theme/esm/skin.css'; export default definePage({title:'Page',description:'',relatedDocs:[],render:()=>`<!doctype html><html><head><title>Page</title></head><body>${label}</body></html>`});",
-    );
-
     let run = |args: &[&str]| run_configured(path, args, None, None, "plain");
     let build = run(&["build"]);
     let stderr = String::from_utf8(build.stderr).unwrap();
@@ -197,24 +161,47 @@ fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
     assert_eq!(stderr, WARNINGS);
     let output = path.join("mokly-static");
     let css = fs::read_to_string(output.join(namespace::generated("styles/style.css"))).unwrap();
-    for text in [".loose", ".untracked", ".theme", "node-loaded"] {
+    for text in [".loose", ".untracked", ".theme", ".package", "node-loaded"] {
+        assert!(css.contains(text), "{css}");
+    }
+    let css = fs::read_to_string(output.join(namespace::generated("styles/tailwind.css"))).unwrap();
+    for text in [".direct", ".nested", ".plugin-theme"] {
         assert!(css.contains(text), "{css}");
     }
 
     let index = output.join(namespace::viewer("index.json"));
     let written = fs::read(&index).unwrap();
+    let installed: CatalogueReadModel = serde_json::from_slice(&written).unwrap();
+    let home = output.join(namespace::generated(&routes::view(
+        "home",
+        Viewport::Desktop,
+        ColorScheme::Light,
+    )));
+    let rendered_home = fs::read_to_string(&home).unwrap();
+    assert!(rendered_home.contains("<p>Home</p>"), "{rendered_home}");
+    write(
+        path,
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<p>Changed Home</p>",
+    );
     let strict = run(&["build", "--strict"]);
     assert_eq!(strict.status.code(), Some(1));
     assert_eq!(
         String::from_utf8(strict.stderr).unwrap(),
-        format!("{WARNINGS}[mokly/build-invalid] 4 build warnings with --strict\n")
+        format!("{WARNINGS}[mokly/build-invalid] 18 build warnings with --strict\n")
     );
-    assert_eq!(fs::read(index).unwrap(), written);
+    let after = fs::read(&index).unwrap();
+    let after_strict: CatalogueReadModel = serde_json::from_slice(&after).unwrap();
+    assert_eq!(after_strict.deployment_id, installed.deployment_id);
+    assert_eq!(after, written);
+    assert_eq!(fs::read_to_string(&home).unwrap(), rendered_home);
 
     let disabled = run(&["build", "--strict", "--no-changes"]);
     let stderr = String::from_utf8(disabled.stderr).unwrap();
     assert_eq!(disabled.status.code(), Some(0), "{stderr}");
     assert_eq!(stderr, "");
+    let rebuilt = fs::read_to_string(home).unwrap();
+    assert!(rebuilt.contains("<p>Changed Home</p>"), "{rebuilt}");
 }
 
 fn package(root: &Path, name: &str, label: &str) {

@@ -13,6 +13,7 @@ export function moduleGraph(
   const physical = new Map<string, string>();
   const names = new Map<string, { absolute: string; logical: string }>();
   const edges = new MetafileEdges(metafile, paths.sourceRoot);
+  const packageImports = edges.packageImports();
   const name = (file: string) => {
     let named = names.get(file);
     if (named === undefined) {
@@ -28,6 +29,9 @@ export function moduleGraph(
     .map(([file]) => ({
       path: name(file),
       imports: edges.imports(file).map(name),
+      ...(packageImports.has(edges.physical(file))
+        ? { packageImport: true }
+        : {}),
     }))
     .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return { modules, physical };

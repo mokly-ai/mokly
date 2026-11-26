@@ -530,12 +530,10 @@ its requests and results. The paths below are relative to the package root.
   forks no child.
 - [`src/sidecar/postcss-module.ts`](./postcss-module.ts) holds
   `importPostcssModule`, which bundles the PostCSS module or a plugin module of
-  the repository with esbuild, and `bundledPostcssImports`, which lists the
-  local files that those bundles reached in one child. The child adds that
-  list to the read evidence of each result as `bundledImports`, so the core
-  can check these files for the
+  the repository with esbuild. [`src/sidecar/postcss-worker.ts`](./postcss-worker.ts)
+  marks dependencies reached by a bundle, loaded by Node, or reported as
+  an exact file by a plugin. The core uses these marks for the
   [`ignored-module` warning](../../../../docs/protocol/mokly-comparison-packages.md#ignored-modules).
-  Files that Node loads, such as installed plugins, stay out of the list.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
   `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short

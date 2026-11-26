@@ -15,8 +15,4 @@ reads: Array<PostcssRead>,
 /**
  * Known module input names, including modules with no byte observation.
  */
-modules: Array<string>,
-/**
- * Local import paths from PostCSS bundles, without Node-loaded requires.
- */
-bundledImports?: Array<string>, };
+modules: Array<string>, };

@@ -128,14 +128,7 @@ pub(crate) fn collect(
     evidence: &Evidence,
     digests: &ModuleDigests,
 ) -> ReadEvidence {
-    let mut result = ReadEvidence {
-        bundled_imports: evidence
-            .bundled_imports
-            .iter()
-            .filter_map(|file| logical(file, side))
-            .collect(),
-        ..Default::default()
-    };
+    let mut result = ReadEvidence::default();
     for (path, digest) in &inventory.inputs {
         result.insert(
             format!("{SOURCE_INPUT_PREFIX}{path}"),

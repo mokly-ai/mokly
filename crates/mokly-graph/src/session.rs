@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::dependencies::DirectoryDependency;
+use mokly_css::dependencies::{DirectoryDependency, ImportKind};
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::data::Props;
@@ -56,7 +56,7 @@ pub(crate) struct State {
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
-    pub(crate) stylesheet_imports: BTreeSet<String>,
+    pub(crate) stylesheet_imports: BTreeMap<String, ImportKind>,
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
     pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) generation_key: String,
@@ -78,7 +78,7 @@ pub(crate) struct State {
 }
 
 pub(crate) struct SessionInput {
-    pub(crate) stylesheet_imports: BTreeSet<String>,
+    pub(crate) stylesheet_imports: BTreeMap<String, ImportKind>,
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
     pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) directories: Vec<DirectoryDependency>,
@@ -94,13 +94,7 @@ pub(crate) struct SessionInput {
 impl RenderGeneration for Session {
     fn module_imports(&self) -> Option<ModuleImports<'_>> {
         Some(ModuleImports {
-            modules: self
-                .state
-                .catalogue
-                .javascript
-                .generation
-                .as_ref()
-                .map(|generation| &generation.modules),
+            javascript: self.state.catalogue.javascript.generation.as_ref(),
             stylesheet_inputs: &self.state.stylesheet_imports,
             tree: self.state.tree.as_ref(),
         })

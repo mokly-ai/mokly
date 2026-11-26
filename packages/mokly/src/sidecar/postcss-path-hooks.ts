@@ -24,6 +24,11 @@ export function observeModulePaths(): void {
         recordModulePath(result.url);
         return result;
       },
+      load(url, context, nextLoad) {
+        const result = nextLoad(url, context);
+        recordModulePath(url, true);
+        return result;
+      },
     });
   };
   Object.defineProperty(nodeModule, "registerHooks", {

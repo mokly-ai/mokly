@@ -105,9 +105,7 @@ counts without using the disk.
   opened source into private storage and checks its captured digest.
 - [`src/read_evidence.rs`](./src/read_evidence.rs) defines `ReadEvidence` and
   `ReadBaseline`, which keep each observed whole-file, byte-range, and late
-  version of an input. `ReadEvidence.bundled_imports` keeps the logical paths
-  that the bundled imports of the consumer reached, such as the local modules
-  of a PostCSS bundle.
+  version of an input.
 - [`src/range_evidence.rs`](./src/range_evidence.rs) provides `verify`, which
   checks all observed byte ranges of one path in one streamed pass.
 - [`src/identity_evidence.rs`](./src/identity_evidence.rs) provides `matches`,

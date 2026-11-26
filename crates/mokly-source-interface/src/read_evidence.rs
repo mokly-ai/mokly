@@ -100,8 +100,6 @@ pub struct ReadEvidence {
     pub coverage: ReadCoverage,
     /// Per-path versions; equal observations may coalesce only after digest comparison.
     pub inputs: BTreeMap<String, BTreeSet<ReadBaseline>>,
-    /// Logical inputs reached through the consumer's bundled imports.
-    pub bundled_imports: BTreeSet<String>,
 }
 
 impl ReadEvidence {
@@ -112,7 +110,6 @@ impl ReadEvidence {
 
     /// Preserve observations when stylesheet closures are combined.
     pub fn extend(&mut self, other: Self) {
-        self.bundled_imports.extend(other.bundled_imports);
         for (path, versions) in other.inputs {
             self.inputs.entry(path).or_default().extend(versions);
         }
@@ -120,8 +117,7 @@ impl ReadEvidence {
 
     /// Conservative metadata charge; no consumed payload is retained.
     pub fn retained_bytes(&self) -> usize {
-        let inputs = self
-            .inputs
+        self.inputs
             .iter()
             .map(|(path, versions)| {
                 size_of::<(String, BTreeSet<ReadBaseline>)>()
@@ -131,12 +127,7 @@ impl ReadEvidence {
                         .map(|version| size_of::<ReadBaseline>() + version.retained_bytes())
                         .sum::<usize>()
             })
-            .sum::<usize>();
-        let imports = self
-            .bundled_imports
-            .iter()
-            .map(|path| size_of::<String>() + path.capacity())
-            .sum::<usize>();
-        inputs.saturating_add(imports).saturating_mul(2)
+            .sum::<usize>()
+            .saturating_mul(2)
     }
 }

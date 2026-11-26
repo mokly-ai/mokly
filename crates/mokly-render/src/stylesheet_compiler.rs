@@ -105,6 +105,7 @@ impl RootCompiler for CapturingCompiler {
         let compiler: &dyn StylesheetBundler = &Compiler {
             tree: tree.clone(),
             repo_root: self.root.clone(),
+            resolution: self.resolution.clone(),
             resolver,
             processor,
         };

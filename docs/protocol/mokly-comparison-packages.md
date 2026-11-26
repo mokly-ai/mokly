@@ -112,20 +112,26 @@ folder `src`.
 
 When Changes runs, Mokly gives one `ignored-module` configuration warning for
 each repository file outside `node_modules` that Git ignores and that a
-bundled import or a CSS `@import` of the head loads. Changes runs in `build`
-and `publish` without `--no-changes`, and in Serve when it classifies
-Changes. A later base renders from the files that Git tracks, so it cannot
-load such a file. `{path}` is the repository-relative POSIX path.
+head import loads. Bundled imports, CSS `@import`, and modules that Node
+loads for PostCSS count. A stylesheet that a PostCSS plugin reports as an
+exact file dependency also counts. When a PostCSS load names a link, Mokly
+checks the reported path and its target. Changes runs in `build` and
+`publish` without `--no-changes`, and in Serve when it classifies Changes.
+A later base renders from the files that Git tracks, so it cannot load
+such a file. `{path}` is the repository-relative POSIX path.
 `{package}` is the workspace package's `package.json` name.
 
-- Inside a workspace package, the message is `module {path} is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for {package}`.
-- Outside a workspace package, the message is `module {path} is ignored by Git, so a later base cannot load it`.
+- For a package-name import that reaches a file below a subfolder of a
+  package root, the message is `module {path} is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for {package}`.
+  This applies when no `false` entry ends the layout order.
+- For other loads and exact PostCSS stylesheet reports, the message is
+  `module {path} is ignored by Git, so a later base cannot load it`.
 
-A file that Git neither tracks nor
-ignores gives no warning, because a commit can still add it. A file that Node
-loads for a require gives no warning, because the base recovers its source
-after `MODULE_NOT_FOUND`. [Strict mode](./mokly-build-warnings.md#strict-mode)
-counts the warning.
+A file that Git neither tracks nor ignores gives no warning, because a
+commit can still add it. A module loaded by Mokly's PostCSS require by
+package name gives no warning when the layout order maps it to a source
+file that Git tracks or does not ignore.
+[Strict mode](./mokly-build-warnings.md#strict-mode) counts the warning.
 
 Decision: Mokly warns about each ignored file that the head loads, so the
 author learns of a missing entry before the merge. A warning for each entry

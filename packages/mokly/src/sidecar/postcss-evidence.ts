@@ -20,6 +20,7 @@ import { resolutionMetadata } from "./postcss-resolution-evidence.js";
 const reads = new Map<string, PostcssRead>();
 const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
+const loadedModules = new Set<string>();
 let activeGeneration: string | undefined;
 const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
@@ -37,12 +38,14 @@ type Observer = (loaded: Iterable<string>) => PostcssEvidence;
 /** The operations that the CommonJS preload shares with the ESM worker. */
 export interface Ledger {
   readEvidence: Observer;
+  loadedModules: ReadonlySet<string>;
   resetGeneration: (generation: string) => void;
   initializeGeneration: (generation: string) => void;
 }
 
 const ledger: Readonly<Ledger> = Object.freeze({
   readEvidence,
+  loadedModules,
   resetGeneration: resetReadEvidence,
   initializeGeneration: markGeneration,
 });
@@ -86,13 +89,20 @@ function markGeneration(generation: string): void {
 }
 
 /** Add a resolved file URL to the current module inventory. */
-export function recordModulePath(url: string): void {
+export function recordModulePath(url: string, loaded = false): void {
   if (!url.startsWith("file:")) return;
   try {
-    modules.add(fileURLToPath(url));
+    const file = fileURLToPath(url);
+    modules.add(file);
+    if (loaded) loadedModules.add(file);
   } catch {
     /* A malformed loader URL cannot be a module input. */
   }
+}
+
+/** Executed native modules can stay loaded across generation resets. */
+export function loadedModulePaths(): Iterable<string> {
+  return [...loadedModules, ...(sharedLedger()?.loadedModules ?? [])];
 }
 
 /** Async loaders cannot certify raw source or synchronously load an ESM preload. */

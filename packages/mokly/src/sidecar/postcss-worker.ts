@@ -10,16 +10,21 @@ import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
   beginReadEvidenceGeneration,
   initializeReadEvidenceGeneration,
+  loadedModulePaths,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
-import { bundledPostcssImports } from "./postcss-module.js";
+import { bundledPostcssSource } from "./postcss-module.js";
 import { observeModulePaths } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
-import { configureResolution, loadedFiles } from "./postcss-resolution.js";
+import {
+  configureResolution,
+  loadedFiles,
+  nodeLoadedFiles,
+} from "./postcss-resolution.js";
 
 type WorkerData = Pick<
   ProcessCssParams,
@@ -68,16 +73,29 @@ process.once("message", (workerData: WorkerData) => {
               throw pluginFailure(error, paths.name(params.sourcePath));
             }),
         );
-        const dependencies: CssResult["dependencies"] = [
-          ...new Set([
-            ...modules,
-            ...paths.resolvedDependencies,
-            ...loadedFiles(workerData.sourceRoot as string),
-          ]),
-        ].map((path) => ({
-          kind: "file",
-          path,
-        }));
+        const nodeLoads = nodeLoadedFiles(
+          paths.sourceRoot,
+          loadedModulePaths(),
+        );
+        const moduleFiles = new Set([
+          ...modules,
+          ...paths.resolvedDependencies,
+          ...loadedFiles(paths.sourceRoot),
+          ...nodeLoads.keys(),
+        ]);
+        const dependencies: CssResult["dependencies"] = [...moduleFiles].map(
+          (path) => {
+            const node = nodeLoads.get(path);
+            const source =
+              bundledPostcssSource(path) ??
+              (node === undefined
+                ? undefined
+                : node
+                  ? "node-package-require"
+                  : "node");
+            return { kind: "file", path, ...(source ? { source } : {}) };
+          },
+        );
         for (const message of result.messages) {
           if (
             message.type !== "dependency" &&
@@ -100,6 +118,7 @@ process.once("message", (workerData: WorkerData) => {
           dependencies.push({
             kind: message.type === "dependency" ? "file" : "directory",
             path,
+            ...(message.type === "dependency" ? { source: "plugin" } : {}),
             ...(typeof message.plugin === "string"
               ? { plugin: message.plugin }
               : {}),
@@ -110,14 +129,7 @@ process.once("message", (workerData: WorkerData) => {
           id,
           result: {
             text: result.css,
-            readEvidence: {
-              ...readEvidence([
-                ...modules,
-                ...paths.resolvedDependencies,
-                ...loadedFiles(workerData.sourceRoot),
-              ]),
-              bundledImports: bundledPostcssImports(),
-            },
+            readEvidence: readEvidence(moduleFiles),
             dependencies,
             unmappedDependencyDirectories: [
               ...paths.dependencyUsage.unmapped,

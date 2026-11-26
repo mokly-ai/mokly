@@ -601,9 +601,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   payloads, and the envelopes of the wire protocol.
   `ModuleResolution.source_packages` carries the `sourcePackages` maps in
   layout order, typed in
-  [`src/methods/source_packages.rs`](./src/methods/source_packages.rs), and the
-  `bundled_imports` of the PostCSS read evidence list the local files of the
-  PostCSS bundles. `BundleRequest` flattens
+  [`src/methods/source_packages.rs`](./src/methods/source_packages.rs).
+  `Dependency.source` records how a file entered the PostCSS dependency
+  inventory. `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only

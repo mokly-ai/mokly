@@ -100,6 +100,7 @@ fn bundle(path: &str, text: String) -> String {
     let compiler = Compiler {
         tree: tree.clone(),
         repo_root: "/repo".into(),
+        resolution: Default::default(),
         resolver: Arc::new(SourceResolver {
             settings: Default::default(),
             tree,

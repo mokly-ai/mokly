@@ -534,8 +534,8 @@ development dependencies, and no test uses the internet.
   After the pin, it adds the `ignored-module` warnings of the head to the
   warning list of the caller.
 - The private [`src/ignored_modules.rs`](./src/ignored_modules.rs) builds the
-  `ignored-module` warnings. It names the workspace package of each file
-  through `mokly_css::workspace_package_name`.
+  `ignored-module` warnings. It uses the workspace layout rule in
+  `mokly-css` to check source recovery and select the override hint.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,

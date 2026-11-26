@@ -16,10 +16,12 @@ import { importerDirectory } from "./package-directory.js";
 import { moduleBytes } from "./postcss-evidence.js";
 import { postcssScriptLoaders } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
+import { bareSpecifier } from "./specifier.js";
 
 let sources: ModulePaths;
 const dynamicFiles = new Set<string>();
 const commonJs = new Map<string, { exports: unknown }>();
+const requiredFiles = new Map<string, boolean>();
 
 export async function configureResolution(
   params: ModuleSources,
@@ -82,10 +84,14 @@ export async function resolvePlugin(
 
 export async function importPlugin(
   file: string,
+  specifier: string,
 ): Promise<Record<string, unknown>> {
   if (path.isAbsolute(file) && sources.repositoryOwned(file)) {
     const { importPostcssModule } = await import("./postcss-module.js");
-    const { module, modules } = await importPostcssModule(file, sources);
+    const { module, modules } = await importPostcssModule(file, sources, {
+      kind: "import",
+      specifier,
+    });
     modules.forEach((file) => dynamicFiles.add(file));
     return module;
   }
@@ -172,9 +178,13 @@ export function context(file: string) {
       )
         return { context };
       const target = resolve(name);
-      return path.isAbsolute(target) && sources.repositoryOwned(target)
-        ? requireLocal(target)
-        : native(target);
+      if (!path.isAbsolute(target) || !sources.repositoryOwned(target))
+        return native(target);
+      const loaded = requireLocal(target);
+      const byPackage = bareSpecifier(name) && !path.isAbsolute(name);
+      if (byPackage || !requiredFiles.has(target))
+        requiredFiles.set(target, byPackage);
+      return loaded;
     },
     native,
     { resolve },
@@ -194,28 +204,48 @@ export function context(file: string) {
           path.isAbsolute(resolved) ? pathToFileURL(resolved).href : resolved,
           options
         );
-      return importPlugin(resolved);
+      return importPlugin(resolved, name);
     },
   };
 }
 
 export function loadedFiles(root: string): string[] {
-  const runtime = path.resolve(import.meta.dirname, "../..");
   return [
     ...new Set([
       ...dynamicFiles,
       ...Object.keys(createRequire(import.meta.url).cache),
     ]),
-  ].filter((file) => {
-    const relative = path.relative(root, file);
-    return (
-      relative !== ".." &&
-      !relative.startsWith(`..${path.sep}`) &&
-      !path.isAbsolute(relative) &&
-      !relative.split(path.sep).includes("node_modules") &&
-      !file.startsWith(runtime + path.sep)
-    );
-  });
+  ].filter((file) => repositoryModule(root, file));
+}
+
+/** The executed files omit resolution-only probes and ordinary file reads. */
+export function nodeLoadedFiles(
+  root: string,
+  observed: Iterable<string>,
+): Map<string, boolean> {
+  const files = [
+    ...observed,
+    ...requiredFiles.keys(),
+    ...Object.keys(createRequire(import.meta.url).cache),
+  ];
+  return new Map(
+    files
+      .filter((file) => repositoryModule(root, file))
+      .map((file) => [file, requiredFiles.get(file) ?? false]),
+  );
+}
+
+const runtime = path.resolve(import.meta.dirname, "../..");
+
+function repositoryModule(root: string, file: string): boolean {
+  const relative = path.relative(root, file);
+  return (
+    relative !== ".." &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative) &&
+    !relative.split(path.sep).includes("node_modules") &&
+    !file.startsWith(runtime + path.sep)
+  );
 }
 
 export function plainObject(value: unknown): value is Record<string, unknown> {

@@ -25,7 +25,6 @@ pub(super) fn css(modules: Vec<String>) -> MethodResult {
             coverage: Default::default(),
             reads: Vec::new(),
             modules,
-            bundled_imports: Vec::new(),
         },
         unmapped_dependency_directories: None,
         text: "a{}".into(),

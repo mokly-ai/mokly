@@ -99,6 +99,7 @@ fn postcss_directory_roots_are_attached_without_their_source_files() {
         path: "content".into(),
         glob: "*.txt".into(),
         origin: PluginInput {
+            import: None,
             plugin: "fixture".into(),
             stylesheet: "style.css".into(),
         },

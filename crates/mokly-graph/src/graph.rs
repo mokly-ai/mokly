@@ -15,6 +15,7 @@ use mokly_model::catalogue::EntryContent;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
+use crate::comparison_input;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{GraphError, Result};
 use crate::key::{NodeKind, key};
@@ -102,7 +103,7 @@ impl Graph {
         let mut imported_by = BTreeMap::new();
         let mut plugin_inputs = BTreeMap::new();
         let mut directories = BTreeSet::new();
-        let mut stylesheet_imports = BTreeSet::new();
+        let mut stylesheet_imports = BTreeMap::new();
         let mut stylesheet_resolution_files = BTreeSet::new();
         let mut stylesheet_resolution_roots = BTreeMap::new();
         let roots = styles::roots(&config, &self.inputs);
@@ -124,14 +125,7 @@ impl Graph {
         let roots: Vec<_> = roots.into_values().collect();
         let bundles = self.workers.stylesheets(&roots, self)?;
         for (root, bundle) in roots.into_iter().zip(bundles) {
-            stylesheet_imports.extend(
-                bundle
-                    .inputs
-                    .keys()
-                    .filter(|path| !root.local_css || **path != root.path)
-                    .chain(&bundle.read_evidence.bundled_imports)
-                    .cloned(),
-            );
+            comparison_input::stylesheet_imports(&mut stylesheet_imports, &root, &bundle);
             stylesheet_resolution_files.extend(bundle.resolution_files.iter().cloned());
             stylesheet_resolution_roots.extend(
                 bundle
@@ -195,7 +189,12 @@ impl Graph {
                                 || original_sources.contains(path))
                     }),
             );
-            imported_by.extend(bundle.imported_by);
+            imported_by.extend(
+                bundle
+                    .imported_by
+                    .into_iter()
+                    .map(|(path, origin)| (path, origin.stylesheet)),
+            );
             plugin_inputs.extend(bundle.plugin_inputs);
             directories.extend(bundle.directories);
         }
