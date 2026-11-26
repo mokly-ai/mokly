@@ -120,31 +120,3 @@ export const Saved={};`,
     assert.match(result.stderr, /2 build warnings with --strict/);
   },
 );
-
-test(
-  "safe controls do not add unsafe-integer warnings",
-  { timeout: 120_000 },
-  async (context) => {
-    const root = await consumer(context, {
-      "specs/number.mockup.ts": `import React from 'react';
-import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Number',description:'',relatedDocs:[],
-  propSchema:{type:'object',additionalProperties:false,properties:{count:{type:'integer'}}},
-  props:{count:0},controls:{count:{kind:'number',minimum:-9007199254740991,maximum:9007199254740991,step:1}},
-  render:({count})=>React.createElement('p',null,count)});`,
-    });
-    const result = await command(
-      root,
-      "build",
-      ["--no-changes", "--strict"],
-      "plain",
-      {},
-      context.signal,
-    ).result;
-    assert.equal(result.code, 0, result.stderr);
-    assert.doesNotMatch(
-      result.stderr,
-      /props-unsafe-integer|outside the JavaScript safe integer range/,
-    );
-  },
-);

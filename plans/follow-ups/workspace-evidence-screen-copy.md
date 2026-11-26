@@ -25,7 +25,7 @@
   - `docs/protocol/mokly-component-workspace-design.md:200` states this exact
     sentence for the `metadata` reason. The design mockup
     `examples/basic/specs/design/parts/reason_sentences.tsx:22` shows it.
-    `tests/browser/design_reason_sentences.ts:13` and
+    `tests/helpers/reason_sentences.ts:11` and
     `packages/viewer/tests/details_reasons_presentation.test.tsx:51` pin it.
   - On 2026-10-21 the user chose to put the nouns of each entry kind in one
     place, in `entry_wording.ts`. That choice kept the visible copy the same.

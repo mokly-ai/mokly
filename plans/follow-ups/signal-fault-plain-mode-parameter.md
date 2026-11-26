@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-mokly-test-value-audit-ng54`, review finding 5.
-- **Location:** `tests/helpers/static_signal.ts:7-17`, and its callers `tests/static_recovery_signals.test.ts:39`, `tests/static_signal_readiness.test.ts:35`, and `tests/helper_process_ownership.test.ts:38`.
+- **Location:** `tests/helpers/static_signal.ts:7-17`, and its callers `tests/static_recovery_signals.test.ts:51`, `tests/static_signal_readiness.test.ts:35`, and `tests/helper_process_ownership.test.ts:38`.
 - **Reason:** The second review round found it after the branch's last fix round, and the review procedure stops fix rounds there.
 
 - **Source:** Review.

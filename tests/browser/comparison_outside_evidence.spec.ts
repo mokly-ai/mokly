@@ -32,6 +32,7 @@ import {
   VARIANT_TERMINAL,
   evidenceFiles,
   evidenceSpacing,
+  expectNoStatusWords,
   openChangesEvidence,
   openEvidence,
   type EvidenceFile,
@@ -39,8 +40,10 @@ import {
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
+  chooseFilter,
   comparisonFrames,
   expectNoCompareModes,
+  navRow,
   outcomeLines,
 } from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
@@ -166,7 +169,10 @@ test.describe("desktop component and screen evidence", () => {
     const evidence = await openEvidence(page);
     await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
     await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
+    // The paragraphs come from the entry detail; then the list stays empty.
+    await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
     await expect(evidence.locator("li")).toHaveText([sheets.theme]);
+    await expectNoStatusWords(evidence);
     // The canvas keeps the current frames, and no frame compares.
     await expect(page.locator(viewportFrame("mobile"))).toBeVisible();
     await awaitRoutedDetail(page, comparisonPaths.unchanged);
@@ -176,6 +182,9 @@ test.describe("desktop component and screen evidence", () => {
     ).toBeHidden();
     await expect(comparisonFrames(page)).toHaveCount(0);
     await expect(outcomeLines(page)).toHaveCount(0);
+    // An excluded screen stays out of Changes.
+    await chooseFilter(page, "changed");
+    await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
     await page.goto(designUrl("design/canvas/evidence/unchanged"));
     const card = page.locator(".cv-evidence [data-workspace-evidence]");
     await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);

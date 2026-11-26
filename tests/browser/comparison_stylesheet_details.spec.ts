@@ -1,9 +1,8 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 
 import {
-  BASE,
   COMPONENT_FILES_LEAD,
   COMPONENT_LEAD,
   DESKTOP_INSPECTOR,
@@ -19,8 +18,8 @@ import {
   VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
   evidenceFiles,
+  expectNoStatusWords,
   openChangesEvidence,
-  openEvidence,
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
@@ -29,20 +28,12 @@ import {
   changesPaths,
   chooseFilter,
   comparisonIndex,
-  expectNoCompareModes,
   navRow,
   outcomeLines,
   showMode,
 } from "./comparison_ui.js";
 import { inspectHead, inspectTitle } from "./inspect_head.js";
 import { chooseViewport, setFrames } from "./workspace_actions.js";
-
-/** Status literals of the evidence format never reach the reader. */
-async function expectNoStatusWords(evidence: Locator): Promise<void> {
-  for (const word of [/\bmatched\b/, /\bunresolved\b/, /\bentry\b/])
-    await expect(evidence).not.toContainText(word);
-  await expect(evidence).not.toContainText(/[0-9a-f]{64}/);
-}
 
 test.describe("desktop stylesheet Details", () => {
   test.use({ viewport: DESKTOP_INSPECTOR });
@@ -87,27 +78,17 @@ test.describe("desktop stylesheet Details", () => {
     ).toBeVisible();
   });
 
-  test("a change that can reach anything says so without naming a status", async ({
+  test("a screen names outside matches and keeps its unresolved paragraph", async ({
     page,
   }) => {
     await page.goto(`/view/${comparisonPaths.changed}/`);
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     const evidence = await openChangesEvidence(page);
+    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toBeVisible();
+    // The reader sees the reason of the first file in the list.
     await expect(
       evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
     ).toBeVisible();
-    await expect
-      .poll(async () => (await evidenceFiles(evidence))[0])
-      .toEqual([sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]]);
-    await expectNoStatusWords(evidence);
-  });
-
-  test("a screen names outside matches and keeps its unresolved paragraph", async ({
-    page,
-  }) => {
-    await page.goto(`/view/${comparisonPaths.changed}/`);
-    const evidence = await openChangesEvidence(page);
-    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toBeVisible();
     await expect
       .poll(() => evidenceFiles(evidence))
       .toEqual([
@@ -118,31 +99,9 @@ test.describe("desktop stylesheet Details", () => {
       evidence.getByRole("link", { name: "Card", exact: true }),
     ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
     await expect(evidence).not.toContainText(SCREEN_TERMINAL);
-    await expect(inspectHead(page)).not.toContainText(".accent");
-  });
-
-  test("an excluded screen stays out of Changes and explains why", async ({
-    page,
-  }) => {
-    await page.goto(`/view/${comparisonPaths.unchanged}/`);
-    await expect(page.locator("[data-workspace-status]")).toHaveText(
-      "Unmodified",
-    );
-    await awaitRoutedDetail(page, comparisonPaths.unchanged);
-    await expectNoCompareModes(page);
-    const evidence = await openEvidence(page);
-    // The paragraphs come from the entry detail; then the list stays empty.
-    await expect(evidence.locator("p")).toHaveText([
-      BASE,
-      EXCLUDED_LEAD,
-      EXAMINED_LEAD,
-      SCREEN_TERMINAL,
-    ]);
-    await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
-    await expect(evidence.locator("ul > li")).toHaveText([sheets.theme]);
+    // A change that can reach anything says so without naming a status.
     await expectNoStatusWords(evidence);
-    await chooseFilter(page, "changed");
-    await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
+    await expect(inspectHead(page)).not.toContainText(".accent");
   });
 
   test("an affected-only screen keeps its full styles and explains the shared change", async ({

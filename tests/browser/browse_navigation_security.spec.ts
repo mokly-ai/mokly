@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import {
   startSuite,
@@ -26,9 +26,57 @@ test.beforeEach(async ({ page, allowBrowserError }) => {
   );
 });
 
+/** The canonical view address that each popup and in-place step opens. */
+const DETAILS_VIEW = "/view/fixture/nested/details/?fragment=section";
+
+/** The `window.open` calls that the stub of `stubWindowOpen` recorded. */
+function openCalls(page: Page): Promise<unknown[][] | undefined> {
+  return page.evaluate(
+    () =>
+      (window as typeof window & { __moklyOpenCalls?: unknown[][] })
+        .__moklyOpenCalls,
+  );
+}
+
+/** Replace the shell's `window.open` with a stub that records each call. */
+async function stubWindowOpen(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const shell = window as typeof window & {
+      __moklyOpenCalls?: unknown[][];
+    };
+    shell.__moklyOpenCalls = [];
+    shell.open = (...args: Parameters<typeof window.open>) => {
+      shell.__moklyOpenCalls?.push(args);
+      return null;
+    };
+  });
+}
+
+/** Forget the calls that the stub recorded. */
+async function clearOpenCalls(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    (
+      window as typeof window & { __moklyOpenCalls?: unknown[][] }
+    ).__moklyOpenCalls = [];
+  });
+}
+
 test("modified and explicit targets open only canonical parent-owned contexts", async ({
   page,
 }) => {
+  // Each popup gets a small document at its address: the check is the
+  // address and the opener, not a second shell.
+  const popupDocument = (url: URL) =>
+    `${url.pathname}${url.search}` === DETAILS_VIEW;
+  await page.context().route(popupDocument, (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: '<!doctype html><html><head><link rel="icon" href="data:,"><title>Popup</title></head><body>Popup</body></html>',
+    }),
+  );
+  // Each popup step checks that the page stays on home, so one load serves
+  // every popup and both stub steps.
+  await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
   for (const activation of [
     {
       label: "Meta-click",
@@ -49,7 +97,6 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
     { label: "named", selector: "#named-link" },
   ]) {
     await test.step(activation.label, async () => {
-      await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
       const opened = page.context().waitForEvent("page");
       await page
         .frameLocator(canvasFrame("mobile"))
@@ -69,72 +116,30 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     });
   }
+  // The in-place steps below open the same address on the page itself.
+  await page.context().unroute(popupDocument);
 
+  await stubWindowOpen(page);
   await test.step("Control-click", async () => {
-    await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
-    await page.evaluate(() => {
-      const shell = window as typeof window & {
-        __moklyOpenCalls?: unknown[][];
-      };
-      shell.__moklyOpenCalls = [];
-      shell.open = (...args: Parameters<typeof window.open>) => {
-        shell.__moklyOpenCalls?.push(args);
-        return null;
-      };
-    });
     await page
       .frameLocator(canvasFrame("mobile"))
       .locator("#mock-link")
       .dispatchEvent("click", { button: 0, ctrlKey: true });
     await expect
-      .poll(() =>
-        page.evaluate(
-          () =>
-            (window as typeof window & { __moklyOpenCalls?: unknown[][] })
-              .__moklyOpenCalls,
-        ),
-      )
-      .toEqual([
-        [
-          "/view/fixture/nested/details/?fragment=section",
-          "_blank",
-          "noopener",
-        ],
-      ]);
+      .poll(() => openCalls(page))
+      .toEqual([[DETAILS_VIEW, "_blank", "noopener"]]);
     await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
   });
 
   await test.step("named target is opened at its canonical view URL", async () => {
-    await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
-    await page.evaluate(() => {
-      const shell = window as typeof window & {
-        __moklyOpenCalls?: unknown[][];
-      };
-      shell.__moklyOpenCalls = [];
-      shell.open = (...args: Parameters<typeof window.open>) => {
-        shell.__moklyOpenCalls?.push(args);
-        return null;
-      };
-    });
+    await clearOpenCalls(page);
     await page
       .frameLocator(canvasFrame("mobile"))
       .locator("#named-link")
       .click();
     await expect
-      .poll(() =>
-        page.evaluate(
-          () =>
-            (window as typeof window & { __moklyOpenCalls?: unknown[][] })
-              .__moklyOpenCalls,
-        ),
-      )
-      .toEqual([
-        [
-          "/view/fixture/nested/details/?fragment=section",
-          "DetailsFrame",
-          "noopener",
-        ],
-      ]);
+      .poll(() => openCalls(page))
+      .toEqual([[DETAILS_VIEW, "DetailsFrame", "noopener"]]);
   });
 
   for (const selector of ["#top-link", "#parent-link"]) {

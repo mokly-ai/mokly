@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { ComponentInstanceRecord } from "../packages/model/dist/index.js";
 
+import { appearanceViolations } from "./helpers/design_appearance_views.js";
 import {
   inventoryViolations,
   libraryViolations,
@@ -14,6 +15,7 @@ import {
   expectationViolations,
   tagViolations,
 } from "./helpers/design_link_checks.js";
+import { reasonViolations } from "./helpers/design_reasons.js";
 import {
   adoptionViolations,
   componentSheetViolations,
@@ -162,6 +164,22 @@ test(
   setup,
   async () => {
     assert.deepEqual(highlightViolations(await served()), []);
+  },
+);
+
+test(
+  "each Canvas view names and paints the scheme it was rendered for",
+  setup,
+  async () => {
+    assert.deepEqual(appearanceViolations(await served()), []);
+  },
+);
+
+test(
+  "each Canvas design reads one sentence per depicted reason",
+  setup,
+  async () => {
+    assert.deepEqual(reasonViolations(await served()), []);
   },
 );
 

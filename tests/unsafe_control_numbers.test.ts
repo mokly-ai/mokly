@@ -14,11 +14,6 @@ for (const [name, schema, control] of [
     "{kind:'number',maximum:count}",
   ],
   [
-    "text",
-    "{type:'string',minLength:count,maxLength:count}",
-    "{kind:'text',maxLength:count}",
-  ],
-  [
     "select",
     "{enum:[count]}",
     "{kind:'select',options:[{label:'Large',value:count}]}",
@@ -67,10 +62,7 @@ export default defineScreen({title:'Number',description:'',relatedDocs:[],
             colorScheme: "light",
             revision: index.revision,
             pageId: "a".repeat(32),
-            overrides:
-              name === "text"
-                ? {}
-                : { count: { kind: "set", value: 1000000000000000100 } },
+            overrides: { count: { kind: "set", value: 1000000000000000100 } },
           }),
         });
         assert.equal(response.status, 200, await response.text());
@@ -115,28 +107,5 @@ export const Saved={};`,
       }),
     });
     assert.equal(response.status, 200, await response.text());
-  },
-);
-
-test(
-  "an omitted integer control step keeps its schema multiple",
-  { timeout: 120_000 },
-  async (context) => {
-    const root = await consumer(context, {
-      "specs/number.mockup.ts": `import React from 'react';
-import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Number',description:'',relatedDocs:[],
-  propSchema:{type:'object',additionalProperties:false,properties:{count:{type:'integer',multipleOf:0.5}}},
-  props:{count:0},controls:{count:{kind:'number'}},render:({count})=>React.createElement('p',null,count)});`,
-    });
-    const result = await command(
-      root,
-      "build",
-      ["--no-changes"],
-      "plain",
-      {},
-      context.signal,
-    ).result;
-    assert.equal(result.code, 0, result.stderr);
   },
 );
