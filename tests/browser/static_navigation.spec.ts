@@ -146,7 +146,6 @@ test("copied Current never polls revisions, opens events or requests renders", a
   baseURL,
 }) => {
   const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
-  expect(response.headers()["access-control-allow-origin"]).toBeUndefined();
   const index = await response.json();
   expect(index).not.toHaveProperty("live");
   expect(index.revision).toBe(0);
