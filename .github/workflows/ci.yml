@@ -354,6 +354,10 @@ jobs:
       - profile
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    env:
+      R2_CACHE_BUCKET: mokly-rust-sccache
+      R2_CACHE_ENDPOINT: https://785233830ca9dfa2eb7c3561dd52f675.r2.cloudflarestorage.com
+      R2_CACHE_PREFIX: ${{ github.event_name == 'workflow_dispatch' && 'ci-trial/rust' || 'rust' }}
     strategy:
       fail-fast: false
       matrix:
@@ -406,11 +410,38 @@ jobs:
       # test shard saves it: its library unit tests and doc tests build every
       # crates.io dependency of the Rust tests. The lint shard never saves, and
       # Clippy reuses the build scripts and procedural macros of the entry.
+      # The entry lives in the R2 bucket when the R2 read key is present, and
+      # in the GitHub Actions cache otherwise, for example in a fork pull
+      # request. A manual run restores both, so the step times compare them.
+      - name: Check R2 cache access
+        id: r2
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_CACHE_READ_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_CACHE_READ_SECRET_ACCESS_KEY }}
+        run: bash scripts/verification/r2-rust-cache.sh check
       - name: Restore Rust build cache
+        if: steps.r2.outputs.enabled != 'true' || github.event_name == 'workflow_dispatch'
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') }}
+          save-if: ${{ steps.r2.outputs.enabled != 'true' && github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') }}
+      - name: Name the R2 Rust build cache entry
+        if: steps.r2.outputs.enabled == 'true'
+        id: r2-key
+        shell: bash
+        env:
+          LOCK_HASH: ${{ hashFiles('**/Cargo.toml', '**/Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml') }}
+        run: bash scripts/verification/r2-rust-cache.sh key native "$LOCK_HASH"
+      - name: Restore Rust build cache from R2
+        if: steps.r2.outputs.enabled == 'true'
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_CACHE_READ_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_CACHE_READ_SECRET_ACCESS_KEY }}
+          KEY: ${{ steps.r2-key.outputs.key }}
+          RESTORE_PREFIX: ${{ steps.r2-key.outputs.restore-prefix }}
+        run: bash scripts/verification/r2-rust-cache.sh restore "$KEY" "$RESTORE_PREFIX"
       - name: Install cargo-nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:
@@ -450,6 +481,18 @@ jobs:
         env:
           NATIVE_SHARD: ${{ matrix.shard }}
         run: cargo xtask check --suite native --shard "$NATIVE_SHARD"
+      # Only main writes the R2 entry. A manual run writes under its trial
+      # prefix, which no pull request or main run reads.
+      - name: Save Rust build cache to R2
+        if: >-
+          steps.r2.outputs.enabled == 'true' && startsWith(matrix.shard, '2/') &&
+          (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_CACHE_WRITE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_CACHE_WRITE_SECRET_ACCESS_KEY }}
+          KEY: ${{ steps.r2-key.outputs.key }}
+        run: bash scripts/verification/r2-rust-cache.sh save "$KEY"
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }}, ${{ matrix.mode }})
     needs: [profile]

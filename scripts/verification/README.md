@@ -60,6 +60,11 @@ Public test commands and strict evidence rules live in the
   Testbox. For the viewer command, it first installs the synced Bun pin with
   npm into `.context/testbox-bun`. Only the viewer suite gets that prefix's
   `bin` directory, first on its `PATH`.
+- [`r2-rust-cache.sh`](./r2-rust-cache.sh) restores and saves the native Rust
+  build cache in the R2 bucket, under the
+  [Rust build cache rules](../../docs/protocol/ci-verification-security.md#rust-build-cache).
+  Its `check` command turns R2 off when a key or a tool is missing, and the
+  job then uses the GitHub Actions cache.
 
 ## Workflow syntax
 

@@ -142,11 +142,23 @@ CI builds Rust without debug info and without incremental compilation.
 Without debug info, the test build takes about a third less time and each
 cache is about half the size. Panic messages keep their file and line.
 
+The native test entry of each host lives in a Cloudflare R2 bucket when the
+job has the R2 read key, and in the Actions cache otherwise. A fork pull
+request gets no key, so it restores the Actions cache entry. The R2 entry
+follows the key, owner, and `main`-only save rules above. Only `main` has the
+R2 write key. A manual run restores both stores, so that their step times
+compare, and writes only under a trial prefix that no other run reads. A
+failed R2 restore is a cache miss and never fails the job.
+
 CI caches dependency builds instead of compiler output through sccache.
 sccache alone saves about the same time, but it needs storage secrets, fork
 pull requests build without it, and every holder of a write key could change
 what CI reads. Its GitHub Actions store also exceeds GitHub's cache upload
-rate limit on a cold run.
+rate limit on a cold run. A trial on 4 CPUs measured no gain over the
+dependency cache: a cold build that read a local sccache with 99.7 % hits
+took 159 seconds, against 154 seconds for a build after a dependency cache
+restore. On top of that restore, a local sccache saved 32 seconds of the
+workspace crate builds, and a remote store adds network time to each hit.
 
 ## Testbox Key And Secret Boundary
 
