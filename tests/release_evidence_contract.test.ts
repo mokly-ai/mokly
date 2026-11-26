@@ -58,13 +58,19 @@ test("release evidence constants match the CI job and artifact namespace", async
     assert.equal(typeof upload?.with?.name, "string");
     assert.match(String(upload?.with?.name), VERIFICATION_ARTIFACT_PATTERN);
   }
+  // A release pull request runs the viewer on both release runtimes and the
+  // browser on Node 22.15.0 only.
+  const releaseRuntimes = {
+    viewer: RELEASE_VERIFICATION_RUNTIMES.length,
+    browser: 1,
+  } as const;
   const expectedReports = (["viewer", "browser"] as const).reduce(
     (total, jobName) => {
       assert.equal(
         workflow.jobs[jobName]?.strategy?.matrix.shard,
         `\${{ fromJSON(needs.profile.outputs.${jobName}-shards) }}`,
       );
-      return total + RELEASE_VERIFICATION_RUNTIMES.length * ciShards[jobName];
+      return total + releaseRuntimes[jobName] * ciShards[jobName];
     },
     0,
   );
