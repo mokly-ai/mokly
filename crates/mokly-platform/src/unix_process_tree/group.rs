@@ -8,14 +8,14 @@ use crate::error::{Error, IoResult, Result};
 use crate::processes::ProcessGroup;
 use crate::unix_process_table::{ProcessIdentity, ProcessTable, SystemTable};
 
+use super::outcome::{GroupOutcome, send};
 use super::walk;
 
 /// Group-level signal boundary kept separate from process-table inspection.
 #[cfg_attr(test, unimock::unimock(api = GroupSignalMock))]
 pub(crate) trait GroupSignal: Send + Sync {
-    /// Send one signal to the owned process group. The result is true when the
-    /// group is already gone and false when the signal reached a live group.
-    fn signal(&self, pid: i32, signal: i32) -> io::Result<bool>;
+    /// Send one signal to the owned process group.
+    fn signal(&self, pid: i32, signal: i32) -> io::Result<GroupOutcome>;
 }
 
 /// Unix process-tree ownership guard.
@@ -95,12 +95,22 @@ impl UnixGroup {
     fn signal_group(&self, signal: i32) -> io::Result<bool> {
         match self.table.identity(self.root.pid) {
             Ok(Some(current)) if current != self.root => Ok(true),
-            Ok(current) => self
-                .group
-                .signal(self.root.pid, signal)
-                .map(|gone| gone || current.is_none()),
+            Ok(current) => send(
+                self.group.as_ref(),
+                self.table.as_ref(),
+                self.root.pid,
+                signal,
+                Some(self.root),
+            )
+            .map(|gone| gone || current.is_none()),
             Err(source) => {
-                let _ = self.group.signal(self.root.pid, signal);
+                let _ = send(
+                    self.group.as_ref(),
+                    self.table.as_ref(),
+                    self.root.pid,
+                    signal,
+                    Some(self.root),
+                );
                 Err(source)
             }
         }

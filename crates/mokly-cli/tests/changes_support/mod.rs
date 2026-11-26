@@ -55,6 +55,19 @@ pub fn run_configured(
     timeout: Option<&str>,
     mode: &str,
 ) -> Output {
+    run_in(root, arguments, node, timeout, mode, None)
+}
+
+/// Run the CLI with a temporary cache. `columns` fixes the terminal width of a
+/// debug build, so that a test can keep long lines whole.
+pub fn run_in(
+    root: &Path,
+    arguments: &[&str],
+    node: Option<&Path>,
+    timeout: Option<&str>,
+    mode: &str,
+    columns: Option<&str>,
+) -> Output {
     let cache = TempDir::new().unwrap();
     let cache_root = dunce::canonicalize(cache.path()).unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
@@ -78,6 +91,9 @@ pub fn run_configured(
     }
     if let Some(timeout) = timeout {
         command.env("MOKLY_SIDECAR_TIMEOUT_MS", timeout);
+    }
+    if let Some(columns) = columns {
+        command.env("MOKLY_TEST_STATIC_COLUMNS", columns);
     }
     let output = command.output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
