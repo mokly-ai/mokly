@@ -31,8 +31,15 @@ guard releases the lock and leaves the lock file intact. The guard unlocks
 before it closes the file, so a child process that another thread starts at
 that moment cannot keep the lock until its exec.
 
-`ProcessGroups` configures a child before spawn, then attaches an ownership
-guard immediately after spawn. The caller retains the child and its pipes.
+`ProcessGroups` configures a child before spawn. Immediately after spawn,
+`attach` takes the child, creates its ownership guard, and returns a
+`ProcessTree` that owns both. The caller takes the pipes before `attach`. A
+failed attachment returns an `AttachFailure`, which holds the child and the
+cause. No guard exists then. The only way to the child is
+`AttachFailure::stop`: it first stops the whole tree with `kill_unattached`,
+and then returns an `Unattached` value with the child, the cause, and the
+result of the stop. The caller then kills and reaps the child. So no caller
+can reap the child of a failed attachment while its descendants still run.
 `configure` starts a new Unix session, so the child leads its own group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
 keeps a parent link to it while it runs. `configure_plain` uses
@@ -42,7 +49,7 @@ The child keeps the parent's session. This permits the standard library's
 checkout directory. Both modes use the same `attach` guard.
 
 The guard records the child's identity, its PID and start time, before the
-caller can reap the child. A reused PID therefore never receives a signal. The
+child can be reaped. A reused PID therefore never receives a signal. The
 guard records this identity also when the child has already exited. The Linux
 and macOS readers of the process table keep an exited process readable until
 its parent reaps it.
@@ -54,6 +61,18 @@ to each found descendant, also one in a new session. After `SIGTERM`, it sends
 `SIGCONT`, so that their handlers run. The guard keeps the found identities,
 so a later `SIGKILL` reaches a descendant whose parent died after the
 `SIGTERM`.
+
+`attach` is the only way to get a host guard, and it never gives the child
+back with one. So no caller can reap the root while its guard can still
+signal. Callers keep the `ProcessTree` until their last signal. Its `wait` blocks until the child exits and leaves the child
+unreaped; on Unix it uses `waitid` with `WNOWAIT`. macOS also reports a
+stopped child to that wait, so a stop report leads to a short pause and a new
+wait. The unreaped child keeps
+its PID, so no new process can take that PID or the group number while the
+guard can still signal. The tree reaps the child only when it drops, after
+the guard. A child that still runs at that point is reaped on its own thread
+when it exits. `kill_root` and `kill_unattached` reach the owned child
+directly.
 
 A stop of a reaped child with no kept descendants signals only the group. A
 tree that keeps changing ends the search after 64 complete passes, and the
@@ -72,7 +91,7 @@ graceful termination, and terminates the job for forceful cancellation.
 attachment fails. On Unix, the unreaped child reserves its PID, so cleanup can
 follow its descendants without reading the root identity. On Windows, the
 unattached child is suspended and cannot have descendants. The caller owns
-the direct child's kill and reap, shutdown deadlines, and pipe draining.
+shutdown deadlines and pipe draining, and the tree owns the reap.
 
 `Flush` uses one Linux `syncfs` for a filesystem. Its per-file fallback uses
 plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data
@@ -120,8 +139,17 @@ process-tree tests start real helper processes. They treat a zombie process as
 gone. The tests of escaped sessions re-run the test binary as a helper that
 calls `setsid()`, because macOS has no `setsid` command. The attachment test
 observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
-attaches to the unreaped child and stops it.
+attaches to the unreaped child and stops it. The `ProcessTree` tests check that
+the root stays unreaped through `wait` and `kill`, and that the drop reaps it.
+The `AttachFailure` tests check that `stop` calls `kill_unattached` once and
+nothing else, and that the host stop ends a running child before `stop` gives
+it back.
 Consumers enable the `mock` feature to use every public trait with unimock.
+The feature also adds `ProcessTree::into_parts`, which gives back the child and
+the guard. Test doubles use it to wrap the host guard, and the guard tests use
+it to control the child. Production builds do not enable the feature, so they
+cannot call it. The integration tests of this crate enable it through a
+dev-dependency on the crate itself.
 
 ### Key Code
 
@@ -130,8 +158,15 @@ Consumers enable the `mock` feature to use every public trait with unimock.
 - [`src/locks.rs`](./src/locks.rs) defines `Locks` and `SystemLocks`, which
   acquire nonblocking shared and exclusive `FileLock` guards.
 - [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups` and
-  `SystemProcessGroups`, which configure a child before spawn and return a
-  `ProcessGroup` guard that terminates or kills the whole tree.
+  `SystemProcessGroups`. They configure a child before spawn and attach it to
+  a `ProcessTree` whose `ProcessGroup` guard terminates or kills the whole
+  tree.
+- [`src/processes/failure.rs`](./src/processes/failure.rs) defines
+  `AttachFailure` and `Unattached`. A failed attachment gives back its child
+  only through `stop`, after `kill_unattached`.
+- [`src/processes/tree.rs`](./src/processes/tree.rs) defines `ProcessTree`,
+  which owns a child and its guard, waits for the exit without a reap, and
+  reaps the child after the guard drops.
 - [`src/flush.rs`](./src/flush.rs) defines `Flush` and `SystemFlush`, which
   flush a filesystem, a file, or a directory before a cache entry is published.
 - [`src/volumes/mod.rs`](./src/volumes/mod.rs) defines `CaptureVolumes`,
@@ -170,7 +205,8 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   fork, so `send` signals each reported member by that identity, and a process
   that later reuses the ID gets nothing. `send` skips the members when another
   process now holds the root ID, because the group number may then name a new
-  group. A member that refuses its own signal
+  group. A `ProcessTree` keeps the root unreaped, so for its guard no other
+  process can hold the root ID. A member that refuses its own signal
   keeps the error, and the other members still get the signal.
 - [`tests/process_tree/fixture.rs`](./tests/process_tree/fixture.rs) defines
   `Tree`, which starts a helper process tree for a test and cleans it up.

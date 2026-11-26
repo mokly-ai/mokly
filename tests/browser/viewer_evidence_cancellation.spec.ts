@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { evidenceFixture, presentation } from "./viewer_evidence_fixture.js";
 import { startViewerPick } from "./viewer_pick.js";
+import { awaitViewerWork } from "./viewer_work.js";
 const start = evidenceFixture();
 for (const cross of [false, true]) {
   const name = cross ? "postMessage" : "same-origin";
@@ -11,11 +12,18 @@ for (const cross of [false, true]) {
       page,
     }) => {
       await start(page, cross);
-      await page.evaluate(async (evidence) => {
-        const probe = window.evidence;
-        await probe.frames.startPick();
-        probe.update("mobile", evidence);
-      }, evidence);
+      await awaitViewerWork(
+        page,
+        (evidence) =>
+          window.holdViewerWork(
+            (async () => {
+              const probe = window.evidence;
+              await probe.frames.startPick();
+              probe.update("mobile", evidence);
+            })(),
+          ),
+        evidence,
+      );
       await expect
         .poll(() => page.evaluate(() => window.evidence.updates))
         .toBe(1);
@@ -24,12 +32,16 @@ for (const cross of [false, true]) {
         "start",
         "end:evidence",
       ]);
-      await page.evaluate(async () => {
-        const probe = window.evidence;
-        probe.frames.cancelPick();
-        probe.update("mobile");
-        await probe.frames.startPick();
-      });
+      await awaitViewerWork(page, () =>
+        window.holdViewerWork(
+          (async () => {
+            const probe = window.evidence;
+            probe.frames.cancelPick();
+            probe.update("mobile");
+            await probe.frames.startPick();
+          })(),
+        ),
+      );
       await presentation(page, cross, 2);
       expect(await page.evaluate(() => window.evidence.events)).toEqual([
         "start",
@@ -44,20 +56,28 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await start(page, cross);
-    await page.evaluate(async () => {
-      const probe = window.evidence;
-      await probe.frames.highlight(probe.instance);
-      probe.update("mobile", "empty");
-    });
+    await awaitViewerWork(page, () =>
+      window.holdViewerWork(
+        (async () => {
+          const probe = window.evidence;
+          await probe.frames.highlight(probe.instance);
+          probe.update("mobile", "empty");
+        })(),
+      ),
+    );
     await expect
       .poll(() => page.evaluate(() => window.evidence.updates))
       .toBe(1);
     await presentation(page, cross, 0);
     expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
-    await page.evaluate(async () => {
-      window.evidence.update("mobile");
-      await window.evidence.frames.startPick();
-    });
+    await awaitViewerWork(page, () =>
+      window.holdViewerWork(
+        (async () => {
+          window.evidence.update("mobile");
+          await window.evidence.frames.startPick();
+        })(),
+      ),
+    );
     await presentation(page, cross, 2);
     expect(await page.evaluate(() => window.evidence.events)).toEqual([
       "start",
@@ -68,8 +88,10 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await start(page, cross);
-    await page.evaluate(() =>
-      window.evidence.frames.highlightInstances(window.evidence.instances),
+    await awaitViewerWork(page, () =>
+      window.holdViewerWork(
+        window.evidence.frames.highlightInstances(window.evidence.instances),
+      ),
     );
     await presentation(page, cross, 2);
     await page.evaluate(() => window.evidence.update("mobile", "empty"));
@@ -113,25 +135,38 @@ for (const cross of [false, true]) {
         );
       }, hold);
       await page.waitForFunction(() => window.evidence.waiting);
-      await page.evaluate(async (hold) => {
-        if (hold === "list") {
-          await new Promise(requestAnimationFrame);
-          await new Promise(requestAnimationFrame);
-        }
-        window.evidence.update("mobile");
-      }, hold);
+      await awaitViewerWork(
+        page,
+        (hold) =>
+          window.holdViewerWork(
+            (async () => {
+              if (hold === "list") {
+                await new Promise(requestAnimationFrame);
+                await new Promise(requestAnimationFrame);
+              }
+              window.evidence.update("mobile");
+            })(),
+          ),
+        hold,
+      );
       await expect
         .poll(() => page.evaluate(() => window.evidence.outcome))
         .toBe("disposed");
       await presentation(page, cross, 0);
       expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
-      await page.evaluate(() => window.evidence.frames.startPick());
+      await awaitViewerWork(page, () =>
+        window.holdViewerWork(window.evidence.frames.startPick()),
+      );
       await presentation(page, cross, 2);
-      await page.evaluate(async () => {
-        window.evidence.release();
-        await new Promise(requestAnimationFrame);
-        await new Promise(requestAnimationFrame);
-      });
+      await awaitViewerWork(page, () =>
+        window.holdViewerWork(
+          (async () => {
+            window.evidence.release();
+            await new Promise(requestAnimationFrame);
+            await new Promise(requestAnimationFrame);
+          })(),
+        ),
+      );
       await presentation(page, cross, 2);
       expect(await page.evaluate(() => window.evidence.events)).toEqual([
         "start",

@@ -169,7 +169,9 @@ export async function managerPath(
 
 /**
  * Count real manager installs and reject any attempted socket connection,
- * except to the local registry `port` when one is given.
+ * except to the local registry `port` when one is given. The output log of an
+ * install ends with its exit code, or with the signal that ended it. A
+ * signal that Node cannot catch, such as SIGKILL, leaves no last line.
  */
 export async function instrumentManagers(root: string, port?: number) {
   const preload = path.join(root, ".context/manager-probe.cjs");
@@ -196,6 +198,12 @@ if (/[/\\\\](pnpm(?:\\.(cjs|mjs))?|yarn\\.js)$/.test(process.argv[1] ? fs.realpa
   for (const stream of [process.stdout, process.stderr]) {
     const write = stream.write.bind(stream);
     stream.write = function (chunk, ...rest) { fs.appendFileSync(${JSON.stringify(output)}, chunk); return write(chunk, ...rest); };
+  }
+  process.on('exit', (code) => fs.appendFileSync(${JSON.stringify(output)}, '\\n[manager exit code ' + code + ']\\n'));
+  // Record the signal. When the manager has no handler of its own, end the
+  // process with the signal, as the default action would.
+  for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+    process.once(signal, () => { fs.appendFileSync(${JSON.stringify(output)}, '\\n[manager signal ' + signal + ']\\n'); if (process.listenerCount(signal) === 0) process.kill(process.pid, signal); });
   }
 }
 `,

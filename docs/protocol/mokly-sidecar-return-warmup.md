@@ -140,7 +140,7 @@ The warm-up of a process ends when it has replayed every recorded request, when
 a call fails, when the process ends or leaves the head root, and when the
 process holds another head generation. Every warm-up ends when a newer head
 generation is bundled, when the newest head generation is released, when the
-pool stops, and when a failed reap ends background return. A process that a
+pool stops, and when a failed exit wait ends background return. A process that a
 return pass starts later gets a warm-up of the newest head generation at that
 time.
 
