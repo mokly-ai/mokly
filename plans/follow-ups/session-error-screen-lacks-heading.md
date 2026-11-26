@@ -18,5 +18,6 @@
 - **Left out:** Change the protocol so that error frames need no heading. It would weaken an accessibility requirement that every other screen meets. There is one real approach, because the requirement settles it.
 - **Wider fix:** None. The requirement already states the rule, and `packages/app/src/_tests_/a11y.spec.ts` checks the screens it visits.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/account-shell-remounts-drop-focus.md`, the same code. Its option C draws one account frame for the account routes in an Expo Router layout. Option A here then draws the error inside that frame, so the later branch adapts to the earlier one.
 - **Recommendation:** A. The requirement settles it.
 - **Action:** fix after merge, apply A, because the screen is outside the change that found it.

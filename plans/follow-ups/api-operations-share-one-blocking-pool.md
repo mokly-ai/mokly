@@ -39,6 +39,8 @@
 - **Previous examples:**
   - The password wait above, which held a worker until the fix of 2026-11-25.
   - In the Mokly server, authored-file requests held a render worker while they waited for the same route. `plans/follow-ups/same-route-waits-hold-workers.md` records that class.
-- **Related:** `plans/follow-ups/auth-admission-keys-full-ipv6-address.md`, same exposure: admission bounds how many password attempts one client can queue, and one IPv6 /64 counts there as many clients.
+- **Related:**
+  - `plans/follow-ups/auth-admission-keys-full-ipv6-address.md`, same exposure: admission bounds how many password attempts one client can queue, and one IPv6 /64 counts there as many clients.
+  - `plans/follow-ups/preview-password-queue-has-no-limit.md`, a shared wider fix. It holds the user's decision on the password queue, and option B here is its option D. Its answer settles option A here, and B here should reuse the refusal that the answer chooses.
 - **Recommendation:** B. It bounds every kind of operation in one place and keeps a worker free for health. A also bounds the password queue, but its refusal needs the user's approval.
 - **Action:** fix after merge, apply B, because it changes the request path of every operation, and the branch already moved the password wait off the pool.
