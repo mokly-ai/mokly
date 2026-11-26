@@ -11,12 +11,13 @@ import type { Subject } from "./subject";
 import { writes } from "./undoable-writes";
 
 /**
- * The controls the write-failure rule in `folio-chrome.md` covers, and how to
- * make each one's own write be refused: at least one control of each pane or
- * screen that draws the fragment, and each control whose own refusal no other
- * test reads. The rule names only its exceptions — a refusal that changes what
- * the reader does next is drawn as a state body — so a surface that starts to
- * draw the fragment adds a row here rather than to the protocol doc.
+ * Controls the write-failure rule in `folio-chrome.md` covers, and how to make
+ * each one's own write be refused. A row leaves this table under the rule in
+ * `covered-writes.ts`: only when a named test fails on a break of that
+ * control's own refusal, and never as the last row of its pane or screen. The
+ * rule names only its exceptions — a refusal that changes what the reader does
+ * next is drawn as a state body — so a surface that starts to draw the
+ * fragment adds a row here rather than to the protocol doc.
  *
  * The fragment puts the cause immediately above the control that made the
  * write and the reference beneath it, so the operation is named by the control

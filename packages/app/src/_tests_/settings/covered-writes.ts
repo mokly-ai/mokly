@@ -1,21 +1,16 @@
 /**
- * The undoable writes that one walk of `writes.spec.ts` leaves out, because a
- * named test of that control already fails when its own wiring for the walk
- * breaks. Each pane or screen keeps at least one row in every walk, so the
- * shared write code is still read wherever a refusal is drawn. A write that
- * a walk does not name here runs in it.
+ * The undoable writes that one walk of `writes.spec.ts` leaves out, each with
+ * the test that covers it. A row leaves a walk only when the named test fails
+ * on a break of each part of that control's own wiring that the walk reads,
+ * and never as the last row of its pane or screen in that walk. A write that a
+ * walk does not name here runs in it.
  */
 export type Walk = "busy" | "undo" | "refusal";
 
 export const coveredElsewhere: Readonly<
   Record<Walk, Readonly<Record<string, string>>>
 > = {
-  busy: {
-    "tokens/confirm-revoke":
-      "settings/tokens.spec.ts: pressing a destructive control twice sends one write",
-    "members/save-role":
-      "settings/members.spec.ts: a failed role change stays on the role form",
-  },
+  busy: {},
   undo: {
     "members/save-role":
       "settings/members.spec.ts: a failed role change stays on the role form",

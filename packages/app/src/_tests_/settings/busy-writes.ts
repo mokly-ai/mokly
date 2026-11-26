@@ -20,9 +20,9 @@ export interface BusyWrite {
 const named = (operation: string) => () => operation;
 
 /**
- * The working word and the operation of every write in `undoable-writes.ts`
- * that the busy walk runs, by its `where`. A write the walk gains without a
- * row here fails the busy walk in `writes.spec.ts`, which reads them together.
+ * The working word and the operation of every write in `undoable-writes.ts`,
+ * by its `where`. A write the table gains without a row here fails the busy
+ * walk in `writes.spec.ts`, which reads them together.
  */
 export const busyWrites: Readonly<Record<string, BusyWrite>> = {
   "account/save-account": {
@@ -61,9 +61,17 @@ export const busyWrites: Readonly<Record<string, BusyWrite>> = {
     working: "Creating…",
     operation: named("Creating workspace"),
   },
+  "members/save-role": {
+    working: "Saving…",
+    operation: named("Saving role"),
+  },
   "project/confirm-visibility": {
     working: "Making public…",
     operation: (subject) => `Making ${subject.projectName} public`,
+  },
+  "tokens/confirm-revoke": {
+    working: "Revoking…",
+    operation: named("Revoking token"),
   },
   "members/confirm-remove-member": {
     working: "Removing…",
