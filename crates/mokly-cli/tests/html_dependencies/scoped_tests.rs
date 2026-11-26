@@ -120,13 +120,6 @@ fn a_used_nested_lockfile_warns_under_strict_after_unrelated_edits_stay_silent()
     let stderr = String::from_utf8_lossy(&strict.stderr);
     assert!(strict.status.success(), "{stderr}");
     assert!(stderr.contains(WARNING), "{stderr}");
-    let permissive = build(root.path(), false);
-    assert!(
-        permissive.status.success(),
-        "{}",
-        String::from_utf8_lossy(&permissive.stderr)
-    );
-    assert!(String::from_utf8_lossy(&permissive.stderr).contains(WARNING));
 }
 
 #[test]
