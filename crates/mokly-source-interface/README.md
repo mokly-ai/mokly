@@ -54,7 +54,10 @@ Consumers inject it as `Arc<dyn SourceTree>`. The Git adapter is
 batches for these operations. It never follows link blobs.
 
 `prefetch` accepts an exact confined read set for batched adapters. Its default
-is a no-op. `read_public` bypasses private source-snapshot retention; the caller
+is a no-op. `hint_projections` names exact paths that later projections ask
+for, so that an adapter can load their metadata together. It reads no bytes and
+reports no error, so each later projection keeps its own answer and error. Its
+default is a no-op. `read_public` bypasses private source-snapshot retention; the caller
 must first apply the same public-path policy as resource delivery.
 Working and Git adapters implement `digest` with bounded streaming reads.
 Snapshot and static admission wrappers retain the resulting hash without the

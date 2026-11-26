@@ -114,6 +114,17 @@ impl SourceTree for SourceSnapshot {
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         self.source.prefetch(paths)
     }
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        let unknown: Vec<_> = {
+            let nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+            paths
+                .iter()
+                .filter(|path| !nodes.contains_key(path.as_path()))
+                .cloned()
+                .collect()
+        };
+        self.source.hint_projections(&unknown);
+    }
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.source.read_public(path)
     }
