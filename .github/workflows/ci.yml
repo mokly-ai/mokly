@@ -353,7 +353,7 @@ jobs:
           include-hidden-files: true
           retention-days: 14
   native:
-    name: Native (${{ matrix.runner }}, shard ${{ matrix.shard }}${{ matrix.variant && format(', {0}', matrix.variant) || '' }})
+    name: Native (${{ matrix.runner }}, shard ${{ matrix.shard }})
     needs:
       - profile
     runs-on: ${{ matrix.runner }}
@@ -378,110 +378,64 @@ jobs:
             shard: 5/5
           - runner: windows-2025
             shard: 1/8
-            variant: base
           - runner: windows-2025
             shard: 2/8
-            variant: base
           - runner: windows-2025
             shard: 3/8
-            variant: base
           - runner: windows-2025
             shard: 4/8
-            variant: base
           - runner: windows-2025
             shard: 5/8
-            variant: base
           - runner: windows-2025
             shard: 6/8
-            variant: base
           - runner: windows-2025
             shard: 7/8
-            variant: base
           - runner: windows-2025
             shard: 8/8
-            variant: base
           - runner: windows-2025
-            shard: 1/8
-            variant: devdrive
+            shard: 1/9
           - runner: windows-2025
-            shard: 2/8
-            variant: devdrive
+            shard: 2/9
           - runner: windows-2025
-            shard: 3/8
-            variant: devdrive
+            shard: 3/9
           - runner: windows-2025
-            shard: 4/8
-            variant: devdrive
+            shard: 4/9
           - runner: windows-2025
-            shard: 5/8
-            variant: devdrive
+            shard: 5/9
           - runner: windows-2025
-            shard: 6/8
-            variant: devdrive
+            shard: 6/9
           - runner: windows-2025
-            shard: 7/8
-            variant: devdrive
+            shard: 7/9
           - runner: windows-2025
-            shard: 8/8
-            variant: devdrive
+            shard: 8/9
           - runner: windows-2025
-            shard: 1/8
-            variant: defender
+            shard: 9/9
           - runner: windows-2025
-            shard: 2/8
-            variant: defender
+            shard: 1/10
           - runner: windows-2025
-            shard: 3/8
-            variant: defender
+            shard: 2/10
           - runner: windows-2025
-            shard: 4/8
-            variant: defender
+            shard: 3/10
           - runner: windows-2025
-            shard: 5/8
-            variant: defender
+            shard: 4/10
           - runner: windows-2025
-            shard: 6/8
-            variant: defender
+            shard: 5/10
           - runner: windows-2025
-            shard: 7/8
-            variant: defender
+            shard: 6/10
           - runner: windows-2025
-            shard: 8/8
-            variant: defender
+            shard: 7/10
+          - runner: windows-2025
+            shard: 8/10
+          - runner: windows-2025
+            shard: 9/10
+          - runner: windows-2025
+            shard: 10/10
     steps:
-      # Temporary experiment: Defender exclusions for the work folders.
-      - name: Exclude the work folders from Defender
-        if: matrix.variant == 'defender'
-        shell: pwsh
-        run: |
-          Get-MpComputerStatus | Format-List RealTimeProtectionEnabled,AntivirusEnabled,IsTamperProtected
-          $paths = @($env:GITHUB_WORKSPACE, $env:RUNNER_TEMP, $env:RUNNER_TOOL_CACHE, "$env:USERPROFILE\.cargo", "$env:USERPROFILE\.rustup", "C:\npm", "$env:APPDATA\npm", "$env:LOCALAPPDATA\npm-cache")
-          Add-MpPreference -ExclusionPath $paths
-          (Get-MpPreference).ExclusionPath
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false
-      # Temporary experiment: a trusted ReFS Dev Drive for the checkout, the
-      # Rust target folder, and node_modules. The target folder of the original
-      # checkout links to the Dev Drive, so the Rust cache paths stay the same.
-      - name: Set up a Dev Drive
-        if: matrix.variant == 'devdrive'
-        uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
-        with:
-          drive-size: 40GB
-          drive-format: ReFS
-          drive-path: D:/dev_drive.vhdx
-          workspace-copy: true
-          trusted-dev-drive: true
-      - name: Link the Rust target folder to the Dev Drive
-        if: matrix.variant == 'devdrive'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path "$env:DEV_DRIVE_WORKSPACE\target" | Out-Null
-          New-Item -ItemType Junction -Path "$env:GITHUB_WORKSPACE\target" -Target "$env:DEV_DRIVE_WORKSPACE\target" | Out-Null
-          Get-Item "$env:GITHUB_WORKSPACE\target" | Format-List FullName,LinkType,Target
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -517,7 +471,6 @@ jobs:
           path: ${{ steps.npm-cache-path.outputs.path }}
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
         run: npm ci
       - name: Save npm download cache
         if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
@@ -525,23 +478,7 @@ jobs:
         with:
           path: ${{ steps.npm-cache-path.outputs.path }}
           key: ${{ steps.npm-cache.outputs.cache-primary-key }}
-      - name: Build UI package
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
-        run: npm run build --workspace @mokly/ui
-      - name: Build model package
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
-        run: npm run build --workspace @mokly/model
-      - name: Build frame package
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
-        run: npm run build --workspace @mokly/frame
-      - name: Build viewer package
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
-        run: npm run build --workspace @mokly/viewer
-      - name: Build sidecar package
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
-        run: npm run build --workspace @mokly/mokly
       - name: Run native verification
-        working-directory: ${{ env.DEV_DRIVE_WORKSPACE || github.workspace }}
         shell: bash
         env:
           NATIVE_SHARD: ${{ matrix.shard }}
