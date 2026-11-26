@@ -352,23 +352,23 @@ files that a commit holds.
 | In an unignored nested checkout | Yes, with the nested repository as cause |
 | In a tracked submodule          | Yes, with the submodule as cause         |
 
-- [ ] Update the Ignored Modules section of
+- [x] Update the Ignored Modules section of
       `docs/protocol/mokly-comparison-packages.md`, the `ignored-module` row of
       `docs/protocol/mokly-build-warnings.md`, and the warning sentence of
       `docs/guides/authoring/config.md`: the rule of the table and the exact
       message of each cause.
-- [ ] Add a shared API to `crates/mokly-git` that returns the exact Git status
+- [x] Add a shared API to `crates/mokly-git` that returns the exact Git status
       of each path of a batch: tracked, untracked and not ignored, ignored,
       inside a nested repository, or inside a submodule, with the repository
       folder for the last two. Update `crates/mokly-git/README.md`.
-- [ ] Use the API in `crates/mokly-compare/src/ignored_modules.rs` and remove
+- [x] Use the API in `crates/mokly-compare/src/ignored_modules.rs` and remove
       the parent-folder guess of `working_inputs::ignored_paths`. Give a file
       in a nested repository its own message without the `sourcePackages`
       hint. Update `crates/mokly-compare/README.md`.
-- [ ] Test each row of the table at the API level and at the CLI level, and
+- [x] Test each row of the table at the API level and at the CLI level, and
       the stale index case of finding 82. Run each new test that starts a
       process 10 times.
-- [ ] Keep `ModulePaths.workspaceSource` and `WorkspaceSources.source` usable
+- [x] Keep `ModulePaths.workspaceSource` and `WorkspaceSources.source` usable
       from another caller that passes a bare import name. The Storybook
       branch calls them from its Vite adapter after this branch merges.
 - [ ] Run the complete gate, commit, push, and review the change with the
@@ -380,21 +380,21 @@ Depends on: 9
 
 Apply Cal's answer of 2026-11-27 to review finding 133.
 
-- [ ] Change the rule of 2026-11-19 in
+- [x] Change the rule of 2026-11-19 in
       `docs/protocol/mokly-sidecar-folder-reuse.md`, and the lookup files
       sentence of `docs/protocol/mokly-sidecar-modules.md`: a build file, an
       export target and a source file that a lookup records only for its
       presence become path-only entries; manifests, layout files, and a build
       file that a Node-loaded `require` keeps carry digests.
-- [ ] Keep the recorded kind in `WorkspaceLookups.marked`, and accept
+- [x] Keep the recorded kind in `WorkspaceLookups.marked`, and accept
       path-only entries in `markedCurrent`, in the reuse filter of
       `packages/mokly/src/sidecar/compiled.ts`, and in
       `ReuseEvidence::serve_edit` of `crates/mokly-sidecar/src/compiled.rs`.
-- [ ] Test a build file above 1 MiB that is unused, kept by `false`, and
+- [x] Test a build file above 1 MiB that is unused, kept by `false`, and
       behind a linked build folder with no entry: each keeps edit reuse. Test
       that an edit to a build file that a Node-loaded `require` keeps ends the
       reuse. Run each new test 10 times.
-- [ ] Delete `plans/follow-ups/unused-build-files-disable-edit-reuse.md`.
+- [x] Delete `plans/follow-ups/unused-build-files-disable-edit-reuse.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

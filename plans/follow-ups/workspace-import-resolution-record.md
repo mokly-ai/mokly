@@ -61,7 +61,6 @@
   - [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md) records an earlier case where an early link resolution lost a fact that a later lookup needed.
   - Commit `89760791f` of #501, on 2026-11-24, added separate bundled and Node-loaded paths when it added the recovery of workspace sources. It also protected configured modules through package imports. Its test used the same written path in the export and in the configuration. So the test passed with the defect of a linked configured module.
 - **Related:**
-  - [unused-build-files-disable-edit-reuse.md](./unused-build-files-disable-edit-reuse.md): same code. This work adds lookups to `WorkspaceLookups`. Do that item first, or record each new check of a file location as a path-only entry.
   - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md): shared wider fix. Its option B adds the evidence of a restored page-render require to this record.
   - [workspace-bundle-export-conditions.md](./workspace-bundle-export-conditions.md): work that waits. For a failed lookup, the record needs the active export target. Option F of that item selects it by a walk of the matched export key. Do that work first, or with the record.
   - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code. Its relative probes for synchronous requires give imports that the record must describe.

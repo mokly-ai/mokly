@@ -55,8 +55,9 @@ its requests and results. The paths below are relative to the package root.
   attempts, while each attempt keeps its own consumed-file and CSS-module
   records. Each attempt takes its esbuild options and plugin order from
   `bundleOptions` in [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
-  Only a native compile gets its log override, which makes a handled
-  `require` failure an error. esbuild resolves most imports itself, and
+  A native compile treats a handled `require` failure as an error. Serve edit
+  compiles retain diagnostics for `require` targets that can be unknown until
+  evaluation. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` records each planned import through
@@ -191,9 +192,9 @@ its requests and results. The paths below are relative to the package root.
   bytes of those texts. It keeps both texts when it drops the plan, and it
   encodes `compiled` again when it drops the evidence. A `serveEdit` compile
   gets incomplete evidence with the `uncaptured: "serveEdit"` marker, and its
-  inputs hold only its private folder files. A compile without a toolchain
-  identity gets no marker. A `serveEdit` compile also gets no marker when
-  `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
+  inputs hold its private folder and workspace lookup files. A compile without
+  a toolchain identity gets no marker. A `serveEdit` compile also gets no
+  marker when `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
 - [`src/sidecar/recipe-encoding.ts`](./recipe-encoding.ts) keeps the texts
   of a new compile from its size check until its response. As its last
@@ -351,7 +352,9 @@ its requests and results. The paths below are relative to the package root.
   can change that choice. It records each `package.json` probe that
   `WorkspaceSources` uses to find the package root, including misses. Its
   `buildTarget` records the build target of each entry that `WorkspaceSources`
-  tries.
+  tries. `marked` keeps the captured kind of each entry. Presence checks keep
+  paths. Manifests, layout files, and workspace files loaded by the restored
+  Node require through resolved peers keep digests.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`

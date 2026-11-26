@@ -107,11 +107,16 @@ loads. Both bundle capture modes keep the workspace layout probes of every
 layout that the rule tries in private reuse evidence, including when no
 source matches. Each `package.json` that the rule reads to find a package
 root and its `name` enters the same evidence, because an entry of
-`moduleResolution.sourcePackages` applies by that `name`. Layout files and
-package manifests used for build targets also enter the bundle metadata. The
-bundle keeps the absent build and source candidates of every tried layout as
-watch inputs. Selected source contents enter through the module graph and
-stylesheet inputs.
+`moduleResolution.sourcePackages` applies by that `name`. In marked edit
+evidence, build files, export targets, and source files that a lookup checks
+for presence use path-only entries. Manifests and layout files carry digests.
+A build file known to be a target of the restored Node `require` when the
+bundle records the lookup also carries a digest. Build files read by a
+synchronous PostCSS `require` carry digests in the stylesheet input evidence.
+Layout files and package manifests used for build targets also enter the
+bundle metadata. The bundle keeps the absent build and source candidates of
+every tried layout as watch inputs. Selected source contents enter through
+the module graph and stylesheet inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

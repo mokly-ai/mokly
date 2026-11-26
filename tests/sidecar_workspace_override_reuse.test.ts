@@ -6,6 +6,7 @@ import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
+import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
 
 import {
   link,
@@ -145,3 +146,142 @@ for (const capture of ["serveEdit", "full"] as const) {
     );
   });
 }
+
+for (const [scenario, sourcePackages, buildFolder, selected] of [
+  ["unused", [working], "esm", "source/value.ts"],
+  ["kept by false", [{ [name]: false }], "esm", "esm/value.js"],
+  ["linked without an override", [], "release", "release/value.js"],
+] as const) {
+  test(`a large workspace build ${scenario} keeps marked edit reuse`, async (context) => {
+    const root = await nativeRoot(context);
+    const directory = path.join(root, pkg);
+    const built = path.join(directory, buildFolder, "value.js");
+    await write(path.join(root, "entry.mjs"), 'export {value} from "local";');
+    await write(
+      path.join(directory, "package.json"),
+      JSON.stringify({ name, exports: "./esm/value.js" }),
+    );
+    await write(
+      built,
+      `export const value = "Built"; /* ${"x".repeat(1_100_000)} */`,
+    );
+    await write(
+      path.join(directory, "source/value.ts"),
+      'export const value = "Source";',
+    );
+    if (buildFolder === "release")
+      await link(
+        path.join(directory, buildFolder),
+        path.join(directory, "esm"),
+      );
+    await link(directory, path.join(root, "node_modules/local"));
+
+    const params = nativeParams(
+      root,
+      {},
+      { sourcePackages: [...sourcePackages] },
+    );
+    const { result, generation } = await bundle(
+      params,
+      build,
+      undefined,
+      undefined,
+      "serveEdit",
+    );
+    const reused = () => reuse([generation], params, "serveEdit");
+    assert.deepEqual(moduleNames(result).sort(), [
+      "entry.mjs",
+      `${pkg}/${selected}`,
+    ]);
+    assert.equal(result.compiled.reuseEvidence.uncaptured, "serveEdit");
+    assert.deepEqual(result.compiled.reuseEvidence.inputs[built], {
+      kind: "filePath",
+    });
+    assert.equal((await reused())?.runtimeKey, generation.runtimeKey);
+
+    await write(built, 'export const value = "Edited";');
+    assert.equal(
+      (await reused())?.runtimeKey,
+      scenario === "unused" ? generation.runtimeKey : undefined,
+    );
+  });
+}
+
+test("a workspace build loaded by the restored Node require ends edit reuse after a content change", async (context) => {
+  const root = await nativeRoot(context);
+  const directory = path.join(root, pkg);
+  const built = path.join(directory, "esm/value.cjs");
+  await write(path.join(root, "entry.mjs"), 'export const value = "Entry";');
+  await write(
+    path.join(directory, "package.json"),
+    JSON.stringify({
+      name: "react",
+      version: "1.0.0",
+      exports: { ".": "./esm/value.cjs", "./package.json": "./package.json" },
+    }),
+  );
+  await write(built, 'module.exports = "Built";');
+  await link(directory, path.join(root, "node_modules/react"));
+
+  const params = nativeParams(root);
+  const { result, generation } = await bundle(
+    params,
+    build,
+    undefined,
+    undefined,
+    "serveEdit",
+  );
+  const reused = () => reuse([generation], params, "serveEdit");
+  assert.deepEqual(moduleNames(result), ["entry.mjs"]);
+  assert.equal(generation.require("react"), "Built");
+  assert.equal((await reused())?.runtimeKey, generation.runtimeKey);
+
+  await write(built, 'module.exports = "Edit!";');
+  assert.equal((await reused())?.runtimeKey, undefined);
+  assert.equal(result.compiled.reuseEvidence.inputs[built]?.kind, "file");
+});
+
+test("a computed require ends edit reuse when it loads the build of an import that selected source", async (context) => {
+  const root = await nativeRoot(context);
+  const directory = path.join(root, pkg);
+  const built = path.join(directory, "esm/value.js");
+  await write(
+    path.join(root, "entry.mjs"),
+    `import { value } from "local";
+    const specifier = ["lo", "cal"].join("");
+    export const observed = [value, require(specifier)];`,
+  );
+  await write(
+    path.join(directory, "package.json"),
+    JSON.stringify({ name, exports: "./esm/value.js" }),
+  );
+  await write(built, 'module.exports = "Built";');
+  await write(
+    path.join(directory, "source/value.ts"),
+    'export const value = "Source";',
+  );
+  await link(directory, path.join(root, "node_modules/local"));
+
+  const params = nativeParams(root, {}, { sourcePackages: [working] });
+  const { result, generation } = await bundle(
+    params,
+    build,
+    undefined,
+    undefined,
+    "serveEdit",
+  );
+  const reused = () => reuse([generation], params, "serveEdit");
+  assert.deepEqual(moduleNames(result).sort(), [
+    "entry.mjs",
+    `${pkg}/source/value.ts`,
+  ]);
+  assert.deepEqual(evaluate(generation).entries["entry.mjs"]?.observed, [
+    "Source",
+    "Built",
+  ]);
+  assert.equal((await reused())?.runtimeKey, generation.runtimeKey);
+
+  await write(built, 'module.exports = "Edit!";');
+  assert.equal((await reused())?.runtimeKey, undefined);
+  assert.equal(result.compiled.reuseEvidence.inputs[built]?.kind, "file");
+});
