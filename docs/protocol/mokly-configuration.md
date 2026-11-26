@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: Mokly does not accept `moduleResolution.sourcePackages` yet. The [configuration type milestone](../../plans/source-package-override.md#milestone-2-configuration-type-and-validation) adds the field and its validation. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) and the [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) apply its entries.
+Status: Mokly accepts and validates `moduleResolution.sourcePackages`, but does not apply its entries yet. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) and the [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) apply them.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path

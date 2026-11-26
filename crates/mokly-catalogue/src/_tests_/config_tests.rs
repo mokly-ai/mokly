@@ -4,6 +4,7 @@ use mokly_model::axes::ColorScheme;
 use serde_json::{Value, json};
 
 use crate::config_validation::{CONFIG_SCHEMA, parse};
+use crate::diagnostic::Code;
 use crate::error::CatalogueError;
 
 #[test]
@@ -98,4 +99,81 @@ fn unknown_nested_fields_keep_their_exact_key_location() {
     };
     assert_eq!(issue.message, "unknown configuration field: extra");
     assert_eq!(issue.location.unwrap().line, 2);
+}
+
+#[test]
+fn source_packages_normalize_build_and_source_folders_and_keep_false() {
+    let value = json!({"moduleResolution":{"sourcePackages":{
+        "@acme/ui":{"esm/":"./source/","./cjs":".","dist/esm":"code//ui/."},
+        "legacy":false
+    }}});
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    assert!(jsonschema::validator_for(&schema).unwrap().is_valid(&value));
+    let config = parse(&value.to_string(), "mokly.config.json").unwrap();
+    assert_eq!(
+        serde_json::to_value(config.module_resolution.unwrap()).unwrap()["sourcePackages"],
+        json!({"@acme/ui":{"esm":"source","cjs":".","dist/esm":"code/ui"},"legacy":false})
+    );
+}
+
+#[test]
+fn source_packages_reject_invalid_entries_with_the_setting_and_config_path() {
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    let validator = jsonschema::validator_for(&schema).unwrap();
+    for packages in [
+        json!({"./ui":false}),
+        json!({"@acme/ui/button":false}),
+        json!({"ui":true}),
+        json!({"ui":{}}),
+        json!({"ui":{"././":"source"}}),
+        json!({"ui":{"":"source"}}),
+        json!({"ui":{"/esm":"source"}}),
+        json!({"ui":{"dist/../esm":"source"}}),
+        json!({"ui":{"dist/node_modules/esm":"source"}}),
+        json!({"ui":{"esm":""}}),
+        json!({"ui":{"esm":"/source"}}),
+        json!({"ui":{"esm":"C:/source"}}),
+        json!({"ui":{"esm":"src\\ui"}}),
+        json!({"ui":{"esm":"src/../ui"}}),
+        json!({"ui":{"esm":"src/node_modules"}}),
+    ] {
+        let value = json!({"moduleResolution":{"sourcePackages":packages}});
+        assert!(!validator.is_valid(&value), "schema accepted {value}");
+        let issue = source_packages_issue(&value.to_string());
+        assert!(
+            issue.message.starts_with("moduleResolution.sourcePackages"),
+            "{value}: {}",
+            issue.message
+        );
+    }
+}
+
+#[test]
+fn source_packages_reject_repeated_build_folders() {
+    for folders in [
+        r#"{"esm":"source","./esm":"other"}"#,
+        r#"{"esm":"source","esm":"other"}"#,
+    ] {
+        let value =
+            format!(r#"{{"moduleResolution":{{"sourcePackages":{{"@acme/ui":{folders}}}}}}}"#);
+        let issue = source_packages_issue(&value);
+        assert!(
+            issue.message.starts_with("moduleResolution.sourcePackages")
+                && issue.message.contains("duplicate build folder \"esm\""),
+            "{value}: {}",
+            issue.message
+        );
+    }
+}
+
+fn source_packages_issue(text: &str) -> crate::diagnostic::Issue {
+    let CatalogueError::Config(issue) = parse(text, "config/mokly.config.json").unwrap_err() else {
+        panic!("expected a configuration error for {text}")
+    };
+    assert_eq!(issue.code, Code::ConfigInvalid, "{text}");
+    assert_eq!(
+        issue.location.as_ref().unwrap().path,
+        "config/mokly.config.json"
+    );
+    issue
 }

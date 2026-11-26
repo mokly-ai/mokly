@@ -84,6 +84,7 @@ pub(super) fn config(postcss: bool) -> ResolvedConfig {
         modules: ResolvedModules {
             renderer: Some("renderer.ts".into()),
             postcss: postcss.then(|| "postcss.mjs".into()),
+            ..ResolvedModules::default()
         },
         authored_inputs: vec![],
         roots: vec![],

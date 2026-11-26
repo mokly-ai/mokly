@@ -179,37 +179,37 @@ them.
 
 Depends on: 1
 
-- [ ] Add `sourcePackages` to `ModuleResolution` in
+- [x] Add `sourcePackages` to `ModuleResolution` in
       `crates/mokly-catalogue/src/config_types.rs`, as a map from a package
       name to `false` or to a map from build folder to source folder. Add it
       to `packages/mokly/config.schema.json`, with the key and folder
       patterns, and to the authoring type in
       `packages/mokly/src/authoring/config.ts`.
-- [ ] Reject invalid entries with `config-invalid` in
+- [x] Reject invalid entries with `config-invalid` in
       `crates/mokly-catalogue/src/config_validation.rs`: a key that is not a
       bare package name, an empty folder map, a build folder `.`, a folder
       that is empty, absolute, or holds `..` or `node_modules`, and a build
       folder named twice after normalisation. Normalise `./esm` and `esm/` to
       `esm`.
-- [ ] Add accepted and rejected examples to
+- [x] Add accepted and rejected examples to
       `crates/mokly-catalogue/src/_tests_/config_tests.rs`.
 
 ## Milestone 3: Settings for both renders
 
 Depends on: 2
 
-- [ ] Add the field to the sidecar's `ModuleResolution` in
+- [x] Add the field to the sidecar's `ModuleResolution` in
       `crates/mokly-sidecar/src/methods.rs` as an ordered list of entry maps,
       and run `cargo xtask generate-types`. Split the file if it passes 300
       lines.
-- [ ] Fill the list for the head, with the working map, in
+- [x] Fill the list for the head, with the working map, in
       `crates/mokly-render/src/side.rs`. Fill it for the base, with the base
       map and then the working map, in
       `crates/mokly-cli/src/base_dependency_selection.rs`.
-- [ ] Add the same list to the CSS `Resolution` in
+- [x] Add the same list to the CSS `Resolution` in
       `crates/mokly-css/src/resolution.rs`, filled in
       `crates/mokly-render/src/stylesheets.rs`.
-- [ ] Keep the working map beside the base configuration where it loads, in
+- [x] Keep the working map beside the base configuration where it loads, in
       `crates/mokly-cli/src/changes_base_sources.rs`, so that a base without a
       sidecar, which still resolves CSS, gets the same list. Add a unit test
       for each order.

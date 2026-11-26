@@ -2,6 +2,9 @@
 
 use std::collections::BTreeMap;
 
+/// Workspace source overrides from one configuration. A value of `None` ends layout lookup.
+pub type SourcePackages = BTreeMap<String, Option<BTreeMap<String, String>>>;
+
 /// Pure resolution settings shared with the sidecar's consumer module graph.
 #[derive(Clone, Debug, Default)]
 pub struct Resolution {
@@ -19,6 +22,8 @@ pub struct Resolution {
     pub dependency_aliases: BTreeMap<String, String>,
     /// Extension lookup order, or the consumer bundler defaults.
     pub extensions: Vec<String>,
+    /// Workspace source overrides in layout order.
+    pub source_packages: Vec<SourcePackages>,
 }
 
 impl Resolution {

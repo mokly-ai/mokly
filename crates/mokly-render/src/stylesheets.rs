@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
 use mokly_css::types::StylesheetRoot;
+use mokly_sidecar::methods::source_packages::SourcePackage;
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
@@ -36,14 +37,9 @@ impl StylesheetAttempt {
     }
 }
 
-pub(crate) fn attempt(
-    runtime: &Runtime,
-    config: &ResolvedConfig,
-    side: &SideInputs,
-) -> StylesheetAttempt {
-    let tree = sources::reader(runtime, config, side);
+fn resolution(side: &SideInputs) -> Resolution {
     let module_resolution = &side.module_resolution;
-    let resolution = Resolution {
+    Resolution {
         config_directory: side.configuration_directory.clone(),
         dependency_aliases: side.dependency_aliases.clone(),
         aliases: module_resolution.aliases.clone(),
@@ -53,7 +49,32 @@ pub(crate) fn attempt(
             .map(mokly_compare::ancestor_roots::logical)
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
-    };
+        source_packages: module_resolution
+            .source_packages
+            .iter()
+            .map(|packages| {
+                packages
+                    .iter()
+                    .map(|(name, entry)| {
+                        let folders = match entry {
+                            SourcePackage::Disabled => None,
+                            SourcePackage::Folders(folders) => Some(folders.clone()),
+                        };
+                        (name.clone(), folders)
+                    })
+                    .collect()
+            })
+            .collect(),
+    }
+}
+
+pub(crate) fn attempt(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    side: &SideInputs,
+) -> StylesheetAttempt {
+    let tree = sources::reader(runtime, config, side);
+    let resolution = resolution(side);
     let settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
@@ -232,3 +253,7 @@ pub(crate) fn ignored(path: &str, loaders: &BTreeMap<String, String>) -> bool {
 #[cfg(test)]
 #[path = "_tests_/stylesheet_walk_tests.rs"]
 mod stylesheet_walk_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_resolution_tests.rs"]
+mod stylesheet_resolution_tests;
