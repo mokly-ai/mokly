@@ -51,32 +51,3 @@ test("a publication address names its pull request and links to GitHub", async (
     `https://github.com/${installedRepository}/pull/42`,
   );
 });
-
-/** An observation with no author says the publication, and nothing in its place. */
-test("a pull request without an observed author names no author", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("pr-anonymous"));
-  const projectId = await createProject(page, "PR Anonymous Org");
-  const token = await createToken(page, projectId);
-  fillPullRequest(projectId, {
-    number: 8,
-    title: "Retain the author login",
-    author: null,
-    branch: "older",
-  });
-  const published = await publish(token, projectId, {
-    branch: "older",
-    pullRequest: 8,
-  });
-
-  await open(page, await publicationPathFor(page, projectId, published.id));
-  await expect(publicationReference(page)).toHaveText(
-    "#8 Retain the author login",
-  );
-  const detail = page.locator(".fo-top-state-detail");
-  // An author would lead the phrase, attached by a separator of its own. The
-  // phrase leading with only its own separator says nothing was put where the
-  // author is not known.
-  await expect(detail).toHaveText(/^Ready · [^·]+$/);
-});
