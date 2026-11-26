@@ -18,7 +18,7 @@ import {
 import { additionsCopyTest } from "./additions_copy_test.js";
 import {
   COMPONENT_FILES_LEAD,
-  INSPECTOR_VIEWPORTS,
+  DESKTOP_INSPECTOR,
   MATCHED_LEAD,
   VARIANT_LEAD,
   SHARED,
@@ -51,41 +51,39 @@ async function expectUsersNotAffected(
   await expect(usage).not.toContainText("Affected screens");
 }
 
-for (const [name, size] of INSPECTOR_VIEWPORTS) {
-  test.describe(`${name} React stylesheet evidence`, () => {
-    test.use({ viewport: size });
+test.describe("desktop React stylesheet evidence", () => {
+  test.use({ viewport: DESKTOP_INSPECTOR });
 
-    test("bundled CSS names the emitted file and keeps component-only styles out", async ({
-      page,
-    }) => {
-      await page.goto(`/view/${paths.checkout}/`);
+  test("bundled CSS names the emitted file and keeps component-only styles out", async ({
+    page,
+  }) => {
+    await page.goto(`/view/${paths.checkout}/`);
+    const evidence = await openChangesEvidence(page);
+    await expect
+      .poll(() => evidenceFiles(evidence))
+      .toEqual([[sheets.bundle, [[MATCHED_LEAD, [".heading"]]]]]);
+    await expect(evidence.locator("code.mbk-code")).toHaveText([".heading"]);
+    await expect(evidence).not.toContainText("react/rule.css");
+  });
+
+  test("a wrapper-only saved view row names its own styles and no affected consumers", async ({
+    page,
+  }) => {
+    for (const route of [paths.badgeVariant, paths.badge]) {
+      await page.goto(`/view/${route}/`);
       const evidence = await openChangesEvidence(page);
+      await expect(
+        evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
+      ).toBeVisible();
       await expect
         .poll(() => evidenceFiles(evidence))
-        .toEqual([[sheets.bundle, [[MATCHED_LEAD, [".heading"]]]]]);
-      await expect(evidence.locator("code.mbk-code")).toHaveText([".heading"]);
-      await expect(evidence).not.toContainText("react/rule.css");
-    });
-
-    test("a wrapper-only saved view row names its own styles and no affected consumers", async ({
-      page,
-    }) => {
-      for (const route of [paths.badgeVariant, paths.badge]) {
-        await page.goto(`/view/${route}/`);
-        const evidence = await openChangesEvidence(page);
-        await expect(
-          evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
-        ).toBeVisible();
-        await expect
-          .poll(() => evidenceFiles(evidence))
-          .toEqual([[sheets.wrapper, [[VARIANT_LEAD, [".frame"]]]]]);
-        await expect(evidence).not.toContainText(SHARED);
-        await expect(evidence).not.toContainText(VARIANT_TERMINAL);
-        await expectUsersNotAffected(page, ["Badged"]);
-      }
-    });
+        .toEqual([[sheets.wrapper, [[VARIANT_LEAD, [".frame"]]]]]);
+      await expect(evidence).not.toContainText(SHARED);
+      await expect(evidence).not.toContainText(VARIANT_TERMINAL);
+      await expectUsersNotAffected(page, ["Badged"]);
+    }
   });
-}
+});
 
 test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
   page,

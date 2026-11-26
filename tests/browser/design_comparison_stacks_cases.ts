@@ -14,7 +14,6 @@ export function registerDesignComparisonStacks() {
     documentFavicon(allowBrowserError, baseURL!);
   });
   type Scheme = "dark" | "light";
-  type Viewport = "desktop" | "mobile";
 
   /**
    * Canvas designs whose frames stack both versions in the shipped viewport:
@@ -43,18 +42,14 @@ export function registerDesignComparisonStacks() {
     light: "rgb(255, 255, 255)",
   };
 
+  /** Open the desktop artboard of a route in a scheme. */
   async function open(
     page: Page,
     route: string,
-    viewport: Viewport,
     scheme: Scheme,
   ): Promise<string> {
-    await page.setViewportSize(
-      viewport === "mobile"
-        ? { width: 390, height: 844 }
-        : { width: 1440, height: 1000 },
-    );
-    const file = `${route}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const file = `${route}/index.desktop${scheme === "dark" ? ".dark" : ""}.html`;
     await page.goto(
       designFileUrl(
         path.join(repositoryRoot, "examples/basic/mokly-generated", file),
@@ -64,145 +59,138 @@ export function registerDesignComparisonStacks() {
     return file;
   }
 
-  for (const viewport of ["desktop", "mobile"] as const) {
-    for (const scheme of ["light", "dark"] as const) {
-      test(`${viewport} ${scheme}: stacked comparisons share each frame and one offset`, async ({
-        page,
-      }, testInfo) => {
-        for (const [route, mode] of STACKED) {
-          const file = await open(page, route, viewport, scheme);
-          // Each frame on the stage that the artboard shows; a phone shows
-          // one frame of a screen and hides the others.
-          const frames = await page.evaluate(() =>
-            [...document.querySelectorAll(".cv-frame[data-cv-frame]")]
-              .filter((frame) => frame.getClientRects().length > 0)
-              .map((frame) => {
-                const box = (element: Element) => {
-                  const rect = element.getBoundingClientRect();
-                  return [rect.left, rect.top, rect.width, rect.height];
-                };
-                const node = frame.querySelector(".mb-viewport")!;
-                const stack = node.querySelector(".mb-viewport-box")!;
-                const before = node.querySelector(".mb-pane--before")!;
-                const after = node.querySelector(".mb-pane--after")!;
-                const surface = (layer: Element) =>
-                  layer.querySelector(":scope > .mb-pane-doc")!;
-                const blended: string[] = [];
-                for (
-                  let ancestor: Element | null = node;
-                  ancestor && !ancestor.classList.contains("cv-canvas");
-                  ancestor = ancestor.parentElement
-                ) {
-                  const style = getComputedStyle(ancestor);
-                  if (style.mixBlendMode !== "normal" || style.opacity !== "1")
-                    blended.push(ancestor.className);
-                }
-                const declared = getComputedStyle(frame);
-                return {
-                  after: box(after),
-                  afterBackground: getComputedStyle(surface(after))
-                    .backgroundColor,
-                  afterBlend: getComputedStyle(after).mixBlendMode,
-                  afterOpacity: getComputedStyle(after).opacity,
-                  before: box(before),
-                  beforeBackground: getComputedStyle(surface(before))
-                    .backgroundColor,
-                  beforeBlend: getComputedStyle(before).mixBlendMode,
-                  beforeOpacity: getComputedStyle(before).opacity,
-                  blended,
-                  documentHeights: [
-                    ...node.querySelectorAll(".mb-pane-doc"),
-                  ].map((document) => document.getBoundingClientRect().height),
-                  frame: frame.getAttribute("data-cv-frame"),
-                  isolation: getComputedStyle(stack).isolation,
-                  // The frame's own size, before the stage's zoom.
-                  nominal: ["--cv-frame-w", "--cv-frame-h"].map((property) =>
-                    Number(declared.getPropertyValue(property)),
-                  ),
-                  // The shipped viewport scrolls in the shell; a static
-                  // artboard draws its position, so it has no range to scroll.
-                  range: node.scrollHeight - node.clientHeight,
-                  scheme: frame.getAttribute("data-cv-scheme") as
-                    "dark" | "light",
-                  scrollerHeight: node.getBoundingClientRect().height,
-                  scrolls: node.scrollTop,
-                  // The viewport's own size, before the stage's zoom, in
-                  // unrounded pixels: a component's frame takes its
-                  // document's measured size, which holds fractions.
-                  size: [
-                    parseFloat(getComputedStyle(node).width),
-                    parseFloat(getComputedStyle(node).height),
-                  ],
-                };
-              }),
+  for (const scheme of ["light", "dark"] as const) {
+    test(`desktop ${scheme}: stacked comparisons share each frame and one offset`, async ({
+      page,
+    }, testInfo) => {
+      for (const [route, mode] of STACKED) {
+        const file = await open(page, route, scheme);
+        // Each frame on the stage that the artboard shows.
+        const frames = await page.evaluate(() =>
+          [...document.querySelectorAll(".cv-frame[data-cv-frame]")]
+            .filter((frame) => frame.getClientRects().length > 0)
+            .map((frame) => {
+              const box = (element: Element) => {
+                const rect = element.getBoundingClientRect();
+                return [rect.left, rect.top, rect.width, rect.height];
+              };
+              const node = frame.querySelector(".mb-viewport")!;
+              const stack = node.querySelector(".mb-viewport-box")!;
+              const before = node.querySelector(".mb-pane--before")!;
+              const after = node.querySelector(".mb-pane--after")!;
+              const surface = (layer: Element) =>
+                layer.querySelector(":scope > .mb-pane-doc")!;
+              const blended: string[] = [];
+              for (
+                let ancestor: Element | null = node;
+                ancestor && !ancestor.classList.contains("cv-canvas");
+                ancestor = ancestor.parentElement
+              ) {
+                const style = getComputedStyle(ancestor);
+                if (style.mixBlendMode !== "normal" || style.opacity !== "1")
+                  blended.push(ancestor.className);
+              }
+              const declared = getComputedStyle(frame);
+              return {
+                after: box(after),
+                afterBackground: getComputedStyle(surface(after))
+                  .backgroundColor,
+                afterBlend: getComputedStyle(after).mixBlendMode,
+                afterOpacity: getComputedStyle(after).opacity,
+                before: box(before),
+                beforeBackground: getComputedStyle(surface(before))
+                  .backgroundColor,
+                beforeBlend: getComputedStyle(before).mixBlendMode,
+                beforeOpacity: getComputedStyle(before).opacity,
+                blended,
+                documentHeights: [...node.querySelectorAll(".mb-pane-doc")].map(
+                  (document) => document.getBoundingClientRect().height,
+                ),
+                frame: frame.getAttribute("data-cv-frame"),
+                isolation: getComputedStyle(stack).isolation,
+                // The frame's own size, before the stage's zoom.
+                nominal: ["--cv-frame-w", "--cv-frame-h"].map((property) =>
+                  Number(declared.getPropertyValue(property)),
+                ),
+                // The shipped viewport scrolls in the shell; a static
+                // artboard draws its position, so it has no range to scroll.
+                range: node.scrollHeight - node.clientHeight,
+                scheme: frame.getAttribute("data-cv-scheme") as
+                  "dark" | "light",
+                scrollerHeight: node.getBoundingClientRect().height,
+                scrolls: node.scrollTop,
+                // The viewport's own size, before the stage's zoom, in
+                // unrounded pixels: a component's frame takes its
+                // document's measured size, which holds fractions.
+                size: [
+                  parseFloat(getComputedStyle(node).width),
+                  parseFloat(getComputedStyle(node).height),
+                ],
+              };
+            }),
+        );
+        expect(frames.length, `${file}: a stacked frame`).toBeGreaterThan(0);
+        for (const facts of frames) {
+          const where = `${file} ${facts.frame}`;
+          expect(facts.after, `${where}: layers coincide`).toEqual(
+            facts.before,
           );
-          expect(frames.length, `${file}: a stacked frame`).toBeGreaterThan(0);
-          for (const facts of frames) {
-            const where = `${file} ${facts.frame}`;
-            expect(facts.after, `${where}: layers coincide`).toEqual(
-              facts.before,
+          expect(facts.documentHeights, where).toHaveLength(2);
+          for (const height of facts.documentHeights)
+            expect(height, where).toBeGreaterThanOrEqual(
+              facts.scrollerHeight - 1,
             );
-            expect(facts.documentHeights, where).toHaveLength(2);
-            for (const height of facts.documentHeights)
-              expect(height, where).toBeGreaterThanOrEqual(
-                facts.scrollerHeight - 1,
-              );
-            // Layout keeps 1/64 of a pixel, so the size matches the nominal
-            // size to within a twentieth of a pixel.
-            facts.size.forEach((value, index) =>
-              expect(value, `${where}: the frame's own size`).toBeCloseTo(
-                facts.nominal[index]!,
-                1,
-              ),
-            );
-            expect(facts.range, where).toBe(0);
-            expect(facts.scrolls, where).toBe(0);
-            expect(facts.isolation, where).toBe("isolate");
-            expect(facts.beforeBackground, where).toBe(
-              SCREEN_BACKGROUND[facts.scheme],
-            );
-            expect(facts.afterBackground, where).toBe(
-              SCREEN_BACKGROUND[facts.scheme],
-            );
-            expect([facts.beforeBlend, facts.beforeOpacity], where).toEqual([
-              "normal",
-              "1",
-            ]);
-            expect([facts.afterBlend, facts.afterOpacity], where).toEqual(
-              mode === "overlay" ? ["normal", "0.5"] : ["difference", "1"],
-            );
-            expect(facts.blended, `${where}: the frame never blends`).toEqual(
-              [],
-            );
-          }
-          await page.screenshot({
-            path: testInfo.outputPath(
-              `${route.replaceAll("/", "-")}.${viewport}.${scheme}.png`,
+          // Layout keeps 1/64 of a pixel, so the size matches the nominal
+          // size to within a twentieth of a pixel.
+          facts.size.forEach((value, index) =>
+            expect(value, `${where}: the frame's own size`).toBeCloseTo(
+              facts.nominal[index]!,
+              1,
             ),
-          });
-        }
-      });
-
-      test(`${viewport} ${scheme}: depicted screens keep their own ink inside a comparison`, async ({
-        page,
-      }) => {
-        for (const route of COMPARED) {
-          const file = await open(page, route, viewport, scheme);
-          const headings = await page.evaluate(() =>
-            [
-              ...document.querySelectorAll(
-                ".cv-frame .mbk-shot :is(h1, h2, h3)",
-              ),
-            ].map((heading) => [
-              getComputedStyle(heading).color,
-              getComputedStyle(heading.closest(".mbk-shot")!).color,
-            ]),
           );
-          expect(headings.length, file).toBeGreaterThan(0);
-          for (const [heading, screen] of headings)
-            expect(heading, `${file}: the screen's ink`).toBe(screen);
+          expect(facts.range, where).toBe(0);
+          expect(facts.scrolls, where).toBe(0);
+          expect(facts.isolation, where).toBe("isolate");
+          expect(facts.beforeBackground, where).toBe(
+            SCREEN_BACKGROUND[facts.scheme],
+          );
+          expect(facts.afterBackground, where).toBe(
+            SCREEN_BACKGROUND[facts.scheme],
+          );
+          expect([facts.beforeBlend, facts.beforeOpacity], where).toEqual([
+            "normal",
+            "1",
+          ]);
+          expect([facts.afterBlend, facts.afterOpacity], where).toEqual(
+            mode === "overlay" ? ["normal", "0.5"] : ["difference", "1"],
+          );
+          expect(facts.blended, `${where}: the frame never blends`).toEqual([]);
         }
-      });
-    }
+        await page.screenshot({
+          path: testInfo.outputPath(
+            `${route.replaceAll("/", "-")}.desktop.${scheme}.png`,
+          ),
+        });
+      }
+    });
+
+    test(`desktop ${scheme}: depicted screens keep their own ink inside a comparison`, async ({
+      page,
+    }) => {
+      for (const route of COMPARED) {
+        const file = await open(page, route, scheme);
+        const headings = await page.evaluate(() =>
+          [
+            ...document.querySelectorAll(".cv-frame .mbk-shot :is(h1, h2, h3)"),
+          ].map((heading) => [
+            getComputedStyle(heading).color,
+            getComputedStyle(heading.closest(".mbk-shot")!).color,
+          ]),
+        );
+        expect(headings.length, file).toBeGreaterThan(0);
+        for (const [heading, screen] of headings)
+          expect(heading, `${file}: the screen's ink`).toBe(screen);
+      }
+    });
   }
 }

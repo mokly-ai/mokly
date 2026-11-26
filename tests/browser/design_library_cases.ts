@@ -13,12 +13,13 @@ import {
   designResourceExists,
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { openCatalogueSheet } from "./workspace_actions.js";
 
 /**
  * Run one viewport's assertions against a catalogue delivery. Each viewport
  * has its own spec file, because Playwright gives a whole spec file to one
- * browser shard and the shard balance limit bounds each shard's share.
+ * browser shard and the shard balance limit bounds each shard's share. The
+ * mobile file runs only the checks whose result the 392 px phone column can
+ * change: each sample's fit, the narrow bar's logo, and the fallback fonts.
  */
 export function registerDesignLibrary(viewport: "desktop" | "mobile") {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
@@ -96,47 +97,6 @@ export function registerDesignLibrary(viewport: "desktop" | "mobile") {
         expect(failed).toEqual([]);
       });
 
-    test("catalogue section headings keep the in-screen typography in isolation", async ({
-      baseURL,
-      browser,
-      page,
-    }) => {
-      const typography = (on: Page) =>
-        on
-          .locator(".mbk-nav-section-head")
-          .first()
-          .evaluate((node) => {
-            const style = getComputedStyle(node);
-            return {
-              fontFamily: style.fontFamily,
-              fontSize: style.fontSize,
-              fontWeight: style.fontWeight,
-              letterSpacing: style.letterSpacing,
-              lineHeight: style.lineHeight,
-            };
-          });
-      await page.goto(
-        fileUrl(
-          `design/library/chrome/catalogue-navigation/all/index.${viewport}.html`,
-        ),
-      );
-      const isolated = await typography(page);
-      const inScreen = await inShell(browser, baseURL!, async (shell) => {
-        // A phone draws the catalogue in the sheet that the dock's
-        // Catalogue opens.
-        if (viewport === "mobile") await openCatalogueSheet(shell);
-        await expect(
-          shell.locator(".mbk-nav-section-head").first(),
-        ).toBeVisible();
-        return typography(shell);
-      });
-      expect(inScreen).toMatchObject({
-        fontSize: "10.5px",
-        fontWeight: "500",
-      });
-      expect(isolated).toEqual(inScreen);
-    });
-
     test("the top-bar logo keeps the in-screen colors in isolation", async ({
       baseURL,
       browser,
@@ -173,27 +133,68 @@ export function registerDesignLibrary(viewport: "desktop" | "mobile") {
       expect(isolated).toEqual(inScreen);
     });
 
-    test("standalone inline components retain their intrinsic width", async ({
-      page,
-    }) => {
-      for (const [slug, selector] of [
-        ["tag-chip", ".mbk-chip"],
-        ["change-status", ".mbk-entry-status"],
-      ]) {
-        const entry = manifest.entries.find(
-          (entry) =>
-            entry.kind === "component" &&
-            "variantOf" in entry &&
-            entry.variantOf === `design/library/controls/${slug}`,
+    // Their styles have no width rule, so they run on the desktop file only.
+    if (viewport === "desktop") {
+      test("catalogue section headings keep the in-screen typography in isolation", async ({
+        baseURL,
+        browser,
+        page,
+      }) => {
+        const typography = (on: Page) =>
+          on
+            .locator(".mbk-nav-section-head")
+            .first()
+            .evaluate((node) => {
+              const style = getComputedStyle(node);
+              return {
+                fontFamily: style.fontFamily,
+                fontSize: style.fontSize,
+                fontWeight: style.fontWeight,
+                letterSpacing: style.letterSpacing,
+                lineHeight: style.lineHeight,
+              };
+            });
+        await page.goto(
+          fileUrl(
+            "design/library/chrome/catalogue-navigation/all/index.desktop.html",
+          ),
         );
-        if (entry?.kind !== "component" || !("variantOf" in entry))
-          throw new Error(`Missing ${slug}`);
-        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-        expect(
-          (await page.locator(selector!).boundingBox())!.width,
-        ).toBeLessThan(150);
-      }
-    });
+        const isolated = await typography(page);
+        const inScreen = await inShell(browser, baseURL!, async (shell) => {
+          await expect(
+            shell.locator(".mbk-nav-section-head").first(),
+          ).toBeVisible();
+          return typography(shell);
+        });
+        expect(inScreen).toMatchObject({
+          fontSize: "10.5px",
+          fontWeight: "500",
+        });
+        expect(isolated).toEqual(inScreen);
+      });
+
+      test("standalone inline components retain their intrinsic width", async ({
+        page,
+      }) => {
+        for (const [slug, selector] of [
+          ["tag-chip", ".mbk-chip"],
+          ["change-status", ".mbk-entry-status"],
+        ]) {
+          const entry = manifest.entries.find(
+            (entry) =>
+              entry.kind === "component" &&
+              "variantOf" in entry &&
+              entry.variantOf === `design/library/controls/${slug}`,
+          );
+          if (entry?.kind !== "component" || !("variantOf" in entry))
+            throw new Error(`Missing ${slug}`);
+          await page.goto(fileUrl(viewRoute(entry.path, "desktop", "light")));
+          expect(
+            (await page.locator(selector!).boundingBox())!.width,
+          ).toBeLessThan(150);
+        }
+      });
+    }
   });
 
   if (viewport === "mobile") {

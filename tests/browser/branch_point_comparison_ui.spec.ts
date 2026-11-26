@@ -1,9 +1,10 @@
 /**
  * The branch-point cases' rendered references in the copied branch-point
- * output at desktop and mobile widths, under the branch-point lookup
- * contract: affected destinations, saved props, removed rows, kept
- * comparison mode, Changes activation, and crumb text and links. Serve and
- * the embedded viewer run the same cases.
+ * output, under the branch-point lookup contract: affected destinations,
+ * saved props, removed rows, kept comparison mode, Changes activation, and
+ * crumb text and links. Every case runs at desktop width, and affected
+ * destinations also at mobile width. Serve and the embedded viewer run only
+ * the cases that their own delivery needs.
  */
 
 import { registerBranchPointCases } from "./branch_point_cases.js";

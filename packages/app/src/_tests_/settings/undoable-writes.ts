@@ -19,7 +19,9 @@ import { choose, fill, pane, press, restore } from "./write-steps";
  * rather than of any one surface, so it is asserted the same way wherever the
  * control lives: a row says how to reach its control rather than naming a
  * pane, because the entry screens' control is not on one, and the setup steps'
- * controls are reached by walking to the step that holds them.
+ * controls are reached by walking to the step that holds them. A walk of
+ * `writes.spec.ts` leaves out a row that `covered-writes.ts` names for it,
+ * because a test of that control already proves its own wiring.
  */
 export interface WriteUnderTest {
   /** The control, named for the assertion that fails. */

@@ -340,8 +340,8 @@ code.
   to the test shards by the weights in
   [`rust-test-weights.json`](../scripts/verification/rust-test-weights.json).
   [`src/check/native_scope.rs`](./src/check/native_scope.rs) holds the list
-  of platform-neutral tests that the native suite leaves out, grouped by
-  reason.
+  of platform-neutral tests and stress tests that the native suite leaves
+  out, grouped by reason.
 - [`src/check/cloud_commands.rs`](./src/check/cloud_commands.rs) maps cloud
   suites to combined-workspace commands. [`src/check/tasks.rs`](./src/check/tasks.rs)
   defines fixture generation, email generation, and the Stripe subprocess.

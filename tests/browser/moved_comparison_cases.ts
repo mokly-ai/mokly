@@ -50,10 +50,11 @@ async function sideBySide(page: Page, host: MovedHost): Promise<void> {
 }
 
 /**
- * Register the moved screen and moved component variant comparisons on
- * `host`, which `test` serves.
+ * Register the moved screen comparison on `host`, which `test` serves. Serve
+ * runs this case alone: it captures the comparison at the previous path on
+ * demand.
  */
-export function registerMovedComparisonCases(
+export function registerMovedScreenComparison(
   test: typeof baseTest,
   host: MovedHost,
 ): void {
@@ -91,6 +92,17 @@ export function registerMovedComparisonCases(
       `The previous version is at ${PREVIOUS}/invoice, where it was before the move.`,
     );
   });
+}
+
+/**
+ * Register the moved screen and moved component variant comparisons on
+ * `host`, which `test` serves.
+ */
+export function registerMovedComparisonCases(
+  test: typeof baseTest,
+  host: MovedHost,
+): void {
+  registerMovedScreenComparison(test, host);
 
   test("a moved component variant compares with its version at the previous path", async ({
     page,

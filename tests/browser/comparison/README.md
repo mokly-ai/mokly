@@ -145,24 +145,31 @@ copy and Serve use this composition. The default copy uses no hook.
 [`comparison_fixture_membership.ts`](../comparison_fixture_membership.ts)
 pins the expected Changes state and the previous path of every branch entry.
 
-Viewer journeys on this copy register shared case modules.
-`static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
-Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
-viewer over this copy through both frame adapters. Each host passes a
-`MovedHost` from `moved_rows.ts`, which extends the `EntryHost` of
-`entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
-page path it shows for that entry.
+Viewer journeys on this copy register shared case modules. A case runs in
+full on this copy. Another host runs only the case that shows how it opens an
+entry, and each check that only that host makes.
+`static_moved_entries.spec.ts` runs every `moved_*_cases.ts` case.
+`serve_moved_entries.spec.ts` runs the moved screen comparison, which Serve
+captures on demand. `viewer_moved_entries.spec.ts` runs the moved parent's row
+navigation in an embedded viewer over this copy through both frame adapters.
+Each host passes a `MovedHost` from `moved_rows.ts`, which extends the
+`EntryHost` of `entry_hosts.ts`. An `EntryHost` says how the host opens an
+entry and which page path it shows for that entry.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 
 `BRANCH_POINT_CHECKS` in `branch_point_checks.ts` holds the checks of each
-shared case. `branch_point_cases.ts` registers them at desktop and mobile
-widths on three hosts: `branch_point_comparison_ui.spec.ts` on this copy,
-`viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
-through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
-on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `MovedHost`. The checks read its `BranchPointHost` part, which keeps the
-`EntryHost` path check and says when comparisons are captured.
+shared case. `branch_point_cases.ts` registers chosen cases and widths on a
+host. `branch_point_comparison_ui.spec.ts` runs every case on this copy at
+desktop width, and affected destinations also at mobile width, where the
+compact layout compares one frame. `serve_branch_point_comparison_ui.spec.ts`
+runs moved variant and affected destinations on one Serve per worker over the
+shared Serve comparison fixture, for the on-demand captures.
+`viewer_branch_point_comparison_ui.spec.ts` runs affected destinations at
+mobile width in an embedded viewer over this copy through both frame adapters,
+and moved parent through the cross-origin adapter, for the compact search.
+Each passes a `MovedHost`. The checks read its `BranchPointHost` part, which
+keeps the `EntryHost` path check and says when comparisons are captured.
 `branch_point_ui.ts` reads Inspect's head: its title, the breadcrumbs of its
 Path row, the Location row of a removed entry, and the Variants list.
 `branch_point_siblings.ts` holds the journey of a family's removed sibling,
