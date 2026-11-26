@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { lte, rcompare, valid } from "semver";
+
 import { publicPackageExportAudit } from "../scripts/verification/repository-ratchets.mjs";
 
 import {
@@ -209,6 +211,25 @@ test("a removal note stays required until a newer release includes it", async (c
   assert.match(released.summary, /v1\.1\.0.*0 noted removal/u);
 });
 
+/** The newest release tag with `prefix` in the history of `HEAD`. */
+function newestReleaseTag(prefix: string): string {
+  const tags = git(
+    process.cwd(),
+    "tag",
+    "--list",
+    `${prefix}[0-9]*`,
+    "--merged",
+    "HEAD",
+  )
+    .split("\n")
+    .filter((tag) => valid(tag.slice(prefix.length)) !== null)
+    .sort((left, right) =>
+      rcompare(left.slice(prefix.length), right.slice(prefix.length)),
+    );
+  assert.ok(tags[0], `no reachable ${prefix} tag; run git fetch --tags origin`);
+  return tags[0];
+}
+
 test("a release pull request audits against the last released tags", async (context) => {
   const fixture = await createReleaseLayoutFixture();
   context.after(() => fs.rm(fixture.root, { force: true, recursive: true }));
@@ -216,4 +237,24 @@ test("a release pull request audits against the last released tags", async (cont
   assert.deepEqual(result.findings, []);
   assert.match(result.summary, /@mokly\/mokly: v0\.15\.0/u);
   assert.match(result.summary, /@mokly\/viewer: viewer-v0\.6\.0/u);
+});
+
+test("the public export audit covers each released package from its newest release tag", async () => {
+  // The Repository suite gate checks the findings of this audit. This test
+  // checks that the audit covers each published package against its newest
+  // release tag, and that no package version falls below that tag.
+  const result = publicPackageExportAudit(process.cwd());
+  for (const [directory, prefix] of [
+    ["packages/mokly", "v"],
+    ["packages/ui", "v"],
+    ["packages/viewer", "viewer-v"],
+  ] as const) {
+    const { name, version } = JSON.parse(
+      await fs.readFile(`${directory}/package.json`, "utf8"),
+    );
+    const tag = newestReleaseTag(prefix);
+    assert.ok(result.summary.includes(`${name}: ${tag}`), result.summary);
+    // The package has the released version, or the next one in a release pull request.
+    assert.ok(lte(tag.slice(prefix.length), version), `${tag} > ${version}`);
+  }
 });

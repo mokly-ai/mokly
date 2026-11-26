@@ -16,7 +16,7 @@
   - Shared read-only Serve: `right_panel_tabs`, `serve_comparison_expiry`, `serve_comparison_renewal_panes`, and `serve_selected_comparisons`, whose weights include one Serve start per test.
   - Merged: `serve_changes_loading.spec.ts` runs the journeys of the deleted `serve_changes_preparing.spec.ts`.
   - Deleted specs with stale entries: `design_reasons.spec.ts`, `serve_changes_preparing.spec.ts`, `serve_comparison_api.spec.ts`.
-  - New Viewer files without a weight: `tests/static_published_files.test.ts`, `tests/release_version_floor.test.ts`.
+  - New Viewer file without a weight: `tests/static_published_files.test.ts`.
 - **Impact if no action:** The scheduler places expensive grouped tests as cheap work, so the longest Browser shard can get slower than the measured total shows.
 - **Root question:** How does shard placement catch up with the audit's test costs?
 - **Options:**
