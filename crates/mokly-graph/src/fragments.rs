@@ -14,7 +14,7 @@ use crate::requests::{MemoryRequests, Requests};
 /// Adapter around one sidecar bundle generation; consume through `dyn FragmentRenderer`.
 /// A component fragment key covers the render input key of the handle's entry module,
 /// the handle, effective entry and saved slots, props, render kind, viewport, scheme,
-/// ignore scope, and supplied slots, so equal requests share one cached render, also
+/// ignore scope, and supplied slots, so equal requests share one successful render, also
 /// across generations and sides. A page key covers the render input key and handle.
 pub struct MemoFragments {
     /// Render input keys of the bundle's entry modules.
@@ -89,21 +89,19 @@ impl FragmentRenderer for MemoFragments {
             {
                 Ok(fragment.clone())
             } else {
-                match self.renderer.render(request) {
-                    Ok(fragment) => {
-                        self.cache.insert(
-                            key.clone(),
-                            Arc::new(Artifact {
-                                bytes: Vec::new(),
-                                document: None,
-                                fragment: Some(fragment.clone()),
-                                content_type: "text/html; charset=utf-8".into(),
-                            }),
-                        );
-                        Ok(fragment)
-                    }
-                    Err(source) => Err(source),
+                let fragment = self.renderer.render(request)?;
+                if fragment.story_failure.is_none() {
+                    self.cache.insert(
+                        key.clone(),
+                        Arc::new(Artifact {
+                            bytes: Vec::new(),
+                            document: None,
+                            fragment: Some(fragment.clone()),
+                            content_type: "text/html; charset=utf-8".into(),
+                        }),
+                    );
                 }
+                Ok(fragment)
             }
         }
     }

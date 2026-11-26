@@ -50,6 +50,8 @@ pub struct FragmentRequest {
 /// Render output with authenticated ownership metadata.
 #[derive(Clone, Debug, Default)]
 pub struct Fragment {
+    /// Story work that failed before a fragment could be delivered.
+    pub story_failure: Option<Box<StoryRenderFailure>>,
     /// Authenticated placements emitted by the provider's Mokly API wrappers.
     pub markers: Vec<FragmentMarker>,
     /// Fragment with protocol markers, or a complete page.
@@ -66,6 +68,17 @@ pub struct Fragment {
     pub numbered_instances: BTreeSet<String>,
     /// Adapter-validated supplied slots referenced by the markers.
     pub slots: Vec<ComponentSlotRecord>,
+}
+
+/// The story and message of one failed fragment render.
+#[derive(Clone, Debug)]
+pub struct StoryRenderFailure {
+    /// Stories file and export name.
+    pub story_id: String,
+    /// Storybook display name.
+    pub name: String,
+    /// Message with logical source and dependency paths.
+    pub reason: String,
 }
 
 /// One generated marker and its physical enclosing marker before HTML grafting.

@@ -99,6 +99,25 @@ pub struct Render {
     pub slots: Vec<SlotDraft>,
 }
 
+/// A story fragment or a failure in the story's own work.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(untagged)]
+#[ts(rename = "RenderStoryResult")]
+pub enum StoryRender {
+    /// Successful markup and render evidence.
+    Rendered(Render),
+    /// A story failure that leaves the sidecar generation usable.
+    Failed {
+        /// Stories file and named export, including for a parent view.
+        #[serde(rename = "storyId")]
+        story_id: String,
+        /// The Storybook display name.
+        name: String,
+        /// The message with filesystem paths in logical source space.
+        reason: String,
+    },
+}
+
 /// Complete page document; the core applies the document safety rules.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[ts(rename = "PageResult")]

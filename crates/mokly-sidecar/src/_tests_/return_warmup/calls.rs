@@ -3,7 +3,9 @@
 use std::collections::BTreeMap;
 
 use crate::bindings::Bindings;
-use crate::methods::{Bundle, BundleRequest, Call, CssModules, ProcessCss, RenderPage};
+use crate::methods::{
+    Bundle, BundleRequest, Call, ColorScheme, CssModules, ProcessCss, RenderPage, RenderStory,
+};
 
 use super::support::Event;
 
@@ -51,6 +53,16 @@ pub(super) fn render(generation: &str, view: &str) -> Call {
     Call::RenderPage(RenderPage {
         generation: generation.into(),
         handle: format!("{view}#default"),
+    })
+}
+
+pub(super) fn story(generation: &str, name: &str) -> Call {
+    Call::RenderStory(RenderStory {
+        generation: generation.into(),
+        story_id: format!("menu.stories.tsx#{name}"),
+        props: BTreeMap::new(),
+        viewport: "desktop".into(),
+        color_scheme: ColorScheme::Light,
     })
 }
 

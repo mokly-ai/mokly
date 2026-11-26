@@ -1,186 +1,89 @@
 import type { ReactNode } from "react";
-import type * as ReactDOMServer from "react-dom/server";
 
 import { definitionData } from "../authoring/runtime.js";
 import type { Renderer } from "../authoring/types.js";
 import type { RenderComponentParams } from "../generated/sidecar/RenderComponentParams.js";
 import type { RenderParams } from "../generated/sidecar/RenderParams.js";
 import type { RenderResult } from "../generated/sidecar/RenderResult.js";
-import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
 
 import type { Generation } from "./bundle.js";
 import { componentOutput } from "./component-output.js";
-import { SidecarError, detail, handleLocation } from "./errors.js";
-import { HtmlInput } from "./html_input.js";
-import { finishMarkup } from "./markup.js";
-import { renderSession } from "./render-session.js";
-import type { StoredStory } from "./story-reader.js";
-import { renderStory } from "./story-render.js";
-import { collectStyles } from "./styles.js";
+import { renderMarkup } from "./render-markup.js";
+import { withRenderSession } from "./render-session.js";
 
-export async function render(
+export function render(
   generation: Generation,
-  kind: "screen" | "component" | "story",
-  params: RenderParams | RenderComponentParams | RenderStoryParams,
+  kind: "screen" | "component",
+  params: RenderParams | RenderComponentParams,
 ): Promise<RenderResult> {
-  const name = "handle" in params ? params.handle : params.storyId;
-  try {
+  return withRenderSession(generation, params.handle, params, (session) => {
     const React = generation.runtime.react;
-    const context = {
-      viewport: params.viewport as "mobile" | "desktop",
-      colorScheme: params.colorScheme,
-    };
-    const session = renderSession(generation, context, handleLocation(name));
-    return await generation.runtime.withSession(session, async () => {
-      if (
-        kind === "story" ||
-        (kind === "component" && generation.stories.has(name))
-      ) {
-        const stored = generation.stories.get(name) as StoredStory;
-        session.storyComponentHandle = stored?.componentHandle;
-        return renderStory(generation, stored, params, renderMarkup);
-      }
-
-      const props: Record<string, unknown> = structuredClone(params.props);
-      let resources: readonly string[] = [];
-      const definition = generation.handles.get(name);
-      const data = definitionData(definition)!;
-      const adapter = data.input.render as (
-        props: object,
-        context: object,
-      ) => ReactNode;
-      if ("slots" in params) {
-        for (const [slot, value] of Object.entries(params.slots)) {
-          const token = value.kind === "placeholder" ? value.token : "";
-          function Placeholder() {
-            session.placeholders.add(JSON.stringify([slot, token]));
-            const enabled = React.useContext(
-              generation.runtime.contexts.ignore,
-            );
-            return React.createElement("mokly-slot", {
-              name: slot,
-              token,
-              "ignore-scope": enabled ? "enabled" : "disabled",
-            });
-          }
-          if (value.kind === "saved") {
-            props[slot] = generation.savedSlots.get(value.handle);
-          } else props[slot] = React.createElement(Placeholder);
+    const context = session.context;
+    const props: Record<string, unknown> = structuredClone(params.props);
+    let resources: readonly string[] = [];
+    const definition = generation.handles.get(params.handle);
+    const data = definitionData(definition)!;
+    const adapter = data.input.render as (
+      props: object,
+      context: object,
+    ) => ReactNode;
+    if ("slots" in params) {
+      for (const [slot, value] of Object.entries(params.slots)) {
+        const token = value.kind === "placeholder" ? value.token : "";
+        function Placeholder() {
+          session.placeholders.add(JSON.stringify([slot, token]));
+          const enabled = React.useContext(generation.runtime.contexts.ignore);
+          return React.createElement("mokly-slot", {
+            name: slot,
+            token,
+            "ignore-scope": enabled ? "enabled" : "disabled",
+          });
         }
+        if (value.kind === "saved") {
+          props[slot] = generation.savedSlots.get(value.handle);
+        } else props[slot] = React.createElement(Placeholder);
       }
-      function Adapter() {
-        return adapter(props, context);
-      }
-      let node: ReactNode = React.createElement(Adapter);
-      if (kind === "component")
-        node = componentOutput(generation.runtime, session, node);
-      const renderer = generation.exports?.renderer?.default;
-      if (generation.params.renderer) {
-        if (typeof renderer !== "function")
-          throw new Error("renderer default export must be a function");
-        const entry = ("entry" in params ? params.entry : undefined)!;
-        const output = (renderer as Renderer)({
-          ...context,
-          node,
-          props: params.props,
-          entry: { kind, path: entry.path, title: entry.title },
-        });
+    }
+    function Adapter() {
+      return adapter(props, context);
+    }
+    let node: ReactNode = React.createElement(Adapter);
+    if (kind === "component")
+      node = componentOutput(generation.runtime, session, node);
+    const renderer = generation.exports?.renderer?.default;
+    if (generation.params.renderer) {
+      if (typeof renderer !== "function")
+        throw new Error("renderer default export must be a function");
+      const output = (renderer as Renderer)({
+        ...context,
+        node,
+        props: params.props,
+        entry: { kind, path: params.entry.path, title: params.entry.title },
+      });
+      if (
+        output &&
+        typeof output === "object" &&
+        !React.isValidElement(output) &&
+        "node" in output
+      ) {
+        node = output.node;
+        resources = output.resources ?? [];
         if (
-          output &&
-          typeof output === "object" &&
-          !React.isValidElement(output) &&
-          "node" in output
-        ) {
-          node = output.node;
-          resources = output.resources ?? [];
-          if (
-            !Array.isArray(resources) ||
-            resources.some((resource) => typeof resource !== "string")
-          )
-            throw new Error("renderer resources must be an array of paths");
-        } else node = output as ReactNode;
-      }
-      return renderMarkup(node, resources);
-
-      function renderMarkup(
-        node: ReactNode,
-        resources: readonly string[] = [],
-      ): RenderResult {
-        const rooted = React.createElement(
-          generation.runtime.contexts.session.Provider,
-          { value: session },
-          React.createElement(
-            generation.runtime.contexts.owner.Provider,
-            { value: { kind: "entry", seen: new Set<string>() } },
-            React.createElement(
-              generation.runtime.contexts.ignore.Provider,
-              {
-                value:
-                  !("ignoreScope" in params) ||
-                  params.ignoreScope === "enabled",
-              },
-              node,
-            ),
-          ),
-        );
-        const server = generation.require(
-          "react-dom/server",
-        ) as typeof ReactDOMServer;
-        const collected = collectStyles(
-          generation,
-          server.renderToStaticMarkup,
-          rooted,
-          kind === "component" ? generation.bindings![name]!.path : undefined,
-        );
-        if (
-          kind === "component" &&
-          !generation.stories.has(name) &&
-          !session.componentOutput
+          !Array.isArray(resources) ||
+          resources.some((resource) => typeof resource !== "string")
         )
-          collected.input = new HtmlInput(
-            server.renderToStaticMarkup(
-              componentOutput(generation.runtime, session, null),
-            ) + collected.input.html,
-          );
-        const result = finishMarkup(
-          collected.input,
-          session,
-          true,
-          collected.inlineAttribution,
-        );
-        const owners =
-          kind === "component" ? [generation.bindings![name]!.path] : [];
-        return {
-          html: result.html,
-          styles: [
-            ...collected.styles.map((style) => ({
-              ...style,
-              owners: style.owners.length ? style.owners : owners,
-            })),
-            ...result.styles.map((style) => ({
-              ...style,
-              owners: style.owners.length ? style.owners : owners,
-            })),
-          ].filter(
-            (style, index, all) =>
-              all.findIndex(
-                (other) =>
-                  other.css === style.css &&
-                  JSON.stringify(other.owners) === JSON.stringify(style.owners),
-              ) === index,
-          ),
-          markers: result.markers,
-          resources: [...resources],
-          instances: session.instances,
-          slots: session.slots,
-        };
-      }
+          throw new Error("renderer resources must be an array of paths");
+      } else node = output as ReactNode;
+    }
+    const componentOwner =
+      kind === "component"
+        ? generation.bindings![params.handle]!.path
+        : undefined;
+    return renderMarkup(generation, session, node, {
+      componentOwner,
+      ignoreEnabled:
+        !("ignoreScope" in params) || params.ignoreScope === "enabled",
+      resources,
     });
-  } catch (error) {
-    if (error instanceof SidecarError) throw error;
-    throw new SidecarError(
-      "render-failed",
-      `${handleLocation(name)} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
-    );
-  }
+  });
 }

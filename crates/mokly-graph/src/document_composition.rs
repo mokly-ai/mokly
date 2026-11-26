@@ -49,7 +49,7 @@ pub(crate) fn document(
             }
         }
     };
-    if plan.viewport.is_some() {
+    if plan.viewport.is_some() && composed.story_render_failure().is_none() {
         let parent = entry
             .metadata
             .variant_of

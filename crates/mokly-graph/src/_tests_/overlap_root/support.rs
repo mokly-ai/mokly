@@ -10,7 +10,7 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderMethod, RenderSource};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::FragmentRenderer;
-use mokly_model::axes::ColorScheme;
+use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
@@ -105,7 +105,15 @@ pub(super) fn session(
         .iter()
         .enumerate()
         .map(|(entry, model)| {
-            let route = route(&model.metadata.path);
+            let viewport = matches!(
+                model.content.kind(),
+                EntryKind::Component | EntryKind::Screen
+            )
+            .then_some(Viewport::Mobile);
+            let route = viewport.map_or_else(
+                || route(&model.metadata.path),
+                |viewport| routes::view(&model.metadata.path, viewport, ColorScheme::Light),
+            );
             (
                 route.clone(),
                 DocumentPlan {
@@ -113,7 +121,7 @@ pub(super) fn session(
                     resource_key: model.metadata.path.clone(),
                     route,
                     entry,
-                    viewport: None,
+                    viewport,
                     color_scheme: ColorScheme::Light,
                     stylesheets: vec![],
                 },

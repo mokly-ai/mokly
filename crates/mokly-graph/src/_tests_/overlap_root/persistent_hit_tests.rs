@@ -16,8 +16,10 @@ use unimock::{MockFn, Unimock, matching};
 use crate::cache::{Artifact, MemoryCache, RenderCache};
 use crate::document_store::{DocumentStoreMock, OfferOutcome, Persistence, ReadOutcome, StoreKey};
 use crate::key::NodeKey;
+use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
+use super::story_preview_tests::{ROUTE, failed_fragment, story_catalogue};
 use super::support::{
     background, completion, document, observe_validation, persistent_catalogue, route, session,
 };
@@ -182,4 +184,56 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
         assert_eq!(cache.stats().hits, 0);
         assert_eq!(trace.closed("render.document").len(), 1);
     }
+}
+
+#[test]
+fn a_stored_failed_story_is_served_without_recording_a_warmup_call() {
+    let renderer = Unimock::new(
+        FragmentRendererMock::render
+            .some_call(matching!(_))
+            .answers(&|_, _| Ok(failed_fragment())),
+    );
+    let (first, _) = session(
+        story_catalogue(),
+        Arc::new(renderer),
+        Arc::new(MemoryCache::new(1 << 20, 0)),
+    );
+    let saved = first.render(ROUTE).unwrap();
+    let store = Unimock::new((
+        DocumentStoreMock::identity
+            .each_call(matching!())
+            .returns(Some("native-build".into())),
+        DocumentStoreMock::load
+            .some_call(matching!(_))
+            .returns(ReadOutcome::Hit(saved.clone())),
+    ));
+    let served = Arc::new(AtomicUsize::new(0));
+    let recorded = served.clone();
+    let renderer = Unimock::new(
+        FragmentRendererMock::record_served
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                recorded.fetch_add(1, Ordering::SeqCst);
+            })),
+    )
+    .no_verify_in_drop();
+    let (mut restored, _) = session(
+        story_catalogue(),
+        Arc::new(renderer),
+        Arc::new(MemoryCache::new(1 << 20, 0)),
+    );
+    Arc::get_mut(&mut restored.state)
+        .unwrap()
+        .inputs
+        .persistence = Some(Persistence {
+        store: Arc::new(store),
+        javascript: Some("stable-typescript-react-config".into()),
+    });
+    let actual = restored.render(ROUTE).unwrap();
+    assert_eq!(actual.bytes, saved.bytes);
+    assert_eq!(
+        actual.document.as_ref().unwrap().warnings,
+        saved.document.as_ref().unwrap().warnings,
+    );
+    assert_eq!(served.load(Ordering::SeqCst), 0);
 }

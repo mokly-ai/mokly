@@ -237,6 +237,8 @@ aligned byte must equal its source byte or be an LF from a CR.
   whether `prepare_root` can prepare an entry. `Composer::record_served`
   passes the root JavaScript request of a store-served view to the fragment
   boundary without composing it. An HTML template entry records nothing.
+- [`src/story_failure.rs`](./src/story_failure.rs) composes a saved story
+  error document with its own style element, an empty root region, and a route warning.
 - [`src/prepared_root.rs`](./src/prepared_root.rs) defines `PreparedRoot`,
   the opaque start state, root request, and single result of one prepared
   root.
@@ -249,8 +251,8 @@ aligned byte must equal its source byte or be an LF from a CR.
   keeps.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
-  records. `FragmentRenderer::record_served` records a request without a
-  render.
+  records. A failed story fragment carries its export ID, name, and reason.
+  `FragmentRenderer::record_served` records a request without a render.
 - [`src/root_inputs.rs`](./src/root_inputs.rs) and
   [`src/javascript_request.rs`](./src/javascript_request.rs) build the root
   inputs and the `FragmentRequest` once, for a fresh render, a prepared root,

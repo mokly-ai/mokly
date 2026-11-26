@@ -95,8 +95,8 @@ decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
 Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
 merged Milestone 1a, pull request #508 finished track B, pull request #509
-applied the asset follow-up answers, and pull request #511 finished track D.
-Tracks E and F run on their own branches. This section
+applied the asset follow-up answers, pull request #511 finished track D, and
+pull request #524 finished track F. Tracks E and I run on their own branches. This section
 tells the next agent what is done, what waits for the user, and how to
 continue.
 
@@ -105,10 +105,12 @@ continue.
 | A. Mockups               | #339 and #506, merged | Milestones 1 and 1a | None                                                                                  |
 | B. Story reading         | #492 and #508, merged | Milestones 2 to 8   | None                                                                                  |
 | C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
-| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Track D decision 6                                                                    |
+| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Answer B of track D decision 6, after the source package override merges into `main`  |
 | J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
-| E and F                  | Not yet               | In progress         | Milestones 18 to 25                                                                   |
-| G to I                   | None                  | Nothing             | Milestones 26 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| E. Storybook folders     | Not yet               | In progress         | Milestones 18 to 22                                                                   |
+| F. Failed stories        | #524, merged          | Milestones 23 to 25 | Two follow-up items that wait for the user                                            |
+| I. Story component usage | Not yet               | In progress         | Milestones 34 to 36                                                                   |
+| G and H                  | None                  | Nothing             | Milestones 26 to 33. The [Tracks](#tracks) table gives the order in which they start. |
 | All                      | None                  | Nothing             | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
@@ -155,9 +157,6 @@ option. None has an answer yet, so no option applies.
   [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
-- [Track D decision 6](#track-d-decision-6-workspace-package-sources-under-vite):
-  workspace package sources under Vite, raised on 2026-11-25. A branch from
-  this branch applies its answer.
 
 ### Follow-up items that wait for the user
 
@@ -183,6 +182,14 @@ holds the full item and its recommended option. They block no milestone.
 - [vite-outside-env-directory.md](follow-ups/vite-outside-env-directory.md)
 - [base-extraction-committed-links.md](follow-ups/base-extraction-committed-links.md)
 - [vite-lazy-css-order.md](follow-ups/vite-lazy-css-order.md)
+
+The review of track F found these problems. Each file holds the full item
+and its recommended option. They block no milestone.
+
+- [links-to-failed-stories-fail-builds.md](follow-ups/links-to-failed-stories-fail-builds.md):
+  an incoming fragment link makes a failed story stop the build.
+- [story-errors-hide-fatal-cleanup-errors.md](follow-ups/story-errors-hide-fatal-cleanup-errors.md):
+  a story error can hide a fatal cleanup error.
 
 ### Defects in merged code
 
@@ -1274,7 +1281,9 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     props.", which both copy files of the controls hold. A second state of the
     "Render failed" mockup, "Later edit failed", shows a failure after an
     earlier edit rendered. Reason: each sentence of design call 29 then has a
-    mockup whose preview matches it.
+    mockup whose preview matches it. Changed on 2026-11-25 by design call 33:
+    only `SAVED_PREVIEW_COPY` of the design copy holds the new sentence, until
+    Milestone 24a moves it into both `CONTROLS_COPY` objects.
 33. Made on 2026-11-25 in Milestone 1a. The Storybook mockups live in their
     own Canvas folder, `design/canvas/stories`, "Storybook stories", because
     the Component explorer folder already holds five screens. One branch
@@ -1289,6 +1298,88 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     sentence of design call 32 from the viewer's copy, so the second TODO of
     Milestone 24a no longer holds, and `tests/viewer_controls_copy.test.ts`
     requires both copies to hold the same keys.
+
+### Track F design calls
+
+These calls are mine, made on 2026-11-25 in track F, on the branch
+`calummoore/storybook-track-f-failed-stories-omid`.
+
+- F1. A failed story view comes only from the story's own work: its
+  composition, the preview's `beforeAll` hook, its loaders and `beforeEach`
+  hooks, their cleanups, and the render. `render-timeout`, `sidecar-crashed`,
+  and the bundle and protocol failures keep their codes and stop the build.
+  Reason: decision 5 names a render failure, and a timeout or a crash
+  replaces the sidecar process. A hung story would also cost the deadline
+  twice for each view.
+- F2. Only a saved view whose root is the story gets the error document: in
+  `build`, `publish`, Serve, and both sides of Changes. A live props render of
+  a story keeps the generic `render-failed` preview failure, and the Props tab
+  shows its alert. Reason: decision 24 chose E, not C, which would have given
+  the live route the error document.
+- F3. The sidecar returns a failed story render as a result with the story's
+  name and its reason, not as an error. The core then writes the document and
+  the warning. Reason: the sidecar holds the story names and the source and
+  dependency roots that give logical paths, and the core owns documents,
+  usage, and warnings.
+- F4. The reason is the message of the thrown error, or the string of a
+  thrown value that is not an error, with no stack. A path inside the side's
+  source root reads relative to it. A path inside a selected dependency root
+  reads as its logical name, such as `node_modules/pkg/index.js`. Each other
+  absolute path or `file:` URL becomes `…`. Reason: design call 26.
+  Changed on 2026-11-25 by review fix round 1: a path under the home or
+  temp folder also becomes `…`. When the value, its message, or its name
+  cannot become text, the reason is `Unknown error`. Each lone surrogate
+  becomes U+FFFD. Changed on 2026-11-25 by review fix round 2: a known root
+  starts a path only after a character that is not a letter, a digit, `_`,
+  `.`, `-`, `/`, or `\`, or right after the `@fs` route or the empty
+  authority of a URL. Mokly changes each path once. Reason: delimiters
+  vary, relative paths and web links must keep their text, and one
+  unreadable value must not stop the build.
+- F5. The warning message gives the JSON-quoted story id, then "could not
+  render; add the "!mokly" tag to leave it out:", then the reason, with the
+  line breaks of the reason joined by spaces. The failure page gives the
+  exact form. Reason: design call 9 names these parts, the route
+  names the view, and the reason comes last because its length varies.
+- F6. The error document keeps the head of a story document without any
+  stylesheet: no configured, component, renderer, entry-module, collected, or
+  preview CSS. It carries its own style element and the colour scheme of its
+  view. Its body holds the empty root region, then the error text. Reason:
+  decision 26 and design call 27.
+- F7. The failure rules get their own page,
+  `docs/protocol/mokly-storybook-failures.md`, which the Storybook stories
+  page links. Reason: the stories page, the setup page, and the sidecar page
+  are near the 250-line cap, and track E edits the stories page in parallel.
+- F8. The Props tab names the last valid props when at least one shown frame
+  of the edited entry shows an accepted edit, and the saved props otherwise.
+  The rule lives in `docs/protocol/mokly-component-controls-design.md`.
+  So when the Frames filter shows another frame beside a frame with an
+  accepted edit, and its render fails, the alert names the last valid
+  props. When the compact layout shows only a frame that no accepted render
+  covers, the alert names the saved props. Reason: the alert names what is
+  on screen. Changed on 2026-11-25 by review fix round 1, which corrected
+  the compact-layout example.
+- F9. Made in review fix round 1, and widened in review fix round 2. Every
+  error of Mokly's own components and helpers while a story renders stops
+  the build. An error with a Mokly code, such as `component-props`, keeps
+  that code. Every other error of Mokly's own code, such as a duplicate
+  instance id, fails with `render-failed`, and so do Mokly's own checks of
+  the rendered output. Reason: these errors ask for a fix in the catalogue
+  or protect Mokly's records, so the `!mokly` hint of an error document
+  would point at the wrong fix. Round 2 replaced my earlier call to keep
+  plain errors of Mokly's helpers as failed views, because that call broke
+  the duplicate-id and props rules inside stories.
+
+- F10. Made in review fix round 2. A failed story view is not a successful
+  render for the warm-up of Serve. It is not recorded, it does not move the
+  warm head, it does not prove that a process is warm, and its replay does
+  not end the warm-up. A render store hit of a failed view records nothing.
+  Reason: the warm-up gains most from replayed renders that succeed, and a
+  failed view leaves the process in use. Recording every reply was rejected,
+  because failures would push out the successful requests.
+- F11. Made in review fix round 2. A URL in a reason keeps its text, except
+  the path after an `@fs` route or an empty URL authority. Reason: links
+  such as the links of React's minified errors carry the message.
+  Replacing each URL with `…` was rejected for that reason.
 
 ## Tracks
 
@@ -2802,6 +2893,20 @@ probe, rewrote the root question, and added options D, E, and F.
 - **Action:** ask the user, because A and D narrow a rule that three pages
   state, and B, C, and E change design call D9. No user decision covers
   either change.
+- **Answer:** B, chosen by the user on 2026-11-27. Reason: the Vite path and
+  the esbuild path stay as similar as possible. The Vite calls of the source
+  step pass the import name, as the esbuild call does, so both sides load the
+  matching source. This changes design call D9. A working tree with no build
+  still fails under Vite, because the user did not choose C. The base build
+  stays in the base prepare command plan.
+- **Order:** chosen by the user on 2026-11-27. The
+  `moduleResolution.sourcePackages` change on branch
+  `calummoore/mokly-source-package-override-jkum` rewrites the same source
+  step, so it merges into `main` first. A branch from this branch then merges
+  `main` and applies B on top of it. That branch adds Vite rows for
+  `sourcePackages` to `tests/fixtures/workspace-sources.json`, so that one
+  source rule covers both compile paths. Reason: one source step, tested once
+  for both paths, with no second pass over the same code.
 
 - [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the
@@ -3016,20 +3121,29 @@ Depends on: 1, 8, and the answer to decision 26
 
 Track F. The protocol states the failure rules of decision 5.
 
-- [ ] Add the render failure rules to `docs/protocol/mokly-storybook.md`.
-- [ ] State there the reason rule of design call 26, the usage rule of
+- [x] Add the render failure rules to a new page,
+      `docs/protocol/mokly-storybook-failures.md`, which
+      `docs/protocol/mokly-storybook.md` links, as track F design call F7
+      says.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] State there the reason rule of design call 26, the usage rule of
       design call 27, and the answer to decision 26.
-- [ ] State the sentence rule of design call 29 in
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] State the sentence rule of design call 29 in
       `docs/protocol/mokly-component-controls-design.md`: after a failed or
       invalid edit, the Props tab names the preview that it shows.
-- [ ] Update `docs/protocol/mokly-build-warnings.md` with
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/protocol/mokly-build-warnings.md` with
       `story-render-failed`. In `docs/protocol/mokly-sidecar.md`, update the
       `render-failed` row and the rule that there is no fallback render, for
       stories.
-- [ ] Update `docs/protocol/mokly-component-design.md` with the failed story
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/protocol/mokly-component-design.md` with the failed story
       state of Milestone 1.
-- [ ] Add the status lines, and run `npm run format:check` and
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 24: Story render failures
 
@@ -3037,16 +3151,21 @@ Depends on: 23
 
 A story that cannot render no longer stops the build, as decision 5 says.
 
-- [ ] Turn a story render failure into the warning of design call 9. Keep
+- [x] Turn a story render failure into the warning of design call 9. Keep
       `--strict` failing on it.
-- [ ] Write the error document of Milestone 1 in place of each failed view,
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Write the error document of Milestone 1 in place of each failed view,
       so that the catalogue shows the story and the reason.
-- [ ] Test that a portal story gives the warning and the error document, that
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test that a portal story gives the warning and the error document, that
       the other stories render, and that `--strict` fails.
-- [ ] Test that a reason with a path in the repository gives the same error
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test that a reason with a path in the repository gives the same error
       document on both sides, and that a failed story keeps every Used by
       and Affected list, as design calls 26 and 27 say.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 24a: The Props sentence after a failed edit
 
@@ -3057,23 +3176,32 @@ Depends on: 1, 23
 The Props tab says truthfully what the preview shows after a failed or
 invalid edit, as design call 29 says.
 
-- [ ] Choose the sentence of the failure alert and of the invalid notice
+- [x] Choose the sentence of the failure alert and of the invalid notice
       from the preview that the frame shows. Until an edit renders, use "The
       preview shows the saved props."
-- [ ] Keep the viewer's copy equal to the copy of the controls mockups, which
-      `tests/viewer_controls_copy.test.ts` compares. The viewer's copy
-      already holds the new sentence of design call 32.
-- [ ] Test both sentences under `packages/viewer/tests`, for a preview that
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Add both saved-preview sentences of `SAVED_PREVIEW_COPY` in
+      `examples/basic/specs/design/components/controls/parts/copy.ts` to
+      `CONTROLS_COPY` there and in
+      `packages/viewer/src/shell/component_controls_copy.ts`, and remove
+      `SAVED_PREVIEW_COPY`. Keep the viewer's copy equal to the copy of the
+      controls mockups, which `tests/viewer_controls_copy.test.ts` compares.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test both sentences under `packages/viewer/tests`, for a preview that
       shows the saved props and for one that shows an edit.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 25: Failed stories verification, review, and pull request
 
 Depends on: 23, 24, 24a
 
-- [ ] Remove each status line whose page this track completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 26: Storybook links documentation
 

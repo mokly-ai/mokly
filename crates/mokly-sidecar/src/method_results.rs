@@ -32,7 +32,7 @@ impl MethodResult {
         value.expect("describe requests select the definitions result decoder")
     }
 
-    /// Take the fragment decoded for a screen, component, or story render request.
+    /// Take the fragment decoded for a screen or component render request.
     pub fn into_render(self) -> results::Render {
         let value = match self {
             Self::Render(value) => Some(value),

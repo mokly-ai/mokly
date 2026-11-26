@@ -143,9 +143,17 @@ The [story setup rules](./mokly-storybook-setup.md) define how the sidecar
 runs the loaders, the `beforeEach` and `beforeAll` hooks, and their cleanups.
 They also define the globals that each view gives a story.
 
+## Failed Stories
+
+The [story failure rules](./mokly-storybook-failures.md) define what Mokly does
+when a story cannot render. They define the failed view, its
+`story-render-failed` warning, its error document, and the reason that both
+give.
+
 ## Related Docs
 
 - [Storybook story setup](./mokly-storybook-setup.md)
+- [Storybook story failures](./mokly-storybook-failures.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Entry props and variants](./mokly-entry-props.md)
 - [Variants](./mokly-variants.md)

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { jsx } from "react/jsx-runtime";
 
+import { withAuthoringErrors } from "../authoring/errors.js";
 import { resolveInstanceId } from "../authoring/instance-names.js";
 import type { RenderSession } from "../authoring/runtime.js";
 import {
@@ -32,43 +33,44 @@ export function wrapStoryUse(generation: Generation) {
     const runtime = generation.runtime;
     const React = runtime.react;
     const outerProps = { ...element.props };
-    const StoryUse = (props: typeof outerProps) => {
-      const session = React.useContext(runtime.contexts.session);
-      const parent = React.useContext(runtime.contexts.owner);
-      const capture = React.useContext(runtime.contexts.styles);
-      const original =
-        props === outerProps ? element : React.cloneElement(element, props);
-      const entries = generation.bindings;
-      if (!session || !entries) return original;
-      const componentPath = storyComponentPath(
-        handles ?? generation.storyComponents.handles(type),
-        entries,
-        session.storyComponentHandle,
-      );
-      if (!componentPath) return original;
-      const segment = componentPath.split("/").at(-1)!;
-      const { id, numbered } = resolveInstanceId(
-        segment,
-        parent.seen,
-        key,
-        props,
-        generation.params.instanceNameProps,
-      );
-      const site = storyInvocationSource(source, session);
-      return renderInstance(
-        runtime,
-        session,
-        {
-          ...instancePlacement(session, parent, id),
-          componentPath,
-          ...instanceProps(storyUseDataProps(props)),
-          ...(numbered ? { numbered } : {}),
-          ...(site ? { source: site } : {}),
-        },
-        original,
-        capture,
-      );
-    };
+    const StoryUse = (props: typeof outerProps) =>
+      withAuthoringErrors(() => {
+        const session = React.useContext(runtime.contexts.session);
+        const parent = React.useContext(runtime.contexts.owner);
+        const capture = React.useContext(runtime.contexts.styles);
+        const original =
+          props === outerProps ? element : React.cloneElement(element, props);
+        const entries = generation.bindings;
+        if (!session || !entries) return original;
+        const componentPath = storyComponentPath(
+          handles ?? generation.storyComponents.handles(type),
+          entries,
+          session.storyComponentHandle,
+        );
+        if (!componentPath) return original;
+        const segment = componentPath.split("/").at(-1)!;
+        const { id, numbered } = resolveInstanceId(
+          segment,
+          parent.seen,
+          key,
+          props,
+          generation.params.instanceNameProps,
+        );
+        const site = storyInvocationSource(source, session);
+        return renderInstance(
+          runtime,
+          session,
+          {
+            ...instancePlacement(session, parent, id),
+            componentPath,
+            ...instanceProps(storyUseDataProps(props)),
+            ...(numbered ? { numbered } : {}),
+            ...(site ? { source: site } : {}),
+          },
+          original,
+          capture,
+        );
+      });
     return create(StoryUse, outerProps, element.key ?? undefined);
   };
 }

@@ -31,6 +31,25 @@ Decision: only top-level JavaScript requests come from the store. Rejected:
 private stored descriptors of the calls from HTML bodies, because they add
 stored data, and no measured catalogue makes such calls.
 
+## Failed Story Views
+
+A render request or a replay gives a failed story view when its story cannot
+render, under the
+[story failure rules](./mokly-storybook-failures.md#failed-views). A failed
+story view is not a successful render or replay under the rules of this page.
+So the pool does not record such a request, and the request does not move the
+[warm head process](./mokly-sidecar-root-scheduling.md#roots-and-the-warm-head-process).
+Such a request or replay does not show that its process is warm. A head
+document of a failed story view that the render store serves adds no request.
+
+A replay that gives a failed story view is not a failed call either. So it does
+not end the warm-up, which goes on with the next recorded request.
+
+Decision: a failed story view is neither a successful render nor a failed
+call. Rejected: a record of every reply, because failed views would then push
+successful requests out of the record. Rejected: a failed call, because the
+process stays usable, and the core still needs the failure result.
+
 ## Warm-Up Steps
 
 Each head process that a return pass starts gets one warm-up. When a return

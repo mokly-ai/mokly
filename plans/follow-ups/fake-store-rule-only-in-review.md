@@ -5,7 +5,12 @@
 - **Added:** 2026-11-21, from the review of branch
   `calummoore/mokly-postcss-reuse-across-edits-pra6`, pull request #459. The
   independent check of review finding 1, a test with a hand-written fake
-  cache, listed this gap as a new problem outside the scope.
+  cache, listed this gap as a new problem outside the scope. On 2026-11-25,
+  the review of branch `calummoore/storybook-track-f-failed-stories-omid`,
+  round 1, added one more example from its finding 6. The check of that
+  finding added the question about a stand-in that keeps no state, and the
+  test `packages/viewer/tests/props_empty_states.test.tsx` from outside the
+  scope.
 - **Location:** The shared skills repository `Firna-AI/skills`, checked at
   commit `14c2aebb5`: `skills/implementation-review/references/review-prompt.md:10`
   to line 13 and `:29` to line 33, `skills/implementation-review/SKILL.md:39`
@@ -67,9 +72,20 @@
     `MemoryCache::new(total_bytes, compact_ceiling)` at
     `crates/mokly-graph/src/cache.rs:92` accepts a small bound. The test can
     cause a real eviction and read the hit and miss counts from `stats()`.
+  - A test can also stand in for the output of a store with a hand-written
+    object that keeps no state. The object then keeps no map, list, or
+    counter, so it does not match the term "hand-written fake store" above.
+  - On 2026-11-25, a reviewer raised such a stand-in under the weak-test rule
+    of the review prompt. The reason: the test bypasses the production
+    store, so it can pass when that store stops supplying what the test
+    reads. **Previous examples** below gives the test.
+  - The review prompt does not say whether such a stand-in counts as a
+    hand-written fake store.
 - **Problem:** The authoring skills do not state the review rule against
   hand-written fake stores. The mocking rule of the `rust` skill makes a
-  map-backed mock look correct. Authors meet the rule only at review.
+  map-backed mock look correct. Authors meet the rule only at review. The
+  rule also does not say whether a hand-written stand-in for the output of a
+  store that keeps no state counts as a fake store.
 - **Impact if no action:** Each new fake store costs a review finding, a
   finding check, and a fix round. A map-backed mock can take another path than the production store. It can
   also fail when a caller uses a store method that its clauses do not cover.
@@ -136,10 +152,41 @@
     test cleared the map to stand for an eviction. Its review raised the test as
     a Low finding under the review prompt rule. The same branch replaced the
     helper with the production `MemoryCache`.
-  - These examples show the gap. This item does not change them.
+  - Commit `937880a66` of 2026-11-25, "feat(viewer): name the props that the
+    preview shows after a failed edit", added a test to
+    `packages/viewer/tests/component_controls.test.tsx`. Its title is "a
+    failed render's alert names the props that the edited row's shown frames
+    show".
+    - At lines 87 to 91, the test cast a hand-written object with only
+      `snapshot`, `routeDelivery`, and `live` `as unknown as ShellDataStore`.
+      The object kept no state.
+    - At line 110, the test supplied that object to `ShellDataBoundary`, the
+      data context of the viewer. So the production store,
+      `ShellStoreProvider` in `packages/viewer/src/shell/store.tsx`, never
+      ran.
+    - The review of branch `calummoore/storybook-track-f-failed-stories-omid`
+      raised the test as a Low finding on 2026-11-25. The review fix of that
+      branch replaced the object with the production `ShellStoreProvider`,
+      which reads its data from `FakeDataSource` in
+      `packages/viewer/tests/data_fakes.ts`.
+  - `packages/viewer/tests/props_empty_states.test.tsx:80` to line 84, on
+    `origin/main`, casts the same kind of hand-written object
+    `as unknown as ShellDataStore`. It supplies the object to
+    `ShellDataBoundary`.
+    - The object has no `reloadDetail`, which `ShellDataStore` requires at
+      `packages/viewer/src/shell/data_store.ts:51`. The cast hides that gap
+      from the type check.
+    - The cast came from commit `d935e6a66` of 2026-10-25. `reloadDetail`
+      joined `ShellDataStore` in commit `f08d02dfb` of 2026-11-02.
+    - The review of 2026-11-25 listed this test outside its scope.
+  - These examples show the gap. This item does not change them. The tests in
+    `validation_cache_tests.rs`, `prefetch_eviction_tests.rs`, and
+    `props_empty_states.test.tsx` are still on `origin/main`.
 - **Related:** None.
 - **Recommendation:** C. As the structural wider fix, it gives authors and
   reviewers one text, so no current weak-test criterion can again exist only
-  in review.
+  in review. The one text must also answer whether a stand-in that keeps no
+  state counts as a fake store. The review of 2026-11-25 counted it, because
+  it bypasses the production store as a map-backed fake does.
 - **Action:** fix after merge, apply C, because the work belongs to a separate
   branch of the shared skills repository.

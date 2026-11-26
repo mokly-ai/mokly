@@ -17,6 +17,8 @@ type CaptureContext = (
 ) => void;
 
 export interface StoredStory {
+  id: string;
+  name: string;
   componentHandle: string;
   compose: (
     cleanups: Csf.CleanupCallback[],

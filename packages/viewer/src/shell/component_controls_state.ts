@@ -142,6 +142,29 @@ export function controlViewKey(
   return `${view.viewport}/${view.colorScheme}`;
 }
 
+/** The props that the shown frames of the edited entry show. */
+export type ShownProps = "edited" | "saved";
+
+/**
+ * Whether the shown frames of the edited entry, the views that an edit
+ * renders, show an edit that rendered or the saved props. A frame shows an
+ * edit while the editor holds an accepted render of its view. The editor
+ * holds none before the first accepted render, after Reset, after an expired
+ * preview, and in a new scope. A frame that no accepted render covers, such
+ * as one that the compact layout just picked, shows its saved view. When
+ * only some shown frames hold an edit, such as after the Frames filter shows
+ * another frame and its render fails, the edit counts: those frames show the
+ * last valid props.
+ */
+export function shownProps(
+  contexts: readonly GeneratedComponentView[],
+  previews: ReadonlyMap<string, ComponentRenderSuccess>,
+): ShownProps {
+  return contexts.some((view) => previews.has(controlViewKey(view)))
+    ? "edited"
+    : "saved";
+}
+
 /**
  * Swap the shown entry's saved views for their accepted temporary previews.
  * Without previews the saved array itself returns, and one set of previews

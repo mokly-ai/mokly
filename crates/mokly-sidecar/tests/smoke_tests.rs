@@ -15,6 +15,7 @@ use mokly_sidecar::pool_options::{Launch, PoolOptions};
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::SystemMemory;
+use mokly_sidecar::results::StoryRender;
 use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 use serde_json::json;
@@ -180,8 +181,11 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
     .into_iter()
     .enumerate()
     {
-        let MethodResult::Render(result) = pool.request(call).unwrap() else {
-            panic!("expected render");
+        let story = matches!(&call, Call::RenderStory(_));
+        let result = match (story, pool.request(call).unwrap()) {
+            (false, MethodResult::Render(result))
+            | (true, MethodResult::StoryRender(StoryRender::Rendered(result))) => result,
+            _ => panic!("expected render"),
         };
         insta::assert_snapshot!(format!("smoke_{index}"), result.html);
         println!("{}", result.html);
