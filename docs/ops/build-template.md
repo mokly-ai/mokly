@@ -37,10 +37,12 @@ The registry confirms the digest, an OCI index that includes Linux amd64 and
 arm64 images. The dated tag names the one image that the digest fixes.
 
 The Dockerfile upgrades the installed Debian packages. Then it installs
-`build-essential`, CA certificates, coreutils, curl, Git, Python 3 and
-`xz-utils` from Debian. The installed packages stay in the image.
-`build-essential` brings in `gcc`, `g++`, `make`, `ld` and the C library
-development headers through its dependencies.
+`build-essential`, CA certificates, coreutils, curl, Git, `libtool`,
+`libtool-bin`, `pkgconf`, Python 3 and `xz-utils` from Debian. The installed
+packages stay in the image. `build-essential` brings in `gcc`, `g++`, `make`,
+`ar`, `ld` and the C library development headers through its dependencies.
+`pkgconf` supplies the `pkg-config` command. Debian trixie ships the `libtool`
+command in `libtool-bin`.
 
 The Dockerfile installs the exact `.nvmrc` Node tarball with its
 checked-in SHA-256 from Node's release `SHASUMS256.txt`. The tarball supplies
@@ -56,9 +58,10 @@ with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
 the oldest Git with a recorded working comparison. Debian trixie's Git 2.47.3
 meets that floor, and Debian's security updates cover it. The package installs
 `/usr/bin/git`, which supports Perl-compatible patterns in `git grep -P`.
-The image must keep a C compiler, a C++ compiler and `make`, so that a dependency
-can compile a native addon during `npm ci`. For example, an install script can
-call `node-gyp`.
+The image must keep a C compiler, a C++ compiler, `ar`, `ld`, `make`,
+`pkg-config` and `libtool`, so that a dependency can compile a native addon
+during `npm ci`. For example, an install script can call `node-gyp`, which
+builds with `cc`, `g++`, `ar` and `ld`.
 
 Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
 The image sets no `PATH`, because E2B sets the process `PATH` itself.
@@ -70,6 +73,12 @@ together. Run `cargo xtask toolchain-pins` and the local template regressions.
 An E2B base or tool change also requires a new template release and assertion.
 The [build toolchain checks](../protocol/cloud/repository-layout.md#build-toolchain-checks)
 reject an unpinned base before release.
+
+The release script builds without E2B's step cache, so each release installs
+the Debian packages that are current at its build time. E2B shares its step
+cache across template names. With the cache, a release of an unchanged
+Dockerfile can reuse the packages of an earlier build under another name. So a
+Debian security fix reaches the template only with a new release.
 
 ## Build And Publish A Candidate
 
@@ -134,9 +143,12 @@ project, so an npm install that mixes files of two releases fails the probe.
 It requires that the `git` on the process `PATH` reports 2.43 or newer and
 accepts `git cat-file --batch --filters -Z` on empty input in a new
 repository. It reads no file and runs no comparison, so a pass does not prove
-that a comparison works. It requires `cc`, `c++` and `make`. It requires that
-`node`, `npm`, `npx`, `corepack`, `python3` and `git` each resolve to one real
-file on `PATH`.
+that a comparison works. It requires `cc`, `c++`, `g++`, `ar`, `ld`, `make`,
+`pkg-config` and `libtool` on `PATH`, and it runs `pkg-config --version` and
+`libtool --version`. It builds a small C and C++ program offline through
+`make`'s default rules, with `cc`, `g++`, `ar` and `ld`, and then runs it. It
+requires that `node`, `npm`, `npx`, `corepack`, `python3` and `git` each
+resolve to one real file on `PATH`.
 The E2B team key stays in the operator process.
 
 Choose the build reference to probe, and set `CANDIDATE_REFERENCE` to it:
@@ -469,7 +481,40 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   ran from 2026-11-26T15:42:12Z to 15:42:29Z. The live probe from commit
   `cc1be056f`, with its Git, compiler and one-copy checks, printed
   `PASS live build template: assertion completed and candidate destroyed` at
-  2026-11-26T15:41:58Z with the build reference.
+  2026-11-26T15:41:58Z with the build reference. It is superseded by
+  `mokly-build-v8`, because a v7 sandbox on 2026-11-26 had no `pkg-config` or
+  `libtool` command. Its probe pass came before the probe's native build check.
+- `mokly-build-v8`, build reference
+  `gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291` (template ID
+  `gwdwriayx6ky1a5n5lfc`, build ID `635dd814-a8b5-41aa-87be-05ea3d74a291`),
+  E2B team `firna`. It was built 2026-11-26T17:48:28Z in 57 s with
+  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`, which passes
+  `skipCache: true`. Its Dockerfile is the one at `6706d6178`, which adds
+  `pkgconf`, `libtool` and `libtool-bin` to the Dockerfile of v7. Node 24.21.0,
+  checksum `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base
+  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+  On 2026-11-26 at 17:47Z, Docker Hub's tag record gave the same digest again.
+  The name was free in E2B's template list before the build. The build log
+  marks no step `CACHED`, and E2B's provisioning ran.
+  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
+  gcc 14.2.0, GNU Make 4.4.1, `pkg-config` 1.8.1 and GNU libtool 2.5.4. `g++`,
+  `ar` and `ld` were in `/usr/bin`, and `git` was `/usr/bin/git` 2.47.3. Each
+  of `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
+  `PATH`. The root filesystem used 758 MiB. The image had 237 installed
+  packages and no `gh`. An HTTPS `git ls-remote` worked. In the smoke
+  repository `mokly-ai/mokly-build-smoke` at `d5fe94d`, with `@mokly/mokly`
+  0.21.0, `npm ci` succeeded. `mokly build --strict` built the catalogue. After
+  a one-commit change,
+  `mokly build --config mokly.config.json --strict --base origin/main` gave
+  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
+  source of `utf-8-validate@6.0.5` compiled `validation.node`. `git grep -P`
+  with a lookahead pattern matched. `git cat-file --batch --filters -Z` exited
+  0 in the repository. These checks ran from 2026-11-26T17:49:11Z to
+  17:49:31Z. The live probe from commit `6706d6178`, with its Git, one-copy,
+  compiler, `pkg-config`, `libtool` and native build checks, printed
+  `PASS live build template: assertion completed and candidate destroyed` at
+  2026-11-26T17:49:11Z with the full build reference.
 
 ### Environments
 

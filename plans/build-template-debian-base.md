@@ -213,11 +213,11 @@ Depends on: 6. Runs with Milestone 8.
 
 Depends on: 8 and 9.
 
-- [ ] Resolve the trixie digest again, and confirm that the name is free.
-- [ ] Build v8 without the step cache, run the live probe, the smoke build,
+- [x] Resolve the trixie digest again, and confirm that the name is free.
+- [x] Build v8 without the step cache, run the live probe, the smoke build,
       the comparison build, a forced native addon build, `git grep -P`,
       `pkg-config --version`, and `libtool --version`.
-- [ ] Runbook: the v8 record, v7 superseded, and the cache paragraph.
+- [x] Runbook: the v8 record, v7 superseded, and the cache paragraph.
 - [ ] Run the gate, review the new changes, and push.
 
 ## Milestone 7: Plan deletion and pull request
