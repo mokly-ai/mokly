@@ -29,14 +29,14 @@
   - `ProcessControl::finish`, at
     `crates/mokly-sidecar/src/process_control.rs:68-80`, waits for the exit of
     a sidecar until a deadline. When the process has not exited by then, it
-    sends the forced kill and calls `Wait::reaped`, at lines 71-72.
-  - `SystemClock::reaped`, at `crates/mokly-sidecar/src/process_clock.rs:63-65`,
-    waits on the exit channel with no deadline. Despite its name and its doc
-    comment ("Wait for the reaper after forced termination, without another
-    graceful period."), it does not wait for a reap. The completion thread
-    waits through `ProcessTree::wait`, which leaves the child unreaped, and
-    then reports the exit. The tree reaps the child later, when its last
-    reference drops.
+    sends the forced kill and calls `Wait::exited_after_kill`, at lines 71-72.
+  - `SystemClock::exited_after_kill`, at
+    `crates/mokly-sidecar/src/process_clock.rs:63-65`, waits on the exit
+    channel with no deadline. Its doc comment says: "Wait for the exit report
+    after forced termination, without another graceful period." The
+    completion thread waits through `ProcessTree::wait`, which leaves the
+    child unreaped, and then reports the exit. The tree reaps the child later,
+    when its last reference drops.
   - These callers run `finish`:
     - Cancellation in `Pool::cancel_busy`, at
       `crates/mokly-sidecar/src/pool_shutdown.rs:45`.

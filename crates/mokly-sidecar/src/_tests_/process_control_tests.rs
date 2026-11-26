@@ -11,7 +11,7 @@ use crate::process_control::ProcessControl;
 use crate::workers::WorkerControl;
 
 #[test]
-fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
+fn a_process_that_survives_the_shared_deadline_is_killed_and_awaited() {
     let mock = Unimock::new((
         WaitMock::exited
             .next_call(matching!(_, 2_100))
@@ -19,7 +19,9 @@ fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
         ProcessGroupMock::kill
             .next_call(matching!())
             .returns(Ok(())),
-        WaitMock::reaped.next_call(matching!(_)).returns(()),
+        WaitMock::exited_after_kill
+            .next_call(matching!(_))
+            .returns(()),
         ProcessGroupMock::kill
             .next_call(matching!())
             .returns(Ok(())),

@@ -70,12 +70,12 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
         ProcessGroupsMock::attach
             .next_call(matching!(_))
             .answers(&|_, child| {
-                Err(AttachFailure {
+                Err(AttachFailure::new(
                     child,
-                    source: error::Error::Locked {
+                    error::Error::Locked {
                         path: "private-root".into(),
                     },
-                })
+                ))
             }),
         ProcessGroupsMock::kill_unattached
             .some_call(matching!(_))
@@ -106,4 +106,58 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
     assert_eq!(stops[0].parent.as_ref().unwrap().into_u64(), 1);
     assert_eq!(stops[0].fields["reason"], "retry");
     assert_eq!(stops[0].fields["status"], "ok");
+}
+
+#[test]
+fn a_failed_unattached_stop_keeps_the_error_status_under_spawn() {
+    let groups = Unimock::new((
+        ProcessGroupsMock::configure
+            .next_call(matching!(_))
+            .returns(Ok(())),
+        ProcessGroupsMock::attach
+            .next_call(matching!(_))
+            .answers(&|_, child| {
+                Err(AttachFailure::new(
+                    child,
+                    error::Error::Locked {
+                        path: "private-root".into(),
+                    },
+                ))
+            }),
+        ProcessGroupsMock::kill_unattached
+            .next_call(matching!(_))
+            .answers(&|_, _| {
+                Err(error::Error::Locked {
+                    path: "stop-probe".into(),
+                })
+            }),
+    ));
+    let trace = Trace::default();
+    trace.in_scope(|| {
+        let span = tracing::info_span!("sidecar.spawn", status = "error");
+        let _scope = span.enter();
+        let factory = NodeFactory::new(
+            Arc::new(groups.clone()),
+            Arc::new(SystemClock::default()),
+            Arc::new(Quiet),
+            Arc::new(SystemMemory),
+        );
+        let failure = factory.spawn(&launch()).err().unwrap();
+        assert!(
+            matches!(&failure, SpawnFailure::Started(Error::Internal(InternalError::Platform {
+            source: error::Error::Locked { path },
+        })) if path == &PathBuf::from("private-root")),
+            "{failure:?}"
+        );
+    });
+    let stops = trace.closed("sidecar.stop");
+    assert_eq!(stops.len(), 1);
+    assert_eq!(stops[0].parent.as_ref().unwrap().into_u64(), 1);
+    assert_eq!(stops[0].fields["reason"], "retry");
+    assert_eq!(stops[0].fields["status"], "error");
+    assert!(trace.events().iter().any(|event| {
+        event
+            .fields
+            .contains(&("operation".into(), "tree.kill_unattached".into()))
+    }));
 }

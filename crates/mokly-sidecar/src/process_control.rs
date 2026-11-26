@@ -69,7 +69,7 @@ impl WorkerControl for ProcessControl {
         let receiver = self.exited.lock().unwrap_or_else(PoisonError::into_inner);
         if !self.clock.exited(&receiver, deadline) {
             self.kill()?;
-            self.clock.reaped(&receiver);
+            self.clock.exited_after_kill(&receiver);
         } else {
             let drained = self.drained.lock().unwrap_or_else(PoisonError::into_inner);
             if !self.clock.drained(&drained, deadline) {
