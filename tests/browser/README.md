@@ -70,7 +70,9 @@ worker has loaded `@mokly/viewer`.
   weakly. When it settles in a later task, a garbage collection before the
   protocol reply loses the reply, and Playwright reports "Execution context
   was destroyed, most likely because of a navigation", although no page
-  navigated.
+  navigated. The page function of `awaitViewerWork` returns
+  `window.holdViewerWork(work)`, which also handles a rejection that comes
+  before the test reads it.
 
 ## Current-only copy
 

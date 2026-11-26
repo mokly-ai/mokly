@@ -1,7 +1,5 @@
 import type { CatalogueReadModel } from "@mokly/viewer";
 
-import { startDuration } from "../helpers/durations.js";
-
 /** The steps of one attempt of a Serve readiness wait. */
 type ReadyStep = "reading the index" | "checking the caller's predicate";
 
@@ -12,6 +10,17 @@ export function describeRead(index: CatalogueReadModel) {
     `changesStatus ${index.changesStatus}`,
     ...(index.baseCommit ? [`baseCommit ${index.baseCommit}`] : []),
   ].join(", ");
+}
+
+/**
+ * The limit that Playwright names in the error of a poll that ran out of
+ * time: its own timeout or the test's time limit.
+ */
+function limitOf(cause: unknown) {
+  const text = cause instanceof Error ? cause.message : String(cause);
+  return /Timeout \d+ms exceeded while waiting on the predicate|Test timeout of \d+ms exceeded/u.exec(
+    text,
+  )?.[0];
 }
 
 /** An error with its own cause, which `fetch` uses for the socket error. */
@@ -31,7 +40,6 @@ function describeError(error: unknown) {
  * during a step or between two attempts.
  */
 export function readyLog() {
-  const elapsed = startDuration();
   const states: { state: string; reads: number }[] = [];
   let current: { step: ReadyStep; on?: string } | undefined;
   let failure: string | undefined;
@@ -41,12 +49,13 @@ export function readyLog() {
     if (last?.state === state) last.reads += 1;
     else states.push({ state, reads: 1 });
   };
-  const ending = () => {
+  const ending = (cause: unknown) => {
     if (failure) return `The wait ended at once because ${failure}.`;
     const during = current
       ? `while ${current.step}${current.on ? ` of ${current.on}` : ""}`
       : "between two attempts";
-    return `A time limit ended the wait after ${elapsed()}, ${during}. The cause below names the limit: the 30-second poll or the test's time limit.`;
+    const limit = limitOf(cause) ?? "the cause below names the limit";
+    return `A time limit ended the wait ${during}: ${limit}.`;
   };
   return {
     record,
@@ -68,9 +77,9 @@ export function readyLog() {
         throw error;
       }
     },
-    report: () =>
+    report: (cause: unknown) =>
       [
-        ending(),
+        ending(cause),
         "Index reads, oldest first:",
         ...states.map(({ state, reads }) => `- ${state} (${reads} reads)`),
         ...(states.length > 0

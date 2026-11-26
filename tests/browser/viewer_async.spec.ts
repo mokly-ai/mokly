@@ -34,9 +34,9 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  await awaitViewerWork(
-    page.evaluateHandle(() => ({
-      work: (async () => {
+  await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
         const host = window.viewerHarness.get("one");
         await Promise.all([
           host.ref.current.startPick(),
@@ -45,7 +45,7 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
         host.ref.current.cancelPick();
         host.ref.current.cancelPick();
       })(),
-    })),
+    ),
   );
   expect(
     await page.evaluate(() =>
@@ -57,9 +57,9 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
     { name: "pick-start", value: null },
     { name: "pick-end", value: { reason: "cancelled" } },
   ]);
-  const cancelled = await awaitViewerWork(
-    page.evaluateHandle(() => ({
-      work: (async () => {
+  const cancelled = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
         const host = window.viewerHarness.get("one");
         let attempted!: () => void;
         const attempt = new Promise<void>((resolve) => {
@@ -80,7 +80,7 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
         host.ref.current.cancelPick();
         return pending;
       })(),
-    })),
+    ),
   );
   expect(cancelled).toBe(true);
 });
@@ -212,9 +212,9 @@ test("frame failures end picking once and reject one handle with one safe error"
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  const result = await awaitViewerWork(
-    page.evaluateHandle(() => ({
-      work: (async () => {
+  const result = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
         const host = window.viewerHarness.get("one");
         let emit: ((event: FrameEvent) => void) | undefined;
         let installed!: () => void;
@@ -246,12 +246,12 @@ test("frame failures end picking once and reject one handle with one safe error"
           .filter((event) => event.name === "pick-end")
           .map((event) => event.value);
       })(),
-    })),
+    ),
   );
   expect(result).toEqual([{ reason: "error" }]);
-  const failures = await awaitViewerWork(
-    page.evaluateHandle(() => ({
-      work: (async () => {
+  const failures = await awaitViewerWork(page, () =>
+    window.holdViewerWork(
+      (async () => {
         const host = window.viewerHarness.get("one");
         host.events.length = 0;
         let attempted!: () => void;
@@ -275,7 +275,7 @@ test("frame failures end picking once and reject one handle with one safe error"
           .filter((event) => event.name === "error")
           .map((event) => event.value);
       })(),
-    })),
+    ),
   );
   expect(failures).toEqual([
     {

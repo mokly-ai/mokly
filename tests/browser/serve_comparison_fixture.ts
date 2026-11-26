@@ -159,7 +159,7 @@ export async function serveComparisonCatalogue(
           ...(predicate ? ["the caller's predicate"] : []),
         ].join(", ");
         throw new Error(
-          `Serve comparison did not become ready. Wanted ${wanted}.\n${reads.report()}\nServe output:\n${host?.diagnostics?.()}`,
+          `Serve comparison did not become ready. Wanted ${wanted}.\n${reads.report(cause)}\nServe output:\n${host?.diagnostics?.()}`,
           { cause },
         );
       }

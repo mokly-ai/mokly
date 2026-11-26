@@ -66,7 +66,7 @@
     poll with that build too. Such a machine is too slow for both limits.
   - Since 2026-11-26, the error of a failed wait first names what ended it:
     a failed step with its error and the error's cause, or a time limit with
-    the step that was still in progress. Then it gives the state that it
+    the step that was still in progress and the limit that Playwright names. Then it gives the state that it
     wanted and each index state that it read, before the Serve output.
 - **Problem:** Under heavy CPU load, the journeys of this spec can still use
   all of their 60-second test time limit. On a loaded 4-CPU machine the

@@ -11,7 +11,7 @@
 - **Terms:**
   - **Readiness wait:** the `expect.poll` loop that reads the catalogue index of a Serve host until it reports a newer revision with `changesStatus` `ready`.
 - **Background:**
-  - Since 2026-11-26, the wait of the comparison fixture records each step through `readyLog` in `tests/browser/serve_ready_log.ts`. Its error first names a failed step with its error and the error's cause, or a time limit with the step that was in progress.
+  - Since 2026-11-26, the wait of the comparison fixture records each step through `readyLog` in `tests/browser/serve_ready_log.ts`. Its error first names a failed step with its error and the error's cause, or a time limit with the step that was in progress and the limit text that Playwright put in the cause: "Timeout 30000ms exceeded while waiting on the predicate" or "Test timeout of 60000ms exceeded".
   - `tests/browser/serve_changes_fixture.ts:144` still throws "did not become ready" with the whole Serve output first. The cause that names the limit or the error comes last.
   - `expect.poll` rethrows a failed read at once, and it stops 250 ms before the test deadline, with the same outer error as its own timeout.
 - **Problem:** The two Serve fixtures keep two copies of the readiness wait, and only one gives the cause first.
