@@ -1,8 +1,6 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { buildPollIntervalMs } from "../viewer/build-poll";
-
 /** The window property where the page counts its build and log reads. */
 const counter = "__mkcBuildReads";
 
@@ -10,6 +8,13 @@ interface ReadCount {
   started: number;
   finished: number;
 }
+
+/**
+ * The poll interval `viewer-builds.md` gives: the card reads a working build
+ * every three seconds. It is the test's own value, not the product's, so a
+ * card that polls less often misses the read that `nextPoll` waits for.
+ */
+const pollIntervalMs = 3_000;
 
 /** The build and log reads of one build, as a path pattern. */
 const buildReads = String.raw`^/v1/projects/[^/]+/builds/[^/]+(/log)?$`;
@@ -53,7 +58,7 @@ export async function installPollClock(
 
 /** Let one poll interval pass on the page, which starts the card's next read. */
 export async function nextPoll(page: Page): Promise<void> {
-  await page.clock.runFor(buildPollIntervalMs);
+  await page.clock.runFor(pollIntervalMs);
 }
 
 /**
