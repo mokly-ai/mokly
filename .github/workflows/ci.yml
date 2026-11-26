@@ -363,7 +363,7 @@ jobs:
       matrix:
         # Shard 1 checks formatting and Clippy. Each later shard builds and
         # runs one weighted share of the Rust test targets of the native test
-        # scope: four on macOS and six on Windows. Shard 2 also runs the doc
+        # scope: four on macOS and seven on Windows. Shard 2 also runs the doc
         # tests.
         include:
           - runner: macos-26
@@ -377,19 +377,21 @@ jobs:
           - runner: macos-26
             shard: 5/5
           - runner: windows-2025
-            shard: 1/7
+            shard: 1/8
           - runner: windows-2025
-            shard: 2/7
+            shard: 2/8
           - runner: windows-2025
-            shard: 3/7
+            shard: 3/8
           - runner: windows-2025
-            shard: 4/7
+            shard: 4/8
           - runner: windows-2025
-            shard: 5/7
+            shard: 5/8
           - runner: windows-2025
-            shard: 6/7
+            shard: 6/8
           - runner: windows-2025
-            shard: 7/7
+            shard: 7/8
+          - runner: windows-2025
+            shard: 8/8
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -642,73 +644,56 @@ jobs:
             infrastructure: false
             rust_cache: true
           # Mockup shard 1 runs the checks without a browser, shard 2 the policy
-          # and served suites, and shards 3 to 6 split the disk browser suite.
-          - name: Mockup checks 1/6
+          # and served suites, and shards 3 to 5 split the disk browser suite.
+          - name: Mockup checks 1/5
             command: cloud-mockups
-            shard: "1/6"
+            shard: "1/5"
             install_dependencies: true
             browser_workspace: ""
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 2/6
+          - name: Mockup checks 2/5
             command: cloud-mockups
-            shard: "2/6"
+            shard: "2/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 3/6
+          - name: Mockup checks 3/5
             command: cloud-mockups
-            shard: "3/6"
+            shard: "3/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 4/6
+          - name: Mockup checks 4/5
             command: cloud-mockups
-            shard: "4/6"
+            shard: "4/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 5/6
+          - name: Mockup checks 5/5
             command: cloud-mockups
-            shard: "5/6"
+            shard: "5/5"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
             rust_cache_key: mokly-tests
-          - name: Mockup checks 6/6
-            command: cloud-mockups
-            shard: "6/6"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/mockups"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 1/2
+          # The site browser suite takes about three minutes, so one job runs
+          # the whole site suite.
+          - name: Site checks
             command: cloud-site
-            shard: "1/2"
-            install_dependencies: true
-            browser_workspace: "@mokly-cloud/site"
-            postgres: false
-            infrastructure: false
-            rust_cache: true
-            rust_cache_key: mokly-tests
-          - name: Site checks 2/2
-            command: cloud-site
-            shard: "2/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false
