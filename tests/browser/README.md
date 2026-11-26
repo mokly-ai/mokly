@@ -1,5 +1,7 @@
 # Browser fixtures
 
+Status: Follow-up work remains in the [browser evaluate promise item](../../plans/follow-ups/browser-evaluate-promise-collected.md).
+
 `npm run test:browser` builds the workspace and runs the selected browser
 specs. Select a spec file, and optionally a test name with `-g`:
 
@@ -62,6 +64,15 @@ worker has loaded `@mokly/viewer`.
 - An assertion that depends on a navigated preview's layout waits for the
   expected frame URL and the complete document state together. The outer Browse
   URL or an iframe `src` attribute alone is not enough.
+- A test awaits viewer work, such as a pick, through `awaitViewerWork` in
+  `viewer_work.ts` or `startViewerPick` in `viewer_pick.ts`, not through the
+  promise of a `page.evaluate`. Chromium's protocol holds that promise only
+  weakly. When it settles in a later task, a garbage collection before the
+  protocol reply loses the reply, and Playwright reports "Execution context
+  was destroyed, most likely because of a navigation", although no page
+  navigated. The page function of `awaitViewerWork` returns
+  `window.holdViewerWork(work)`, which also handles a rejection that comes
+  before the test reads it.
 
 ## Current-only copy
 

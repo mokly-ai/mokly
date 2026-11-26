@@ -13,7 +13,7 @@ mod unix {
     use std::process::{Command, Stdio};
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
+    use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
 
     #[test]
     fn owned_process_group_terminates_descendants_and_closes_pipes() {
@@ -28,16 +28,16 @@ mod unix {
             .stdout(Stdio::piped());
         groups.configure(&mut command).unwrap();
         let mut child = command.spawn().unwrap();
-        // Child::wait closes its stdin. Keep this writer until stdout drains
-        // so reaping the leader cannot change the descendant's input.
+        // Keep this writer until stdout drains, so the exit and the reap of
+        // the leader cannot change the descendant's input.
         let _input = child.stdin.take().unwrap();
-        let group = groups.attach(&child).unwrap();
         let mut reader = BufReader::new(child.stdout.take().unwrap());
+        let group = groups.attach(child).unwrap();
         let mut ready = String::new();
         reader.read_line(&mut ready).unwrap();
         assert_eq!(ready, "ready\n");
         group.terminate().unwrap();
-        assert!(!child.wait().unwrap().success());
+        assert!(!group.wait().unwrap().success());
         let mut remaining = String::new();
         reader.read_to_string(&mut remaining).unwrap();
         let mut lines: Vec<_> = remaining.lines().collect();

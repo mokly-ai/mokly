@@ -174,6 +174,9 @@ impl SourceTree for SideTree {
         }
         Ok(())
     }
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        self.hint_sources(paths);
+    }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
         let (tree, physical, _) = self.selected(path)?;
         let source = tree
