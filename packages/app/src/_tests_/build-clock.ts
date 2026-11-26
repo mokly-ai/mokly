@@ -77,9 +77,10 @@ export async function pollUntilShown(
 /**
  * Wait until no counted read of the page is in flight, and return how many it
  * has started. Before one `nextPoll`, this lets the card's current poll end,
- * because a poll interval that passes while a poll runs starts no read. A finished read has passed the build double, so the double has
- * counted it too. Each look first lets the page finish its current
- * task, so a read that a timer just started is already counted.
+ * because a poll interval that passes while a poll runs starts no read. A
+ * finished read has passed the build double, so the double has counted it
+ * too. Each look first lets the page finish its current task and the task
+ * that one queues, so a read that a timer just started is already counted.
  */
 export async function settledReads(page: Page): Promise<number> {
   const look = () =>

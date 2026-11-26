@@ -53,12 +53,13 @@ test("a read that answers after Cancel leaves the card, its status and focus in 
     card.getByRole("heading", { name: "Publishing this branch" }),
   ).toBeVisible();
 
-  // The next poll's build read waits, holding the build as it was then.
+  // The next poll's build read waits, holding the build as it was then. The
+  // first poll ends before the hold, so the clock jump starts the next one.
+  await settledReads(page);
   let release = () => {};
   double.holdBuildReads = new Promise((resolve) => {
     release = resolve;
   });
-  await settledReads(page);
   await nextPoll(page);
   await expect.poll(() => double.heldBuildReads).toBe(1);
   await page.getByTestId("build-cancel").focus();
