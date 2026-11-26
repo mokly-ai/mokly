@@ -28,7 +28,7 @@ fn changes_use_source_when_both_configurations_have_the_same_override() {
 
 #[test]
 fn identical_source_overrides_reuse_head_stylesheets_and_renders() {
-    let root = workspace_fixture(Some("source"), "@import '@acme/ui/skin.css';");
+    let root = workspace_fixture(&config(Some("source")), "@import '@acme/ui/skin.css';", &[]);
     let output = run(
         root.path(),
         &["build", "--config", CONFIG_PATH, "--debug-timings"],
@@ -93,6 +93,46 @@ fn changes_fall_back_to_the_working_override_when_the_base_entry_misses() {
 }
 
 #[test]
+fn changes_keep_a_tracked_base_stylesheet_when_the_working_build_is_absent() {
+    let working_config = config(Some("source"));
+    let mut base_config: Value = serde_json::from_str(&working_config).unwrap();
+    base_config["moduleResolution"]["sourcePackages"]["@acme/ui"] = json!(false);
+    let built = "packages/ui/esm/skin.css";
+    let root = workspace_fixture(
+        &base_config.to_string(),
+        "@import '@acme/ui/skin.css';",
+        &[
+            (".gitignore", "node_modules/\nmokly-static/\n"),
+            (
+                "packages/ui/package.json",
+                r#"{"name":"@acme/ui","exports":{".":"./source/index.ts","./skin.css":"./esm/skin.css"}}"#,
+            ),
+            (built, ".workspace-card { --workspace-tone: base-build; }"),
+        ],
+    );
+    let root = root.path();
+    fs::remove_file(root.join(built)).unwrap();
+    write(root, CONFIG_PATH, &working_config);
+
+    let output = run(root, &["build", "--config", CONFIG_PATH]);
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(output.status.code(), Some(0), "{stderr}");
+    let published = root.join("mokly-static");
+    let index = read_index(&published);
+    assert_eq!(index.changes_status, ChangesStatus::Ready, "{stderr}");
+    let style = routes::comparison_snapshot(
+        ReviewSide::Before,
+        &format!(
+            "{}/styles/{STYLESHEET_PATH}",
+            namespace::GENERATED_DIRECTORY
+        ),
+    );
+    let css =
+        fs::read_to_string(published.join(index.comparison_url.0.unwrap()).join(style)).unwrap();
+    assert!(css.contains("base-build"), "{css}");
+}
+
+#[test]
 fn changes_explain_the_missing_override_when_only_the_head_can_load_the_build() {
     let root = workspace_with_stylesheet(None, ".workspace-card { color: blue; }");
     let output = run_configured(
@@ -129,8 +169,8 @@ fn workspace(base_source: Option<&str>) -> TempDir {
     workspace_with_stylesheet(base_source, "@import '@acme/ui/skin.css';")
 }
 
-fn workspace_fixture(base_source: Option<&str>, stylesheet: &str) -> TempDir {
-    let root = base(&[
+fn workspace_fixture(config: &str, stylesheet: &str, additional: &[(&str, &str)]) -> TempDir {
+    let mut files = vec![
         (
             ".gitignore",
             "node_modules/\nmokly-static/\npackages/ui/esm/\n",
@@ -139,7 +179,7 @@ fn workspace_fixture(base_source: Option<&str>, stylesheet: &str) -> TempDir {
             "package.json",
             r#"{"name":"catalogue","private":true,"workspaces":["packages/*"]}"#,
         ),
-        (CONFIG_PATH, &config(base_source)),
+        (CONFIG_PATH, config),
         (STYLESHEET_PATH, stylesheet),
         (
             "app/specs/card.mockup.tsx",
@@ -157,7 +197,9 @@ fn workspace_fixture(base_source: Option<&str>, stylesheet: &str) -> TempDir {
             "packages/ui/source/skin.css",
             ".workspace-card { --workspace-tone: base-source; }",
         ),
-    ]);
+    ];
+    files.extend_from_slice(additional);
+    let root = base(&files);
     let path = root.path();
     let modules = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../node_modules");
     link_directory(&modules, &path.join("node_modules"));
@@ -170,7 +212,7 @@ fn workspace_fixture(base_source: Option<&str>, stylesheet: &str) -> TempDir {
 }
 
 fn workspace_with_stylesheet(base_source: Option<&str>, stylesheet: &str) -> TempDir {
-    let root = workspace_fixture(base_source, stylesheet);
+    let root = workspace_fixture(&config(base_source), stylesheet, &[]);
     let path = root.path();
     write(
         path,

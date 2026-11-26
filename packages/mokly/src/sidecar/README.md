@@ -328,9 +328,10 @@ its requests and results. The paths below are relative to the package root.
   with comments and trailing commas.
 - [`src/sidecar/module-paths.ts`](./module-paths.ts) holds `ModulePaths`,
   which maps resolved paths to the selected source tree. Its `resolve` and
-  `resolveSync` add the `moduleResolution.sourcePackages` hint, with the
-  package `name`, to the missing-source error of a target inside a workspace
-  package. `resolveSync` serves the requires that Node loads.
+  `resolveSync` add the `moduleResolution.sourcePackages` hint when lookup
+  by package name reaches a missing target below a subfolder of the package
+  root. An entry of `false` suppresses the hint when lookup reaches it.
+  `resolveSync` serves the requires that Node loads.
   `ConfiguredModuleFiles` in
   [`src/sidecar/module-configured-files.ts`](./module-configured-files.ts)
   holds the configured entry, stories, renderer, and PostCSS files and each
@@ -343,8 +344,7 @@ its requests and results. The paths below are relative to the package root.
   [workspace package source rule](../../../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
   It takes the `sourcePackages` maps of the request in layout order. It tries
   the entry of each map for the package `name`, and then the detected layout,
-  for which it uses `ConfigChain` to read `rootDir` and `outDir`. Its
-  `packageName` gives the `name` of the workspace package that holds a file.
+  for which it uses `ConfigChain` to read `rootDir` and `outDir`.
   [`src/sidecar/workspace-lookups.ts`](./workspace-lookups.ts) holds
   `WorkspaceLookups`, which records the candidate files and directories that
   can change that choice. When the request has `sourcePackages` entries, it

@@ -120,6 +120,22 @@ pub fn workspace_package_name(
     package_root(tree, repo_root, target).map(|(_, name)| name)
 }
 
+/// Name an override only when a failed package target can use a layout.
+pub(crate) fn override_hint(
+    tree: &dyn SourceTree,
+    repo_root: &Path,
+    target: &Path,
+    settings: &Resolution,
+) -> Option<String> {
+    let (package, name) = package_root(tree, repo_root, target)?;
+    (target.strip_prefix(package).ok()?.components().count() > 1
+        && !settings
+            .source_packages
+            .iter()
+            .any(|entries| entries.get(&name) == Some(&None)))
+    .then_some(name)
+}
+
 fn package_root<'a>(
     tree: &dyn SourceTree,
     repo_root: &Path,

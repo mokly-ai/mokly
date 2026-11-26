@@ -38,7 +38,7 @@ pub enum CssError {
         /// Authored import specifier.
         specifier: String,
     },
-    /// A named workspace package lacks the selected stylesheet source.
+    /// A package import lacks a target in a subfolder and can use a source layout.
     #[error(
         "[mokly-css/build-invalid] could not resolve CSS @import in {stylesheet}: {specifier}; set moduleResolution.sourcePackages for {package}"
     )]

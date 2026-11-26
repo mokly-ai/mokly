@@ -7,9 +7,8 @@ import { build, transformSync } from "esbuild";
 import { detail } from "./errors.js";
 import {
   importPath,
-  missingModule,
-  requireSource,
   resolveImport,
+  resolveRequire,
 } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
@@ -115,24 +114,13 @@ function requireTarget(
 ): string {
   const directory = importerDirectory(sources, name, path.dirname(file));
   const native = createRequire(path.join(directory, path.basename(file)));
-  const resolvers = [native];
-  try {
-    return sources.resolveSync(native.resolve(name, options), name);
-  } catch (error) {
-    if (!missingModule(error)) throw error;
-    for (const root of sources.dependencyRoots) {
-      const resolver = createRequire(
-        path.join(path.dirname(root), "package.json"),
-      );
-      resolvers.push(resolver);
-      try {
-        return sources.resolveSync(resolver.resolve(name, options), name);
-      } catch (next) {
-        if (!missingModule(next)) throw next;
-      }
-    }
-    return requireSource(sources, name, directory, resolvers, error, options);
-  }
+  const resolvers = [
+    native,
+    ...sources.dependencyRoots.map((root) =>
+      createRequire(path.join(path.dirname(root), "package.json")),
+    ),
+  ];
+  return resolveRequire(sources, name, directory, resolvers, options);
 }
 
 function requireLocal(file: string): unknown {

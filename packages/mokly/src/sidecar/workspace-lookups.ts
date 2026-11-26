@@ -121,6 +121,30 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     this.capture.file(file);
   }
 
+  /** Compare the bytes of the installed manifest and retain its lookup path. */
+  installationManifest(file: string): string | undefined {
+    this.packageLookup(file);
+    const captured = this.capture.inspectMetadata(file);
+    if (captured) return captured.bytes?.toString("utf8");
+    try {
+      return fs.readFileSync(file, "utf8");
+    } catch (error) {
+      if (!missingFile(error)) throw error;
+    }
+  }
+
+  /** Keep native resolution targets and links without reading their contents. */
+  nativeTarget(file: string): string | undefined {
+    this.observed.add(file);
+    const captured = this.capture.canonicalFile(file);
+    if (this.capture.complete) return captured;
+    try {
+      return fs.realpathSync.native(file);
+    } catch (error) {
+      if (!missingFile(error)) throw error;
+    }
+  }
+
   private observeCandidate(file: string): Probe {
     const result = this.observe(file);
     if (result.kind !== "unavailable")

@@ -264,6 +264,15 @@
       "expected": "packages/plain/src/button.tsx"
     },
     {
+      "name": "a working entry of false stops detection after the base layout misses",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [
+        { "plain": { "dist": "missing" } },
+        { "plain": false }
+      ],
+      "expected": null
+    },
+    {
       "name": "a missing source in every layout leaves the original build target",
       "target": "packages/renamed/esm/only-built.js",
       "sourcePackages": [{ "@example/ui": { "esm": "source" } }],

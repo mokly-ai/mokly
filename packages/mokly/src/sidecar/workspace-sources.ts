@@ -69,8 +69,18 @@ export class WorkspaceSources {
     return this.detectedSource(file, root, relative);
   }
 
-  packageName(file: string): string | undefined {
-    return this.package(file)?.name;
+  /** A failed target can use a layout only below a package subfolder. */
+  overrideHint(file: string): string | undefined {
+    const pkg = this.package(file);
+    if (
+      pkg &&
+      path.dirname(file) !== pkg.root &&
+      !this.overrides.some(
+        (entries) =>
+          Object.hasOwn(entries, pkg.name) && entries[pkg.name] === false,
+      )
+    )
+      return pkg.name;
   }
 
   private detectedSource(

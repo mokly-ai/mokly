@@ -32,15 +32,18 @@ Third-party dependencies follow three tiers:
 
 After lookup of a bare package specifier and repository mapping, Mokly
 checks for a source file on the side being rendered. This rule applies to
-the head and the base. A configured file keeps its exact path, including
-when a package import reaches it. This includes local stylesheets named in
-the configuration.
+the head and the base. A link from the installation to a workspace package
+uses the manifest and files of the side being rendered. A configured file
+keeps its exact path, including when a package import reaches it. This
+includes local stylesheets named in the configuration.
 
 1. The target must be a repository path outside `node_modules`. The nearest
    `package.json` above the target, within the repository, must have a
    `name`. Its directory is the package root.
 2. Try the layouts of the package in the [layout order](#layout-order). A
    layout maps build folders to source folders inside the package root.
+   Match the build folder against the target path that the package declares,
+   relative to the package root.
 3. For a target under a build folder of a layout, try the same relative path
    under its source folder. When build folders of one layout nest, use the
    longest one that holds the target. For a `.js`, `.mjs` or `.cjs` target,
@@ -52,9 +55,10 @@ the configuration.
    restored runtime require or a synchronous PostCSS require, keep an
    existing build file on the selected side. Use the source rule if that
    side lacks the build file. A missing repository-mapped JavaScript target
-   fails with `module {path} has no source in this side`. When a package
-   root holds the target, the message also names
-   `moduleResolution.sourcePackages`.
+   fails with `module {path} has no source in this side`. The message names
+   `moduleResolution.sourcePackages` when lookup by package name reaches a
+   target below a subfolder of the package root. An entry of `false`
+   suppresses the hint when lookup reaches it.
 
 When lookup for a bundled JavaScript import fails, Mokly tries each target
 of the matched export key. For a package without `exports`, it tries the

@@ -41,9 +41,10 @@ See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md
 `Resolution.source_packages` carries the `sourcePackages` entries of each
 configuration in the
 [layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order),
-with `None` for `false`. When an import fails and its target is inside a
-workspace package, `SourceResolver` returns `CssError::WorkspaceImport`,
-which names that package. The public `workspace_package_name` finds the
+with `None` for `false`. `SourceResolver` returns `CssError::WorkspaceImport`
+when lookup by package name reaches a missing target below a subfolder of
+the package root. An entry of `false` suppresses the hint when lookup
+reaches it. The public `workspace_package_name` finds the
 package `name` of a target on one side. `mokly-compare` uses it for the
 `ignored-module` warning.
 

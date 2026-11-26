@@ -224,7 +224,11 @@ export function consumerPlugins(
               args.resolveDir,
               file,
             );
-            const { workspaceSource: _workspaceSource, ...result } = resolved;
+            const {
+              workspaceSource: _workspaceSource,
+              workspaceTarget: _workspaceTarget,
+              ...result
+            } = resolved;
             return { ...result, path: file };
           } catch (error) {
             return { errors: [{ text: detail(error) }] };

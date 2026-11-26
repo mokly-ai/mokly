@@ -50,6 +50,7 @@ export class ModulePaths {
     readonly dependencyRoots: string[],
     readonly sourceDependencyRoots: SourceDependencyRoot[],
     readonly settings: ModuleResolution,
+    readonly configurationDirectory: string,
     readonly dependencyUsage: DependencyUsage,
     configured: readonly string[],
   ) {
@@ -80,6 +81,12 @@ export class ModulePaths {
       installation: dependencyRoot,
     }: ModuleRoots,
   ): ModulePaths {
+    const configurationDirectory =
+      params.configurationDirectory === undefined
+        ? dependencies[0] && inside(root, dependencies[0])
+          ? path.dirname(dependencies[0])
+          : root
+        : path.resolve(root, params.configurationDirectory);
     return new ModulePaths(
       root,
       dependencyRoot,
@@ -87,15 +94,12 @@ export class ModulePaths {
       [...new Set(dependencies)],
       sourceDependencyRoots(params, root, dependencyRoot, dependencies),
       params.moduleResolution,
+      configurationDirectory,
       new DependencyUsage(
         root,
         [...new Set(dependencies)],
         params.moduleResolution,
-        params.configurationDirectory === undefined
-          ? dependencies[0] && inside(root, dependencies[0])
-            ? path.dirname(dependencies[0])
-            : root
-          : path.resolve(root, params.configurationDirectory),
+        configurationDirectory,
       ),
       [
         ...(params.entryFiles ?? []),
@@ -104,30 +108,6 @@ export class ModulePaths {
         ...(params.postcss ? [params.postcss] : []),
       ],
     );
-  }
-
-  /** Canonical metadata also maps workspace links to this side's sources. */
-  async metadata(file: string): Promise<string> {
-    let ancestor = file;
-    const suffix: string[] = [];
-    for (;;) {
-      try {
-        const real = await fs.promises.realpath(ancestor);
-        return this.location(path.join(real, ...suffix)).file;
-      } catch (error) {
-        if (
-          !error ||
-          typeof error !== "object" ||
-          !("code" in error) ||
-          !["ENOENT", "ENOTDIR"].includes(String(error.code))
-        )
-          throw error;
-        const parent = path.dirname(ancestor);
-        if (parent === ancestor) throw error;
-        suffix.unshift(path.basename(ancestor));
-        ancestor = parent;
-      }
-    }
   }
 
   name(file: string): string {
@@ -200,12 +180,6 @@ export class ModulePaths {
     return this.configured.has(file);
   }
 
-  private candidate(real: string, specifier?: string) {
-    const location = this.location(real);
-    const source = this.workspaceSource(location.file, specifier);
-    return source === undefined ? location : { ...location, file: source };
-  }
-
   workspaceSource(file: string, specifier?: string): string | undefined {
     if (
       specifier &&
@@ -221,9 +195,10 @@ export class ModulePaths {
     candidate: { file: string; mapped: boolean; name: string },
     real: string,
     regular: boolean,
+    packageTarget?: string,
   ): string {
     if (candidate.mapped && (!inside(this.sourceRoot, real) || !regular))
-      throw this.missing(candidate.name, candidate.file);
+      throw this.missing(candidate.name, packageTarget);
     this.name(real);
     return this.observe(real);
   }
@@ -238,10 +213,8 @@ export class ModulePaths {
     return file;
   }
 
-  private missing(name: string, file: string): Error {
-    const pkg = this.repositoryOwned(file)
-      ? this.workspace.packageName(file)
-      : undefined;
+  private missing(name: string, packageTarget?: string): Error {
+    const pkg = packageTarget && this.workspace.overrideHint(packageTarget);
     const message = `module ${name} has no source in this side`;
     return new Error(
       pkg === undefined
@@ -250,13 +223,20 @@ export class ModulePaths {
     );
   }
 
-  async resolve(file: string, specifier?: string): Promise<string> {
+  async resolve(
+    file: string,
+    specifier?: string,
+    packageTarget?: string,
+  ): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const real = await fs.promises.realpath(file);
-    const candidate = this.candidate(
-      (await sourceDependency(this, real)) ?? real,
+    const target = this.location((await sourceDependency(this, real)) ?? real);
+    const source = this.workspaceSource(
+      packageTarget ?? target.file,
       specifier,
     );
+    const candidate =
+      source === undefined ? target : { ...target, file: source };
     if (!candidate.mapped) return this.observe(candidate.file);
     try {
       const real = await fs.promises.realpath(candidate.file);
@@ -264,31 +244,39 @@ export class ModulePaths {
         candidate,
         real,
         (await fs.promises.stat(real)).isFile(),
+        packageTarget,
       );
     } catch {
-      throw this.missing(candidate.name, candidate.file);
+      throw this.missing(candidate.name, packageTarget);
     }
   }
 
   /** Node-loaded requires prefer the native target on the selected side. */
-  resolveSync(file: string, specifier?: string): string {
+  resolveSync(
+    file: string,
+    specifier?: string,
+    packageTarget?: string,
+  ): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
     const target = this.location(sourceDependencySync(this, real) ?? real);
     if (!target.mapped) return this.observe(target.file);
     try {
       const real = fs.realpathSync(target.file);
-      return this.checked(target, real, fs.statSync(real).isFile());
+      return this.checked(
+        target,
+        real,
+        fs.statSync(real).isFile(),
+        packageTarget,
+      );
     } catch (error) {
       if (missingFile(error)) {
-        const source = this.workspaceSource(target.file, specifier);
-        if (
-          source !== undefined &&
-          this.workspaceLookups.buildTarget(target.file)
-        )
+        const build = packageTarget ?? target.file;
+        const source = this.workspaceSource(build, specifier);
+        if (source !== undefined && this.workspaceLookups.buildTarget(build))
           return this.observe(source);
       }
-      throw this.missing(target.name, target.file);
+      throw this.missing(target.name, packageTarget);
     }
   }
 }

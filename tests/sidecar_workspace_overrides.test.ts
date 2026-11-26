@@ -45,10 +45,11 @@ test("workspace layouts select JavaScript and CSS per file on the head and base"
     'export {value} from "local"; import "local/theme.css";',
   );
   await write(
-    path.join(head, pkg, "esm/value.js"),
+    path.join(head, pkg, "release/value.js"),
     'export const value = "Built";',
   );
-  await write(path.join(head, pkg, "esm/theme.css"), ".built {}\n");
+  await write(path.join(head, pkg, "release/theme.css"), ".built {}\n");
+  await link(path.join(head, pkg, "release"), path.join(head, pkg, "esm"));
   await write(
     path.join(head, pkg, "source/value.ts"),
     'export const value = "Head";',
