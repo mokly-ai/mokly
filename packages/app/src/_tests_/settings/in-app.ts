@@ -28,9 +28,19 @@ export async function openDialogInApp(page: Page, pane: string): Promise<void> {
   await expect(
     page.getByRole("dialog").getByRole("heading", { level: 1 }),
   ).toHaveText(pane);
-  // The dialog is drawn a step before it takes the keyboard: it moves focus
-  // onto the pane the reader chose and starts to take Escape together, once
-  // it is on screen. A key pressed between the two reaches no dialog.
+  await expectDialogTakesKeys(page, pane);
+}
+
+/**
+ * Wait until the open dialog takes the keyboard. It is drawn a step before
+ * that: it moves focus onto the rail link of the pane it shows and starts to
+ * take Escape together, once it is on screen. A key pressed between the two
+ * reaches no dialog.
+ */
+export async function expectDialogTakesKeys(
+  page: Page,
+  pane: string,
+): Promise<void> {
   await expect(
     page.getByRole("dialog").getByRole("link", { name: pane, exact: true }),
   ).toBeFocused();
