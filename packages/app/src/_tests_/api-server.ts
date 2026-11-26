@@ -39,7 +39,7 @@ export { startCatalogue, stopCatalogue } from "./catalogue-server";
 export {
   cleanupPublicationRuntime,
   previewSignInEmail,
-  previewSignInSecret,
+  previewSignInPassword,
 } from "./publication-runtime";
 export { apiLogPath, catalogueLogPath } from "./server-process";
 export type { StartOutcome } from "./server-process";

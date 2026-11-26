@@ -3,10 +3,14 @@
 This is the account entry guide for the [App package](./README.md).
 
 Sign-in is one magic-link process for new and returning readers; GitHub
-sign-in, connection and App installation each land on their own route. A
+sign-in, connection and App installation each land on their own route. Where
+the API's configuration answer names a shared account, as a PR preview's
+does, sign in also takes that account's password under the email form, as
+[Preview sign-in](../../docs/protocol/cloud/preview-sign-in.md#sign-in-section)
+defines. A
 credential leaves the address before the router records it, and an accepted
-`returnTo` destination survives email, GitHub and desktop grant sign-in byte
-for byte or becomes `/dashboard`. Inside the desktop shell, sign in and sign
+`returnTo` destination survives email, GitHub, desktop grant and password
+sign-in byte for byte or becomes `/dashboard`. Inside the desktop shell, sign in and sign
 up open the browser instead: the entry keeps a verifier in its tab and opens
 `/connect/desktop` for the verifier's challenge, that page names the
 browser's account and after **Open Mokly** hands the app a one-use grant

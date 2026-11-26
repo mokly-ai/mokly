@@ -1,0 +1,40 @@
+# Optional request fields accept an explicit null
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 7, "Preview exchange accepts undeclared null destinations", joined with the same gap in four older fields that its check found outside the scope. The check lowered the severity to Low.
+- **Location:** `crates/mkc-api/src/input.rs:121-122` and `:140-141`, `crates/mkc-api/src/github/input.rs:10-11` and `:23-24`, `crates/mkc-api/src/desktop_grant_input.rs:14-15`, `crates/mkc-api/src/input.rs:82-85` and `:152-154` (`present_boolean`), `crates/mkc-api/src/github/input.rs:19-22` and `:56-60` (`candidate_installation`), `docs/api/openapi.json:6308`, `:6943`, `:7081`, `:7515` and `:8517`, `packages/app/src/api/generated/schema.ts:1337`, `:1491`, `:1545`, `:1653` and `:1990`, and `crates/mkc-api/src/contract/_tests_/request_tests.rs:28` and `:71`.
+- **Reason:** The recommended option refuses requests that the API accepts today, and the always-on rules leave a new rejection to the user.
+- **Category:** Docs or spec.
+
+- **Terms:**
+  - **`returnTo`:** the optional app route to which a sign-in or a GitHub flow returns the reader. The API replaces a missing or rejected value with `/dashboard`.
+  - **Present decoder:** a serde `deserialize_with` function that decodes the inner type directly. JSON null then fails, while `#[serde(default)]` still turns an omitted field into `None`.
+- **Background:**
+  - Five request fields are `Option<String>` with `#[schema(nullable = false)]` and no serde attribute:
+    - `returnTo` of the email-link request, `POST /v1/auth/magic-links`, in `crates/mkc-api/src/input.rs:121-122`.
+    - `returnTo` of the preview password exchange, `POST /v1/auth/preview`, in `crates/mkc-api/src/input.rs:140-141`.
+    - `returnTo` of `Start`, the body of `POST /v1/auth/github` and `POST /v1/github/connection`, in `crates/mkc-api/src/github/input.rs:10-11`.
+    - `returnTo` of `Install`, the body of `POST /v1/github/installations`, in `crates/mkc-api/src/github/input.rs:23-24`.
+    - `returnTo` of the desktop grant request, `POST /v1/auth/desktop/grants`, in `crates/mkc-api/src/desktop_grant_input.rs:14-15`.
+  - OpenAPI declares each of them as an optional `{"type": "string"}` that is not nullable, at `docs/api/openapi.json:6308`, `:6943`, `:7081`, `:7515` and `:8517`. The generated app types say `returnTo?: string`.
+  - serde decodes JSON null into `None` for an `Option` field. So the API treats `"returnTo": null` as an omitted field, admits the request and uses `/dashboard`.
+  - Two fields already refuse null with a present decoder: `automaticBuilds` of the project update, through `present_boolean`, and `installationId` of `Install`, through `candidate_installation`.
+  - `no_optional_request_property_becomes_nullable` in `request_tests.rs:71` checks that no optional request property of the OpenAPI document accepts null. `serde_optional_inputs_stay_optional_and_nonnullable` in `request_tests.rs:28` checks that three of these fields decode an omitted value to `None`. No test sends null to the decoders.
+  - `docs/protocol/cloud/rest-api.md:23-25` says that the schemas' nullability matches the API's serialized data. No protocol page says what an explicit null in a request means.
+- **Problem:** The API accepts a request shape that the published contract refuses. A client that validates against OpenAPI refuses `"returnTo": null`, while the API answers it as if the field were absent.
+- **Impact if no action:** Clients and the API disagree on public request shapes, so the contract does not fully describe what the API accepts. Each new optional request field that copies the pattern widens the gap.
+- **Root question:** What should an optional request field such as `returnTo` accept when a caller sends an explicit null, so that the contract and the runtime agree?
+- **Options:**
+  - **A.** Refuse explicit null for each of the five fields with a present decoder, and keep omission valid. Null then fails with `validation-failed` before admission. Add a null case to the tests of each endpoint. For the preview exchange, add it to `crates/mkc-api/src/_tests_/dispatch_tests.rs`, which checks that a malformed body fails before admission. Effort: Small.
+  - **B.** Declare null as equal to omission for the preview exchange only. Mark its field nullable, regenerate OpenAPI and the app types, and say it in `docs/protocol/cloud/preview-sign-in.md`. The four other fields keep the gap. Effort: Small.
+  - **C.** Use one shared present decoder for every optional request field. Add a runtime twin of `no_optional_request_property_becomes_nullable` that sends null for each optional request property and expects a refusal. The twin is a test for the class, so it needs the user's approval. Effort: Medium.
+  - **D.** Add an `Omittable<T>` type for optional request fields. It holds an absent field or a present value, never a null. Move every optional request field to it. Effort: Medium.
+  - **E.** Validate each request body against its OpenAPI schema at runtime, before decoding. It also catches every other difference between the schemas and the decoders. Effort: Large.
+  - **F.** Declare null as equal to omission for every optional request field. Mark each field nullable, regenerate OpenAPI and the app types, and update the protocol. Effort: Medium.
+- **Left out:** Remove the `returnTo` fields. Each one carries an approved return destination.
+- **Wider fix:** C. One decoder refuses null for every optional field, and its runtime twin catches a new field that skips the decoder. D is the type-only form of the same fix.
+- **Previous examples:** `automaticBuilds` and `installationId`, which refuse null with present decoders. Commit `5cba4dc4b` brought the decoder of the project update into this repository.
+- **Related:** `plans/follow-ups/request-bodies-accept-json-arrays.md`, a shared wider fix: option E here validates each body against its schema, which also refuses a JSON array where OpenAPI declares an object.
+- **Recommendation:** A, for each of the five fields. It matches the published non-null strings and keeps malformed input out of admission. C best protects the codebase after the merge, when the user approves its runtime twin.
+- **Action:** ask the user, because option A refuses requests that the API accepts today, a new rejection that the always-on rules leave to the user.

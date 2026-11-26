@@ -89,6 +89,16 @@ export async function open(page: Page, path: string): Promise<void> {
   await ready(page);
 }
 
+/**
+ * Open sign in and wait until it has read the configuration answer. Until
+ * then it draws its wait, which looks like the form, so a test that moves
+ * focus or measures the page starts from the form itself.
+ */
+export async function openSignIn(page: Page): Promise<void> {
+  await open(page, "/sign-in");
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+}
+
 /** Sign one new person in through the real magic-link process. */
 export async function signIn(
   page: Page,

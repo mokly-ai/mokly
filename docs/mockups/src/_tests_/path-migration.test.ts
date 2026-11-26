@@ -14,8 +14,9 @@ test("every earlier entry has its exact file-derived path and variant slug", () 
   );
   // `design/skeleton/comments` drew the three bars that the placeholder forms
   // replaced, so it left the catalogue with them. `design/site/pricing` left
-  // with the site's pricing page.
-  assert.equal(new Set(mapping.map(({ oldId }) => oldId)).size, 275);
+  // with the site's pricing page, and `product/account/callback/preview-invalid`
+  // and its failure left with the preview's sign-in link.
+  assert.equal(new Set(mapping.map(({ oldId }) => oldId)).size, 273);
   for (const expected of mapping) {
     assert.ok(isEntryPath(expected.path), expected.path);
     const entry = entries.get(expected.path);

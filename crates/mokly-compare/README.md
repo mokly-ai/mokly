@@ -434,7 +434,6 @@ cargo test -p mokly-compare --test dependencies_tests
 
 ```bash
 cargo clippy -p mokly-compare --all-targets -- -D warnings
-cargo test -p mokly-compare --test pnpm_modules_purge_tests
 ```
 
 Consumers enable the `mock` feature to use every public trait with unimock.
@@ -447,23 +446,17 @@ lockfiles from `tests/fixtures/`. To refresh a lockfile, use the test's
 manifest and local dependency files with
 `npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund`.
 
-On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
-base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
-It runs the pinned pnpm 10.34.7, 11.20.0, and 12.14.0 CLIs from the
-repository's development dependencies, with and without `CI` and
-`GITHUB_ACTIONS` in the parent environment. The cases for one pnpm version
-read the same Git commit and use separate extraction and install caches.
-Two cases run at a time. Run `npm ci` at the repository root before you run
-the crate tests. The test fails when a pinned CLI is missing.
-
-The Node tests in `tests/static_base_managers.test.ts` run cold builds with
-pnpm and both Yarn families from local archives.
-`tests/static_base_registry.test.ts` runs one cold build per manager from a
-local registry that requires the user token. Pinned test CLIs come from
-development dependencies, and no test uses the internet.
-`tests/static_base_manager_ci.test.ts` runs the four base-manager files and
-`tests/static_cold_base_tiers.test.ts` with `CI=true` and
-`GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
+The Node tests in `tests/static_base_managers.test.ts` and
+`tests/static_base_registry.test.ts` run cold builds from local archives and
+from a local registry that requires the user token. They install with Yarn
+Berry and the pinned pnpm 11 and 12 CLIs. The unit tests of this crate cover
+the arguments, versions, and environment of pnpm 10 and Yarn Classic. One
+cold build still installs with the pinned pnpm 10 CLI, and
+`tests/static_base_manager_mirror.test.ts` and
+`tests/static_base_classic_paths.test.ts` install with Yarn Classic. The
+install environment leaves out `CI` and `GITHUB_ACTIONS`, so a CI install
+runs as a local one does. Pinned test CLIs come from development
+dependencies, and no test uses the internet.
 
 ### Key Code
 

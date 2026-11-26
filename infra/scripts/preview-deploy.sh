@@ -17,7 +17,6 @@ if [[ -n $(preview_kubectl --namespace "$namespace" get pvc data-postgres-0 --ig
 fi
 preview_ensure_secret postgres-credentials "$pvc_present"
 preview_ensure_secret catalogue-signing-key "$pvc_present"
-preview_ensure_secret preview-sign-in false
 
 preview_fetch_dns_token
 python3 infra/scripts/preview-lifecycle.py dns-upsert "$environment" "$preview_dns_token"
@@ -56,9 +55,11 @@ preview_rollback() {
   exit "$status"
 }
 
+preview_sync_verifier
 chart=infra/helm/mokly-cloud
 if helm upgrade --install "$preview_release" "$chart" --namespace "$namespace" \
   -f "$chart/environments/preview-pr.yaml" -f .context/release-values.json \
+  --set-string "preview.signInRolloutMarker=$preview_sign_in_rollout_marker" \
   --wait --timeout 15m; then
   :
 else

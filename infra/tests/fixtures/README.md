@@ -152,6 +152,16 @@ errors as absence and require a final empty listing. Failed list/removal calls
 count as absence only when the entire diagnostic matches the pinned CLI's
 no-object message; any additional error remains a failure.
 
+`gcloud-verifier-no-versions.stderr.txt` keeps the public
+`gcloud secrets versions access latest` diagnostic for a secret with no
+version. The fixture substitutes a test project number and the verifier ID.
+The companion exit fixture uses status 1. The Actions variant adds the
+credential-file suffix from `CredentialInfo.GetInfoString` in Cloud CLI
+585.0.0 with a synthetic account and path. The doubles replay stderr and
+exit status without a live Secret Manager call.
+[Public CLI output](https://stackoverflow.com/questions/75116369/google-cloud-secret-is-there-or-not)
+[Cloud CLI 585.0.0 archive](https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-585.0.0-linux-x86_64.tar.gz)
+
 `api-log-invitation.txt` holds two lines recorded from the live preview API
 on 2026-09-23 (token and return address redacted, host renamed to the fixture
 preview): the invitation email to an address, linking to the old `/sign-in` path, and

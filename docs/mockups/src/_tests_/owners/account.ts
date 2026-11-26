@@ -1,5 +1,21 @@
 import type { Owner } from "../app-regions";
 
+/**
+ * Sign in's password section, which the application draws from a module of
+ * its own once it reads its configuration answer. The entry screen writes the
+ * rest of the panel: the GitHub action and the email form, which stay at rest
+ * on every page of the section but its empty state, where the email form is
+ * empty too. That state answers to the section, as every state answers to its
+ * screen.
+ */
+const passwordSection = {
+  region: "panelled",
+  files: [
+    "screens/account/entry-screen.tsx",
+    "screens/account/preview-password.tsx",
+  ],
+} as const satisfies Owner;
+
 export const accountOwners = {
   "product/account/sign-in": {
     region: "panelled",
@@ -52,6 +68,10 @@ export const accountOwners = {
     region: "panelled",
     files: ["screens/account/entry-screen.tsx"],
   },
+  "product/account/sign-in/preview-password": passwordSection,
+  "product/account/sign-in/preview-password/password-refused": passwordSection,
+  "product/account/sign-in/preview-password/failure": passwordSection,
+  "product/account/sign-in/preview-password/signing-in": passwordSection,
   // Sign in in the Mac app draws the desktop entry; the window buttons over
   // the header are the window's, and the header holds no control of its own.
   "product/account/sign-in/mac-app": {

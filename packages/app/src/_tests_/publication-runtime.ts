@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 import { scratchDirectory } from "../../../../apps/_tests_/scratch.mjs";
@@ -14,7 +14,7 @@ import {
   catalogueOrigin,
   catalogueSigningKey,
 } from "./origins";
-import { runtimeDirectory } from "./server-process";
+import { repositoryRoot, runtimeDirectory } from "./server-process";
 
 let isolatedDatabase: IsolatedDatabase | undefined;
 let blobRoot: string | undefined;
@@ -23,8 +23,14 @@ let previousTestDatabaseUrl: string | undefined;
 /** The development-only preview identity exercised by the browser suite. */
 export const previewSignInEmail = "preview@mokly.ai";
 
-/** The reusable development credential carried only in callback fragments. */
-export const previewSignInSecret = "2".repeat(64);
+const [previewSignInPassword, previewSignInVerifier] = readFileSync(
+  join(repositoryRoot, "infra/tests/fixtures/preview-verifier.txt"),
+  "utf8",
+)
+  .trimEnd()
+  .split("\n");
+
+export { previewSignInPassword };
 
 /** What the API and catalogue server must share for one isolated test run. */
 export function publicationEnvironment(): Record<string, string> {
@@ -42,7 +48,7 @@ export function publicationEnvironment(): Record<string, string> {
     MKC_FILE_STORE: "local",
     MKC_FILE_STORE_ROOT: blobRoot,
     MKC_PREVIEW_SIGN_IN_EMAIL: previewSignInEmail,
-    MKC_PREVIEW_SIGN_IN_SECRET: previewSignInSecret,
+    MKC_PREVIEW_SIGN_IN_VERIFIER: previewSignInVerifier,
   };
 }
 

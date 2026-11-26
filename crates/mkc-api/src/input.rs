@@ -1,5 +1,6 @@
 //! Strict JSON request models; unknown fields are rejected.
 
+use std::fmt::{self, Debug, Formatter};
 use std::result::Result;
 
 use mkc_domain::ids::UserId;
@@ -129,12 +130,23 @@ pub(crate) struct VerifyLink {
     pub(crate) token: String,
 }
 
-#[derive(Clone, Debug, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[schema(as = PreviewSignIn)]
 pub(crate) struct PreviewCredential {
-    #[schema(pattern = "^[a-f0-9]{64}$")]
-    pub(crate) secret: String,
+    /// Preview password, from 1 to 1024 UTF-8 bytes.
+    #[schema(format = Password, min_length = 1, max_length = 1024)]
+    pub(crate) password: String,
+    #[schema(nullable = false)]
+    pub(crate) return_to: Option<String>,
+}
+
+impl Debug for PreviewCredential {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PreviewCredential")
+            .finish_non_exhaustive()
+    }
 }
 
 fn present_boolean<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<bool>, D::Error> {

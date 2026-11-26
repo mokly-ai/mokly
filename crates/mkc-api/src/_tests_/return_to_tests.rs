@@ -124,6 +124,7 @@ async fn magic_link_issue_and_exchange_preserve_the_exact_return_destination() {
     let router = RouterFactory {
         trusted_proxies: TrustedProxies::default(),
         dispatcher: Arc::new(ApiDispatcher {
+            preview_hash_slots: Default::default(),
             builds: Arc::new(Unimock::new(())),
             auth: Arc::new(auth),
             platform: Arc::new(platform),

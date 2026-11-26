@@ -5,17 +5,19 @@ use std::collections::BTreeMap;
 use mkc_domain::ids::OrganizationId;
 use uuid::Uuid;
 
+use crate::billing::service::BillingService;
 use crate::dispatch::{ApiDispatcher, Request};
 use crate::error::{ApiError, Result};
 use crate::operation::Operation;
 use crate::payload::{Payload, Reply};
 
 impl ApiDispatcher {
-    pub(crate) fn dispatch_billing(&self, request: Request) -> Result<Reply> {
-        let billing = self
-            .billing
-            .as_ref()
-            .ok_or(ApiError::OperationUnavailable)?;
+    /// Handle a billing operation after the gate selects the service.
+    pub(crate) fn dispatch_billing(
+        &self,
+        request: Request,
+        billing: &dyn BillingService,
+    ) -> Result<Reply> {
         if request.operation == Operation::ReceiveBillingWebhook {
             billing.accept(
                 request
