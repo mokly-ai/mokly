@@ -14,6 +14,7 @@ import {
   expectationViolations,
   tagViolations,
 } from "./helpers/design_link_checks.js";
+import { reasonViolations } from "./helpers/design_reasons.js";
 import {
   adoptionViolations,
   componentSheetViolations,
@@ -162,6 +163,14 @@ test(
   setup,
   async () => {
     assert.deepEqual(highlightViolations(await served()), []);
+  },
+);
+
+test(
+  "each Canvas design reads one sentence per depicted reason",
+  setup,
+  async () => {
+    assert.deepEqual(reasonViolations(await served()), []);
   },
 );
 
