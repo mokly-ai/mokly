@@ -38,9 +38,17 @@ fn display(suite: VerificationSuite, shard: Option<&str>) -> Vec<String> {
         .collect()
 }
 
-fn test_shard(first: &[&str], partition: &str, options: &str, doc: bool) -> Vec<String> {
+/// The commands of one test shard. `scope` is the scope option of the shard
+/// command, which the doc tests do not take.
+fn test_shard(
+    first: &[&str],
+    partition: &str,
+    options: &str,
+    scope: &str,
+    doc: bool,
+) -> Vec<String> {
     let mut expected: Vec<String> = first.iter().chain(&BUILDS).map(|c| (*c).into()).collect();
-    expected.push(format!("{SHARD} {partition}{options}"));
+    expected.push(format!("{SHARD} {partition}{options}{scope}"));
     if doc {
         expected.push(format!("{DOC}{options}"));
     }
@@ -57,11 +65,11 @@ fn native_shard_one_lints_and_later_shards_split_the_tests() {
     let options = " --no-fail-fast";
     assert_eq!(
         display(native, Some("2/3")),
-        test_shard(&[], "1/2", options, true)
+        test_shard(&[], "1/2", options, " --native", true)
     );
     assert_eq!(
         display(native, Some("3/3")),
-        test_shard(&[], "2/2", options, false)
+        test_shard(&[], "2/2", options, " --native", false)
     );
     assert_eq!(display(native, Some("1/1")), display(native, None));
 }
@@ -87,11 +95,11 @@ fn repository_shard_one_checks_and_later_shards_install_then_split_the_tests() {
     }));
     assert_eq!(
         display(repository, Some("2/3")),
-        test_shard(&["npm ci"], "1/2", "", true)
+        test_shard(&["npm ci"], "1/2", "", "", true)
     );
     assert_eq!(
         display(repository, Some("3/3")),
-        test_shard(&["npm ci"], "2/2", "", false)
+        test_shard(&["npm ci"], "2/2", "", "", false)
     );
     assert_eq!(display(repository, Some("1/1")), display(repository, None));
 }
@@ -111,9 +119,11 @@ fn the_shards_of_a_suite_run_every_command_and_test_partition_of_the_complete_su
             for index in 1..=total {
                 for command in display(suite, Some(&format!("{index}/{total}"))) {
                     match command.strip_prefix(&format!("{SHARD} ")) {
-                        Some(partition) => {
-                            partitions.push(partition.replace(" --no-fail-fast", ""))
-                        }
+                        Some(partition) => partitions.push(
+                            partition
+                                .replace(" --no-fail-fast", "")
+                                .replace(" --native", ""),
+                        ),
                         None => {
                             covered.insert(command);
                         }

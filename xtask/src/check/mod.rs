@@ -3,6 +3,7 @@
 mod cloud_commands;
 mod cloud_shards;
 mod commands;
+pub(crate) mod native_scope;
 pub(crate) mod request;
 pub(crate) mod runner;
 mod rust_commands;
@@ -23,6 +24,10 @@ mod repository_tests;
 #[cfg(test)]
 #[path = "_tests_/native_tests.rs"]
 mod native_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_scope_tests.rs"]
+mod native_scope_tests;
 
 #[cfg(test)]
 #[path = "_tests_/rust_shard_tests.rs"]

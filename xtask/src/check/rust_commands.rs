@@ -2,6 +2,7 @@
 
 use crate::command::CommandSpec;
 
+use super::native_scope::TestScope;
 use super::request::Shard;
 
 /// Leading shards of a sharded repository or native suite that run checks
@@ -59,12 +60,15 @@ fn package_builds() -> [CommandSpec; 5] {
 }
 
 /// Build the inputs of the Rust tests, then run the test units of one test
-/// shard. The first test shard also runs the doc tests.
-pub(super) fn test_shard(shard: Shard, no_fail_fast: bool) -> Vec<CommandSpec> {
-    let [_, doc] = rust_tests(no_fail_fast);
+/// shard in one scope. The first test shard also runs the doc tests.
+pub(super) fn test_shard(shard: Shard, no_fail_fast: bool, scope: TestScope) -> Vec<CommandSpec> {
+    let [_, doc] = rust_tests(no_fail_fast, scope);
     let mut tests = cargo(&["xtask", "rust-test-shard", "--partition"]).args([shard.to_string()]);
     if no_fail_fast {
         tests = tests.args(["--no-fail-fast"]).keep_going();
+    }
+    if scope == TestScope::Native {
+        tests = tests.args(["--native"]);
     }
     let mut commands = vec![require_nextest()];
     commands.extend(test_builds());
@@ -75,23 +79,24 @@ pub(super) fn test_shard(shard: Shard, no_fail_fast: bool) -> Vec<CommandSpec> {
     commands
 }
 
-/// Run every Mokly test target in parallel with nextest, then the doc tests,
-/// which nextest does not run. With `no_fail_fast`, both commands report
-/// every failure, and the doc tests run after failed tests.
-pub(super) fn rust_tests(no_fail_fast: bool) -> [CommandSpec; 2] {
-    let tests = nextest(&[], no_fail_fast);
+/// Run every Mokly test target of one scope in parallel with nextest, then
+/// every doc test, which nextest does not run. With `no_fail_fast`, both
+/// commands report every failure, and the doc tests run after failed tests.
+pub(super) fn rust_tests(no_fail_fast: bool, scope: TestScope) -> [CommandSpec; 2] {
+    let tests = nextest(&[], no_fail_fast, scope);
     let doc = mokly_cargo(&["test"])
         .args(["--doc"])
         .args(fail_fast_options(no_fail_fast).iter().copied());
     [tests, doc]
 }
 
-/// Run the given Cargo target selections of the Mokly packages with nextest.
-/// Every shard selects the same packages, so Cargo resolves the same
-/// dependency features as the complete suite.
-pub(super) fn nextest(targets: &[String], no_fail_fast: bool) -> CommandSpec {
+/// Run the given Cargo target selections of the Mokly packages with nextest,
+/// limited to the tests of the scope. Every shard selects the same packages,
+/// so Cargo resolves the same dependency features as the complete suite.
+pub(super) fn nextest(targets: &[String], no_fail_fast: bool, scope: TestScope) -> CommandSpec {
     let tests = mokly_cargo(&["nextest", "run"])
         .args(fail_fast_options(no_fail_fast).iter().copied())
+        .args(scope.nextest_args())
         .args(targets.iter().cloned());
     if no_fail_fast {
         tests.keep_going()
@@ -114,22 +119,22 @@ pub(super) fn cargo_metadata() -> CommandSpec {
     cargo(&["metadata", "--format-version=1", "--locked"])
 }
 
-/// Build the host binary, then run the Rust tests. A sharded suite runs the
-/// formatting and Clippy checks on shard 1 and one weighted share of the test
-/// units on each later shard; the first test shard also runs the doc tests.
-/// The doc tests also run after failed tests, so one job reports both kinds
-/// of failure.
+/// Build the host binary, then run the Rust tests of the native scope. A
+/// sharded suite runs the formatting and Clippy checks on shard 1 and one
+/// weighted share of the test units on each later shard; the first test shard
+/// also runs the doc tests. The doc tests also run after failed tests, so one
+/// job reports both kinds of failure.
 pub(super) fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
     match RustPart::of(shard) {
         RustPart::Complete => {
             let mut commands = vec![require_nextest(), build_native()];
             commands.extend(rust_lints());
             commands.extend(package_builds());
-            commands.extend(rust_tests(true));
+            commands.extend(rust_tests(true, TestScope::Native));
             commands
         }
         RustPart::Checks => rust_lints().into(),
-        RustPart::Tests(tests) => test_shard(tests, true),
+        RustPart::Tests(tests) => test_shard(tests, true, TestScope::Native),
     }
 }
 

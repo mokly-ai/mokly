@@ -29,12 +29,15 @@ export interface VerificationReportFixture {
 }
 
 /**
- * Passed reports of every viewer and browser shard per runtime. Each viewer
- * shard holds two files and each browser shard holds two tests.
+ * Passed reports of every viewer shard per runtime and of every browser shard
+ * per browser runtime. Each viewer shard holds two files and each browser
+ * shard holds two tests. The defaults give the release profile: the viewer
+ * on Node 22.15.0 and Node 24, and the browser on Node 22.15.0.
  */
 export function ciReports(
   runtimes: readonly string[] = ["node-22.15.0", "node-24"],
   totals: Readonly<CiShardTotals> = ciShards,
+  browserRuntimes: readonly string[] = ["node-22.15.0"],
 ): VerificationReportFixture[] {
   return runtimes.flatMap((runtime): VerificationReportFixture[] => {
     const files = Array.from(
@@ -106,7 +109,7 @@ export function ciReports(
         };
       },
     );
-    return [...viewer, ...browser];
+    return browserRuntimes.includes(runtime) ? [...viewer, ...browser] : viewer;
   });
 }
 

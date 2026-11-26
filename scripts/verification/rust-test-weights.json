@@ -1,6 +1,6 @@
 {
   "defaultSeconds": 3,
-  "docSeconds": 60,
+  "docSeconds": 150,
   "compileSeconds": {
     "--bin mokly": 20,
     "--bin xtask": 0,
