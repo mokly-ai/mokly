@@ -128,6 +128,19 @@ repository. It reads no file and runs no comparison, so a pass does not prove
 that a comparison works.
 The E2B team key stays in the operator process.
 
+Choose the build reference to probe:
+
+- A new candidate uses the `build_reference` of its generated
+  `$TEMPLATE_DIRECTORY/e2b.toml`, as the commands below read it.
+- A recheck of a release in use takes the environment's `builds.template`
+  value and changes no configuration. Set `CANDIDATE_REFERENCE` to that
+  value instead of reading the generated file.
+- A production promotion uses the reference that passed the main-preview proof.
+- A rollback uses only a previous reference whose release meets the current
+  [template contract](../protocol/cloud/cloud-build-runner.md#template). When
+  no recorded release meets it, disable builds as the last section says,
+  then publish and verify a new release.
+
 Set the candidate build reference from the generated configuration:
 
 ```sh
@@ -248,7 +261,8 @@ proof is separate from the repository's local checks.
 
 For a template rotation, publish and verify `mokly-build-v<N+1>`, change only
 the reviewed build reference, and roll the API. Keep the previous release ready
-for rollback. Do not change the environment deployment ID during rotation;
+for rollback when it meets the current template contract. A contract change,
+such as the Git floor, can retire it. Do not change the environment deployment ID during rotation;
 the new worker must reconcile sandboxes made by the previous worker.
 
 For key rotation, create a replacement key in the same E2B team. Verify the
@@ -263,8 +277,9 @@ template or add a key version through Terraform.
 A provider failure retries under the build lifecycle. It does not make API
 health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
-Restore the previous verified build reference or key version and restart the API
-if verification fails. Keep keys needed by old pods until recovery completes.
+If verification fails, restore the previous key version, or a previous build
+reference chosen as "Verify The Streaming Boundary" says, and restart the API.
+When no build reference qualifies, disable builds. Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
 [live-lease renewal rule](../protocol/cloud/cloud-builds.md#claims-leases-and-retries).
@@ -333,7 +348,8 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   `mokly build --config mokly.config.json --base origin/main` of a pull
   request printed `base <sha>: [mokly/config-invalid] mokly.config.json: unknown`,
   and the published index had `changesStatus: "unavailable"`. The probe's Git
-  check rejects this Git, and no probe with that check has run against v3.
+  check rejects this Git, and no probe with that check has run against v3. It
+  does not meet the current template contract, so do not roll back to it.
 - `mokly-build-v4` was a candidate that installed Git from bookworm-backports.
   It still had Git 2.39.5, so it was deleted. It is not a release.
 - `mokly-build-v5`, build reference

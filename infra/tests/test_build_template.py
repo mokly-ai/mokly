@@ -124,7 +124,7 @@ class BuildTemplateTests(unittest.TestCase):
 
     def run_with_host_tools(self, argv, **kwargs):
         """Run the probe's npm ci and Git checks with host tools, so they judge the real argv."""
-        if argv[0] == "git" and argv[1:] != ["--version"]:
+        if argv[0] == "git":
             return self.run_with_host_git(argv, **kwargs)
         if argv[:2] != ["npm", "ci"]:
             return self.run_command(argv, **kwargs)
