@@ -35,8 +35,11 @@
     release pull request audits against the last released tags", at
     `tests/public_export_ratchet_git.test.ts:233`, requires the audit to use
     the last released tags then.
-  - The test "the repository public surface has complete release notes" at
-    line 242 runs the ratchet on the repository itself.
+  - The test "the public export audit covers each released package from its
+    newest release tag" at line 242 runs the ratchet on the repository
+    itself. Until 2026-11-26 its name was "the repository public surface has
+    complete release notes", and it also checked the findings of the audit,
+    which the Repository suite gate checks too.
   - CI checks out the full history with `fetch-depth: 0` in
     `.github/workflows/ci.yml`.
 - **Problem:**

@@ -8,12 +8,17 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import { test } from "./serve_comparison_test.js";
+import {
+  closeReadOnlyCatalogue,
+  test,
+} from "./serve_comparison_read_only_test.js";
 import {
   canvasFrame,
   openPanelSheet,
   openPanelTab,
 } from "./workspace_actions.js";
+
+test.afterAll(closeReadOnlyCatalogue);
 
 /** The labels of the panel's tabs and the label of the selected one. */
 async function expectTabs(

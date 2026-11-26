@@ -1,7 +1,7 @@
 /**
  * Renewal of a loaded selected comparison in Serve: one HEAD request renews
  * the generation before new panes load, later switches share it, Current and
- * navigation fence it, and a new revision cancels it in place.
+ * a saved variant's sibling fence it, and a new revision cancels it in place.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -9,7 +9,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
 import { comparisonFrames, modeButton, navRow } from "./comparison_ui.js";
-import { test } from "./serve_comparison_test.js";
+import {
+  closeReadOnlyCatalogue,
+  test,
+} from "./serve_comparison_read_only_test.js";
+import { test as editableTest } from "./serve_comparison_test.js";
 import {
   generationOf,
   holdRenewal,
@@ -25,6 +29,8 @@ import {
   openPanelTab,
   setFrames,
 } from "./workspace_actions.js";
+
+test.afterAll(closeReadOnlyCatalogue);
 
 /** A frame of the canvas, named `name`, that holds a compared document. */
 function comparedFrame(page: Page, name: RegExp): Locator {
@@ -113,56 +119,34 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
   }
 });
 
-for (const destination of ["Current", "another screen"] as const)
-  test(`a pending renewal cannot replace ${destination}`, async ({
-    page,
-    changes,
-  }) => {
-    await openOverlay(page, changes.paths.changed);
-    const pending = await holdRenewal(page);
-    try {
-      await openPanelTab(page, "Inspect");
-      await chooseViewport(page, "mobile");
-      await pending.arrived;
-      if (destination === "Current") {
-        await openPanelTab(page, "Changes");
-        await modeButton(page, "Current").click();
-      } else {
-        await navRow(page, changes.paths.component).click();
-        // The canvas shows the compare only while Changes is the selected
-        // tab, so the destination's frames are checked there.
-        await openPanelTab(page, "Changes");
-      }
-      await pending.release();
-      // Leaving the comparison cancelled the renewal before its response.
-      expect(pending.outcomes()).toEqual(["cancelled"]);
-      await expect(comparisonFrames(page)).toHaveCount(0);
-      // The canvas shows the destination's current frames.
-      await expect(
-        page.getByRole("figure", {
-          name:
-            destination === "Current"
-              ? /^Mobile · Light\b/u
-              : /^Card · Light\b/u,
-        }),
-      ).toBeVisible();
-      await openPanelTab(page, "Changes");
-      await expect(modeButton(page, "Current")).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      // The destination's address names the kept Mobile viewport.
-      if (destination === "another screen")
-        await expect(page).toHaveURL(
-          new RegExp(
-            `/view/${changes.paths.component}/\\?viewport=mobile$`,
-            "u",
-          ),
-        );
-    } finally {
-      pending.unblock();
-    }
-  });
+// `comparison_row_cancel.test.tsx` covers a renewal that another workspace
+// cancels; this journey keeps the cancellation of the browser's request.
+test("a pending renewal cannot replace Current", async ({ page, changes }) => {
+  await openOverlay(page, changes.paths.changed);
+  const pending = await holdRenewal(page);
+  try {
+    await openPanelTab(page, "Inspect");
+    await chooseViewport(page, "mobile");
+    await pending.arrived;
+    await openPanelTab(page, "Changes");
+    await modeButton(page, "Current").click();
+    await pending.release();
+    // Leaving the comparison cancelled the renewal before its response.
+    expect(pending.outcomes()).toEqual(["cancelled"]);
+    await expect(comparisonFrames(page)).toHaveCount(0);
+    // The canvas shows the current frames.
+    await expect(
+      page.getByRole("figure", { name: /^Mobile · Light\b/u }),
+    ).toBeVisible();
+    await openPanelTab(page, "Changes");
+    await expect(modeButton(page, "Current")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  } finally {
+    pending.unblock();
+  }
+});
 
 test("renewal failure offers a retry that reacquires the selected comparison", async ({
   page,
@@ -236,52 +220,55 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
   }
 });
 
-test("new evidence cancels renewal in place and the next comparison uses fresh snapshots", async ({
-  page,
-  changes,
-}) => {
-  const requests = selectedRequests(page);
-  await openOverlay(page, changes.paths.changed);
-  const frame = lightAfter(page);
-  await expect(frame.contentFrame().locator("h1")).toHaveText("After screen");
-  const snapshot = (await frame.getAttribute(PANE_SOURCE))!;
-  const root = page.locator("html");
-  await root.evaluate((element) =>
-    element.setAttribute("data-test-retained", "true"),
-  );
-  const pending = await holdRenewal(page);
-  try {
-    await openPanelTab(page, "Inspect");
-    await chooseViewport(page, "mobile");
-    await pending.arrived;
-    const consumer = changes.paths.consumer;
-    await changes.edit(
-      `specs/${consumer}.screen.html`,
-      '---\ntitle: Consumer renamed\n---\n<h1>Consumer screen</h1>\n<ui-card label="Card content"></ui-card>',
-      (index) =>
-        index.screens.find((entry) => entry.path === consumer)?.title ===
-        "Consumer renamed",
-    );
-    await expect(navRow(page, consumer)).toContainText("Consumer renamed");
-    await expect(root).toHaveAttribute("data-test-retained", "true");
-    await openPanelTab(page, "Changes");
-    await expect(modeButton(page, "Current")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    await pending.release();
-    // The new revision cancelled the renewal before its response.
-    expect(pending.outcomes()).toEqual(["cancelled"]);
-    await expect(comparisonFrames(page)).toHaveCount(0);
-    expect(requests).toHaveLength(1);
-    await loadComparison(page, "Overlay");
+// This test edits a source, so it owns a private Serve.
+editableTest(
+  "new evidence cancels renewal in place and the next comparison uses fresh snapshots",
+  async ({ page, changes }) => {
+    const requests = selectedRequests(page);
+    await openOverlay(page, changes.paths.changed);
+    const frame = lightAfter(page);
     await expect(frame.contentFrame().locator("h1")).toHaveText("After screen");
-    expect(generationOf((await frame.getAttribute(PANE_SOURCE))!)).not.toBe(
-      generationOf(snapshot),
+    const snapshot = (await frame.getAttribute(PANE_SOURCE))!;
+    const root = page.locator("html");
+    await root.evaluate((element) =>
+      element.setAttribute("data-test-retained", "true"),
     );
-    expect(requests).toHaveLength(2);
-    expect(requests[1]!.searchParams.get("path")).toBe(changes.paths.changed);
-  } finally {
-    pending.unblock();
-  }
-});
+    const pending = await holdRenewal(page);
+    try {
+      await openPanelTab(page, "Inspect");
+      await chooseViewport(page, "mobile");
+      await pending.arrived;
+      const consumer = changes.paths.consumer;
+      await changes.edit(
+        `specs/${consumer}.screen.html`,
+        '---\ntitle: Consumer renamed\n---\n<h1>Consumer screen</h1>\n<ui-card label="Card content"></ui-card>',
+        (index) =>
+          index.screens.find((entry) => entry.path === consumer)?.title ===
+          "Consumer renamed",
+      );
+      await expect(navRow(page, consumer)).toContainText("Consumer renamed");
+      await expect(root).toHaveAttribute("data-test-retained", "true");
+      await openPanelTab(page, "Changes");
+      await expect(modeButton(page, "Current")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await pending.release();
+      // The new revision cancelled the renewal before its response.
+      expect(pending.outcomes()).toEqual(["cancelled"]);
+      await expect(comparisonFrames(page)).toHaveCount(0);
+      expect(requests).toHaveLength(1);
+      await loadComparison(page, "Overlay");
+      await expect(frame.contentFrame().locator("h1")).toHaveText(
+        "After screen",
+      );
+      expect(generationOf((await frame.getAttribute(PANE_SOURCE))!)).not.toBe(
+        generationOf(snapshot),
+      );
+      expect(requests).toHaveLength(2);
+      expect(requests[1]!.searchParams.get("path")).toBe(changes.paths.changed);
+    } finally {
+      pending.unblock();
+    }
+  },
+);

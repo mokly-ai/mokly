@@ -13,19 +13,19 @@ declare global {
     startEvidence(
       index: CatalogueReadModel,
       details: readonly (readonly [DetailRequest, EntryDetailV4])[],
-      origin: string,
-      cross: boolean,
       sibling: "ready" | "pending" | "unavailable",
     ): void;
   }
 }
 
-window.startEvidence = (index, details, origin, cross, sibling) => {
+// The evidence cases check the viewer, so they mount the same-origin adapter
+// over the host's own origin.
+window.startEvidence = (index, details, sibling) => {
   window.evidence = startEvidenceHarness(
     index,
     details,
-    origin,
-    cross,
+    location.origin,
+    false,
     sibling,
   );
 };

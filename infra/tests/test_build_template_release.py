@@ -30,8 +30,8 @@ export class ServiceBusyError extends Error {}
 export function defaultBuildLogger() { return () => {}; }
 export function Template() { return { fromDockerfile: (dockerfile) => ({ dockerfile }) }; }
 Template.build = async (template, name, options) => {
-  const { onBuildLogs, ...connection } = options;
-  writeFileSync(process.env.STUB_RECORD, JSON.stringify({ seen, name, template, connection }));
+  const { onBuildLogs, ...buildOptions } = options;
+  writeFileSync(process.env.STUB_RECORD, JSON.stringify({ seen, name, template, buildOptions }));
   const mode = process.env.STUB_MODE;
   if (mode === "sdk") throw new TypeError(`Headers.set: "${options.apiKey}" is an invalid header value.`);
   if (mode === "provider") {
@@ -78,9 +78,9 @@ class BuildTemplateReleaseTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         record = json.loads(self.record.read_text())
         self.assertEqual(record["seen"], {key: None for key in ROUTING})
-        self.assertEqual(record["connection"], {
+        self.assertEqual(record["buildOptions"], {
             "apiKey": KEY, "apiUrl": "https://api.e2b.dev", "debug": False,
-            "cpuCount": 2, "memoryMB": 4096})
+            "cpuCount": 2, "memoryMB": 4096, "skipCache": True})
         self.assertEqual(record["name"], "mokly-build-v9")
         self.assertEqual(record["template"], {"dockerfile": "FROM e2bdev/base\n"})
 
