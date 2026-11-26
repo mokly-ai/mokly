@@ -215,6 +215,10 @@
     item also reaches Git helpers. Both items change the runtime words
     "except for the base install limits", so one branch can apply both
     answers.
+  - `plans/follow-ups/macos-stop-signal-eperm.md` records an EPERM that the
+    same macOS stop returned when the test clock stopped Git a few
+    milliseconds after its spawn. A change to the macOS walk can serve both
+    items.
 - **Recommendation:** A. It makes both pages true at Small effort, and each
   code option still leaves a case that the pages must name. C best protects
   the codebase, because it also narrows the recorded macOS limit.

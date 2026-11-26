@@ -8,6 +8,7 @@ use crate::error::Result;
 use crate::rust_file_length::RustFileLengthAuditor;
 
 use super::commands::{Step, browser_test_command, commands_for, steps_for};
+use super::native_scope::TestScope;
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{RustPart, cargo_metadata, nextest};
 use super::rust_partition::{Piece, Weights, shard_pieces};
@@ -23,8 +24,10 @@ pub(crate) trait CheckRunner: Send + Sync {
     fn task(&self, task: Task) -> Result<()>;
     /// Audit changed source/protocol files or every scoped file.
     fn source_file_length(&self, all: bool) -> Result<()>;
-    /// Run the Mokly Rust test units of one weighted test shard.
-    fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool) -> Result<()>;
+    /// Run the Mokly Rust test units of one weighted test shard, limited to
+    /// the tests of one scope.
+    fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool, scope: TestScope)
+    -> Result<()>;
 }
 
 /// Verification implementation backed by injected side-effect boundaries.
@@ -32,6 +35,9 @@ pub(crate) struct DefaultCheckRunner {
     command_runner: Arc<dyn CommandRunner>,
     rust_file_length_auditor: Arc<dyn RustFileLengthAuditor>,
     workspace: PathBuf,
+    /// The Rust test weights of the test shards. `None` reads the committed
+    /// weight file that the build embedded.
+    rust_test_weights: Option<Weights>,
 }
 
 impl DefaultCheckRunner {
@@ -45,6 +51,17 @@ impl DefaultCheckRunner {
             command_runner,
             rust_file_length_auditor,
             workspace,
+            rust_test_weights: None,
+        }
+    }
+
+    /// Place the Rust test shards by fixed weights instead of the committed
+    /// weight file, so that a weight refresh never changes a test result.
+    #[cfg(test)]
+    pub(super) fn with_rust_test_weights(self, weights: Weights) -> Self {
+        Self {
+            rust_test_weights: Some(weights),
+            ..self
         }
     }
 
@@ -128,15 +145,35 @@ impl CheckRunner for DefaultCheckRunner {
         Ok(())
     }
 
-    /// Reads the test units from Cargo metadata and selects the pieces of the
-    /// shard. One nextest command runs its whole units, and one more command
-    /// runs each slice of a split unit. A shard without pieces runs nothing.
-    /// With `no_fail_fast`, every command runs and the first failure returns.
-    fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool) -> Result<()> {
+    /// Reads the test units from Cargo metadata, drops each unit that the
+    /// scope leaves out as a whole, and selects the pieces of the shard from
+    /// the rest. One nextest command runs its whole units, and one more
+    /// command runs each slice of a split unit. Each command passes the
+    /// scope's filter. A shard without pieces runs nothing. With
+    /// `no_fail_fast`, every command runs and the first failure returns.
+    fn rust_test_shard(
+        &self,
+        partition: Shard,
+        no_fail_fast: bool,
+        scope: TestScope,
+    ) -> Result<()> {
         let metadata = self
             .command_runner
             .output(&cargo_metadata().in_directory(self.workspace.clone()))?;
-        let pieces = shard_pieces(&test_units(&metadata)?, &Weights::embedded()?, partition);
+        let embedded;
+        let weights = match &self.rust_test_weights {
+            Some(weights) => weights,
+            None => {
+                embedded = Weights::embedded()?;
+                &embedded
+            }
+        };
+        let units = test_units(&metadata)?
+            .into_iter()
+            .filter(|(unit, packages)| !scope.leaves_out(unit, packages))
+            .map(|(unit, _)| unit)
+            .collect();
+        let pieces = shard_pieces(&units, weights, partition);
         if pieces.is_empty() {
             eprintln!("Rust test shard {partition} has no test units");
             return Ok(());
@@ -150,7 +187,7 @@ impl CheckRunner for DefaultCheckRunner {
             .then_some(whole)
             .into_iter()
             .chain(pieces.iter().filter_map(Piece::slice_args))
-            .map(|targets| nextest(&targets, no_fail_fast));
+            .map(|targets| nextest(&targets, no_fail_fast, scope));
         let mut first_failure = None;
         for command in commands {
             if let Err(error) = self.run_command(command) {

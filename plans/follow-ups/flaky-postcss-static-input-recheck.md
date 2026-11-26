@@ -151,3 +151,12 @@ one stylesheet under `docs/mockups/styles/product/` and no other change,
 `[mokly/export-invalid] Inputs changed during the build`. Deleting the cached
 entry bundles under the Mokly cache directory made the next build pass. This
 gives a repeatable starting point for option A's trace.
+
+**Check, added 2026-11-25** from `calummoore/ci-speed-flaky-follow-ups-a-ube3`:
+the reproduction above no longer holds on `main` at `1f2f00024`. On Linux
+with Node 24.22.1, `npm run mockups:build` passed once. Then one new rule was
+added to `docs/mockups/styles/product/account.css`, with no other change. Two
+more runs of `npm run mockups:build` both passed, with no
+`[mokly/export-invalid]` line. The commit that removed the reproduction is not
+known. So option A or B has no repeatable starting point, and the flake of the
+Rust test stays unexplained.

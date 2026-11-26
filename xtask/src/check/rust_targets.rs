@@ -98,8 +98,9 @@ pub(super) fn is_mokly_package(name: &str) -> bool {
 /// for the Mokly workspace packages: each target that has tests and whose
 /// required features Cargo's resolved features enable, also a required
 /// `dependency/feature`. The resolved features include features that a
-/// dependency or a dev-dependency enables. Build scripts have no tests.
-pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
+/// dependency or a dev-dependency enables. Build scripts have no tests. Each
+/// unit maps to the names of the packages whose targets it selects.
+pub(super) fn test_units(metadata: &str) -> Result<BTreeMap<TestUnit, BTreeSet<String>>> {
     let metadata: Metadata =
         serde_json::from_str(metadata).context("parse Cargo test target metadata")?;
     let resolved: BTreeMap<&str, &Node> = metadata
@@ -108,7 +109,7 @@ pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
         .iter()
         .map(|node| (node.id.as_str(), node))
         .collect();
-    let mut units = BTreeSet::new();
+    let mut units: BTreeMap<TestUnit, BTreeSet<String>> = BTreeMap::new();
     for package in &metadata.packages {
         if !metadata.workspace_members.contains(&package.id) || !is_mokly_package(&package.name) {
             continue;
@@ -122,7 +123,7 @@ pub(super) fn test_units(metadata: &str) -> Result<BTreeSet<TestUnit>> {
                 continue;
             }
             if let Some(unit) = unit(target) {
-                units.insert(unit);
+                units.entry(unit).or_default().insert(package.name.clone());
             }
         }
     }

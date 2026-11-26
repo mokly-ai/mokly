@@ -12,6 +12,7 @@ import {
 } from "./ci-timing-cache.mjs";
 import { fetchRunJobs, parseJobs } from "./ci-timing-jobs.mjs";
 import { criticalPath } from "./ci-timing-path.mjs";
+import { evaluateShards, parseShardGroups } from "./ci-timing-shards.mjs";
 import { annotationLines, renderSummary } from "./ci-timing-summary.mjs";
 import { slowestTests } from "./ci-timing-tests.mjs";
 
@@ -21,7 +22,7 @@ const USAGE =
 
 /**
  * Report each job's run time against its budget, the critical path, the
- * slowest tests, and the Actions cache usage. It writes the Markdown to `GITHUB_STEP_SUMMARY`, or to
+ * spread of each shard group, the slowest tests, and the Actions cache usage. It writes the Markdown to `GITHUB_STEP_SUMMARY`, or to
  * standard output when that is unset, and prints one workflow annotation for
  * each finding. It returns 1 only in `fail` mode, for an overrun or for a
  * report that could not run. In `warn` mode it always returns 0.
@@ -101,6 +102,7 @@ async function buildReport(entries, budgets, options, env, loadCaches) {
     path: critical,
     wallClockMinutes: budgets.wallClockMinutes,
     wallOverSeconds: firstAttempt && overSeconds > 0 ? overSeconds : null,
+    shards: readShards(rows, budgets.shardGroups, issues),
     slowest: slowestTests(
       await reports(options.reports, issues),
       budgets.slowestTests,
@@ -108,6 +110,20 @@ async function buildReport(entries, budgets, options, env, loadCaches) {
     cache: await readCache(loadCaches, budgets.cache, issues),
     issues,
   };
+}
+
+/**
+ * The spread of each shard group, or null when the `shardGroups` field does
+ * not parse. A bad field adds an issue only.
+ */
+function readShards(rows, source, issues) {
+  try {
+    return evaluateShards(rows, parseShardGroups(source));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push(`The shard balance was not checked: ${message}`);
+    return null;
+  }
 }
 
 /**

@@ -40,34 +40,34 @@ directory from another job.
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
 - five repository shards on Node 24;
-- three viewer shards and fourteen browser shards on Node 22.15.0;
-- two static-delivery jobs, one per delivery mode, on Node 22.15.0; and
-- six native shards on macOS and seven on Windows at Node 22.15.0.
+- three viewer shards, fourteen browser shards, and one static-delivery job per delivery mode on Node 22.15.0; and
+- five native shards on macOS and seven on Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
-For a same-repository Release Please pull request, every viewer and browser
-shard and both static-delivery jobs also run on Node 24. A release pull request selects this profile
-only when its head repository is this repository and either its head ref
-starts with `release-please--` or it has an `autorelease:` label. A fork cannot
-opt into the more expensive profile by choosing a matching branch name.
+For a same-repository Release Please pull request, every viewer shard also
+runs on Node 24; browser and static delivery stay on Node 22.15.0. A release
+pull request selects this profile only when its head repository is this
+repository and either its head ref starts with `release-please--` or it has
+an `autorelease:` label. A fork cannot opt into the more expensive profile by
+choosing a matching branch name. Decision: Node 24 repeats only the Node
+tests of the viewer suite. Rejected: 16 more browser and delivery jobs.
 
 The runtime profile job resolves floating Node 24 once per run and publishes
 that exact version, the selected matrix, and the report-runtime identities as
-job outputs. The repository job, `Required CI`, and every viewer, browser, and
-static-delivery job selected for Node 24 install that exact version. Matrix
-labels and report runtime identities stay `node-24`; reports record the exact
-installed version. The aggregate rejects mixed versions within a group.
-A profile names the Node version that runs the tests. The pinned Bun of the
-viewer jobs adds no profile and changes no label or runtime identity.
+job outputs. The repository job, `Required CI`, and every viewer job selected
+for Node 24 install that exact version. Matrix labels and report runtime
+identities stay `node-24`; reports record the exact installed version. The
+aggregate rejects mixed versions within a group. A profile names the Node
+version that runs the tests. The pinned Bun of the viewer jobs adds no profile
+and changes no label or runtime identity.
 
 Node 22.15 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository job runs on every event. A
-Node 24-only regression can therefore reach unreleased `main`, but the
-dual-runtime Release Please gate must catch it before versions, tags, or npm
-artifacts can be published. Release Please normally updates its pull request
-after a releasable merge, keeping that feedback close to the originating change
-without paying for both functional profiles on every ordinary event.
+Node 24-only regression can therefore reach unreleased `main`, but the Release
+Please gate must catch it before versions, tags, or npm artifacts can be
+published. Release Please normally updates its pull request after a releasable
+merge, so that feedback stays close to the originating change.
 
 The [package contract](./mokly-package.md#node-support) defines supported Node
 versions and exclusions. CI runtime representatives do not change that range.
@@ -171,7 +171,7 @@ workflows contain no `${{` expression.
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile job's selection: one report per viewer
-and browser shard on each selected runtime. Every cloud verification partition is also required. The
+and browser shard on each runtime that the profile selects for its suite. Every cloud verification partition is also required. The
 [cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
 provider plan only when its trusted main-push guard permits it.
 
