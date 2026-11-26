@@ -55,6 +55,17 @@ entries in the parent-folder guess (A), asking Git about exact paths under the
 import, and the same rule change without a shared API (D). Milestone 9 applies
 it.
 
+On 2026-11-27 Cal answered review finding 133, unused build files turn off
+Serve edit reuse, with option D: the marked edit evidence keeps the kind that
+the capture recorded. Build files, export targets and source files become
+path-only entries, and manifests and layout files keep their digests. All three
+marker filters accept path-only entries, and the 2026-11-19 rule in
+`docs/protocol/mokly-sidecar-folder-reuse.md` changes in the same change. A
+build file that a Node-loaded `require` keeps stays a digest entry, because its
+content reaches the render. Rejected: path-only entries for workspace targets
+only (A), a separate result field (B), and one typed observation model (C), which
+stays the wider fix. Cal also approved the third fix round for findings 82 and 133. Milestone 10 applies it.
+
 This plan does not change the detection rule outside the override, except that
 JavaScript now matches the detected layout against the declared export target,
 as CSS already did (design call of 2026-11-26). It does not build the base. The "Mokly base prepare command" workspace plans that
@@ -362,6 +373,28 @@ files that a commit holds.
       branch calls them from its Vite adapter after this branch merges.
 - [ ] Run the complete gate, commit, push, and review the change with the
       `implementation-review` skill. Cal approved this fix round.
+
+## Milestone 10: Path-only entries in the marked edit evidence
+
+Depends on: 9
+
+Apply Cal's answer of 2026-11-27 to review finding 133.
+
+- [ ] Change the rule of 2026-11-19 in
+      `docs/protocol/mokly-sidecar-folder-reuse.md`, and the lookup files
+      sentence of `docs/protocol/mokly-sidecar-modules.md`: a build file, an
+      export target and a source file that a lookup records only for its
+      presence become path-only entries; manifests, layout files, and a build
+      file that a Node-loaded `require` keeps carry digests.
+- [ ] Keep the recorded kind in `WorkspaceLookups.marked`, and accept
+      path-only entries in `markedCurrent`, in the reuse filter of
+      `packages/mokly/src/sidecar/compiled.ts`, and in
+      `ReuseEvidence::serve_edit` of `crates/mokly-sidecar/src/compiled.rs`.
+- [ ] Test a build file above 1 MiB that is unused, kept by `false`, and
+      behind a linked build folder with no entry: each keeps edit reuse. Test
+      that an edit to a build file that a Node-loaded `require` keeps ends the
+      reuse. Run each new test 10 times.
+- [ ] Delete `plans/follow-ups/unused-build-files-disable-edit-reuse.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
