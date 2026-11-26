@@ -122,7 +122,7 @@ test("Share waits for the third screen page, then copies a nested screen path th
           shares.push(request.url());
       });
       await page.getByTestId("viewer-share").click();
-      await held.arrived;
+      await held.arrived();
       await expectSharePreparing(panel);
       expect(shares).toEqual([]);
       held.release();

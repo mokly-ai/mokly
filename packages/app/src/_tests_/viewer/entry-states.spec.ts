@@ -161,7 +161,7 @@ test("Share prepares its link while the real publication entry resolves", async 
       },
     );
     await ready(page);
-    await held.arrived;
+    await held.arrived();
     const panel = page.getByTestId("viewer-panel-share");
     await expect(panel).toBeVisible();
     await expectSharePreparing(panel);

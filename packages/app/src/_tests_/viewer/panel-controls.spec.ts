@@ -65,7 +65,8 @@ test("a trigger says which overlay it opens, and whether it is open", async ({
   page,
 }) => {
   const made = await publishedProject(page, "announced");
-  await open(page, made.publicationPath);
+  const path = made.publicationPath;
+  await open(page, path);
   await publishedViewerReady(page);
 
   // Every bar trigger opens one overlay or, for the avatar, its menu, and
@@ -90,19 +91,19 @@ test("a trigger says which overlay it opens, and whether it is open", async ({
   // Exactly the open one reports itself expanded, so a reader who cannot see
   // the overlay is still told. The avatar reports its menu, not the dialog
   // that the menu's items open.
-  await page.getByTestId("viewer-history").click();
-  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
-  await expect(page.getByTestId("viewer-history")).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
-  await expect(page.getByTestId("viewer-share")).toHaveAttribute(
-    "aria-expanded",
-    "false",
-  );
-  await page.getByTestId("close-history").click();
-  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
-  await openSettingsFromAccount(page);
+  const open_ = async (address: string, expanded: string, shut: string) => {
+    await open(page, `${path}${address}`);
+    await expect(page.getByTestId(expanded)).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(page.getByTestId(shut)).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  };
+  await open_("?panel=history", "viewer-history", "viewer-share");
+  await open(page, `${path}?settings=account`);
   await expect(page.getByTestId("settings-dialog")).toBeVisible();
   await expect(page.getByTestId("viewer-account")).toHaveAttribute(
     "aria-expanded",

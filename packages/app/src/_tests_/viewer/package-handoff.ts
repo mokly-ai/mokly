@@ -3,14 +3,14 @@ import type { ElementHandle, Page } from "@playwright/test";
 import { publicationPathFor } from "../addresses";
 import { expect, open } from "../harness";
 
-import { publishedViewerReady } from "./support";
+import { arrival, publishedViewerReady } from "./support";
 
 /**
- * Hold one route until the test releases it. `arrived` settles once the first
+ * Hold one route until the test releases it. `arrived()` settles once the first
  * request is held, so a test waits for the request itself rather than polling
  * for it.
  */
-function requestGate() {
+function requestGate(what: string) {
   const gate = Promise.withResolvers<void>();
   const arrived = Promise.withResolvers<void>();
   return {
@@ -19,14 +19,14 @@ function requestGate() {
       await gate.promise;
     },
     release: () => gate.resolve(),
-    arrived: arrived.promise,
+    arrived: () => arrival(arrived.promise, what),
   };
 }
 
 export async function holdPackageHandoff(page: Page, catalogueUrl: string) {
   const catalogueOrigin = new URL(catalogueUrl).origin;
-  const access = requestGate();
-  const catalogue = requestGate();
+  const access = requestGate("the held access confirmation");
+  const catalogue = requestGate("the held catalogue index read");
   await page.route(
     (url) => url.origin === catalogueOrigin && url.pathname === "/",
     async (route) => {
@@ -45,11 +45,11 @@ export async function openHeldPackage(
   page: Page,
   projectId: string,
   publicationId: string,
-  accessArrived: Promise<void>,
+  accessArrived: () => Promise<void>,
 ): Promise<void> {
   await open(page, await publicationPathFor(page, projectId, publicationId));
   await expect(page.getByTestId("viewer-share")).toBeVisible();
-  await accessArrived;
+  await accessArrived();
 }
 
 /**
@@ -75,7 +75,7 @@ export async function releaseAccessDuringPress(
   });
   handoff.access.release();
   await confirmed;
-  await handoff.catalogue.arrived;
+  await handoff.catalogue.arrived();
   handoff.catalogue.release();
   await indexed;
   await page.evaluate(
@@ -92,7 +92,7 @@ export async function finishPackageHandoff(
   page: Page,
   handoff: Awaited<ReturnType<typeof holdPackageHandoff>>,
 ): Promise<void> {
-  await handoff.catalogue.arrived;
+  await handoff.catalogue.arrived();
   handoff.catalogue.release();
   await publishedViewerReady(page);
 }

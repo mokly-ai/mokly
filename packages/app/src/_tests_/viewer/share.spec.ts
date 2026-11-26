@@ -245,7 +245,7 @@ test("Share's screen list survives a failed read and clears the screen the reade
     );
     try {
       await panel.getByRole("button", { name: "Try again" }).click();
-      await held.arrived;
+      await held.arrived();
       await expectSharePreparing(panel);
       expect(shares).toHaveLength(1);
       held.release();
