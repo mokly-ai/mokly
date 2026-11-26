@@ -96,7 +96,7 @@ Clippy, and the complete Rust tests run in the repository shards. The native
 shards run them for the `mokly-*` crates and `xtask` only. Repository and
 native shard 1 run the checks, and each later shard runs one partition of the
 Rust tests, under the
-[shard rule](./ci-verification-repository.md#suite-shards). Native jobs build the
+[shard rule](./ci-verification-repository.md#suite-shards). Native jobs, except the library shard, build the
 checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
 integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
@@ -111,7 +111,7 @@ the image lacks it.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. Each repository shard runs it inside
-its suite, the checks shard after the lockfile-only audit, and not a second time before. The scheduled audit installs no
+its suite, the checks shard after the lockfile-only audit, and not a second time before; the library shard runs none. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
 caches npm downloads and Rust dependency builds. Every cached CI job keys npm's

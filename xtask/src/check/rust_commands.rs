@@ -59,8 +59,16 @@ fn package_builds() -> [CommandSpec; 5] {
     PACKAGES.map(|package| npm(&["run", "build", "--workspace", package]))
 }
 
+/// Whether a test shard runs only the library unit tests and the doc tests:
+/// the first of two or more test shards. These tests read no npm package and
+/// no native binary, so the shard skips the npm install and the builds.
+pub(super) fn is_library_shard(shard: Shard) -> bool {
+    shard.is_first() && shard.total() > 1
+}
+
 /// Build the inputs of the Rust tests, then run the test units of one test
-/// shard in one scope. The first test shard also runs the doc tests.
+/// shard in one scope. The first test shard also runs the doc tests. The
+/// library shard builds nothing first.
 pub(super) fn test_shard(shard: Shard, no_fail_fast: bool, scope: TestScope) -> Vec<CommandSpec> {
     let [_, doc] = rust_tests(no_fail_fast, scope);
     let mut tests = cargo(&["xtask", "rust-test-shard", "--partition"]).args([shard.to_string()]);
@@ -71,7 +79,9 @@ pub(super) fn test_shard(shard: Shard, no_fail_fast: bool, scope: TestScope) -> 
         tests = tests.args(["--native"]);
     }
     let mut commands = vec![require_nextest()];
-    commands.extend(test_builds());
+    if !is_library_shard(shard) {
+        commands.extend(test_builds());
+    }
     commands.push(tests);
     if shard.is_first() {
         commands.push(doc);

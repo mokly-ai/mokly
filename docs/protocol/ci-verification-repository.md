@@ -96,10 +96,15 @@ runs the checks and each later shard runs Rust tests:
   [test unit rule](#test-units). The first test shard, shard 2, also runs
   the doc tests. A repository test shard first installs the root npm
   lockfile.
+- With two or more test shards, the first test shard is the library shard.
+  It runs only the preflight, the library unit tests, and the doc tests. These
+  tests read no npm package and no native binary, so it runs no npm install
+  and none of the builds of item 10. On `main` it builds the native binary
+  before its Rust build cache saves, so the saved entry stays complete.
 
 The shards of a suite together run every check and every test of the
 complete suite exactly once. Only the npm install, the preflight, and the
-builds repeat on each test shard. A native test shard keeps the
+builds repeat on the test shards. A native test shard keeps the
 `--no-fail-fast` behaviour of the complete native suite.
 
 Decision: the checks run on their own shard, so no test shard waits for them.
@@ -136,8 +141,12 @@ new crate or a new test lands on a shard without an edit.
 
 The first test shard runs `--lib` with the doc tests. Their builds need every
 crates.io dependency of the Rust tests, so only this shard saves the Rust
-build cache of its job. The other units go to the test shards by weight, the
-heaviest first, each to the shard with the least weight so far. `scripts/verification/rust-test-weights.json`
+build cache of its job. With two or more test shards, it runs no other unit.
+The other units go to the other test shards by weight, the heaviest first,
+each to the shard with the least weight so far. Decision: keep `--lib` whole
+on a shard without builds. Rejected: a `--lib` slice by crate on each shard,
+because `-p "mokly-*" -p xtask --lib` builds every library test binary, 85 to
+112 seconds on the native hosts, on each shard that runs a slice. `scripts/verification/rust-test-weights.json`
 holds the measured compile seconds of each unit, the measured test seconds of
 each unit on each CI host, a default for a unit that it does not name, and
 the doc test weight of the first test shard. Each host places its units by

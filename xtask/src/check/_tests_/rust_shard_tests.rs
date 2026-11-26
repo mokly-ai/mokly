@@ -38,16 +38,28 @@ fn display(suite: VerificationSuite, shard: Option<&str>) -> Vec<String> {
         .collect()
 }
 
+/// What a test shard runs before its tests: the library shard runs only the
+/// nextest preflight, and every other test shard installs and builds first.
+#[derive(Clone, Copy)]
+enum Before {
+    Preflight,
+    Builds(&'static [&'static str]),
+}
+
 /// The commands of one test shard. `scope` is the scope option of the shard
 /// command, which the doc tests do not take.
 fn test_shard(
-    first: &[&str],
+    before: Before,
     partition: &str,
     options: &str,
     scope: &str,
     doc: bool,
 ) -> Vec<String> {
-    let mut expected: Vec<String> = first.iter().chain(&BUILDS).map(|c| (*c).into()).collect();
+    let commands: Vec<&str> = match before {
+        Before::Preflight => BUILDS[..1].to_vec(),
+        Before::Builds(first) => first.iter().chain(&BUILDS).copied().collect(),
+    };
+    let mut expected: Vec<String> = commands.into_iter().map(Into::into).collect();
     expected.push(format!("{SHARD} {partition}{options}{scope}"));
     if doc {
         expected.push(format!("{DOC}{options}"));
@@ -56,7 +68,8 @@ fn test_shard(
 }
 
 #[test]
-fn native_shard_one_lints_and_later_shards_split_the_tests() {
+fn native_shard_one_lints_and_later_shards_split_the_tests_and_only_the_library_shard_skips_the_builds()
+ {
     let native = VerificationSuite::Native;
     assert_eq!(
         display(native, Some("1/3")),
@@ -65,17 +78,23 @@ fn native_shard_one_lints_and_later_shards_split_the_tests() {
     let options = " --no-fail-fast";
     assert_eq!(
         display(native, Some("2/3")),
-        test_shard(&[], "1/2", options, " --native", true)
+        test_shard(Before::Preflight, "1/2", options, " --native", true)
     );
     assert_eq!(
         display(native, Some("3/3")),
-        test_shard(&[], "2/2", options, " --native", false)
+        test_shard(Before::Builds(&[]), "2/2", options, " --native", false)
+    );
+    // A single test shard runs every unit, so it builds first.
+    assert_eq!(
+        display(native, Some("2/2")),
+        test_shard(Before::Builds(&[]), "1/1", options, " --native", true)
     );
     assert_eq!(display(native, Some("1/1")), display(native, None));
 }
 
 #[test]
-fn repository_shard_one_checks_and_later_shards_install_then_split_the_tests() {
+fn repository_shard_one_checks_and_later_shards_split_the_tests_and_only_the_library_shard_skips_the_builds()
+ {
     let repository = VerificationSuite::Repository;
     let checks = display(repository, Some("1/3"));
     assert_eq!(
@@ -95,11 +114,11 @@ fn repository_shard_one_checks_and_later_shards_install_then_split_the_tests() {
     }));
     assert_eq!(
         display(repository, Some("2/3")),
-        test_shard(&["npm ci"], "1/2", "", "", true)
+        test_shard(Before::Preflight, "1/2", "", "", true)
     );
     assert_eq!(
         display(repository, Some("3/3")),
-        test_shard(&["npm ci"], "2/2", "", "", false)
+        test_shard(Before::Builds(&["npm ci"]), "2/2", "", "", false)
     );
     assert_eq!(display(repository, Some("1/1")), display(repository, None));
 }

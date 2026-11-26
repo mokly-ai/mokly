@@ -24,6 +24,11 @@ const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
 /** The start of a narrowed save condition: `main` and more terms. */
 const MAIN_AND = "${{ github.ref == 'refs/heads/main' && ";
+/**
+ * The test shard that saves the Rust test build cache of a sharded suite: the
+ * library shard, which builds every crates.io dependency of the Rust tests.
+ */
+const SAVING_SHARD = "startsWith(matrix.shard, '2/')";
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
@@ -41,6 +46,7 @@ const BUILD_CACHE =
   /\b(?:actions\/cache|Swatinem\/rust-cache|sccache|RUSTC_WRAPPER)\b/u;
 
 interface WorkflowStep {
+  readonly if?: string;
   readonly run?: string;
   readonly uses?: string;
   readonly with?: Readonly<Record<string, unknown>>;
@@ -77,6 +83,30 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
     }
   }
   assert.ok(caches > 0, "CI must restore Rust build caches");
+});
+
+test("the shard that saves a Rust test build cache also builds the native binary on main", async () => {
+  const writers: string[] = [];
+  for (const [name, job] of Object.entries(
+    (await readWorkflow(CI_WORKFLOW)).jobs ?? {},
+  )) {
+    const steps = job.steps ?? [];
+    const saves = steps.some(
+      (step) =>
+        isRustCache(step) &&
+        String(step.with?.["save-if"]).includes(SAVING_SHARD),
+    );
+    if (!saves) continue;
+    writers.push(name);
+    // The library shard builds no native binary on its own, and the other
+    // shards and jobs build theirs on top of the saved entry.
+    const build = steps.find((step) => step.run === "cargo xtask build-native");
+    assert.ok(
+      build?.if?.includes("refs/heads/main") && build.if.includes(SAVING_SHARD),
+      `${name} must build the native binary on main in the shard that saves its Rust build cache`,
+    );
+  }
+  assert.deepEqual(writers.sort(), ["native", "repository"]);
 });
 
 test("release automation builds Rust without a build cache", async () => {

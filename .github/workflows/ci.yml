@@ -132,12 +132,19 @@ jobs:
         with:
           tool: cargo-nextest@0.9.152
           fallback: none
+      # The library shard, the first test shard, installs no npm package.
       - name: Restore npm download cache
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+      # On main the library shard saves the shared mokly-tests entry, so it also
+      # builds the native binary that the readers of the entry build.
+      - name: Build the native binary for the Rust build cache
+        if: github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') && matrix.shard != '2/2'
+        run: cargo xtask build-native
       - name: Run repository verification
         env:
           DEPENDENCY_AUDIT: |-
@@ -421,35 +428,51 @@ jobs:
         with:
           tool: cargo-nextest@0.9.152
           fallback: none
+      # The library shard, the first test shard, runs only the library unit
+      # tests and the doc tests. They read no npm package, so that shard skips
+      # the npm install and the package builds.
       # The Windows runner image moves npm's cache out of the home folder.
       - name: Locate npm download cache
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         id: npm-cache-path
         shell: bash
         run: echo "path=$(npm config get cache)" >> "$GITHUB_OUTPUT"
       - name: Restore npm download cache
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ steps.npm-cache-path.outputs.path }}
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm ci
       - name: Save npm download cache
-        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outcome == 'success' && steps.npm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ steps.npm-cache-path.outputs.path }}
           key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Build UI package
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm run build --workspace @mokly/ui
       - name: Build model package
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm run build --workspace @mokly/model
       - name: Build frame package
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm run build --workspace @mokly/frame
       - name: Build viewer package
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm run build --workspace @mokly/viewer
       - name: Build sidecar package
+        if: ${{ !(startsWith(matrix.shard, '2/') && matrix.shard != '2/2') }}
         run: npm run build --workspace @mokly/mokly
+      # On main the library shard saves the Rust build cache, so it also builds
+      # the native binary that the other shards build on top of that entry.
+      - name: Build the native binary for the Rust build cache
+        if: github.ref == 'refs/heads/main' && startsWith(matrix.shard, '2/') && matrix.shard != '2/2'
+        run: cargo xtask build-native
       - name: Run native verification
         shell: bash
         env:

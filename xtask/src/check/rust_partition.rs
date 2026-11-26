@@ -40,9 +40,11 @@ impl Piece {
 ///
 /// The first shard runs the doc tests and the unit tests of every library,
 /// `--lib`. Their builds need each crates.io dependency that any unit needs,
-/// so this shard alone can save a complete Rust build cache. Then the
-/// heaviest piece goes first, each to the shard with the least weight so far;
-/// the lower shard wins a tie. The same units and weights give the same
+/// so this shard alone can save a complete Rust build cache. With two or more
+/// shards, the first shard holds nothing else, so it needs neither the npm
+/// install nor the builds that the other units run. Then the heaviest piece
+/// goes first, each to the other shard with the least weight so far; the
+/// lower shard wins a tie. The same units and weights give the same
 /// partition; each host passes the weights of its own test seconds.
 pub(super) fn partition(
     units: &BTreeSet<TestUnit>,
@@ -65,11 +67,16 @@ pub(super) fn partition(
     let mut loads = vec![0_u64; count];
     let mut shards = vec![Vec::new(); count];
     loads[0] = weights.doc_seconds();
+    let reserved = count > 1 && units.contains(&TestUnit::Libraries);
+    let others = usize::from(reserved)..count;
     for (piece, weight) in pieces {
         let lightest = if piece.unit == TestUnit::Libraries {
             0
         } else {
-            (0..count).min_by_key(|&index| loads[index]).unwrap_or(0)
+            others
+                .clone()
+                .min_by_key(|&index| loads[index])
+                .unwrap_or(0)
         };
         loads[lightest] += weight;
         shards[lightest].push(piece);

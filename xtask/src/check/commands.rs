@@ -6,8 +6,8 @@ use super::cloud_commands::cloud_commands;
 use super::native_scope::TestScope;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{
-    RustPart, design_matrix_clippy, native_commands, require_nextest, rust_lints, rust_tests,
-    test_builds, test_shard,
+    RustPart, design_matrix_clippy, is_library_shard, native_commands, require_nextest, rust_lints,
+    rust_tests, test_builds, test_shard,
 };
 
 /// One step of a suite plan.
@@ -102,7 +102,9 @@ fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> 
             steps
         }
         RustPart::Checks => repository_checks(dependency_audit, false),
-        RustPart::Tests(tests) => std::iter::once(npm(&["ci"]))
+        RustPart::Tests(tests) => (!is_library_shard(tests))
+            .then(|| npm(&["ci"]))
+            .into_iter()
             .chain(test_shard(tests, false, TestScope::Complete))
             .map(Step::Run)
             .collect(),
