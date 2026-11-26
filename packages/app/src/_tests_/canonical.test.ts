@@ -42,11 +42,11 @@ test("settings renames rewrite only a working route that names the subject", () 
   assert.equal(
     canonicalWorkspaceWorkingRoute(
       "/install",
-      "?workspaceId=org-id&settings=workspace",
+      "?workspaceId=org-id&settings=workspace&settingsProject=project-id",
       "old-org",
       "new-org",
     ),
-    "/install?workspaceId=org-id&settings=workspace",
+    "/install?workspaceId=org-id&settings=workspace&settingsProject=project-id",
   );
   assert.equal(
     canonicalProjectWorkingRoute(

@@ -151,6 +151,12 @@ test("old shares, check links, and UUID permalinks survive both slug renames", a
       url.pathname ===
       `/${nextWorkspaceSlug}/${nextProjectSlug}/publications/${made.publicationId}`,
   );
+  // The saved slug replaces the path and keeps the rest of the address.
+  current = new URL(page.url());
+  expect(current.searchParams.get("settings")).toBe("workspace");
+  expect(current.searchParams.get("catalogueScreen")).toBe(selection.path);
+  expect(current.searchParams.get("viewport")).toBe(selection.viewport);
+  expect(current.searchParams.get("scheme")).toBe(selection.scheme);
   await expect.poll(() => unloadGuard(page)).toBe(false);
   await page.getByTestId("close-settings").click();
   await expect(page.getByRole("dialog")).toHaveCount(0);

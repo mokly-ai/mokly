@@ -45,6 +45,12 @@ function lastState(shown: readonly BuildWatch[]): string | undefined {
   return last?.status === "ready" ? last.build.state : last?.status;
 }
 
+/** The build the card shows last, or nothing while it shows no build. */
+function lastBuild(shown: readonly BuildWatch[]): Build | undefined {
+  const last = shown[shown.length - 1];
+  return last?.status === "ready" ? last.build : undefined;
+}
+
 /** Answer the read a test started last, then let the card take it. */
 async function answer(
   read: HeldRead | undefined,
@@ -247,10 +253,12 @@ test("a poll whose reads fail tries each read once and keeps the card and the ou
   assert.equal(shown.length, before);
   assert.equal(lastState(shown), "running");
 
-  // The next read that succeeds moves the card, and keeps its output.
+  // The next read that succeeds moves the card, with the failure's cause,
+  // and keeps its output.
   api.refuse = { build: false, log: false };
   await follower.poll();
   assert.equal(lastState(shown), "failed");
+  assert.deepEqual(lastBuild(shown), failedAtInstall(id));
   assert.deepEqual(output(shown[shown.length - 1]), ["installing\n"]);
 });
 
@@ -278,5 +286,6 @@ test("a poll whose log read fails moves the state and keeps the output", async (
   await follower.poll();
   assert.deepEqual(api.reads, { build: 2, log: 2 });
   assert.equal(lastState(shown), "failed");
+  assert.deepEqual(lastBuild(shown), failedAtInstall(id));
   assert.deepEqual(output(shown[shown.length - 1]), ["installing\n"]);
 });

@@ -59,7 +59,13 @@ export async function installPollClock(
   await page.clock.install();
 }
 
-/** Let one poll interval pass on the page, which starts the card's next read. */
+/**
+ * Move the page clock forward by the test's three-second poll interval. It
+ * only moves the clock: the card can start no read, because the tab is hidden,
+ * the build is settled, or a read still runs, and a product interval other
+ * than three seconds can start none or more than one. A test waits for the
+ * read or the state that it expects.
+ */
 export async function nextPoll(page: Page): Promise<void> {
   await page.clock.runFor(pollIntervalMs);
 }
