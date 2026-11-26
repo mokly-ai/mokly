@@ -66,6 +66,5 @@
   - [workspace-bundle-export-conditions.md](./workspace-bundle-export-conditions.md): work that waits. For a failed lookup, the record needs the active export target. Option F of that item selects it by a walk of the matched export key. Do that work first, or with the record.
   - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code. Its relative probes for synchronous requires give imports that the record must describe.
   - [postcss-relative-require-retry.md](./postcss-relative-require-retry.md): same code. The import form of the record also tells `resolveRequire` that a name is relative.
-  - [ignored-module-nested-paths.md](./ignored-module-nested-paths.md): same code. The warning that reads the record must not give the hint for a file in a nested repository.
 - **Recommendation:** C. It gives every consumer one set of facts, in JavaScript and in CSS, so a new consumer cannot derive them wrongly.
 - **Action:** fix after merge, apply C, because the record changes every workspace lookup path in both languages, beyond the purpose of this branch.

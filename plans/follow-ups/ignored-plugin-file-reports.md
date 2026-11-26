@@ -37,7 +37,6 @@
 - **Wider fix:** E. It treats every exact file that a plugin reads by one rule, whatever its type.
 - **Previous examples:** The renderer exclusion check, `validate` at `crates/mokly-render/src/postcss_nested.rs:27`, already joins exact plugin reports to nested CSS imports.
 - **Related:**
-  - [ignored-module-nested-paths.md](./ignored-module-nested-paths.md): options that change the same rule. Both widen the `ignored-module` rule of 2026-11-25, so answer them together.
   - [postcss-inlined-package-imports.md](./postcss-inlined-package-imports.md): same cause. Tailwind also resolves a CSS package import itself, and the warning then names the inlined build file without the hint.
 - **Recommendation:** E. It reports each file that a plugin reads and a later base lacks, with the message that a stylesheet file already gets.
 - **Action:** ask the user, because E widens the warning rule of 2026-11-25, and `--strict` counts the new warnings, so a strict build can newly fail.

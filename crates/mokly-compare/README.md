@@ -388,10 +388,10 @@ the pin, and before the kept-base lookup, `Changes` adds the `ignored-module`
 warnings of the head to that list, so the caller keeps them also when the
 base fails. The private `ignored_modules` module reads the files that the
 head loaded through `RenderGeneration::module_imports`. Then
-`working_inputs::ignored_paths` keeps the files that are missing from Git's
-list of tracked and unignored working paths. When Git cannot give that list,
-the check gives no warning, and the classification continues. A cancellation
-still stops it. The
+`Repository::working_path_statuses` checks each path and supplies the cause
+for ignored files, nested checkouts, and submodules. When Git cannot give the
+statuses, the check records a debug event and classification continues without
+these warnings. Cancellation stops classification. The
 [ignored modules rule](../../docs/protocol/mokly-comparison-packages.md#ignored-modules)
 owns which files count and the message.
 
@@ -549,8 +549,9 @@ development dependencies, and no test uses the internet.
   After the pin, it adds the `ignored-module` warnings of the head to the
   warning list of the caller.
 - The private [`src/ignored_modules.rs`](./src/ignored_modules.rs) builds the
-  `ignored-module` warnings. It uses the workspace layout rule in
-  `mokly-css` to check source recovery and select the override hint.
+  `ignored-module` warnings from exact path statuses in `mokly-git`. It uses
+  the workspace layout rule in `mokly-css` to check source recovery and
+  select the override hint for ignored files.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,
@@ -642,8 +643,6 @@ development dependencies, and no test uses the internet.
 - [`src/inputs.rs`](./src/inputs.rs) and
   [`src/working_inputs.rs`](./src/working_inputs.rs) define `InputReader` and
   `WorkingInputs`, the base and working dependency identities.
-  `working_inputs::ignored_paths` keeps the loaded files that Git's list of
-  tracked and unignored working paths omits.
 - [`src/manager_plan.rs`](./src/manager_plan.rs) selects every locked install
   root among the configuration directory, the package roots, and their
   ancestors, and returns each root with its package manager. The other

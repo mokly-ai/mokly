@@ -1,6 +1,6 @@
-//! Match actual head imports against Git's working-tree inventory.
+//! Report actual head imports that a later Git base cannot load.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 use std::path::Path;
 
@@ -10,12 +10,11 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_css::dependencies::ImportKind;
 use mokly_css::resolution::Resolution;
 use mokly_git::identity::RepoPath;
-use mokly_git::repository::Repository;
+use mokly_git::repository::{Repository, WorkingPathStatus};
 use mokly_graph::comparison_input::ModuleImports;
 use mokly_graph::types::RenderGeneration;
 
-use crate::error::{Error, Result};
-use crate::working_inputs::ignored_paths;
+use crate::error::{Error, GitResult, Result};
 
 pub(crate) fn warnings(
     repository: &dyn Repository,
@@ -40,7 +39,7 @@ pub(crate) fn warnings(
                 .flatten()
                 .and_then(|node| {
                     let target = relative(&node.identity, root);
-                    (target != path && repository_path(&target)).then_some(target)
+                    (target != path && repository_path(&target).is_some()).then_some(target)
                 });
             let source = resolution
                 .workspace_source(imports.tree, root, &named)
@@ -48,19 +47,27 @@ pub(crate) fn warnings(
             (path, PackagePaths { target, source })
         })
         .collect();
-    let candidates = loaded
+    let candidates: BTreeSet<_> = loaded
         .keys()
         .copied()
         .chain(packages.values().flat_map(|paths| {
             [paths.target.as_deref(), paths.source.as_deref()]
                 .into_iter()
                 .flatten()
-        }));
-    let ignored = match ignored_paths(repository, candidates.collect()) {
-        Ok(ignored) => ignored,
+        }))
+        .collect();
+    let (names, paths): (Vec<_>, Vec<_>) = candidates
+        .into_iter()
+        .filter_map(|path| repository_path(path).map(|query| (path, query)))
+        .unzip();
+    if paths.is_empty() {
+        return Ok(Vec::new());
+    }
+    let statuses = match repository.working_path_statuses(&paths).base() {
+        Ok(statuses) => names.into_iter().zip(statuses).collect::<BTreeMap<_, _>>(),
         Err(Error::Cancelled) => return Err(Error::Cancelled),
         Err(error) => {
-            tracing::debug!(%error, "ignored module check could not read Git's working paths");
+            tracing::debug!(%error, "ignored module check could not read Git's working path statuses");
             return Ok(Vec::new());
         }
     };
@@ -78,15 +85,15 @@ pub(crate) fn warnings(
     for (named, kind) in loaded {
         let package = packages.get(named);
         if let Some(source) = package.and_then(|paths| paths.source.as_deref())
-            && !ignored.contains(source)
+            && matches!(
+                statuses.get(source),
+                Some(WorkingPathStatus::Tracked | WorkingPathStatus::Untracked)
+            )
         {
             continue;
         }
         let target = package.and_then(|paths| paths.target.as_deref());
-        for path in std::iter::once(named)
-            .chain(target)
-            .filter(|path| ignored.contains(path))
-        {
+        for path in std::iter::once(named).chain(target) {
             warnings
                 .entry(path)
                 .and_modify(|present: &mut (ImportKind, &str)| {
@@ -99,23 +106,41 @@ pub(crate) fn warnings(
     }
     Ok(warnings
         .into_iter()
-        .map(|(path, (kind, named))| {
+        .filter_map(|(path, (kind, named))| {
+            let status = statuses.get(path)?;
+            let reason = match status {
+                WorkingPathStatus::Tracked | WorkingPathStatus::Untracked => return None,
+                WorkingPathStatus::Ignored => "is ignored by Git".to_owned(),
+                WorkingPathStatus::NestedRepository(directory) => {
+                    format!(
+                        "is inside the nested repository {}",
+                        escape_controls(directory.as_str())
+                    )
+                }
+                WorkingPathStatus::Submodule(directory) => {
+                    format!(
+                        "is inside the submodule {}",
+                        escape_controls(directory.as_str())
+                    )
+                }
+            };
             let mut message = format!(
-                "module {} is ignored by Git, so a later base cannot load it",
+                "module {} {reason}, so a later base cannot load it",
                 escape_controls(path)
             );
-            if matches!(kind, ImportKind::Package | ImportKind::NodePackage)
+            if *status == WorkingPathStatus::Ignored
+                && matches!(kind, ImportKind::Package | ImportKind::NodePackage)
                 && let Some(package) =
                     resolution.workspace_override_hint(imports.tree, root, &root.join(named))
             {
                 message.push_str("; set moduleResolution.sourcePackages for ");
                 message.push_str(&escape_controls(&package));
             }
-            Warning {
+            Some(Warning {
                 code: "ignored-module",
                 subject: subject.clone(),
                 message,
-            }
+            })
         })
         .collect())
 }
@@ -125,10 +150,11 @@ struct PackagePaths {
     source: Option<String>,
 }
 
-fn repository_path(path: &str) -> bool {
-    !Path::new(path).is_absolute()
-        && !path.split('/').any(|part| part == "node_modules")
-        && RepoPath::parse(path).is_ok()
+fn repository_path(path: &str) -> Option<RepoPath> {
+    if Path::new(path).is_absolute() || path.split('/').any(|part| part == "node_modules") {
+        return None;
+    }
+    RepoPath::parse(path).ok()
 }
 
 fn loaded_paths<'a>(imports: &ModuleImports<'a>) -> BTreeMap<&'a str, ImportKind> {
@@ -148,7 +174,7 @@ fn loaded_paths<'a>(imports: &ModuleImports<'a>) -> BTreeMap<&'a str, ImportKind
         .map(|(path, kind)| (path, *kind));
     let mut paths = BTreeMap::<_, ImportKind>::new();
     for (path, kind) in javascript.chain(stylesheets) {
-        if repository_path(path) {
+        if repository_path(path).is_some() {
             paths
                 .entry(path.as_str())
                 .and_modify(|current| *current = (*current).max(kind))

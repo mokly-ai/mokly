@@ -111,29 +111,34 @@ folder `src`.
 ## Ignored Modules
 
 When Changes runs, Mokly gives one `ignored-module` configuration warning for
-each repository file outside `node_modules` that Git ignores and that a
-head import loads. Bundled imports, CSS `@import`, and modules that Node
-loads for PostCSS count. A stylesheet that a PostCSS plugin reports as an
-exact file dependency also counts. When a PostCSS load names a link, Mokly
-checks the reported path and its target. Changes runs in `build` and
-`publish` without `--no-changes`, and in Serve when it classifies Changes.
-A later base renders from the files that Git tracks, so it cannot load
-such a file. `{path}` is the repository-relative POSIX path.
-`{package}` is the workspace package's `package.json` name.
+each repository file outside `node_modules` that the head loads and a later base
+cannot load. Bundled imports, CSS `@import`, and modules that Node loads for
+PostCSS count. A stylesheet that a PostCSS plugin reports as an exact file
+dependency also counts. A reported path through a symbolic link uses the
+status of its first link. When a PostCSS load reports both the written path
+and its target, Mokly checks both paths separately. Changes runs in `build`
+and `publish` without `--no-changes`, and in Serve when it classifies Changes.
 
-- For a package-name import that reaches a file below a subfolder of a
-  package root, the message is `module {path} is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for {package}`.
-  This applies when no `false` entry ends the layout order.
-- For other loads and exact PostCSS stylesheet reports, the message is
-  `module {path} is ignored by Git, so a later base cannot load it`.
+| Git status of the file          | Warning                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------- |
+| Tracked                         | None                                                                                  |
+| Untracked and unignored         | None                                                                                  |
+| Ignored                         | `module {path} is ignored by Git, so a later base cannot load it`                     |
+| In an unignored nested checkout | `module {path} is inside the nested repository {dir}, so a later base cannot load it` |
+| In a tracked submodule          | `module {path} is inside the submodule {dir}, so a later base cannot load it`         |
 
-A file that Git neither tracks nor ignores gives no warning, because a
-commit can still add it. A module gives no warning when every load of the
-file uses Mokly's PostCSS require by package name and the layout order
-maps it to a source file that Git tracks or does not ignore.
+`{path}` and `{dir}` are repository-relative POSIX paths. `{dir}` names the
+nested checkout or submodule directory. For an ignored file reached by a
+package-name import below a subfolder of the package root, Mokly adds
+`; set moduleResolution.sourcePackages for {package}` when no `false` entry
+ends the layout order. `{package}` is the name in the workspace package's
+`package.json`.
+
+A module gives no warning when every load of the file uses Mokly's PostCSS
+require by package name and the layout order maps it to a source file that
+the outer repository tracks or can add.
 [Strict mode](./mokly-build-warnings.md#strict-mode) counts the warning.
 
-Decision: Mokly warns about each ignored file that the head loads, so the
-author learns of a missing entry before the merge. A warning for each entry
-that loads no source file was rejected, because it misses an entry that the
-author forgot.
+A later base reads only the outer repository's commit. The next commit can
+include an untracked and unignored file. A nested checkout enters that
+commit as a gitlink, which holds only the other repository's commit ID.

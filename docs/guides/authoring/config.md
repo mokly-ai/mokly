@@ -142,10 +142,10 @@ as Tailwind inlines it through its own package lookup, which bypasses
 automatic detection and `sourcePackages`.
 
 An invalid entry causes a `config-invalid` error. An entry that names one
-build folder twice, such as `esm` and `./esm`, is invalid. When Changes
-reports `ignored-module`, the catalogue in the working tree loaded a file
-that Git ignores, for example through an import or its PostCSS configuration.
-A later base may fail to load that file.
+build folder twice, such as `esm` and `./esm`, is invalid. The
+`ignored-module` warning means an import or the PostCSS configuration loaded
+a repository file that Git ignores or that lies in a nested checkout or
+tracked submodule. A later base cannot load that file.
 
 ## Review and watch
 

@@ -15,6 +15,21 @@ use crate::identity::{ObjectId, RepoPath};
 use crate::source_key::CheckoutIdentity;
 use crate::tree::{Entry, Limits, text};
 
+/// Git's classification of a path in the working tree.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum WorkingPathStatus {
+    /// The index tracks the path.
+    Tracked,
+    /// The path can be added to the index.
+    Untracked,
+    /// Git's standard exclude rules ignore the path.
+    Ignored,
+    /// The path lies in an unignored nested checkout at this folder.
+    NestedRepository(RepoPath),
+    /// The path lies in a tracked submodule at this folder.
+    Submodule(RepoPath),
+}
+
 /// Immutable-base operations for a validated repository root.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RepositoryMock))]
 pub trait Repository: Send + Sync {
@@ -64,6 +79,9 @@ pub trait Repository: Send + Sync {
     ) -> Result<String>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
+    /// Classify each working file in input order. A path through a symbolic
+    /// link uses the first link's status. Pass the target separately to check it.
+    fn working_path_statuses(&self, paths: &[RepoPath]) -> Result<Vec<WorkingPathStatus>>;
     /// Read regular working bytes and their Git-clean object identity.
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>>;
     /// Read confined regular working bytes without starting Git.
