@@ -100,6 +100,9 @@ fn update(received: &Received, root: &str, mode: &mut Mode) -> Result<Recording>
     let Some(fields) = input.as_object() else {
         return Err(Error::Field { name: "body" });
     };
+    if let Some(hook) = mode.check_update_hook.take() {
+        hook();
+    }
     let Some(run) = mode.check_runs.iter_mut().find(|run| run["id"] == id) else {
         return Recorded::NotFound.response();
     };

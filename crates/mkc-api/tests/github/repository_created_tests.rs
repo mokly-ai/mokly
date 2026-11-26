@@ -44,7 +44,7 @@ fn created_repository_is_discovered_under_an_all_repositories_installation() {
         requests + 1
     );
     app.queries(&mut |queries| {
-        let repositories = queries.github_repositories(project.installation).unwrap();
+        let repositories = queries.github_repositories(project.installation)?;
         let created = repositories
             .iter()
             .find(|row| row.github_id == 1296270)
@@ -52,6 +52,7 @@ fn created_repository_is_discovered_under_an_all_repositories_installation() {
         assert!(created.active);
         assert_eq!(created.full_name, "octocat/New");
         assert_ne!(created.id, project.repository);
-        assert!(queries.project(project.id).unwrap().is_some());
+        assert!(queries.project(project.id)?.is_some());
+        Ok(())
     });
 }

@@ -16,10 +16,11 @@ use super::harness::Harness;
 
 fn enable(app: &Harness, project: ProjectId) {
     app.queries(&mut |queries| {
-        let mut value = queries.project(project).unwrap().unwrap();
+        let mut value = queries.project(project)?.unwrap();
         value.automatic_builds = true;
         value.visibility = Visibility::Public;
-        queries.save_project(&value).unwrap();
+        queries.save_project(&value)?;
+        Ok(())
     });
 }
 
@@ -28,22 +29,21 @@ fn latest(app: &Harness, project: ProjectId, pull: bool) -> Option<Build> {
     app.queries(&mut |queries| {
         let summary = if pull {
             queries
-                .viewer_pull_requests(project, None, 100)
-                .unwrap()
+                .viewer_pull_requests(project, None, 100)?
                 .into_iter()
                 .find(|row| row.key.number == 42)
                 .and_then(|row| row.newest_build)
         } else {
             queries
-                .viewer_branches(project, None, 100)
-                .unwrap()
+                .viewer_branches(project, None, 100)?
                 .into_iter()
                 .find(|row| row.key.name == "master")
                 .and_then(|row| row.newest_build)
         };
         if let Some(summary) = summary {
-            value = queries.build(project, summary.id).unwrap();
+            value = queries.build(project, summary.id)?;
         }
+        Ok(())
     });
     value
 }
@@ -70,11 +70,9 @@ fn terminal(app: &Harness, project: ProjectId, head: &str, pull: bool) -> Build 
     );
     assert!(build.log_complete);
     app.queries(&mut |queries| {
-        let log = queries
-            .build_log(project, build.id, 0, 100)
-            .unwrap()
-            .unwrap();
+        let log = queries.build_log(project, build.id, 0, 100)?.unwrap();
         assert_eq!(log.chunks[0].bytes, b"Recorded build output\n");
+        Ok(())
     });
     wait_until(|| {
         app.github

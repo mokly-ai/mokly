@@ -31,21 +31,21 @@ fn pull_request_rows_report_forks_for_every_authorized_reader() {
                     (Some(true), None, true),
                 ] {
                     app.queries(&mut |q| {
-                        let mut repository =
-                            q.github_repository(project.repository).unwrap().unwrap();
+                        let mut repository = q.github_repository(project.repository)?.unwrap();
                         repository.active = available;
-                        q.save_github_repository(&repository).unwrap();
-                        let mut pull = q.github_pull_requests(repository.id).unwrap().remove(0);
+                        q.save_github_repository(&repository)?;
+                        let mut pull = q.github_pull_requests(repository.id)?.remove(0);
                         pull.head_repository_id =
                             head.map(|same| repository.github_id + i64::from(!same));
                         pull.base_repository_id =
                             base.map(|same| repository.github_id + i64::from(!same));
                         pull.open = false;
-                        q.save_github_pull_request(&pull).unwrap();
-                        let workspace = q.project(project.id).unwrap().unwrap().organization_id;
-                        let mut workspace = q.organization(workspace).unwrap().unwrap();
+                        q.save_github_pull_request(&pull)?;
+                        let workspace = q.project(project.id)?.unwrap().organization_id;
+                        let mut workspace = q.organization(workspace)?.unwrap();
                         workspace.plan = plan;
-                        q.save_organization(&workspace).unwrap();
+                        q.save_organization(&workspace)?;
+                        Ok(())
                     });
                     for direct in [false, true] {
                         for member in [Role::Owner, Role::Admin, Role::Member, Role::Reviewer] {

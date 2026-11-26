@@ -11,6 +11,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::build_runtime::{BuildReconciliationLoop, BuildWorkerLoop};
 use crate::check_runtime::CheckClockMock;
 use crate::github_runtime::WorkerLoop;
+use crate::worker_intervals::WorkerIntervals;
 
 #[tokio::test]
 async fn idle_build_loop_waits_two_seconds() {
@@ -28,6 +29,7 @@ async fn idle_build_loop_waits_two_seconds() {
     let polling: &dyn WorkerLoop = &BuildWorkerLoop {
         worker: Some(Arc::new(worker)),
         clock: Arc::new(clock),
+        interval: WorkerIntervals::default().build_claim,
     };
     assert!(
         tokio::time::timeout(Duration::from_millis(100), polling.run())
@@ -65,6 +67,7 @@ async fn absent_builds_run_neither_loop_nor_clock() {
     let polling: &dyn WorkerLoop = &BuildWorkerLoop {
         worker: None,
         clock: Arc::new(Unimock::new(())),
+        interval: WorkerIntervals::default().build_claim,
     };
     assert!(
         tokio::time::timeout(Duration::from_millis(20), polling.run())
