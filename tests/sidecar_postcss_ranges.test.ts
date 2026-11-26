@@ -91,6 +91,65 @@ root.append({prop:'range',value:'done'});
   assert.equal(result.readEvidence.coverage, "incomplete");
 });
 
+test("PostCSS keeps bigint and vector NaN read positions", async (context) => {
+  const { base } = await sidecarSources(context);
+  const content = Buffer.from("abcdef");
+  const reads = {
+    bigint: "fs.readSync(fd,Buffer.alloc(1),0,1,-1n)",
+    nan: "fs.readvSync(fd,[Buffer.alloc(1)],NaN)",
+  };
+  for (const name of Object.keys(reads))
+    await fs.writeFile(path.join(base, `${name}.txt`), content);
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `
+import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'positions',Once(root,{result}){
+${Object.entries(reads)
+  .map(
+    ([
+      name,
+      read,
+    ]) => `{const fd=fs.openSync('${name}.txt','r');const count=${read};
+const bytes=Buffer.alloc(1);fs.readSync(fd,bytes,0,1,null);fs.closeSync(fd);
+root.append({prop:'${name}',value:count+'-'+bytes.toString()});
+result.messages.push({type:'dependency',file:'${name}.txt'});}`,
+  )
+  .join("\n")}
+}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+  );
+  const digest = (bytes: Buffer) =>
+    createHash("sha256").update(bytes).digest("hex");
+  for (const name of Object.keys(reads)) {
+    // The read returns 1 byte, and the next sequential read gets "b".
+    assert.match(result.text, new RegExp(`${name}: 1-b`, "u"), name);
+    const file = path.join(base, `${name}.txt`);
+    // Each recorded range holds the file's bytes at its offset.
+    const recorded = result.readEvidence.reads.filter(
+      (read) => read.path === file,
+    );
+    assert.deepEqual(
+      recorded.map((read) => [read.kind, read.digest]),
+      recorded.map((read) => [
+        "byte-range",
+        digest(
+          read.kind === "byte-range"
+            ? content.subarray(read.offset, read.offset + read.length)
+            : content,
+        ),
+      ]),
+      name,
+    );
+    assert.deepEqual(await fs.readFile(file), content, name);
+  }
+});
+
 test("PostCSS tracks reused descriptors and whole reads from the current position", async (context) => {
   const { base } = await sidecarSources(context);
   await fs.writeFile(path.join(base, "first.txt"), "first");
