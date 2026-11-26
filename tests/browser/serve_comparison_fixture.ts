@@ -14,7 +14,6 @@ import {
   createComparisonCatalogue,
   type ComparisonAdditions,
 } from "../helpers/comparison_catalogue.js";
-import { startDuration } from "../helpers/durations.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -25,6 +24,7 @@ import { git, write } from "../helpers/static_changes.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
 import { commitBaseSources } from "./serve_comparison_git.js";
+import { describeRead, readyLog } from "./serve_ready_log.js";
 
 /**
  * The waits between index reads while a publication is pending. A watched
@@ -38,54 +38,6 @@ const PUBLICATION_POLL_INTERVALS: readonly number[] = [50, 100, 200];
 export type ReadyPredicate = (
   index: CatalogueReadModel,
 ) => boolean | Promise<boolean>;
-
-/**
- * The duration of one wait and the states that it read, oldest first, for
- * the report of a wait that failed. The test's own time limit can end a
- * wait before its 30-second poll does, with the same error.
- */
-function readLog() {
-  const elapsed = startDuration();
-  const states: { state: string; reads: number }[] = [];
-  let inFlight = false;
-  const record = (state: string) => {
-    const last = states.at(-1);
-    if (last?.state === state) last.reads += 1;
-    else states.push({ state, reads: 1 });
-  };
-  return {
-    record,
-    /** Track one index read, so that a read without a response shows. */
-    async read(pending: Promise<CatalogueReadModel>) {
-      inFlight = true;
-      try {
-        return await pending;
-      } catch (error) {
-        record(`read failed: ${String(error)}`);
-        throw error;
-      } finally {
-        inFlight = false;
-      }
-    },
-    report: () =>
-      [
-        `The wait ended after ${elapsed()}. The cause below names the limit that ended it: the 30-second poll or the test's time limit. Index reads, oldest first:`,
-        ...states.map(({ state, reads }) => `- ${state} (${reads} reads)`),
-        ...(states.length === 0 ? ["- no index read completed"] : []),
-        ...(inFlight ? ["- the last index read had no response"] : []),
-      ].join("\n"),
-  };
-}
-
-/** One index read as the report of a wait names it. */
-function describeRead(index: CatalogueReadModel, predicate?: boolean) {
-  return [
-    `revision ${index.revision}`,
-    `changesStatus ${index.changesStatus}`,
-    ...(index.baseCommit ? [`baseCommit ${index.baseCommit}`] : []),
-    ...(predicate === undefined ? [] : [`predicate ${predicate}`]),
-  ].join(", ");
-}
 
 /** Replace one source atomically without placing a partial file in a watched root. */
 async function replaceSource(root: string, name: string, contents: string) {
@@ -171,19 +123,28 @@ export async function serveComparisonCatalogue(
       predicate?: ReadyPredicate,
     ): Promise<CatalogueReadModel> => {
       let accepted: Awaited<ReturnType<typeof index>> | undefined;
-      const reads = readLog();
+      const reads = readyLog();
       try {
         await expect
           .poll(
             async () => {
-              const current = await reads.read(index());
+              const current = await reads.step("reading the index", index);
+              const read = describeRead(current);
               const counted =
                 current.revision > after &&
                 current.changesStatus === "ready" &&
                 (!expectedBase || current.baseCommit === expectedBase);
+              if (!counted || !predicate) reads.record(read);
               const matched =
-                counted && predicate ? await predicate(current) : undefined;
-              reads.record(describeRead(current, matched));
+                counted && predicate
+                  ? await reads.step(
+                      "checking the caller's predicate",
+                      async () => predicate(current),
+                      read,
+                    )
+                  : undefined;
+              if (matched !== undefined)
+                reads.record(`${read}, predicate ${matched}`);
               if (!counted || matched === false) return false;
               accepted = current;
               return true;

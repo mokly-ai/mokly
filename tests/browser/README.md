@@ -1,5 +1,7 @@
 # Browser fixtures
 
+Status: Follow-up work remains in the [browser evaluate promise item](../../plans/follow-ups/browser-evaluate-promise-collected.md).
+
 `npm run test:browser` builds the workspace and runs the selected browser
 specs. Select a spec file, and optionally a test name with `-g`:
 

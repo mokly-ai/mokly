@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-26, from the branch `calummoore/ci-speed-flaky-follow-ups-b-and-new-k3dt`, which fixed the item "Viewer pick test loses its page to a navigation".
-- **Location:** The asynchronous page functions of 32 files under `tests/browser/`. The most are in `viewer_lifecycle.spec.ts` and `same_origin_identity.spec.ts`, six each, and in `same_origin_adapter.spec.ts`, three.
+- **Location:** The asynchronous page functions of 32 files under `tests/browser/`. `settleBrowserPage`, which the automatic error fixture in `tests/browser/error_monitor.ts:46` runs for each open page after every test, also waits for two animation frames through a `page.evaluate` promise. The most are in `viewer_lifecycle.spec.ts` and `same_origin_identity.spec.ts`, six each, and in `same_origin_adapter.spec.ts`, three.
 - **Reason:** The branch fixed the two specs whose failures CI and local runs showed, and each other spec needs its own conversion and repeat runs.
 
 - **Source:** Implementation.
@@ -23,7 +23,7 @@
 - **Root question:** How does a browser test wait for asynchronous page work so that the browser cannot drop the result?
 - **Options:**
   - **A.** Change nothing until Playwright bundles a Chromium with the V8 fix. The failures continue until then, and the date is unknown. Effort: Small.
-  - **B.** Convert each remaining page function that awaits page work to `awaitViewerWork`, or to `startViewerPick` for a pick. Run each changed spec 40 times. Effort: Medium.
+  - **B.** Convert each remaining page function that awaits page work to `awaitViewerWork`, or to `startViewerPick` for a pick. First make `startViewerPick` in `tests/browser/viewer_pick.ts` wait through `awaitViewerWork` and drop its page-global completion slot, so that one mechanism remains. Its six calls in `viewer.spec.ts`, `viewer_events.spec.ts`, `viewer_inspection_ownership.spec.ts`, and `viewer_evidence_cancellation.spec.ts` then need repeat runs. Run each changed spec 40 times. Effort: Medium.
   - **C.** Change the fixture in `tests/browser/browser_test.ts` so that every `page.evaluate` waits through a held handle. One change covers every spec. It changes how every evaluation of every browser spec waits, so it needs the complete Browser suite. Effort: Medium.
 - **Left out:** A retry of a failed evaluation hides the failure. A wait for an idle page before each reply does not remove the weak handle.
 - **Wider fix:** C. One fixture covers the specs that later changes add.
@@ -31,5 +31,6 @@
 - **Related:** `plans/follow-ups/pick-promise-unsettled-during-adapter-swap.md` has the same failure text from another cause: a pick promise that never settles. Through `awaitViewerWork`, such a promise makes the test time out instead.
 - **Recommendation:** B. It uses the reviewed helpers and keeps the timing of each other evaluation, and C remains possible later.
 - **Action:** fix after merge, apply B, because the two specs with observed failures are fixed and each other spec needs its own runs.
+- **Done when:** No browser spec or helper awaits page work through the promise of a `page.evaluate`, and the status line of `tests/browser/README.md` is gone.
 
 Evidence from the fixing branch: with a forced collection two microtasks after the page function returns, the old form of the concurrent pick test failed 4 of 4 runs, and `awaitViewerWork` passed 24 of 24 runs, 4 of them at that same point. The local protocol log of a natural failure showed the reply "Promise was collected" for the failed evaluation, while the page went on to finish the page function.
