@@ -70,6 +70,19 @@ test("settings renames rewrite only a working route that names the subject", () 
     ),
     "/settings/account?settings=project&settingsProject=project-id",
   );
+  // The install route names neither slug, so a project rename keeps it, its
+  // workspace and the settings scope it holds.
+  assert.equal(
+    canonicalProjectWorkingRoute(
+      "/install",
+      "?workspaceId=org-id&settings=project&settingsProject=project-id",
+      "org",
+      "old-project",
+      "org",
+      "new-project",
+    ),
+    "/install?workspaceId=org-id&settings=project&settingsProject=project-id",
+  );
 });
 
 test("a UUID permalink keeps viewer selection while replacing its prefix", () => {

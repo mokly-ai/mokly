@@ -99,59 +99,66 @@ test("Manage on GitHub opens the installation's page beside the pane", async ({
   await beside.close();
 });
 
-test("Remove disconnects the account and the pane offers to add one", async ({
+test("Remove disconnects the account, and Add GitHub account installs one again", async ({
   page,
 }) => {
-  await paneWithAccount(page, "github-remove");
-  await openRowMenu(page);
-  await page.getByRole("menuitem", { name: "Remove" }).click();
-  const modal = page.getByTestId("remove-github-account-modal");
-  await expect(modal).toContainText("Remove " + installedAccount + "?");
-  await expect(modal).toContainText(
-    "Mokly stops reading its repositories. Its projects and publications stay.",
-  );
+  const projectId = await paneWithAccount(page, "github-remove");
+  await test.step("Remove disconnects the account and the pane offers to add one", async () => {
+    await openRowMenu(page);
+    await page.getByRole("menuitem", { name: "Remove" }).click();
+    const modal = page.getByTestId("remove-github-account-modal");
+    await expect(modal).toContainText("Remove " + installedAccount + "?");
+    await expect(modal).toContainText(
+      "Mokly stops reading its repositories. Its projects and publications stay.",
+    );
 
-  // Cancel keeps the account and lands back on its row.
-  await page.getByTestId("cancel-remove-github-account").click();
-  await expect(modal).toHaveCount(0);
-  await expect(accountRow(page)).toBeVisible();
+    // Cancel keeps the account and lands back on its row.
+    await page.getByTestId("cancel-remove-github-account").click();
+    await expect(modal).toHaveCount(0);
+    await expect(accountRow(page)).toBeVisible();
 
-  await openRowMenu(page);
-  await page.getByRole("menuitem", { name: "Remove" }).click();
-  const removed = page.waitForResponse(
-    (answer) =>
-      answer.request().method() === "DELETE" &&
-      answer.url().includes("/v1/github/installations/"),
-  );
-  await page.getByTestId("confirm-remove-github-account").click();
-  expect((await removed).status()).toBe(204);
-  await expect(page.getByText("No GitHub accounts yet")).toBeVisible();
-  await expect(page.getByTestId("add-github-account")).toBeVisible();
+    await openRowMenu(page);
+    await page.getByRole("menuitem", { name: "Remove" }).click();
+    const removed = page.waitForResponse(
+      (answer) =>
+        answer.request().method() === "DELETE" &&
+        answer.url().includes("/v1/github/installations/"),
+    );
+    await page.getByTestId("confirm-remove-github-account").click();
+    expect((await removed).status()).toBe(204);
+    await expect(page.getByText("No GitHub accounts yet")).toBeVisible();
+    await expect(page.getByTestId("add-github-account")).toBeVisible();
 
-  // The workspace keeps its project and reads its accounts as none.
-  await page.getByRole("link", { name: "Workspace", exact: true }).click();
-  await expect(page.getByTestId("github-accounts-fact")).toContainText("None");
-  await expect(page.getByRole("dialog")).toContainText("Projects");
-});
+    // The workspace keeps its project and reads its accounts as none.
+    await page.getByRole("link", { name: "Workspace", exact: true }).click();
+    await expect(page.getByTestId("github-accounts-fact")).toContainText(
+      "None",
+    );
+    await expect(page.getByRole("dialog")).toContainText("Projects");
+    // Installing is still the way on: Create project offers the install step.
+    await expect(
+      page.getByRole("button", { name: "Create project" }),
+    ).toBeVisible();
+  });
 
-test("Add GitHub account installs through GitHub and returns to the pane", async ({
-  page,
-}) => {
-  const projectId = await paneWithAccount(page, "github-add");
-  await openRowMenu(page);
-  await page.getByRole("menuitem", { name: "Remove" }).click();
-  await page.getByTestId("confirm-remove-github-account").click();
-  await expect(page.getByText("No GitHub accounts yet")).toBeVisible();
+  await test.step("Add GitHub account installs through GitHub and returns to the pane", async () => {
+    await page
+      .getByRole("link", { name: "GitHub accounts", exact: true })
+      .click();
+    await expect(page.getByText("No GitHub accounts yet")).toBeVisible();
 
-  releaseRecordedGitHub();
-  await answerGitHubPages(page);
-  await startGitHubFlow(page, "add-github-account");
-  // The pane's own route is the flow's return, which the desktop opens as the
-  // dialog over the workspace's project.
-  await page.waitForURL((url) => url.searchParams.get("settings") === "github");
-  await expect(accountRow(page)).toBeVisible();
-  expect(new URL(page.url()).pathname).not.toContain("/-/settings");
-  expect(projectId.length).toBeGreaterThan(0);
+    releaseRecordedGitHub();
+    await answerGitHubPages(page);
+    await startGitHubFlow(page, "add-github-account");
+    // The pane's own route is the flow's return, which the desktop opens as the
+    // dialog over the workspace's project.
+    await page.waitForURL(
+      (url) => url.searchParams.get("settings") === "github",
+    );
+    await expect(accountRow(page)).toBeVisible();
+    expect(new URL(page.url()).pathname).not.toContain("/-/settings");
+    expect(projectId.length).toBeGreaterThan(0);
+  });
 });
 
 test("a suspended account says so beside the way to resume it", async ({
@@ -173,7 +180,7 @@ test("a suspended account says so beside the way to resume it", async ({
   await expect(resume).toHaveAttribute("rel", "noopener noreferrer");
 });
 
-test("a member reads the accounts and is offered no action", async ({
+test("a member reads the accounts in both panes and is offered no action", async ({
   page,
 }) => {
   await signIn(page, freshEmail("github-member-owner"));
@@ -190,11 +197,23 @@ test("a member reads the accounts and is offered no action", async ({
     page,
     await projectQueryPathFor(page, projectId, "settings=github"),
   );
-  await expect(accountRow(page)).toContainText("Personal");
-  await expect(
-    page.getByRole("button", { name: "Actions for " + installedAccount }),
-  ).toHaveCount(0);
-  await expect(page.getByTestId("add-github-account")).toHaveCount(0);
+  await test.step("a member reads the accounts and is offered no action", async () => {
+    await expect(accountRow(page)).toContainText("Personal");
+    await expect(
+      page.getByRole("button", { name: "Actions for " + installedAccount }),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("add-github-account")).toHaveCount(0);
+  });
+
+  await test.step("a member reads the accounts without the way to manage them", async () => {
+    await openDialog(
+      page,
+      await projectQueryPathFor(page, projectId, "settings=workspace"),
+    );
+    const fact = page.getByRole("dialog").getByTestId("github-accounts-fact");
+    await expect(fact).toContainText(installedAccount);
+    await expect(fact.getByRole("button", { name: "Manage" })).toHaveCount(0);
+  });
 });
 
 test("the pane says when the accounts could not load", async ({ page }) => {
