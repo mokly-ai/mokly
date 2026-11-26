@@ -1,24 +1,32 @@
 //! The native test scope: the Mokly Rust tests that the native suite leaves
-//! out, because their behaviour cannot differ by platform.
+//! out, because their behaviour cannot differ by platform or because they are
+//! stress tests.
 //!
 //! The native suite repeats the Rust tests on macOS and Windows to find
 //! platform defects. The Repository suite still runs every test on Linux. The
 //! list below excludes; it does not include. A new test therefore runs on
 //! every platform until someone adds it here.
 //!
-//! A test stays on every platform when it touches paths, links, file names or
-//! their case, line endings, processes and signals, file watching, sockets and
-//! ports, stack depth, temporary folders, Git subprocesses, the sidecar Node
-//! process, or locks. Every test of `mokly-platform`, `mokly-git`,
-//! `mokly-sidecar`, `mokly-watch`, `mokly-catalogue`, `mokly-static`, and
-//! `mokly-server` stays. A test leaves only when it checks pure logic, and
+//! A test that is not a stress test stays on every platform when it touches
+//! paths, links, file names or their case, line endings, processes and
+//! signals, file watching, sockets and ports, stack depth, temporary folders,
+//! Git subprocesses, the sidecar Node process, or locks. Every other test of
+//! `mokly-platform`, `mokly-git`, `mokly-sidecar`, `mokly-watch`,
+//! `mokly-catalogue`, `mokly-static`, and `mokly-server` stays. A test that
+//! is not a stress test leaves only when it checks pure logic, and
 //! its fixtures use Git, temporary folders, or the sidecar only to produce
 //! the inputs that kept tests cover on every platform. When in doubt, keep
 //! the test.
+//!
+//! Stress tests are the one exception, in every crate: they run on Linux
+//! only. A stress test builds an input far past authored sizes, a tree of at
+//! least 10,000 levels, at least 10,000 files or entries, or tens of
+//! megabytes, and proves that Mokly survives it. A stack overflow at such a
+//! depth that only macOS or Windows has is then not caught.
 
 use std::collections::BTreeSet;
 
-use self::Neutral::{Binary, Module};
+use self::Neutral::{Binary, Module, Test};
 use super::rust_targets::TestUnit;
 
 /// The nextest binary ID of the `mokly-render` integration test binary.
@@ -32,6 +40,8 @@ enum Neutral {
     /// Every test of one module of a test binary: the binary ID and the
     /// module path under the crate root of the binary.
     Module(&'static str, &'static str),
+    /// One test of a test binary: the binary ID and the full test name.
+    Test(&'static str, &'static str),
 }
 
 /// CSS attribution and rule ownership. The tests decide which component owns
@@ -93,13 +103,96 @@ const HTML_COMPOSITION: &[Neutral] = &[
     Binary("mokly-graph::plaintext_tests"),
 ];
 
+/// Stress tests. Each test builds a tree of at least 10,000 levels, at least
+/// 10,000 files or entries, or tens of megabytes. The Repository suite runs
+/// them on Linux.
+const STRESS: &[Neutral] = &[
+    Binary("mokly-catalogue::nesting_depth_tests"),
+    Binary("mokly-compare::deep_tree_tests"),
+    Binary("mokly-compare::large_sources_tests"),
+    Binary("mokly-css::nesting_depth_tests"),
+    Binary("mokly-graph::deep_tree_tests"),
+    Binary("mokly-html::deep_tree_tests"),
+    Test(
+        "mokly-catalogue",
+        "yaml::yaml_depth_tests::deep_input_stops_at_the_limit",
+    ),
+    Test(
+        "mokly-compare",
+        "inline_styles::inline_styles_tests::deep_head_styles_preserve_order_and_do_not_leak_head_state_to_siblings",
+    ),
+    Test(
+        "mokly-compare",
+        "instance_impact::instance_impact_tests::deep_slot_search_preserves_scope_merge_order",
+    ),
+    Test(
+        "mokly-compare",
+        "matching_tree::matching_tree_tests::deep_regions_and_elements_use_a_heap_walk_and_restore_sibling_scope",
+    ),
+    Test(
+        "mokly-compare",
+        "material::material_tests::deep_values_compare_hash_and_drop_without_using_tree_depth_as_stack_depth",
+    ),
+    Test(
+        "mokly-compare",
+        "owned_style_instances::owned_style_instances_tests::deep_nested_instances_retain_only_the_matched_chain",
+    ),
+    Test(
+        "mokly-compare",
+        "owned_styles::owned_styles_tests::deep_styles_map_owners_deduplicate_rules_and_skip_inert_subtrees",
+    ),
+    Test(
+        "mokly-compare",
+        "workspace_patterns_tests::many_and_deeply_nested_groups_need_no_expansion_list",
+    ),
+    Test(
+        "mokly-css",
+        "containment::containment_tests::final_deep_path_owner_releases_on_an_ordinary_stack",
+    ),
+    Module("mokly-css", "deep_scanner_tests"),
+    Test(
+        "mokly-css",
+        "has_depth_tests::very_deep_pages_keep_relational_evidence_and_match_other_selectors",
+    ),
+    Test(
+        "mokly-graph",
+        "document_codec::document_codec_tests::capture_and_restore_are_iterative_and_keep_authored_owner_attributes_untrusted",
+    ),
+    Module("mokly-html", "deep_context_tests"),
+    Test(
+        "mokly-model",
+        "catalogue_tree::catalogue_tree_tests::deep_navigation_clones_formats_and_drops_on_an_ordinary_thread",
+    ),
+    Test(
+        "mokly-model",
+        "output::artifact::artifact_tests::marker_writer_has_no_publication_file_count_ceiling",
+    ),
+    Test(
+        "mokly-model",
+        "output::artifact::artifact_tests::marker_writer_rejects_a_marker_above_the_regular_file_limit",
+    ),
+    Test(
+        "mokly-render",
+        "stylesheet_record::stylesheet_chain_drop_tests::finding_8_releasing_a_long_context_chain_uses_bounded_stack_space",
+    ),
+    Test(
+        "mokly-render",
+        "stylesheets::stylesheet_walk_tests::a_deep_import_chain_keeps_first_stylesheet_encounter_and_stops_cycles",
+    ),
+    Test(
+        "mokly-static",
+        "assembly_tests::rejects_a_current_index_above_the_output_file_limit",
+    ),
+];
+
 /// Every group of tests that the native scope leaves out.
-const GROUPS: [&[Neutral]; 5] = [
+const GROUPS: [&[Neutral]; 6] = [
     CSS_ATTRIBUTION,
     CHANGES_CLASSIFICATION,
     SCALE_COUNTS,
     AUTHORING_RULES,
     HTML_COMPOSITION,
+    STRESS,
 ];
 
 /// The Rust tests that one suite runs.
@@ -107,7 +200,8 @@ const GROUPS: [&[Neutral]; 5] = [
 pub(crate) enum TestScope {
     /// Every Mokly Rust test.
     Complete,
-    /// Every Mokly Rust test except the platform-neutral tests of this module.
+    /// Every Mokly Rust test except the platform-neutral tests and the stress
+    /// tests of this module.
     Native,
 }
 
@@ -146,6 +240,7 @@ fn native_filterset() -> String {
         .map(|test| match test {
             Binary(id) => format!("binary_id(={id})"),
             Module(id, module) => format!("(binary_id(={id}) & test(/^{module}::/))"),
+            Test(id, name) => format!("(binary_id(={id}) & test(={name}))"),
         })
         .collect();
     format!("not ({})", parts.join(" | "))
