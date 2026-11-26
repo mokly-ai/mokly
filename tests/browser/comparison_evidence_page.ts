@@ -224,3 +224,10 @@ export function evidenceSpacing(scope: Locator) {
     };
   });
 }
+
+/** Status literals of the evidence format never reach the reader. */
+export async function expectNoStatusWords(evidence: Locator): Promise<void> {
+  for (const word of [/\bmatched\b/, /\bunresolved\b/, /\bentry\b/])
+    await expect(evidence).not.toContainText(word);
+  await expect(evidence).not.toContainText(/[0-9a-f]{64}/);
+}
