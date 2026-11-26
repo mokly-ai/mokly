@@ -164,7 +164,9 @@ Depends on: 5. Starts after `main` with PR #571 merges into this branch.
 - [x] `docs/ops/build-template.md`: the v7 release record.
 - [x] Reconcile the follow-up items that PR #571 added or kept with this
       change.
-- [ ] Run the gate checks again, review the merge, and push.
+- [x] Run the gate checks again, review the merge, and push. Evidence:
+      `.context/build-template-debian-base/gate-full-4.log` and round 3 of the
+      findings file.
 
 ## Milestone 7: Plan deletion and pull request
 
