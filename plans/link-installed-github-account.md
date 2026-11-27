@@ -242,35 +242,7 @@ recommendation.
 - **Action:** ask the user, because he asked to settle this row, and it
   sets what the list discloses.
 
-### 5. What the list shows when nothing can be linked
-
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Design.
-- **Category:** UX wording.
-- **Location:** None.
-- **Background:** The list trip can find no account that the reader can
-  link. An organization member who is not an admin also finds nothing,
-  because the list must not show that organization.
-- **Problem:** The pane needs an empty state for the found accounts.
-- **Impact if no action:** The design has a gap.
-- **Root question:** What does the reader do next when no installed
-  account can be linked?
-- **Options:**
-  - **A.** A note, "No other account that you administer has Mokly
-    installed", with **Install on another account**, the same label as
-    the end of the list. Effort: Small.
-  - **B.** Go straight on to the GitHub install page with no note. Effort:
-    Small.
-  - **C.** A note with no action. The section action stays. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** None.
-- **Previous examples:** **No GitHub accounts yet** is the empty state of
-  the pane.
-- **Recommendation:** A. The reader learns the result and gets the next
-  step in the same place.
-- **Action:** ask the user, because he asked to settle the empty state.
-
-### 6. Where a failed GitHub trip from the pane returns
+### 5. Where a failed GitHub trip from the pane returns
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -311,6 +283,34 @@ recommendation.
 - **Action:** ask the user, because B edits files that the parent branch
   changes, and he asked to approve each such edit.
 
+### 6. What the list shows when nothing can be linked
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** UX wording.
+- **Location:** None.
+- **Background:** The list trip can find no account that the reader can
+  link. An organization member who is not an admin also finds nothing,
+  because the list must not show that organization.
+- **Problem:** The pane needs an empty state for the found accounts.
+- **Impact if no action:** The design has a gap.
+- **Root question:** What does the reader do next when no installed
+  account can be linked?
+- **Options:**
+  - **A.** A note, "No other account that you administer has Mokly
+    installed", with **Install on another account**, the same label as
+    the end of the list. Effort: Small.
+  - **B.** Go straight on to the GitHub install page with no note. Effort:
+    Small.
+  - **C.** A note with no action. The section action stays. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Previous examples:** **No GitHub accounts yet** is the empty state of
+  the pane.
+- **Recommendation:** A. The reader learns the result and gets the next
+  step in the same place.
+- **Action:** ask the user, because he asked to settle the empty state.
+
 ## Design
 
 This design uses the recommended option of each decision. Each line marked
@@ -324,7 +324,7 @@ This design uses the recommended option of each decision. Each line marked
   verifier. My call: a new endpoint and purpose, so that the install flow
   keeps its guard against an OAuth return without a candidate.
 - The tab record. The pane stores its trips under the new tab purpose of
-  decision 6 B. The landing posts it to the callback with the session
+  decision 5 B. The landing posts it to the callback with the session
   CSRF, as for an installation trip.
 - The callback. `POST /v1/auth/github/callback` runs as today. For an
   `install-list` flow, it reads `/user/installations` for this App. It
@@ -365,7 +365,7 @@ This design uses the recommended option of each decision. Each line marked
 - The pane without connected accounts. The found section replaces **No
   GitHub accounts yet** while it has rows. My call: one state per pane.
 - An organization member who is not an admin gets no row for that
-  organization. The empty note of decision 5 names only accounts that the
+  organization. The empty note of decision 6 names only accounts that the
   reader administers. My call: the requirement forbids the row.
 - The desktop shell opens the pane on the web for each GitHub trip, as
   today.
@@ -378,9 +378,9 @@ This design uses the recommended option of each decision. Each line marked
 - `docs/protocol/cloud/github-app.md`: one link line to the new protocol
   page, outside the parent's lines. Expect a small conflict at most.
 - `docs/protocol/cloud/auth-callbacks.md`: the tab-scoped purpose table
-  and, with decision 6 B, the recovery table of the GitHub callback. The
+  and, with decision 5 B, the recovery table of the GitHub callback. The
   parent changes other lines of this file.
-- With decision 6 B only: `packages/app/src/navigation/github-flow.ts`
+- With decision 5 B only: `packages/app/src/navigation/github-flow.ts`
   gets the new tab purpose. The parent changes the same file. Expect a
   conflict in the purpose list.
 
