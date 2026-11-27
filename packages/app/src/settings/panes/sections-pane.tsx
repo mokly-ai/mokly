@@ -76,7 +76,7 @@ export function SectionsPane() {
  * The index while the settings scope loads: the sections and panes that the
  * scope gives an owner, as the rail beside it draws them. Every pane's name and
  * summary are known, so they stay text; where each row leads waits, because its
- * address needs the scope, so Open is text with no link.
+ * address needs the scope, so no row is a link yet.
  */
 export function SectionsWait({ panes }: { panes: readonly PaneDefinition[] }) {
   return (
@@ -89,7 +89,6 @@ export function SectionsWait({ panes }: { panes: readonly PaneDefinition[] }) {
             id: pane.id,
             title: pane.title,
             detail: pane.summary,
-            action: "Open",
             waiting: true,
           }))}
         />

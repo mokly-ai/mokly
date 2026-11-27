@@ -62,7 +62,6 @@ function publicationRow(
             context.projectSlug,
             publication.id,
           ),
-          action: state === "failed" ? "Details" : "Open",
         }),
   };
 }
@@ -87,7 +86,6 @@ function buildRow(build: Build, context: RowContext): PanelRow {
       ? {}
       : {
           href: buildPath(context.workspaceSlug, context.projectSlug, build.id),
-          action: "Details",
         }),
   };
 }
@@ -100,7 +98,7 @@ function rowFor(entry: HistoryEntry, context: RowContext): PanelRow {
 
 /**
  * An entry while the history's read runs: its state, its time and its head
- * are the read's, and its way on keeps its label as text.
+ * are the read's.
  */
 const waitingEntry: WaitingPanelRow = {
   id: "waiting",
@@ -109,7 +107,6 @@ const waitingEntry: WaitingPanelRow = {
   detail: "",
   status: true,
   sha: true,
-  action: "Open",
 };
 
 /**

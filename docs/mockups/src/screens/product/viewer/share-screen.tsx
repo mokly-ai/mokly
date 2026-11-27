@@ -43,22 +43,19 @@ function screenOffers(viewport: Viewport, scheme: ColorScheme): ScreenOffer[] {
   });
 }
 
-/** The row control that selects a screen, or the whole catalogue. */
-const choose = {
-  to: "product/viewer/share",
-  action: "Select",
-  choose: true,
-} as const;
+/** A row that is one button, which selects a screen or the whole catalogue. */
+const choose = { to: "product/viewer/share", choose: true } as const;
 
-/** The row that the link points at, which says so in place of its choice. */
+/** The row that the link points at, which says so and is no button. */
 const chosen = { current: true, mark: "Selected" } as const;
 
 /**
- * Which screen the link points at: the whole catalogue or one offer. The
- * selected row takes the signal-soft fill and says Selected in place of its
- * choice. While the screens are read, the whole catalogue keeps its known
- * name, one placeholder row stands for the screens, and which row is
- * selected is the read's, so each row's choice is a placeholder.
+ * Which screen the link points at: the whole catalogue or one offer. Each
+ * other row is one button that selects it. The selected row is no button: it
+ * takes the signal-soft fill and says Selected. While the screens are read,
+ * the whole catalogue keeps its known name, one placeholder row stands for
+ * the screens, and which row is selected is the read's, so no row is a
+ * button or says Selected yet.
  */
 function ScreenChoice({
   offers,
@@ -78,10 +75,9 @@ function ScreenChoice({
               {
                 id: "whole-catalogue",
                 title: "Whole catalogue",
-                ...choose,
                 waiting: true,
               },
-              { id: "waiting", title: "", ...choose, waiting: true },
+              { id: "waiting", title: "", waiting: true },
             ]
           : [
               {

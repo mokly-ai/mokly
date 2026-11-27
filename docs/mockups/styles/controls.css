@@ -30,22 +30,59 @@
   flex: 1 1 14rem;
   min-width: 0;
 }
-.list-destination {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--mk-layout-row-min);
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-ui-small-size);
-  line-height: var(--mk-type-ui-small-line);
-  font-weight: var(--mk-font-medium);
+/* A row that leads somewhere is one link, and a row whose only action is to
+   choose it is one button: its content is the anchor or the button, whose
+   ::after reaches the list item's own frame, padding included, so the whole
+   row takes the click. The list item draws the row's states, so they take
+   its own corners: the hover fill, the text at 5% that the chrome's hover
+   rule allows, and the focus outline inside its frame. */
+.row-link {
+  display: block;
+  color: inherit;
   text-decoration: none;
-  white-space: nowrap;
 }
-.list-destination:hover {
-  color: var(--mk-color-text);
+.row-choice {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
-.list-destination:hover > span {
-  text-decoration: underline;
+:is(.row-link, .row-choice)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+:is(.row-link, .row-choice):focus-visible {
+  outline: none;
+}
+li:has(> .content-list-row > :is(.row-link, .row-choice):hover) {
+  background: color-mix(in srgb, var(--mk-color-text) 5%, transparent);
+}
+li:has(> .content-list-row > :is(.row-link, .row-choice):focus-visible) {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: -2px;
+}
+/* A panel clips its first and last rows to its inner corners, so those rows
+   take the same corners and their outline is not cut. */
+.fo-panel li:first-child:has(> .content-list-row) {
+  border-start-start-radius: calc(var(--mk-radius-medium) - 1px);
+  border-start-end-radius: calc(var(--mk-radius-medium) - 1px);
+}
+.fo-panel li:last-child:has(> .content-list-row) {
+  border-end-start-radius: calc(var(--mk-radius-medium) - 1px);
+  border-end-end-radius: calc(var(--mk-radius-medium) - 1px);
+}
+@media (forced-colors: active) {
+  li:has(> .content-list-row > :is(.row-link, .row-choice):focus-visible) {
+    outline-color: Highlight;
+  }
 }
 .component-example > .loading-layout,
 .component-example > .toggle-layout {

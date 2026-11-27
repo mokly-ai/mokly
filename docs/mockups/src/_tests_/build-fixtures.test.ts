@@ -92,8 +92,8 @@ test("a build's head is the same build wherever a row or a publication shows it"
   );
   assert.equal(pullRequests[1].sha, shortSha(builds.pullRequest));
   // A row that takes its state from a build names that build's reference and
-  // shows its head: the running builds, and the failed build whose Details
-  // the switcher opens.
+  // shows its head: the running builds, and the failed build that the
+  // switcher's failed row opens.
   const rows = [...branches, ...pullRequests];
   assert.deepEqual(
     rows.flatMap((row) => ("build" in row ? [row.build] : [])),

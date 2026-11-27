@@ -85,7 +85,7 @@ test("a branch alias resolves that branch's newest ready publication, and a rout
     await page
       .getByRole("listitem")
       .filter({ hasText: "main" })
-      .getByText("Open")
+      .getByRole("link")
       .click();
     await expect(publicationReference(page)).toHaveText("main");
   });
@@ -102,7 +102,7 @@ test("a branch alias resolves that branch's newest ready publication, and a rout
     await page
       .getByRole("listitem")
       .filter({ hasText: "topic" })
-      .getByText("Open")
+      .getByRole("link")
       .click();
     await expect(publicationReference(page)).toHaveText("topic");
     // The path names the page, with nothing of the reserved key's value in it.
@@ -166,7 +166,7 @@ test("history lists every attempt on this branch, failed ones included", async (
     .getByRole("listitem")
     .filter({ hasText: "Unable to publish" });
   await expect(failed).toHaveCount(1);
-  await failed.getByText("Details").click();
+  await failed.getByRole("link").click();
   // A failed attempt opens its own details, never an absent catalogue.
   await expect(page.getByText("Unable to publish this branch")).toBeVisible();
   await expect(

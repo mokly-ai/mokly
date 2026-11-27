@@ -73,12 +73,8 @@ function detailFor(row: ReferenceRowState): string {
  * publication and newest build, and its short SHA from whichever that was.
  * A branch reads in mono, as a reference does, and a pull request keeps its
  * number and title in sans. The reference the reader is on is where they
- * already are, so its row takes the signal-soft fill and says Current in
- * place of a destination. Opening any other row resolves its reference, so a
- * ready publication still wins over a newer build. Details on a reference
- * with nothing ready opens its failed attempt's own address — a failed
- * build's address or a failed publication's details — whatever card the
- * reference's stage shows.
+ * already are, so its row takes the signal-soft fill and says Current; every
+ * other row leads where `rowTarget` says.
  */
 function rowFor(
   row: RefRow,
@@ -86,7 +82,7 @@ function rowFor(
   projectSlug: string,
   current: PublicationRef | undefined,
 ): PanelRow {
-  const { state, href, details } = rowTarget(row, workspaceSlug, projectSlug);
+  const { state, href } = rowTarget(row, workspaceSlug, projectSlug);
   const detail = detailFor(state);
   const shown: PanelRow = {
     id: row.ref.kind + ":" + row.title,
@@ -98,7 +94,7 @@ function rowFor(
   };
   return sameReference(row.ref, current)
     ? { ...shown, current: true, mark: "Current" }
-    : { ...shown, href, action: details ? "Details" : "Open" };
+    : { ...shown, href };
 }
 
 function matching(rows: readonly PanelRow[], search: string): PanelRow[] {

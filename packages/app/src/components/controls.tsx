@@ -8,7 +8,6 @@ import type { ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
 
-import { Action } from "./action";
 import { AppLink } from "./app-link";
 import { WaitingListRow } from "./placeholder-rows";
 import type { WaitingRow } from "./placeholder-rows";
@@ -73,25 +72,37 @@ export function PersonAvatar({
   );
 }
 
-/** One row of a shared content list. */
-export interface ContentRow {
+/**
+ * What a press on a row does. A row that goes to one place is the link as a
+ * whole, and a row whose only action is to choose it, rather than go
+ * anywhere, is a button as a whole. Neither carries a label of its own: its
+ * title already names what it opens or chooses. A choice changes what its
+ * panel shows, so it is not openable in a second tab. A row with neither
+ * leads nowhere.
+ */
+export type RowPress =
+  RowDestination | { onChoose: () => void; href?: never; onFollow?: never };
+
+/** Where a row that goes somewhere leads, or nothing for a row that does not. */
+export interface RowDestination {
+  href?: string;
+  /** Takes the destination's place, for a row whose owner drives the move. */
+  onFollow?: () => void;
+  onChoose?: never;
+}
+
+/**
+ * One row of a shared content list. A record list holds no choice, so its
+ * row goes somewhere or nowhere.
+ */
+export type ContentRow = {
   id: string;
   title: string;
   detail?: string;
   meta?: string;
   mono?: boolean;
   status?: StatusTone;
-  href?: string;
-  action?: string;
-  /** Takes the destination's place, for a row whose owner drives the move. */
-  onFollow?: () => void;
-  /**
-   * A row whose action changes what the panel is showing rather than going
-   * anywhere, so it is a control rather than a destination and is not
-   * openable in a second tab.
-   */
-  onChoose?: () => void;
-}
+} & RowDestination;
 
 /**
  * One row of a list whose read runs: the row's own frame, with a bar in place
@@ -100,7 +111,36 @@ export interface ContentRow {
  */
 export type WaitingContentRow = WaitingRow & { id: string; waiting: true };
 
-/** The shared rows a panel lists, with an optional destination at the right. */
+/**
+ * A row's content, as the link of a row that goes somewhere or the button of
+ * a row that chooses: the whole row takes the click, and the link or the
+ * button reaches the row's full frame.
+ */
+export function RowContent({
+  row,
+  children,
+}: {
+  row: RowPress;
+  children: ReactNode;
+}) {
+  // The native button keeps its own keyboard and focus behaviour. It holds
+  // the package row's block markup, which HTML allows only in phrasing
+  // content, and every browser draws and presses it as one box.
+  if (row.onChoose)
+    return (
+      <button type="button" className="row-choice" onClick={row.onChoose}>
+        {children}
+      </button>
+    );
+  if (row.href === undefined) return children;
+  return (
+    <AppLink href={row.href} onPress={row.onFollow} className="row-link">
+      {children}
+    </AppLink>
+  );
+}
+
+/** The shared rows a panel lists; a row that goes somewhere is a link. */
 export function ContentList({
   label,
   rows,
@@ -121,47 +161,29 @@ export function ContentList({
           <WaitingListRow row={row} size={size} />
         ) : (
           <div className="content-list-row">
-            <ListItem
-              size={size}
-              title={row.title}
-              description={row.detail}
-              leading={
-                row.status ? (
-                  <StatusDot tone={statusTones[row.status]} size="sm" />
-                ) : undefined
-              }
-              trailing={
-                row.meta ? (
-                  <span
-                    className={
-                      "row-meta" + (row.mono ? " mono-value" : " numeric")
-                    }
-                  >
-                    {row.meta}
-                  </span>
-                ) : undefined
-              }
-            />
-            {row.onChoose && row.action ? (
-              <Action
-                label={row.action}
-                tone="quiet"
-                size="sm"
-                onPress={row.onChoose}
-                testID={"choose-" + row.id}
+            <RowContent row={row}>
+              <ListItem
+                size={size}
+                title={row.title}
+                description={row.detail}
+                leading={
+                  row.status ? (
+                    <StatusDot tone={statusTones[row.status]} size="sm" />
+                  ) : undefined
+                }
+                trailing={
+                  row.meta ? (
+                    <span
+                      className={
+                        "row-meta" + (row.mono ? " mono-value" : " numeric")
+                      }
+                    >
+                      {row.meta}
+                    </span>
+                  ) : undefined
+                }
               />
-            ) : (
-              row.href &&
-              row.action && (
-                <AppLink
-                  href={row.href}
-                  onPress={row.onFollow}
-                  className="list-destination"
-                >
-                  <span>{row.action}</span>
-                </AppLink>
-              )
-            )}
+            </RowContent>
           </div>
         )
       }

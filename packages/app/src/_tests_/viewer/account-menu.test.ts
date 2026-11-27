@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { User } from "../../api/types";
 import type { MenuItem } from "../../viewer/menu-list";
-import type { ViewerPanel } from "../../viewer/selection";
+import type { PanelId } from "../../viewer/selection";
 import "../server-render";
 
 /**
@@ -58,12 +58,12 @@ test("the account's items run from Settings to Sign out, with the site's Docs an
 
 test("More's own rows are the project, History and Share, and Share waits for a publication", async () => {
   const { moreItems, barPlacement } = await subjects();
-  const opened: ViewerPanel[] = [];
+  const opened: PanelId[] = [];
   const input = {
     placement: barPlacement(true),
     workspace: "Mokly Team",
     project: { name: "Mokly Cloud" },
-    onPanel: (panel: ViewerPanel) => opened.push(panel),
+    onPanel: (panel: PanelId) => opened.push(panel),
   };
   const items = moreItems({ ...input, shareable: true });
   assert.deepEqual(rows(items), [
