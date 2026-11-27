@@ -545,4 +545,26 @@ at `cb6cf71a0` started build `01a219ca-02ca-7668-bf90-31b7ee9c1c8a`. Its check r
 included. The build published `01a219ca-2d77-768d-a44f-6949a6ffb980`. The test repository has
 no other producer. Its GitHub check `140180940938` said "Catalogue ready to
 review." (1 changed) with its Changes link. A Re-run at 21:43:21Z delivered
-the same result to the same check. Record the production build proof here.
+the same result to the same check.
+
+Production build proof, 2026-11-27: version 1 of
+`mkc-production-e2b-api-key` was added at 09:58:26Z. Production builds then
+used the same `mokly-build-v8` build reference
+`gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291`, with deployment
+ID `production-builds`, source revision `c345aa04a`, through Deploy run 45992143730. The production plan rendered `builds.enabled: true` with that
+reference. The test repository's push to `main` at `2de028072` started build
+`01a21cde-61f3-7144-94bf-b40ea937a33f`. Its check `140491057594` ran from
+11:57:47Z to 11:58:03Z and said "Catalogue published.". Pull request
+[mokly-build-smoke#3](https://github.com/mokly-ai/mokly-build-smoke/pull/3)
+at `0d4d52114` started build `01a21ce0-1e82-72b8-9ef3-a44f6e83cdd5`. Its
+check `140491895705` ran from 11:59:44Z to 11:59:55Z and said "Catalogue
+ready to review." (2 changed). The Changes link named publication
+`01a21ce0-4e85-7298-893d-176d3d067b61`. A Re-run at 12:04:53Z delivered the
+same result to the same check. Pull request
+[mokly-build-smoke#4](https://github.com/mokly-ai/mokly-build-smoke/pull/4)
+at `f00dfe20e` changed the lockfile against its base. Its build
+`01a21ce1-1011-72f8-a0ad-b3a261ae24d9` and check `140492371846` ran from
+12:00:45Z to 12:00:56Z and said "Catalogue ready to review." (0 changed).
+Each check time includes checkout, a cold install in a fresh sandbox and
+publish, far inside the 15-minute budget. After these builds, E2B listed no
+running sandbox for the team.
