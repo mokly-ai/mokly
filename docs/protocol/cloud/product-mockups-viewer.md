@@ -15,14 +15,14 @@ renders the same chrome, so the family reads as one application. Every viewer
 drawing draws the cloud's own chrome, panels and cards in the Canvas palette
 with Geist, and its `@mokly/ui` parts with the package's own stylesheet.
 
-| Path                          | Canonical content and action                                                   | Empty / missing data                           | Error recovery                                 |
-| ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
-| `product/viewer/standalone`   | A branch's ready publication on the stage                                      | No publication; Set up publishing              | Publication unavailable; choose another branch |
-| `product/viewer/pull-request` | A pull request entry with Changes preselected                                  | Pull request not published yet; switcher       | Publication unavailable; choose another branch |
-| `product/viewer/projects`     | Workspaces, their projects, Create project, Workspace settings                 | No projects in this workspace; create          | Projects couldn't load; retry                  |
-| `product/viewer/switcher`     | Branches then pull requests, each with its newest publication or build state   | No ref matches the search; clear it            | Branches couldn't load; retry                  |
-| `product/viewer/history`      | This branch's publications and builds, newest first, with each one's state     | No earlier publications; Choose another branch | History couldn't load; retry                   |
-| `product/viewer/share`        | The canonical link, its access sentence, the screen it points at and Copy link | Nothing published to share; set it up          | Link couldn't load; retry                      |
+| Path                          | Canonical content and action                                                     | Empty / missing data                           | Error recovery                                 |
+| ----------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| `product/viewer/standalone`   | A branch's ready publication on the stage                                        | No publication; Set up publishing              | Publication unavailable; choose another branch |
+| `product/viewer/pull-request` | A pull request entry with Changes preselected                                    | Pull request not published yet; switcher       | Publication unavailable; choose another branch |
+| `product/viewer/projects`     | Workspaces, their projects, Create project, Create workspace, Workspace settings | No projects in this workspace; create          | Projects couldn't load; retry                  |
+| `product/viewer/switcher`     | Branches then pull requests, each with its newest publication or build state     | No ref matches the search; clear it            | Branches couldn't load; retry                  |
+| `product/viewer/history`      | This branch's publications and builds, newest first, with each one's state       | No earlier publications; Choose another branch | History couldn't load; retry                   |
+| `product/viewer/share`        | The canonical link, its access sentence, the screen it points at and Copy link   | Nothing published to share; set it up          | Link couldn't load; retry                      |
 
 `product/viewer/standalone` and `product/viewer/pull-request` carry the chrome and the stage,
 and their document heading is visually hidden in the top bar, which already

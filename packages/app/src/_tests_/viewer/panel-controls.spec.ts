@@ -58,6 +58,12 @@ test("one overlay is one entry, and the projects panel lists what the reader can
     await expect(page).toHaveURL((url) =>
       /^\/[^/]+\/-\/new$/.test(url.pathname),
     );
+
+    // The next workspace starts at the workspace step of setup.
+    await open(page, here);
+    await page.getByTestId("viewer-project").click();
+    await page.getByTestId("projects-create-workspace").click();
+    await expect(page).toHaveURL((url) => url.pathname === "/new");
   });
 });
 

@@ -100,6 +100,8 @@
 }
 .fo-panel-foot {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
   justify-content: flex-start;
 }
 .fo-ref-group {

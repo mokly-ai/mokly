@@ -186,6 +186,13 @@ function ProjectsPage({
               icon="start"
               disabled={state === "loading"}
             />
+            <Action
+              instance="projects-create-workspace"
+              label="Create workspace"
+              to="product/account/create-workspace"
+              size="md"
+              icon="start"
+            />
           </div>
         )}
       </div>

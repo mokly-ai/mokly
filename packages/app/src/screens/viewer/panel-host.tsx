@@ -4,6 +4,7 @@ import type { Workspace, Project } from "../../api/types";
 import { site } from "../../config";
 import type { PublicationRef } from "../../data/publications";
 import {
+  createWorkspacePath,
   workspaceNewProjectPath,
   projectPath,
   settingsPath,
@@ -88,6 +89,7 @@ export function ViewerPanelHost(input: PanelInput) {
           onCreateProject={() =>
             input.onFollow(workspaceNewProjectPath(project.workspaceSlug))
           }
+          onCreateWorkspace={() => input.onFollow(createWorkspacePath)}
         />
       )}
       {panel === "switcher" && (

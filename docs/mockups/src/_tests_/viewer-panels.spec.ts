@@ -247,6 +247,9 @@ for (const viewport of ["desktop", "mobile"] as const)
           page.getByRole("link", { name: "Create project" }),
         ).toBeVisible();
         await expect(
+          page.getByRole("link", { name: "Create workspace" }),
+        ).toBeVisible();
+        await expect(
           page.getByRole("link", { name: "Workspace settings" }).first(),
         ).toBeVisible();
         await page.getByRole("link", { name: "Close", exact: true }).click();

@@ -72,6 +72,8 @@ const panelWaits = [
     controls: [
       ["Close", false],
       ["Create project", true],
+      // A new workspace needs nothing the read answers.
+      ["Create workspace", false],
     ],
     placeholders: 1,
     hidden: projects,

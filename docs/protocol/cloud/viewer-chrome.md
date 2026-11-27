@@ -80,13 +80,13 @@ loader. A settled package control remains package-owned for its complete
 native pointer or keyboard activation and never causes the host to render the
 fallback again.
 
-| Slot          | Trigger                                                    | Opens                                                                                                           |
-| ------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `project`     | Workspace and project                                      | The workspaces the user can access, their projects, Create project, and Workspace settings for administrators   |
-| `publication` | The publication pill: the branch or pull request and state | Branches with the default first, then pull requests, each row showing its publication state, time and short SHA |
-| `history`     | History                                                    | This branch's publications and, for members, its builds, newest first, each an immutable link                   |
-| `share`       | Share                                                      | The canonical publication link with the API-supported screen/view projection and Copy link                      |
-| `account`     | The reader's avatar                                        | The account menu: who is signed in, Theme, Settings, Docs, Changelog and Sign out                               |
+| Slot          | Trigger                                                    | Opens                                                                                                                           |
+| ------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `project`     | Workspace and project                                      | The workspaces the user can access, their projects, Create project, Create workspace, and Workspace settings for administrators |
+| `publication` | The publication pill: the branch or pull request and state | Branches with the default first, then pull requests, each row showing its publication state, time and short SHA                 |
+| `history`     | History                                                    | This branch's publications and, for members, its builds, newest first, each an immutable link                                   |
+| `share`       | Share                                                      | The canonical publication link with the API-supported screen/view projection and Copy link                                      |
+| `account`     | The reader's avatar                                        | The account menu: who is signed in, Theme, Settings, Docs, Changelog and Sign out                                               |
 
 The project trigger uses the workspace display name when its authorized
 read succeeds and the readable slug while that optional read is pending or

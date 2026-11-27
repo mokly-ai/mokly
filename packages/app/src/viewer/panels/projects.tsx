@@ -180,7 +180,8 @@ function WaitingWorkspace() {
 /**
  * The workspaces the reader can reach and the projects inside each one. The
  * product has no workspace page, so this panel is where a workspace is
- * administered from and where the next project is created.
+ * administered from and where the next project and the next workspace are
+ * created.
  */
 export function ProjectsPanel({
   workspaceId,
@@ -188,12 +189,14 @@ export function ProjectsPanel({
   onOpenProject,
   onWorkspaceSettings,
   onCreateProject,
+  onCreateWorkspace,
 }: {
   workspaceId: string;
   currentProjectId: string;
   onOpenProject: (project: Project) => void;
   onWorkspaceSettings: (workspace: Workspace) => void;
   onCreateProject: (workspaceId: string) => void;
+  onCreateWorkspace: () => void;
 }) {
   const groups = useResource(readWorkspaceProjects, "viewer-projects");
   return (
@@ -233,6 +236,15 @@ export function ProjectsPanel({
             disabled={groups.state.status === "loading"}
             onPress={() => onCreateProject(workspaceId)}
             testID="projects-create"
+          />
+          {/* A new workspace needs nothing the read answers, so it never
+              waits for it. */}
+          <Action
+            label="Create workspace"
+            size="md"
+            icon="start"
+            onPress={onCreateWorkspace}
+            testID="projects-create-workspace"
           />
         </div>
       )}
