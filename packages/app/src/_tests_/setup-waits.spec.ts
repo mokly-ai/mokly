@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { paneQuery } from "../settings/routes";
+
 import { installApp } from "./github-installation";
 import { expect, freshEmail, signIn, test } from "./harness";
 import { repositoryField } from "./project-setup";
@@ -151,6 +153,12 @@ test("every setup step waits in its own layout", async ({ page }) => {
   ).toBeDisabled();
   await expect(page.getByText(cliLine)).toBeVisible();
   await expect(page.getByRole("link", { name: cliLine })).toHaveCount(0);
+  // The manage link opens the GitHub accounts pane over this step, an address
+  // that needs nothing from the read, so it waits as a link.
+  const step = new URL(page.url());
+  await expect(
+    page.getByRole("link", { name: "Manage repository access" }),
+  ).toHaveAttribute("href", paneQuery(step.pathname, "github", step.search));
   repositories.release();
   await expect(page.getByRole("link", { name: cliLine })).toBeVisible();
 

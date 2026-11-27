@@ -57,7 +57,7 @@ export default defineScreen({
       slug: "loading",
       title: "Choose repository \u00b7 Loading",
       description:
-        "The workspace and its repositories loading: the step's own form, with Loading repositories… in the Repository field, the other fields and the address in waiting form, Create project disabled, and the manage line and the line to the CLI form as text with no link. Static controls depict the documented action; no live writes occur.",
+        "The workspace and its repositories loading: the step's own form, with Loading repositories… in the Repository field, the other fields and the address in waiting form, Create project disabled, the manage line opening the GitHub accounts pane, and the line to the CLI form as text with no link. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "account", "loading"],
       props: { state: "loading" },
     },

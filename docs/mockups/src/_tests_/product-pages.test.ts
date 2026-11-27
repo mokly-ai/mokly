@@ -95,8 +95,9 @@ test("recovery has one dashboard action and no route, framework or product data"
 
 test("the account family leaves for the public site only where the contract allows", () => {
   // The install step that depends on the App also leaves for GitHub's own page
-  // for this installation, which is the only place a suspension is cleared. It is named here so the destination
-  // stays one address the fixtures own rather than a link any screen may invent.
+  // for this installation, which is the only place a suspension is cleared. It
+  // is named here so the destination stays one address the fixtures own rather
+  // than a link any screen may invent.
   const owned: readonly string[] = [
     ...Object.values(site),
     workspace.manageUrl,

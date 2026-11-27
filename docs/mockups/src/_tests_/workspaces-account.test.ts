@@ -184,6 +184,7 @@ test("the repository step sends its manage line to where the accounts are kept",
     for (const id of [
       "product/account/choose-repository",
       "product/account/choose-repository/empty",
+      "product/account/choose-repository/loading",
       "product/account/choose-repository/suggestion-loading",
       "product/account/choose-repository/open",
       "product/account/choose-repository/slug-taken",

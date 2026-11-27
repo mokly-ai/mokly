@@ -254,11 +254,16 @@ test("a repository list that comes back empty offers the manage link", async ({
     }),
   );
   await atRepositoryStep(page, "unlisted");
+  const step = new URL(page.url()).pathname;
 
   await expect(repositoryField(page)).toContainText("No repositories yet");
-  await expect(
-    page.getByRole("link", { name: "Manage repository access" }),
-  ).toBeVisible();
   await expect(page.getByTestId("create-project")).toBeDisabled();
+  // The way on opens the GitHub accounts pane over the step, which can add
+  // another account as well as change what this one grants.
+  await page.getByRole("link", { name: "Manage repository access" }).click();
+  await expect(
+    page.getByRole("dialog").getByRole("heading", { level: 1 }),
+  ).toHaveText("GitHub accounts");
+  expect(new URL(page.url()).pathname).toBe(step);
   await page.unrouteAll();
 });

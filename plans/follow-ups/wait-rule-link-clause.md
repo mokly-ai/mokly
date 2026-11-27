@@ -1,0 +1,32 @@
+# The Wait rule leaves known-target links unclear
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the branch `calummoore/multiple-org-configuration-error-9mms`, the wider fix of review finding 1.
+- **Location:** `docs/protocol/cloud/folio-chrome.md:84-109` (the **Wait** paragraph; the link clause is at `:87-88`), and `docs/protocol/cloud/product-mockups-account.md:142-143` (the CLI line in a wait).
+- **Reason:** The fix adds a sentence to a protocol requirement, and the user decides each change of a requirement.
+
+- **Terms:**
+  - **Wait:** What a screen region draws while a read that it needs runs: its own layout, with placeholders where the answer goes.
+  - **Known target:** A link whose address the screen knows before the read answers.
+  - **Install step and repository step:** The Mokly Cloud setup steps at `/install?workspaceId=W` and `/:workspace/-/new`. The first installs the Mokly GitHub App; the second chooses the repository of a new project.
+  - **CLI form:** The form at `/:workspace/-/new/cli` that creates a project published from CI. The line "Publish with the CLI instead" opens it.
+  - **Manage repository access:** The link under the repository step's field. It opens the GitHub accounts pane, the settings pane that lists the workspace's GitHub accounts.
+- **Background:** The **Wait** paragraph says: "Known text renders as text, such as the title, labels, section headings, the progress strip and links whose targets are known." It also says: "While a read runs, every control in its region draws its placeholder form, also a control that does not need the answer, so a failed read removes nothing the reader typed." The app keeps **Back** live in the install step's and the CLI form's waits (`packages/app/src/_tests_/setup-waits.spec.ts:73`), and **Manage repository access** live in the repository step's wait. The CLI line draws as text with no link in every wait. `product-mockups-account.md:142-143` requires that form, "because its target needs the workspace's slug", which holds on the install step only.
+- **Problem:** The paragraph does not say whether a link with a known target is a control that a wait disables. On 2026-11-27 a reviewer read it that way and asked for the live **Manage repository access** link to become text. The check of that finding read it the other way, as the app does for **Back** and the manage link.
+- **Impact if no action:** The next reader can misread the rule again, and a review or a change can turn a working link into text.
+- **Root question:** How does the Wait rule say which links stay live in a wait?
+- **Options:**
+  - **A.** Add one requirement to the **Wait** paragraph: a link whose target is known stays a link; a link whose target needs the answer draws its words as text with no link, in the link's own box. The CLI-line sentence of `product-mockups-account.md:142-143` then needs its own reason or a change, as `plans/follow-ups/repository-wait-cli-line-unlinked.md` says. Effort: Small.
+  - **B.** Change nothing. The misread can occur again. Effort: Small.
+  - **C.** State the reviewer's reading: every link in a wait draws as text with no link. Change **Back** in the install step and CLI form waits, and **Manage repository access** in the repository step's wait, with their mockups and the tests in `setup-waits.spec.ts` and `docs/mockups/src/_tests_/onboarding-waits.test.ts`. A reader then waits for a read before using a way back that needs nothing from it. Effort: Medium.
+- **Left out:**
+  - A shared waiting-link component in `packages/app/src/components/placeholders.tsx` and `docs/mockups/src/screens/product/placeholders.tsx`. The gap is in the prose, and a component does not say which reading is right.
+  - A disabled link. The codebase draws a disabled link as its words with no link in the link's box, which is the text form of C.
+- **Wider fix:** A. It prevents the misread for every link in a wait.
+- **Previous examples:** The CLI line on the repository step draws as text while its target is known (`packages/app/src/screens/account/choose-repository-screen.tsx:79`). `plans/loading-states-match-content.md:187` and `plans/follow-ups/viewer-drawings-draw-share-live.md:12` record other choices about which controls a wait draws live.
+- **Related:**
+  - `plans/follow-ups/repository-wait-cli-line-unlinked.md`, work that waits for this answer: under A, that line breaks the stated rule, and both items can go in one branch.
+  - `plans/follow-ups/install-step-back-opens-new-workspace.md`, the same example: its option A makes the target of **Back** depend on the workspace read, so under A of this item **Back** would draw as text in that wait.
+- **Recommendation:** A. One sentence ends the doubt and matches how the app draws **Back** and the manage link.
+- **Action:** ask the user, because A adds a sentence to a protocol requirement, and no recorded user decision covers it.

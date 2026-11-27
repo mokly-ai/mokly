@@ -55,8 +55,6 @@ export const secondInstallation = {
   id: 2,
   account: "fixture-org",
   repository: "fixture-org/Catalogue",
-  manageUrl:
-    "https://github.com/organizations/fixture-org/settings/installations/2",
 } as const;
 
 /**

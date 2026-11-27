@@ -1,0 +1,44 @@
+# Members reach no GitHub page from repository access
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the branch `calummoore/multiple-org-configuration-error-9mms`, review finding 2.
+- **Location:** `packages/app/src/settings/panes/github-pane.tsx:74` (the `RowMenu` behind `administers`), `packages/app/src/screens/account/repository-field.tsx:18-22` and `:27` (`ManageAccess` and its comment), `docs/protocol/cloud/settings-dialog-github.md:10-12` ("Section And Roles") and `:36-37` ("States"), `docs/protocol/cloud/product-accounts-and-roles.md:85-86`, `docs/protocol/cloud/folio-chrome-account.md:67-70`, `apps/site/src/content/docs/cloud/connect-a-repository.md:50`, `docs/mockups/src/screens/product/account/repository-field.tsx:29-33`, `docs/mockups/src/screens/product/settings/github-pane.tsx`, `docs/mockups/src/entries/product/settings/github/member.mockup.tsx`, `docs/mockups/src/entries/product/settings/github/menu.mockup.tsx`, and `packages/app/src/_tests_/settings/github-accounts.spec.ts`.
+- **Reason:** The recommended option E changes the role rules of the GitHub accounts pane in `settings-dialog-github.md`, and no user decision covers that change.
+
+- **Terms:**
+  - **Repository step:** The Mokly Cloud form at `/:workspace/-/new` where a person chooses the GitHub repository of a new project.
+  - **Install step:** The step before it, which installs the Mokly GitHub App on a GitHub account.
+  - **Manage repository access:** The link under the repository field, in the line "Don’t see it? Manage repository access".
+  - **GitHub accounts pane:** The `github` pane of the settings dialog. It lists the GitHub accounts that the workspace connects. It opens at `?settings=github` over the page, or at `/:workspace/-/settings/github` on a phone.
+  - **Member:** A workspace role that can create projects but cannot add or remove a GitHub account. Owners and admins can.
+  - **Reviewer:** A workspace role that reads and comments but creates no project.
+  - **Manage on GitHub:** The row action that opens the account's installation page on GitHub in a new tab. On that page, a person with rights on the GitHub account changes which repositories the App can read.
+  - **Tokens pane:** The settings pane of a project's CLI tokens, `packages/app/src/settings/panes/tokens-pane.tsx`. Its row menu holds one entry, **Revoke**.
+  - **Plan gate:** An action that the workspace's billing plan allows or refuses. `PlanConsequence` in `packages/app/src/components/plan-consequence.tsx` draws the action or a line that says why it is not offered.
+- **Background:** A repository is missing from the repository step for one of two causes: the App's selection on GitHub leaves it out, or its GitHub account is not connected to the workspace. **Manage repository access** is the way on for both. Before 2026-11-27, a workspace with one account sent that link to the account's page on GitHub, for every role. On 2026-11-27 the user decided that the link always opens the GitHub accounts pane, because one account's page on GitHub cannot add a second organization. `settings-dialog-github.md` says: "Members and reviewers can read the rows but see no section action and no row menu."
+- **Problem:** A member who follows the link sees each account's name and kind, but no way to GitHub and no word on whom to ask. `github-pane.tsx` draws the row menu with **Manage on GitHub** only when `administers` is true. The guide and `product-accounts-and-roles.md:85-86` say that the pane opens each account on GitHub, which holds only for owners and admins.
+- **Screenshot:** The mockup `product/settings/github/member` showed the pane for a member: two account rows with a name and a kind, no menu and no link. The box marked the first row.
+- **Impact if no action:** A member who can change the installation on GitHub must find its page outside Mokly. A member who cannot gets no guidance, and the guide promises both a link that they do not get.
+- **Root question:** How does a member who cannot find a repository get it added to the list?
+- **Options:**
+  - **A.** Keep the pane's role rules. Change the guide, `product-accounts-and-roles.md:85-86` and `folio-chrome-account.md:67-70` so that they say only owners and admins add an account or open it on GitHub, and a member asks an owner or admin. A member gets this guidance only outside the app. Effort: Small.
+  - **B.** Add one line to the pane, and to its empty state, for a reader who cannot add an account, such as "Ask an owner or admin to change repository access." The install step already tells members "Ask an owner or admin to install it." (`packages/app/src/screens/account/install-screen.tsx:280`). Add the line to "Section And Roles" and "States" of `settings-dialog-github.md`, and change the docs of A, the member mockup and its tests. A member with rights on GitHub still must find the page alone. Effort: Medium.
+  - **C.** Give members and reviewers a **Manage on GitHub** link on each connected row. Owners and admins keep it in the row menu, so the pane offers one action in two forms by role. Change "Account Rows" of `settings-dialog-github.md`, the member mockup and the member test (`github-accounts.spec.ts:183`). A member without rights on GitHub can open the page but cannot change the selection, and a member whose repository's account is not connected gets no way on. Effort: Medium.
+  - **D.** Put a **Manage on GitHub** link on every connected row for every reader, where a suspended row now shows **Resume on GitHub**. A suspended row keeps only **Resume on GitHub**. The owner-and-admin menu keeps only **Remove**. Change "Account Rows", both mockups, and the tests at `github-accounts.spec.ts:59`, `:82`, `:164` and `:183`. It has the same gaps for members as C. Effort: Medium.
+  - **E.** Apply D and B together. Every reader gets **Manage on GitHub** on each connected row. The menu keeps only **Remove**, as the tokens pane's menu keeps only **Revoke**. A reader who cannot add an account gets the line of B. Change the docs, mockups and tests of B and D. Effort: Medium.
+  - **F.** Build one shared part for owner-or-admin actions, like `PlanConsequence` for plan gates. It shows the action to an owner or admin, and a line that says to ask an owner or admin to every other reader. The install step, **Add GitHub account** in the pane and in its empty state, and each later owner-or-admin action use it. It adds lines beyond this problem and needs an audit of each owner-or-admin action. Effort: Large.
+- **Left out:**
+  - A direct link to GitHub from the repository step for members. It breaks the decision of 2026-11-27 that the link has one destination, and it fails when the repository's account is not connected.
+  - A members-only line on the step in place of the link. It breaks the same decision, and B and E give the same line one press away.
+  - A second link in the step's line. The decision of 2026-11-27 rejected a second link beside the GitHub link.
+  - A Mokly check of the reader's rights on GitHub. `docs/protocol/cloud/github-app.md:84` discards provider tokens after use, so Mokly cannot know those rights.
+  - Letting members add accounts. `github-app.md:75` rechecks owner or admin permission in the install callback.
+- **Wider fix:** F. It stops any owner-or-admin action from disappearing without a line that says whom to ask. E is enough for the link part, because **Manage on GitHub** is the only link in any row menu of the app.
+- **Previous examples:** The pane's empty state gives members "No GitHub accounts yet" and no line (`settings-dialog-github.md:36-37`). The pane already shows **Resume on GitHub** to every reader on a suspended row, a model for D.
+- **Related:**
+  - `plans/follow-ups/menu-rows-take-no-link.md`, the same code: **Manage on GitHub** is a menu row that opens a page but is not a real link. D and E move it out of the menu, which also ends that problem for this row.
+  - `plans/follow-ups/site-pages-still-marked-ahead.md`, the same file: it keeps `connect-a-repository.md` marked ahead of the product, and this guide claim is one such mismatch.
+  - `plans/follow-ups/viewer-more-menu-targets-below-required-size.md`, the same file: it names `packages/app/src/settings/row-menu.tsx`, whose GitHub entries D and E change.
+- **Recommendation:** E. It gives a member a way on for both causes, a direct link when the account is connected and whom to ask otherwise, and it avoids C's two forms of one action. F best protects the codebase.
+- **Action:** ask the user, because E changes the role rules of the GitHub accounts pane in `settings-dialog-github.md`, and no recorded user decision covers that change.
