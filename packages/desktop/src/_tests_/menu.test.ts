@@ -35,8 +35,18 @@ function install(
       current: () => menu([...items]),
       item,
       build: menu,
+      // Electron shows a menu as it is when it is set, so copy its lists then.
       set: (value: Menu) => {
-        installed = value;
+        installed = menu(
+          value.items.map((entry) =>
+            entry.submenu
+              ? ({
+                  ...entry,
+                  submenu: menu([...entry.submenu.items]),
+                } as MenuItem)
+              : entry,
+          ),
+        );
       },
       focusedWindow: () => focused,
     },
