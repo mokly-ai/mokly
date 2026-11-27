@@ -2,6 +2,7 @@ import { tokens } from "@mokly-cloud/tokens/tokens";
 import { type Locator, type Page, expect, test } from "@playwright/test";
 
 import { openLargeText } from "./large-text.js";
+import { openSearch } from "./search.js";
 
 const PAGE = "/docs/start/your-first-screen/";
 
@@ -18,35 +19,40 @@ function rgb(hex: string): string {
   return `rgb(${red}, ${green}, ${blue})`;
 }
 
-test("copying a multi-line shell block writes its lines without prompts", async ({
-  context,
-  page,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto(PAGE);
-  const panel = page.locator(".site-code", {
-    hasText: "npx mokly build --out mokly-static",
-  });
-  const copy = panel.getByRole("button");
-  await expect(copy).toHaveText("Copy");
-  await copy.click();
-  await expect(copy).toHaveText("Copied");
-  await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe("npx mokly serve\nnpx mokly build --out mokly-static");
-});
+test(
+  "copying a multi-line shell block writes its lines without prompts",
+  { tag: "@desktop" },
+  async ({ context, page }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(PAGE);
+    const panel = page.locator(".site-code", {
+      hasText: "npx mokly build --out mokly-static",
+    });
+    const copy = panel.getByRole("button");
+    await expect(copy).toHaveText("Copy");
+    await copy.click();
+    await expect(copy).toHaveText("Copied");
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe("npx mokly serve\nnpx mokly build --out mokly-static");
+  },
+);
 
-test("a code panel stays dark in both schemes", async ({ page }, testInfo) => {
-  await page.goto(PAGE);
-  const panel = page.locator(".site-code", {
-    hasText: "npx mokly build --out mokly-static",
-  });
-  const fill =
-    testInfo.project.use.colorScheme === "dark"
-      ? tokens.color.dark.surfaceMuted
-      : tokens.color.light.text;
-  await expect(panel).toHaveCSS("background-color", rgb(fill));
-});
+test(
+  "a code panel stays dark in both schemes",
+  { tag: ["@desktop", "@scheme"] },
+  async ({ page }, testInfo) => {
+    await page.goto(PAGE);
+    const panel = page.locator(".site-code", {
+      hasText: "npx mokly build --out mokly-static",
+    });
+    const fill =
+      testInfo.project.use.colorScheme === "dark"
+        ? tokens.color.dark.surfaceMuted
+        : tokens.color.light.text;
+    await expect(panel).toHaveCSS("background-color", rgb(fill));
+  },
+);
 
 test("Copy sits beside the sample's language at the end of its tab bar", async ({
   page,
@@ -70,6 +76,37 @@ test("Copy sits beside the sample's language at the end of its tab bar", async (
     .toBe(4);
 });
 
+test(
+  "Copy and search start on a browser that never goes idle",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    // A page that stays busy gives the browser no idle period, and no user
+    // action arranges that on demand. In this browser an idle callback runs
+    // only when the deadline that its caller set has passed. Playwright's clock
+    // replaces the idle callback with one that always runs, so a real timer
+    // keeps the deadline.
+    await page.addInitScript(() => {
+      let handles = 0;
+      window.requestIdleCallback = (callback, options) => {
+        if (options?.timeout === undefined) return (handles += 1);
+        return window.setTimeout(
+          () => callback({ didTimeout: true, timeRemaining: () => 0 }),
+          options.timeout,
+        );
+      };
+    });
+    await page.goto(PAGE);
+    const panel = page.locator(".site-code", {
+      hasText: "npx mokly build --out mokly-static",
+    });
+    // The wait for the islands includes their one-second deadline.
+    await expect(panel.getByRole("button")).toHaveText("Copy", {
+      timeout: 10_000,
+    });
+    await expect(await openSearch(page)).toBeVisible();
+  },
+);
+
 /**
  * Below about 348px the sample's tab bar cannot hold the file name, the
  * `html` label and Copy. The name shrinks and ends in an ellipsis, clear of
@@ -85,11 +122,13 @@ for (const [width, cut] of [
     async ({ page }) => {
       await page.setViewportSize({ height: 900, width });
       await page.goto(PAGE);
-      const name = samplePanel(page).getByText("welcome.screen.html", {
+      const panel = samplePanel(page);
+      await expect(panel.getByRole("button", { name: "Copy" })).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const name = panel.getByText("welcome.screen.html", {
         exact: true,
       });
-      const language = samplePanel(page).getByText("html", { exact: true });
-      await expect(name).toHaveText("welcome.screen.html");
+      const language = panel.getByText("html", { exact: true });
       const [named, label] = await Promise.all([
         name.boundingBox(),
         language.boundingBox(),

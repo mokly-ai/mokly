@@ -7,8 +7,10 @@
 - **Location:**
   - `examples/basic/specs/design/canvas/parts/frame_outcomes.ts`: builds the
     view heading lines of the Changes mockups from the frames on the stage.
-  - `tests/browser/design_reasons.spec.ts`: the design cases that read the
-    comparison details of the Canvas mockups by route and viewport.
+  - `tests/helpers/design_reasons.ts`: the design check that reads the
+    comparison details of the Canvas mockups by route and viewport. The
+    test "each Canvas design reads one sentence per depicted reason" of
+    `tests/design_catalogue.test.ts` runs it.
   - `docs/protocol/mokly-css-evidence-presentation.md:48-55`: the view heading
     rule.
 - **Reason:** Milestone 12 added the headings to the mockups at its end, and
@@ -21,8 +23,7 @@
   - **View heading:** one line of the Changes tab's comparison details for
     each compared frame of a loaded comparison, such as "Desktop · Light ·
     Screen changed".
-  - **Design case:** a browser check that opens a design mockup and reads what
-    it draws.
+  - **Design case:** a check that reads what a design mockup draws.
 - **Background:** The shipped viewer draws one view heading for each compared
   frame. Commit `1d7cec76f` made the Canvas mockups with a loaded comparison
   draw the same lines with the product's `ComparisonEvidence`. A desktop
@@ -36,8 +37,7 @@
 - **Root question:** Which test pins the headings that each mockup draws?
 - **Options:**
   - **A.** Add the expected heading lines for each route and viewport to
-    `tests/browser/design_reasons.spec.ts`, next to its reasons. Effort:
-    Small.
+    `tests/helpers/design_reasons.ts`, next to its reasons. Effort: Small.
   - **B.** Add a unit test of `frame_outcomes.ts` alone. It checks the builder
     but not what each artboard passes to it. Effort: Small.
 - **Left out:** A screenshot comparison, because the repository has no visual

@@ -63,6 +63,7 @@ fn response(value: serde_json::Value) -> Frame {
 
 fn graph() -> Arc<Vec<Module>> {
     Arc::new(vec![Module {
+        package_import: None,
         path: "entry.ts".into(),
         imports: vec!["shared.ts".into()],
         digest: Some("entry-digest".into()),
@@ -275,7 +276,10 @@ pub(super) fn exercise(finish: Finish, kind: Seed) -> Observation {
             drop(result);
             Ok(generation)
         }
-        Err(error) => Err(error),
+        Err(error) => {
+            pool.synchronize_releases();
+            Err(error)
+        }
     };
     Observation {
         during,

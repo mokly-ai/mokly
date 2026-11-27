@@ -80,6 +80,7 @@ fn generation(root: &Path, fragment: Fragment) -> Arc<dyn RenderGeneration> {
         stylesheets: Arc::new(Compiler {
             tree: tree.clone(),
             repo_root: config.repo_root.clone(),
+            resolution: Default::default(),
             resolver: Arc::new(SourceResolver {
                 settings: Default::default(),
                 tree,

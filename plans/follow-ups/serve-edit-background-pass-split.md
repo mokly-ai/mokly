@@ -330,6 +330,10 @@
     memory grow faster than the registry text. React Native Web does not write
     such registries in practice. The fix of that item changes the C1 code that
     the section "C1 at the cold start, measured on 2026-11-23" describes.
+  - [restored-require-module-cache.md](./restored-require-module-cache.md)
+    shows that Node's module cache already shares the run-time modules of
+    the sidecar across generations. This item leaves out the reuse of
+    evaluated modules across generations for that risk.
 - **Decisions:**
   - 2026-11-22, the performance orchestrator chose B of the first decision of
     this item: split the serial work after the last view with the same probe,

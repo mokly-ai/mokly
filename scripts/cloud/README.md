@@ -20,6 +20,9 @@ format dependency.
 
 ### Key Code
 
+- `smoke_catalogue_origins.py` checks framing, CORS and both rollout admission
+  mismatch errors against the real catalogue server with the desktop flag on and off.
+  The `desktop_origin_tests` integration test runs this script with Postgres and `psql`.
 - `smoke_publications.py` runs the publication scenarios against real services.
 - `publication_exchange.py` builds three-file Plans and runs Blob and Complete.
   It also converts test uploads to current-only indexes and envelopes.
@@ -27,8 +30,10 @@ format dependency.
   from `checksums.json`. Fixture consumers use that metadata, not a release pin.
 - `publication_smoke_fixture.py` strictly validates two source-only revisions
   of the [frozen fixture](./fixtures/publication-smoke-v0.19/README.md).
-- `publication_smoke_consumer.py` installs npm `latest`, rejects linked or
-  escaped package paths, and records the installed version.
+- `publication_smoke_consumer.py` installs npm `latest` with dependencies
+  published at least an hour before the run, or before that release when it
+  is newer. It rejects linked or escaped package paths and records the
+  installed version.
 - `publication_smoke_cli.py` publishes with that installation's executable,
   compares every served file with a strict build of the same checkout and
   base, checks replay, and compares the real dirty refusal with its recording.

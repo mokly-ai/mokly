@@ -156,6 +156,8 @@ jobs:
           PREVIEW_BRANCH: ${{ steps.deploy.outputs.branch }}
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -189,6 +191,20 @@ jobs:
                 issue_number: context.payload.pull_request.number,
                 body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
 
   close-pr:
@@ -268,6 +284,8 @@ jobs:
           CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -303,7 +321,6 @@ jobs:
       action: ${{ steps.event.outputs.action }}
       environment: ${{ steps.event.outputs.environment }}
       revision: ${{ steps.event.outputs.revision }}
-      repository_private: ${{ steps.event.outputs.repository_private }}
     steps:
       - name: Check out trusted event policy
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -444,7 +461,6 @@ jobs:
       MKC_REVISION: ${{ needs.prepare.outputs.revision }}
       ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
       PREVIEW_ACTION: ${{ needs.prepare.outputs.action }}
-      REPOSITORY_PRIVATE: ${{ needs.prepare.outputs.repository_private }}
       PREVIEW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Check out trusted release scripts
@@ -460,12 +476,13 @@ jobs:
           python3 infra/scripts/preview-comment.py --state running --environment "$ENVIRONMENT" \
             --revision "$MKC_REVISION" --domain "$MKC_DOMAIN" \
             --catalogue-domain "$MKC_CATALOGUE_BASE_DOMAIN" --run-url "$PREVIEW_RUN_URL" \
-            --repository-private "$REPOSITORY_PRIVATE" \
             > .context/preview-comment.md
       - name: Publish running comment
         if: env.PREVIEW_ACTION == 'deploy'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';
@@ -483,6 +500,20 @@ jobs:
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number, body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
       - name: Check cloud identity configuration
         id: credentials
@@ -533,20 +564,8 @@ jobs:
         id: seed
         if: steps.deploy.outcome == 'success' && steps.evidence.outcome == 'success'
         env:
-          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
           PREVIEW_SEED_RUN: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          source infra/scripts/preview-common.sh
-          preview_initialize "$ENVIRONMENT"
-          preview_create_temporary
-          trap 'rm -rf "$preview_temporary"' EXIT
-          preview_select_cluster
-          rm -f "$PREVIEW_SECRET_FILE"
-          preview_kubectl --namespace "$namespace" get secret preview-sign-in -o json \
-            | python3 infra/scripts/preview-lifecycle.py extract-preview "$PREVIEW_SECRET_FILE"
-          preview_secret=$(<"$PREVIEW_SECRET_FILE")
-          echo "::add-mask::$preview_secret"
-          unset preview_secret
           catalogue_args=()
           [[ ! -d .context/seed/catalogue ]] || catalogue_args+=(--catalogue .context/seed/catalogue)
           python3 infra/scripts/preview-seed-job.py "$ENVIRONMENT" \
@@ -580,7 +599,6 @@ jobs:
           SEED_RESULT: ${{ steps.seed.outcome }}
           SEED_EVIDENCE_RESULT: ${{ steps.seed_evidence.outcome }}
           CLEANUP_RESULT: ${{ steps.destroy.outcome }}
-          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
         run: |
           mkdir -p .context
           state=failed
@@ -594,10 +612,8 @@ jobs:
           fi
           comment_args=(--state "$state" --environment "$ENVIRONMENT" \
             --revision "$MKC_REVISION" --domain "$MKC_DOMAIN" \
-            --catalogue-domain "$MKC_CATALOGUE_BASE_DOMAIN" --run-url "$PREVIEW_RUN_URL" \
-            --repository-private "$REPOSITORY_PRIVATE")
+            --catalogue-domain "$MKC_CATALOGUE_BASE_DOMAIN" --run-url "$PREVIEW_RUN_URL")
           if [[ "$DEPLOY_RESULT" == success ]]; then
-            [[ ! -f "$PREVIEW_SECRET_FILE" ]] || comment_args+=(--secret-file "$PREVIEW_SECRET_FILE")
             [[ ! -s .context/seed-status.json ]] || comment_args+=(--seed-status .context/seed-status.json)
             [[ ! -s .context/seed-proof.json ]] || comment_args+=(--seed-proof .context/seed-proof.json)
           fi
@@ -608,6 +624,8 @@ jobs:
         if: ${{ always() && steps.comment-body.outcome == 'success' }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';
@@ -625,12 +643,21 @@ jobs:
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number, body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
-      - name: Remove the private preview credential file
-        if: ${{ always() }}
-        env:
-          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
-        run: rm -f "$PREVIEW_SECRET_FILE"
   required:
     timeout-minutes: 10
     name: Preview required

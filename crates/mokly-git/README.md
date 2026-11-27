@@ -39,9 +39,10 @@ Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
 `ls-tree`, `cat-file blob` for link targets, and the `ls-files` listings. The
 tree, link, and file listings select it in repositories without promisor remotes.
 
-The file listings cover working-path candidates, untracked changes, and
-index membership. They pass `-c core.fsmonitor=false`, so Git starts no file
-system monitor hook or daemon for them. The
+The listings find working-path candidates, untracked changed paths, index
+membership, and working path statuses. They pass `-c core.fsmonitor=false`, so Git starts no
+file system monitor hook or daemon for them. They share a request builder
+that selects the override and process mode. The
 [file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
 reason and the Git source evidence.
 
@@ -75,6 +76,15 @@ the location. The `Repository` trait resolves the configured ref to a commit
 before `merge-base`. Changed paths include committed, staged, unstaged, and
 untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
+
+`Repository::working_path_statuses` classifies a batch of `RepoPath`s, with
+one `WorkingPathStatus` per input in order. It reports exact tracked files,
+untracked and unignored files, ignored files, the directory of an unignored
+nested checkout, or the directory of a tracked submodule. It checks the
+index for exact entries and gitlinks. It uses bounded `ls-files` queries to
+check Git's standard excludes and nested checkout boundaries. A written
+path through a symbolic link uses the first link's status. Pass the target
+as a separate path to check it. Empty input starts no Git command.
 
 Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
@@ -217,8 +227,9 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/batches.rs`](./src/batches.rs) provides `split`, which splits path
   arguments into ordered, bounded batches.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
-  `GitRepositories`, and `Repository`, which validate a checkout and read merge
-  bases, changed paths, trees, blobs, and archives.
+  `GitRepositories`, `Repository`, and `WorkingPathStatus`. They validate a
+  checkout and read merge bases, changed paths, path statuses, trees, blobs,
+  and archives.
   [`src/repository_access.rs`](./src/repository_access.rs) implements
   `Repository` for the checkout that `GitRepositories::open` returns.
 - [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and

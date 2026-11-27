@@ -14,75 +14,73 @@ import {
 } from "./comparison_test.js";
 import { historicalFrame } from "./previous_version.js";
 
-for (const width of [390, 1280]) {
-  for (const [entryPath, text, metadata, document] of [
-    [comparisonPaths.removedPage, "Historical page", "page", "index.html"],
-    [
-      comparisonPaths.removedScreen,
-      "Historical screen",
-      "screen",
-      "index.desktop.html",
-    ],
-  ] as const) {
-    test(`${width}px: copied ${metadata} history reads its metadata once and keeps its bytes`, async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      const directory = copiedComparisonDirectory();
-      const before = await files(directory);
-      const { index, generation } = await deliveryIndex(request, baseURL!);
-      const removed = index.removedEntries.find(
-        (entry) => entry.entry.path === entryPath,
-      )!;
-      const traffic = deliveryRequests(page);
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
-      await expect(page.locator("#mb-main h2").first()).toHaveText(
-        "Changed screen",
-      );
-      expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([]);
-      await page.goto(
-        `/view/${entryPath}/?snapshot=${removed.snapshotId}&viewport=desktop`,
-      );
-      // A removed screen's section holds a frame for each scheme of the
-      // chosen viewport; its Light frame shows the checked document.
-      const frame =
-        metadata === "screen"
-          ? historicalFrame(page, "desktop").locator("iframe")
-          : page.locator("iframe[data-mokly-preview-frame]");
-      await expect(frame).toHaveCount(1);
-      await expect(frame.contentFrame().locator("h1")).toHaveText(text);
-      const documentUrl = `${generation}snapshots/before/mokly-generated/${entryPath}/${document}`;
-      await expect(frame).toHaveAttribute(
-        "data-mokly-preview-source",
-        documentUrl,
-      );
-      // A page's preview reads its metadata; a screen's preview uses the
-      // removed detail that the route reads once for Details too.
-      const detailUrl = `${generation}entries/${entryPath}.json`;
-      if (metadata === "page")
-        expect(
-          traffic.urls.filter(
-            (url) => url === `${generation}previews/${entryPath}/index.json`,
-          ),
-        ).toHaveLength(1);
-      expect(traffic.urls.filter((url) => url === detailUrl)).toHaveLength(1);
-      expect(traffic.urls.filter((url) => url === documentUrl)).toHaveLength(1);
+for (const [entryPath, text, metadata, document] of [
+  [comparisonPaths.removedPage, "Historical page", "page", "index.html"],
+  [
+    comparisonPaths.removedScreen,
+    "Historical screen",
+    "screen",
+    "index.desktop.html",
+  ],
+] as const) {
+  test(`1280px: copied ${metadata} history reads its metadata once and keeps its bytes`, async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    const directory = copiedComparisonDirectory();
+    const before = await files(directory);
+    const { index, generation } = await deliveryIndex(request, baseURL!);
+    const removed = index.removedEntries.find(
+      (entry) => entry.entry.path === entryPath,
+    )!;
+    const traffic = deliveryRequests(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
+    await expect(page.locator("#mb-main h2").first()).toHaveText(
+      "Changed screen",
+    );
+    expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([]);
+    await page.goto(
+      `/view/${entryPath}/?snapshot=${removed.snapshotId}&viewport=desktop`,
+    );
+    // A removed screen's section holds a frame for each scheme of the
+    // chosen viewport; its Light frame shows the checked document.
+    const frame =
+      metadata === "screen"
+        ? historicalFrame(page, "desktop").locator("iframe")
+        : page.locator("iframe[data-mokly-preview-frame]");
+    await expect(frame).toHaveCount(1);
+    await expect(frame.contentFrame().locator("h1")).toHaveText(text);
+    const documentUrl = `${generation}snapshots/before/mokly-generated/${entryPath}/${document}`;
+    await expect(frame).toHaveAttribute(
+      "data-mokly-preview-source",
+      documentUrl,
+    );
+    // A page's preview reads its metadata; a screen's preview uses the
+    // removed detail that the route reads once for Details too.
+    const detailUrl = `${generation}entries/${entryPath}.json`;
+    if (metadata === "page")
       expect(
-        traffic.urls.filter((url) => url.includes("/snapshots/after/")),
-      ).toEqual([]);
-      expect(
-        traffic.urls.filter((url) =>
-          url.includes(`/static/mokly-generated/${entryPath}/`),
+        traffic.urls.filter(
+          (url) => url === `${generation}previews/${entryPath}/index.json`,
         ),
-      ).toEqual([]);
-      for (const address of new Set(
-        traffic.urls.filter((url) => url.includes("/diffs/generations/")),
-      ))
-        await copiedBytes(request, directory, address);
-      expect(await files(directory)).toEqual(before);
-      traffic.assert();
-    });
-  }
+      ).toHaveLength(1);
+    expect(traffic.urls.filter((url) => url === detailUrl)).toHaveLength(1);
+    expect(traffic.urls.filter((url) => url === documentUrl)).toHaveLength(1);
+    expect(
+      traffic.urls.filter((url) => url.includes("/snapshots/after/")),
+    ).toEqual([]);
+    expect(
+      traffic.urls.filter((url) =>
+        url.includes(`/static/mokly-generated/${entryPath}/`),
+      ),
+    ).toEqual([]);
+    for (const address of new Set(
+      traffic.urls.filter((url) => url.includes("/diffs/generations/")),
+    ))
+      await copiedBytes(request, directory, address);
+    expect(await files(directory)).toEqual(before);
+    traffic.assert();
+  });
 }

@@ -43,7 +43,11 @@ to the configuration file.
 
 Build and check pass `--strict`. Runtime and type mappings use documented
 public entrypoints from the single installation.
-The `cloud-mockups` suite runs build, check, test and typecheck in that order.
+The `cloud-mockups` suite runs build, then test. The `cloud-typecheck` suite
+type-checks the mockups.
+In CI the suite runs as parallel
+[mockup shards](./repository-verification.md#mockup-and-site-shards); each
+shard builds the catalogue first, and the shards do not wait for one another.
 
 ## Imported Viewer Styles
 
@@ -165,7 +169,6 @@ filename suffixes do not determine them.
 | `product/account/callback/email-invalid`     | `expired`        |
 | `product/account/callback/email-invalid`     | `used`           |
 | `product/account/callback/email-invalid`     | `failure`        |
-| `product/account/callback/preview-invalid`   | `failure`        |
 | `product/settings/project/visibility`        | `plan`           |
 | `product/settings/project/visibility`        | `plan-admin`     |
 | `product/settings/tokens/create`             | `reveal`         |

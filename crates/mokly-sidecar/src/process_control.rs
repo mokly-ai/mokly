@@ -19,7 +19,7 @@ use crate::workers::WorkerControl;
 pub(super) struct ProcessControl {
     pub(super) memory: Arc<dyn ResidentMemory>,
     pub(super) discover_memory: Arc<AtomicBool>,
-    pub(super) group: Box<dyn ProcessGroup>,
+    pub(super) group: Arc<dyn ProcessGroup>,
     pub(super) outgoing: SyncSender<Vec<u8>>,
     pub(super) exited: Mutex<Receiver<()>>,
     pub(super) drained: Mutex<Receiver<()>>,
@@ -69,7 +69,7 @@ impl WorkerControl for ProcessControl {
         let receiver = self.exited.lock().unwrap_or_else(PoisonError::into_inner);
         if !self.clock.exited(&receiver, deadline) {
             self.kill()?;
-            self.clock.reaped(&receiver);
+            self.clock.exited_after_kill(&receiver);
         } else {
             let drained = self.drained.lock().unwrap_or_else(PoisonError::into_inner);
             if !self.clock.drained(&drained, deadline) {

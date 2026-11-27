@@ -1,46 +1,21 @@
 //! Readiness closes while an eager task remains blocked on final head evidence.
 
-use std::sync::atomic::AtomicU64;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use mokly_cli::redaction::Redactor;
-use mokly_graph::cache::MemoryCache;
 use mokly_server::changes::ChangeToken;
-use mokly_sidecar::workers::ClockMock;
-use mokly_test_support::subscriber::with_default;
 use serde_json::Value;
-use tracing_subscriber::layer::SubscriberExt;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_eager_admission::PreparationAdmission;
 use crate::serve_eager_task::{
     NativeTasks, PreparationTasks, PreparationWorkMock, SourceCompletion,
 };
-use crate::terminal::TerminalMock;
 
-use super::Timings;
+use super::serve_trace_tests::capture_live;
 
 #[test]
 fn eager_task_does_not_retain_the_readiness_span_while_waiting_for_head() {
-    let lines = Arc::new(Mutex::new(Vec::new()));
-    let captured = lines.clone();
-    let layer = Timings {
-        terminal: Arc::new(Unimock::new(
-            TerminalMock::stderr
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, line| {
-                    captured.lock().unwrap().push(line.to_owned())
-                })),
-        )),
-        session: "test".into(),
-        clock: Arc::new(Unimock::new(
-            ClockMock::now_ms.each_call(matching!()).returns(0u64),
-        )),
-        next: AtomicU64::new(1),
-        redactor: Arc::new(Redactor::default()),
-        cache: Arc::new(MemoryCache::new(0, 0)),
-    };
-    let closed = with_default(tracing_subscriber::registry().with(layer), || {
+    let closed = capture_live(|lines| {
         let work = Arc::new(Unimock::new((
             PreparationWorkMock::sources
                 .some_call(matching!())

@@ -84,7 +84,9 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
 
 - Build: `npm run build`. It builds the host native target, the UI package,
   the model package, the frame package, the viewer, and then the shim and the
-  sidecar, in that order. The cloud builds of the app, the site, the mockups,
+  sidecar. A package build starts after the package builds whose outputs it
+  reads, and it is skipped when the content of its inputs and outputs did not
+  change since its last successful build. The cloud builds of the app, the site, the mockups,
   and the desktop bundle use these built workspace packages, so run it first.
 - Dev server: `npm run dev` serves the example catalogue with watching. It
   runs `npm ci` and `npm run build` first when the install or the build is
@@ -93,12 +95,13 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
   Node test files under `tests/`, `packages/viewer/tests/`,
   `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`,
-  `cargo test -p <crate>` for one crate, and
+  `cargo nextest run -p <crate>` for one crate (`cargo test --doc -p <crate>`
+  for its doc tests), and
   `npm run test:browser -- <spec> -g "<name>"` for browser specs. The npm
   commands build first. The
   [developer test commands](./docs/protocol/developer-test-commands.md)
   hold the full rules, including the raw commands that test the last build.
-  `cargo test -p <crate>` also runs one `mkc-` crate, whose database tests
+  `cargo nextest run -p <crate>` also runs one `mkc-` crate, whose database tests
   need Postgres. `npm run <script> --workspace @mokly-cloud/<project>` runs
   the tests of one cloud project, as its README says.
 - Early check (format, lint, file length, exports, Rust):

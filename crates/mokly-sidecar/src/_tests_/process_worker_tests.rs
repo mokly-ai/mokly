@@ -82,7 +82,7 @@ fn admission_discovers_postcss_children_without_consuming_the_worker_scan() {
         memory: Arc::new(mock.clone()),
         discover_memory: discover_memory.clone(),
         startup: Default::default(),
-        group: Box::new(mock.clone()),
+        group: Arc::new(mock.clone()),
         outgoing,
         exited: Mutex::new(exited),
         drained: Mutex::new(drained),

@@ -1,4 +1,4 @@
-//! Independent delivery batches and an injected five-second polling clock.
+//! Independent delivery batches and an injected polling clock with the five-second production pause.
 
 use std::future;
 use std::sync::Arc;
@@ -14,6 +14,7 @@ use crate::check_runtime::{
     CheckBatches, CheckClockMock, CheckDelivery, CheckDeliveryMock, CheckWorkerLoop,
 };
 use crate::github_runtime::WorkerLoop;
+use crate::worker_intervals::WorkerIntervals;
 
 #[test]
 fn each_tick_runs_both_batches_even_when_either_batch_fails() {
@@ -72,6 +73,7 @@ async fn loop_runs_one_tick_then_waits_for_five_seconds() {
     let worker_loop: &dyn WorkerLoop = &CheckWorkerLoop {
         worker: Some(Arc::new(worker)),
         clock: Arc::new(clock),
+        interval: WorkerIntervals::default().check_delivery,
     };
     assert!(
         tokio::time::timeout(Duration::from_millis(100), worker_loop.run())
@@ -85,6 +87,7 @@ async fn unconfigured_loop_never_calls_a_worker_or_clock() {
     let worker_loop: &dyn WorkerLoop = &CheckWorkerLoop {
         worker: None,
         clock: Arc::new(Unimock::new(())),
+        interval: WorkerIntervals::default().check_delivery,
     };
     assert!(
         tokio::time::timeout(Duration::from_millis(25), worker_loop.run())

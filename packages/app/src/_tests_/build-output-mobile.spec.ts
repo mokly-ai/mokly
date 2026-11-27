@@ -1,3 +1,4 @@
+import { installPollClock, nextPoll } from "./build-clock";
 import { write } from "./build-double";
 import {
   boxOutline,
@@ -24,6 +25,7 @@ test("a phone's output follows its newest line until the reader scrolls back", a
   const id = buildId(490);
   double.builds.set(id, build({ id, projectId }));
   write(double, id, numbered(1, 60));
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   await expect(page.locator("html")).toHaveAttribute(
     "data-color-scheme",
@@ -42,6 +44,7 @@ test("a phone's output follows its newest line until the reader scrolls back", a
   expect(await output.evaluate(boxOutline)).toEqual(tokenBoxOutline("dark"));
 
   write(double, id, numbered(61, 64));
+  await nextPoll(page);
   await expect(output).toContainText("line 64");
   expect((await output.evaluate(outputView)).atEnd).toBe(true);
 
@@ -54,6 +57,7 @@ test("a phone's output follows its newest line until the reader scrolls back", a
   await scrollSettled(output);
   const back = await output.evaluate(outputView);
   write(double, id, numbered(65, 68));
+  await nextPoll(page);
   await expect(output).toContainText("line 68");
   expect(await output.evaluate(outputView)).toEqual({
     newest: "line 68",
@@ -67,6 +71,7 @@ test("a phone's output follows its newest line until the reader scrolls back", a
     .toBe(true);
   await scrollSettled(output);
   write(double, id, numbered(69, 72));
+  await nextPoll(page);
   await expect(output).toContainText("line 72");
   expect((await output.evaluate(outputView)).atEnd).toBe(true);
 });

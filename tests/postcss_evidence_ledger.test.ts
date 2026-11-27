@@ -7,7 +7,9 @@ import test from "node:test";
 import type { PostcssEvidence } from "../packages/mokly/src/generated/sidecar/PostcssEvidence.js";
 import {
   beginReadEvidenceGeneration,
+  hasAsynchronousLoader,
   initializeReadEvidenceGeneration,
+  loadedModulePaths,
   observeBytes,
   preloadedObserver,
   readEvidence,
@@ -102,9 +104,10 @@ test("PostCSS read evidence stays bounded to one simulated generation", (context
   }
 });
 
-test("every ledger function reaches a shared ledger", (context) => {
+test("every ledger member is read from the shared ledger", (context) => {
   const key = Symbol.for("mokly.postcss.ledger");
   const calls: string[] = [];
+  const preloadedModule = path.resolve("/preloaded.cjs");
   const shared: PostcssEvidence = {
     coverage: "incomplete",
     modules: [],
@@ -115,6 +118,14 @@ test("every ledger function reaches a shared ledger", (context) => {
       calls.push(`readEvidence ${[...loaded].join(" ")}`);
       return shared;
     },
+    get loadedModules() {
+      calls.push(`loadedModules ${preloadedModule}`);
+      return new Set([preloadedModule]);
+    },
+    get asynchronousLoader() {
+      calls.push("asynchronousLoader registered");
+      return true;
+    },
     resetGeneration: (generation) => {
       calls.push(`resetGeneration ${generation}`);
     },
@@ -122,12 +133,15 @@ test("every ledger function reaches a shared ledger", (context) => {
       calls.push(`initializeGeneration ${generation}`);
     },
   };
-  // Each case calls the worker's entry point for one ledger function.
+  // Each case calls the worker's entry point for one ledger member.
   const cases: { [Member in keyof Ledger]: () => void } = {
     readEvidence: () => {
       assert.equal(preloadedObserver(), fake.readEvidence);
       assert.equal(readEvidence([path.resolve("/loaded.css")]), shared);
     },
+    loadedModules: () =>
+      assert.deepEqual([...loadedModulePaths()], [preloadedModule]),
+    asynchronousLoader: () => assert.equal(hasAsynchronousLoader(), true),
     resetGeneration: () => beginReadEvidenceGeneration("generation-2"),
     initializeGeneration: () =>
       initializeReadEvidenceGeneration("generation-1"),

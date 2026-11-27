@@ -17,6 +17,7 @@ import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import {
   currentEvidence,
+  markedEvidence,
   PhysicalInputReader,
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
@@ -149,14 +150,8 @@ export async function reuse(
   );
   const uncaptured =
     capture === "serveEdit"
-      ? candidates.filter(
-          ({ compiled: { reuseEvidence } }) =>
-            !reuseEvidence.complete &&
-            !reuseEvidence.durable &&
-            reuseEvidence.uncaptured === "serveEdit" &&
-            Object.values(reuseEvidence.inputs).every((value) =>
-              ["file", "absent", "link"].includes(value.kind),
-            ),
+      ? candidates.filter(({ compiled: { reuseEvidence } }) =>
+          markedEvidence(reuseEvidence),
         )
       : [];
   const peers = candidates.filter(

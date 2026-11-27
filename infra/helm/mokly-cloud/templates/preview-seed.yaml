@@ -43,5 +43,5 @@ spec:
           volumes:
             - name: tmp
               emptyDir: { sizeLimit: 64Mi }
-            {{- include "mkc.secretVolume" (dict "root" . "workload" "api") | nindent 12 }}
+            {{- include "mkc.secretVolume" (dict "root" . "workload" "preview-seed") | nindent 12 }}
 {{- end }}

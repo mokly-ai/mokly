@@ -149,7 +149,7 @@ fn send_magic_link() {}
     path = "/v1/auth/preview",
     operation_id = "verifyPreviewSignIn",
     tag = "Account",
-    summary = "Exchange a configured preview credential for a session cookie.",
+    summary = "Exchange the preview password for a session cookie.",
     params(
         Origin,
     ),
@@ -165,6 +165,7 @@ fn send_magic_link() {}
                 ("Retry-After" = inline(PositiveInteger), description = "Seconds until another request can be admitted."),
             )
         ),
+        (status = 503, description = "Preview sign-in configuration is absent, or the full password queue refused the attempt before peer admission.", body = Error, content_type = "application/json"),
         (status = "4XX", response = ErrorResponse),
         (status = "5XX", response = ErrorResponse),
     ),
@@ -176,6 +177,7 @@ fn send_magic_link() {}
         reasons::OPERATION_UNAVAILABLE,
         reasons::PAYLOAD_TOO_LARGE,
         reasons::RATE_LIMITED,
+        reasons::UNAVAILABLE,
         reasons::VALIDATION_FAILED,
     ])))
 )]

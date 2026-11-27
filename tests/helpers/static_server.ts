@@ -82,6 +82,11 @@ export async function serveStaticFiles(
       response.end(request.method === "HEAD" ? undefined : "Not found");
     });
   });
+  // Playwright's request client keeps idle sockets open and reuses them. A
+  // server that closes an idle socket can close it while a request is on its
+  // way, and the request fails. So only the client and `close` end a socket,
+  // as with Serve.
+  server.keepAliveTimeout = 0;
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   if (!address || typeof address === "string")

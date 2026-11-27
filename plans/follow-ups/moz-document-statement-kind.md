@@ -122,8 +122,6 @@
     rule list, as for `@media`. In a style block, it stays a style block.
   - In a keyframes or `@document` block, which `lightningcss` does not parse
     as rules, an `@-moz-document` block stays a declarations block.
-  - `legacy_nested` in `crates/mokly-css/src/_tests_/token_differential.rs`
-    changes the same way.
   - Remove the exception from `PARSER_EXCEPTIONS`.
   - In `blocks_open_the_grammar_that_lightningcss_parses`, in
     `crates/mokly-css/src/_tests_/token_sections_tests.rs`, change the two

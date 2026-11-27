@@ -22,10 +22,11 @@ import {
   renderComparison,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 test("each compared row gets one selection request, and a row outside the frames gets none", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   // The routed saved variant does not compare, so the frames leave it out.
   const props: ComparisonOptions = {
@@ -70,7 +71,7 @@ test("each compared row gets one selection request, and a row outside the frames
 
 test("Side by side requests the compared frame's row alone, and another compared row aborts the earlier request", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   // Without a chosen frame, Side by side compares the routed row's first frame.
   const props: ComparisonOptions = {
@@ -116,7 +117,7 @@ test("Side by side requests the compared frame's row alone, and another compared
 
 test("Try again requests its own row with refresh, the routed row by default, and Refresh requests every row", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const view = renderComparison(host.environment, {
     eligible: true,

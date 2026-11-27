@@ -1,0 +1,32 @@
+# Fixture generation uses the macOS host cache
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the review of the branch `calummoore/ci-speed-slowest-tests-and-remaining-mfoi`.
+- **Location:** `xtask/scripts/mokly-fixture-runtime.mjs:21`.
+- **Reason:** The review of a test-speed change found this in a script that the change did not edit.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Fixture runtime:** The Node script that starts the workspace `mokly` CLI with a clean environment when `cargo xtask mokly-fixtures` regenerates the cloud contract fixtures, and when the `xtask` fixture tests run it.
+  - **Host cache:** The cache folder of the user account that runs the command, for example `~/Library/Caches` on macOS.
+- **Background:**
+  - The fixture runtime builds the child environment from an allowlist. It sets `TMPDIR`, `TMP`, `TEMP`, and `XDG_CACHE_HOME` to folders under the fixture root.
+  - It also passes the caller's `HOME` through when `HOME` is set.
+  - The cache location library of the CLI uses `HOME` plus `Library/Caches` on macOS. `XDG_CACHE_HOME` alone does not redirect that path. `plans/follow-ups/non-serve-process-cache-homes.md` records the same library behaviour for two Rust CLI fixtures.
+  - The `xtask` fixture tests in `xtask/tests/cli/fixture_tests.rs` run the generator in temporary roots, and some now run two generations side by side.
+- **Problem:**
+  - On macOS, each fixture generation can write cache entries into the user's real `~/Library/Caches`, not into the fixture root.
+  - Source reads establish the gap. No macOS run measured it.
+- **Impact if no action:** Fixture generation and the `xtask` fixture tests can leave cache files in the developer's macOS profile. Each generation uses a new absolute root, so no output defect is known.
+- **Root question:** How can each fixture generation keep its cache files inside its own fixture root on every platform?
+- **Options:**
+  - **A.** Set the child `HOME` to a folder under the fixture root, beside the existing `XDG_CACHE_HOME`, and also set `LOCALAPPDATA`. Check first that no child step needs the real home, for example for Git configuration or the npm cache. Effort: Small.
+  - **B.** Keep the real `HOME`, and pass the CLI an explicit cache setting. The CLI has no such public setting, so this adds product behaviour for a fixture need. Effort: Medium.
+- **Left out:** Changing the developer's or the CI job's `HOME` changes unrelated tools and goes beyond child-only isolation.
+- **Wider fix:** A. It follows the child-only cache-home rule that the Rust process fixtures already use.
+- **Previous examples:** `crates/mokly-cli/tests/process_support/cache.rs` gives Serve fixtures an owned home. `plans/follow-ups/non-serve-process-cache-homes.md` covers two Rust launchers with the same gap.
+- **Related:** [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md): the same child environment. Both items decide which `HOME` and which Git settings a child of a test or a fixture run reads.
+- **Recommendation:** A. It isolates the cache with no product change.
+- **Action:** fix after merge, apply A. The script was outside the change that found the gap.

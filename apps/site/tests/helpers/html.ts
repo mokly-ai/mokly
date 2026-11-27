@@ -29,6 +29,56 @@ export function elements(
   ];
 }
 
+export function byTag(node: Node, name: string): Element[] {
+  return elements(node, (element) => element.tagName === name);
+}
+
+export function normalizeText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/** Whether the markup removes this element from assistive technology. */
+export function hiddenInMarkup(element: Element): boolean {
+  return (
+    attribute(element, "aria-hidden") === "true" ||
+    attribute(element, "hidden") !== undefined ||
+    attribute(element, "inert") !== undefined
+  );
+}
+
+function labelContent(node: Node, directlyReferenced = false): string {
+  if ("tagName" in node) {
+    if (
+      (!directlyReferenced && hiddenInMarkup(node)) ||
+      ["script", "style"].includes(node.tagName)
+    )
+      return "";
+    const label = attribute(node, "aria-label")?.trim();
+    if (label) return label;
+    if (node.tagName === "img") return attribute(node, "alt") ?? "";
+    if (node.tagName === "svg") {
+      const title = node.childNodes.find(
+        (child) => "tagName" in child && child.tagName === "title",
+      );
+      return title ? labelContent(title) : "";
+    }
+  }
+  if ("value" in node) return node.value;
+  return "childNodes" in node
+    ? node.childNodes.map((child) => labelContent(child)).join("")
+    : "";
+}
+
+/** Text and image labels supplied by an element's markup. */
+export function markupLabel(node: Node): string {
+  return normalizeText(labelContent(node));
+}
+
+/** An explicit reference can name a control from a hidden target. */
+export function referencedLabel(node: Element): string {
+  return normalizeText(labelContent(node, true));
+}
+
 /** Find elements with one class name. */
 export function byClass(node: Node, name: string): Element[] {
   return elements(

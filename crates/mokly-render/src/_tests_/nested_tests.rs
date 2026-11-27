@@ -34,6 +34,7 @@ fn nested_exclusions_fail_before_a_missing_plugin_dependency() {
             .returns(Ok("renderer.css".into())),
     ));
     let dependencies = ["/repo/missing", "/repo/renderer.css"].map(|path| Dependency {
+        source: None,
         kind: DependencyKind::File,
         path: path.into(),
         plugin: Some("inliner".into()),
@@ -105,6 +106,7 @@ fn package_exclusions_use_selected_logical_names_before_repository_names() {
             context: "test".into(),
         };
         let dependencies = [Dependency {
+            source: None,
             kind: DependencyKind::File,
             path: physical.into(),
             plugin: Some("inliner".into()),

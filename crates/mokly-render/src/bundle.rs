@@ -36,6 +36,7 @@ pub(crate) struct BundleState {
     pub(crate) class_maps_digest: String,
     pub(crate) definitions: Definitions,
     pub(crate) modules: BTreeMap<String, Vec<String>>,
+    pub(crate) package_imports: BTreeSet<String>,
     pub(crate) module_digests: BTreeMap<String, Option<String>>,
     pub(crate) imported_assets: BTreeSet<String>,
     pub(crate) render: RenderEnvironment,
@@ -147,6 +148,12 @@ pub(crate) fn describe(
         .filter(|module| module.imported_asset == Some(true))
         .map(|module| module.path.clone())
         .collect();
+    let package_imports = result
+        .modules
+        .iter()
+        .filter(|module| module.package_import == Some(true))
+        .map(|module| module.path.clone())
+        .collect();
     if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
         let existing = Arc::new(BundleState {
             persistence_identity: persistent_identity::compilation(&result.compiled),
@@ -156,6 +163,7 @@ pub(crate) fn describe(
             class_maps_digest,
             definitions: existing.definitions.clone(),
             modules,
+            package_imports,
             module_digests,
             imported_assets,
             render,
@@ -188,6 +196,7 @@ pub(crate) fn describe(
         class_maps_digest,
         definitions,
         modules,
+        package_imports,
         module_digests,
         imported_assets,
         render,

@@ -4,13 +4,8 @@ import type { BuildAction } from "../viewer/build-action";
 import type { RequestControl } from "../viewer/request-controls";
 
 import { cancelBusy, publishBusy, tryAgainBusy } from "./build-state-busy";
-import {
-  failed,
-  follow,
-  published,
-  superseded,
-  timedOut,
-} from "./build-state-cards";
+import { follow, published, superseded, timedOut } from "./build-state-cards";
+import { failed } from "./build-state-failed";
 import { history, switcher } from "./build-state-lists";
 import type { BuildStateRow } from "./build-state-parts";
 import {
@@ -27,15 +22,17 @@ import {
 } from "./build-state-refusals";
 
 /**
- * The one table of build states the desktop and phone build browser tests
- * read, as `web-app.md` requires: every build state, every card action, every
- * request control's refusal and its wait while its request runs, the answers
- * that open what already answers for a head, the reviewer's publishing card,
- * and builds in History and the switcher. Each record is keyed by the application's own union, so a state,
- * action or request control the application gains fails to compile here until
- * it names the row that shows it. `build-states.spec.ts` runs every row on the
- * desktop and `build-states-mobile.spec.ts` runs every row on a phone, so no
- * state reaches only one surface.
+ * The one table of build states the desktop build browser tests read: every
+ * build state, every card action, every request control's refusal and its
+ * wait while its request runs, the answers that open
+ * what already answers for a head, the reviewer's publishing card, and builds
+ * in History and the switcher. Each record is keyed by the application's own
+ * union, so a state, action or request control the application gains fails
+ * to compile here until it names the row that shows it. `build-states.spec.ts`
+ * runs every row on the desktop. `build-states-mobile.spec.ts` runs on a phone
+ * the two rows whose steps differ there, and walks every state a card draws,
+ * keyed by the same unions in `build-card-walk.ts`, to see that none scrolls
+ * sideways.
  */
 
 /** The row that shows each build state. */
@@ -93,7 +90,7 @@ export const otherRows = {
   switcher,
 } as const satisfies Record<string, BuildStateRow>;
 
-/** Every row once, in the order both surfaces run them. */
+/** Every row once, in the order the desktop runs them. */
 export const buildStates: readonly BuildStateRow[] = [
   ...new Set<BuildStateRow>([
     ...Object.values(stateRows),

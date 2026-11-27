@@ -3,8 +3,8 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from review finding 9 of branch `calummoore/e2b-build-enabling-vbbo`.
-- **Location:** `infra/e2b/tests/assert_build_template.py:54`, `infra/tests/test_build_template.py:98`, `docs/protocol/cloud/cloud-build-runner.md` section "Template", `docs/ops/build-template.md` section "Verify The Streaming Boundary", `infra/e2b/build/e2b.Dockerfile`.
-- **Reason:** The recommended option needs a new credentialed E2B template release, and its first probe may fail and force a choice between two other options.
+- **Location:** `infra/e2b/tests/assert_build_template.py`, the added-entry and `HOME` checks at the start of `verify`; `infra/tests/test_build_template.py`, `test_replaced_or_changed_process_environment_fails`; `docs/protocol/cloud/cloud-build-template.md`, section "Workload User And Environment"; `docs/ops/build-template.md`, section "Verify The Streaming Boundary"; `infra/e2b/build/e2b.Dockerfile`.
+- **Reason:** The recommended option needs a credentialed E2B probe run, and its first probe may fail and force a choice between two other options.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -13,7 +13,7 @@
   - **envd:** E2B's process service inside the sandbox. It builds each process environment.
   - **Template environment:** the `ENV` values of the template image. The Dockerfile sets `HOME=/home/user`. The `mokly-build-v2` build log also shows that the SDK build turned the Dockerfile's `ARG` values into `ENV NODE_VERSION 24.21.0` and `ENV NODE_SHA256 ...` steps.
 - **Background:**
-  - The "Template" section of `docs/protocol/cloud/cloud-build-runner.md` requires that a build command gets the template environment merged with its own added entries, not replaced.
+  - The section "Workload User And Environment" of `docs/protocol/cloud/cloud-build-template.md` requires that a build command gets the template environment merged with its own added entries, not replaced.
   - The probe adds `MKC_TEMPLATE_PROBE=stream-process-added-env` and requires it, the template `HOME`, and every template tool on the process `PATH`. On 2026-11-24 the branch dropped the exact `PATH` comparison, because the live process had E2B's order (`/usr/local/sbin` before `/usr/local/bin`), and removed `ENV PATH` from the Dockerfile.
   - envd sets `HOME` from the user account and `PATH` itself (`packages/envd/internal/services/process/handler/env_unix.go:13-19` in `e2b-dev/infra` at `30723eda`). So the probe passes with provider defaults plus the request entry even if the template layer is lost.
   - envd adds its defaults map after its base `PATH`, and the last duplicate wins (`handler.go:220-234`). So a template `PATH` should have replaced the base one. The mismatch seen with `mokly-build-v1` may therefore mean that the template `ENV` layer did not reach the process. That release was built with the deprecated `@e2b/cli@2.7.0` build system, and `mokly-build-v2` with the `e2b@2.64.0` SDK, so the observation may not apply to v2. envd's `/init` also calls `ReplaceUserVars` (`packages/envd/internal/api/init.go:456-459`). Since review round 2 of that branch, the docs state only what the probe checks and record the v1 mismatch as an observation with an unknown cause.
@@ -22,14 +22,14 @@
 - **Root question:** How does the probe prove that a command kept a value supplied by the template?
 - **Options:**
   - **A.** Limit the documented proof to the effective `HOME`, tool availability and delivery of the added entry, and drop the merge requirement from the protocol. Effort: Small.
-  - **B.** Add a harmless marker `ENV` to the template, require it and the request entry in the probe, add a regression for a missing marker, publish a new release and probe it with its build reference. Effort: Medium.
+  - **B.** Add a harmless marker `ENV` to the template, require it and the request entry in the probe, add a regression for a missing marker, publish a new release and probe it with its full build reference, `TEMPLATE_ID:BUILD_ID`. Record the pass with that reference. Effort: Medium.
   - **C.** Have the release script set a release-specific marker and have the probe check it against the release receipt. Effort: Medium.
   - **D.** Require `E2B_TEMPLATE_ID` to equal the template under test. It needs no release, but it proves only envd's defaults layer, not template user variables, and envd sets it through a metadata poll that can race. Effort: Small.
-  - **F.** Require `NODE_VERSION` to equal the probe's `--node-version` argument, add a regression for a missing value, and re-run the credentialed probe against the `mokly-build-v2` build reference. It needs no new release. It depends on the SDK turning `ARG` into `ENV`, which the build log shows but no process has confirmed. If the value is missing, the probe fails, and the choice is between E and A. Effort: Medium.
+  - **F.** Require `NODE_VERSION` to equal the probe's `--node-version` argument, and add a regression for a missing value. Choose the newest release whose record passes the current probe, in "Live Evidence" of `docs/ops/build-template.md`. First run the unchanged probe against that release's full build reference, `TEMPLATE_ID:BUILD_ID`, as a control run. Then run the probe with the `NODE_VERSION` check against the same reference. Record each result with the full build reference, the assertion commit, and the UTC time. On 2026-11-26 the current probe failed `mokly-build-v5` and `mokly-build-v6` with `python3 has multiple copies on PATH`, so neither can be that release. It needs no new release. It depends on the SDK turning `ARG` into `ENV`, which the build log shows but no process has confirmed. When the control run passes and the `NODE_VERSION` check fails, the value is missing, and the choice is between E and A. When the control run fails, the release does not qualify, and the run proves nothing about the value. Effort: Medium.
   - **E.** Make builds independent of the template environment: the runner sets `HOME` (and `PATH` if wanted) in its per-step environment (`crates/mkc-build-sandbox/src/command.rs`), the protocol drops the merge requirement, and the probe runs with the runner's real step environment. Effort: Medium.
 - **Left out:** Restoring the exact `PATH` comparison, because it depends on provider order and still uses a provider value.
 - **Wider fix:** B. E is the structural alternative if the template environment does not reach processes.
 - **Previous examples:** The pinned adapter added explicit streaming environment support in `futex-ai/sandbox` commit `86d8234`.
 - **Related:** `cloud-builds-never-ran-live.md` holds the live build proof. A release for B should also follow the build-reference rule of `docs/ops/build-template.md`.
-- **Recommendation:** F, then B only if F cannot run. F proves a template-only value survives with the verified v2 build and no new release. If its probe fails, choose between E and A, and do not weaken the probe.
+- **Recommendation:** F, then B only if F cannot run. F proves that a template-only value survives, on a release that passes the current probe, with no new release. If its `NODE_VERSION` check fails after a passing control run, choose between E and A, and do not weaken the probe.
 - **Action:** ask the user, because F and B need a credentialed E2B run, and their result can force a protocol change.

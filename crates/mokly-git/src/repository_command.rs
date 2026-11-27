@@ -29,23 +29,19 @@ impl GitRepository {
             .stdout)
     }
 
-    /// Disable monitor helpers while retaining promisor object-fetch ownership.
     pub(crate) fn file_listing(&self, flags: &[&str]) -> Result<Vec<u8>> {
+        Ok(self.runner.run(&self.file_listing_request(flags))?.stdout)
+    }
+
+    /// Disable monitor helpers while retaining promisor object-fetch ownership.
+    pub(crate) fn file_listing_request(&self, flags: &[&str]) -> Request {
         let mut args = vec!["-c", "core.fsmonitor=false", "ls-files"];
         args.extend_from_slice(flags);
-        Ok(self.runner.run(&self.tree_request(&args))?.stdout)
+        self.tree_request(&args)
     }
 
     pub(crate) fn index_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>> {
-        let args = [
-            "-c",
-            "core.fsmonitor=false",
-            "ls-files",
-            "--cached",
-            "-z",
-            "--",
-        ];
-        let mut request = self.tree_request(&args);
+        let mut request = self.file_listing_request(&["--cached", "-z", "--"]);
         request.args.retain(|arg| arg != "--literal-pathspecs");
         let arguments = pathspecs.iter().map(OsString::from).collect::<Vec<_>>();
         let batches = if arguments.is_empty() {

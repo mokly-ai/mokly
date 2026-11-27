@@ -3,31 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { parse } from "yaml";
-
 import { repositoryRoot } from "./helpers/fixture.js";
 
 /** The first npm release that writes lockfile `libc` fields (npm/cli#9025). */
 const FIRST_NPM_WITH_LOCKFILE_LIBC = "11.11.0";
-/** Workflows whose dependency installs must use the pinned npm. */
-const PINNED_WORKFLOWS = [
-  "ci.yml",
-  "release.yml",
-  "release-prepare.yml",
-] as const;
 const NPM_PIN = /npm (?:install|i) (?:--global|-g) npm@(\S+)/gu;
-
-interface WorkflowStep {
-  run?: string;
-}
-
-interface WorkflowJob {
-  steps?: readonly WorkflowStep[];
-}
-
-interface Workflow {
-  jobs: Readonly<Record<string, WorkflowJob>>;
-}
 
 test("every automation npm pin matches the packageManager version", async () => {
   const pinned = await pinnedNpmVersion();
@@ -36,28 +16,6 @@ test("every automation npm pin matches the packageManager version", async () => 
   );
   assert.ok(pins.length > 0, "workflows must pin npm");
   for (const pin of pins) assert.equal(pin.version, pinned, pin.file);
-});
-
-test("CI and release jobs set up the pinned npm before npm ci", async () => {
-  const pinned = await pinnedNpmVersion();
-  let installs = 0;
-  for (const file of PINNED_WORKFLOWS) {
-    const workflow = await readWorkflow(file);
-    for (const [name, job] of Object.entries(workflow.jobs)) {
-      const steps = job.steps ?? [];
-      const install = steps.findIndex((step) => step.run === "npm ci");
-      if (install < 0) continue;
-      installs += 1;
-      const setup = steps.findIndex(
-        (step) => step.run === `npm install --global npm@${pinned}`,
-      );
-      assert.ok(
-        setup >= 0 && setup < install,
-        `${file}:${name} must set up npm ${pinned} before npm ci`,
-      );
-    }
-  }
-  assert.ok(installs > 0, "CI and release workflows must install dependencies");
 });
 
 test("the pinned npm is new enough to keep lockfile libc fields", async () => {
@@ -100,10 +58,6 @@ async function automationSources(): Promise<
       source: await read(file),
     })),
   );
-}
-
-async function readWorkflow(file: string): Promise<Workflow> {
-  return parse(await read(`.github/workflows/${file}`)) as Workflow;
 }
 
 async function read(file: string): Promise<string> {

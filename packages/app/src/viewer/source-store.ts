@@ -106,8 +106,8 @@ async function settle(
 
 /**
  * Keep one source in memory: the index it read, its `detail` function and
- * its version failure. A query-only Back that rebuilds the route finds them
- * again; another origin or policy, or a new document, starts empty.
+ * its version failure. A traversal that rebuilds the route finds them again;
+ * another origin or policy, or a new document, starts empty.
  */
 export function createCatalogueSources(reads: SourceReads): CatalogueSources {
   let active: Entry | undefined;

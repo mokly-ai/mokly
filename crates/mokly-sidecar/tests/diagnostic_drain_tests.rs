@@ -65,7 +65,7 @@ impl Wait for DrainClock {
         true
     }
 
-    fn reaped(&self, receiver: &Receiver<()>) {
+    fn exited_after_kill(&self, receiver: &Receiver<()>) {
         receiver.recv().unwrap();
     }
 }

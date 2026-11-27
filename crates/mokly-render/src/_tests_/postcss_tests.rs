@@ -4,7 +4,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_sidecar::results::{Dependency, DependencyKind};
+use mokly_css::dependencies::ImportKind;
+use mokly_sidecar::results::{Dependency, DependencyKind, DependencySource};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
@@ -33,6 +34,13 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
+                if path == Path::new("/repo/link.txt") {
+                    return Ok(Some(Node {
+                        identity: "/repo/inputs/one.txt".into(),
+                        lexical_kind: FileKind::Symlink,
+                        kind: FileKind::File,
+                    }));
+                }
                 let kind = if projected.contains_key(path) {
                     Some(FileKind::File)
                 } else if [Path::new("/repo/inputs"), Path::new("/repo/empty")].contains(&path) {
@@ -80,6 +88,7 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
             })),
     ));
     let report = |kind, path: &str| Dependency {
+        source: None,
         kind,
         path: path.into(),
         plugin: Some("fixture".into()),
@@ -94,6 +103,10 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
         vec![
             report(DependencyKind::File, "/outside/missing"),
             report(DependencyKind::File, "/repo/inputs/one.txt"),
+            Dependency {
+                source: Some(DependencySource::BundledPackageImport),
+                ..report(DependencyKind::File, "/repo/link.txt")
+            },
             report(DependencyKind::File, "/repo/.context/exact.txt"),
             Dependency {
                 glob: Some("**/*.txt".into()),
@@ -103,10 +116,17 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
         ],
     )
     .unwrap();
-    assert_eq!(inventory.inputs.len(), 3);
+    assert_eq!(inventory.inputs.len(), 4);
     assert!(inventory.inputs.contains_key("inputs/.hidden.txt"));
     assert!(inventory.inputs.contains_key(".context/exact.txt"));
     assert_eq!(inventory.directories.len(), 2);
     assert_eq!(inventory.plugin_inputs["inputs/one.txt"].plugin, "fixture");
+    for path in ["inputs/one.txt", "link.txt"] {
+        assert_eq!(
+            inventory.plugin_inputs[path].import,
+            Some(ImportKind::Package)
+        );
+    }
+    assert_eq!(inventory.plugin_inputs["inputs/.hidden.txt"].import, None);
     assert_eq!(reads.lock().unwrap().len(), 3);
 }

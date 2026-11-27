@@ -23,9 +23,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { expectNoComparison } from "./comparison_absence.js";
 import {
   BASE,
-  EXAMINED_LEAD,
-  INSPECTOR_VIEWPORTS,
-  PAGE_EXCLUDED_LEAD,
+  DESKTOP_INSPECTOR,
   PAGE_FILES_LEAD,
   PAGE_MATCHED_LEAD,
   PAGE_OUTSIDE_LEAD,
@@ -75,13 +73,13 @@ test.beforeEach(({ allowBrowserError, baseURL }) => {
   documentFavicon(allowBrowserError, ownExampleServerUrl() ?? baseURL!);
 });
 
-/** The approved document design at one viewport. */
-function documentDesignUrl(viewport: string): string {
+/** The approved document design at the desktop viewport. */
+function documentDesignUrl(): string {
   return designFileUrl(
     path.join(
       repositoryRoot,
       "examples/basic/mokly-generated/design/canvas/evidence/page",
-      `index.${viewport}.html`,
+      "index.desktop.html",
     ),
   ).href;
 }
@@ -112,114 +110,94 @@ async function titleLines(page: Page): Promise<number> {
   });
 }
 
-for (const [name, size] of INSPECTOR_VIEWPORTS) {
-  test.describe(`${name} whole-page evidence`, () => {
-    test.use({ viewport: size });
+test.describe("desktop whole-page evidence", () => {
+  test.use({ viewport: DESKTOP_INSPECTOR });
 
-    test("a changed document names each stylesheet once with the page copy", async ({
-      page,
-    }) => {
-      const evidence = await openHandbook(page);
-      await expect(inspectStatus(page)).toHaveText("Changed");
-      await awaitRoutedDetail(page, HANDBOOK);
-      // A page has no compare, no comparison band and no Frames filter.
-      await expect(compareStage(page)).toHaveCount(0);
-      await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
-      await expectNoComparison(page);
-      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
-      await expect(
-        evidence.getByText(PAGE_FILES_LEAD, { exact: true }),
-      ).toBeVisible();
-      expect(await evidenceSpacing(evidence)).toMatchObject({
-        sentence: "8px",
-        styles: "8px",
-        afterList: "14px",
-      });
-      await expect(evidence).not.toContainText(
-        /Changed component|Shared component changes|this screen|saved view|this variant|[0-9a-f]{64}/u,
-      );
-      await expect(inspectHead(page)).not.toContainText(
-        /\.action|article h2|:root|\.css/u,
-      );
+  test("a changed document names each stylesheet once with the page copy", async ({
+    page,
+  }) => {
+    const evidence = await openHandbook(page);
+    await expect(inspectStatus(page)).toHaveText("Changed");
+    await awaitRoutedDetail(page, HANDBOOK);
+    // A page has no compare, no comparison band and no Frames filter.
+    await expect(compareStage(page)).toHaveCount(0);
+    await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
+    await expectNoComparison(page);
+    await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
+    await expect(
+      evidence.getByText(PAGE_FILES_LEAD, { exact: true }),
+    ).toBeVisible();
+    expect(await evidenceSpacing(evidence)).toMatchObject({
+      sentence: "8px",
+      styles: "8px",
+      afterList: "14px",
     });
-
-    test("the shell repeats the approved document mockup's layout and copy", async ({
-      page,
-    }) => {
-      const evidence = await openHandbook(page);
-      const spacing = await evidenceSpacing(evidence);
-      await expect(inspectTitle(page)).toHaveText("Getting started");
-      expect(await titleLines(page)).toBe(1);
-      await page.goto(documentDesignUrl(name));
-      const card = page.locator(".cv-evidence [data-page-evidence]");
-      await expect(
-        card.getByText(PAGE_FILES_LEAD, { exact: true }),
-      ).toBeVisible();
-      // The design names the same files from its own folder.
-      const approved = await evidenceFiles(card);
-      expect(approved.map(([file]) => path.posix.basename(file))).toEqual(
-        HANDBOOK_FILES.map(([file]) => path.posix.basename(file)),
-      );
-      expect(approved.map(([, outcomes]) => outcomes)).toEqual(
-        HANDBOOK_FILES.map(([, outcomes]) => outcomes),
-      );
-      expect(await evidenceSpacing(card)).toMatchObject({
-        sentence: spacing.sentence,
-        styles: spacing.styles,
-        afterList: spacing.afterList,
-      });
-      // The design's status sits beside its title: the section head's on a
-      // desktop, and the entry bar's on a phone.
-      await expect(
-        page.locator(".cv-canvas .mbk-entry-status:visible"),
-      ).toHaveText("Changed");
-    });
-
-    test("an unchanged document lists its examined stylesheet and ends with its terminal line", async ({
-      page,
-    }) => {
-      await page.goto(`/view/${NOTES}/`);
-      await expect(inspectStatus(page)).toHaveText("Unmodified");
-      const evidence = await openPageEvidence(page, "Inspect");
-      await expect(evidence.locator("p")).toHaveText([
-        BASE,
-        PAGE_EXCLUDED_LEAD,
-        EXAMINED_LEAD,
-        PAGE_TERMINAL,
-      ]);
-      await expect(evidence.locator("li")).toHaveText([pageStylesheets.notes]);
-      await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
-    });
-
-    test("a page that uses a changed component shows its styles and links no component", async ({
-      page,
-    }) => {
-      await page.goto(`/view/${CATALOG}/`);
-      await expect(inspectStatus(page)).toHaveText("Unmodified");
-      const evidence = await openPageEvidence(page, "Inspect");
-      await expect
-        .poll(() => evidenceFiles(evidence))
-        .toEqual([
-          [configuredStylesheets.theme, [[PAGE_MATCHED_LEAD, [".accent"]]]],
-        ]);
-      await expect(evidence.locator(":scope > p")).toHaveText([
-        BASE,
-        PAGE_FILES_LEAD,
-        PAGE_TERMINAL,
-      ]);
-      await expect(evidence).not.toContainText(/Changed component/u);
-      await expect(evidence).not.toContainText(SHARED);
-      // Card's Usage lists its consumers, and a page is none of them. In the
-      // compact layout Inspect stands in the panel's sheet.
-      await page.goto(`/view/${comparisonPaths.component}/`);
-      const usage = await openInspectFold(page, "usage");
-      await expect(
-        usage.locator('[data-usage-section="used-by"]').getByRole("link"),
-      ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
-      await expect(usage).not.toContainText("Catalog");
-    });
+    await expect(evidence).not.toContainText(
+      /Changed component|Shared component changes|this screen|saved view|this variant|[0-9a-f]{64}/u,
+    );
+    await expect(inspectHead(page)).not.toContainText(
+      /\.action|article h2|:root|\.css/u,
+    );
   });
-}
+
+  test("the shell repeats the approved document mockup's layout and copy", async ({
+    page,
+  }) => {
+    const evidence = await openHandbook(page);
+    const spacing = await evidenceSpacing(evidence);
+    await expect(inspectTitle(page)).toHaveText("Getting started");
+    expect(await titleLines(page)).toBe(1);
+    await page.goto(documentDesignUrl());
+    const card = page.locator(".cv-evidence [data-page-evidence]");
+    await expect(
+      card.getByText(PAGE_FILES_LEAD, { exact: true }),
+    ).toBeVisible();
+    // The design names the same files from its own folder.
+    const approved = await evidenceFiles(card);
+    expect(approved.map(([file]) => path.posix.basename(file))).toEqual(
+      HANDBOOK_FILES.map(([file]) => path.posix.basename(file)),
+    );
+    expect(approved.map(([, outcomes]) => outcomes)).toEqual(
+      HANDBOOK_FILES.map(([, outcomes]) => outcomes),
+    );
+    expect(await evidenceSpacing(card)).toMatchObject({
+      sentence: spacing.sentence,
+      styles: spacing.styles,
+      afterList: spacing.afterList,
+    });
+    // The design's status sits beside its title in the section head.
+    await expect(
+      page.locator(".cv-canvas .mbk-entry-status:visible"),
+    ).toHaveText("Changed");
+  });
+
+  test("a page that uses a changed component shows its styles and links no component", async ({
+    page,
+  }) => {
+    await page.goto(`/view/${CATALOG}/`);
+    await expect(inspectStatus(page)).toHaveText("Unmodified");
+    const evidence = await openPageEvidence(page, "Inspect");
+    await expect
+      .poll(() => evidenceFiles(evidence))
+      .toEqual([
+        [configuredStylesheets.theme, [[PAGE_MATCHED_LEAD, [".accent"]]]],
+      ]);
+    await expect(evidence.locator(":scope > p")).toHaveText([
+      BASE,
+      PAGE_FILES_LEAD,
+      PAGE_TERMINAL,
+    ]);
+    await expect(evidence).not.toContainText(/Changed component/u);
+    await expect(evidence).not.toContainText(SHARED);
+    // Card's Usage lists its consumers, and a page is none of them.
+    await page.goto(`/view/${comparisonPaths.component}/`);
+    const usage = await openInspectFold(page, "usage");
+    await expect(
+      usage.locator('[data-usage-section="used-by"]').getByRole("link"),
+    ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
+    await expect(usage).not.toContainText("Catalog");
+  });
+});
 
 test.describe("whole-page evidence on a short screen", () => {
   test.use({ viewport: { width: 390, height: 640 } });

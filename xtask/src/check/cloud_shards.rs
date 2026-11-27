@@ -1,0 +1,133 @@
+//! Shard plans of the cloud suites: app, mockups, site, and infrastructure.
+
+use crate::command::CommandSpec;
+
+use super::cloud_commands::{built, npm};
+use super::request::Shard;
+
+const APP: &str = "@mokly-cloud/app";
+const MOCKUPS: &str = "@mokly-cloud/mockups";
+const SITE: &str = "@mokly-cloud/site";
+
+/// Mockup shards that own the checks outside the disk browser suite.
+const MOCKUP_LEADING_SHARDS: u64 = 2;
+
+/// Every app shard builds its own web export; shard 1 also runs the logic tests.
+pub(super) fn app_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let mut commands = built([]);
+    commands.push(CommandSpec::new("node").args(["xtask/scripts/require-postgres.mjs"]));
+    let scripts = if shard.is_none_or(Shard::is_first) {
+        vec!["test:logic", "build:web", "test:browser"]
+    } else {
+        vec!["build:web", "test:browser"]
+    };
+    let value = shard.map(|shard| shard.to_string());
+    commands.extend(scripts.into_iter().map(|script| {
+        npm(&["run", script, "--workspace", APP])
+            .with_environment("MKC_APP_SHARD", value.as_deref())
+            .with_environment("CI", Some("1"))
+    }));
+    commands
+}
+
+/// Every mockup shard builds the catalogue that the checks read.
+///
+/// The `cloud-typecheck` suite type-checks the mockup workspace, so this suite
+/// runs no type check. With three or more shards, shard 1 runs the
+/// determinism check, shard 2 runs the policy tests and the served suite,
+/// and the other shards split the disk suite. Two shards split the work into
+/// a part without a browser and a browser part. One shard, or none, runs the
+/// complete suite.
+pub(super) fn mockup_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
+        return built(["mockups:build", "mockups:test"]);
+    };
+    let mut commands = built(["mockups:build"]);
+    match (shard.index(), shard.total()) {
+        (1, 2) => commands.extend(["test:determinism", "test:policy"].map(mockups)),
+        (2, 2) => commands.extend([mockup_disk(None), mockups("test:serve")]),
+        (1, _) => commands.push(mockups("test:determinism")),
+        (2, _) => commands.extend(["test:policy", "test:serve"].map(mockups)),
+        _ => commands.push(mockup_disk(shard.after(MOCKUP_LEADING_SHARDS))),
+    }
+    commands
+}
+
+/// Every site shard builds the site and runs one Playwright shard; shard 1
+/// also runs the unit and link checks. One shard, or none, runs them all.
+///
+/// The `cloud-typecheck` suite type-checks the site, so this suite runs no
+/// type check.
+pub(super) fn site_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
+        return built(["site:build", "site:test", "site:links", "site:browser"]);
+    };
+    let mut commands = built(["site:build"]);
+    if shard.is_first() {
+        commands.extend(["site:test", "site:links"].map(|script| npm(&["run", script])));
+    }
+    let value = shard.to_string();
+    commands.push(npm(&[
+        "run",
+        "browser",
+        "--workspace",
+        SITE,
+        "--",
+        "--shard",
+        &value,
+    ]));
+    commands
+}
+
+/// The infrastructure suite runs the contract and storage tests, then builds
+/// the API, catalogue, and app images.
+///
+/// With two or more shards, the suite has three parts: the tests, the API and
+/// catalogue images, and the app image. Part `p`, counted from 0, belongs to
+/// shard `p % N + 1`. The two Rust images stay in one part, because they share
+/// one cached build stage. A shard after the third runs nothing. One shard, or
+/// none, runs the complete suite.
+pub(super) fn infrastructure_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let Some(shard) = shard.filter(|shard| shard.total() > 1) else {
+        let mut commands = infrastructure_tests();
+        commands.push(images(&[]));
+        return commands;
+    };
+    let parts = [
+        infrastructure_tests(),
+        vec![images(&["api", "catalogue"])],
+        vec![images(&["app"])],
+    ];
+    (0_u64..)
+        .zip(parts)
+        .filter(|(part, _)| part % shard.total() + 1 == shard.index())
+        .flat_map(|(_, commands)| commands)
+        .collect()
+}
+
+fn infrastructure_tests() -> Vec<CommandSpec> {
+    vec![
+        CommandSpec::new("node").args(["xtask/scripts/require-postgres-tools.mjs"]),
+        CommandSpec::new("python3")
+            .args(["infra/scripts/run-infrastructure-tests.py", "contracts"]),
+        CommandSpec::new("python3").args(["infra/scripts/run-infrastructure-tests.py", "storage"]),
+    ]
+}
+
+fn images(selection: &[&str]) -> CommandSpec {
+    CommandSpec::new("bash")
+        .args(["infra/scripts/check-image.sh"])
+        .args(selection.iter().copied())
+}
+
+fn mockups(script: &str) -> CommandSpec {
+    npm(&["run", script, "--workspace", MOCKUPS])
+}
+
+fn mockup_disk(shard: Option<Shard>) -> CommandSpec {
+    let command = mockups("test:disk");
+    match shard {
+        Some(shard) => command.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]),
+        None => command,
+    }
+}

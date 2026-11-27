@@ -7,8 +7,19 @@ from network_contract import check_network
 
 
 DATABASE_URL = {"valueFrom": {"secretKeyRef": {"name": "postgres-credentials", "key": "url"}}}
+SIGNING_SECRET = {"secret": {"name": "catalogue-signing-key", "items": [
+    {"key": "catalogue-signing-key", "path": "catalogue-signing-key"}]}}
 SECURITY = {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True,
             "capabilities": {"drop": ["ALL"]}}
+
+
+def check_preview_sign_in_rollout_marker(documents, marker):
+    for name in ("api", "app", "catalogue"):
+        deployment = resource(documents, "Deployment", name)
+        pod_metadata = deployment["spec"]["template"]["metadata"]
+        actual = pod_metadata.get("annotations", {}).get("mokly.ai/preview-sign-in-rollout-marker")
+        expected = marker if name == "api" else None
+        assert actual == expected, f"{name} pod rollout marker: expected {expected!r}, got {actual!r}"
 
 
 def check_preview_seed(documents, environment_name):
@@ -31,7 +42,10 @@ def check_preview_seed(documents, environment_name):
     api = resource(documents, "Deployment", "api")["spec"]["template"]["spec"]
     maintenance = resource(documents, "CronJob", "auth-prune")["spec"]["jobTemplate"]["spec"]["template"]["spec"]
     assert pod["securityContext"] == maintenance["securityContext"]
-    assert pod["volumes"] == api["volumes"]
+    assert pod["volumes"] == [
+        {"name": "tmp", "emptyDir": {"sizeLimit": "64Mi"}},
+        {"name": "secrets", "projected": {"sources": [SIGNING_SECRET]}},
+    ]
     container, = pod["containers"]
     api_container, = api["containers"]
     maintenance_container, = maintenance["containers"]
@@ -126,13 +140,10 @@ def check_workloads(documents, defaults, postgres_image):
         assert env["MKC_GCS_BUCKET"] == {"value": "mokly-508518-preview-blobs"}
         assert env["MKC_GCS_PREFIX"] == {"value": "pr-42"}
         assert {"name": "secrets", "mountPath": "/var/run/mokly-secrets", "readOnly": True} in container["volumeMounts"]
-        signing = {"secret": {"name": "catalogue-signing-key", "items": [
-            {"key": "catalogue-signing-key", "path": "catalogue-signing-key"}]}}
         sources = pod["volumes"][1]["projected"]["sources"]
-        assert signing in sources
-        preview = {"secret": {"name": "preview-sign-in", "items": [
+        preview = {"secret": {"name": "preview-sign-in", "optional": True, "items": [
             {"key": "preview-sign-in", "path": "preview-sign-in"}]}}
-        assert (preview in sources) == (name == "api")
+        assert sources == ([SIGNING_SECRET, preview] if name == "api" else [SIGNING_SECRET])
     assert resource(documents, "Deployment", "api")["spec"]["strategy"] == {"type": "Recreate"}
     api = pods["api"]["containers"][0]
     env = environment(api)

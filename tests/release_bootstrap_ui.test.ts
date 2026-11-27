@@ -83,19 +83,8 @@ for (const registration of registrations) {
     assert.equal(await fixture.git("status", "--porcelain"), "");
   });
 
-  test(`${registration.name} bootstrap rejects later versions and lifecycle source mutations`, async (t) => {
+  test(`${registration.name} bootstrap rejects later versions`, async (t) => {
     const { createBootstrapArchive } = await bootstrapModule();
-    const changed = await bootstrapFixture(t, {
-      afterBuild: 'await fs.writeFile("source.txt", "unreviewed");',
-    });
-    await assert.rejects(
-      createBootstrapArchive({
-        ...changed,
-        repositoryRoot: changed.root,
-        packageName: registration.name,
-      }),
-      /clean.*source|source.*clean/i,
-    );
     const fixture = await bootstrapFixture(t);
     const filename = path.join(
       fixture.root,
@@ -127,3 +116,23 @@ for (const registration of registrations) {
     );
   });
 }
+
+/**
+ * The build changes the source. For `@mokly/ui` it runs in the package's own
+ * pack. For a later package it runs first as the `@mokly/ui` prerequisite
+ * build, which the viewer bootstrap test covers.
+ */
+test("@mokly/ui bootstrap rejects lifecycle source mutations", async (t) => {
+  const { createBootstrapArchive } = await bootstrapModule();
+  const changed = await bootstrapFixture(t, {
+    afterBuild: 'await fs.writeFile("source.txt", "unreviewed");',
+  });
+  await assert.rejects(
+    createBootstrapArchive({
+      ...changed,
+      repositoryRoot: changed.root,
+      packageName: "@mokly/ui",
+    }),
+    /clean.*source|source.*clean/i,
+  );
+});

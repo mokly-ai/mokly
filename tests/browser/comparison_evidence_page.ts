@@ -57,13 +57,14 @@ export const PAGE_OUTSIDE_LEAD =
   "These changed styles also apply outside the changed components on this page:";
 export const PAGE_UNRESOLVED_LEAD =
   "This change can apply anywhere on the page, so the page stays in Changes:";
-export const PAGE_EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this page.";
 export const PAGE_TERMINAL = "No changes to this page.";
+
+/** The window of the desktop inspector dock. */
+export const DESKTOP_INSPECTOR = { width: 1440, height: 1000 } as const;
 
 /** The desktop inspector dock and the mobile inspector sheet. */
 export const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
+  ["desktop", DESKTOP_INSPECTOR],
   ["mobile", { width: 390, height: 844 }],
 ] as const;
 
@@ -222,4 +223,11 @@ export function evidenceSpacing(scope: Locator) {
       afterList: margin("ul + p"),
     };
   });
+}
+
+/** Status literals of the evidence format never reach the reader. */
+export async function expectNoStatusWords(evidence: Locator): Promise<void> {
+  for (const word of [/\bmatched\b/, /\bunresolved\b/, /\bentry\b/])
+    await expect(evidence).not.toContainText(word);
+  await expect(evidence).not.toContainText(/[0-9a-f]{64}/);
 }

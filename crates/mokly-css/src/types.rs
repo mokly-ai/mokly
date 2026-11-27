@@ -41,6 +41,24 @@ impl OpaqueAsset {
     }
 }
 
+/// Reported source of a protected stylesheet input or asset.
+#[derive(Clone, Debug)]
+pub struct InputOrigin {
+    /// Importing stylesheet.
+    pub stylesheet: String,
+    /// A CSS import selected the input by package name.
+    pub package_import: bool,
+}
+
+impl From<&str> for InputOrigin {
+    fn from(stylesheet: &str) -> Self {
+        Self {
+            stylesheet: stylesheet.into(),
+            package_import: false,
+        }
+    }
+}
+
 /// Fully prepared stylesheet bundle and private source inventory.
 #[derive(Clone, Debug)]
 pub struct Bundle {
@@ -63,7 +81,7 @@ pub struct Bundle {
     /// Parsed CSS source bytes used by the graph key, keyed by logical path.
     pub inputs: BTreeMap<String, Vec<u8>>,
     /// Importing stylesheet for each protected source and asset.
-    pub imported_by: BTreeMap<String, String>,
+    pub imported_by: BTreeMap<String, InputOrigin>,
     /// Logical aliases whose real source is repository-owned, rather than an installation.
     pub repository_aliases: BTreeSet<String>,
     /// Digests of plugin-reported dependencies, without retained file bytes.

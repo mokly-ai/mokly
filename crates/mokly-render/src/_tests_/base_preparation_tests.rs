@@ -29,6 +29,7 @@ fn head(calls: Arc<Mutex<Vec<Call>>>) -> Runtime {
                     Call::Bundle(_) => {
                         let mut reply = result(None, evidence());
                         reply.modules = vec![Module {
+                            package_import: None,
                             path: "renderer.ts".into(),
                             imports: vec![],
                             digest: None,

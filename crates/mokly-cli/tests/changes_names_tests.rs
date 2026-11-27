@@ -68,6 +68,8 @@ mod terminal;
 )]
 mod changes_support;
 use changes_support::{base, write};
+#[path = "process_support/parallel.rs"]
+mod parallel;
 
 const TEST: &str = "mixed_comparison_names_each_changed_entry";
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],props:{},element:'ui-card',propSchema:{type:'object',additionalProperties:false,properties:{}},render:()=> <p className='card'>Before</p>});";
@@ -79,7 +81,8 @@ fn mixed_comparison_names_each_changed_entry() {
         inspect(&PathBuf::from(root));
         return;
     }
-    for change in ["none", "html", "react", "css", "all"] {
+    let cases = ["none", "html", "react", "css", "all"].map(|change| (change.to_owned(), change));
+    parallel::each(cases, |change| {
         let root = base(&[
             (
                 "mokly.config.json",
@@ -138,7 +141,7 @@ fn mixed_comparison_names_each_changed_entry() {
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr)
         );
-    }
+    });
 }
 
 fn inspect(root: &Path) {

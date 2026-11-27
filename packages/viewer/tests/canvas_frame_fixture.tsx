@@ -26,6 +26,7 @@ import { ShellStoreProvider } from "../src/shell/store.js";
 
 import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 import { FakeDataSource } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 export const ORIGIN = "https://catalogue.test";
 
@@ -49,7 +50,7 @@ export function registerDom(t: TestContext): void {
       },
     },
   });
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
 }
 
 /** The frames of a path's canvas in the fixture catalogue, with dark views. */

@@ -1,7 +1,7 @@
 # Authentication Callback Landings
 
-Email, the preview sign-in link, the desktop grant, GitHub identity
-authorization and GitHub App setup return to separate application routes. A
+Email, the desktop grant, GitHub identity authorization and GitHub App setup
+return to separate application routes. A
 landing never guesses its provider from a shared query,
 and `/auth/callback` is not a route. The API is the only authority that
 consumes credentials, binds a GitHub flow or chooses the stored `returnTo`.
@@ -11,7 +11,6 @@ consumes credentials, binds a GitHub flow or chooses the stored `returnTo`.
 | Route                    | Browser input                                                                                | API call                                                                                            | Completion                                                                                     |
 | ------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `/auth/email/callback`   | One `token` in the fragment                                                                  | `POST /v1/auth/callback` with Origin                                                                | Adopt the session and replace with the returned `returnTo`                                     |
-| `/auth/preview/callback` | One `secret` in the fragment                                                                 | `POST /v1/auth/preview` with Origin                                                                 | Adopt the session and replace with the returned `returnTo`                                     |
 | `/auth/desktop/callback` | One `grant` in the fragment; the verifier in tab storage                                     | `POST /v1/auth/desktop/callback` with Origin                                                        | Adopt the session and replace with the returned `returnTo`                                     |
 | `/auth/github/callback`  | One `code` and `state` in the query                                                          | `POST /v1/auth/github/callback` with Origin, plus session CSRF for a connected or installation flow | Adopt the rotated session and replace with the returned `returnTo`                             |
 | `/auth/github/install`   | `installation_id` with `state`, `installation_id` without `state`, or `setup_action=request` | Callback POST for the stateful arrival; no API call for the other arrivals                          | Continue authorization, replace with `/install?installationId=<id>`, or draw the request state |
@@ -24,8 +23,8 @@ provider-specific recovery below.
 A landing's provider input leaves the address before the app router starts.
 The cleanup removes the whole GitHub query, except that a stateless
 `installation_id` arrival replaces the address with
-`/install?installationId=<id>`. It removes the email, preview or desktop
-fragment while keeping any query. It creates no history entry, never copies a
+`/install?installationId=<id>`. It removes the email or desktop fragment
+while keeping any query. It creates no history entry, never copies a
 credential into a path or query, and sets a `no-referrer` policy on the GitHub
 landings. No address a landing's document takes after it loads carries its
 credential.
@@ -92,42 +91,6 @@ the shared validator and replaces the route.
 **Back to sign in** is the sole primary action and goes to `/sign-in`. An API
 failure also shows its error details; missing local input has none.
 
-## Preview Callback
-
-The preview landing takes the `secret` captured from its fragment and keeps it
-only in memory after address cleanup. Success adopts the session, validates the
-API's `returnTo` with the shared validator and replaces the route, as the email
-landing does.
-
-The account shell owns the one visible heading. Every failed preview state
-then renders the shared error state: one problem glyph and one `role="alert"`
-section, with no state title or body that repeats the heading. The recovery
-action group follows that block. Request details, when present, are inside the
-block as a closed **Details** disclosure. Each failed state's alert carries a
-hidden announcement that equals the screen title exactly and leaves the visible
-screen unchanged.
-
-| State                                         | Screen title              | State block                                           | Alert announcement        | Actions                                 |
-| --------------------------------------------- | ------------------------- | ----------------------------------------------------- | ------------------------- | --------------------------------------- |
-| Pending                                       | `Signing you in`          | Skeleton; screen-reader-only `Signing you in…` status | None                      | None                                    |
-| Success                                       | No rendered state         | None                                                  | None                      | None; route replaced                    |
-| Missing secret                                | `This link isn’t valid`   | Problem alert only; no title, body or details         | `This link isn’t valid`   | **Back to sign in**                     |
-| API `magic-link-invalid`                      | `This link isn’t valid`   | Problem alert with request details                    | `This link isn’t valid`   | **Back to sign in**                     |
-| Other request failure with a request ID       | `We couldn’t sign you in` | Problem alert with request details                    | `We couldn’t sign you in` | **Try again**, then **Back to sign in** |
-| Request or local failure without a request ID | `We couldn’t sign you in` | Problem alert only; no title, body or details         | `We couldn’t sign you in` | **Try again**, then **Back to sign in** |
-
-While pending, the visible page says `Signing you in` only in its heading,
-assistive technology still hears `Signing you in…`, and the skeleton stays
-visible.
-
-**Try again** is primary. Selecting it enters the pending state, waits until
-any `Retry-After` deadline has passed, then re-sends the in-memory secret; a
-new refusal replaces the displayed details. **Back to sign in** is secondary
-and goes to `/sign-in`. The invalid state offers no retry and no request for a
-new link. API error details contain `Reference <request-id>`; a local or
-transport failure without a request ID omits the disclosure. The landing
-shares the email landing's screen; no copy names an environment.
-
 ## Desktop Callback
 
 The desktop landing takes the `grant` captured from its fragment and the
@@ -152,9 +115,14 @@ shows the application's session error state.
 
 **Back to sign in** is the sole primary action and goes to `/sign-in`, which
 in the window is the entry screen. No state offers a retry, because the grant
-is single use. Each failed state draws the preview landing's shared error
-state: a problem alert that announces the screen title, with an API failure's
-request details in a closed **Details** disclosure.
+is single use. The account shell owns the one visible heading, so each failed
+state draws the shared error state: one problem glyph and one `role="alert"`
+section, with no state title or body that repeats the heading. The alert
+carries a hidden announcement that equals the screen title exactly and leaves
+the visible screen unchanged. An API failure's request details, which contain
+`Reference <request-id>`, sit inside the block as a closed **Details**
+disclosure, and a failure without a request ID omits it. The action follows
+the block.
 
 ## GitHub Callback
 

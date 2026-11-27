@@ -13,14 +13,16 @@ use crate::policy::environment::{OutputMock, ReadMock};
 
 use super::ToolchainCheck;
 
-const DOCKERFILE: &str = "FROM e2bdev/base:2026@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nARG NODE_VERSION=24.21.0\n";
+const DOCKERFILE: &str = "FROM debian:trixie-slim@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nARG NODE_VERSION=24.21.0\n";
+const NEXTEST: &str = "nextest-version = { required = \"0.9.152\" }\n";
+const WORKFLOW: &str = "jobs:\n  test:\n    steps:\n      - uses: taiki-e/install-action@fixture # v2\n        with:\n          tool: cargo-nextest@0.9.152 # pinned\n";
 const VERSIONS: &str = "pub const MIN_MOKLY_VERSION: &str = \"0.18.0\";\n";
 const SENTENCE: &str =
     "unsupported-mokly-version: Update `@mokly/mokly` to 0.18.0 or later to publish.\n";
 
 fn check(replacement: Option<(&str, &str)>) -> Result<(), Error> {
     let mut files: BTreeMap<String, Vec<u8>> = [
-        ("docs/protocol/cloud/repository-layout.md", "| Rust | 1.98.0 |\n| Node | 24.21.0 |\n| npm | 11.21.0 |\n| tar | 7.5.22 |\n| Terraform | 1.16.2 |\n| Helm | 4.3.0 |\n"),
+        ("docs/protocol/cloud/repository-layout.md", "| Rust | 1.98.0 |\n| Node | 24.21.0 |\n| npm | 11.21.0 |\n| tar | 7.5.22 |\n| Terraform | 1.16.2 |\n| Helm | 4.3.0 |\n| cargo-nextest | 0.9.152 |\n"),
         ("rust-toolchain.toml", "[toolchain]\nchannel = '1.98.0'\ncomponents = ['rustfmt', 'clippy']\n"),
         (".nvmrc", "24.21.0\n"),
         ("infra/e2b/build/e2b.Dockerfile", DOCKERFILE),
@@ -31,6 +33,9 @@ fn check(replacement: Option<(&str, &str)>) -> Result<(), Error> {
         ("packages/app/src/viewer/build-copy.ts", SENTENCE),
         ("docs/mockups/src/fixtures/build-copy.ts", SENTENCE),
         ("infra/toolchains.json", r#"{"terraform":"1.16.2","helm":"4.3.0"}"#),
+        (".config/nextest.toml", NEXTEST),
+        (".github/workflows/ci.yml", WORKFLOW),
+        (".github/workflows/blacksmith-testbox.yml", WORKFLOW),
     ].into_iter().map(|(path, text)| (path.to_owned(), text.as_bytes().to_vec())).collect();
     if let Some((path, text)) = replacement {
         files.insert(path.to_owned(), text.as_bytes().to_vec());
@@ -51,6 +56,9 @@ fn check(replacement: Option<(&str, &str)>) -> Result<(), Error> {
                     "rustc --version" => "rustc 1.98.0 (fixture)",
                     "node --version" => "v24.21.0",
                     "npm --version" => "11.21.0",
+                    "cargo nextest --version" => {
+                        "cargo-nextest 0.9.152 (fixture)\nrelease: 0.9.152"
+                    }
                     other => panic!("unexpected command: {other}"),
                 }
                 .to_owned())
@@ -84,9 +92,9 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
         ),
         (
             "infra/e2b/build/e2b.Dockerfile",
-            "FROM e2bdev/base:latest\nARG NODE_VERSION=24.21.0\n".into(),
+            "FROM debian:trixie-slim\nARG NODE_VERSION=24.21.0\n".into(),
             "FROM",
-            "e2bdev/base:<tag>@sha256:<64 lowercase hex>",
+            "debian:<tag>@sha256:<64 lowercase hex>",
         ),
         (
             "docs/protocol/cloud/viewer-builds.md",
@@ -105,6 +113,30 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
             SENTENCE.replace("0.18.0", "0.17.0"),
             "unsupported-mokly-version sentence",
             "0.18.0",
+        ),
+        (
+            ".config/nextest.toml",
+            NEXTEST.replace("0.9.152", "0.9.150"),
+            "nextest-version.required",
+            "0.9.152",
+        ),
+        (
+            ".github/workflows/blacksmith-testbox.yml",
+            WORKFLOW.replace("0.9.152", "0.9.150"),
+            "cargo-nextest install",
+            "0.9.152",
+        ),
+        (
+            ".github/workflows/ci.yml",
+            WORKFLOW.replace("@0.9.152", ""),
+            "cargo-nextest install",
+            "0.9.152",
+        ),
+        (
+            ".github/workflows/ci.yml",
+            WORKFLOW.replace("cargo-nextest@0.9.152", "\"cargo-nextest@0.9.150\""),
+            "cargo-nextest install",
+            "0.9.152",
         ),
     ];
     for (path, text, expected_field, expected_value) in changes {

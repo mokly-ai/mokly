@@ -37,8 +37,9 @@ fn absolute_and_idle_session_expiry_refuse_every_build_operation() {
             (Method::POST, format!("builds/{build}/cancel"), None),
         ] {
             app.queries(&mut |queries| {
-                queries.delete_session(&session.token_hash).unwrap();
-                queries.insert_session(&session).unwrap();
+                queries.delete_session(&session.token_hash)?;
+                queries.insert_session(&session)?;
+                Ok(())
             });
             let mut request = app.request(method, &format!("/v1/projects/{}/{tail}", project.id));
             if let Some(body) = body {

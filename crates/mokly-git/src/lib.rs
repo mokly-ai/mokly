@@ -26,6 +26,7 @@ pub mod access;
 mod lookup;
 mod repository_access;
 mod repository_command;
+mod working_path_status;
 
 mod checkout;
 mod checkout_batch;

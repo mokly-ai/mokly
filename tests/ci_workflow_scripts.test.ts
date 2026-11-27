@@ -17,7 +17,7 @@ import { readTestboxWorkflow } from "./helpers/testbox_workflow.js";
 
 const execute = promisify(execFile);
 const PROFILE_SELECTOR = "Select Node verification profile";
-const SELECTOR_OUTPUTS = ["node-matrix", "verification-runtimes"];
+const SELECTOR_OUTPUTS = ["viewer-node-matrix", "verification-runtimes"];
 
 interface CiStep {
   readonly id?: string;
@@ -34,7 +34,7 @@ interface CiWorkflow {
   readonly jobs?: Readonly<Record<string, CiJob>>;
 }
 
-test("the Node profile selector adds release runtimes only for release pull requests", async (context) => {
+test("the Node profile selector adds the Node 24 viewer runtime only for release pull requests", async (context) => {
   const { job, step } = await workflowStep("ci.yml", PROFILE_SELECTOR);
   const { id, run } = step;
   assert.ok(id, `"${PROFILE_SELECTOR}" needs an id to publish its outputs`);
@@ -63,7 +63,7 @@ test("the Node profile selector adds release runtimes only for release pull requ
   ]) {
     await context.test(profile.release ? "release" : "ordinary", async () => {
       const output = await runSelector(run, profile.release);
-      assert.equal(output["node-matrix"], JSON.stringify(profile.nodes));
+      assert.equal(output["viewer-node-matrix"], JSON.stringify(profile.nodes));
       assert.equal(output["verification-runtimes"], profile.runtimes.join(","));
     });
   }

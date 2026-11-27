@@ -55,6 +55,7 @@ const fieldHomes: Record<
 > = {
   email: { file: "screens/account/entry-screen.tsx", quoted: true },
   tokenName: { file: "api/form-error.ts", quoted: true },
+  password: { file: "api/form-error.ts", quoted: true },
 };
 
 test("fixture copy is the application's own copy", () => {

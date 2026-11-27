@@ -6,9 +6,9 @@ import { NARROW_WIDTH, openLargeText } from "./large-text.js";
 import { narrow } from "./menu.js";
 
 /**
- * The footer frame and the status bar under it. The chrome spec checks the
- * footer's links, its current page and its targets with the header's, and
- * the scheme spec checks the scheme control.
+ * The footer frame and the status bar under it. The built-output tests check
+ * its links and current page, the chrome spec checks its targets, and the
+ * scheme spec checks its scheme control.
  */
 
 /**
@@ -39,12 +39,14 @@ const FOOTER = `
       - link "Security"
 `;
 
-test("the footer hides its depictions from assistive technology", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.terms);
-  await expect(page.getByRole("contentinfo")).toMatchAriaSnapshot(FOOTER);
-});
+test(
+  "the footer hides its depictions from assistive technology",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.terms);
+    await expect(page.getByRole("contentinfo")).toMatchAriaSnapshot(FOOTER);
+  },
+);
 
 test("the status bar under the footer frame depicts the page's file", async ({
   page,
@@ -96,26 +98,28 @@ test(
   },
 );
 
-test("a focused footer link draws its glow with rounded corners", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.terms);
-  // A press of Tab gives the page keyboard focus, so the link that takes
-  // focus next matches :focus-visible and draws the glow.
-  await page.keyboard.press("Tab");
-  const link = page
-    .getByRole("contentinfo")
-    .getByRole("link", { exact: true, name: "Privacy" });
-  await link.focus();
-  await expect(link).toBeFocused();
-  const corners = await link.evaluate((node) => {
-    const style = getComputedStyle(node);
-    return [
-      style.borderTopLeftRadius,
-      style.borderTopRightRadius,
-      style.borderBottomRightRadius,
-      style.borderBottomLeftRadius,
-    ].map((radius) => Number.parseFloat(radius));
-  });
-  for (const radius of corners) expect(radius).toBeGreaterThan(0);
-});
+test(
+  "a focused footer link draws its glow with rounded corners",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.terms);
+    // A press of Tab gives the page keyboard focus, so the link that takes
+    // focus next matches :focus-visible and draws the glow.
+    await page.keyboard.press("Tab");
+    const link = page
+      .getByRole("contentinfo")
+      .getByRole("link", { exact: true, name: "Privacy" });
+    await link.focus();
+    await expect(link).toBeFocused();
+    const corners = await link.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ].map((radius) => Number.parseFloat(radius));
+    });
+    for (const radius of corners) expect(radius).toBeGreaterThan(0);
+  },
+);

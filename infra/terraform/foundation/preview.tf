@@ -25,7 +25,8 @@ resource "google_storage_bucket" "preview_blobs" {
 
 resource "google_secret_manager_secret" "preview" {
   for_each = toset([
-    "mkc-preview-origin-tls-key", "mkc-preview-origin-tls-cert", "mkc-catalogue-dns-token"
+    "mkc-preview-origin-tls-key", "mkc-preview-origin-tls-cert", "mkc-catalogue-dns-token",
+    "mkc-preview-sign-in-password",
   ])
   project   = var.project
   secret_id = each.key

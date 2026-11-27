@@ -1,0 +1,35 @@
+# Changes git diff can rewrite the Git index
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from a finding check in the review of the branch `calummoore/ci-speed-slowest-tests-and-remaining-mfoi`.
+- **Location:** `crates/mokly-git/src/history.rs:45-58`, `crates/mokly-git/src/repository_command.rs:52`, and `docs/protocol/mokly-git.md:91`.
+- **Reason:** A finding check found it while it checked another finding. Each option changes either the reported changes or a protocol requirement.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Git index:** Git's record of staged files and their file system metadata, in `.git/index`.
+  - **Optional lock:** A lock that Git takes only to refresh the index during a read. A read skips the refresh when the lock is taken. `--no-optional-locks` and `GIT_OPTIONAL_LOCKS=0` tell Git not to take it.
+  - **Stat-dirty file:** A tracked file whose file system metadata, such as its modification time, changed while its content did not.
+- **Background:**
+  - `docs/protocol/mokly-git.md:91` says: "No Git command refreshes the index through optional locks."
+  - Every command of the shared repository command starts with `--no-optional-locks`, in `crates/mokly-git/src/repository_command.rs:52`.
+  - The Changes comparison lists changed paths with `git --no-optional-locks diff --name-status -z --find-renames --no-ext-diff --no-textconv {base} --`, in `crates/mokly-git/src/history.rs:45-58`.
+  - In Git 2.43.0 and in Git master, `git diff` against the working tree runs `refresh_index_quietly()`. That refresh ignores optional-lock settings.
+- **Problem:**
+  - When one tracked file is stat-dirty, the Changes `git diff` takes `.git/index.lock` and replaces `.git/index`. So the protocol sentence does not hold for this command.
+  - `GIT_OPTIONAL_LOCKS=0` does not stop the write. `-c diff.autoRefreshIndex=false` stops it, but then Git reports the unchanged stat-dirty file as `M`.
+  - A scratch check on Linux with Git 2.43.0 showed the write. It ran beside two concurrent `git status` runs and saw no failure.
+- **Impact if no action:** A Mokly comparison can write into a checkout that it only reads. A Git command that another tool runs at the same moment and that needs the index lock can fail on it. No such failure is known.
+- **Root question:** How does a Mokly comparison list changed paths without an index write?
+- **Options:**
+  - **A.** Keep the command, and change the protocol sentence to name the quiet index refresh of `git diff` as the one write that Git does not let Mokly turn off. Effort: Small.
+  - **B.** Set `diff.autoRefreshIndex=false`, and filter out the stat-dirty paths that Git then reports as `M`, for example with a content check of each reported path. This adds reads and a new rule for which change is real. Effort: Medium.
+  - **C.** Compare the working tree against the base without `git diff` against the working tree: diff the base tree against a temporary index or a tree that Mokly builds from the working files. This changes how every comparison finds its changes. Effort: Large.
+- **Left out:** `GIT_OPTIONAL_LOCKS=0`, because Git's quiet diff refresh ignores it.
+- **Wider fix:** C. It removes every working-tree diff from the read path. B and A keep the write or add a filter.
+- **Previous examples:** `plans/follow-ups/publish-status-takes-optional-locks.md` records the same contract gap for the `git status` of `mokly publish`. That one has a simple fix, because `git status` honours `--no-optional-locks`.
+- **Related:** `plans/follow-ups/publish-status-takes-optional-locks.md`: the same protocol sentence. Its option C, `GIT_OPTIONAL_LOCKS=0` for every Git process, does not cover this command.
+- **Recommendation:** A. The write is rare and harmless today, and A makes the protocol state the real behaviour at a small cost. B best protects the comparison output only if a measurement shows the extra reads are cheap.
+- **Action:** ask the user, because A changes a protocol requirement, and B and C change how a comparison finds its changes.

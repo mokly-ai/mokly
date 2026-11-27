@@ -9,6 +9,7 @@ use mokly_git::tree::Limits;
 fn git_bytes(root: &Path, args: &[&str], input: &[u8]) -> Vec<u8> {
     let mut child = Command::new("git")
         .args(args)
+        .envs(crate::IDENTITY)
         .current_dir(root)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

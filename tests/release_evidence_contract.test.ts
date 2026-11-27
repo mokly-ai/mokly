@@ -11,6 +11,7 @@ import {
   VERIFICATION_ARTIFACT_PATTERN,
   VERIFICATION_REPORT_COUNT,
 } from "../scripts/release/evidence_contract.mjs";
+import ciShards from "../scripts/verification/ci-shards.json" with { type: "json" };
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -24,7 +25,7 @@ interface WorkflowJob {
   name?: string;
   steps: readonly WorkflowStep[];
   strategy?: {
-    matrix: Readonly<Record<string, readonly (string | number)[]>>;
+    matrix: Readonly<Record<string, string | readonly (string | number)[]>>;
   };
 }
 
@@ -57,12 +58,21 @@ test("release evidence constants match the CI job and artifact namespace", async
     assert.equal(typeof upload?.with?.name, "string");
     assert.match(String(upload?.with?.name), VERIFICATION_ARTIFACT_PATTERN);
   }
-  const expectedReports = ["viewer", "browser"].reduce((total, jobName) => {
-    const matrix = workflow.jobs[jobName]?.strategy?.matrix;
-    return (
-      total +
-      RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 1)
-    );
-  }, 0);
+  // A release pull request runs the viewer on both release runtimes and the
+  // browser on Node 22.15.0 only.
+  const releaseRuntimes = {
+    viewer: RELEASE_VERIFICATION_RUNTIMES.length,
+    browser: 1,
+  } as const;
+  const expectedReports = (["viewer", "browser"] as const).reduce(
+    (total, jobName) => {
+      assert.equal(
+        workflow.jobs[jobName]?.strategy?.matrix.shard,
+        `\${{ fromJSON(needs.profile.outputs.${jobName}-shards) }}`,
+      );
+      return total + releaseRuntimes[jobName] * ciShards[jobName];
+    },
+    0,
+  );
   assert.equal(expectedReports, VERIFICATION_REPORT_COUNT);
 });

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { readFile, readdir, rm, symlink } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after, before } from "node:test";
 import { promisify } from "node:util";
 
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
@@ -12,10 +12,21 @@ import {
   determinismCommandFixture,
   markedDocument,
 } from "./determinism-command-fixture";
-import { outputDirectory, repository } from "./generated-output-fixture";
+import {
+  outputDirectory,
+  outputFixture,
+  repository,
+} from "./generated-output-fixture";
 import { policyFixture } from "./policy-fixture";
 
 type CommandFixture = Awaited<ReturnType<typeof determinismCommandFixture>>;
+
+let seed: Awaited<ReturnType<typeof outputFixture>>;
+before(async () => {
+  seed = await outputFixture();
+  await seed.cli("build", "--strict", "--no-changes");
+});
+after(() => seed?.cleanup());
 
 test("mockups:test requires a build before policy or browser modules load", async (t) => {
   const fixture = await policyFixture();
@@ -67,7 +78,7 @@ test("mockups:test requires a build before policy or browser modules load", asyn
 });
 
 test("the real determinism command accepts an independent deterministic build", async (t) => {
-  const fixture = await determinismCommandFixture();
+  const fixture = await determinismCommandFixture(seed.output);
   t.after(fixture.cleanup);
   await fixture.run("mockups:build");
   const result = await fixture.run("test:determinism");
@@ -79,7 +90,7 @@ test("the real determinism command accepts an independent deterministic build", 
 });
 
 test("the real determinism command rejects process-dependent bytes and gives Build recovery", async (t) => {
-  const fixture = await determinismCommandFixture(true);
+  const fixture = await determinismCommandFixture(seed.output, true);
   t.after(fixture.cleanup);
   await fixture.run("mockups:build");
   await assert.rejects(
@@ -149,7 +160,7 @@ for (const [name, outcome, damage] of [
   test(
     "the real determinism command rejects " + name + " before Build",
     async (t) => {
-      const fixture = await determinismCommandFixture();
+      const fixture = await determinismCommandFixture(seed.output);
       t.after(fixture.cleanup);
       await fixture.run("mockups:build");
       await damage(fixture);

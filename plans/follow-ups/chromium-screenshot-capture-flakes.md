@@ -1,0 +1,35 @@
+# Chromium screenshot capture fails at random
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
+- **Location:** `packages/desktop/src/_tests_/shell.ts`, the `screenshot` helper and the `launch` that starts Electron, `packages/desktop/src/_tests_/electron-output.ts`, and the first caller `packages/desktop/src/_tests_/global-setup.ts:34`. The full-page capture of each disk test in `docs/mockups/src/_tests_/disk.spec.ts` runs only on request since pull request #528.
+- **Reason:** The source is not known after a code reading and 200 local repeats, and only the next failure in CI can name it.
+
+- **Category:** Test.
+- **Terms:**
+  - **Disk test:** one test of `disk.spec.ts`, which opens one generated mockup document from disk, checks its policies, and saves a full-page capture under `.context/mockups-smoke`.
+  - **Surface copy:** Chromium's read of the compositor output of a page. A DevTools screenshot is one surface copy.
+- **Background:**
+  - The `Mockup checks` job runs 2076 disk tests. The `Desktop checks` job saves screenshots of the Electron shell under `.context/m5`. No check reads either set of images. `docs/mockups/README.md` documents the mockup captures for people who compose design sheets from them.
+  - Three CI runs failed with `page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot`. Mockup checks run 45017138714, attempt 1, at the disk test of `product/viewer/standalone/publish-refused/index.desktop.html`. Mockup checks run 45212667020, attempt 1, at `product/account/choose-repository/slug-taken/index.mobile.html`. Desktop checks run 44782121767, attempt 1, at `global-setup.ts:34`, the first screenshot after the shell window opens offline.
+  - In each run the call log reached `fonts loaded`, and the failed disk tests took about 0.5 seconds. The tests before and after them were fast, so the machine was not slow.
+  - The mockup suite uses Chromium 149, from Playwright 1.61.1. The desktop suite uses Electron 44.11.3, which is Chromium 152. The Chromium 149 source sends this error when its surface copy returns an empty image. Playwright turns on the feature `CDPScreenshotNewSurface`. In that path Chromium asks for a repaint and retries an empty copy 5 times at once (`content/browser/renderer_host/render_widget_host_impl.cc`, `OnSnapshotFromSurfaceReceived`).
+  - The source reading covers Chromium 149 only. It does not prove the path of the Electron failure.
+  - A copy is dropped at once when the page has no valid surface (`content/browser/renderer_host/delegated_frame_host.cc`, `CanCopyFromCompositingSurface`). That is the case between the start of a main-frame navigation commit and the first frame of the new document.
+- **Checked:**
+  - The two mockup pages measure 1440 by 900 and 390 by 1035 pixels. They hold no frame. Neither navigates after `load`. The 1440 by 900 page fits its viewport, so its capture did not resize the view.
+  - The two pages ran 100 times each with `--repeat-each 100`, beside another browser suite. All 200 passed.
+- **Problem:** A screenshot that no check reads fails a required CI job at random. The source is not known.
+- **Impact if no action:** In 300 CI runs between 2026-11-20 and 2026-11-25, this error failed Mockup checks twice and Desktop checks once. Each failure needed a rerun.
+- **Root question:** How does the desktop suite keep its captures without a random failure?
+- **Options:**
+  - **A.** Collect evidence first. Launch the Electron shell of the desktop suite with its standard error in the job log, for example with `DEBUG=pw:browser`, and read the next failure for a GPU process exit or a lost context. Then fix the source that the log names. It changes the Playwright launch of the suite. Effort: Medium.
+  - **B.** Stop saving the desktop captures in CI, and keep them for local runs, as pull request #528 does for the mockup disk captures. CI then cannot fail on them. Effort: Small.
+  - **C.** Remove the desktop captures. Effort: Small.
+- **Left out:** A retry of the capture, a sleep before it, or a longer time limit. Each hides the source, and the testing rules forbid each.
+- **Wider fix:** None. The source is not known.
+- **Previous examples:** None found.
+- **Related:** Pull request #528, the cloud test value audit, applied option B to the mockup disk suite: its capture runs only when `MKC_MOCKUP_CAPTURES=1` is set, and CI does not set it. This item now covers only the desktop captures of `packages/desktop/src/_tests_/shell.ts`.
+- **Decision:** On 2026-11-26 the user chose A, in item 34 of the cloud test audit. The branch `calummoore/ci-speed-app-retries-and-desktop-capture-03pn` applied it. `launch` starts Electron with `--enable-logging=file` and a `--log-file` of its own in the profile, so Chromium writes its log from the process start. When `page.screenshot` throws on an Electron window, `screenshot` prints the last 200 lines of that log and the error to the job log, then throws the error again. Nothing retries or hides the failure.
+- **Action:** Fix after merge. At the next `Unable to capture screenshot` failure in the `Desktop checks` job, read the Chromium log lines above the error in the job log. Look for a GPU process exit, a lost context, or a compositor error. Fix the source that they name, then delete this item. If the lines name no cause, record what they show here and ask the user for the next step.

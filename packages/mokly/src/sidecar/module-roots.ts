@@ -29,16 +29,16 @@ export async function moduleRoots(params: ModuleSources): Promise<ModuleRoots> {
 }
 
 export function moduleRootsSync(params: ModuleSources): ModuleRoots {
-  const source = fs.realpathSync(params.sourceRoot);
+  const source = fs.realpathSync.native(params.sourceRoot);
   const repositories = params.repositoryRoots.map((file) =>
-    fs.realpathSync(file),
+    fs.realpathSync.native(file),
   );
   const dependencies = resolutionOptions(
     source,
     params.moduleResolution,
   ).nodePaths.map((file) => {
     try {
-      return fs.realpathSync(file);
+      return fs.realpathSync.native(file);
     } catch {
       return path.resolve(file);
     }
@@ -46,6 +46,6 @@ export function moduleRootsSync(params: ModuleSources): ModuleRoots {
   const installation =
     params.moduleResolution.dependencyRoot === undefined
       ? undefined
-      : fs.realpathSync(params.moduleResolution.dependencyRoot);
+      : fs.realpathSync.native(params.moduleResolution.dependencyRoot);
   return { source, repositories, dependencies, installation };
 }

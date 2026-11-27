@@ -19,4 +19,8 @@ path: string,
  * Vite lists static imports and re-exports first, then dynamic imports.
  * Vite keeps source order within each group.
  */
-imports: Array<string>, };
+imports: Array<string>,
+/**
+ * A bundled import reached this module by package name.
+ */
+packageImport?: boolean, };

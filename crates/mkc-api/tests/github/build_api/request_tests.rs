@@ -87,10 +87,11 @@ fn request_refusals_cover_unavailable_plan_duplicates_and_pull_eligibility() {
         json!({"requiredPlan":"team","feature":"private-projects"})
     );
     app.queries(&mut |q| {
-        let workspace_id = q.project(project.id).unwrap().unwrap().organization_id;
-        let mut value = q.organization(workspace_id).unwrap().unwrap();
+        let workspace_id = q.project(project.id)?.unwrap().organization_id;
+        let mut value = q.organization(workspace_id)?.unwrap();
         value.plan = Plan::Team;
-        q.save_organization(&value).unwrap();
+        q.save_organization(&value)?;
+        Ok(())
     });
     app.github.mode.lock().unwrap().head_sha = Some("b".repeat(40));
     let requested = response_json(
@@ -131,7 +132,10 @@ fn request_refusals_cover_unavailable_plan_duplicates_and_pull_eligibility() {
         false
     );
     let ready = publication(project.id, "ready", 99, Utc::now());
-    app.queries(&mut |q| q.insert_publication(&ready).unwrap());
+    app.queries(&mut |q| {
+        q.insert_publication(&ready)?;
+        Ok(())
+    });
     app.github.mode.lock().unwrap().head_sha = Some(format!("{:040x}", 99));
     let published = refusal(
         app.request(Method::POST, &path)
@@ -182,9 +186,10 @@ fn request_refusals_cover_unavailable_plan_duplicates_and_pull_eligibility() {
     assert_eq!(pull["pullRequest"]["number"], 42);
     assert_eq!(pull["pullRequest"]["author"], "octocat");
     app.queries(&mut |q| {
-        let mut repository = q.github_repository(project.repository).unwrap().unwrap();
+        let mut repository = q.github_repository(project.repository)?.unwrap();
         repository.active = false;
-        q.save_github_repository(&repository).unwrap();
+        q.save_github_repository(&repository)?;
+        Ok(())
     });
     refusal(
         app.request(Method::POST, &path)

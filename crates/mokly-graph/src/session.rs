@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::dependencies::DirectoryDependency;
+use mokly_css::dependencies::{DirectoryDependency, ImportKind};
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::data::Props;
@@ -17,6 +17,7 @@ use crate::cache::{Artifact, RenderCache};
 use crate::capture_window::CaptureConsumer;
 use crate::closure::Closure;
 use crate::collection::ComparisonCollector;
+use crate::comparison_input::ModuleImports;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
@@ -55,6 +56,7 @@ pub(crate) struct State {
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
+    pub(crate) stylesheet_imports: BTreeMap<String, ImportKind>,
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
     pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) generation_key: String,
@@ -76,6 +78,7 @@ pub(crate) struct State {
 }
 
 pub(crate) struct SessionInput {
+    pub(crate) stylesheet_imports: BTreeMap<String, ImportKind>,
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
     pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) directories: Vec<DirectoryDependency>,
@@ -89,6 +92,14 @@ pub(crate) struct SessionInput {
 }
 
 impl RenderGeneration for Session {
+    fn module_imports(&self) -> Option<ModuleImports<'_>> {
+        Some(ModuleImports {
+            javascript: self.state.catalogue.javascript.generation.as_ref(),
+            stylesheet_inputs: &self.state.stylesheet_imports,
+            tree: self.state.tree.as_ref(),
+        })
+    }
+
     fn validate_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
         self.complete_head(validation)
     }

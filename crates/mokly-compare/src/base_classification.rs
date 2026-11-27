@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::material::catalogue_key;
 
@@ -13,6 +14,7 @@ use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
 use crate::comparison_steps::Step;
 use crate::comparison_types::{ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
+use crate::ignored_modules;
 
 struct Attempt {
     base: Arc<KeptBase>,
@@ -32,6 +34,7 @@ impl Changes {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
         install_scripts: Option<bool>,
+        warnings: &mut Vec<Warning>,
     ) -> Result<ComparisonResult> {
         self.steps.step(Step::Reading);
         let selected = match &self.pinned {
@@ -40,6 +43,11 @@ impl Changes {
                 .lookup
                 .pin(&config.repo_root, selected_base(config, base))?,
         };
+        warnings.extend(ignored_modules::warnings(
+            selected.repository.as_ref(),
+            config,
+            head.as_ref(),
+        )?);
         let request = BaseRetentionRequest {
             selected: &selected,
             working_config: config,

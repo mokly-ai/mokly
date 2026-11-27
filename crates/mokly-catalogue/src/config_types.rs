@@ -4,7 +4,9 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use mokly_model::axes::ColorScheme;
-use serde::{Deserialize, Serialize};
+use serde::de::value::MapAccessDeserializer;
+use serde::de::{self, MapAccess, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Data-only JSON configuration, validated before resolution.
 #[derive(Clone, Debug, PartialEq, Default, Deserialize, Serialize)]
@@ -88,6 +90,57 @@ pub struct ModuleResolution {
     pub package_roots: Option<Vec<String>>,
     /// Ordered extension lookup list.
     pub resolve_extensions: Option<Vec<String>>,
+    /// Workspace source overrides keyed by package name.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_packages: Option<SourcePackages>,
+}
+
+/// Source overrides for the workspace packages of one configuration.
+pub type SourcePackages = BTreeMap<String, SourcePackage>;
+
+/// One package's replacement layout or an explicit end to layout lookup.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SourcePackage {
+    /// Keep the original target at this point in the lookup order.
+    Disabled,
+    /// Map each build folder to its source folder relative to the package.
+    Folders(BTreeMap<String, String>),
+}
+
+impl Serialize for SourcePackage {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::Disabled => serializer.serialize_bool(false),
+            Self::Folders(folders) => folders.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for SourcePackage {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct Entry;
+
+        impl<'de> Visitor<'de> for Entry {
+            type Value = SourcePackage;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("false or a build-to-source folder map")
+            }
+
+            fn visit_bool<E: de::Error>(self, value: bool) -> Result<Self::Value, E> {
+                if value {
+                    return Err(E::invalid_value(de::Unexpected::Bool(value), &self));
+                }
+                Ok(SourcePackage::Disabled)
+            }
+
+            fn visit_map<M: MapAccess<'de>>(self, map: M) -> Result<Self::Value, M::Error> {
+                BTreeMap::deserialize(MapAccessDeserializer::new(map)).map(SourcePackage::Folders)
+            }
+        }
+
+        deserializer.deserialize_any(Entry)
+    }
 }
 
 /// Supported sidecar loaders. CSS is owned by the core.
@@ -197,15 +250,27 @@ impl ResolvedConfig {
     pub fn vite(&self) -> bool {
         !vite_disabled(&self.input.vite)
     }
+
+    /// Normalized source overrides authored by this side.
+    pub fn source_packages(&self) -> Option<&SourcePackages> {
+        self.input
+            .module_resolution
+            .as_ref()?
+            .source_packages
+            .as_ref()
+    }
 }
 
-/// Configured module identities after lexical normalization and source-tree projection.
+/// Configured module identities and retained source resolution settings.
 #[derive(Clone, Debug, PartialEq, Default, Serialize)]
 pub struct ResolvedModules {
     /// Renderer module's repository-relative POSIX identity.
     pub renderer: Option<String>,
     /// PostCSS module's repository-relative POSIX identity.
     pub postcss: Option<String>,
+    /// Working override map attached when the base configuration loads.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub working_source_packages: Option<SourcePackages>,
 }
 
 /// One root with its projected physical identity.

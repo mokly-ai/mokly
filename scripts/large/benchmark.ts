@@ -56,6 +56,8 @@ export async function benchmark(
     ) => Promise<AcceptanceBuild>;
     buildLivenessTimer?: LivenessTimer;
     browser?: Browser;
+    /** A test-owned empty XDG cache directory outside the fixture repository. */
+    emptyCacheRoot?: string;
   } = {},
 ) {
   const memoryStopKiB = options.memoryStopKiB ?? DEFAULT_MEMORY_STOP_KIB;
@@ -78,12 +80,20 @@ export async function benchmark(
     "--port",
     "0",
   ];
-  const renderStore = renderStorePreparation(
-    fixture.root,
-    serveArguments,
-    memoryStopKiB,
-    options.sidecarTimeoutMs,
-  );
+  const emptyCacheRoot =
+    process.platform === "linux" ? options.emptyCacheRoot : undefined;
+  const environment = emptyCacheRoot ? { XDG_CACHE_HOME: emptyCacheRoot } : {};
+  const startServe = () =>
+    start(
+      serveArguments,
+      fixture.root,
+      memoryStopKiB,
+      options.sidecarTimeoutMs,
+      {
+        environment,
+      },
+    );
+  const renderStore = renderStorePreparation(fixture.root, startServe);
   const results: object[] = [];
   const warmSeeds: (WarmSeedResult & { scenario: Scenario })[] = [];
   const report = {
@@ -135,7 +145,7 @@ export async function benchmark(
           fixture.root,
           memoryStopKiB,
           options.sidecarTimeoutMs,
-          () => liveness.line(),
+          { environment, onOutputLine: () => liveness.line() },
         );
         renderStore.observe(running, "build");
         const liveness = buildLiveness(
@@ -178,14 +188,10 @@ export async function benchmark(
         for (const state of scenario === "watch"
           ? ["live"]
           : ["cold", "warm"]) {
-          if (state === "cold") await renderStore.cold(scenario);
+          if (state === "cold" && (!emptyCacheRoot || results.length > 0))
+            await renderStore.cold(scenario);
           const beginning = performance.now();
-          const running = start(
-            serveArguments,
-            fixture.root,
-            memoryStopKiB,
-            options.sidecarTimeoutMs,
-          );
+          const running = startServe();
           const announcement = renderStore.observe(
             running,
             `${scenario}-${state}`,

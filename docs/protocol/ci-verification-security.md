@@ -33,9 +33,25 @@ job that holds credentials.
 The desktop partition restores the Electron download that its tests start.
 Only a run on `main` saves it, after the tests.
 
-The cloud browser jobs keep no cache of the Playwright system packages. Its
-index refresh and restore took as long as the download that it saved, about
-25 seconds with the cache and without it.
+Every CI job that installs Chromium restores the system package downloads of
+its Chromium install: the Mokly browser and static-delivery jobs, the cloud
+partitions that run a browser, and Site Lighthouse. The key covers the runner
+platform, the image's Ubuntu release, and the Playwright version. The install
+adds only the packages that the image lacks and upgrades no package of the
+image, so the downloads are one set of about 21 MB on every image. After a
+miss, only browser shard 1 on Node 22.15.0 of a run on `main` saves the entry;
+every other job only restores it, so the cache holds one such entry. Decision:
+keep this cache, although it saves nothing on a fast mirror, because a slow
+regional mirror took up to 3.4 minutes for these downloads and set the run's
+wall clock. The cloud jobs took 23 to 25 seconds for their install on a fast
+mirror and up to 142 seconds on a slow one.
+
+The Mokly browser and static-delivery jobs start the Chromium install in the
+background after `npm ci` and build the workspace while it runs. A step after
+the build waits for the install to end and fails when the install failed or
+stopped. Only then do the tests start. Decision: install in the background,
+because the install, about 25 seconds, always ended within the build, and the
+install, build, and test steps of these jobs took 28 seconds less on average.
 
 The Bun setup of the CI viewer jobs and of release preparation sets
 `no-cache: true`, so it neither restores nor saves a workflow cache. It can
@@ -44,7 +60,7 @@ therefore adds no cache to CI. Release preparation stays uncached.
 
 The [Rust build cache](#rust-build-cache) section gives the rules for Rust.
 
-The live lockfile-only workspace audit runs first in the CI repository job and
+The live lockfile-only workspace audit runs first in the CI repository checks shard and
 does not depend on cache state. Complete local and release commands keep
 audit-first ordering. The
 [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
@@ -70,17 +86,45 @@ balance follow the separate [suite evidence contract](./ci-suite-evidence.md).
 Every CI job that runs cargo restores a Rust build cache after it installs the
 toolchain and before cargo runs. The cache holds the Cargo registry and the
 builds of crates.io dependencies. It holds no build of a workspace crate. The
-Repository job's cache also holds the installed Rust audit tool. Each key
+cache of the Repository checks shard also holds the installed Rust audit tool. Each key
 covers the runner platform, the toolchain, the Cargo environment, the
-lockfile, and the workspace manifests. The Repository job's key also covers
-the audit tool lockfile and installer. Jobs that build the same artifacts
-share one cache. Every Linux CI job that builds only `xtask` and the native
-binary shares one cache, the cloud mockup and site partitions included. The
-cloud partitions that also build `mkc-` crates, the image job, the Repository
-job, and each native host keep their own cache. The four app shards share one
-cache. The two Stripe catalogue jobs of the deploy workflow share one cache.
-A separate cache for the mockup and site partitions was rejected: they held
-the same build as the Mokly jobs, and the total passed the 10 GB limit.
+lockfile, and the workspace manifests. The Repository checks key also covers
+the audit tool lockfile and installer.
+
+These jobs own a cache entry and save it: the Repository checks shard, the
+Repository test shards, the cloud Rust partition, the app shards, the test
+shards of each native host, and the two Stripe catalogue jobs of the deploy
+workflow. Jobs that build the same artifacts, such as the app shards, share
+one entry. Of the Repository and native test shards, only the first saves,
+under the [test unit rule](./ci-verification-repository.md#test-units),
+because a smaller shard would save an entry that lacks dependencies of the
+others. A Clippy build entry for each native host was rejected, because it
+would add one more entry for each host to a total near the 10 GB limit.
+
+A reader restores the entry of an owner that holds some or all of its
+dependency builds, and never saves. Every other Linux CI job that builds only `xtask` and
+the native binary restores the Repository test entry, the cloud mockup, site,
+and Workspace checks (infrastructure) partitions included. The desktop
+partition and the image job restore the app entry. These readers need no
+dependency build that their entry lacks. The Workspace checks (contracts)
+partition restores the cloud Rust entry, which lacks some of its dependency
+builds. The native lint shard of each host restores the test entry of its
+host, so Clippy reuses its build scripts and procedural macros. Only the owner
+saves its entry: a cache key cannot change after its first save, so an entry
+that a reader saved first would lack the builds of the owner until the key
+changes. A separate saved entry for a reader was rejected, because it adds its
+builds to a total near the 10 GB limit. One entry for the app
+shards and the cloud Rust partition was rejected, because they resolve
+different features of shared dependencies, so most of their dependency builds
+differ. One entry for the Repository checks and test shards was rejected,
+because the checks shard adds Clippy dependency metadata and the audit tool,
+and the test shards add full test builds, so neither entry holds the builds of
+the other. Both entries also hold the builds of `xtask`, which every
+Repository shard runs.
+
+The entries that `main` saves stay below the cache budget of the
+[CI timing report](./ci-duration-budgets.md#actions-cache), which keeps
+headroom under the 10 GB limit.
 
 The Rust build cache follows the `main`-only save rule above. Testboxes restore with
 the cache options of the CI viewer, browser, and static-delivery jobs and never

@@ -9,6 +9,7 @@ use std::time::Duration;
 use mkc_api::application::{ApplicationFactory, ConfiguredApplicationFactory};
 use mkc_api::billing_providers::SystemBillingProviderFactory;
 use mkc_api::github_providers::SystemGitHubProviderFactory;
+use mkc_api::worker_intervals::WorkerIntervals;
 use mkc_github_double::server::RecordedGitHub;
 use sandbox_interface::SandboxLifecycleMock;
 use tokio::runtime::Runtime;
@@ -49,6 +50,7 @@ fn serve_replica_process() {
         github: Arc::new(SystemGitHubProviderFactory),
         billing: Arc::new(SystemBillingProviderFactory),
         runtime: Arc::new(mkc_auth::runtime::SystemRuntime),
+        intervals: WorkerIntervals::default(),
     }
     .create(settings_url(
         &database,

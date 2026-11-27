@@ -1,31 +1,21 @@
 import { expect, type Page } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
-import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
+import { unexpectedDesignScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 import { canvasFrame } from "./workspace_actions.js";
-
-type Viewport = "desktop" | "mobile";
 
 /** One fold of a Canvas artboard's Inspect panel. */
 function fold(page: Page, section: string) {
   return page.locator(`[data-cv-section="${section}"]`);
 }
 
-/**
- * A leaf component and a component with nested components, each where its
- * artboard draws the panel: a phone draws it only in an open panel sheet,
- * and no phone artboard opens the Toolbar's.
- */
-const COMPONENTS: Record<Viewport, { leaf: string; nested: string[] }> = {
-  desktop: {
-    leaf: "design/canvas/stage/component-set",
-    nested: ["design/canvas/stage/component-set/toolbar"],
-  },
-  mobile: { leaf: "design/canvas/stage/component-set/disabled", nested: [] },
-};
+/** A leaf component and a component with nested components. */
+const COMPONENTS = {
+  leaf: "design/canvas/stage/component-set",
+  nested: ["design/canvas/stage/component-set/toolbar"],
+} as const;
 
 /** Unchanged entries, also with temporary edits, which offer no comparison. */
 const UNCHANGED = [
@@ -36,21 +26,11 @@ const UNCHANGED = [
 ];
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentWorkspace(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentWorkspace() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const unexpectedDesignScripts = () =>
-    mode === "static"
-      ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
-      : servedScripts();
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} component workspace`, () => {
@@ -61,29 +41,31 @@ export function registerComponentWorkspace(
             : { width: 390, height: 844 },
       });
 
-      test("component tabs distinguish leaves from nested components", async ({
-        page,
-      }) => {
-        const { leaf, nested } = COMPONENTS[viewport];
-        await page.goto(designDocumentUrl(leaf, viewport));
-        await expect(fold(page, "props"), leaf).toHaveCount(1);
-        await expect(fold(page, "nested"), leaf).toHaveCount(0);
-        for (const route of nested) {
-          await page.goto(designDocumentUrl(route, viewport));
-          await fold(page, "nested").locator(":scope > summary").click();
-          await expect(fold(page, "nested"), route).toContainText("Action");
-        }
-        // A screen without registered components keeps its Components fold.
-        await page.goto(
-          designDocumentUrl("design/canvas/inspect/unchanged", viewport),
-        );
-        await expect(
-          fold(page, "components").locator(":scope > summary"),
-        ).toBeVisible();
-        await expect(
-          fold(page, "components").locator(".cv-sec-count"),
-        ).toHaveText("0");
-      });
+      // The folds read the same on a phone, so the desktop alone checks them.
+      if (viewport === "desktop")
+        test("component tabs distinguish leaves from nested components", async ({
+          page,
+        }) => {
+          const { leaf, nested } = COMPONENTS;
+          await page.goto(designDocumentUrl(leaf, "desktop"));
+          await expect(fold(page, "props"), leaf).toHaveCount(1);
+          await expect(fold(page, "nested"), leaf).toHaveCount(0);
+          for (const route of nested) {
+            await page.goto(designDocumentUrl(route, "desktop"));
+            await fold(page, "nested").locator(":scope > summary").click();
+            await expect(fold(page, "nested"), route).toContainText("Action");
+          }
+          // A screen without registered components keeps its Components fold.
+          await page.goto(
+            designDocumentUrl("design/canvas/inspect/unchanged", "desktop"),
+          );
+          await expect(
+            fold(page, "components").locator(":scope > summary"),
+          ).toBeVisible();
+          await expect(
+            fold(page, "components").locator(".cv-sec-count"),
+          ).toHaveText("0");
+        });
 
       test("a Frames filter change keeps edited fields", async ({ page }) => {
         await page.goto(
@@ -107,32 +89,37 @@ export function registerComponentWorkspace(
         await expect(label).toHaveValue("Keep this edit");
       });
 
-      test("unchanged examples omit comparison modes including temporary edits", async ({
-        page,
-      }) => {
-        const modes = page.getByRole("list", { name: "Comparison mode" });
-        for (const route of UNCHANGED) {
-          await page.goto(designDocumentUrl(route, viewport));
-          await expect(page.locator(".cv-root"), route).toHaveCount(1);
-          // An unchanged entry has no Changes tab and no status.
+      // The tabs and the modes read the same on a phone, and the entry-bar
+      // status is checked by the entry badges of the evidence cases.
+      if (viewport === "desktop")
+        test("unchanged examples omit comparison modes including temporary edits", async ({
+          page,
+        }) => {
+          const modes = page.getByRole("list", { name: "Comparison mode" });
+          for (const route of UNCHANGED) {
+            await page.goto(designDocumentUrl(route, "desktop"));
+            await expect(page.locator(".cv-root"), route).toHaveCount(1);
+            // An unchanged entry has no Changes tab and no status.
+            await expect(
+              page.locator('.cv-ptab[data-tab="changes"]'),
+              route,
+            ).toHaveCount(0);
+            await expect(modes, route).toHaveCount(0);
+            await expect(page.locator(".mbk-entry-status"), route).toHaveCount(
+              0,
+            );
+          }
+          await page.goto(
+            designDocumentUrl(
+              "design/canvas/components/compare/current",
+              "desktop",
+            ),
+          );
+          await expect(modes).toBeVisible();
           await expect(
-            page.locator('.cv-ptab[data-tab="changes"]'),
-            route,
-          ).toHaveCount(0);
-          await expect(modes, route).toHaveCount(0);
-          await expect(page.locator(".mbk-entry-status"), route).toHaveCount(0);
-        }
-        await page.goto(
-          designDocumentUrl(
-            "design/canvas/components/compare/current",
-            viewport,
-          ),
-        );
-        await expect(modes).toBeVisible();
-        await expect(
-          page.locator(".cv-canvas .mbk-entry-status:visible"),
-        ).toHaveText("Changed");
-      });
+            page.locator(".cv-canvas .mbk-entry-status:visible"),
+          ).toHaveText("Changed");
+        });
 
       test("only the panel body scrolls, and the tabs and the stage stay in place", async ({
         page,

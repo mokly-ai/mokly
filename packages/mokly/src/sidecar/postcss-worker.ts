@@ -1,3 +1,5 @@
+import { realpathSync } from "node:fs";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
@@ -6,24 +8,59 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
+import { inside } from "./path-scope.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
   beginReadEvidenceGeneration,
   initializeReadEvidenceGeneration,
+  loadedModulePaths,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
-import { observeModulePaths } from "./postcss-path-hooks.js";
+import { bundledPostcssSource } from "./postcss-module.js";
+import { observeModulePaths, postcssRequest } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
-import { configureResolution, loadedFiles } from "./postcss-resolution.js";
+import {
+  configureResolution,
+  loadedFiles,
+  nodeLoadedFiles,
+} from "./postcss-resolution.js";
 
 type WorkerData = Pick<
   ProcessCssParams,
   "context" | "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
+
+/** Rebase a report through an alternate checkout name and keep links below it. */
+function dependencyPath(
+  root: string,
+  reported: string,
+  rootAliases: Map<string, boolean>,
+): string {
+  if (!path.isAbsolute(reported)) return reported;
+  if (inside(root, reported))
+    return path.join(root, path.relative(root, reported));
+
+  const absolute = path.resolve(reported);
+  for (let candidate = absolute; ;) {
+    let matches = rootAliases.get(candidate);
+    if (matches === undefined) {
+      try {
+        matches = realpathSync.native(candidate) === root;
+      } catch {
+        matches = false;
+      }
+      rootAliases.set(candidate, matches);
+    }
+    if (matches) return path.join(root, path.relative(candidate, absolute));
+    const parent = path.dirname(candidate);
+    if (parent === candidate) return reported;
+    candidate = parent;
+  }
+}
 
 guardParentOutput();
 const parent = parentInput();
@@ -45,10 +82,12 @@ process.once("message", (workerData: WorkerData) => {
   }
   observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
-    loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
-      ...loaded,
-      paths,
-    })),
+    postcssRequest(() => loadPostcss(workerData.postcss, paths, phases)).then(
+      (loaded) => ({
+        ...loaded,
+        paths,
+      }),
+    ),
   );
   configuration.catch(() => {});
   process.on(
@@ -58,36 +97,52 @@ process.once("message", (workerData: WorkerData) => {
         beginReadEvidenceGeneration(params.context);
         const { processor, modules, paths } = await configuration;
         const result = await phases.run("stylesheet-run", () =>
-          processor
-            .process(params.text, {
-              from: params.sourcePath,
-              map: false,
-            })
-            .catch((error: unknown) => {
-              throw pluginFailure(error, paths.name(params.sourcePath));
-            }),
+          postcssRequest(() =>
+            processor
+              .process(params.text, {
+                from: params.sourcePath,
+                map: false,
+              })
+              .catch((error: unknown) => {
+                throw pluginFailure(error, paths.name(params.sourcePath));
+              }),
+          ),
         );
-        const dependencies: CssResult["dependencies"] = [
-          ...new Set([
-            ...modules,
-            ...paths.resolvedDependencies,
-            ...loadedFiles(workerData.sourceRoot as string),
-          ]),
-        ].map((path) => ({
-          kind: "file",
-          path,
-        }));
+        const nodeLoads = nodeLoadedFiles(
+          paths.sourceRoot,
+          loadedModulePaths(),
+        );
+        const moduleFiles = new Set([
+          ...modules,
+          ...paths.resolvedDependencies,
+          ...loadedFiles(paths.sourceRoot),
+          ...nodeLoads.keys(),
+        ]);
+        const dependencies: CssResult["dependencies"] = [...moduleFiles].map(
+          (path) => {
+            const node = nodeLoads.get(path);
+            const source =
+              bundledPostcssSource(path) ??
+              (node === undefined
+                ? undefined
+                : node
+                  ? "node-package-require"
+                  : "node");
+            return { kind: "file", path, ...(source ? { source } : {}) };
+          },
+        );
+        const rootAliases = new Map<string, boolean>();
         for (const message of result.messages) {
           if (
             message.type !== "dependency" &&
             message.type !== "dir-dependency"
           )
             continue;
-          const path =
+          const reported =
             message.type === "dependency" ? message.file : message.dir;
           if (
-            typeof path !== "string" ||
-            !path ||
+            typeof reported !== "string" ||
+            !reported ||
             (message.glob !== undefined && typeof message.glob !== "string")
           )
             throw new PostcssError({
@@ -98,7 +153,8 @@ process.once("message", (workerData: WorkerData) => {
             });
           dependencies.push({
             kind: message.type === "dependency" ? "file" : "directory",
-            path,
+            path: dependencyPath(paths.sourceRoot, reported, rootAliases),
+            ...(message.type === "dependency" ? { source: "plugin" } : {}),
             ...(typeof message.plugin === "string"
               ? { plugin: message.plugin }
               : {}),
@@ -109,11 +165,7 @@ process.once("message", (workerData: WorkerData) => {
           id,
           result: {
             text: result.css,
-            readEvidence: readEvidence([
-              ...modules,
-              ...paths.resolvedDependencies,
-              ...loadedFiles(workerData.sourceRoot),
-            ]),
+            readEvidence: readEvidence(moduleFiles),
             dependencies,
             unmappedDependencyDirectories: [
               ...paths.dependencyUsage.unmapped,

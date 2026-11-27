@@ -91,6 +91,69 @@ root.append({prop:'range',value:'done'});
   assert.equal(result.readEvidence.coverage, "incomplete");
 });
 
+test("PostCSS keeps bigint and vector NaN read positions", async (context) => {
+  const { base } = await sidecarSources(context);
+  const content = Buffer.from("abcdef");
+  const reads = {
+    bigint: "fs.readSync(fd,Buffer.alloc(1),0,1,-1n)",
+    nan: "fs.readvSync(fd,[Buffer.alloc(1)],NaN)",
+  };
+  for (const name of Object.keys(reads))
+    await fs.writeFile(path.join(base, `${name}.txt`), content);
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `
+import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'positions',Once(root,{result}){
+${Object.entries(reads)
+  .map(
+    ([
+      name,
+      read,
+    ]) => `{const fd=fs.openSync('${name}.txt','r');const count=${read};
+const bytes=Buffer.alloc(1);fs.readSync(fd,bytes,0,1,null);fs.closeSync(fd);
+root.append({prop:'${name}',value:count+'-'+bytes.toString()});
+result.messages.push({type:'dependency',file:'${name}.txt'});}`,
+  )
+  .join("\n")}
+}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+  );
+  const digest = (bytes: Buffer) =>
+    createHash("sha256").update(bytes).digest("hex");
+  // Each read returns 1 byte, and the next sequential read gets "b".
+  for (const name of Object.keys(reads))
+    assert.match(result.text, new RegExp(`${name}: 1-b`, "u"), name);
+  const witnesses = (name: string) =>
+    result.readEvidence.reads
+      .filter((read) => read.path === path.join(base, `${name}.txt`))
+      .map((read) =>
+        read.kind === "byte-range"
+          ? [read.offset, read.length, read.eof, read.digest]
+          : [read.kind],
+      )
+      .sort();
+  // The bigint position -1n reads at the current offset, so its two reads
+  // record "a" at offset 0 and "b" at offset 1, and neither reaches the end
+  // of the file.
+  assert.deepEqual(witnesses("bigint"), [
+    [0, 1, false, digest(Buffer.from("a"))],
+    [1, 1, false, digest(Buffer.from("b"))],
+  ]);
+  // A vector read at NaN proves no position, so it records no witness, and
+  // the later read from that unknown position records none either.
+  assert.deepEqual(witnesses("nan"), []);
+  for (const name of Object.keys(reads)) {
+    const file = path.join(base, `${name}.txt`);
+    assert.deepEqual(await fs.readFile(file), content, name);
+  }
+});
+
 test("PostCSS tracks reused descriptors and whole reads from the current position", async (context) => {
   const { base } = await sidecarSources(context);
   await fs.writeFile(path.join(base, "first.txt"), "first");

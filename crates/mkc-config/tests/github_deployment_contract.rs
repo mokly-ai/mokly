@@ -47,6 +47,10 @@ fn enabled_chart_rendering_satisfies_the_runtime_validator() {
     let entrypoint =
         fs::read_to_string(root.join("infra/docker/entrypoint.sh")).expect("read API entrypoint");
     let mut values = BTreeMap::new();
+    assert!(
+        entrypoint.contains("secrets_dir=${MKC_SECRETS_DIR:-/var/run/mokly-secrets}"),
+        "entrypoint must read mounted secrets from /var/run/mokly-secrets by default"
+    );
 
     for setting in PUBLIC_SETTINGS {
         values.insert(setting, rendered_value(&rendered, setting));
@@ -57,7 +61,7 @@ fn enabled_chart_rendering_satisfies_the_runtime_validator() {
             "CSI must mount {file}"
         );
         assert!(
-            entrypoint.contains(&format!("{setting}=$(cat /var/run/mokly-secrets/{file})")),
+            entrypoint.contains(&format!("{setting}=$(cat \"$secrets_dir/{file}\")")),
             "entrypoint must export {setting} from {file}"
         );
         let value = if setting == "MKC_GITHUB_WEBHOOK_SECRET" {

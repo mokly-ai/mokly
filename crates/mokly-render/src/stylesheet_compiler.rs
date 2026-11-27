@@ -156,6 +156,7 @@ impl CapturingCompiler {
         let compiler = Compiler {
             tree: tree.clone(),
             repo_root: self.root.clone(),
+            resolution: self.resolution.clone(),
             resolver,
             processor,
         };

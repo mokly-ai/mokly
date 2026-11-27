@@ -9,6 +9,7 @@ use utoipa::ToSchema;
 use crate::billing::views::{Billing, HostedSession};
 use crate::builds::history::HistoryEntry;
 use crate::builds::views::{Build, Log};
+use crate::configuration::ConfigurationView;
 use crate::contract::pages::page_items;
 use crate::github::views;
 use crate::health::HealthView;
@@ -42,6 +43,8 @@ pub(crate) enum Payload {
     GitHubInstallations(Page<views::Installation>),
     GitHubRepositories(Page<views::Repository>),
     Health(HealthView),
+    /// The optional configuration that the API has.
+    Configuration(ConfigurationView),
     Build(Build),
     BuildLog(Log),
     History(Page<HistoryEntry>),

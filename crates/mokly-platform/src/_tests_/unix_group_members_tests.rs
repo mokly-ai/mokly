@@ -1,10 +1,18 @@
-//! Model empty, live, zombie, disappearing, and unobservable groups.
+//! Model empty, live, exiting, zombie, disappearing, and unobservable groups.
 
 use std::io;
 
 use unimock::{MockFn, Unimock, matching};
 
-use super::{MembersMock, stopped};
+use crate::unix_process_table::ProcessIdentity;
+use crate::unix_process_tree::GroupOutcome;
+
+use super::{Member, MembersMock, Refusal, classify, refusal};
+
+const MEMBER: ProcessIdentity = ProcessIdentity {
+    pid: 18,
+    start: 180,
+};
 
 #[test]
 fn a_single_live_member_cannot_be_mistaken_for_an_empty_group() {
@@ -15,11 +23,30 @@ fn a_single_live_member_cannot_be_mistaken_for_an_empty_group() {
                 pids[0] = 18;
                 Ok(1)
             }),
-        MembersMock::live
+        MembersMock::state
             .next_call(matching!(17, 18))
-            .returns(Ok(true)),
+            .returns(Ok(Member::Live(MEMBER))),
     ));
-    assert!(!stopped(&members, 17));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![MEMBER])));
+}
+
+#[test]
+fn an_exiting_member_keeps_the_group_but_needs_no_signal() {
+    let members = Unimock::new((
+        MembersMock::list
+            .next_call(matching!(17, _))
+            .answers(&|_, _, pids| {
+                pids[..2].copy_from_slice(&[17, 18]);
+                Ok(2)
+            }),
+        MembersMock::state
+            .next_call(matching!(17, 17))
+            .returns(Ok(Member::Exiting)),
+        MembersMock::state
+            .next_call(matching!(17, 18))
+            .returns(Ok(Member::Gone)),
+    ));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Pending(vec![])));
 }
 
 #[test]
@@ -31,14 +58,14 @@ fn zombies_and_members_reaped_during_enumeration_count_as_stopped() {
                 pids[..2].copy_from_slice(&[18, 19]);
                 Ok(2)
             }),
-        MembersMock::live
+        MembersMock::state
             .next_call(matching!(17, 18))
-            .returns(Ok(false)),
-        MembersMock::live
+            .returns(Ok(Member::Gone)),
+        MembersMock::state
             .next_call(matching!(17, 19))
-            .returns(Ok(false)),
+            .returns(Ok(Member::Gone)),
     ));
-    assert!(stopped(&members, 17));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Stopped));
 }
 
 #[test]
@@ -48,7 +75,7 @@ fn list_or_status_errors_do_not_hide_permission_failures() {
             .next_call(matching!(17, _))
             .returns(Err(io::ErrorKind::PermissionDenied.into())),
     );
-    assert!(!stopped(&members, 17));
+    assert_eq!(refusal(&members, 17), None);
     let members = Unimock::new((
         MembersMock::list
             .next_call(matching!(17, _))
@@ -56,11 +83,11 @@ fn list_or_status_errors_do_not_hide_permission_failures() {
                 pids[0] = 18;
                 Ok(1)
             }),
-        MembersMock::live
+        MembersMock::state
             .next_call(matching!(17, 18))
             .returns(Err(io::ErrorKind::UnexpectedEof.into())),
     ));
-    assert!(!stopped(&members, 17));
+    assert_eq!(refusal(&members, 17), None);
 }
 
 #[test]
@@ -73,5 +100,51 @@ fn full_buffers_are_resized_before_accepting_a_stopped_group() {
             .next_call(matching!((17, pids) if pids.len() == 512))
             .returns(Ok(0)),
     ));
-    assert!(stopped(&members, 17));
+    assert_eq!(refusal(&members, 17), Some(Refusal::Stopped));
+}
+
+#[test]
+fn a_refused_signal_maps_to_the_members_that_still_need_it() {
+    let live = Unimock::new((
+        MembersMock::list
+            .next_call(matching!(17, _))
+            .answers(&|_, _, pids| {
+                pids[0] = 18;
+                Ok(1)
+            }),
+        MembersMock::state
+            .next_call(matching!(17, 18))
+            .returns(Ok(Member::Live(MEMBER))),
+    ));
+    assert_eq!(
+        classify(&live, io::Error::from_raw_os_error(libc::EPERM), 17).unwrap(),
+        GroupOutcome::Refused(vec![MEMBER])
+    );
+    let stopped = Unimock::new(MembersMock::list.next_call(matching!(17, _)).returns(Ok(0)));
+    assert_eq!(
+        classify(&stopped, io::Error::from_raw_os_error(libc::EPERM), 17).unwrap(),
+        GroupOutcome::Gone
+    );
+    let unreadable = Unimock::new(
+        MembersMock::list
+            .next_call(matching!(17, _))
+            .returns(Err(io::ErrorKind::PermissionDenied.into())),
+    );
+    assert_eq!(
+        classify(&unreadable, io::Error::from_raw_os_error(libc::EPERM), 17)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EPERM)
+    );
+    let unused = Unimock::new(());
+    assert_eq!(
+        classify(&unused, io::Error::from_raw_os_error(libc::ESRCH), 17).unwrap(),
+        GroupOutcome::Gone
+    );
+    assert_eq!(
+        classify(&unused, io::Error::from_raw_os_error(libc::EINVAL), 17)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EINVAL)
+    );
 }

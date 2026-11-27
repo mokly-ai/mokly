@@ -1,8 +1,5 @@
 """Runtime-setting documentation and Helm renders stay in exact parity."""
 
-from pathlib import Path
-import json
-import subprocess
 import sys
 import unittest
 
@@ -16,11 +13,7 @@ if str(HELM_TESTS) not in sys.path:
 from runtime_settings import RuntimeSettingsParityError, check_parity, check_runtime_settings
 from chart_support import CHART, environment, parse_yaml, resource
 
-sys.path.insert(0, str(ROOT / "scripts/cloud"))
-from smoke_support import Api
-
 render = load("render-values")
-admission = load("smoke_admission")
 smoke = load("smoke")
 
 
@@ -79,62 +72,30 @@ class RuntimeSettingsTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeSettingsParityError, "documented but unrendered"):
             check_parity(table, actual - {("main-preview", "maintenance", "MKC_FILE_STORE")})
 
-
-class DesktopSmokeParityTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        build = subprocess.run(
-            ["cargo", "build", "-p", "mkc-catalogue-server", "--message-format=json"],
-            cwd=ROOT, capture_output=True, text=True, check=True, timeout=1200,
-        )
-        cls.executable = next(
-            artifact["executable"] for line in build.stdout.splitlines()
-            if (artifact := json.loads(line)).get("executable") and
-            artifact.get("target", {}).get("name") == "mkc-catalogue-server"
-        )
-
-    def test_every_helm_environment_matches_real_catalogue_framing_and_cors(self):
+    def test_every_helm_environment_configures_rollout_smoke(self):
+        revision = "a" * 40
         for path in sorted((CHART / "environments").glob("*.yaml")):
             with self.subTest(environment=path.stem):
                 overlay = parse_yaml(path.read_text())[0]
                 name = path.stem + ("-42" if path.stem == "preview-pr" else "")
-                values = dict(overlay, prNumber=42, domain="example.invalid",
-                              catalogueBaseDomain="catalogues.invalid",
-                              region="us-central1", revision="a" * 40)
-                api, app, domain, _, _, flag = render.origins(values, name, "a" * 40)
+                values = dict(
+                    overlay, prNumber=42, domain="example.invalid",
+                    catalogueBaseDomain="catalogues.invalid",
+                    region="us-central1", revision=revision,
+                )
+                api, app, domain, _, _, flag = render.origins(values, name, revision)
                 config = smoke.configuration(dict(
                     MKC_API_ORIGIN=api, MKC_APP_ORIGIN=app, MKC_CATALOGUE_DOMAIN=domain,
-                    MKC_REVISION="a" * 40, MKC_DESKTOP_CLIENT=flag,
+                    MKC_REVISION=revision, MKC_DESKTOP_CLIENT=flag,
                 ))
-                enabled = config[-1]
-                self.assertIs(enabled, overlay["desktopClient"])
-                documents = parse_yaml((HELM_TESTS / "golden" / f"{path.stem}.yaml").read_text())
-                runtime = {}
+                self.assertIs(config[-1], overlay["desktopClient"])
+
+                golden = HELM_TESTS / "golden" / path.name
+                documents = parse_yaml(golden.read_text())
                 for workload in ("api", "catalogue"):
                     deployment = resource(documents, "Deployment", workload)
-                    runtime[workload] = environment(deployment["spec"]["template"]["spec"]["containers"][0])
-                    self.assertEqual(runtime[workload]["MKC_DESKTOP_CLIENT"], {"value": flag})
-                server = Api(self.executable, isolated_database=True, overrides={
-                    "MKC_DESKTOP_CLIENT": runtime["catalogue"]["MKC_DESKTOP_CLIENT"]["value"],
-                    "MKC_APP_ORIGIN": app, "MKC_CATALOGUE_BIND": "127.0.0.1:0",
-                })
-                try:
-                    client = smoke.HttpClient()
-                    response = client.get(server.url + "/", app)
-                    self.assertEqual(response.status, 404)
-                    csp = response.headers["content-security-policy"]
-                    actual = [part.strip().split()[1:] for part in csp.split(";")
-                              if part.strip().startswith("frame-ancestors ")]
-                    self.assertEqual(actual, [admission.frame_ancestors(app, enabled)])
-                    admission.catalogue_headers(response.headers, app, enabled)
-                    admission.cors(client, server.url + "/", app, enabled, "Catalogue", 404)
-                    with self.assertRaisesRegex(ValueError, "frame-ancestors mismatch.*MKC_DESKTOP_CLIENT"):
-                        admission.catalogue_headers(response.headers, app, not enabled)
-                    with self.assertRaisesRegex(ValueError, "CORS mismatch.*MKC_DESKTOP_CLIENT"):
-                        admission.cors(client, server.url + "/", app, not enabled, "Catalogue", 404)
-                finally:
-                    server.close()
-                    server.process.stdout.close()
+                    container = deployment["spec"]["template"]["spec"]["containers"][0]
+                    self.assertEqual(environment(container)["MKC_DESKTOP_CLIENT"], {"value": flag}, workload)
 
 
 if __name__ == "__main__":

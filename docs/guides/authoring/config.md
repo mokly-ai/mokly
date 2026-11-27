@@ -24,9 +24,10 @@ JSON file named by `--config`.
 }
 ```
 
-Filesystem fields resolve from the configuration's directory and stay inside
-`repoRoot`. The configuration contains data. Product JavaScript runs in entry
-modules, the renderer, and the optional PostCSS module.
+Filesystem fields resolve from the configuration's directory by default.
+Inputs stay inside `repoRoot`. The configuration contains data. Product
+JavaScript runs in entry modules, the renderer, and the optional PostCSS
+module.
 
 ## Source roots
 
@@ -73,8 +74,8 @@ See [styles](/docs/authoring/styles/).
 ## Resolve consumer modules
 
 `moduleResolution` accepts `aliases`, `conditions`, `loaders`, `mainFields`,
-`packageRoots`, and `resolveExtensions`. These describe your product's module
-layout. Mokly supplies no application-specific aliases.
+`packageRoots`, `resolveExtensions`, and `sourcePackages`. These describe your
+product's module layout. Mokly supplies no application-specific aliases.
 React and React DOM resolve from the consumer. CSS imports use Mokly's delivery
 rules. Only `empty` can override `.css` and `.module.css` handling.
 
@@ -87,19 +88,70 @@ setup. See [Vite](/docs/authoring/vite/) for installation and module settings.
 
 ### Workspace packages
 
-For bundled imports by workspace package name, Mokly looks for source
-files that match the build targets in the working tree and the Git base.
+With the default compiler, Mokly looks for source files that match the build
+targets of workspace package imports in the working tree and the Git base.
 If package lookup fails, every declared target for the import must map to
 the same source file. TypeScript declaration files do not count.
 Configured entry and stories files, the renderer, and the PostCSS module
 keep their exact paths.
-It reads `outDir` and `rootDir` from the package's `tsconfig.json` and
-relative `extends` files in the repository outside `node_modules`. Set both
-folders in the package's `tsconfig.json` when it extends an installed
-configuration. Both folders must be inside the package. Otherwise Mokly
-looks for the same path under `src` for targets in `dist`, `lib`, `build`,
-or `out`.
+
+To detect the layout, Mokly reads `outDir` and `rootDir` from the package's
+`tsconfig.json` and relative `extends` files in the repository outside
+`node_modules`. Set both folders in the package's `tsconfig.json` when it
+extends an installed configuration. Both folders must be inside the package.
+Otherwise Mokly looks for the same path under `src` for targets in `dist`,
+`lib`, `build`, or `out`.
 For example, `dist/button.js` can map to `src/button.tsx`.
+
+Use `moduleResolution.sourcePackages` to override automatic detection for a
+workspace package. Use the `name` from its `package.json` as the key. For a
+custom layout, map each build folder to its source folder. Use paths relative
+to the package root.
+
+```json
+{
+  "moduleResolution": {
+    "sourcePackages": {
+      "@acme/ui": { "esm": "source", "cjs": "source" }
+    }
+  }
+}
+```
+
+Set the entry to `false` when the render needs the built files, for example
+when the package build changes the code.
+
+```json
+{
+  "moduleResolution": {
+    "sourcePackages": {
+      "@acme/ui": false
+    }
+  }
+}
+```
+
+With `false`, track the built files in Git. The base render fails if those
+files are missing.
+
+Mokly tries layouts in order for each file.
+
+- The base render tries the base commit's entry, then the working tree's
+  entry, then automatic detection.
+- The head render tries the working tree's entry, then automatic detection.
+
+The first layout that finds a source file wins. If Mokly reaches `false`, it
+uses the original package target and ends the search.
+
+Import the source stylesheet by a relative path when a PostCSS plugin such
+as Tailwind inlines it through its own package lookup, which bypasses
+automatic detection and `sourcePackages`.
+
+An invalid entry causes a `config-invalid` error. An entry that names one
+build folder twice, such as `esm` and `./esm`, is invalid. The
+`ignored-module` warning means an import or the PostCSS configuration loaded
+a repository file that Git ignores or that lies in a nested checkout or
+tracked submodule. A later base cannot load that file.
 
 ## Review and watch
 
@@ -122,21 +174,21 @@ The configuration declares no output directory and no build recipe.
 
 ## Configuration fields
 
-| Field                       | Meaning                                                                      |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `roots`                     | Source directories, file globs, path prefixes, and transparent directories   |
-| `repoRoot`                  | Repository root; the configuration directory is the default                  |
-| `colorSchemes`              | A unique set that includes `light`; the default is light only                |
-| `stylesheets`               | Ordered route rules with shared and scheme-specific CSS                      |
-| `renderer`                  | A local module that wraps React renders with product providers               |
-| `postcss`                   | A local module that supplies consumer PostCSS plugins                        |
-| `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`              |
-| `moduleResolution`          | Consumer aliases, package roots, conditions, fields, extensions, and loaders |
-| `review.base`               | The Git ref used to find the comparison base                                 |
-| `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false            |
-| `watch`                     | Additional watch rules and the debounce interval                             |
+| Field                       | Meaning                                                                     |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `roots`                     | Source directories, file globs, path prefixes, and transparent directories  |
+| `repoRoot`                  | Repository root; the configuration directory is the default                 |
+| `colorSchemes`              | A unique set that includes `light`; the default is light only               |
+| `stylesheets`               | Ordered route rules with shared and scheme-specific CSS                     |
+| `renderer`                  | A local module that wraps React renders with product providers              |
+| `postcss`                   | A local module that supplies consumer PostCSS plugins                       |
+| `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`             |
+| `moduleResolution`          | Consumer aliases, package lookup, extensions, loaders, and `sourcePackages` |
+| `review.base`               | The Git ref used to find the comparison base                                |
+| `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false           |
+| `watch`                     | Additional watch rules and the debounce interval                            |
 
-Paths resolve from the configuration file. Inputs stay inside `repoRoot`.
+Paths resolve from the configuration file by default. Inputs stay inside `repoRoot`.
 Before a Git operation, `repoRoot` must be the Git repository's top level.
 A build with `--no-changes` can run without Git.
 

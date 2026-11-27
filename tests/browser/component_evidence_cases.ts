@@ -1,23 +1,16 @@
 import { expect } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
-
-type Viewport = "desktop" | "mobile";
 
 /**
- * Artboards whose frames draw highlight chips: the Toolbar's nested Actions
- * once a reader checks Highlight components, and Welcome's phone frame with
- * it on. A phone draws the switch only in an open panel sheet. Welcome's
- * desktop stage stands at 42%, where the frames draw no chips.
+ * The artboard whose frames draw highlight chips: the Toolbar's nested
+ * Actions once a reader checks Highlight components. Welcome's desktop stage
+ * stands at 42%, where the frames draw no chips.
  */
-const CHIPS: Record<Viewport, readonly (readonly [string, boolean])[]> = {
-  desktop: [["design/canvas/stage/component-set/toolbar", true]],
-  mobile: [["design/canvas/inspect/frames", false]],
-};
+const CHIP_ROUTE = "design/canvas/stage/component-set/toolbar";
 
 /** Each entry state's status beside its title, and the entries without one. */
 const STATUSES = [
@@ -41,17 +34,11 @@ const LABEL_PAIRS = Array.from({ length: 4 }, () => [
 ]).flat();
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentEvidence(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentEvidence() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test.describe(`${viewport} comparison evidence`, () => {
@@ -62,106 +49,115 @@ export function registerComponentEvidence(
             : { width: 390, height: 844 },
       });
 
-      // A removed consumer keeps its comparison evidence on its Changes tab,
-      // which a phone opens in the panel sheet; the canvas holds none.
-      test("a removed consumer's comparison facts appear only in its Changes tab", async ({
-        page,
-      }) => {
-        const route = "design/canvas/components/removed/consumer-changes";
-        await page.goto(designDocumentUrl(route, viewport));
-        await expect(
-          page.locator(".cv-canvas [data-workspace-evidence]"),
-        ).toHaveCount(0);
-        const panel = page.getByRole("region", { name: "Panel", exact: true });
-        await expect(
-          panel.getByRole("link", { name: "Changes", exact: true }),
-        ).toHaveAttribute("aria-current", "page");
-        const evidence = page.locator("[data-workspace-evidence]");
-        await expect(evidence).toHaveCount(1);
-        await expect(panel.locator(".cv-evidence")).toContainText(
-          "Comparison details",
-        );
-        await expect(evidence).not.toContainText("corners and spacing");
-        await expectReasonSentences(
-          evidence,
-          ["removed"],
-          `${viewport} ${route}`,
-        );
-        // The rail holds the version before alone, and no mode compares.
-        await expect(
-          panel.getByText(
-            "Removed on this branch, so there is no current version to compare.",
-            { exact: true },
-          ),
-        ).toBeVisible();
-        await expect(
-          page.getByRole("list", { name: "Comparison mode" }),
-        ).toHaveCount(0);
-        // Inspect, the panel's other tab, opens Farewell's Removed state.
-        await panel.getByRole("link", { name: "Inspect", exact: true }).click();
-        await expect(page).toHaveURL(
-          designDocumentUrl(
-            "design/canvas/components/removed/consumer",
-            viewport,
-          ),
-        );
-      });
-
-      // Welcome changed the label that it gives its own Action beside the
-      // changed Action. The Changes tab, which a phone opens as its sheet,
-      // holds the facts; the canvas holds no explanation of its own.
-      test("screen comparison names the instance and its before/current props", async ({
-        page,
-      }) => {
-        await page.goto(
-          designDocumentUrl(
-            "design/canvas/components/affected/direct",
-            viewport,
-          ),
-        );
-        await expect(
-          page.locator(".cv-canvas [data-workspace-evidence]"),
-        ).toHaveCount(0);
-        await expect(
-          page
-            .getByRole("region", { name: "Panel", exact: true })
-            .getByRole("link", { name: "Changes", exact: true }),
-        ).toHaveAttribute("aria-current", "page");
-        const evidence = page.locator(".cv-evidence [data-workspace-evidence]");
-        await expect(evidence).toContainText("Action · details");
-        // Each view pairs the instance's props before and after the change.
-        await expect(evidence.locator("pre")).toHaveText(LABEL_PAIRS);
-        await expect(
-          evidence.getByText("Changed component: Action", { exact: true }),
-        ).toHaveCount(1);
-        await expect(
-          evidence.getByRole("link", { name: "Action" }),
-        ).toHaveAttribute(
-          "data-mokly-link",
-          "design/canvas/components/compare/current",
-        );
-        // The compared frames show the same values, and nothing marks the
-        // saved change as a temporary edit.
-        const own = (side: string) =>
-          page.locator(
-            `.cv-frame[data-cv-side="${side}"]:visible .mbk-shot-own-action`,
+      // The evidence, the Changes tab, and the chips read the same on a
+      // phone, so the desktop alone checks them.
+      if (viewport === "desktop") {
+        // A removed consumer keeps its comparison evidence on its Changes tab;
+        // the canvas holds none.
+        test("a removed consumer's comparison facts appear only in its Changes tab", async ({
+          page,
+        }) => {
+          const route = "design/canvas/components/removed/consumer-changes";
+          await page.goto(designDocumentUrl(route, "desktop"));
+          await expect(
+            page.locator(".cv-canvas [data-workspace-evidence]"),
+          ).toHaveCount(0);
+          const panel = page.getByRole("region", {
+            name: "Panel",
+            exact: true,
+          });
+          await expect(
+            panel.getByRole("link", { name: "Changes", exact: true }),
+          ).toHaveAttribute("aria-current", "page");
+          const evidence = page.locator("[data-workspace-evidence]");
+          await expect(evidence).toHaveCount(1);
+          await expect(panel.locator(".cv-evidence")).toContainText(
+            "Comparison details",
           );
-        await expect(own("before")).toHaveText("Continue");
-        await expect(own("after")).toHaveText("View details");
-        await expect(
-          page.locator(".mbk-controls-edited, .mbk-edit-status"),
-        ).toHaveCount(0);
-      });
+          await expect(evidence).not.toContainText("corners and spacing");
+          await expectReasonSentences(
+            evidence,
+            ["removed"],
+            `desktop ${route}`,
+          );
+          // The rail holds the version before alone, and no mode compares.
+          await expect(
+            panel.getByText(
+              "Removed on this branch, so there is no current version to compare.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          await expect(
+            page.getByRole("list", { name: "Comparison mode" }),
+          ).toHaveCount(0);
+          // Inspect, the panel's other tab, opens Farewell's Removed state.
+          await panel
+            .getByRole("link", { name: "Inspect", exact: true })
+            .click();
+          await expect(page).toHaveURL(
+            designDocumentUrl(
+              "design/canvas/components/removed/consumer",
+              "desktop",
+            ),
+          );
+        });
 
-      test("highlight chips have clear separation from intact outlines", async ({
-        page,
-      }) => {
-        for (const [route, check] of CHIPS[viewport]) {
-          await page.goto(designDocumentUrl(route, viewport));
-          if (check)
-            await page
-              .getByRole("switch", { name: "Highlight components" })
-              .check();
+        // Welcome changed the label that it gives its own Action beside the
+        // changed Action. The Changes tab holds the facts; the canvas holds no
+        // explanation of its own.
+        test("screen comparison names the instance and its before/current props", async ({
+          page,
+        }) => {
+          await page.goto(
+            designDocumentUrl(
+              "design/canvas/components/affected/direct",
+              "desktop",
+            ),
+          );
+          await expect(
+            page.locator(".cv-canvas [data-workspace-evidence]"),
+          ).toHaveCount(0);
+          await expect(
+            page
+              .getByRole("region", { name: "Panel", exact: true })
+              .getByRole("link", { name: "Changes", exact: true }),
+          ).toHaveAttribute("aria-current", "page");
+          const evidence = page.locator(
+            ".cv-evidence [data-workspace-evidence]",
+          );
+          await expect(evidence).toContainText("Action · details");
+          // Each view pairs the instance's props before and after the change.
+          await expect(evidence.locator("pre")).toHaveText(LABEL_PAIRS);
+          await expect(
+            evidence.getByText("Changed component: Action", { exact: true }),
+          ).toHaveCount(1);
+          await expect(
+            evidence.getByRole("link", { name: "Action" }),
+          ).toHaveAttribute(
+            "data-mokly-link",
+            "design/canvas/components/compare/current",
+          );
+          // The compared frames show the same values, and nothing marks the
+          // saved change as a temporary edit.
+          const own = (side: string) =>
+            page.locator(
+              `.cv-frame[data-cv-side="${side}"]:visible .mbk-shot-own-action`,
+            );
+          await expect(own("before")).toHaveText("Continue");
+          await expect(own("after")).toHaveText("View details");
+          await expect(
+            page.locator(".mbk-controls-edited, .mbk-edit-status"),
+          ).toHaveCount(0);
+        });
+
+        test("highlight chips have clear separation from intact outlines", async ({
+          page,
+        }) => {
+          const route = CHIP_ROUTE;
+          await page.goto(designDocumentUrl(route, "desktop"));
+          await page
+            .getByRole("switch", { name: "Highlight components" })
+            .check();
           const frames = page.locator(".cv-frame[data-cv-frame]:visible");
           await expect(frames, route).not.toHaveCount(0);
           for (const frame of await frames.all()) {
@@ -189,7 +185,11 @@ export function registerComponentEvidence(
                   const bounds = chip.getBoundingClientRect();
                   return {
                     outline: { x: box.x - edge, y: box.y - edge },
-                    label: { x: bounds.x, y: bounds.y, height: bounds.height },
+                    label: {
+                      x: bounds.x,
+                      y: bounds.y,
+                      height: bounds.height,
+                    },
                     radii: [
                       style.borderBottomLeftRadius,
                       style.borderBottomRightRadius,
@@ -207,8 +207,8 @@ export function registerComponentEvidence(
               ).toBe(true);
             }
           }
-        }
-      });
+        });
+      }
 
       test("entry badges distinguish additions, edits, removals, and saved values", async ({
         page,

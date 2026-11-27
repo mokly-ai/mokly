@@ -210,6 +210,12 @@
   - [changes-detail-revision-copies.md](./changes-detail-revision-copies.md):
     the same measurement. It records the ready publication, the other
     deferred phase outside the comparison.
+  - [ignored-module-large-index.md](./ignored-module-large-index.md): the
+    same bound. The listing of the working candidates of this check runs
+    under the same 64 MiB bound as the index listing of that item, so a
+    large repository can make both fail. This listing keeps each record
+    that is not a folder, so the streamed filter of that item does not help
+    it.
 - **Recommendation:** A. No option is clearly best until a split names the
   costly Git process, and A names it without a product change.
 - **Action:** fix after merge, apply A, because the user asked on 2026-11-21

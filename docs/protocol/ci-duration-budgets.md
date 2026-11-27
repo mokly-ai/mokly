@@ -1,8 +1,10 @@
 # CI Duration Budgets
 
 Every run of the CI workflow reports how long each job ran against its
-budget. The report also shows the critical path and the slowest tests. It
-exists to keep CI fast as jobs, shards, and tests change. The budgets apply to
+budget. The report also shows the critical path, the balance of each shard
+group, the slowest tests, and the size of the Actions cache against its
+budget. It exists to keep CI fast as
+jobs, shards, tests, and caches change. The budgets apply to
 CI jobs and to the wall clock of a run. They never apply to one test: test
 durations stay report text under the
 [CI test timing contract](./ci-test-timing.md#duration-reporting).
@@ -17,8 +19,8 @@ failure of the job shows on its own check but never fails the run. The run
 conclusion, and so the
 [release evidence](./npm-release-evidence.md), never depend on it.
 
-The job reads job and step times from the GitHub API with the run's own
-token. It is the only CI job with `actions: read`. It keeps `contents: read`
+The job reads job and step times and the Actions cache list of the
+repository from the GitHub API with the run's own token. It is the only CI job with `actions: read`. It keeps `contents: read`
 and gets no secret. It needs no npm dependencies and no Rust build. Its
 10-minute timeout is a hang guard under the
 [job timeout rule](./ci-workflow.md#job-execution).
@@ -34,6 +36,8 @@ fields:
 | `wallClockMinutes` | The budget of the wall clock of an attempt that reused no job.                             |
 | `slowestTests`     | The number of rows in each slowest-test table.                                             |
 | `jobs`             | An ordered list of `pattern` and `minutes` pairs.                                          |
+| `cache`            | The cache budget `gigabytes` and the number of rows `largestEntries`.                      |
+| `shardGroups`      | The shard groups, as [Shard Balance](#shard-balance) says.                                 |
 
 A pattern matches the whole job name. In a pattern, `*` matches any run of
 characters, also an empty one. Every other character matches only itself,
@@ -68,6 +72,69 @@ The report infers the critical path from the job times. Reading the `needs`
 graph from the workflow file was rejected, because it needs a YAML parser and
 so an npm install in the report job. The times give the same chain.
 
+## Shard Balance
+
+A shard group is the set of jobs that split one suite. Each entry of
+`shardGroups` has a `name`, a list of job-name `patterns`, an optional
+`exclude` list of job-name patterns, a `spreadMinutes` budget, and an
+optional `weighted` flag. The patterns match as job budget patterns do. A job
+that matches one of `patterns` and none of `exclude` is a shard of the group.
+`exclude` leaves out a matching job that runs other work, such as a shard
+that runs only the lints. `weighted` is `false` for a group that no committed weight file
+balances, such as shards that Playwright splits by test count. It is `true`
+when it is missing.
+
+- The spread of a group is the run time of its slowest passed shard minus
+  that of its fastest passed shard in the same run. Runner speed changes
+  between runs, so the report never compares shards of different runs. A
+  shard reused from an earlier attempt counts with its earlier run time.
+- A shard that did not pass is left out. A group with fewer than two passed
+  shards has no spread and no check.
+- For each group, the summary gives the number of passed shards, the fastest
+  and the slowest shard with their run times, the spread, the budget, and
+  the status.
+- A spread above its budget adds one warning. The warning names both shards.
+  For a weighted group, it gives the command that refreshes every weight file
+  from the newest green `main` runs, `npm run ci:refresh-shard-weights`. For
+  another group, it says to move tests between its spec files or to change
+  its shard count.
+
+A shard balance warning never fails the step, also in `fail` mode. A
+`shardGroups` field that is missing or does not parse adds a note, and the
+rest of the report still runs. A changed job name or shard count can leave a
+pattern without a match. The group then shows `not run`.
+
+## Actions Cache
+
+The report reads every entry of the Actions cache of the repository when it
+runs. Sizes are decimal: 1 GB is 10^9 bytes. The total is the sum of the
+sizes of the listed entries.
+
+- The report gives the total and the number of entries, and compares the
+  total with the cache budget.
+- It lists the largest entries, as many as `largestEntries` says, with the
+  ref, the size, and the last use of each.
+- It lists every entry saved from a ref other than `main`, because
+  [only `main` saves a cache](./ci-verification-security.md#dependency-cache-and-security).
+- A total above the budget adds one warning. Entries from other refs add one
+  more warning, with their number and their total size.
+
+When the report cannot read every entry, it says how many it read and adds a
+note. Its total is then a lower bound. It still warns about an overrun or an
+entry from another ref that the entries it read prove. It never says that the
+cache is within budget, or that every entry comes from `main`.
+
+The report reads the list after the other jobs of the run, so the section
+shows the cache after their saves. One run can save many new entries, for
+example after a lockfile change. The total can then pass the budget and the
+10 GB limit before the report reads the list, and GitHub can evict entries
+before the warning shows.
+
+A cache warning never fails the step, also in `fail` mode. A failing cache
+check needs the user's approval, because a new failing gate needs it. A
+`cache` field that is missing or does not parse, and a cache list that
+cannot be read, add a note, and the rest of the report still runs.
+
 ## Reruns
 
 A rerun of failed jobs starts a new attempt. The API lists every job under
@@ -89,13 +156,16 @@ The report writes these parts to the job summary, in this order:
 3. The critical path.
 4. A table of every completed job, the longest first: result, run time,
    budget and its pattern, status, and slowest step.
-5. The slowest tests of the `verification-*` reports of the run. A report
+5. The shard balance of each shard group.
+6. The slowest tests of the `verification-*` reports of the run. A report
    that times each test, such as a browser shard report, adds rows of tests.
    Another report, such as the viewer report, adds rows of test files.
-6. Notes: each warning that is not about a budget.
+7. The Actions cache: the total against its budget, the largest entries, and
+   the entries from other refs.
+8. Notes: each warning that is not about a budget.
 
-Job and test names in the summary and in annotations are escaped. A name
-cannot add a workflow command, a table cell, or HTML.
+Job and test names, cache keys, and refs in the summary and in annotations are
+escaped. A name cannot add a workflow command, a table cell, or HTML.
 
 ## Warnings And The Failing Mode
 
@@ -103,12 +173,14 @@ The `mode` field is the one setting that turns the report into a failing
 check.
 
 In `warn` mode, each job above its budget, each job without a budget, a wall
-clock above its budget, and each note adds one warning annotation. The step
+clock above its budget, each shard spread above its budget, each cache
+warning, and each note adds one warning annotation. The step
 always succeeds, also when the API or the budget file cannot be read.
 
 In `fail` mode, each job above its budget and a wall clock above its budget
 add an error annotation, and the step fails. A report that cannot run also
-fails the step. A job without a budget and a note stay warnings.
+fails the step. A job without a budget, a shard spread, a cache warning, and
+a note stay warnings.
 
 GitHub shows at most 10 annotations of each level for one step. When a level
 has more, its tenth annotation gives the number of the others, and the job

@@ -10,11 +10,11 @@ the local id of each instance, the numbers of repeated ids, and the
 
 The id of an instance comes from the first of its sources that gives a value:
 
-| Instance                                                 | Sources, in order                                                                                                                  |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| A component element in an HTML body                      | `mokly-instance`, then the segment                                                                                                 |
-| A `defineComponent` wrapper                              | `moklyInstance`, then `key`, then the segment                                                                                      |
-| A [story component use](./mokly-story-component-uses.md) | `key`, then each naming prop in the order of [`instanceNameProps`](./mokly-configuration.md#instance-name-props), then the segment |
+| Instance                                                 | Sources, in order                                                                                   |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| A component element in an HTML body                      | `mokly-instance`, then the segment                                                                  |
+| A `defineComponent` wrapper                              | `moklyInstance`, then `key`, then the segment                                                       |
+| A [story component use](./mokly-story-component-uses.md) | `key`, then each naming prop in the order of [`instanceNameProps`](#naming-props), then the segment |
 
 The segment is the final segment of the component's resolved path, including
 after index collapse or a declared path override. The component of a story
@@ -55,6 +55,18 @@ the kebab-case form makes every value a valid id, and translated labels keep
 their letters. Names from source lines and names from all props were
 rejected, because an edit above a use, or of any prop, would then change its
 id.
+
+## Naming Props
+
+The top-level configuration field `instanceNameProps` of the
+[configuration contract](./mokly-configuration.md#configuration-discovery)
+is an array of strings, defaulting to
+`["id", "name", "data-testid", "aria-label"]`. The [id rules](#ids) try the `key` of a story
+component use first, and then each listed prop in order. A `key` item, an empty
+item, and a repeated item change nothing. With an empty list, only the `key`
+names a use, and a repeated id takes a number. Decision: one top-level list
+serves every root, because the naming props are product-wide. Such items give
+no configuration error, because they are harmless.
 
 ## Numbered Ids
 
@@ -105,5 +117,5 @@ change when an earlier instance changes, so the warning asks for a name, and
 - [Component instance identity](./mokly-instances.md)
 - [Story component uses](./mokly-story-component-uses.md)
 - [Component usage records](./mokly-component-usage-records.md)
-- [Configuration](./mokly-configuration.md#instance-name-props)
+- [Configuration](./mokly-configuration.md#configuration-discovery)
 - [Build warnings](./mokly-build-warnings.md)

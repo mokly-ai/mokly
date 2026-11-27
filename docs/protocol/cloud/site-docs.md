@@ -98,13 +98,11 @@ path, slug, title and order:
 | `docs/protocol/mokly-link-controls.md`    | `link-controls`    | Styled link controls      |
 | `docs/protocol/mokly-pages.md`            | `pages`            | Pages in the catalogue    |
 
-The allowlist is fixed by this contract. No protocol file becomes a site page
-only because the package ships it; adding a document is a change to
-this table. The table holds the documents of the **Published Protocol
-Documents** list in `mokly-guides.md`, in that order,
-and the site and the docs mockup fail their checks when the two lists differ.
-A Mokly change that changes that list therefore changes
-this table in the same change.
+The allowlist is fixed by this contract. This table and the **Published
+Protocol Documents** list in `mokly-guides.md` name the same documents in
+the same order. The site and docs mockup tests check their output against
+the membership and order of this contract. A change to the published list
+updates both tables and the test expectations in the same change.
 
 Guides keep their authored links unchanged; the Reference link rewriting below
 never runs on a guide. A guide link to `/docs/reference/<slug>/` must name an

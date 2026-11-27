@@ -21,6 +21,7 @@ postgres:
 preview:
   blobsBucket: mokly-508518-preview-blobs
   signInEmail: ""
+  signInRolloutMarker: none
 github:
   enabled: false
   appId: ""

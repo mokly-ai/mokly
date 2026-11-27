@@ -8,15 +8,16 @@ mod unix {
     //! Unix ownership checks for live descendants and exited, unreaped roots.
 
     use std::mem::MaybeUninit;
+    use std::os::unix::process::ExitStatusExt;
     use std::process::Command;
 
-    use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
+    use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
 
     use crate::process_tree::fixture::Tree;
     use crate::process_tree::unix_helpers::run_helper;
     #[cfg(target_os = "linux")]
     use crate::process_tree::unix_status::parent;
-    use crate::process_tree::unix_status::{alive, wait_gone};
+    use crate::process_tree::unix_status::{alive, reaped, wait_gone};
 
     /// An unreaped child keeps its identity even after it has stopped running.
     #[test]
@@ -24,24 +25,25 @@ mod unix {
         let mut command = Command::new("sh");
         command.args(["-c", "exit 23"]);
         SystemProcessGroups.configure(&mut command).unwrap();
-        let mut child = command.spawn().unwrap();
+        let child = command.spawn().unwrap();
+        let pid = child.id();
         let mut info = MaybeUninit::<libc::siginfo_t>::uninit();
         // SAFETY: This PID is our unreaped child. The aligned buffer has the
         // exact siginfo_t size. WNOWAIT observes exit without reaping the child.
         let waited = unsafe {
             libc::waitid(
                 libc::P_PID,
-                child.id(),
+                pid,
                 info.as_mut_ptr(),
                 libc::WEXITED | libc::WNOWAIT,
             )
         };
         let wait_error = std::io::Error::last_os_error();
-        let group = SystemProcessGroups.attach(&child);
+        let group = SystemProcessGroups.attach(child);
         let terminated = group.as_ref().map(|group| group.terminate());
         let killed = group.as_ref().map(|group| group.kill());
-        let was_alive = alive(i32::try_from(child.id()).unwrap());
-        let status = child.wait().unwrap();
+        let was_alive = alive(i32::try_from(pid).unwrap());
+        let status = group.as_ref().map(|group| group.wait());
         assert_eq!(waited, 0, "waitid failed: {wait_error}");
         assert!(
             group.is_ok(),
@@ -54,15 +56,47 @@ mod unix {
         );
         assert!(matches!(killed, Ok(Ok(()))), "kill failed: {killed:?}");
         assert!(!was_alive, "an exited, unreaped child is not alive");
+        assert_eq!(status.unwrap().unwrap().code(), Some(23));
+    }
+
+    /// The root keeps its ID, and so its group number, until the tree drops.
+    #[test]
+    fn a_process_tree_reaps_its_exited_root_only_when_it_drops() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 23"]);
+        SystemProcessGroups.configure(&mut command).unwrap();
+        let child = command.spawn().unwrap();
+        let pid = child.id();
+        let tree = SystemProcessGroups.attach(child).unwrap();
+        let status = tree.wait().unwrap();
+        let reaped_after_wait = reaped(pid);
+        let killed = tree.kill();
+        let reaped_after_kill = reaped(pid);
+        drop(tree);
         assert_eq!(status.code(), Some(23));
+        assert!(!reaped_after_wait, "the wait reaped the root");
+        assert!(matches!(killed, Ok(())), "kill failed: {killed:?}");
+        assert!(!reaped_after_kill, "the kill reaped the root");
+        assert!(reaped(pid), "the drop left the root unreaped");
+    }
+
+    #[test]
+    fn a_process_tree_reports_the_signal_that_ended_its_root() {
+        let mut command = Command::new("sleep");
+        command.arg("60");
+        SystemProcessGroups.configure(&mut command).unwrap();
+        let child = command.spawn().unwrap();
+        let tree = SystemProcessGroups.attach(child).unwrap();
+        tree.kill().unwrap();
+        assert_eq!(tree.wait().unwrap().signal(), Some(libc::SIGKILL));
     }
 
     #[test]
     fn kill_stops_a_descendant_in_a_new_session() {
-        let mut tree = Tree::start("kill");
+        let tree = Tree::start("kill");
         assert!(tree.pids.iter().all(|pid| alive(*pid)));
-        tree.group.kill().unwrap();
-        tree.child.wait().unwrap();
+        tree.root.kill().unwrap();
+        tree.root.wait().unwrap();
         for &pid in &tree.pids {
             wait_gone(pid);
         }
@@ -70,12 +104,12 @@ mod unix {
 
     #[test]
     fn terminate_then_kill_stops_an_ignoring_new_session_tree() {
-        let mut tree = Tree::start("ignore");
+        let tree = Tree::start("ignore");
         assert!(tree.pids.iter().all(|pid| alive(*pid)));
-        tree.group.terminate().unwrap();
-        tree.child.wait().unwrap();
+        tree.root.terminate().unwrap();
+        tree.root.wait().unwrap();
         assert!(tree.pids.iter().all(|pid| alive(*pid)));
-        tree.group.kill().unwrap();
+        tree.root.kill().unwrap();
         for &pid in &tree.pids {
             wait_gone(pid);
         }
@@ -83,25 +117,25 @@ mod unix {
 
     #[test]
     fn kill_keeps_a_child_whose_intermediate_parent_dies_after_terminate() {
-        let mut tree = Tree::start("parent-exits");
+        let tree = Tree::start("parent-exits");
         assert!(tree.pids.iter().all(|pid| alive(*pid)));
-        tree.group.terminate().unwrap();
-        tree.child.wait().unwrap();
+        tree.root.terminate().unwrap();
+        tree.root.wait().unwrap();
         wait_gone(tree.pids[0]);
         assert!(alive(tree.pids[1]));
-        tree.group.kill().unwrap();
+        tree.root.kill().unwrap();
         wait_gone(tree.pids[1]);
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn kill_stops_an_orphan_adopted_by_the_owned_subreaper() {
-        let mut tree = Tree::start("orphan");
+        let tree = Tree::start("orphan");
         wait_gone(tree.pids[0]);
         assert!(alive(tree.pids[1]));
-        assert_eq!(parent(tree.pids[1]), tree.child.id() as i32);
-        tree.group.kill().unwrap();
-        tree.child.wait().unwrap();
+        assert_eq!(parent(tree.pids[1]), tree.root.id() as i32);
+        tree.root.kill().unwrap();
+        tree.root.wait().unwrap();
         wait_gone(tree.pids[1]);
     }
 

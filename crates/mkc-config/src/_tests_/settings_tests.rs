@@ -26,14 +26,14 @@ fn provider_with_preview(
     mode: Option<&'static str>,
     app_origin: &'static str,
     mail: &'static str,
-    preview: Option<(&'static str, &'static str)>,
+    preview_email: Option<&'static str>,
 ) -> EnvironmentConfig {
     provider_with_options(
         mode,
         app_origin,
         mail,
         Some("https://site.example.com"),
-        preview,
+        preview_email,
     )
 }
 
@@ -51,7 +51,7 @@ fn provider_with_options(
     app_origin: &'static str,
     mail: &'static str,
     site_origin: Option<&'static str>,
-    preview: Option<(&'static str, &'static str)>,
+    preview_email: Option<&'static str>,
 ) -> EnvironmentConfig {
     EnvironmentConfig {
         environment: Arc::new(Unimock::new(
@@ -75,8 +75,7 @@ fn provider_with_options(
                         assert_eq!(mail, "postmark", "log delivery must not read credentials");
                         Some("test-mail-setting".to_owned())
                     }
-                    "MKC_PREVIEW_SIGN_IN_SECRET" => preview.map(|(secret, _)| secret.to_owned()),
-                    "MKC_PREVIEW_SIGN_IN_EMAIL" => preview.map(|(_, email)| email.to_owned()),
+                    "MKC_PREVIEW_SIGN_IN_EMAIL" => preview_email.map(str::to_owned),
                     "MKC_CATALOGUE_ORIGIN" => Some(if mode == Some("development") {
                         "http://localhost:8082".to_owned()
                     } else {
@@ -99,19 +98,12 @@ fn preview_sign_in_is_loaded_only_in_its_named_environments() {
         Some("preview"),
         Some("development"),
     ] {
-        let result = provider_with_preview(
-            mode,
-            HTTPS,
-            "postmark",
-            Some((
-                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                " Preview@Example.com ",
-            )),
-        )
-        .load();
+        let result =
+            provider_with_preview(mode, HTTPS, "postmark", Some(" Preview@Example.com ")).load();
         if matches!(mode, Some("preview" | "development")) {
             let preview = result.unwrap().preview_sign_in.unwrap();
             assert_eq!(preview.email, "preview@example.com");
+            assert!(preview.verifier.is_none());
         } else {
             assert!(matches!(result, Err(Error::PreviewSignInDisallowed { .. })));
         }

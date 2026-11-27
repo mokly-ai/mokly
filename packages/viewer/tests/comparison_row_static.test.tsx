@@ -19,6 +19,7 @@ import {
   renderComparison,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 /** Deployment checks that wait for the test's answer. */
 function heldChecks() {
@@ -32,7 +33,7 @@ function heldChecks() {
 
 test("a static comparison checks the deployment once for the rows that start together and gives each row the packaged root", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const { delivery, root } = pinnedDelivery();
   const { check, checks } = heldChecks();
   const host = heldHost(delivery, check);
@@ -74,7 +75,7 @@ test("a static comparison checks the deployment once for the rows that start tog
 
 test("a row's own cancel keeps the deployment check of the other rows, and another deployment ends the check with no failure", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const { delivery, root } = pinnedDelivery();
   const { check, checks } = heldChecks();
   const host = heldHost(delivery, check);

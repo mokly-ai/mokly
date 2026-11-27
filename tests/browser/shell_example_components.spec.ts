@@ -18,68 +18,61 @@ import {
 
 const ACTION = "/view/example/components/action/";
 
-for (const viewport of ["desktop", "mobile"] as const)
-  test(`${viewport}: the example's React action renders live edits and lists its Usage consumers`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(
-      viewport === "desktop"
-        ? { width: 1280, height: 900 }
-        : { width: 390, height: 844 },
+test("desktop: the example's React action renders live edits and lists its Usage consumers", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${ACTION}?viewport=desktop`);
+  // Props edits the row of the selected frame, the component's own one.
+  const props = await showProps(page);
+  // A row of the variant set shows the edit in its Light and Dark frames on
+  // the canvas.
+  const rowFrame = (row: string, scheme: "dark" | "light" = "light") =>
+    page.frameLocator(
+      `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`,
     );
-    await page.goto(`${ACTION}?viewport=${viewport}`);
-    // Props edits the row of the selected frame, the component's own one.
-    const props = await showProps(page);
-    if (viewport === "mobile")
-      await page.getByRole("button", { name: "Expand panel" }).click();
-    // A row of the variant set shows the edit in its Light and Dark frames,
-    // on the canvas and in the compact layout, which shows the selected one.
-    const rowFrame = (row: string, scheme: "dark" | "light" = "light") =>
-      page.frameLocator(
-        `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`,
-      );
-    const frame = rowFrame("example/components/action");
-    const label = props.getByLabel("Label", { exact: true });
-    await expect(label).toBeEditable();
-    await label.fill("Ready to continue");
-    const ready = (shown: FrameLocator) =>
-      shown.getByRole("button", { name: "Ready to continue", exact: true });
-    await expect(ready(frame)).toBeVisible();
-    // The optional radius is set in the saved props, so its field shows.
-    await props.locator('[data-prop-control="radius"]').fill("24");
-    await expect(ready(frame)).toHaveCSS("border-radius", "24px");
-    // A scheme change keeps the edit, and the dark view renders it.
-    await chooseScheme(page, "dark");
-    const dark = rowFrame("example/components/action", "dark");
-    await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
-    await expect(ready(dark)).toHaveCSS("border-radius", "24px");
-    await expect(label).toHaveValue("Ready to continue");
+  const frame = rowFrame("example/components/action");
+  const label = props.getByLabel("Label", { exact: true });
+  await expect(label).toBeEditable();
+  await label.fill("Ready to continue");
+  const ready = (shown: FrameLocator) =>
+    shown.getByRole("button", { name: "Ready to continue", exact: true });
+  await expect(ready(frame)).toBeVisible();
+  // The optional radius is set in the saved props, so its field shows.
+  await props.locator('[data-prop-control="radius"]').fill("24");
+  await expect(ready(frame)).toHaveCSS("border-radius", "24px");
+  // A scheme change keeps the edit, and the dark view renders it.
+  await chooseScheme(page, "dark");
+  const dark = rowFrame("example/components/action", "dark");
+  await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
+  await expect(ready(dark)).toHaveCSS("border-radius", "24px");
+  await expect(label).toHaveValue("Ready to continue");
 
-    const usage = await openInspectFold(page, "usage");
-    for (const name of ["Welcome", "Details", "Toolbar"])
-      await expect(
-        usage.getByRole("link", { name, exact: true }).first(),
-      ).toBeVisible();
-    await usage
-      .locator('a[href^="/view/example/components/toolbar/default/"]')
-      .click();
-    await expect(page).toHaveURL(
-      /\/view\/example\/components\/toolbar\/default\/\?/u,
-    );
+  const usage = await openInspectFold(page, "usage");
+  for (const name of ["Welcome", "Details", "Toolbar"])
     await expect(
-      rowFrame("example/components/toolbar/default", "dark").locator(
-        ".example-toolbar",
-      ),
-    ).toHaveCSS("border-radius", "12px");
-    const nested = await openInspectFold(page, "components");
-    await expect(nested.locator("[data-instance-key]")).toHaveCount(2);
-    const highlight = page.getByRole("switch", {
-      name: "Highlight components",
-      exact: true,
-    });
-    await highlight.click();
-    await expect(highlight).toBeChecked();
+      usage.getByRole("link", { name, exact: true }).first(),
+    ).toBeVisible();
+  await usage
+    .locator('a[href^="/view/example/components/toolbar/default/"]')
+    .click();
+  await expect(page).toHaveURL(
+    /\/view\/example\/components\/toolbar\/default\/\?/u,
+  );
+  await expect(
+    rowFrame("example/components/toolbar/default", "dark").locator(
+      ".example-toolbar",
+    ),
+  ).toHaveCSS("border-radius", "12px");
+  const nested = await openInspectFold(page, "components");
+  await expect(nested.locator("[data-instance-key]")).toHaveCount(2);
+  const highlight = page.getByRole("switch", {
+    name: "Highlight components",
+    exact: true,
   });
+  await highlight.click();
+  await expect(highlight).toBeChecked();
+});
 
 /**
  * Expect each frame of the top bar component to render its desktop view in

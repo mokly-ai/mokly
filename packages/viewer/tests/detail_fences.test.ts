@@ -70,6 +70,10 @@ test("a current detail needs the index identity, detail id and revision", () => 
   assert.deepEqual(fenceDetail(index, request, identity), {
     kind: "rejected",
   });
+  const title = current(request.path, (detail) => {
+    (detail.identity as { title: string }).title = "Another catalogue";
+  });
+  assert.deepEqual(fenceDetail(index, request, title), { kind: "rejected" });
   const deployment = current(request.path, (detail) => {
     detail.detailId = OTHER;
   });

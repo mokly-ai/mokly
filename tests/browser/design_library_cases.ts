@@ -1,38 +1,52 @@
 import path from "node:path";
 
-import { expect, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  type Browser,
+  type Page,
+  type Request,
+} from "@playwright/test";
 
 import { viewHref, viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
 import {
   assertDesignResource,
-  designFileUrl as servedDesignFileUrl,
+  designFileUrl,
   designResourceExists,
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
-import { openCatalogueSheet } from "./workspace_actions.js";
+
+/** The saved samples of the shared design library, by library family. */
+function sampleFamilies(): Map<string, (typeof designCases)[number][]> {
+  const families = new Map<string, (typeof designCases)[number][]>();
+  for (const entry of designCases)
+    if (
+      entry.kind === "component" &&
+      entry.variantOf &&
+      entry.path.startsWith("design/library/")
+    ) {
+      const family = entry.path.split("/").slice(0, 3).join("/");
+      families.set(family, [...(families.get(family) ?? []), entry]);
+    }
+  return families;
+}
 
 /**
  * Run one viewport's assertions against a catalogue delivery. Each viewport
  * has its own spec file, because Playwright gives a whole spec file to one
- * browser shard and the shard balance limit bounds each shard's share.
+ * browser shard and the shard balance limit bounds each shard's share. The
+ * mobile file runs only the checks whose result the 392 px phone column can
+ * change: each sample's fit, the narrow bar's logo, and the fallback fonts.
  */
-export function registerDesignLibrary(
-  viewport: "desktop" | "mobile",
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignLibrary(viewport: "desktop" | "mobile") {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
-  const manifest = { entries: designCatalogue(test) };
+  const manifest = { entries: designCatalogue() };
   const fileUrl = (route: string) =>
     designFileUrl(path.join(generated, route)).href;
   const size =
@@ -68,81 +82,50 @@ export function registerDesignLibrary(
   test.describe(`${viewport} shared design library`, () => {
     test.use({ javaScriptEnabled: false, viewport: size });
 
-    for (const entry of designCases.filter(
-      (entry) =>
-        entry.kind === "component" &&
-        entry.variantOf &&
-        entry.path.startsWith("design/library/"),
-    ))
-      test(`${entry.path}: saved sample loads with confined styles and links`, async ({
+    // One test for each library family visits each saved sample of the
+    // family on one page. A soft assertion names each sample that fails, and
+    // each linked file's existence is read once for the family.
+    for (const [family, entries] of sampleFamilies())
+      test(`${family}: each saved sample loads with confined styles and links`, async ({
         page,
       }, testInfo) => {
-        const failed: string[] = [];
-        page.on("requestfailed", (request) => failed.push(request.url()));
-        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-        await expect(page.locator(".mbk-library-host")).toBeVisible();
-        expect(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth,
-          ),
-          `${entry.variantOf}/${entry.path} fits`,
-        ).toBe(true);
-        const urls = await page
-          .locator("a[href],link[rel=stylesheet]")
-          .evaluateAll((nodes) =>
-            nodes.map((node) => (node as HTMLAnchorElement).href),
-          );
-        for (const url of new Set(urls)) {
-          await assertDesignResource(url, page.url());
-          expect(await designResourceExists(page.request, url), url).toBe(true);
-        }
-        await page.screenshot({
-          path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
-          fullPage: true,
-        });
-        expect(failed).toEqual([]);
-      });
-
-    test("catalogue section headings keep the in-screen typography in isolation", async ({
-      baseURL,
-      browser,
-      page,
-    }) => {
-      const typography = (on: Page) =>
-        on
-          .locator(".mbk-nav-section-head")
-          .first()
-          .evaluate((node) => {
-            const style = getComputedStyle(node);
-            return {
-              fontFamily: style.fontFamily,
-              fontSize: style.fontSize,
-              fontWeight: style.fontWeight,
-              letterSpacing: style.letterSpacing,
-              lineHeight: style.lineHeight,
-            };
+        const exists = new Map<string, boolean>();
+        for (const entry of entries) {
+          const sample = `${entry.variantOf}/${entry.path}`;
+          const failed: string[] = [];
+          const onFailed = (request: Request) => failed.push(request.url());
+          page.on("requestfailed", onFailed);
+          await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+          await expect
+            .soft(page.locator(".mbk-library-host"), sample)
+            .toBeVisible();
+          expect
+            .soft(
+              await page.evaluate(
+                () => document.documentElement.scrollWidth <= innerWidth,
+              ),
+              `${sample} fits`,
+            )
+            .toBe(true);
+          const urls = await page
+            .locator("a[href],link[rel=stylesheet]")
+            .evaluateAll((nodes) =>
+              nodes.map((node) => (node as HTMLAnchorElement).href),
+            );
+          for (const url of new Set(urls)) {
+            await assertDesignResource(url, page.url());
+            if (!exists.has(url))
+              exists.set(url, await designResourceExists(page.request, url));
+            expect.soft(exists.get(url), `${sample}: ${url}`).toBe(true);
+          }
+          await page.screenshot({
+            path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
+            fullPage: true,
           });
-      await page.goto(
-        fileUrl(
-          `design/library/chrome/catalogue-navigation/all/index.${viewport}.html`,
-        ),
-      );
-      const isolated = await typography(page);
-      const inScreen = await inShell(browser, baseURL!, async (shell) => {
-        // A phone draws the catalogue in the sheet that the dock's
-        // Catalogue opens.
-        if (viewport === "mobile") await openCatalogueSheet(shell);
-        await expect(
-          shell.locator(".mbk-nav-section-head").first(),
-        ).toBeVisible();
-        return typography(shell);
+          page.off("requestfailed", onFailed);
+          expect.soft(failed, `${sample} requests`).toEqual([]);
+        }
       });
-      expect(inScreen).toMatchObject({
-        fontSize: "10.5px",
-        fontWeight: "500",
-      });
-      expect(isolated).toEqual(inScreen);
-    });
 
     test("the top-bar logo keeps the in-screen colors in isolation", async ({
       baseURL,
@@ -180,27 +163,68 @@ export function registerDesignLibrary(
       expect(isolated).toEqual(inScreen);
     });
 
-    test("standalone inline components retain their intrinsic width", async ({
-      page,
-    }) => {
-      for (const [slug, selector] of [
-        ["tag-chip", ".mbk-chip"],
-        ["change-status", ".mbk-entry-status"],
-      ]) {
-        const entry = manifest.entries.find(
-          (entry) =>
-            entry.kind === "component" &&
-            "variantOf" in entry &&
-            entry.variantOf === `design/library/controls/${slug}`,
+    // Their styles have no width rule, so they run on the desktop file only.
+    if (viewport === "desktop") {
+      test("catalogue section headings keep the in-screen typography in isolation", async ({
+        baseURL,
+        browser,
+        page,
+      }) => {
+        const typography = (on: Page) =>
+          on
+            .locator(".mbk-nav-section-head")
+            .first()
+            .evaluate((node) => {
+              const style = getComputedStyle(node);
+              return {
+                fontFamily: style.fontFamily,
+                fontSize: style.fontSize,
+                fontWeight: style.fontWeight,
+                letterSpacing: style.letterSpacing,
+                lineHeight: style.lineHeight,
+              };
+            });
+        await page.goto(
+          fileUrl(
+            "design/library/chrome/catalogue-navigation/all/index.desktop.html",
+          ),
         );
-        if (entry?.kind !== "component" || !("variantOf" in entry))
-          throw new Error(`Missing ${slug}`);
-        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-        expect(
-          (await page.locator(selector!).boundingBox())!.width,
-        ).toBeLessThan(150);
-      }
-    });
+        const isolated = await typography(page);
+        const inScreen = await inShell(browser, baseURL!, async (shell) => {
+          await expect(
+            shell.locator(".mbk-nav-section-head").first(),
+          ).toBeVisible();
+          return typography(shell);
+        });
+        expect(inScreen).toMatchObject({
+          fontSize: "10.5px",
+          fontWeight: "500",
+        });
+        expect(isolated).toEqual(inScreen);
+      });
+
+      test("standalone inline components retain their intrinsic width", async ({
+        page,
+      }) => {
+        for (const [slug, selector] of [
+          ["tag-chip", ".mbk-chip"],
+          ["change-status", ".mbk-entry-status"],
+        ]) {
+          const entry = manifest.entries.find(
+            (entry) =>
+              entry.kind === "component" &&
+              "variantOf" in entry &&
+              entry.variantOf === `design/library/controls/${slug}`,
+          );
+          if (entry?.kind !== "component" || !("variantOf" in entry))
+            throw new Error(`Missing ${slug}`);
+          await page.goto(fileUrl(viewRoute(entry.path, "desktop", "light")));
+          expect(
+            (await page.locator(selector!).boundingBox())!.width,
+          ).toBeLessThan(150);
+        }
+      });
+    }
   });
 
   if (viewport === "mobile") {

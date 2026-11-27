@@ -6,7 +6,7 @@ use crate::compiled::{PhysicalInput, ReuseEvidence, UncapturedEvidence};
 use crate::methods::BundleCapture;
 
 #[test]
-fn folder_file_observations_admit_marked_reuse_without_admitting_full_reuse() {
+fn file_and_path_observations_admit_marked_reuse_without_admitting_full_reuse() {
     let mut evidence = ReuseEvidence {
         complete: false,
         durable: false,
@@ -18,6 +18,7 @@ fn folder_file_observations_admit_marked_reuse_without_admitting_full_reuse() {
                     digest: "digest".into(),
                 },
             ),
+            ("/pkg/build.js".into(), PhysicalInput::FilePath),
             ("/pkg/missing.ts".into(), PhysicalInput::Absent),
             (
                 "/pkg/link".into(),
@@ -30,11 +31,9 @@ fn folder_file_observations_admit_marked_reuse_without_admitting_full_reuse() {
     assert!(evidence.serve_edit());
     assert!(evidence.reusable(BundleCapture::ServeEdit));
     assert!(!evidence.reusable(BundleCapture::Full));
-    for invalid in [
-        PhysicalInput::FilePath,
+    evidence.inputs.insert(
+        "/pkg/directory".into(),
         PhysicalInput::Directory { entries: vec![] },
-    ] {
-        evidence.inputs.insert("/pkg/invalid".into(), invalid);
-        assert!(!evidence.serve_edit());
-    }
+    );
+    assert!(!evidence.serve_edit());
 }

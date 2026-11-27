@@ -57,8 +57,6 @@ class PreviewScriptDiagnosticTests(unittest.TestCase):
                     "catalogues.net",
                     "--run-url",
                     "https://github.com/mokly-ai/mokly-cloud/actions/runs/1",
-                    "--repository-private",
-                    "true",
                 ],
                 "Preview comment: environment must match preview-pr-N\n",
             ),

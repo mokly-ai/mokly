@@ -43,6 +43,14 @@ pub struct Module {
     /// Vite lists static imports and re-exports first, then dynamic imports.
     /// Vite keeps source order within each group.
     pub imports: Vec<String>,
+    /// A bundled import reached this module by package name.
+    #[serde(
+        default,
+        rename = "packageImport",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub package_import: Option<bool>,
 }
 
 /// An unevaluated bundle's module graph.
@@ -163,6 +171,23 @@ pub enum DependencyKind {
     Directory,
 }
 
+/// How a file entered the PostCSS dependency inventory.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "kebab-case")]
+#[ts(rename = "PostcssDependencySource")]
+pub enum DependencySource {
+    /// A PostCSS bundle included this file through an import.
+    BundledImport,
+    /// A PostCSS bundle included this file through a package-name import.
+    BundledPackageImport,
+    /// The worker loaded this module outside the bundle.
+    Node,
+    /// Mokly's synchronous require loaded this module by package name.
+    NodePackageRequire,
+    /// A plugin reported this exact file.
+    Plugin,
+}
+
 /// A file or directory reported by consumer PostCSS.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct Dependency {
@@ -170,6 +195,10 @@ pub struct Dependency {
     pub kind: DependencyKind,
     /// Source path.
     pub path: String,
+    /// Load or report evidence for the warning check, when available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source: Option<DependencySource>,
     /// Plugin name used in dependency diagnostics.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

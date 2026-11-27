@@ -5,7 +5,10 @@ import test from "node:test";
 
 import { readReport } from "../scripts/verification/evidence.mjs";
 import { runCaptured } from "../scripts/verification/process.mjs";
-import { checkDeliveryMode } from "../scripts/verification/static-delivery-mode.mjs";
+import {
+  checkDeliveryMode,
+  deliveryModes,
+} from "../scripts/verification/static-delivery-mode.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -19,6 +22,21 @@ const passing = {
   ],
   errors: [],
 };
+
+test("delivery checks both modes without arguments, or only the mode that --mode names", () => {
+  assert.deepEqual(deliveryModes([]), ["static-http", "file"]);
+  assert.deepEqual(deliveryModes(["--mode", "static-http"]), ["static-http"]);
+  assert.deepEqual(deliveryModes(["--mode", "file"]), ["file"]);
+  for (const args of [
+    ["--mode"],
+    ["--mode", "http"],
+    ["--mode", "file", "--mode", "static-http"],
+    ["--shard", "1/2"],
+  ])
+    assert.throws(() => deliveryModes(args), {
+      message: "expected --mode static-http or --mode file",
+    });
+});
 
 test("delivery acceptance requires complete passing evidence from a zero-exit child", async () => {
   const calls: string[] = [];

@@ -35,20 +35,19 @@ fn overlapping_completions_of_one_upload_repeat_the_same_201() {
     app.queries(&mut |queries| {
         assert_eq!(
             queries
-                .build(project.id, attempt.id)
-                .unwrap()
+                .build(project.id, attempt.id)?
                 .unwrap()
                 .publication_id,
             Some(id)
         );
         assert!(
             queries
-                .build_attempt_grant(attempt.id, 1)
-                .unwrap()
+                .build_attempt_grant(attempt.id, 1)?
                 .unwrap()
                 .consumed_at
                 .is_some()
         );
+        Ok(())
     });
 }
 
@@ -98,18 +97,18 @@ fn one_grant_can_complete_only_one_of_its_sibling_uploads() {
     app.queries(&mut |queries| {
         assert_eq!(
             queries
-                .build(project.id, attempt.id)
-                .unwrap()
+                .build(project.id, attempt.id)?
                 .unwrap()
                 .publication_id,
             Some(winner)
         );
-        let rows = queries.publications(project.id).unwrap();
+        let rows = queries.publications(project.id)?;
         assert_eq!(
             rows.iter()
                 .filter(|row| row.state == PublicationState::Ready)
                 .count(),
             1
         );
+        Ok(())
     });
 }

@@ -14,6 +14,7 @@ import {
   paneZoom,
 } from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
+import { mainHeading } from "./main_heading.js";
 
 const changed = comparisonPaths.changed;
 const panel = "#panel";
@@ -139,9 +140,9 @@ test("an anchor inside a panel reveals it in every version, then the page", asyn
   // The browser also brings the target to the top of the page.
   await expectPageAtTarget(stack, top);
   await expect(page).toHaveURL(address);
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Changed screen",
-  );
+  // The Changes tab hides Inspect, so its title is mounted but hidden.
+  const title = mainHeading(page, "Changed screen", { includeHidden: true });
+  await expect(title).toBeAttached();
 
   // Side by side: the anchor in the Before version moves both panes.
   await openComparison(page, changed, "desktop", "Side by side");
@@ -151,9 +152,7 @@ test("an anchor inside a panel reveals it in every version, then the page", asyn
   await expectRegionsAtRest(sides, panel, (offset) => offset !== 0);
   expect(await shownInPanel(before)).toBe(true);
   await expectPageAtTarget(sides, before);
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Changed screen",
-  );
+  await expect(title).toBeAttached();
 });
 
 test("a scroll the browser makes inside the lower version pulls every version along", async ({

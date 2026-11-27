@@ -35,6 +35,7 @@ fn fixture() -> (State, Slot) {
     state.modules.insert(
         "g".into(),
         vec![Module {
+            package_import: None,
             digest: Some("digest".into()),
             imported_asset: None,
             path: "entry.ts".into(),

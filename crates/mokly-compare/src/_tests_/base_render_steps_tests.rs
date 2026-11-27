@@ -91,7 +91,13 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
         authored_inputs: vec![],
     };
     assert!(matches!(
-        service.classify(&config, None, Arc::new(Unimock::new(())), None),
+        service.classify(
+            &config,
+            None,
+            Arc::new(Unimock::new(())),
+            None,
+            &mut Vec::new()
+        ),
         Err(Error::UnsupportedManager)
     ));
 }

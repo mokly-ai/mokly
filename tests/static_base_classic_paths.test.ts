@@ -22,11 +22,10 @@ const classic = managers[1];
  * manifest folder. With `outside`, the value leaves the repository.
  */
 async function nestedFixture(context: TestContext, outside: boolean) {
-  const cold = await coldBaseFixture(2, context);
+  const cold = await coldBaseFixture(2, context, { install: false });
   const { root } = cold;
   await git(root, "checkout", "HEAD", "--", "specs/source-value.ts");
   await fs.rm(path.join(root, "package-lock.json"));
-  await fs.rm(path.join(root, "node_modules"), { recursive: true });
   await write(root, ".gitignore", "node_modules/\n.context/\n");
   await write(root, ".yarnrc", "disable-self-update-check true\n");
   const manifests = async (version: string) => {

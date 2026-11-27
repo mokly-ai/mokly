@@ -2,18 +2,27 @@
 
 use std::io;
 
-use super::group_is_gone;
+use crate::unix_process_tree::GroupOutcome;
+
+use super::refused;
 
 #[test]
 fn missing_groups_are_stopped_and_other_errors_remain_errors() {
-    assert!(group_is_gone(&io::Error::from_raw_os_error(libc::ESRCH), 1));
-    assert!(!group_is_gone(
-        &io::Error::from_raw_os_error(libc::EINVAL),
-        1
-    ));
+    assert_eq!(
+        refused(io::Error::from_raw_os_error(libc::ESRCH), 1).unwrap(),
+        GroupOutcome::Gone
+    );
+    assert_eq!(
+        refused(io::Error::from_raw_os_error(libc::EINVAL), 1)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EINVAL)
+    );
     #[cfg(not(target_os = "macos"))]
-    assert!(!group_is_gone(
-        &io::Error::from_raw_os_error(libc::EPERM),
-        1
-    ));
+    assert_eq!(
+        refused(io::Error::from_raw_os_error(libc::EPERM), 1)
+            .unwrap_err()
+            .raw_os_error(),
+        Some(libc::EPERM)
+    );
 }

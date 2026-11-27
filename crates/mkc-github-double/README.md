@@ -36,7 +36,7 @@ running the app on another origin passes its own. The remaining fields drive
 suspension, uninstallation, repository renames, visibility and default
 branches, exact or redirected branch reads and their failures, pull request
 heads, forks and closure, lost check-run answers, the hooks a scenario runs
-during one branch or pull request read, and the request counters scenarios
+during one branch read, pull request read or check run update, and the request counters scenarios
 assert on. `second_installation` adds provider installation 2 on `fixture-org`,
 an active administrator membership and one separately token-scoped repository.
 Its suspension and repository rename have independent scenario fields. Check runs are stateful: a create is stored, listed on its commit

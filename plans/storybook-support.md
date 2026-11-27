@@ -153,10 +153,12 @@ A branch from this branch applies each answer and deletes the file.
 Each decision is in full in this plan, with its options and a recommended
 option. None has an answer yet, so no option applies.
 
-- [Decision 18b](#18b-mocks-of-modules-that-another-setup-owns) and
-  [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
-  modules that another setup owns, and roots whose Storybook folder lies
-  elsewhere. They block Milestones 30 and 32.
+- [Decision 18b](#18b-mocks-of-modules-that-another-setup-owns): mocks of
+  modules that another setup owns. It blocks Milestones 30 and 32. On
+  2026-11-26 the user asked whether decision 18, option E, still holds
+  given this item, and a re-check of decision 18 runs before the answer.
+  [Decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere) has the
+  answer D, of 2026-11-26.
 
 ### Follow-up items that wait for the user
 
@@ -592,6 +594,10 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   as the location rule.
 - **Action:** ask the user, because B and D change the ownership rule of
   option E, which the user chose, and C adds a configuration error.
+- **Answer:** D, chosen by the user on 2026-11-26. A file that the globs of
+  a root match takes the Storybook folder of that root, when the root names
+  one. For the other files inside root directories, the deepest root
+  decides. Every other file keeps the location rule of option E.
 
 ### 18d. Storybook env values of several folders in one process
 

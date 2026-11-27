@@ -1,13 +1,14 @@
 import type { Request } from "@playwright/test";
 
 import { branchPathFor } from "./addresses";
-import { currentWorkspaceId, expect, signIn, test } from "./harness";
+import { currentWorkspaceId, expect, walkSignIn, test } from "./harness";
 import { shareSelection, uniqueSlug } from "./readable-addresses-support";
 import {
   settingsLink,
   expectExactReturnTo,
   expectSettingsHandoff,
   endSession,
+  reopenSignInWindow,
   retireAddressSlugs,
 } from "./settings-address-handoff";
 import {
@@ -110,7 +111,8 @@ test("private settings keep an exact branch and viewer query through email sign-
   };
   page.on("request", rememberReturnTo);
   await endSession(page);
-  await signIn(page, made.email, destination);
+  reopenSignInWindow(made.email);
+  await walkSignIn(page, made.email, destination);
   page.off("request", rememberReturnTo);
 
   expect(storedReturnTo).toBe(destination);
@@ -184,6 +186,7 @@ test("retired workspace and project settings links keep viewer state", async ({
   await page.goto(returned);
   await page.waitForURL((url) => url.pathname === "/sign-in");
   expectExactReturnTo(page.url(), returned);
-  await signIn(page, made.email, returned);
+  reopenSignInWindow(made.email);
+  await walkSignIn(page, made.email, returned);
   await expectSettingsHandoff(page, "access", "Access", selection.path);
 });

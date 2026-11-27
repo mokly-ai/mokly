@@ -12,6 +12,7 @@ import { missingFile } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { filename, options } from "./postcss-read-options.js";
+import { metadataPath } from "./resolution-inputs.js";
 import { ViteBaseEnv as BaseEnv } from "./vite-base-env.js";
 import type { EnvSelection } from "./vite-base-env.js";
 import { setupCandidate, setupChanged } from "./vite-setup-input.js";
@@ -98,7 +99,9 @@ export class ViteEnv {
           const root = this.paths.sourceRoot;
           const name = inside(root, candidate)
             ? logical(root, candidate)
-            : this.paths.metadataName(await this.paths.metadata(candidate));
+            : this.paths.metadataName(
+                await metadataPath(this.paths, candidate),
+              );
           const digest =
             file === null ? null : (await setupCandidate(name, file)).digest;
           return [
