@@ -54,6 +54,7 @@ order, the operating system, or the absolute checkout path.
 | `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                               |
 | `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                                                  |
 | `html-ignore-attribute`          | An unknown attribute on an ignore wrapper in an authored body, a saved variant slot, or a page callback document ([HTML screens](./mokly-html-screens.md#links-and-markers))                                                                        |
+| `ignored-module`                 | A file that the head loads, when Changes runs, which Git ignores or which lies in a nested checkout or tracked submodule ([package selection](./mokly-comparison-packages.md#ignored-modules))                                                      |
 | `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                                                                                                                                                    |
 | `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                                                                                                                                              |
 | `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                                                                                                                                                        |
@@ -71,13 +72,14 @@ here and defines its message in its own contract.
 
 ## Producers And Transport
 
-Warnings arise at three points: catalogue validation, which parses front
+Warnings arise at four points: catalogue validation, which parses front
 matter, infers schemas, and registers definitions; composition, which
 adapts link controls, resolves component elements, and grafts sidecar
-fragments; and the base side's preparation for Changes. Warnings that the
-sidecar raises during a bundle or a render use this record too. A document's
-warnings belong to the generation that rendered it. A document reused from
-an earlier render keeps the warnings of that render. A referenced
+fragments; the base side's preparation for Changes; and the check of the
+files that the head loads, which also runs only for Changes. Warnings that
+the sidecar raises during a bundle or a render use this record too. A
+document's warnings belong to the generation that rendered it. A document
+reused from an earlier render keeps the warnings of that render. A referenced
 document keeps its own diagnostics; they do not become the requesting
 document's. A later validation or link failure keeps the warnings already
 produced without inventing a result. Warnings are never written into a
@@ -146,8 +148,8 @@ view that first renders on demand after readiness prints its warnings once
 when they appear, while its attempt is current; a request for an already
 reported document repeats nothing. Reconfiguration follows the same rules.
 Snapshot Serve (`--no-watch`) has one lifetime scope, and a one-shot command
-has one invocation scope. The base side's preparation follows the same
-attempt rules.
+has one invocation scope. The base side's preparation and the check of the
+files that the head loads follow the same attempt rules.
 
 On-demand, background, and temporary renders report their warnings in the
 attempt that published their document, also when the render fails. The

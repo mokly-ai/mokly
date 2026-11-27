@@ -25,6 +25,9 @@ export interface ModuleResolution {
   mainFields?: readonly string[];
   packageRoots?: readonly string[];
   resolveExtensions?: readonly string[];
+  sourcePackages?: Readonly<
+    Record<string, false | Readonly<Record<string, string>>>
+  >;
 }
 export interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[];

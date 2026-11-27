@@ -92,6 +92,18 @@ export function registerMovedComponentCases(
     );
   });
 
+  registerMovedParentNavigation(test, host);
+}
+
+/**
+ * Register the navigation case on `host`, which `test` serves: a catalogue
+ * row opens the moved parent through the host's own address. Each embedded
+ * adapter runs this case alone.
+ */
+export function registerMovedParentNavigation(
+  test: typeof baseTest,
+  host: MovedHost,
+): void {
   test("a moved parent lists its removed variant from the first paint after navigation", async ({
     page,
   }) => {

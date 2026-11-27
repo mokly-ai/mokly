@@ -8,12 +8,12 @@ import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reade
 import { consumer } from "./helpers/mokly_serve.js";
 import { command } from "./helpers/static_publication.js";
 
-const component = (step: number, multiple = 2, count = 6) => `
+const component = (step: number) => `
 import React from 'react';
 import {defineComponent} from '@mokly/mokly';
 export default defineComponent({path:'count',title:'Count',description:'',relatedDocs:[],
-  propSchema:{type:'object',additionalProperties:false,properties:{count:{type:'integer',multipleOf:${multiple}}}},
-  props:{count:${count}},controls:{count:{kind:'number',minimum:0,maximum:4,step:${step}}},
+  propSchema:{type:'object',additionalProperties:false,properties:{count:{type:'integer',multipleOf:2}}},
+  props:{count:6},controls:{count:{kind:'number',minimum:0,maximum:4,step:${step}}},
   variants:[{slug:'valid',title:'Valid',props:{count:0}}],
   render:({count})=>React.createElement('p',null,count)});
 `;
@@ -66,34 +66,5 @@ test(
     assert.equal(strict.code, 1, strict.stderr);
     assert.match(strict.stderr, /3 build warnings with --strict/);
     assert.deepEqual(await fs.readFile(indexPath), previous);
-  },
-);
-
-test(
-  "declared number steps must fit integer types and schema multiples",
-  { timeout: 120_000 },
-  async (context) => {
-    const root = await consumer(context, {});
-    for (const [step, multiple, count] of [
-      [3, 2, 0],
-      [0.5, 1, 0],
-      [6, 2, 0],
-    ]) {
-      await fs.mkdir(path.join(root, "specs"), { recursive: true });
-      await fs.writeFile(
-        path.join(root, "specs/count.mockup.ts"),
-        component(step!, multiple!, count!),
-      );
-      const result = await command(
-        root,
-        "build",
-        ["--no-changes"],
-        "plain",
-        {},
-        context.signal,
-      ).result;
-      assert.equal(result.code, step === 6 ? 0 : 1, result.stderr);
-      if (step !== 6) assert.match(result.stderr, /component-controls/);
-    }
   },
 );

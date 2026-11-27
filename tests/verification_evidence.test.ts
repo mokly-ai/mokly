@@ -20,29 +20,63 @@ test("viewer discovery includes tooling, viewer, UI, and model package tests in 
   assert.deepEqual(files, [...new Set(files)].sort());
 });
 
-test("aggregate accepts one viewer and four browser reports per runtime", () => {
-  for (const runtimes of [["node-22.15.0"], ["node-22.15.0", "node-24"]])
-    validateCiReports(ciReports(runtimes), "a".repeat(40), runtimes);
-  const reports = ciReports();
+const COMMIT = "a".repeat(40);
+const TOTALS = { viewer: 2, browser: 4 } as const;
+type Reports = ReturnType<typeof ciReports>;
+const shardsOf = (reports: Reports, suite: string) =>
+  reports.filter((report) => report.suite === suite);
+
+test("aggregate accepts every viewer and browser shard per runtime", () => {
+  for (const runtimes of [["node-22.15.0"], ["node-22.15.0", "node-24"]]) {
+    validateCiReports(ciReports(runtimes, TOTALS), COMMIT, runtimes, TOTALS);
+    validateCiReports(ciReports(runtimes), COMMIT, runtimes);
+  }
+  const reports = ciReports(undefined, TOTALS);
   for (const invalid of [
     reports.slice(1),
     [...reports, reports[0]],
     [reports[0], reports[0]],
   ])
     assert.throws(() =>
-      validateCiReports(invalid, "a".repeat(40), ["node-22.15.0", "node-24"]),
+      validateCiReports(invalid, COMMIT, ["node-22.15.0", "node-24"], TOTALS),
     );
   assert.throws(
-    () => validateCiReports(reports, "main", ["node-22.15.0"]),
+    () => validateCiReports(reports, "main", ["node-22.15.0"], TOTALS),
     /full lowercase Git SHA/,
+  );
+  assert.throws(
+    () =>
+      validateCiReports(reports, COMMIT, ["node-22.15.0", "node-24"], {
+        viewer: 3,
+        browser: 4,
+      }),
+    { message: "missing or extra CI evidence: expected 10 reports" },
   );
 });
 
+test("the release profile accepts browser evidence on Node 22.15.0 only", () => {
+  const release = ["node-22.15.0", "node-24"];
+  assert.throws(
+    () =>
+      validateCiReports(
+        ciReports(release, TOTALS, release),
+        COMMIT,
+        release,
+        TOTALS,
+      ),
+    { message: "missing or extra CI evidence: expected 8 reports" },
+  );
+  const moved = structuredClone(ciReports(release, TOTALS));
+  shardsOf(moved, "browser")[0]!.runtime = "node-24";
+  assert.throws(() => validateCiReports(moved, COMMIT, release, TOTALS), {
+    message: "unexpected CI evidence group",
+  });
+});
+
 test("viewer evidence rejects incomplete inventories and unsuccessful test runs", () => {
-  const report = ciReports()[0]!;
+  const report = ciReports(undefined, TOTALS)[0]!;
   for (const mutation of [
     { suite: "unit" },
-    { shard: { index: 1, total: 4 } },
     { observedFiles: [] },
     { fullFiles: [] },
     { assignedFiles: ["another.test.ts"] },
@@ -59,46 +93,89 @@ test("viewer evidence rejects incomplete inventories and unsuccessful test runs"
   validateCompletedReport(report);
 });
 
+test("viewer shards reject unsharded, wrong-shard, overlapping, and missing files", () => {
+  const validate = (reports: Reports) =>
+    validateCiReports(reports, COMMIT, ["node-22.15.0"], TOTALS);
+  for (const [change, message] of [
+    [
+      (viewer: Reports) => {
+        viewer[1]!.shard = null;
+      },
+      /viewer node-22\.15\.0 evidence failed: unsharded files do not match/,
+    ],
+    [
+      (viewer: Reports) => {
+        viewer[1]!.shard = { index: 2, total: 3 };
+      },
+      /viewer node-22\.15\.0 evidence failed: missing, duplicate, or invalid shard identity/,
+    ],
+    [
+      (viewer: Reports) => {
+        viewer[1]!.shard = { index: 1, total: 2 };
+      },
+      /viewer node-22\.15\.0 evidence failed: missing, duplicate, or invalid shard identity/,
+    ],
+    [
+      (viewer: Reports) => {
+        viewer[1]!.assignedFiles = viewer[0]!.assignedFiles;
+        viewer[1]!.observedFiles = viewer[0]!.observedFiles;
+      },
+      /viewer node-22\.15\.0 evidence failed: .*file assignments/,
+    ],
+    [
+      (viewer: Reports) => {
+        viewer[1]!.assignedFiles = viewer[1]!.assignedFiles.slice(1);
+        viewer[1]!.observedFiles = viewer[1]!.observedFiles.slice(1);
+      },
+      /viewer node-22\.15\.0 evidence failed: .*file assignments/,
+    ],
+  ] as const) {
+    const reports = structuredClone(ciReports(["node-22.15.0"], TOTALS));
+    change(shardsOf(reports, "viewer"));
+    assert.throws(() => validate(reports), { message });
+  }
+});
+
 test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes", () => {
-  const validate = (reports: ReturnType<typeof ciReports>) =>
-    validateCiReports(reports, "a".repeat(40), ["node-22.15.0"]);
+  const validate = (reports: Reports) =>
+    validateCiReports(reports, COMMIT, ["node-22.15.0"], TOTALS);
   for (const change of [
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.observedTests!.pop();
+    (browser: Reports) => {
+      browser[0]!.observedTests!.pop();
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.assignedFiles = reports[2]!.assignedFiles;
+    (browser: Reports) => {
+      browser[0]!.assignedFiles = browser[1]!.assignedFiles;
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.observedTests![0]!.status = "skipped";
+    (browser: Reports) => {
+      browser[0]!.observedTests![0]!.status = "skipped";
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.nodeVersion = "22.16.0";
+    (browser: Reports) => {
+      browser[0]!.nodeVersion = "22.16.0";
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.playwrightFiles!.push("tests/browser/extra.spec.ts");
+    (browser: Reports) => {
+      browser[0]!.playwrightFiles!.push("tests/browser/extra.spec.ts");
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.shard = { index: 2, total: 4 };
+    (browser: Reports) => {
+      browser[0]!.shard = { index: 2, total: 4 };
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.reporterComplete = false;
+    (browser: Reports) => {
+      browser[0]!.reporterComplete = false;
     },
-    (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.observedTests![0]!.errors.push({ message: "frame failed" });
+    (browser: Reports) => {
+      browser[0]!.observedTests![0]!.errors.push({ message: "frame failed" });
     },
   ]) {
-    const reports = structuredClone(ciReports(["node-22.15.0"]));
-    change(reports);
+    const reports = structuredClone(ciReports(["node-22.15.0"], TOTALS));
+    change(shardsOf(reports, "browser"));
     assert.throws(() => validate(reports));
   }
 });
 
 test("aggregate names the failing browser runtime and shard detail", () => {
-  const reports = ciReports(["node-22.15.0"]);
-  reports[1]!.reporterComplete = false;
+  const reports = ciReports(["node-22.15.0"], TOTALS);
+  shardsOf(reports, "browser")[0]!.reporterComplete = false;
   assert.throws(
-    () => validateCiReports(reports, "a".repeat(40), ["node-22.15.0"]),
+    () => validateCiReports(reports, COMMIT, ["node-22.15.0"], TOTALS),
     {
       message:
         "browser node-22.15.0 evidence failed: reporter did not complete",

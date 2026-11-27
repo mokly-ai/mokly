@@ -101,6 +101,7 @@ pub fn bundle(
         let origin = PluginInput {
             plugin: "unknown".into(),
             stylesheet: path.clone(),
+            import: None,
         };
         for (dependency, digest) in &source.dependencies {
             let Some(digest) = digest else { continue };
@@ -115,7 +116,7 @@ pub fn bundle(
                 prepared
                     .result
                     .imported_by
-                    .insert(dependency.clone(), importer.clone());
+                    .insert(dependency.clone(), importer.as_str().into());
             } else {
                 prepared
                     .result

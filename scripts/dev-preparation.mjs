@@ -1,20 +1,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { BUILD_COMPLETE } from "./build/workspace-build.mjs";
 import { ExpectedFailure } from "./verification/expected-failure.mjs";
 import { missingPreparedOutputs } from "./verification/prepared.mjs";
 
 /** npm writes this record when an install completes. */
 const INSTALL_RECORD = "node_modules/.package-lock.json";
-/** TypeScript writes this output in the last package build of `npm run build`. */
-const BUILD_RECORD = "packages/mokly/dist/sidecar.js";
 
 /**
  * Install and build the checkout when `npm run dev` cannot serve it yet, and
  * stop at the first failed command. The dependencies install when no install
  * completed or `package-lock.json` changed after it. The build runs when an
- * output that Serve needs is missing or an install completed after the last
- * build, because the bundles carry dependency code.
+ * output that Serve needs is missing, no build completed, or an install
+ * completed after the last complete build, because the bundles carry
+ * dependency code. A build that skips every package step still completes.
  */
 export async function prepareDevelopment(repositoryRoot, { run, report }) {
   const install = await installReason(repositoryRoot);
@@ -43,9 +43,10 @@ async function buildReason(repositoryRoot) {
     browser: true,
   });
   if (missing) return `${missing} is missing`;
+  const built = await modified(repositoryRoot, BUILD_COMPLETE);
+  if (built === undefined) return "no complete build is recorded";
   const installed = await modified(repositoryRoot, INSTALL_RECORD);
-  const built = await modified(repositoryRoot, BUILD_RECORD);
-  if (installed !== undefined && built !== undefined && installed > built)
+  if (installed !== undefined && installed > built)
     return "the dependencies changed after the last build";
   return undefined;
 }

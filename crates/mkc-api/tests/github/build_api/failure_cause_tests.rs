@@ -33,22 +33,19 @@ fn build_reads_return_consumer_causes_with_the_publish_exit_code() {
                 build.lease_token.unwrap(),
                 BuildStep::Publish,
                 Utc::now(),
-            )
-            .unwrap();
-            assert!(
-                q.finish_build(
-                    id,
-                    build.lease_token,
-                    &BuildFinish {
-                        state: BuildState::Failed,
-                        failure_cause: Some(cause),
-                        exit_code: Some(9),
-                        at: Utc::now(),
-                        next_attempt_at: Utc::now(),
-                    }
-                )
-                .unwrap()
-            );
+            )?;
+            assert!(q.finish_build(
+                id,
+                build.lease_token,
+                &BuildFinish {
+                    state: BuildState::Failed,
+                    failure_cause: Some(cause),
+                    exit_code: Some(9),
+                    at: Utc::now(),
+                    next_attempt_at: Utc::now(),
+                }
+            )?);
+            Ok(())
         });
         let view = read(&app, project.id, &format!("builds/{id}"));
         assert_eq!(view["state"], "failed");

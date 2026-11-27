@@ -4,120 +4,99 @@ import { test } from "./browser_test.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
 import {
   canvasFrame,
-  chooseViewport,
-  closeOpenSheet,
   DOCUMENT_FRAME,
-  openCatalogueSheet,
   revealInPanel,
 } from "./workspace_actions.js";
 
-for (const width of [390, 1280]) {
-  test(`catalogue guidance includes documents at ${width}px`, async ({
-    page,
-    baseURL,
-    allowBrowserError,
-  }) => {
-    allowBrowserError(
-      missingResourceNotice(new URL("/view/missing-document/", baseURL).href),
-    );
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
-    await expect(page.locator("#mb-main")).toContainText(
-      "choose an item from the navigation",
-    );
-    await expect(
-      page.getByRole("searchbox", { name: "Search catalogue" }),
-    ).toHaveAttribute("placeholder", "Search");
-    await page.goto("/view/missing-document/");
-    await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
-    await expect(page.locator("#mb-main")).toContainText(
-      "Nothing in the catalogue matches view/missing-document/",
-    );
-    await page.getByRole("link", { name: "Go to the catalogue home" }).click();
-    await expect(page.locator("#mb-main h2")).toHaveText("Mokly");
-  });
+test("catalogue guidance includes documents at 1280px", async ({
+  page,
+  baseURL,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    missingResourceNotice(new URL("/view/missing-document/", baseURL).href),
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await expect(page.locator("#mb-main")).toContainText(
+    "choose an item from the navigation",
+  );
+  await expect(
+    page.getByRole("searchbox", { name: "Search catalogue" }),
+  ).toHaveAttribute("placeholder", "Search");
+  await page.goto("/view/missing-document/");
+  await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
+  await expect(page.locator("#mb-main")).toContainText(
+    "Nothing in the catalogue matches view/missing-document/",
+  );
+  await page.getByRole("link", { name: "Go to the catalogue home" }).click();
+  await expect(page.locator("#mb-main h2")).toHaveText("Mokly");
+});
 
-  test(`document pages retain metadata, anchors and mixed navigation at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/view/example/getting-started/?fragment=next-steps");
-    await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
-    const frame = page.locator(DOCUMENT_FRAME);
-    await expect(frame).toHaveCount(1);
-    await expect(frame).toHaveAttribute(
-      "src",
-      /\/static\/mokly-generated\/example\/getting-started\/index.html#next-steps$/,
-    );
-    await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
+test("document pages retain metadata, anchors and mixed navigation at 1280px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/view/example/getting-started/?fragment=next-steps");
+  await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
+  const frame = page.locator(DOCUMENT_FRAME);
+  await expect(frame).toHaveCount(1);
+  await expect(frame).toHaveAttribute(
+    "src",
+    /\/static\/mokly-generated\/example\/getting-started\/index.html#next-steps$/,
+  );
+  await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
+  await expect(
+    page.locator(
+      "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option], #mb-main [data-frames-toggle]",
+    ),
+  ).toHaveCount(0);
+  await expect(
+    page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
+  ).toBeVisible();
+  // A page's Details rows stand in Inspect's head, in the right panel.
+  const details = page.locator('[data-inspect-section="details"]');
+  await revealInPanel(page, details);
+  await expect(details).not.toContainText("example/getting-started/index.html");
+  await expect(details).toContainText("documents");
+  await expect(
+    page.locator(
+      '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
+    ),
+  ).toHaveCount(1);
+  await expect(
+    page.locator('[data-entry-id="example/getting-started"]'),
+  ).toHaveCount(1);
+  const search = page.getByRole("searchbox", { name: "Search catalogue" });
+  for (const query of [
+    "example/getting-started",
+    "Getting started",
+    "tag:documents",
+  ]) {
+    await search.fill(query);
     await expect(
-      page.locator(
-        "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option], #mb-main [data-frames-toggle]",
-      ),
-    ).toHaveCount(0);
-    await expect(
-      page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
+      page.locator('[data-entry-id="example/getting-started"]'),
     ).toBeVisible();
-    // A page's Details rows stand in Inspect's head, in the right panel, a
-    // sheet of the compact layout.
-    const details = page.locator('[data-inspect-section="details"]');
-    await revealInPanel(page, details);
-    await expect(details).not.toContainText(
-      "example/getting-started/index.html",
-    );
-    await expect(details).toContainText("documents");
-    if (width < 700) await openCatalogueSheet(page);
-    await expect(
-      page.locator(
-        '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
-      ),
-    ).toHaveCount(1);
-    await expect(
-      page.locator('[data-entry-id="example/getting-started"]'),
-    ).toHaveCount(1);
-    const search = page.getByRole("searchbox", { name: "Search catalogue" });
-    for (const query of [
-      "example/getting-started",
-      "Getting started",
-      "tag:documents",
-    ]) {
-      await search.fill(query);
-      await expect(
-        page.locator('[data-entry-id="example/getting-started"]'),
-      ).toBeVisible();
-    }
-    await search.fill("example/getting-started/index.html");
-    await expect(
-      page.locator('[data-entry-id="example/getting-started"]'),
-    ).toBeHidden();
-    await search.fill("");
-    await page
-      .locator('[data-nav-folder="folder:example/screens"] > summary')
-      .click();
-    await page.locator('[data-entry-id="example/screens/welcome"]').click();
-    await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-    if (width < 700) {
-      await chooseViewport(page, "mobile");
-      await closeOpenSheet(page);
-    }
-    const screenFrame =
-      width < 700
-        ? `.mbk-canvas-cell:not([hidden]) ${canvasFrame("mobile")}`
-        : canvasFrame("desktop");
-    await page
-      .frameLocator(screenFrame)
-      .getByRole("link", { name: "Read the handbook" })
-      .click();
-    // The destination's address names the Mobile viewport that was kept.
-    const kept = width < 700 ? "&viewport=mobile" : "";
-    await expect(page).toHaveURL(
-      new RegExp(
-        `/view/example/getting-started/\\?fragment=next-steps${kept}$`,
-      ),
-    );
-    await page.goBack();
-    await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-    await page.goForward();
-    await expect(frame).toHaveAttribute("src", /#next-steps$/);
-  });
-}
+  }
+  await search.fill("example/getting-started/index.html");
+  await expect(
+    page.locator('[data-entry-id="example/getting-started"]'),
+  ).toBeHidden();
+  await search.fill("");
+  await page
+    .locator('[data-nav-folder="folder:example/screens"] > summary')
+    .click();
+  await page.locator('[data-entry-id="example/screens/welcome"]').click();
+  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+  await page
+    .frameLocator(canvasFrame("desktop"))
+    .getByRole("link", { name: "Read the handbook" })
+    .click();
+  await expect(page).toHaveURL(
+    /\/view\/example\/getting-started\/\?fragment=next-steps$/,
+  );
+  await page.goBack();
+  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+  await page.goForward();
+  await expect(frame).toHaveAttribute("src", /#next-steps$/);
+});

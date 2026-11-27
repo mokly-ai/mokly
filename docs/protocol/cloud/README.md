@@ -47,7 +47,7 @@ Change a doc only when a requirement or a decision changes.
 - [PR preview environments](./pr-preview-environments.md) — namespace/data/host
   contracts, [shared platform](./preview-platform.md),
   [script interfaces](./preview-scripts.md) and the
-  [seed data](./preview-seed.md) account, sign-in link and sample project;
+  [seed data](./preview-seed.md) account and sample project;
   the [seed Job](./preview-seed-job.md) owns its template and release script,
   [local seed](./preview-seed-local.md) owns the local seed command, and
   [catalogue capture](./preview-capture.md) owns the producer command and failures.
@@ -71,7 +71,9 @@ Change a doc only when a requirement or a decision changes.
 - [Billing workers](./billing-workers.md) — Stripe webhooks, retries, seat
   reconciliation and the workers' use of verified prices.
 - [Authentication and sessions](./auth-sessions.md) — links, desktop grants,
-  cookies, rotation and CSRF.
+  cookies, rotation and CSRF; [preview sign-in](./preview-sign-in.md) owns the
+  shared account, the preview password, its verifier and the configuration
+  answer's password field.
 - [Authentication callbacks](./auth-callbacks.md) — provider-scoped browser
   landings, tab state, cleanup, recovery and resume behavior.
 - [Email](./email.md) — the sign-in and invitation messages: typed content,
@@ -208,8 +210,9 @@ Change a doc only when a requirement or a decision changes.
   and [build checks](./changes-check-builds.md) the check of each cloud build.
 - [Cloud builds](./cloud-builds.md) — triggers, the build lifecycle, leases,
   supersession and retention, with [records and leases](./cloud-build-lifecycle.md),
-  the [runner](./cloud-build-runner.md) and its
-  [sandbox](./cloud-build-sandbox.md), the
+  the [runner](./cloud-build-runner.md), its
+  [sandbox](./cloud-build-sandbox.md) and its
+  [template](./cloud-build-template.md), the
   [build API](./cloud-build-api.md), [viewer cards and output](./viewer-builds.md)
   and [viewer build navigation](./viewer-build-navigation.md).
 - [Retention](./retention.md) — successful publications kept until parent deletion, attempt and grant cleanup, and fenced content collection.

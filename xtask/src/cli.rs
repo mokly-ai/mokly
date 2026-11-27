@@ -85,7 +85,8 @@ pub(crate) enum Command {
         /// Run one partial verification suite.
         #[arg(long, value_enum)]
         suite: Option<VerificationSuite>,
-        /// Select one whole-file partition of the browser suite.
+        /// Select one partition of the repository, viewer, browser, native, cloud-app, cloud-mockups,
+        /// cloud-site, or cloud-infrastructure suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
         /// Select the workspace audit policy for complete or repository checks.
@@ -94,6 +95,18 @@ pub(crate) enum Command {
         /// Select auto, local or explicit remote execution.
         #[arg(long, value_enum)]
         executor: Option<Executor>,
+    },
+    /// Run the Mokly Rust test units of one weighted test shard with nextest.
+    RustTestShard {
+        /// Select one of the test shards, after the leading checks shards.
+        #[arg(long, value_name = "INDEX/TOTAL")]
+        partition: Shard,
+        /// Report every failed test instead of stopping at the first.
+        #[arg(long)]
+        no_fail_fast: bool,
+        /// Leave out the platform-neutral tests that the native suite skips.
+        #[arg(long)]
+        native: bool,
     },
     /// Print the available executor without warming boxes or running suites.
     Executor {

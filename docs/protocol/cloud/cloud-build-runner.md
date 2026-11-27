@@ -73,24 +73,8 @@ a package upgrade can silently change the result.
 
 ## Template
 
-The template, `mokly-build-v<N>`, is 2 vCPU and 4 GiB with `/bin/sh`,
-coreutils, Python 3, git, curl, CA certificates, an exact Node release with
-npm and corepack on the template `PATH`, the non-root workload `user`, and
-`/workspace` owned by it. The template contains no file at C, so the credential
-write creates a new 0600 file rather than preserving a pre-existing mode.
-`infra/e2b/build/e2b.Dockerfile` pins its `e2bdev/base` image by a SHA-256
-digest, so a new tag cannot change a template release's base.
-Its Node release is the repository's pin in
-`.nvmrc`, which `toolchain-pins` compares with the template definition, so the
-template satisfies the CLI's engines. The CLI is a native binary
-with no musl build and no JavaScript fallback. The template
-therefore runs Linux x64 with glibc 2.28 or newer, and the candidate assertion
-checks that floor. `docs/ops/build-template.md`
-records its release procedure and its live probe. The template sets
-`HOME=/home/user`, and E2B sets the process `PATH`. A build command gets the
-template environment with its own entries added, not replaced. The probe
-checks the added entry, `HOME` and the tools on `PATH`, not the exact `PATH`
-(decided 2026-11-24), because E2B sets its own `PATH` order.
+The [template contract](./cloud-build-template.md) defines the E2B template in
+which every attempt runs, and the candidate assertion that checks each release.
 
 ## Steps
 

@@ -40,6 +40,27 @@ test("a byte-limited usage map keeps the frame available with inspection disable
   });
 });
 
+test("postMessage mount loads exactly the document of the chosen scheme", async () => {
+  for (const file of ["index.mobile.html", "index.mobile.dark.html"]) {
+    const href = `https://frames.test/static/mokly-generated/screen/${file}?revision=2#section`;
+    const fake = fakeFrame();
+    const mount = postMessageAdapter({
+      frameOrigin: "https://frames.test",
+    }).mount(fake.frame, { ...frameView, url: new URL(href) });
+    fake.load();
+    fake.send({ type: "ready" }, fake.nonce());
+    const mounted = await mount;
+    // The adapter adds only its host origin to the address it loads.
+    const loaded = new URL(fake.replacements[0]!);
+    assert.deepEqual(loaded.searchParams.getAll("mokly-host"), [
+      "https://app.test",
+    ]);
+    loaded.searchParams.delete("mokly-host");
+    assert.equal(loaded.href, href, file);
+    mounted.dispose();
+  }
+});
+
 test("postMessage mount validates origins, sandbox, nonce and history replacement", async () => {
   const fake = await mounted();
   assert.match(fake.sessionNonce, /^[a-f0-9]{32}$/);

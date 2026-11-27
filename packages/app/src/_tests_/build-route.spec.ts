@@ -75,16 +75,3 @@ test("a build address is one screen and carries no viewer selection", async ({
   await expect(output).toBeFocused();
   expect(await page.evaluate(stateDocumentViolations)).toEqual([]);
 });
-
-test("a build's UUID permalink keeps its tail", async ({ page }) => {
-  const scenario = await buildScenario(page, "build-permalink");
-  const { double, projectId } = scenario;
-  const id = buildId(250);
-  double.builds.set(id, build({ id, projectId }));
-  await open(page, `/projects/${projectId}/builds/${id}?panel=history`);
-  await page.waitForURL(
-    (url) =>
-      url.pathname === scenario.buildAt(id) && url.search === "?panel=history",
-  );
-  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
-});

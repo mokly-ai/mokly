@@ -87,7 +87,7 @@ pub(super) fn e2b_base(source: &str) -> Vec<Violation> {
             image = parts.next().unwrap_or_default();
         }
         let pinned = image.split_once("@sha256:").is_some_and(|(tag, digest)| {
-            tag.strip_prefix("e2bdev/base:").is_some_and(|tag| {
+            tag.strip_prefix("debian:").is_some_and(|tag| {
                 !tag.is_empty()
                     && tag
                         .bytes()
@@ -101,7 +101,7 @@ pub(super) fn e2b_base(source: &str) -> Vec<Violation> {
             violations.extend(compare(
                 path,
                 "FROM",
-                "e2bdev/base:<tag>@sha256:<64 lowercase hex>",
+                "debian:<tag>@sha256:<64 lowercase hex>",
                 image,
             ));
         }

@@ -1,0 +1,35 @@
+# An image change can keep its release name
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-keep-the-template-s-compiler-and-csnm`, the blocked wider fix of review finding 3 of round 1.
+- **Location:** `infra/e2b/build/e2b.Dockerfile`; `infra/e2b/build/e2b.toml`, its `template_name`; `xtask/src/policy/migration_check.rs`, the check that already compares a file with `origin/main`.
+- **Reason:** The fix adds a repository check, a new gate, which only the user approves.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Build template:** the E2B sandbox image, `mokly-build-v<N>`, in which Mokly Cloud runs each build. `infra/e2b/build/e2b.Dockerfile` defines it, and `template_name` in `infra/e2b/build/e2b.toml` names its release.
+  - **Build reference:** `TEMPLATE_ID:BUILD_ID`, which starts exactly one template build. The environment app-config names it under `builds.template`.
+- **Background:**
+  - `docs/ops/build-template.md`, section "Release Prerequisites", says that an E2B base or tool change requires a new template release and assertion. Section "Build And Publish A Candidate" says to increment `template_name` for a new release.
+  - No check compares a change of `infra/e2b/build/e2b.Dockerfile` with a change of `template_name`. Only the runbook and the reviewers keep the rule. Commits `6fbcfa806`, `b5bcb1ba4`, `1ce3ed0be`, and `e8243906f` each changed both files, because a person kept the rule.
+  - On 2026-11-26, a review of the branch above found a follow-up proposal that changed the Dockerfile but probed only the release in use. The branch fixed the proposal text.
+  - `xtask/src/policy/migration_check.rs` already reads a file at `origin/main` with `git show`, so a local run needs a fetched `origin/main`.
+- **Problem:** A change can edit the Dockerfile and keep the release name, and the gate passes. The checked-in Dockerfile then no longer matches the release that it names.
+- **Impact if no action:** An operator can read the checked-in Dockerfile as the definition of a release that was built from other bytes, or skip the new release and the probe that an image change needs.
+- **Root question:** How does the repository keep each checked-in Dockerfile tied to the release that it names?
+- **Options:**
+  - **A.** Change nothing. The runbook rule and the review keep it. Effort: Small.
+  - **B.** Add a repository check beside `xtask/src/policy/migration_check.rs`: when a change alters `infra/e2b/build/e2b.Dockerfile` against `origin/main`, `template_name` must also change. Every past Dockerfile change passes it. It proves only that the name differs from the name at `origin/main`. A change from `mokly-build-v6` back to the published `mokly-build-v5` also passes it, and it does not prove that the release exists. A variant that requires a higher number enforces the runbook's increment rule, but it also rejects a `git revert` of a release commit, which restores an earlier name together with its own Dockerfile. Effort: Medium.
+  - **C.** Record the SHA-256 of the Dockerfile in `infra/e2b/build/e2b.toml` beside `template_name`, and make a local test compare it with the file. A Dockerfile change then fails until the author updates the hash, which is the point to update the name. It does not check the name, and it adds a field that each release must edit. Effort: Medium.
+  - **D.** Make `infra/e2b/build/build-template.mjs` write a release receipt that ties the Dockerfile SHA-256 to the exact build reference that E2B returned, and make the deploy accept only a `builds.template` value that has a receipt for the checked-in Dockerfile. It ties the source bytes to the built image, not only to a name. It changes the release and deploy process. Effort: Large.
+- **Left out:**
+  - A probe check that compares the image with the checked-in Dockerfile. The release in use would fail each recheck as soon as the next Dockerfile change merges.
+- **Wider fix:** D. Only a receipt from the release script ties the checked-in bytes to the build that E2B returned.
+- **Previous examples:**
+  - The proposal of the former follow-up item on the template's compiler guard, before the fix on 2026-11-26, changed the Dockerfile and probed only v6.
+  - On 2026-11-26 two different images were built under the name `mokly-build-v6`. One was `main`'s `e2bdev/base` build `e58c1440` at 12:15Z. The other was the Debian build `b63ce806` of the branch `calummoore/builds-spike-a-plain-debian-base-for-the-aa76` at 12:43Z. Each branch had changed `template_name` from v5 to v6 against its own `origin/main`. The two builds share the template ID `mm5vcm4xv7inkey7ad9p`, so the bare ID starts the newer one.
+- **Related:** None. On 2026-11-26 Cal decided that no verified fallback release is kept, so a failing release disables builds.
+- **Recommendation:** B. It catches a Dockerfile change that keeps its name, with the files that the change already edits, although it checks only that the name differs. D best protects the codebase.
+- **Action:** ask the user, because B, C, and D add a check that can stop a merge or a deploy.

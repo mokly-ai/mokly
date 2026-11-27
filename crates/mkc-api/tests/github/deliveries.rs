@@ -57,7 +57,10 @@ impl Harness {
 
     pub(super) fn delivery(&self, id: Uuid) -> Option<Delivery> {
         let mut found = None;
-        self.queries(&mut |queries| found = queries.github_delivery(id).unwrap());
+        self.queries(&mut |queries| {
+            found = queries.github_delivery(id)?;
+            Ok(())
+        });
         found
     }
 

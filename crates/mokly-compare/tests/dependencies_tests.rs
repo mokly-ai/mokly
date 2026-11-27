@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_compare::cache_types::Cache;
-use mokly_compare::commands::{Command, Commands, TimedCommands};
+use mokly_compare::commands::{Commands, TimedCommands};
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
@@ -49,9 +49,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     // extraction applies checkout conversion. Pin identity conversion, so the
     // installed bytes below are the committed bytes on every host.
     git(&root, &["config", "core.autocrlf", "false"]);
-    git(&root, &["config", "user.name", "Mokly Tests"]);
-    git(&root, &["config", "user.email", "tests@mokly.invalid"]);
-    write(&root, ".npmrc", b"offline=true\nupdate-notifier=false\n");
     write(&root, ".gitignore", b"node_modules\n.npm-cache\n");
     write(&root, "package.json", br#"{"name":"base-fixture","version":"1.0.0","workspaces":["packages/*"],"dependencies":{"local-fixture":"file:packages/local"},"scripts":{"preinstall":"node -e \"require('node:fs').writeFileSync('script-ran','bad')\""}}"#);
     write(&root, "packages/local/package.json", br#"{"name":"local-fixture","version":"1.0.0","main":"index.js","scripts":{"install":"node -e \"require('node:fs').writeFileSync('dependency-script-ran','bad')\""}}"#);
@@ -61,6 +58,11 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         b"module.exports = 'base';\n",
     );
     write(&root, "specs/file.html", b"<p>Base</p>");
+    write(
+        &root,
+        "package-lock.json",
+        include_bytes!("fixtures/local-dependencies/package-lock.json"),
+    );
     let token = Arc::new(Token::default());
     let clock = Arc::new(SystemClock::default());
     let groups = Arc::new(SystemProcessGroups);
@@ -73,30 +75,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         cancellation: token.clone(),
         storage: storage(temporary.path()),
     });
-    commands
-        .run(&Command {
-            program: "npm".into(),
-            args: [
-                "install",
-                "--package-lock-only",
-                "--ignore-scripts",
-                "--offline",
-                "--no-audit",
-                "--no-fund",
-                "--cache",
-                ".npm-cache",
-            ]
-            .map(Into::into)
-            .to_vec(),
-            scripts: false,
-            directory: root.clone(),
-            timeout: Duration::from_secs(120),
-            byte_limit: None,
-            size_root: None,
-            cache: None,
-            node: None,
-        })
-        .unwrap();
     let outside_logs = temporary.path().join("outside-npm-logs");
     write(
         &root,
@@ -108,7 +86,18 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         .as_bytes(),
     );
     git(&root, &["add", "-A"]);
-    git(&root, &["commit", "-m", "base fixture"]);
+    git(
+        &root,
+        &[
+            "-c",
+            "user.name=Mokly Tests",
+            "-c",
+            "user.email=tests@mokly.invalid",
+            "commit",
+            "-m",
+            "base fixture",
+        ],
+    );
     let commit =
         ObjectId::parse(String::from_utf8_lossy(&git(&root, &["rev-parse", "HEAD"])).trim())
             .unwrap();

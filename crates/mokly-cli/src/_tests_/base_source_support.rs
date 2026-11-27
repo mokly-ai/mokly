@@ -160,6 +160,7 @@ pub(super) fn prepare(
         modules: ResolvedModules {
             renderer: input.renderer.clone(),
             postcss: input.postcss.clone(),
+            ..ResolvedModules::default()
         },
         input,
         file: "/repo/mokly.config.json".into(),

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
-import { directoryFiles } from "./resolution-inputs.js";
+import { directoryFiles, metadataPath } from "./resolution-inputs.js";
 import { INSTALLED_INPUT_PREFIX } from "./source-dependencies.js";
 import { configPresent, viteConfigFiles } from "./vite-config.js";
 import type { VitePostcssLookup } from "./vite-postcss-lookup.js";
@@ -103,7 +103,7 @@ export function rebuildInputs(files: string[], paths: ModulePaths) {
     files.map(async (name) =>
       setupCandidate(
         name,
-        await paths.metadata(path.resolve(paths.sourceRoot, name)),
+        await metadataPath(paths, path.resolve(paths.sourceRoot, name)),
       ),
     ),
   );
@@ -113,7 +113,7 @@ async function confinedInputs(files: string[], paths: ModulePaths) {
   return new Map(
     await Promise.all(
       [...new Set(files)].map(async (file) => {
-        const physical = await paths.metadata(file);
+        const physical = await metadataPath(paths, file);
         return [
           file,
           await setupCandidate(paths.metadataName(physical), physical),

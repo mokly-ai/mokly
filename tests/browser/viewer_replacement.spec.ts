@@ -20,143 +20,141 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-for (const cross of [false, true]) {
-  for (const transition of ["viewport", "scheme", "variant"] as const) {
-    for (const pending of [false, true]) {
-      test(`${cross ? "postMessage" : "same-origin"} ${transition} ends ${pending ? "pending" : "active"} pick at replacement`, async ({
-        page,
-      }) => {
-        await page.goto(fixture.host.url);
-        await page.waitForFunction(() => Boolean(window.viewerHarness));
-        await page.evaluate(
-          ({ cross, transition, pending }) => {
-            const host = window.viewerHarness.start("one", {
-              cross,
-              defaultSelection: {
-                screenPath: transition === "variant" ? "pane" : "home",
+// The postMessage adapter takes no part in these checks: the holds sit in
+// the wrapper after the real adapter call, and the adapter's own specs cover
+// its highlight and disposal.
+for (const transition of ["viewport", "scheme", "variant"] as const) {
+  for (const pending of [false, true]) {
+    test(`same-origin ${transition} ends ${pending ? "pending" : "active"} pick at replacement`, async ({
+      page,
+    }) => {
+      await page.goto(fixture.host.url);
+      await page.waitForFunction(() => Boolean(window.viewerHarness));
+      await page.evaluate(
+        ({ transition, pending }) => {
+          const host = window.viewerHarness.start("one", {
+            defaultSelection: {
+              screenPath: transition === "variant" ? "pane" : "home",
+            },
+          });
+          const original = host.props.frameAdapter!;
+          const probe: PickProbe = { waiting: false, release: () => {} };
+          (window as unknown as ProbeWindow).pickProbe = probe;
+          if (pending)
+            host.props.frameAdapter = {
+              async mount(frame, options) {
+                const mounted = await original.mount(frame, options);
+                return {
+                  ...mounted,
+                  async highlight(keys, mode) {
+                    await mounted.highlight(keys, mode);
+                    if (mode === "pick" && !probe.waiting) {
+                      probe.waiting = true;
+                      await new Promise<void>((resolve) => {
+                        probe.release = resolve;
+                      });
+                    }
+                  },
+                };
               },
-            });
-            const original = host.props.frameAdapter!;
-            const probe: PickProbe = { waiting: false, release: () => {} };
-            (window as unknown as ProbeWindow).pickProbe = probe;
-            if (pending)
-              host.props.frameAdapter = {
-                async mount(frame, options) {
-                  const mounted = await original.mount(frame, options);
-                  return {
-                    ...mounted,
-                    async highlight(keys, mode) {
-                      await mounted.highlight(keys, mode);
-                      if (mode === "pick" && !probe.waiting) {
-                        probe.waiting = true;
-                        await new Promise<void>((resolve) => {
-                          probe.release = resolve;
-                        });
-                      }
-                    },
-                  };
-                },
-              };
-            host.render();
-          },
-          { cross, transition, pending },
+            };
+          host.render();
+        },
+        { transition, pending },
+      );
+      await page.waitForFunction(() =>
+        Boolean(window.viewerHarness.get("one").ref.current),
+      );
+      await page.evaluate((pending) => {
+        const activation = window.viewerHarness
+          .get("one")
+          .ref.current.startPick()
+          .then(
+            () => {
+              (window as unknown as ProbeWindow).pickProbe.outcome = "resolved";
+            },
+            () => {
+              (window as unknown as ProbeWindow).pickProbe.outcome = "rejected";
+            },
+          );
+        return pending ? undefined : activation;
+      }, pending);
+      if (pending)
+        await page.waitForFunction(
+          () => (window as unknown as ProbeWindow).pickProbe.waiting,
         );
-        await page.waitForFunction(() =>
-          Boolean(window.viewerHarness.get("one").ref.current),
-        );
-        await page.evaluate((pending) => {
-          const activation = window.viewerHarness
+      // The host commits another viewport, scheme, or saved variant.
+      await page.evaluate(
+        (transition) =>
+          window.viewerHarness
             .get("one")
-            .ref.current.startPick()
-            .then(
-              () => {
-                (window as unknown as ProbeWindow).pickProbe.outcome =
-                  "resolved";
-              },
-              () => {
-                (window as unknown as ProbeWindow).pickProbe.outcome =
-                  "rejected";
-              },
-            );
-          return pending ? undefined : activation;
-        }, pending);
-        if (pending)
-          await page.waitForFunction(
-            () => (window as unknown as ProbeWindow).pickProbe.waiting,
-          );
-        // The host commits another viewport, scheme, or saved variant.
-        await page.evaluate(
-          (transition) =>
-            window.viewerHarness
-              .get("one")
-              .ref.current.select(
-                transition === "viewport"
-                  ? { viewport: "desktop" }
-                  : transition === "scheme"
-                    ? { colorScheme: "dark" }
-                    : { screenPath: "pane/second" },
-              ),
-          transition,
+            .ref.current.select(
+              transition === "viewport"
+                ? { viewport: "desktop" }
+                : transition === "scheme"
+                  ? { colorScheme: "dark" }
+                  : { screenPath: "pane/second" },
+            ),
+        transition,
+      );
+      if (pending) {
+        await expect
+          .poll(() =>
+            page.evaluate(
+              () => (window as unknown as ProbeWindow).pickProbe.outcome,
+            ),
+          )
+          .toBe("rejected");
+        await page.evaluate(() =>
+          (window as unknown as ProbeWindow).pickProbe.release(),
         );
-        if (pending) {
-          await expect
-            .poll(() =>
-              page.evaluate(
-                () => (window as unknown as ProbeWindow).pickProbe.outcome,
-              ),
-            )
-            .toBe("rejected");
-          await page.evaluate(() =>
-            (window as unknown as ProbeWindow).pickProbe.release(),
-          );
-        }
-        expect(
-          await page.evaluate(() =>
-            window.viewerHarness
-              .get("one")
-              .events.filter((event) => event.name.startsWith("pick")),
-          ),
-        ).toEqual(
-          pending
-            ? []
-            : [
-                { name: "pick-start", value: null },
-                { name: "pick-end", value: { reason: "navigation" } },
-              ],
-        );
-        await expect(
-          page.locator("[data-mokly-label-layer] button"),
-        ).toHaveCount(0);
-        await page.evaluate(async () => {
-          await window.viewerHarness.get("one").ref.current.startPick();
-        });
-        expect(
-          await page.evaluate(() =>
-            window.viewerHarness
-              .get("one")
-              .events.filter((event) => event.name === "pick-start"),
-          ),
-        ).toHaveLength(pending ? 1 : 2);
-        await expect(
-          page.locator("[data-mokly-label-layer] button").first(),
-        ).toBeVisible();
-        await page.evaluate(() => {
-          window.viewerHarness.get("one").ref.current.cancelPick();
-          window.viewerHarness.get("one").ref.current.cancelPick();
-        });
-        expect(
-          await page.evaluate(() =>
-            window.viewerHarness
-              .get("one")
-              .events.filter((event) => event.name === "pick-end")
-              .map((event) => event.value),
-          ),
-        ).toEqual(
-          pending
-            ? [{ reason: "cancelled" }]
-            : [{ reason: "navigation" }, { reason: "cancelled" }],
-        );
+      }
+      expect(
+        await page.evaluate(() =>
+          window.viewerHarness
+            .get("one")
+            .events.filter((event) => event.name.startsWith("pick")),
+        ),
+      ).toEqual(
+        pending
+          ? []
+          : [
+              { name: "pick-start", value: null },
+              { name: "pick-end", value: { reason: "navigation" } },
+            ],
+      );
+      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
+        0,
+      );
+      await page.evaluate(async () => {
+        await window.viewerHarness.get("one").ref.current.startPick();
       });
-    }
+      expect(
+        await page.evaluate(() =>
+          window.viewerHarness
+            .get("one")
+            .events.filter((event) => event.name === "pick-start"),
+        ),
+      ).toHaveLength(pending ? 1 : 2);
+      await expect(
+        page.locator("[data-mokly-label-layer] button").first(),
+      ).toBeVisible();
+      await page.evaluate(() => {
+        window.viewerHarness.get("one").ref.current.cancelPick();
+        window.viewerHarness.get("one").ref.current.cancelPick();
+      });
+      expect(
+        await page.evaluate(() =>
+          window.viewerHarness
+            .get("one")
+            .events.filter((event) => event.name === "pick-end")
+            .map((event) => event.value),
+        ),
+      ).toEqual(
+        pending
+          ? [{ reason: "cancelled" }]
+          : [{ reason: "navigation" }, { reason: "cancelled" }],
+      );
+    });
   }
 }

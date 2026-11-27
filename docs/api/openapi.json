@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mokly Cloud product API",
-    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/preview/callback, /auth/desktop/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
+    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/desktop/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
     "license": {
       "name": "Proprietary",
       "identifier": "LicenseRef-Proprietary"
@@ -97,6 +97,49 @@
         "x-reasons": [
           "internal-error",
           "migrations-pending",
+          "payload-too-large",
+          "validation-failed"
+        ]
+      }
+    },
+    "/v1/configuration": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Read which optional operations have runtime configuration",
+        "operationId": "getConfiguration",
+        "responses": {
+          "200": {
+            "description": "The optional configuration of this API.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [],
+        "x-reasons": [
+          "internal-error",
           "payload-too-large",
           "validation-failed"
         ]
@@ -328,7 +371,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Exchange a configured preview credential for a session cookie.",
+        "summary": "Exchange the preview password for a session cookie.",
         "operationId": "verifyPreviewSignIn",
         "parameters": [
           {
@@ -390,6 +433,16 @@
           "4XX": {
             "$ref": "#/components/responses/ErrorResponse"
           },
+          "503": {
+            "description": "Preview sign-in configuration is absent, or the full password queue refused the attempt before peer admission.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "5XX": {
             "$ref": "#/components/responses/ErrorResponse"
           }
@@ -402,6 +455,7 @@
           "operation-unavailable",
           "payload-too-large",
           "rate-limited",
+          "unavailable",
           "validation-failed"
         ]
       }
@@ -6057,6 +6111,45 @@
         },
         "additionalProperties": false
       },
+      "Configuration": {
+        "type": "object",
+        "description": "The public configuration of optional API operations.",
+        "required": [
+          "github",
+          "billing",
+          "previewPassword"
+        ],
+        "properties": {
+          "github": {
+            "type": "boolean"
+          },
+          "billing": {
+            "type": "boolean"
+          },
+          "previewPassword": {
+            "oneOf": [
+              {
+                "type": "object",
+                "description": "The public identity of the shared account that accepts a preview password.",
+                "required": [
+                  "account"
+                ],
+                "properties": {
+                  "account": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "Connection": {
         "type": "object",
         "required": [
@@ -7420,12 +7513,18 @@
       "PreviewSignIn": {
         "type": "object",
         "required": [
-          "secret"
+          "password"
         ],
         "properties": {
-          "secret": {
+          "password": {
             "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
+            "format": "password",
+            "description": "Preview password, from 1 to 1024 UTF-8 bytes.",
+            "maxLength": 1024,
+            "minLength": 1
+          },
+          "returnTo": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -9090,6 +9189,10 @@
     {
       "name": "Health",
       "description": "Public process identity and database readiness."
+    },
+    {
+      "name": "Configuration",
+      "description": "Public configuration of optional operations."
     },
     {
       "name": "Account",

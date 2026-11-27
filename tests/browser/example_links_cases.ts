@@ -4,11 +4,10 @@ import { expect } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { test } from "./browser_test.js";
+import { designFileUrl } from "./design_fixture.js";
 import { focusDesignLink } from "./design_test_helpers.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 import { useCaseStepFrame } from "./use_case_steps.js";
 import {
   canvasFrame,
@@ -19,15 +18,10 @@ import {
 } from "./workspace_actions.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerExampleLinks(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerExampleLinks() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   for (const viewport of ["mobile", "desktop"] as const) {
     for (const scheme of ["light", "dark"] as const) {
       test(`${viewport}/${scheme}: the basic example buttons work in Browse and direct served documents`, async ({

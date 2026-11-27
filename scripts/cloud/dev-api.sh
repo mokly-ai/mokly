@@ -4,31 +4,26 @@ cd "$(dirname "$0")/../.."
 source scripts/cloud/dev-publication-env.sh
 export MKC_DESKTOP_CLIENT="${MKC_DESKTOP_CLIENT:-true}"
 umask 077
-mkc_preview_file="$PWD/.context/preview-sign-in"
+mkc_preview_file="$PWD/.context/preview-password"
 if [[ ! -e "$mkc_preview_file" ]]; then
-  mkc_preview_temp=$(mktemp "$PWD/.context/preview-sign-in.XXXXXX")
-  python3 -c 'import secrets; print(secrets.token_hex(32), end="")' > "$mkc_preview_temp"
+  mkc_preview_temp=$(mktemp "$mkc_preview_file.XXXXXX")
+  python3 -c 'import secrets; print(secrets.token_urlsafe(24), end="")' > "$mkc_preview_temp"
   chmod 600 "$mkc_preview_temp"
   ln "$mkc_preview_temp" "$mkc_preview_file" 2>/dev/null || test -f "$mkc_preview_file"
   rm "$mkc_preview_temp"
 fi
 python3 - "$mkc_preview_file" <<'PY'
-import os
 from pathlib import Path
-import re
 import stat
 import sys
 
 path = Path(sys.argv[1])
 metadata = path.lstat()
-value = path.read_text(encoding="ascii")
 if not stat.S_ISREG(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) != 0o600:
-    raise SystemExit(".context/preview-sign-in must be a regular mode-0600 file")
-if not re.fullmatch(r"[a-f0-9]{64}", value):
-    raise SystemExit(".context/preview-sign-in must contain 64 lowercase hex characters")
+    raise SystemExit(".context/preview-password must be a regular mode-0600 file")
 PY
-export MKC_PREVIEW_SIGN_IN_SECRET
-MKC_PREVIEW_SIGN_IN_SECRET=$(<"$mkc_preview_file")
+MKC_PREVIEW_SIGN_IN_VERIFIER=$(python3 infra/scripts/preview-lifecycle.py preview-verifier < "$mkc_preview_file")
+export MKC_PREVIEW_SIGN_IN_VERIFIER
 export MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai
 export MKC_PREVIEW_SIGN_IN_PLAN=team
 export MKC_BIND="${MKC_BIND:-127.0.0.1:8080}"

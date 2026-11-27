@@ -52,109 +52,115 @@ test("embedded viewer fills a host shorter than the viewport", async ({
   expect(heights).toEqual({ host: 500, viewer: 500 });
 });
 
-for (const width of [1440, 900, 390, 320]) {
-  for (const colorScheme of ["light", "dark"] as const) {
-    test(`embedded layout owns ${width}px ${colorScheme} scrolling and sizing`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto(fixture.host.url);
-      await page.waitForFunction(() => Boolean(window.viewerHarness));
-      await page.evaluate(
-        ({ colorScheme }) =>
-          window.viewerHarness.start("one", {
-            defaultSelection: { colorScheme },
-            responsive: true,
-            topBarSlots: true,
-          }),
-        { colorScheme },
-      );
-      await page.waitForFunction(() =>
-        Boolean(window.viewerHarness.get("one").ref.current),
-      );
+/**
+ * The width and the scheme of each layout test. At 390 and 320 px only Light
+ * runs: the compact search branch has no scheme input, and the selected
+ * scheme reaches only the frame surfaces inside the stage.
+ */
+const LAYOUT_CASES = [
+  [1440, "light"],
+  [1440, "dark"],
+  [900, "light"],
+  [900, "dark"],
+  [390, "light"],
+  [320, "light"],
+] as const;
 
-      const layout = await page
-        .locator("#one .mokly-viewer")
-        .evaluate((root) => {
-          const host = root.parentElement!;
-          const style = getComputedStyle(root);
-          return {
-            display: style.display,
-            flexDirection: style.flexDirection,
-            fontSize: style.fontSize,
-            height: root.getBoundingClientRect().height,
-            hostHeight: host.getBoundingClientRect().height,
-            scrollHeight: document.documentElement.scrollHeight,
-            viewportHeight: window.innerHeight,
-          };
-        });
-      expect(layout).toEqual({
-        display: "flex",
-        flexDirection: "column",
-        fontSize: "13px",
-        height: 900,
-        hostHeight: 900,
-        scrollHeight: 900,
-        viewportHeight: 900,
-      });
+for (const [width, colorScheme] of LAYOUT_CASES) {
+  test(`embedded layout owns ${width}px ${colorScheme} scrolling and sizing`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(fixture.host.url);
+    await page.waitForFunction(() => Boolean(window.viewerHarness));
+    await page.evaluate(
+      ({ colorScheme }) =>
+        window.viewerHarness.start("one", {
+          defaultSelection: { colorScheme },
+          responsive: true,
+          topBarSlots: true,
+        }),
+      { colorScheme },
+    );
+    await page.waitForFunction(() =>
+      Boolean(window.viewerHarness.get("one").ref.current),
+    );
 
-      if (width === 1440) {
-        const desktop = await page.evaluate(() => {
-          const nav = document.querySelector<HTMLElement>("#one .mbk-nav")!;
-          const stage = document.querySelector<HTMLElement>(
-            "#one .mokly-stage-host",
-          )!;
-          const navBounds = nav.getBoundingClientRect();
-          const stageBounds = stage.getBoundingClientRect();
-          return {
-            navLeft: navBounds.left,
-            navTop: navBounds.top,
-            stageLeft: stageBounds.left,
-            stageTop: stageBounds.top,
-          };
-        });
-        // The rail host floats over the stage, 8px from its top and its start.
-        expect(desktop.navLeft).toBe(desktop.stageLeft + 8);
-        expect(desktop.navTop).toBe(desktop.stageTop + 8);
-      }
-
-      if (width <= 390) {
-        const toggle = page.getByRole("button", { name: "Search catalogue" });
-        await expect(toggle).toBeVisible();
-        const target = await toggle.boundingBox();
-        expect(target?.width).toBeGreaterThanOrEqual(30);
-        expect(target?.height).toBeGreaterThanOrEqual(30);
-        const hostStart = await page
-          .getByRole("button", { name: "Host start" })
-          .elementHandle();
-        const hostEnd = await page
-          .getByRole("button", { name: "Host end" })
-          .elementHandle();
-        await toggle.click();
-        const search = page.getByRole("searchbox", {
-          name: "Search catalogue",
-        });
-        await expect(search).toBeFocused();
-        const input = await search.boundingBox();
-        expect(input?.width).toBeGreaterThanOrEqual(160);
-        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
-          true,
-        );
-        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
-        await search.press("Escape");
-        await expect(toggle).toBeVisible();
-
-        await toggle.click();
-        await expect(search).toBeVisible();
-        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
-          true,
-        );
-        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
-        await page.getByRole("button", { name: "Close search" }).click();
-        await expect(toggle).toBeVisible();
-      }
+    const layout = await page.locator("#one .mokly-viewer").evaluate((root) => {
+      const host = root.parentElement!;
+      const style = getComputedStyle(root);
+      return {
+        display: style.display,
+        flexDirection: style.flexDirection,
+        fontSize: style.fontSize,
+        height: root.getBoundingClientRect().height,
+        hostHeight: host.getBoundingClientRect().height,
+        scrollHeight: document.documentElement.scrollHeight,
+        viewportHeight: window.innerHeight,
+      };
     });
-  }
+    expect(layout).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      fontSize: "13px",
+      height: 900,
+      hostHeight: 900,
+      scrollHeight: 900,
+      viewportHeight: 900,
+    });
+
+    if (width === 1440) {
+      const desktop = await page.evaluate(() => {
+        const nav = document.querySelector<HTMLElement>("#one .mbk-nav")!;
+        const stage = document.querySelector<HTMLElement>(
+          "#one .mokly-stage-host",
+        )!;
+        const navBounds = nav.getBoundingClientRect();
+        const stageBounds = stage.getBoundingClientRect();
+        return {
+          navLeft: navBounds.left,
+          navTop: navBounds.top,
+          stageLeft: stageBounds.left,
+          stageTop: stageBounds.top,
+        };
+      });
+      // The rail host floats over the stage, 8px from its top and its start.
+      expect(desktop.navLeft).toBe(desktop.stageLeft + 8);
+      expect(desktop.navTop).toBe(desktop.stageTop + 8);
+    }
+
+    if (width <= 390) {
+      const toggle = page.getByRole("button", { name: "Search catalogue" });
+      await expect(toggle).toBeVisible();
+      const target = await toggle.boundingBox();
+      expect(target?.width).toBeGreaterThanOrEqual(30);
+      expect(target?.height).toBeGreaterThanOrEqual(30);
+      const hostStart = await page
+        .getByRole("button", { name: "Host start" })
+        .elementHandle();
+      const hostEnd = await page
+        .getByRole("button", { name: "Host end" })
+        .elementHandle();
+      await toggle.click();
+      const search = page.getByRole("searchbox", {
+        name: "Search catalogue",
+      });
+      await expect(search).toBeFocused();
+      const input = await search.boundingBox();
+      expect(input?.width).toBeGreaterThanOrEqual(160);
+      expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(true);
+      expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+      await search.press("Escape");
+      await expect(toggle).toBeVisible();
+
+      await toggle.click();
+      await expect(search).toBeVisible();
+      expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(true);
+      expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+      await page.getByRole("button", { name: "Close search" }).click();
+      await expect(toggle).toBeVisible();
+    }
+  });
 }
 
 for (const rootFontSize of [10, 20]) {

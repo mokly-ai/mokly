@@ -215,7 +215,9 @@ The repository's `npm run dev` command runs watched Serve on
 for example `npm run dev -- --port 0`. Before Serve starts, the command runs
 `npm ci` when no install completed or `package-lock.json` changed after the
 last install. It then runs `npm run build` when an output that Serve needs is
-missing or an install completed after the last build. Each step prints its
+missing, no complete build is recorded, or an install completed after the last
+complete build. A build that skips every unchanged package build still
+completes. Each step prints its
 reason first. A failed step stops the command with exit status 1, and Serve
 does not start. A change to Mokly's own sources does not start a build; run
 `npm run build` after it.

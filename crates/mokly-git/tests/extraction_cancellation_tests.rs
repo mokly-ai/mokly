@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_git::control::Token;
-use mokly_git::disk::{Archive, Disk, SystemDisk};
+use mokly_git::disk::{Archive, Disk, SystemDisk, WorkingPath};
 use mokly_git::error::{Error, Result};
 use mokly_git::fingerprint::Fingerprint;
 use mokly_git::identity::RepoPath;
@@ -28,6 +28,9 @@ struct CancelDisk {
 impl Disk for CancelDisk {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
         SystemDisk.canonicalize(path)
+    }
+    fn working_path(&self, root: &Path, path: &RepoPath) -> Result<WorkingPath> {
+        SystemDisk.working_path(root, path)
     }
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
         SystemDisk.read(root, path, limit)

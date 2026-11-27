@@ -24,8 +24,7 @@
   99, and 102,
   `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
   `plans/follow-ups/stylesheet-roots-span-parent.md:9`,
-  `plans/follow-ups/flaky-warm-bundle-cache-no-record.md:13`, line 70, and
-  line 72, `plans/follow-ups/serve-pause-warm-head.md:10` and line 45,
+  `plans/follow-ups/serve-pause-warm-head.md:10` and line 45,
   `plans/follow-ups/serve-sidecar-prestart.md:7` and line 26, and
   `plans/follow-ups/sidecar-loaded-state-selection.md:10` and line 41.
 - **Reason:** The workspace orchestrator chose on 2026-11-20 to record these
@@ -109,6 +108,9 @@
     - `flaky-warm-bundle-cache-no-record.md:72` cites line 62 for the load
       in `seed_bundle`, and its next sentence cites line 63 for the cause.
       They are now at lines 107 and 108.
+    - Resolved on 2026-11-25: the flaky-test branch deleted
+      `flaky-warm-bundle-cache-no-record.md`, because it fixed that flake.
+      Its three pointers above need no fix.
     - `serve-pause-warm-head.md:10` and line 45 cite line 62 for the load in
       `seed_bundle`. It is now at line 107.
     - `sequential-evidence-capture-cost.md:14` and line 87 cite lines 111 to

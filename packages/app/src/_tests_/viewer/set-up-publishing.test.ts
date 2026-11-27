@@ -104,6 +104,17 @@ test("every Set up publishing action opens the CI setup guide in this tab", asyn
   }
 });
 
+test("an administrator's stage offers Set up publishing, then the switcher", async () => {
+  const { SetUpPublishing } = await cards();
+  drawSetUpPublishing(
+    createElement(SetUpPublishing, { project, onChoose: () => {} }),
+  );
+  assert.deepEqual(
+    seen.buttons.map((button) => button.label),
+    ["Set up publishing", "Choose another branch"],
+  );
+});
+
 test("every Set up publishing action draws the external glyph", async () => {
   for (const [card, element] of await offered()) {
     assert.equal(drawSetUpPublishing(element)?.icon, icons.external, card);

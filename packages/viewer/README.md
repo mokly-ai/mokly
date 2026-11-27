@@ -231,8 +231,10 @@ cargo xtask check
 ```
 
 `npm run build` builds the host native target, the UI package, the model
-package, the frame package, the viewer, and then the shim and the sidecar, in
-that order. The viewer build bundles the standalone shell into
+package, the frame package, the viewer, and then the shim and the sidecar. Each
+package build starts after the builds whose outputs it reads, and the
+[workspace build](../../scripts/build/README.md) skips a package build whose
+inputs and outputs did not change. The viewer build bundles the standalone shell into
 `dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
 into `dist/browser/frame-probe.js`. It writes `shell.css` and `styles.css`
 from the `@font-face` rules of the shell fonts and the UI package's
@@ -251,6 +253,12 @@ output in the browser module inventory, `dist/browser.manifest.json`;
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
 and Review regressions against `mokly serve` of the example catalogue.
+
+A viewer test that registers a happy-dom window removes it with
+`unregisterDom` from [`tests/dom_teardown.ts`](tests/dom_teardown.ts), not
+with `GlobalRegistrator.unregister`. React DOM can still hold a queued task
+that reads `window` after the test unmounts, and `unregisterDom` removes the
+window only after that task has run.
 
 ### Key Code
 

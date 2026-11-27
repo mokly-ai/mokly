@@ -36,6 +36,9 @@ const copy: Partial<Record<ApiReason, string>> = {
   "payload-too-large": "That is too large to send.",
   "internal-error": "Something went wrong. Try again.",
   "migrations-pending": "Mokly is updating. Try again in a moment.",
+  // A form meets this reason only as a refused preview password; a link's
+  // own landing titles the refusal itself.
+  "magic-link-invalid": "This password isn’t valid.",
   "github-auth-invalid": "Start GitHub sign-in again.",
   "github-email-unverified":
     "Verify your primary email on GitHub, or sign in by email.",

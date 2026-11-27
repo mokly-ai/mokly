@@ -46,16 +46,19 @@ and whitespace, stop startup with `Error::Invalid("MKC_DESKTOP_CLIENT")`.
 The process adapter keeps non-Unicode values present as empty input, so they
 also fail strict flag validation instead of using the absent-value default.
 
-Preview sign-in is optional and all-or-none: `MKC_PREVIEW_SIGN_IN_SECRET`
-holds 64 lowercase hexadecimal digits and `MKC_PREVIEW_SIGN_IN_EMAIL` passes
-the shared account email validator, and partial, malformed and production
-configuration have distinct typed failures. Optional `MKC_PREVIEW_SIGN_IN_PLAN`
-accepts `free` (the absent default) or `team`, requires the same pair and
-capability, and reports typed key-only errors for invalid values, partial
-configuration or forbidden environments. `PreviewSignInSettings.plan` is the
-initial plan for organizations created by the configured normalized email;
-existing plans do not change. `GitHubConfigProvider` enables the App
-integration only when all six `MKC_GITHUB_*` settings are present. Its
+Preview sign-in is optional: `MKC_PREVIEW_SIGN_IN_EMAIL` passes the shared
+account email validator and configures the shared account. Optional
+`MKC_PREVIEW_SIGN_IN_VERIFIER` holds the scrypt verifier of the preview
+password, within the parameter bounds of
+[Preview sign-in](../../docs/protocol/cloud/preview-sign-in.md#verifier).
+Optional `MKC_PREVIEW_SIGN_IN_PLAN` accepts `free` (the absent default) or
+`team`. The verifier and the plan each require the email and the capability.
+Malformed values, a setting without the email, and forbidden environments
+have distinct typed key-only failures, which never include a value.
+`PreviewSignInSettings.plan` is the initial plan for organizations created by
+the configured normalized email; existing plans do not change.
+`GitHubConfigProvider` enables the App integration only when all six
+`MKC_GITHUB_*` settings are present. Its
 transport origins default to `https://api.github.com` and `https://github.com`.
 `MKC_GITHUB_API_ORIGIN` and `MKC_GITHUB_WEB_ORIGIN` replace them only under the
 HTTP-loopback capability: both must be set together, and either alone or
@@ -132,7 +135,7 @@ check compares the documented and the rendered settings in both directions.
 
 - [settings.rs](./src/settings.rs) — `Environment` and `ProcessEnvironment`, the environment seam; `EnvironmentConfig` and `ConfigProvider::load`, which return `Settings` with its `Mail` selection; `Error`, whose `Invalid` variant names only the key; and `validate_origin`, the exact-origin rule.
 - [capabilities.rs](./src/capabilities.rs) — the `MKC_ENV` modes and the named capabilities each one grants.
-- [preview.rs](./src/preview.rs) — `PreviewSignInSettings`, the all-or-none preview sign-in pair with its partial, malformed and disallowed failures, and the initial `plan` of the organizations its email creates.
+- [preview.rs](./src/preview.rs) — `PreviewSignInSettings` loads the shared account's email, its optional `mkc-auth` verifier, and its initial workspace plan under the `preview_sign_in` capability.
 - [desktop.rs](./src/desktop.rs) — `DesktopConfig`, the strict `MKC_DESKTOP_CLIENT` flag that both `Settings` and `CatalogueSettings` read.
 - [github.rs](./src/github.rs) — `GitHubSettings`, `GitHubConfigProvider` and `GitHubEnvironmentConfig`, the all-or-none App integration.
 - [billing.rs](./src/billing.rs) — `BillingSettings`, `BillingConfigProvider` and `BillingEnvironmentConfig`, the explicit Stripe selection and origin rule.
@@ -145,7 +148,7 @@ check compares the documented and the rendered settings in both directions.
 ### Related Docs
 
 - [Environments](../../docs/ops/environment.md) — the variable inventory, defaults and limits.
-- [Authentication](../../docs/protocol/cloud/auth-sessions.md) — preview sign-in.
+- [Preview sign-in](../../docs/protocol/cloud/preview-sign-in.md) — the shared account, the verifier and the plan.
 - [Desktop application](../../docs/protocol/cloud/desktop-app.md#api-and-catalogue-admission) — the desktop origin that `MKC_DESKTOP_CLIENT` admits.
 - [GitHub App](../../docs/protocol/cloud/github-app.md)
 - [Billing](../../docs/protocol/cloud/billing.md)

@@ -2,22 +2,63 @@
   "mode": "warn",
   "wallClockMinutes": 13,
   "slowestTests": 10,
+  "cache": { "gigabytes": 8.5, "largestEntries": 10 },
   "jobs": [
     { "pattern": "Runtime profile", "minutes": 2 },
     { "pattern": "Required CI", "minutes": 3 },
     { "pattern": "Cloud provider plan result", "minutes": 2 },
     { "pattern": "Credential-gated infrastructure plan", "minutes": 10 },
-    { "pattern": "Repository*", "minutes": 12 },
+    { "pattern": "Repository*", "minutes": 6 },
     { "pattern": "Viewer *", "minutes": 10 },
     { "pattern": "Browser *", "minutes": 10 },
     { "pattern": "Static delivery *", "minutes": 10 },
-    { "pattern": "Native *", "minutes": 12 },
-    { "pattern": "Workspace checks*", "minutes": 10 },
+    { "pattern": "Native *", "minutes": 9 },
+    { "pattern": "Workspace checks (Rust)", "minutes": 9 },
+    { "pattern": "Workspace checks (contracts)", "minutes": 6 },
+    { "pattern": "Workspace checks (infrastructure)", "minutes": 4 },
     { "pattern": "Desktop checks*", "minutes": 10 },
     { "pattern": "App checks*", "minutes": 10 },
     { "pattern": "Mockup checks*", "minutes": 10 },
     { "pattern": "Site checks*", "minutes": 10 },
-    { "pattern": "Workload image checks*", "minutes": 10 },
+    { "pattern": "Workload image checks*", "minutes": 6 },
     { "pattern": "Site Lighthouse*", "minutes": 10 }
+  ],
+  "shardGroups": [
+    {
+      "name": "Repository",
+      "patterns": ["Repository (shard */*)"],
+      "exclude": ["Repository (shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Native macOS",
+      "patterns": ["Native (macos-*, shard */*)"],
+      "exclude": ["Native (macos-*, shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Native Windows",
+      "patterns": ["Native (windows-*, shard */*)"],
+      "exclude": ["Native (windows-*, shard 1/*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Viewer",
+      "patterns": ["Viewer (Node *, shard */*)"],
+      "spreadMinutes": 2
+    },
+    {
+      "name": "Browser",
+      "patterns": ["Browser (Node *, shard */*)"],
+      "spreadMinutes": 2
+    },
+    { "name": "App", "patterns": ["App checks */*"], "spreadMinutes": 2 },
+    {
+      "name": "Mockup disk suite",
+      "patterns": ["Mockup checks */*"],
+      "exclude": ["Mockup checks 1/*", "Mockup checks 2/*"],
+      "spreadMinutes": 2,
+      "weighted": false
+    }
   ]
 }

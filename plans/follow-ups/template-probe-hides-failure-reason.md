@@ -1,0 +1,34 @@
+# The live template probe hides why it failed
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-spike-a-plain-debian-base-for-the-aa76`, review finding 2 of round 1, with option D of its check.
+- **Location:** `crates/mkc-api/tests/build_template/probe.rs:134` and line 141, the stream loop of the probe driver; `infra/e2b/tests/assert_build_template.py:156`, where the script reports a failure.
+- **Reason:** The fix changes the Rust probe driver, which the branch that found it did not own, and the release that it verified had already passed the probe.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Template probe:** the live check in `docs/ops/build-template.md`, section "Verify The Streaming Boundary". It starts a fresh sandbox of a build template candidate, writes `infra/e2b/tests/assert_build_template.py` below `/workspace`, and runs it as `user` through `stream_process`.
+  - **Probe driver:** the opt-in Rust test `live_template` in `crates/mkc-api/tests/build_template/`. It runs the template probe and prints `PASS live build template: assertion completed and candidate destroyed` on a pass.
+- **Background:**
+  - The assertion script checks the tools, the user, `/workspace`, the Git floor, the compilers, one real file each for `node`, `npm`, `npx`, `corepack`, `python3`, and `git` on `PATH`, and the absence of credentials.
+  - On a failure the script exits 1 and writes one fixed line to standard error through `parser.exit`, for example `FAIL build template: python3 has multiple copies on PATH`. The messages hold no command output; `infra/tests/test_build_template.py` proves that command output stays out of them.
+  - The driver drops every `Stderr` event (`probe.rs:134`) and returns the bare error `ProbeError::Assertion`. The operator then sees only `Error: Assertion`.
+  - On 2026-11-26 the probe at commit `0ad58e724` failed against `mokly-build-v5` with `Error: Assertion`. A second sandbox, which ran the script by hand, printed `FAIL build template: python3 has multiple copies on PATH`.
+  - The driver also returns the same `ProbeError::Assertion` for every failed stream outcome, such as an overflow, a timeout, or a transport failure (`probe.rs:141`), and for an event after completion (`probe.rs:126`). So a broken stream looks like a failed template check.
+  - The stream request already bounds standard error at 32 KiB (`stderr_limit: 32768`, `probe.rs:113`). `mkc_publications::build_log_text::normalize`, which `mkc-api` already uses, cleans sandbox text for the build log.
+- **Problem:** One probe run does not tell the operator which check failed, or whether a check failed at all.
+- **Impact if no action:** Each failed probe needs a second sandbox and a script that the repository does not hold to find the reason.
+- **Root question:** How can an operator identify the failed check from one probe run?
+- **Options:**
+  - **A.** Document a separate diagnostic run of the script and its sandbox cleanup in the runbook. Each diagnosis still needs another sandbox. Effort: Small.
+  - **B.** Recognize the exact missing-tool and duplicate-tool messages in the driver, and render a local diagnostic for each. Every new check needs a driver change. Effort: Small.
+  - **C.** Give every probe failure a fixed code from a set that Python and Rust share, and render only known codes. The set must stay in step in two languages, and the code still comes from the sandbox. Effort: Medium.
+  - **D.** Keep the script's standard error in the driver. On a failed run, take the last line that starts with `FAIL build template: `, clean it with `build_log_text::normalize`, cap its length, and carry it in the `Assertion` error. Without such a line, keep the generic error. Give failed stream outcomes their own error, so that they do not read as a failed check. The pass rule stays: exit 0, `Completed`, and the exact PASS line on standard output. Add driver tests for a shown line, a removed terminal escape, and standard error without the prefix that stays hidden. Add one runbook sentence. A tampered candidate can print a false reason, but it cannot make a pass. Effort: Small.
+  - **E.** On a failed run, show all of the script's standard error, with the same bound and the same cleaning. It also shows a Python traceback, and any other text that the candidate writes there. Effort: Small.
+- **Left out:** Forward raw standard error without a bound or cleaning: E is better on every point.
+- **Wider fix:** D. It does not need to know each check, so a new or renamed check keeps its reason.
+- **Previous examples:** `plans/follow-ups/smoke-refusal-failures-hide-cli-output.md` records the same problem in the publication smoke check.
+- **Recommendation:** D. It shows the reason of every current and future check from one run with the script's own tested messages.
+- **Action:** fix after merge, apply D, because the fix changes the Rust probe driver outside the change that found it.

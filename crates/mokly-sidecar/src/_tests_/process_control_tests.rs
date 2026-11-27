@@ -11,7 +11,7 @@ use crate::process_control::ProcessControl;
 use crate::workers::WorkerControl;
 
 #[test]
-fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
+fn a_process_that_survives_the_shared_deadline_is_killed_and_awaited() {
     let mock = Unimock::new((
         WaitMock::exited
             .next_call(matching!(_, 2_100))
@@ -19,7 +19,9 @@ fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
         ProcessGroupMock::kill
             .next_call(matching!())
             .returns(Ok(())),
-        WaitMock::reaped.next_call(matching!(_)).returns(()),
+        WaitMock::exited_after_kill
+            .next_call(matching!(_))
+            .returns(()),
         ProcessGroupMock::kill
             .next_call(matching!())
             .returns(Ok(())),
@@ -31,7 +33,7 @@ fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
         memory: Arc::new(Unimock::new(())),
         discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
-        group: Box::new(mock.clone()),
+        group: Arc::new(mock.clone()),
         outgoing: sender,
         exited: Mutex::new(exited),
         drained: Mutex::new(drained),
@@ -83,7 +85,7 @@ fn an_open_stderr_pipe_cannot_extend_the_shared_deadline() {
         memory: Arc::new(Unimock::new(())),
         discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
-        group: Box::new(mock.clone()),
+        group: Arc::new(mock.clone()),
         outgoing,
         exited: Mutex::new(exited),
         drained: Mutex::new(drained),
@@ -112,7 +114,7 @@ fn graceful_completion_waits_for_exit_and_drain_with_one_deadline() {
         memory: Arc::new(Unimock::new(())),
         discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
-        group: Box::new(mock.clone()),
+        group: Arc::new(mock.clone()),
         outgoing,
         exited: Mutex::new(exited),
         drained: Mutex::new(drained),

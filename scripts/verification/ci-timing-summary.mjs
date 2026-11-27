@@ -1,23 +1,31 @@
+import { cacheLines, cacheWarnings } from "./ci-timing-cache.mjs";
+import {
+  cell,
+  escapeCommand,
+  formatSeconds,
+  jobCell,
+} from "./ci-timing-format.mjs";
+import { shardLines, shardWarnings } from "./ci-timing-shards.mjs";
+
 const BUDGET_FILE = "scripts/verification/ci-budgets.json";
 // GitHub shows at most 10 annotations of each level for one step.
 const ANNOTATION_LIMIT = 10;
-
-/** Format whole seconds as `28m 05s`, or `42s` below one minute. */
-function formatSeconds(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const rest = String(seconds % 60).padStart(2, "0");
-  return `${Math.floor(seconds / 60)}m ${rest}s`;
-}
+const DURATION_TITLE = "CI duration budget";
+const CACHE_TITLE = "Actions cache budget";
+const SHARD_TITLE = "Shard balance";
 
 /**
- * The workflow command lines for each budget overrun, missing budget, and
- * issue. When a level has more findings than GitHub shows, its last line
- * counts the rest and points to the job summary.
+ * The workflow command lines for each budget overrun, missing budget, shard
+ * spread, cache warning, and issue. A shard spread and a cache warning stay
+ * warnings in `fail` mode. When a
+ * level has more findings than GitHub shows, its last line counts the rest
+ * and points to the job summary.
  */
 export function annotationLines(report) {
   const level = report.mode === "fail" ? "error" : "warning";
   const found = { error: [], warning: [] };
-  const add = (command, text) => found[command].push(text);
+  const add = (command, text, title = DURATION_TITLE) =>
+    found[command].push({ text, title });
   if (report.wallOverSeconds !== null)
     add(
       level,
@@ -35,17 +43,25 @@ export function annotationLines(report) {
         level,
         `${row.job.name} ran ${formatSeconds(row.seconds)}, above its ${row.budget.minutes}m budget (pattern "${row.budget.pattern}").`,
       );
+  for (const warning of shardWarnings(report.shards))
+    add("warning", warning, SHARD_TITLE);
+  for (const warning of cacheWarnings(report.cache))
+    add("warning", warning, CACHE_TITLE);
   for (const issue of report.issues) add("warning", issue);
-  return Object.entries(found).flatMap(([command, texts]) => {
+  return Object.entries(found).flatMap(([command, findings]) => {
     const shown =
-      texts.length > ANNOTATION_LIMIT
+      findings.length > ANNOTATION_LIMIT
         ? [
-            ...texts.slice(0, ANNOTATION_LIMIT - 1),
-            `${texts.length - ANNOTATION_LIMIT + 1} more findings are in the job summary.`,
+            ...findings.slice(0, ANNOTATION_LIMIT - 1),
+            {
+              text: `${findings.length - ANNOTATION_LIMIT + 1} more findings are in the job summary.`,
+              title: DURATION_TITLE,
+            },
           ]
-        : texts;
+        : findings;
     return shown.map(
-      (text) => `::${command} title=CI duration budget::${escapeCommand(text)}`,
+      ({ text, title }) =>
+        `::${command} title=${title}::${escapeCommand(text)}`,
     );
   });
 }
@@ -56,7 +72,9 @@ export function renderSummary(report) {
   lines.push(...wallClockLines(report), "");
   if (report.path) lines.push(...pathLines(report.path), "");
   lines.push(...jobLines(report.rows), "");
+  lines.push(...shardLines(report.shards), "");
   lines.push(...testLines(report.slowest), "");
+  lines.push(...cacheLines(report.cache), "");
   if (report.issues.length > 0)
     lines.push(
       "### Notes",
@@ -167,26 +185,8 @@ function result(job) {
   return job.reused ? `${value}, earlier attempt` : value;
 }
 
-function jobCell(job) {
-  return job.url ? `[${cell(job.name)}](${job.url})` : cell(job.name);
-}
-
 function milliseconds(ms) {
   return ms < 60_000
     ? `${(ms / 1000).toFixed(1)}s`
     : formatSeconds(Math.round(ms / 1000));
-}
-
-function cell(text) {
-  return text
-    .replace(/\\/g, "\\\\")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/[[\]|]/g, "\\$&")
-    .replace(/\s*[\r\n]+\s*/g, " ");
-}
-
-function escapeCommand(text) {
-  return text.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
 }

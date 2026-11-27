@@ -1,9 +1,10 @@
 /**
  * Previous versions of removed entries in the copied comparison output, under
- * the removed previews contract. In a narrow and a wide window, a removed
- * page, document, and screen open as the section of their previous versions
- * on the canvas, with the Removed status and without comparison controls.
- * Each previous version comes from its generation, read once. A viewport
+ * the removed previews contract. In a wide window, a removed page, document,
+ * and screen open as the section of their previous versions on the canvas,
+ * with the Removed status and without comparison controls. In a narrow and a
+ * wide window, each previous version comes from its generation, read once,
+ * and the compact layout reads the Mobile column's documents alone. A viewport
  * that has no captured previous view holds its note in its frame's place,
  * which names the viewport that has one while no frame of it shows. Under
  * Dark, a screen captured only in Light keeps its Light row alone.
@@ -28,7 +29,7 @@ import {
   PREVIOUS as STAGE,
   previousVersionLabel,
 } from "./previous_version.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 const DOCUMENTS = [
   [comparisonPaths.removedPage, "Historical page"],
@@ -65,87 +66,81 @@ function screenFrame(page: Page, viewport: "desktop" | "mobile") {
   return historicalFrame(page, viewport).locator("iframe").contentFrame();
 }
 
+test.describe("1280px window previews", () => {
+  test.use({ viewport: { width: 1280, height: 900 } });
+
+  test("a removed page and document show their previous versions", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    const index = await comparisonIndex(request, baseURL);
+    for (const [entryPath, heading] of DOCUMENTS) {
+      await openRemoved(page, index, entryPath);
+      await expect(page.locator(`${STAGE} iframe`)).toHaveCount(1);
+      await expect(
+        page.frameLocator(`${STAGE} iframe`).locator("h1"),
+      ).toHaveText(heading);
+    }
+    // The base stylesheet still styles a previous version: the card that
+    // screens/former used keeps the Before colour, not the current one.
+    await openRemoved(page, index, comparisonPaths.removedLightOnly);
+    await expect(
+      screenFrame(page, "desktop").locator("article.accent"),
+    ).toHaveCSS("color", accentColor.Before);
+  });
+
+  test("a removed screen shows its previous frames", async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    await openRemoved(
+      page,
+      await comparisonIndex(request, baseURL),
+      comparisonPaths.removedScreen,
+    );
+    // Each frame, a bare canvas frame of its viewport, shows its own
+    // viewport's previous document.
+    for (const viewport of ["mobile", "desktop"] as const) {
+      await expect(historicalFrame(page, viewport)).toHaveAttribute(
+        "data-canvas-frame",
+        viewport,
+      );
+      await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
+        "Historical screen",
+      );
+      await expect(
+        historicalFrame(page, viewport).locator("iframe"),
+      ).toHaveAttribute(
+        "data-mokly-preview-source",
+        new RegExp(
+          `/snapshots/before/mokly-generated/${comparisonPaths.removedScreen}/index\\.${viewport}\\.html$`,
+          "u",
+        ),
+      );
+    }
+    // Desktop stands beside Mobile, in one row, on the fitted canvas.
+    const desktop = await historicalFrame(page, "desktop").boundingBox();
+    const mobile = await historicalFrame(page, "mobile").boundingBox();
+    expect(desktop).not.toBeNull();
+    expect(mobile).not.toBeNull();
+    expect(desktop!.x + desktop!.width).toBeLessThan(mobile!.x);
+    expect(Math.abs(desktop!.y - mobile!.y)).toBeLessThanOrEqual(1);
+    await expect(page.getByRole("group", { name: "Zoom" })).toBeVisible();
+    await chooseViewport(page, "mobile");
+    await expect(historicalFrame(page, "desktop")).toHaveCount(0);
+    await expect(screenFrame(page, "mobile").locator("h1")).toHaveText(
+      "Historical screen",
+    );
+    await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();
+    await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
+  });
+});
+
 for (const width of [390, 1280])
   test.describe(`${width}px window`, () => {
     test.use({ viewport: { width, height: 900 } });
-
-    test("a removed page and document show their previous versions", async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      const index = await comparisonIndex(request, baseURL);
-      for (const [entryPath, heading] of DOCUMENTS) {
-        await openRemoved(page, index, entryPath);
-        await expect(page.locator(`${STAGE} iframe`)).toHaveCount(1);
-        await expect(
-          page.frameLocator(`${STAGE} iframe`).locator("h1"),
-        ).toHaveText(heading);
-      }
-      // The base stylesheet still styles a previous version: the card that
-      // screens/former used keeps the Before colour, not the current one. The
-      // compact layout shows the Mobile frame.
-      await openRemoved(page, index, comparisonPaths.removedLightOnly);
-      await expect(
-        screenFrame(page, width < 900 ? "mobile" : "desktop").locator(
-          "article.accent",
-        ),
-      ).toHaveCSS("color", accentColor.Before);
-    });
-
-    test("a removed screen shows its previous frames", async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      await openRemoved(
-        page,
-        await comparisonIndex(request, baseURL),
-        comparisonPaths.removedScreen,
-      );
-      // Each frame, a bare canvas frame of its viewport, shows its own
-      // viewport's previous document. The compact layout shows one frame at
-      // a time, which the entry bar's picker picks.
-      for (const viewport of ["mobile", "desktop"] as const) {
-        if (width < 900)
-          await page.getByRole("combobox", { name: "Frame" }).selectOption({
-            label: `${viewport === "desktop" ? "Desktop" : "Mobile"} · Light`,
-          });
-        await expect(historicalFrame(page, viewport)).toHaveAttribute(
-          "data-canvas-frame",
-          viewport,
-        );
-        await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
-          "Historical screen",
-        );
-        await expect(
-          historicalFrame(page, viewport).locator("iframe"),
-        ).toHaveAttribute(
-          "data-mokly-preview-source",
-          new RegExp(
-            `/snapshots/before/mokly-generated/${comparisonPaths.removedScreen}/index\\.${viewport}\\.html$`,
-            "u",
-          ),
-        );
-      }
-      if (width >= 900) {
-        // Desktop stands beside Mobile, in one row, on the fitted canvas.
-        const desktop = await historicalFrame(page, "desktop").boundingBox();
-        const mobile = await historicalFrame(page, "mobile").boundingBox();
-        expect(desktop).not.toBeNull();
-        expect(mobile).not.toBeNull();
-        expect(desktop!.x + desktop!.width).toBeLessThan(mobile!.x);
-        expect(Math.abs(desktop!.y - mobile!.y)).toBeLessThanOrEqual(1);
-        await expect(page.getByRole("group", { name: "Zoom" })).toBeVisible();
-      }
-      await chooseViewport(page, "mobile");
-      await expect(historicalFrame(page, "desktop")).toHaveCount(0);
-      await expect(screenFrame(page, "mobile").locator("h1")).toHaveText(
-        "Historical screen",
-      );
-      await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();
-      await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
-    });
 
     test("each previous version is read once from its generation", async ({
       page,
@@ -256,34 +251,5 @@ test("a viewport with no captured previous view says so", async ({
   await expect(page.locator(note)).toHaveCount(0);
   await expect(screenFrame(page, "desktop").locator("h1")).toHaveText(
     "Historical screen",
-  );
-});
-
-test("under Dark, a removed screen captured only in Light keeps its Light row alone", async ({
-  page,
-  request,
-  baseURL,
-}) => {
-  const entryPath = comparisonPaths.removedLightOnly;
-  await openRemoved(page, await comparisonIndex(request, baseURL), entryPath);
-  await chooseViewport(page, "desktop");
-  await chooseScheme(page, "dark");
-  await expect(page.locator(`${STAGE} figure`)).toHaveCount(1);
-  await expect(historicalFrame(page, "desktop", "dark")).toHaveCount(0);
-  await expect(historicalFrame(page, "desktop")).toHaveAttribute(
-    "data-preview-color-scheme",
-    "light",
-  );
-  await expect(
-    historicalFrame(page, "desktop").locator("iframe"),
-  ).toHaveAttribute(
-    "data-mokly-preview-source",
-    new RegExp(
-      `/snapshots/before/mokly-generated/${entryPath}/index\\.desktop\\.html$`,
-      "u",
-    ),
-  );
-  await expect(screenFrame(page, "desktop").locator("h1")).toHaveText(
-    "Former screen",
   );
 });

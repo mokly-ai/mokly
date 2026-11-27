@@ -19,8 +19,6 @@ export function validateCompletedReport(report, options = {}) {
   validateRuntime(report.runtime, report.nodeVersion);
   validateShard(report.shard);
   const isPlaywright = report.suite === "browser";
-  if (report.suite === "viewer" && report.shard !== null)
-    throw new Error("viewer report must be unsharded");
   if (isPlaywright)
     validateUniqueStrings(
       report.playwrightFiles,
@@ -140,17 +138,6 @@ export function validateShardReports(reports, expected) {
       expected.total,
     );
   }
-}
-
-export function validateUnshardedReport(report, expected) {
-  validateCompletedReport(report);
-  if (report.suite !== expected.suite)
-    throw new Error(`wrong suite ${report.suite}`);
-  if (report.commit !== expected.commit)
-    throw new Error(`wrong commit ${report.commit}`);
-  if (report.runtime !== expected.runtime)
-    throw new Error(`wrong runtime ${report.runtime}`);
-  if (report.shard !== null) throw new Error("report must be unsharded");
 }
 
 function validateUnitFailures(report) {

@@ -120,6 +120,15 @@ test("the adoption preserves existing registration schemas, controls and saved v
   const field = compatible.find(
     (item: { path: string }) => item.path === "design/input",
   );
+  // The Password field of sign in's password section.
+  assert.equal(
+    field.propSchema.properties.type.schema.values.pop(),
+    "password",
+  );
+  assert.deepEqual(field.controls.type.options.pop(), {
+    label: "Password",
+    value: "password",
+  });
   assert.equal(
     field.propSchema.properties.type.schema.values.pop(),
     "identifier",
@@ -255,4 +264,24 @@ test("identifier fields disable keyboard rewriting without changing prose fields
   assert.match(prose, /autoCapitalize="sentences"/);
   assert.match(prose, /autoCorrect="on"/);
   assert.match(prose, /spellCheck="true"/);
+});
+
+test("a password field masks what the reader typed and asks for the current password", () => {
+  const html = wrapperMarkup(
+    inputInput.render(
+      {
+        label: "Password",
+        name: "password",
+        type: "password",
+        value: "typed-password",
+      },
+      context,
+    ),
+    context,
+  );
+  assert.match(html, /type="password"/);
+  assert.match(html, /autoComplete="current-password"/);
+  assert.match(html, /autoCapitalize="none"/);
+  assert.match(html, /autoCorrect="off"/);
+  assert.match(html, /spellCheck="false"/);
 });

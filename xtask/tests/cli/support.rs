@@ -12,7 +12,7 @@ use std::process::{Command, ExitStatus, Output};
 
 use tempfile::TempDir;
 
-pub(super) trait Fixture {
+pub(super) trait Fixture: Sync {
     fn root(&self) -> &Path;
     fn write(&self, path: &str, text: &str);
     fn copy(&self, path: &str);

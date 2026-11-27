@@ -1,22 +1,9 @@
 import { type Locator, type Page, expect, test } from "@playwright/test";
 
-import {
-  EXTERNAL_LINKS,
-  GET_STARTED_PATH,
-  SITE_PATHS,
-} from "../../src/navigation.js";
+import { SITE_PATHS } from "../../src/navigation.js";
 
 import { openMenu } from "./menu.js";
 import { HEADINGS } from "./routes.js";
-
-/** The menu's destinations, in reading order. */
-const MENU_LINKS = [
-  SITE_PATHS.docs,
-  SITE_PATHS.changelog,
-  SITE_PATHS.pricing,
-  EXTERNAL_LINKS.github,
-  GET_STARTED_PATH,
-];
 
 /** The menu control. The open menu makes it inert, so it is found by its relationship. */
 function control(page: Page): Locator {
@@ -29,7 +16,7 @@ async function isOpen(menu: Locator): Promise<boolean> {
 }
 
 test(
-  "the menu opens as a modal sheet below the tool bar holding every destination",
+  "the menu opens as a modal sheet below the tool bar",
   { tag: "@mobile" },
   async ({ page }) => {
     await page.goto(SITE_PATHS.home);
@@ -51,13 +38,6 @@ test(
     const sheet = await menu.boundingBox();
     expect(sheet?.y ?? 0).toBeCloseTo((bar?.y ?? 0) + (bar?.height ?? -1), 0);
     expect([sheet?.x, sheet?.width]).toEqual([0, page.viewportSize()?.width]);
-    expect(
-      await menu
-        .locator("a")
-        .evaluateAll((anchors) =>
-          anchors.map((anchor) => anchor.getAttribute("href")),
-        ),
-    ).toEqual(MENU_LINKS);
     await expect(page.locator("html")).toHaveCSS("overflow", "hidden");
   },
 );

@@ -141,6 +141,7 @@ pub(super) fn session(
                 generation_key: "test".into(),
                 matchers,
                 directories: vec![],
+                stylesheet_imports: Default::default(),
                 stylesheet_resolution_files: Default::default(),
                 stylesheet_resolution_roots: Default::default(),
             },

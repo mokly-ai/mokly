@@ -18,6 +18,7 @@ for (const variant of ["html", "react"] as const) {
       path.join(repositoryRoot, ".context/large-changes-"),
     );
     let completed = false;
+    let cache: string | undefined;
     try {
       const fixture = await prepareFixture(
         repositoryRoot,
@@ -26,9 +27,12 @@ for (const variant of ["html", "react"] as const) {
         "workspace",
         root,
       );
+      if (variant === "react" && process.platform === "linux")
+        cache = await fs.mkdtemp(testInfo.outputPath("cache-"));
       const report = await benchmark(fixture, ["changes"], 1, {
         memoryStopKiB: 0,
         browser,
+        ...(cache ? { emptyCacheRoot: cache } : {}),
       });
       assert.equal(report.results.length, 2);
       const cacheDirectories: string[] = [];
@@ -54,6 +58,9 @@ for (const variant of ["html", "react"] as const) {
           assert.equal(typeof result.basePreparation.cacheDirectory, "string");
           const directory = result.basePreparation.cacheDirectory;
           assert.ok(typeof directory === "string");
+          // The cold run starts in the test's own empty cache.
+          if (cache)
+            assert.ok(directory.startsWith(cache + path.sep), directory);
           cacheDirectories.push(directory);
           const sourceEntries = await fs.readdir(
             path.join(directory, "sources/entries"),
@@ -103,7 +110,11 @@ for (const variant of ["html", "react"] as const) {
       });
       completed = true;
     } finally {
-      await cleanupLargeFixture(root, testInfo, completed);
+      try {
+        await cleanupLargeFixture(root, testInfo, completed);
+      } finally {
+        if (cache) await fs.rm(cache, { recursive: true, force: true });
+      }
     }
   });
 }

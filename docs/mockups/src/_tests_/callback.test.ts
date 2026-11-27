@@ -1,7 +1,7 @@
 /**
- * The callback landings: the protocol-named states of the email, preview and
- * desktop callbacks, and the GitHub installation landings' waits, their request
- * and their two install recovery states.
+ * The callback landings: the protocol-named states of the email and desktop
+ * callbacks, and the GitHub installation landings' waits, their request and
+ * their two install recovery states.
  */
 
 import assert from "node:assert/strict";
@@ -87,20 +87,6 @@ test("the callback landing owns every protocol state in screens of at most four 
       title: "We couldn’t sign you in",
       message: "Request another sign-in link",
       actions: ["Back to sign in"],
-      details: true,
-    },
-    {
-      id: "product/account/callback/preview-invalid",
-      title: "This link isn’t valid",
-      message: undefined,
-      actions: ["Back to sign in"],
-      details: true,
-    },
-    {
-      id: "product/account/callback/preview-invalid/failure",
-      title: "We couldn’t sign you in",
-      message: undefined,
-      actions: ["Try again", "Back to sign in"],
       details: true,
     },
     // The grant is single use, so neither desktop failure offers a retry.

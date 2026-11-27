@@ -13,6 +13,10 @@ export interface Budgets {
   wallClockMinutes: number;
   slowestTests: number;
   jobs: JobBudget[];
+  /** The unchecked `cache` field; the cache report narrows it. */
+  cache: unknown;
+  /** The unchecked `shardGroups` field; the shard balance report narrows it. */
+  shardGroups: unknown;
 }
 
 export type BudgetState = "within" | "over" | "no-budget" | "not-run";
@@ -28,6 +32,8 @@ export interface BudgetRow {
 export function parseBudgets(value: unknown): Budgets;
 
 export function matchBudget(name: string, budgets: Budgets): JobBudget | null;
+
+export function matchesPattern(name: string, source: string): boolean;
 
 export function evaluateJobs(
   jobs: readonly TimedJob[],

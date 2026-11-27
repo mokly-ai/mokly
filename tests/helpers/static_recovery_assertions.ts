@@ -52,17 +52,21 @@ export function normalized(
     .join("/");
 }
 
-export async function installedBytes(
-  root: string,
-  output: string,
-  verb: "build" | "publish",
-) {
+/** The bytes that a plain build of the root's committed sources installs. */
+export async function builtBytes(root: string) {
   const built = await command(root, "build", [
     "--no-changes",
     "--out=.context/expected",
   ]).result;
   assert.equal(built.code, 0, built.stderr);
-  const expected = await files(path.join(root, ".context/expected"));
+  return files(path.join(root, ".context/expected"));
+}
+
+export async function installedBytes(
+  expected: Map<string, Buffer>,
+  output: string,
+  verb: "build" | "publish",
+) {
   const actual = await files(output);
   if (verb === "publish") {
     assert.ok(actual.delete("mokly-upload.json"));

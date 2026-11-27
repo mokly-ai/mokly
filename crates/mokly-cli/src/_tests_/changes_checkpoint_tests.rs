@@ -52,8 +52,8 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
             Arc::new(Unimock::new((
                 capture_head(),
                 ChangesServiceMock::classify
-                    .next_call(matching!(_, _, _, _))
-                    .answers_arc(Arc::new(move |_, _, _, _, _| {
+                    .next_call(matching!(_, _, _, _, _))
+                    .answers_arc(Arc::new(move |_, _, _, _, _, _| {
                         interrupt.interrupt();
                         Err(Error::Base {
                             commit: "a".repeat(40),
@@ -105,7 +105,7 @@ fn a_base_input_rejection_survives_a_later_clean_verification() {
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         changes: Arc::new(Unimock::new(
             ChangesServiceMock::classify
-                .next_call(matching!(_, _, _, _))
+                .next_call(matching!(_, _, _, _, _))
                 .returns(Err(Error::Base {
                     commit: "a".repeat(40),
                     scripts_off: false,

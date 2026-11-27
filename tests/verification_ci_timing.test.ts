@@ -8,8 +8,10 @@ import {
   matchBudget,
   parseBudgets,
 } from "../scripts/verification/ci-timing-budgets.mjs";
+import { parseCacheBudget } from "../scripts/verification/ci-timing-cache.mjs";
 import { parseJobs } from "../scripts/verification/ci-timing-jobs.mjs";
 import { criticalPath } from "../scripts/verification/ci-timing-path.mjs";
+import { parseShardGroups } from "../scripts/verification/ci-timing-shards.mjs";
 import { slowestTests } from "../scripts/verification/ci-timing-tests.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -264,5 +266,7 @@ test("the committed budget file parses", async () => {
     path.join(repositoryRoot, "scripts/verification/ci-budgets.json"),
     "utf8",
   );
-  assert.doesNotThrow(() => parseBudgets(JSON.parse(source)));
+  const committed = parseBudgets(JSON.parse(source));
+  assert.doesNotThrow(() => parseCacheBudget(committed.cache));
+  assert.doesNotThrow(() => parseShardGroups(committed.shardGroups));
 });

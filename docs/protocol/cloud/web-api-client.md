@@ -19,18 +19,19 @@ Sign-in is one process for new and returning readers.
 `POST /v1/auth/magic-links` sends the link; the mail carries `#token=` in the
 fragment. The token leaves the address before the app's router records it,
 and `/auth/email/callback` exchanges it through `POST /v1/auth/callback`
-before resuming; a credential never stays in the address. A preview's shared
-link carries `#secret=` instead, removed the same way and exchanged by
-`/auth/preview/callback` through `POST /v1/auth/preview`. Inside the desktop
-shell, which the app recognizes by the page's own `mokly-app:` location
-protocol, account entry signs in through the browser instead, and
+before resuming; a credential never stays in the address. Where the
+configuration answer names a shared account, Sign in also sends a typed
+preview password through `POST /v1/auth/preview`, as
+[Preview sign-in](./preview-sign-in.md#sign-in-section) defines. Inside the
+desktop shell, which the app recognizes by the page's own `mokly-app:`
+location protocol, account entry signs in through the browser instead, and
 `/auth/desktop/callback` exchanges the returned grant through
 `POST /v1/auth/desktop/callback`, as [Desktop sign-in](./desktop-sign-in.md)
 defines. `returnTo` is validated exactly as
 [Navigation](./product-navigation.md#routes-and-entry) requires: an accepted
 destination keeps its path and query bytes and their order through email,
-GitHub and desktop grant sign-in, and an absent or rejected value becomes
-`/dashboard`.
+GitHub, desktop grant and preview password sign-in, and an absent or
+rejected value becomes `/dashboard`.
 
 A session state is `loading`, `signed-in`, `signed-out` or `error`. Only
 `unauthenticated` and `session-expired` sign the reader out; any other failure

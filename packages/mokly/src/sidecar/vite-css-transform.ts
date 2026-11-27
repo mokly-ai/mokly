@@ -3,6 +3,7 @@ import type { Plugin, ResolvedConfig } from "vite";
 import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 
 import { fileDigest, metadataDigest } from "./file-digests.js";
+import { metadataPath } from "./resolution-inputs.js";
 import { viteCssPath, ViteCssUrls } from "./vite-css-paths.js";
 import { recordViteInput } from "./vite-inputs.js";
 import { viteMetadata } from "./vite-metadata.js";
@@ -106,7 +107,7 @@ export class ViteCssTransform {
         const report = pluginReports.get(dependency);
         const file =
           report === undefined
-            ? await input.paths.metadata(dependency)
+            ? await metadataPath(input.paths, dependency)
             : dependency;
         const digest =
           report === undefined

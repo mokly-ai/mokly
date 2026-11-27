@@ -10,9 +10,15 @@ import {
   type DependencyTier,
 } from "./helpers/cold_base_fixture.js";
 import { reportDuration } from "./helpers/durations.js";
+import { fileFixture } from "./helpers/file_fixture.js";
 import { git } from "./helpers/static_changes.js";
 import { command } from "./helpers/static_publication.js";
 import { timings } from "./helpers/static_timings.js";
+
+const workingModules = fileFixture(async (owner) => {
+  const fixture = await coldBaseFixture(2, owner);
+  return path.join(fixture.root, "node_modules");
+});
 
 async function children(directory: string) {
   try {
@@ -40,65 +46,75 @@ async function findMarker(directory: string): Promise<string | undefined> {
   return undefined;
 }
 
-for (const mode of ["config", "flag"] as const) {
-  test(
-    `scripts-on ${mode} opt-in runs the base lifecycle marker`,
-    { timeout: 120_000 },
-    async (context) => {
-      const fixture = await coldBaseFixture(2, context);
-      if (mode === "config") {
-        await fs.writeFile(
-          path.join(fixture.root, "mokly.config.json"),
-          '{"review":{"baseInstallScripts":true}}',
-        );
-      }
-      const result = await command(
-        fixture.root,
-        "build",
-        [
-          "--base=HEAD",
-          "--out=.context/site",
-          "--sidecars=1",
-          ...(mode === "flag" ? ["--base-install-scripts"] : []),
-        ],
-        "plain",
-        fixture.env,
-        context.signal,
-      ).result;
-      assert.equal(result.code, 0, result.stderr);
-      const cacheLine = result.stdout
-        .split("\n")
-        .find((line) => line.startsWith("Mokly cache: "));
-      assert.ok(cacheLine);
-      assert.ok(
-        await findMarker(cacheLine.slice("Mokly cache: ".length)),
-        `${result.stdout}\n${result.stderr}`,
-      );
-    },
-  );
-}
+// Rust unit tests cover the configuration setting and its precedence. The
+// flag runs here, because no Rust test covers its command-line wiring.
+test(
+  "scripts-on flag opt-in runs the base lifecycle marker",
+  { timeout: 120_000 },
+  async (context) => {
+    const fixture = await coldBaseFixture(2, context, {
+      nodeModules: await workingModules(),
+    });
+    const result = await command(
+      fixture.root,
+      "build",
+      [
+        "--base=HEAD",
+        "--out=.context/site",
+        "--sidecars=1",
+        "--base-install-scripts",
+      ],
+      "plain",
+      fixture.env,
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    const cacheLine = result.stdout
+      .split("\n")
+      .find((line) => line.startsWith("Mokly cache: "));
+    assert.ok(cacheLine);
+    assert.ok(
+      await findMarker(cacheLine.slice("Mokly cache: ".length)),
+      `${result.stdout}\n${result.stderr}`,
+    );
+  },
+);
 
-const cases: ReadonlyArray<{ tier: DependencyTier; title: string }> = [
+/**
+ * `rebuilds` names the outputs of the repeated builds that must reuse the
+ * source entry. The source key does not depend on the tier, so one tier
+ * repeats the build.
+ */
+const cases: ReadonlyArray<{
+  tier: DependencyTier;
+  title: string;
+  rebuilds: readonly string[];
+}> = [
   {
     tier: 1,
     title:
       "a cold base build reuses working dependencies when identities match",
+    rebuilds: [],
   },
   {
     tier: 2,
     title:
       "a cold base build installs locked dependencies offline without lifecycle scripts",
+    rebuilds: [".context/repeated"],
   },
   {
     tier: 3,
     title:
       "a strict cold base build warns and uses working dependencies when the offline install fails",
+    rebuilds: [],
   },
 ];
 
-for (const { tier, title } of cases) {
+for (const { tier, title, rebuilds } of cases) {
   test(title, { timeout: 120_000 }, async (context) => {
-    const fixture = await coldBaseFixture(tier, context);
+    const fixture = await coldBaseFixture(tier, context, {
+      nodeModules: await workingModules(),
+    });
     const { root, cache, base, env } = fixture;
     const working = await git(root, "status", "--porcelain");
     assert.deepEqual(await fs.readdir(cache), []);
@@ -257,16 +273,18 @@ for (const { tier, title } of cases) {
     await absent(
       path.join(root, "node_modules/mokly-cold-dependency/lifecycle-ran"),
     );
-    const repeated = await command(
-      root,
-      "build",
-      ["--base=HEAD", "--out=.context/repeated", "--sidecars=1"],
-      "plain",
-      env,
-      context.signal,
-    ).result;
-    assert.equal(repeated.code, 0, repeated.stderr);
-    assert.deepEqual(await children(sources), sourceEntries);
+    for (const out of rebuilds) {
+      const repeated = await command(
+        root,
+        "build",
+        ["--base=HEAD", `--out=${out}`, "--sidecars=1"],
+        "plain",
+        env,
+        context.signal,
+      ).result;
+      assert.equal(repeated.code, 0, repeated.stderr);
+      assert.deepEqual(await children(sources), sourceEntries);
+    }
     assert.equal(await git(root, "status", "--porcelain"), working);
   });
 }

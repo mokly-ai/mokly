@@ -9,6 +9,7 @@ import {
   navRow,
   showMode,
 } from "./comparison_ui.js";
+import { mainHeading } from "./main_heading.js";
 import {
   chooseViewport,
   openCatalogueSheet,
@@ -173,7 +174,7 @@ test("Changed navigation preserves collapsed unrelated groups", async ({
 
   await navRow(page, comparisonPaths.darkOnly).click();
 
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Dusk screen");
+  await expect(mainHeading(page, "Dusk screen")).toBeVisible();
   await expect(page.locator('button[data-filter="changed"]')).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -207,7 +208,7 @@ test("clearing filtering keeps the destination folder open", async ({
   await chooseFilter(page, "changed");
 
   await navRow(page, comparisonPaths.component).click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Card");
+  await expect(mainHeading(page, "Card")).toBeVisible();
   await chooseFilter(page, "all");
 
   await expect(components).toHaveAttribute("open", "");
@@ -276,7 +277,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
   }
   await chooseFilter(page, "all");
   await navRow(page, comparisonPaths.unchanged).click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  await expect(mainHeading(page, "Stable screen")).toBeVisible();
   await expect
     .poll(async () => (await nav.boundingBox())?.width)
     .toBeCloseTo(stepped, 0);

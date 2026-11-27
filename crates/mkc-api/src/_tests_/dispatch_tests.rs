@@ -13,6 +13,7 @@ use mkc_domain::client_origins::ClientOrigin;
 use mkc_domain::ids::UserId;
 use mkc_store_interface::session::Session;
 use mkc_store_interface::user::User;
+use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
@@ -33,7 +34,7 @@ fn unconfigured_optional_operations_precede_request_validation() {
     );
     let dispatcher = dispatcher(Arc::new(auth), None);
     let operations = optional_operations();
-    assert_eq!(operations.len(), 11);
+    assert_eq!(operations.len(), 15);
     for operation in operations {
         let valid_body = valid_body(operation);
         for (body, origin, csrf) in [
@@ -89,6 +90,45 @@ fn configured_preview_checks_origin_before_decoding_the_body() {
         )),
         Err(ApiError::ValidationFailed)
     ));
+}
+
+#[tokio::test]
+async fn configured_preview_passes_password_at_the_utf8_limit_unchanged() {
+    let password = format!(" {} ", "é".repeat(511));
+    let body = serde_json::to_vec(&json!({"password": password})).unwrap();
+    let auth = Unimock::new((
+        AuthenticatorMock::preview_sign_in_available
+            .each_call(matching!())
+            .returns(true),
+        AuthenticatorMock::origin
+            .each_call(matching!(Some(APP_ORIGIN)))
+            .answers(&|_, _| Ok(ClientOrigin::App)),
+        AuthenticatorMock::preview
+            .each_call(matching!((previous, "127.0.0.1") if previous.as_deref() == Some("session")))
+            .answers_arc(Arc::new(move |_, _, _| {
+                let password = password.clone();
+                Ok(Box::new(move |supplied| {
+                    assert_eq!(supplied, password);
+                    Err(Error::InvalidLink)
+                }))
+            })),
+    ));
+    let dispatcher = dispatcher(Arc::new(auth), None);
+    let result = dispatcher
+        .dispatch(request(
+            Operation::VerifyPreviewSignIn,
+            body,
+            Some(APP_ORIGIN),
+            None,
+        ))
+        .unwrap()
+        .finish()
+        .await;
+    assert!(
+        matches!(result, Err(ApiError::MagicLinkInvalid)),
+        "{:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -184,6 +224,7 @@ fn dispatcher(
         github,
         billing: None,
         access: Arc::new(Unimock::new(())),
+        preview_hash_slots: Default::default(),
     }
 }
 
@@ -218,7 +259,7 @@ fn identity() -> Identity {
 
 fn valid_body(operation: Operation) -> Vec<u8> {
     match operation {
-        Operation::VerifyPreviewSignIn => br#"{"secret":"aaaaaaaa"}"#.to_vec(),
+        Operation::VerifyPreviewSignIn => br#"{"password":"preview password"}"#.to_vec(),
         Operation::ConnectGitHub | Operation::StartGitHubSignIn => b"{}".to_vec(),
         Operation::VerifyGitHubSignIn => {
             br#"{"code":"code","state":"state","codeVerifier":"verifier"}"#.to_vec()

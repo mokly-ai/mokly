@@ -36,6 +36,7 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 - Install base dependencies with scripts disabled by default, a deadline, and a
   size bound. The working-tree configuration or CLI can opt into scripts.
 - Return bundle settings and a configuration warning when an install fails.
+- Warn when the head loads a repository file that Git ignores.
 
 ## What This Crate Does
 
@@ -43,7 +44,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 It indexes configured roots and exact requested paths and retains every tree
 mode. `GitTree` implements `dyn SourceTree` over that index, so the catalogue
 applies its roots, globs, and source rules to base files. Exact projections use
-cached metadata and bounded path queries. Catalogue inventories and planning
+cached metadata and bounded path queries. `SourceTree::hint_projections` loads
+the metadata of many exact paths with one query, and leaves out a path that has
+a descendant in the set; a failed hint loads nothing, so each projection runs
+its own query and keeps its own error. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
@@ -167,6 +171,12 @@ owns the install environment, the manager executables, the bounds, and the
 stops. `NodeExecutable` resolves the shim-supplied Node or searches absolute
 `PATH` entries. The CLI uses the same resolver for rendering and for the
 scripts-on runtime probe.
+
+`SystemSpawner` gives each manager to a `ProcessTree` of `mokly-platform`. The
+tree reaps the manager only after its last tree signal. Both output readers
+share the tree. When the stop grace ends while a process that the stop did not
+end still holds the output, the install abandons the readers, and the exited
+manager stays unreaped until that process closes the output.
 
 `Resolved` returns the primary `node_modules` path, the complete
 `ModuleResolution` value, and typed `repository_roots` for sidecar mapping.
@@ -373,6 +383,18 @@ announces reading and comparing, and the base provider announces rendering.
 `DependencyTiers` announces installing when a dependency build starts. A
 complete entry announces nothing.
 
+`ChangesService::classify` also takes the warning list of the caller. After
+the pin, and before the kept-base lookup, `Changes` adds the `ignored-module`
+warnings of the head to that list, so the caller keeps them also when the
+base fails. The private `ignored_modules` module reads the files that the
+head loaded through `RenderGeneration::module_imports`. Then
+`Repository::working_path_statuses` checks each path and supplies the cause
+for ignored files, nested checkouts, and submodules. When Git cannot give the
+statuses, the check records a debug event and classification continues without
+these warnings. Cancellation stops classification. The
+[ignored modules rule](../../docs/protocol/mokly-comparison-packages.md#ignored-modules)
+owns which files count and the message.
+
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
 classification onto current or historical public records of the same retained
@@ -425,7 +447,6 @@ cargo test -p mokly-compare --test dependencies_tests
 
 ```bash
 cargo clippy -p mokly-compare --all-targets -- -D warnings
-cargo test -p mokly-compare --test pnpm_modules_purge_tests
 ```
 
 Consumers enable the `mock` feature to use every public trait with unimock.
@@ -433,22 +454,22 @@ Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. Command tests pin
 every manager's complete scripts-off argument list.
 
-On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
-base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
-It runs the pinned pnpm 10.34.7, 11.20.0, and 12.14.0 CLIs from the
-repository's development dependencies, with and without `CI` and
-`GITHUB_ACTIONS` in the parent environment. Run `npm ci` at the repository
-root before you run the crate tests. The test fails when a pinned CLI is
-missing.
+The `dependencies_tests` and `package_roots_tests` fixtures copy npm
+lockfiles from `tests/fixtures/`. To refresh a lockfile, use the test's
+manifest and local dependency files with
+`npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund`.
 
-The Node tests in `tests/static_base_managers.test.ts` run cold builds with
-pnpm and both Yarn families from local archives.
-`tests/static_base_registry.test.ts` runs one cold build per manager from a
-local registry that requires the user token. Pinned test CLIs come from
-development dependencies, and no test uses the internet.
-`tests/static_base_manager_ci.test.ts` runs the four base-manager files and
-`tests/static_cold_base_tiers.test.ts` with `CI=true` and
-`GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
+The Node tests in `tests/static_base_managers.test.ts` and
+`tests/static_base_registry.test.ts` run cold builds from local archives and
+from a local registry that requires the user token. They install with Yarn
+Berry and the pinned pnpm 11 and 12 CLIs. The unit tests of this crate cover
+the arguments, versions, and environment of pnpm 10 and Yarn Classic. One
+cold build still installs with the pinned pnpm 10 CLI, and
+`tests/static_base_manager_mirror.test.ts` and
+`tests/static_base_classic_paths.test.ts` install with Yarn Classic. The
+install environment leaves out `CI` and `GITHUB_ACTIONS`, so a CI install
+runs as a local one does. Pinned test CLIs come from development
+dependencies, and no test uses the internet.
 
 ### Key Code
 
@@ -521,6 +542,12 @@ development dependencies, and no test uses the internet.
   reuse. Each fresh preparation takes the provider's historical sources when
   it has them. It holds the `PrefetchGuard` of a fresh base until the capture
   of that base returns, so each exit stops its early renders and waits for them.
+  After the pin, it adds the `ignored-module` warnings of the head to the
+  warning list of the caller.
+- The private [`src/ignored_modules.rs`](./src/ignored_modules.rs) builds the
+  `ignored-module` warnings from exact path statuses in `mokly-git`. It uses
+  the workspace layout rule in `mokly-css` to check source recovery and
+  select the override hint for ignored files.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,

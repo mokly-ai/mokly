@@ -2,6 +2,7 @@
 
 use mokly_catalogue::config_types::{ModuleLoader, ResolvedConfig};
 use mokly_compare::dependency_types::Tier;
+use mokly_render::side::source_package_maps;
 use mokly_sidecar::methods::ModuleResolution;
 
 pub(super) fn tier_number(tier: Tier) -> u64 {
@@ -43,5 +44,6 @@ pub(super) fn resolution(config: &ResolvedConfig) -> ModuleResolution {
         main_fields: authored.main_fields.unwrap_or_default(),
         resolve_extensions: authored.resolve_extensions.unwrap_or_default(),
         package_roots: config.package_roots(),
+        source_packages: source_package_maps(config),
     }
 }

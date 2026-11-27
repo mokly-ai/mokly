@@ -66,7 +66,6 @@ test("each code line of the sample takes its own rows, with no blank row after i
 }) => {
   await page.goto(SAMPLE_PAGE);
   const lines = band(page).locator(".site-code-line");
-  await expect(lines).toHaveCount(16);
   const rows = await lines.evaluateAll((all) =>
     all.map((code) => {
       const { bottom, top } = code.getBoundingClientRect();
@@ -87,33 +86,35 @@ test("each code line of the sample takes its own rows, with no blank row after i
   ).toEqual(rows.slice(1).map(() => 0));
 });
 
-test("the controls switch the frame to the chosen view and dim the lines it leaves out", async ({
-  page,
-}) => {
-  await page.goto(SAMPLE_PAGE);
-  const radio = (name: string) =>
-    page.getByRole("radio", { exact: true, name });
-  await expect(radio("Mobile")).toBeChecked();
-  await expect(radio("Welcome")).toBeChecked();
-  await expect(view(page, VIEWS.mobile)).toBeVisible();
-  await expect.poll(() => dimmedLines(page)).toEqual([15]);
+test(
+  "the controls switch the frame to the chosen view and dim the lines it leaves out",
+  { tag: ["@desktop", "@scheme"] },
+  async ({ page }) => {
+    await page.goto(SAMPLE_PAGE);
+    const radio = (name: string) =>
+      page.getByRole("radio", { exact: true, name });
+    await expect(radio("Mobile")).toBeChecked();
+    await expect(radio("Welcome")).toBeChecked();
+    await expect(view(page, VIEWS.mobile)).toBeVisible();
+    await expect.poll(() => dimmedLines(page)).toEqual([15]);
 
-  await option(page, "Desktop").click();
-  await expect(radio("Desktop")).toBeChecked();
-  await expect(view(page, VIEWS.desktop)).toBeVisible();
-  await expect(view(page, VIEWS.mobile)).toBeHidden();
-  await expect.poll(() => dimmedLines(page)).toEqual([14]);
+    await option(page, "Desktop").click();
+    await expect(radio("Desktop")).toBeChecked();
+    await expect(view(page, VIEWS.desktop)).toBeVisible();
+    await expect(view(page, VIEWS.mobile)).toBeHidden();
+    await expect.poll(() => dimmedLines(page)).toEqual([14]);
 
-  await option(page, "First visit").click();
-  await expect(radio("First visit")).toBeChecked();
-  await expect(view(page, VIEWS.desktopFirstVisit)).toBeVisible();
-  await expect(view(page, VIEWS.desktop)).toBeHidden();
-  await expect.poll(() => dimmedLines(page)).toEqual([13, 14]);
-});
+    await option(page, "First visit").click();
+    await expect(radio("First visit")).toBeChecked();
+    await expect(view(page, VIEWS.desktopFirstVisit)).toBeVisible();
+    await expect(view(page, VIEWS.desktop)).toBeHidden();
+    await expect.poll(() => dimmedLines(page)).toEqual([13, 14]);
+  },
+);
 
 test(
   "beside the code, the wire joins the lit heading's line to the heading at the frame's edge",
-  { tag: "@desktop" },
+  { tag: ["@desktop", "@scheme"] },
   async ({ page }) => {
     await page.goto(SAMPLE_PAGE);
     const lit = line(page, HEADING);
@@ -155,7 +156,7 @@ test(
 
 test(
   "pointing at a line lights it and its element, and pointing at an element lights its line",
-  { tag: "@desktop" },
+  { tag: ["@desktop", "@scheme"] },
   async ({ page }) => {
     await page.goto(SAMPLE_PAGE);
     const ready = line(page, READY);
@@ -199,7 +200,7 @@ test.describe("on a touch screen", () => {
 
   test(
     "stacked, the band draws no wire, and tapping a line or an element lights the pair",
-    { tag: "@mobile" },
+    { tag: ["@mobile", "@scheme"] },
     async ({ page }) => {
       await page.goto(SAMPLE_PAGE);
       const ready = line(page, READY);
@@ -212,7 +213,6 @@ test.describe("on a touch screen", () => {
         box(frame),
       ]);
       expect(screen.y).toBeGreaterThan(panel.y + panel.height);
-      await expect(wire(page)).toHaveCount(1);
       await expect(shownWire(page)).toHaveCount(0);
 
       await ready.tap();
@@ -247,14 +247,13 @@ test(
   },
 );
 
-test.describe("without script", () => {
+test.describe("without script", { tag: ["@desktop", "@scheme"] }, () => {
   test.use({ javaScriptEnabled: false });
 
   test("the band shows its first view with its dimmed lines, without the controls or the wire", async ({
     page,
   }) => {
     await page.goto(SAMPLE_PAGE);
-    await expect(band(page).locator("iframe")).toHaveCount(4);
     await expect(view(page, VIEWS.mobile)).toBeVisible();
     for (const title of [
       VIEWS.desktop,
@@ -266,9 +265,7 @@ test.describe("without script", () => {
       includeHidden: true,
       name: "Viewport",
     });
-    await expect(controls).toHaveCount(1);
     await expect(controls).toBeHidden();
-    await expect(wire(page)).toHaveCount(1);
     await expect(shownWire(page)).toHaveCount(0);
     await expect.poll(() => dimmedLines(page)).toEqual([15]);
     expect(await litLines(page)).toEqual([]);

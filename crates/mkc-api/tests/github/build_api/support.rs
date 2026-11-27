@@ -45,23 +45,24 @@ pub(super) fn refusal(response: ContractResponse, status: u16, reason: &str) -> 
 
 pub(super) fn visibility(app: &Harness, project: ProjectId, visibility: Visibility) {
     app.queries(&mut |q| {
-        let mut value = q.project(project).unwrap().unwrap();
+        let mut value = q.project(project)?.unwrap();
         value.visibility = visibility;
-        q.save_project(&value).unwrap();
+        q.save_project(&value)?;
+        Ok(())
     });
 }
 
 pub(super) fn role(app: &Harness, project: ProjectId, role: Option<Role>, direct: bool) {
     app.queries(&mut |q| {
-        let workspace = q.project(project).unwrap().unwrap().organization_id;
-        for member in q.members(workspace).unwrap() {
+        let workspace = q.project(project)?.unwrap().organization_id;
+        for member in q.members(workspace)? {
             if member.user_id == Some(app.user) {
-                q.delete_member(member.id).unwrap();
+                q.delete_member(member.id)?;
             }
         }
-        for grant in q.grants(project).unwrap() {
+        for grant in q.grants(project)? {
             if grant.user_id == app.user {
-                q.delete_grant(grant.id).unwrap();
+                q.delete_grant(grant.id)?;
             }
         }
         if let Some(role) = role {
@@ -72,8 +73,7 @@ pub(super) fn role(app: &Harness, project: ProjectId, role: Option<Role>, direct
                     user_id: app.user,
                     role,
                     version: 1,
-                })
-                .unwrap();
+                })?;
             } else {
                 q.insert_member(&Member {
                     id: Uuid::now_v7().into(),
@@ -83,10 +83,10 @@ pub(super) fn role(app: &Harness, project: ProjectId, role: Option<Role>, direct
                     role,
                     version: 1,
                     expires_at: None,
-                })
-                .unwrap();
+                })?;
             }
         }
+        Ok(())
     });
 }
 
@@ -111,8 +111,8 @@ pub(super) fn schedule(
             base_ref: None,
             config_path: "mokly.config.json".into(),
             created_at: at,
-        })
-        .unwrap();
+        })?;
+        Ok(())
     });
     id
 }
@@ -120,7 +120,8 @@ pub(super) fn schedule(
 pub(super) fn build(app: &Harness, project: ProjectId, id: BuildId) -> Build {
     let mut value = None;
     app.queries(&mut |q| {
-        value = q.build(project, id).unwrap();
+        value = q.build(project, id)?;
+        Ok(())
     });
     value.unwrap()
 }
@@ -137,9 +138,9 @@ pub(super) fn start(app: &Harness, project: ProjectId, id: BuildId) -> Build {
                 lease_expires_at: at + Duration::minutes(2),
                 deadline_at: at + Duration::minutes(15),
             },
-        )
-        .unwrap()
+        )?
         .unwrap();
+        Ok(())
     });
     build(app, project, id)
 }
@@ -158,20 +159,18 @@ pub(super) fn finish(app: &Harness, project: ProjectId, id: BuildId, state: Buil
         _ => None,
     };
     app.queries(&mut |q| {
-        assert!(
-            q.finish_build(
-                id,
-                value.lease_token,
-                &BuildFinish {
-                    state,
-                    failure_cause: cause,
-                    exit_code: None,
-                    at,
-                    next_attempt_at: at
-                }
-            )
-            .unwrap()
-        );
+        assert!(q.finish_build(
+            id,
+            value.lease_token,
+            &BuildFinish {
+                state,
+                failure_cause: cause,
+                exit_code: None,
+                at,
+                next_attempt_at: at
+            }
+        )?);
+        Ok(())
     });
 }
 

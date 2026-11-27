@@ -1,5 +1,8 @@
+import { createHash } from "node:crypto";
+
 import type { Page } from "@playwright/test";
 
+import { sql } from "./database-fixture";
 import { expect } from "./harness";
 import { apiOrigin } from "./origins";
 
@@ -62,6 +65,20 @@ export async function endSession(page: Page): Promise<void> {
   }, apiOrigin);
   await page.evaluate(() => window.localStorage.clear());
   await page.context().clearCookies();
+}
+
+/**
+ * Reopen the sign-in link window of one address. The API sends one link per
+ * address each minute, so a test that signs the same reader in again would
+ * wait out that minute. This clears the row the limit keeps, keyed as
+ * `mkc-auth` keys it: the SHA-256 of `email:` and the normalized address. The
+ * second request still goes through the real API and mailer.
+ */
+export function reopenSignInWindow(email: string): void {
+  const key = createHash("sha256")
+    .update(`email:${email.trim().toLowerCase()}`)
+    .digest("hex");
+  sql(`DELETE FROM auth_rate_limits WHERE key = '${key}'`);
 }
 
 export async function retireAddressSlugs(

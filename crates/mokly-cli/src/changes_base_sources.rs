@@ -88,7 +88,7 @@ impl NativeBase {
         let early = self.early_sources(request)?;
         let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
         let file = request.working_config.file.to_string_lossy();
-        let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
+        let mut config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
             ResolvedConfig {
                 input: Config::default(),
                 roots: Vec::new(),
@@ -102,6 +102,15 @@ impl NativeBase {
                 Err(source) => return Err(Error::Catalogue { source }),
             }
         };
+        let working_packages = request.working_config.source_packages();
+        if config
+            .source_packages()
+            .is_some_and(|packages| !packages.is_empty())
+            || working_packages.is_some_and(|packages| !packages.is_empty())
+        {
+            config.modules.working_source_packages =
+                Some(working_packages.cloned().unwrap_or_default());
+        }
         if let Some(admission) = admission {
             admission.enter(if early.is_some() {
                 SourceCache::Leased
@@ -163,3 +172,7 @@ fn configured_sidecar(config: &ResolvedConfig) -> bool {
         || config.modules.postcss.is_some()
         || (config.vite() && !local_roots(config, &Default::default()).is_empty())
 }
+
+#[cfg(test)]
+#[path = "_tests_/changes_base_sources_tests.rs"]
+mod changes_base_sources_tests;

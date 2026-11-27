@@ -49,12 +49,13 @@ fn envelope_mismatches_never_retain_identity_and_a_rejected_plan_can_retry() {
         &attempt.bearer,
     );
     app.queries(&mut |queries| {
-        let rows = queries.publications(project.id).unwrap();
+        let rows = queries.publications(project.id)?;
         assert_eq!(rows.len(), 3);
         assert!(
             rows.iter()
                 .all(|row| row.build_id == Some(attempt.id) && row.metadata.is_none())
         );
+        Ok(())
     });
     refusal(
         plan(&app, &attempt, b"invalid gzip".to_vec()),
@@ -126,20 +127,16 @@ fn blob_rejections_and_expiry_do_not_overwrite_a_higher_ranked_outcome() {
     );
     assert_eq!(outcome(&app, &attempt), Some(UploadOutcome::Rejected));
     app.queries(&mut |queries| {
+        assert!(queries.fail_publication(id, PublicationFailure::Expired)?);
+        queries.delete_publication_files(id)?;
         assert!(
             queries
-                .fail_publication(id, PublicationFailure::Expired)
-                .unwrap()
-        );
-        queries.delete_publication_files(id).unwrap();
-        assert!(
-            queries
-                .build_attempt_grant(attempt.id, 1)
-                .unwrap()
+                .build_attempt_grant(attempt.id, 1)?
                 .unwrap()
                 .consumed_at
                 .is_none()
         );
+        Ok(())
     });
     refusal(
         complete(&app, &attempt, id),
@@ -181,10 +178,10 @@ fn another_builds_attempt_in_the_same_project_stays_not_found() {
     app.queries(&mut |queries| {
         assert!(
             queries
-                .cancel_build(project.id, owner.id, Utc::now())
-                .unwrap()
+                .cancel_build(project.id, owner.id, Utc::now())?
                 .is_some()
         );
+        Ok(())
     });
     let receipts = response_json(
         app.request(

@@ -109,6 +109,7 @@ impl Harness {
             stylesheets: Arc::new(Compiler {
                 tree: captured.clone(),
                 repo_root: config.repo_root.clone(),
+                resolution: Default::default(),
                 resolver: Arc::new(SourceResolver {
                     settings: Default::default(),
                     tree: captured,

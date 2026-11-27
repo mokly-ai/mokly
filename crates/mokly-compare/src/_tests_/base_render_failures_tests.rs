@@ -72,7 +72,7 @@ fn classify(
         modules: Default::default(),
         authored_inputs: Vec::new(),
     };
-    service.classify(&config, None, generation(), None)
+    service.classify(&config, None, generation(), None, &mut Vec::new())
 }
 
 fn assert_source_failure(error: Error, expected: &Arc<Error>) {

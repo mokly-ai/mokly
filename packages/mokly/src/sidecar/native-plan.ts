@@ -12,7 +12,12 @@ import { nativeImport, nativeResolveFilter } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import type { PlanCandidates } from "./plan-candidates.js";
 import { PlanBuilder } from "./resolution-plan.js";
+import { resolutionOptions } from "./resolution.js";
 import { bareSpecifier } from "./specifier.js";
+import {
+  workspaceImportRequest,
+  workspaceTarget,
+} from "./workspace-imports.js";
 
 interface Target {
   path: string;
@@ -49,6 +54,10 @@ export async function planNative(
   candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
+  const options = {
+    ...resolutionOptions(paths.sourceRoot, paths.settings),
+    absWorkingDir: paths.configurationDirectory,
+  };
   const targets = new Map<string, Promise<Target | undefined>>();
   const target = (file: string, specifier: string) => {
     const key = bareSpecifier(specifier) ? `${specifier}\0${file}` : file;
@@ -80,7 +89,32 @@ export async function planNative(
         exact = false;
       if (edge.external || !path.isAbsolute(edge.path)) continue;
       if (edge.original === undefined) exact = false;
-      else if (nativeImport(paths, edge.original, directory))
+      else if (nativeImport(paths, edge.original, directory)) {
+        if (bareSpecifier(edge.original)) {
+          const location = paths.location(edge.path);
+          if (paths.repositoryOwned(location.file)) {
+            const request = workspaceImportRequest(
+              paths,
+              edge.original,
+              directory,
+              options,
+              edge.path,
+            );
+            if (
+              request &&
+              (request.pkg.retry ||
+                workspaceTarget(
+                  paths,
+                  request.pkg,
+                  edge.path,
+                  request.pkg.installation,
+                ) !== location.file)
+            ) {
+              exact = false;
+              continue;
+            }
+          }
+        }
         edges.push({
           importer: file,
           specifier: edge.original,
@@ -89,6 +123,7 @@ export async function planNative(
           file: edge.path,
           target: target(edge.path, edge.original),
         });
+      }
     }
   }
   const builder = new PlanBuilder();

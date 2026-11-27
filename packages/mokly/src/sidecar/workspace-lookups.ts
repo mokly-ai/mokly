@@ -5,7 +5,6 @@ import path from "node:path";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { missingFile } from "./file-digests.js";
-import { markedFileEvidence } from "./marked-file-evidence.js";
 import type { ModulePaths } from "./module-paths.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
@@ -23,6 +22,7 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   private readonly digests = new Map<string, string>();
   private readonly observed = new Set<string>();
   private readonly metadataFiles = new Set<string>();
+  private readonly buildFiles = new Set<string>();
 
   constructor(private readonly paths: ModulePaths) {}
 
@@ -35,14 +35,15 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     return result.kind === "file" ? result.real : undefined;
   }
 
-  /** Package ownership on a layout miss already uses the module's ancestor inputs. */
-  manifest(file: string): string | null | undefined {
+  /** Record the manifest digest or absence when the caller needs lookup evidence. */
+  manifest(file: string, record: boolean): string | null | undefined {
     const result = this.probe(file);
-    if (result.kind !== "file") return undefined;
     try {
-      return this.contents(result.real);
+      return result.kind === "file" ? this.contents(result.real) : undefined;
     } catch {
       return null;
+    } finally {
+      if (record) this.metadata(file);
     }
   }
 
@@ -111,13 +112,41 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   buildTarget(file: string): boolean {
-    return this.observeCandidate(file).kind !== "unavailable";
+    const result = this.observeCandidate(file);
+    if (this.capture.complete && result.kind === "file")
+      this.buildFiles.add(result.real);
+    return result.kind !== "unavailable";
   }
 
   /** Retain package search paths and links in private reuse evidence. */
   packageLookup(file: string): void {
-    this.observed.add(file);
     this.capture.file(file);
+  }
+
+  /** Compare the bytes of the installed manifest and retain its lookup path. */
+  installationManifest(file: string): string | undefined {
+    this.packageLookup(file);
+    const captured = this.capture.inspectMetadata(file);
+    if (captured) return captured.bytes?.toString("utf8");
+    try {
+      return fs.readFileSync(file, "utf8");
+    } catch (error) {
+      if (!missingFile(error)) throw error;
+    }
+  }
+
+  /** Keep native resolution targets and links without reading their contents. */
+  nativeTarget(file: string): string | undefined {
+    const captured = this.capture.canonicalFile(file);
+    if (this.capture.complete) {
+      if (captured !== undefined) this.buildFiles.add(captured);
+      return captured;
+    }
+    try {
+      return fs.realpathSync.native(file);
+    } catch (error) {
+      if (!missingFile(error)) throw error;
+    }
   }
 
   private observeCandidate(file: string): Probe {
@@ -161,15 +190,43 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     return bytes.toString("utf8");
   }
 
+  /** Keep content evidence for workspace files that the restored require can load. */
+  runtimeFiles(files: Iterable<string | null>): void {
+    for (const file of files) {
+      if (!file || !path.isAbsolute(file) || !this.paths.repositoryOwned(file))
+        continue;
+      if (this.capture.file(file)?.kind !== "file") {
+        this.capture.complete = false;
+        return;
+      }
+    }
+  }
+
+  /** An unresolved require may load any recorded workspace build. */
+  runtimeBuilds(): void {
+    this.runtimeFiles(this.buildFiles);
+  }
+
   marked(evidence: ReuseEvidence | undefined): ReuseEvidence | undefined {
     if (!evidence || !this.capture.complete) return undefined;
-    if (!this.observed.size) return evidence;
-    const workspace = markedFileEvidence(this.capture, this.observed);
-    if (!workspace) return undefined;
-    const combined = {
-      ...evidence,
-      inputs: { ...evidence.inputs, ...workspace.inputs },
-    };
+    if (!this.capture.inputs.size) return evidence;
+    const workspace = Object.fromEntries(this.capture.inputs);
+    if (!this.capture.markedCurrent({ ...evidence, inputs: workspace }))
+      return undefined;
+
+    const inputs = { ...evidence.inputs };
+    for (const [file, entry] of this.capture.inputs) {
+      const prior = inputs[file];
+      if (prior?.kind === "file" && entry.kind === "filePath") continue;
+      if (
+        prior &&
+        !(prior.kind === "filePath" && entry.kind === "file") &&
+        JSON.stringify(prior) !== JSON.stringify(entry)
+      )
+        return undefined;
+      inputs[file] = entry;
+    }
+    const combined = { ...evidence, inputs };
     return Buffer.byteLength(JSON.stringify(combined)) <= EVIDENCE_LIMIT
       ? combined
       : undefined;

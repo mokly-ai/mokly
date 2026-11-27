@@ -76,7 +76,15 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call.
+  static output call. `RenderGeneration::read_background` looks up one Serve
+  background view, and its default `Ok(None)` declines the lookup.
+  `RenderGeneration::uncached_documents` lists routes absent from all cache tiers
+  and the prepared render-store index. `RenderGeneration::prefetch_comparison`
+  starts their early renders. `RenderGeneration::schedule_capture_window` runs
+  the capture window with the limit of `RenderGeneration::capture_parallelism`.
+  `RenderGeneration::module_imports` gives the `ModuleImports` of a generation,
+  its module graph edges and stylesheet inputs, which `mokly-compare` checks
+  for the `ignored-module` warning.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines

@@ -97,7 +97,10 @@ impl ReuseEvidence {
             && self.inputs.values().all(|input| {
                 matches!(
                     input,
-                    PhysicalInput::File { .. } | PhysicalInput::Absent | PhysicalInput::Link { .. }
+                    PhysicalInput::File { .. }
+                        | PhysicalInput::FilePath
+                        | PhysicalInput::Absent
+                        | PhysicalInput::Link { .. }
                 )
             })
     }

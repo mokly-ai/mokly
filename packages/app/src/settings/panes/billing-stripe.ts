@@ -1,5 +1,5 @@
-import { readQuery } from "../../navigation/address";
 import { isDesktopShell } from "../../navigation/desktop-shell";
+import { readQuery } from "../../navigation/query";
 import { openBeside } from "../../navigation/web-setup";
 import type { Write } from "../write";
 

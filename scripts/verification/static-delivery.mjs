@@ -4,13 +4,19 @@ import path from "node:path";
 import { readReport, verificationIdentity, writeReport } from "./evidence.mjs";
 import { requirePrepared } from "./prepared.mjs";
 import { runInherited } from "./process.mjs";
-import { checkDeliveryMode } from "./static-delivery-mode.mjs";
+import {
+  checkDeliveryMode,
+  DELIVERY_MODES,
+  deliveryModes,
+} from "./static-delivery-mode.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
+const modes = deliveryModes(process.argv.slice(2));
 await requirePrepared(root, { browser: true });
 const reports = path.join(root, ".context/static-delivery");
 await fs.mkdir(reports, { recursive: true });
-for (const mode of ["static-http", "file"])
+// The folder holds only the reports of this run, also when it checks one mode.
+for (const mode of DELIVERY_MODES)
   await fs.rm(path.join(reports, `${mode}.json`), { force: true });
 await writeReport(
   path.join(reports, "identity.json"),
@@ -30,7 +36,7 @@ try {
     "--out",
     directory,
   ]);
-  for (const mode of ["static-http", "file"]) {
+  for (const mode of modes) {
     const env = { ...process.env };
     delete env.MOKLY_PLAYWRIGHT_STATIC_DIR;
     delete env.MOKLY_PLAYWRIGHT_FILE_DIR;

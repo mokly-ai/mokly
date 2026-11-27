@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { cooperativeYield } from "./cooperative-yield.js";
 import { SidecarError } from "./errors.js";
-import { metadataDigest } from "./file-digests.js";
+import { metadataDigest, missingFile } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 import { FRAME_LIMIT } from "./transport.js";
@@ -53,7 +53,7 @@ export async function resolutionInputs(
   const ancestors = new Set<string>();
   const directories = new Set<string>();
   for (const directory of paths.lookupDirectories) {
-    directories.add(await paths.metadata(directory));
+    directories.add(await metadataPath(paths, directory));
     const pause = cooperativeYield();
     if (pause) await pause;
   }
@@ -72,12 +72,12 @@ export async function resolutionInputs(
     if (pause) await pause;
   }
   for (const lookup of [...paths.lookupFiles].sort()) {
-    const file = await paths.metadata(lookup);
+    const file = await metadataPath(paths, lookup);
     metadataInputs[paths.metadataName(file)] = inputs[file] =
       await metadataDigest(file, inputs);
   }
   for (const lookup of [...paths.workspaceLookups.absences].sort()) {
-    const file = await paths.metadata(lookup);
+    const file = await metadataPath(paths, lookup);
     if (inputs[file] === undefined)
       metadataInputs[paths.metadataName(file)] = inputs[file] = null;
   }
@@ -101,4 +101,24 @@ export async function resolutionInputs(
     inputDirectories: Object.fromEntries(inputDirectories),
     metadataDirectories: Object.fromEntries(metadataDirectories),
   };
+}
+
+/** Map metadata through existing ancestor links, including missing candidates. */
+export async function metadataPath(
+  paths: ModulePaths,
+  file: string,
+): Promise<string> {
+  let ancestor = file;
+  const suffix: string[] = [];
+  for (;;) {
+    try {
+      const real = await fs.promises.realpath(ancestor);
+      return paths.location(path.join(real, ...suffix)).file;
+    } catch (error) {
+      const parent = path.dirname(ancestor);
+      if (!missingFile(error) || parent === ancestor) throw error;
+      suffix.unshift(path.basename(ancestor));
+      ancestor = parent;
+    }
+  }
 }

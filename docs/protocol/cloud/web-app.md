@@ -89,7 +89,6 @@ matching wins before either dynamic segment.
 | `/auth/email`                                         | Link sent; resend or change the address               |
 | `/auth/email/callback`                                | Consume `#token=`, then resume the stored destination |
 | `/workspaces/:uuid/invitations/:uuid/accept`          | Accept the signed-in reader's invitation              |
-| `/auth/preview/callback`                              | Exchange `#secret=`, then open the returned route     |
 | `/auth/github/callback`, `/auth/github/install`       | Complete GitHub authorization or setup                |
 | `/dashboard`                                          | Resolver: viewer, or the next setup step              |
 | `/new`, `/new?installationId=:id`                     | Workspace onboarding, with an optional candidate      |

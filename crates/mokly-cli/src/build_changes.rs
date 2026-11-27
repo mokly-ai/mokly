@@ -36,6 +36,7 @@ impl CatalogueBuild {
                 options.common.base.as_deref(),
                 generation,
                 options.common.base_install_scripts_override(),
+                warnings,
             ) {
                 Ok(result) => {
                     warnings.extend(result.warnings.iter().cloned());

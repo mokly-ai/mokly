@@ -5,6 +5,7 @@ use mkc_mokly_contract::index::CatalogueIndex;
 use mkc_mokly_contract::index_values::{ColorScheme, Viewport};
 use mkc_mokly_contract::limits::Limits;
 use mkc_store_interface::publication::{PublicationFailure, PublicationState};
+use mkc_store_interface::viewer::PublicationPullRequest;
 use serde_json::{Value, json};
 use url::Url;
 
@@ -90,6 +91,34 @@ fn failure_and_current_only_context_do_not_invent_changes_or_catalogues() {
         ready["catalogueUrl"],
         format!("https://p-{PUBLICATION}.br-main.preview.example.net")
     );
+}
+
+/// An observation from before author retention keeps no author, so the read
+/// answers `author: null` and never invents one.
+#[test]
+fn a_pull_request_observed_without_an_author_reads_a_null_author() {
+    let mut context = viewer_publication(false);
+    context.pull_request = Some(PublicationPullRequest {
+        number: 7,
+        title: "Publication origin".into(),
+        author: None,
+        repository: "mokly-ai/mokly-cloud".into(),
+    });
+    let value = serde_json::to_value(projection::publication(&context, &locations())).unwrap();
+    assert_eq!(
+        value["pullRequest"],
+        json!({
+            "number": 7,
+            "title": "Publication origin",
+            "author": null,
+            "url": "https://github.com/mokly-ai/mokly-cloud/pull/7",
+        })
+    );
+
+    let mut row = pull_request();
+    row.author = None;
+    let value = serde_json::to_value(projection::pull_request(row)).unwrap();
+    assert_eq!(value.get("author"), Some(&Value::Null));
 }
 
 #[test]

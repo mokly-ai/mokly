@@ -7,7 +7,6 @@ import {
   startInspection,
 } from "./viewer_inspection_fixture.js";
 import { startViewerPick } from "./viewer_pick.js";
-import { canvasFrame } from "./workspace_actions.js";
 
 /**
  * The frames on the canvas: the selection's one viewport, Mobile and after a
@@ -21,138 +20,92 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-/** Let any geometry read the viewer has scheduled start. */
-const twoFrames = () =>
-  new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-
 /**
- * The holds below are only meaningful when the test decides every geometry
- * read. A preview reports geometry after its own layout, scroll, font and DOM
- * changes; if one of those reports reached the viewer, its extra read could
- * take the hold meant for the operation under test.
+ * Two cases for each operation that a replaced pick started: a geometry read,
+ * a label read, a highlight, and a scroll. Each operation runs once with a
+ * frame change and once with `cancelPick()`, and once with a late failure and
+ * once with a late success. The wrapper holds the old work after the real
+ * adapter call, so the cases run on one adapter. Unit tests of
+ * `InspectionWork`, the inspection controller, the geometry scheduler, and
+ * `Picking` cover each operation with both late outcomes.
  */
-for (const cross of [false, true]) {
-  test(`${cross ? "postMessage" : "same-origin"} preview geometry reaches the viewer only when the test emits it`, async ({
+const CASES = [
+  { operation: "geometry", fail: true, replacement: "frame" },
+  { operation: "geometry", fail: false, replacement: "request" },
+  { operation: "labels", fail: false, replacement: "request" },
+  { operation: "labels", fail: true, replacement: "frame" },
+  { operation: "highlight", fail: false, replacement: "frame" },
+  { operation: "highlight", fail: true, replacement: "request" },
+  { operation: "scroll", fail: true, replacement: "request" },
+  { operation: "scroll", fail: false, replacement: "frame" },
+] as const;
+
+for (const { operation, fail, replacement } of CASES)
+  test(`same-origin obsolete ${operation} ${fail ? "failure" : "success"} preserves ${replacement} replacement pick`, async ({
     page,
   }) => {
     await page.goto(fixture.host.url);
-    await startInspection(page, cross);
-    await page.evaluate(() =>
-      window.viewerHarness.get("one").ref.current.startPick(),
-    );
-    await page.evaluate(twoFrames);
-    const reads = () =>
-      page.evaluate(
-        () =>
-          window.inspectionProbe.calls.filter(
-            (call) => call.viewport === "mobile" && call.operation === "list",
-          ).length,
-      );
-    const withheld = () =>
-      page.evaluate(() => window.inspectionProbe.withheldGeometry);
-    const before = { reads: await reads(), withheld: await withheld() };
-
-    await page
-      .locator(canvasFrame("mobile"))
-      .contentFrame()
-      .locator("body")
-      .evaluate((body) => body.append(body.ownerDocument.createElement("div")));
-    await expect.poll(withheld).toBeGreaterThan(before.withheld);
-    await page.evaluate(twoFrames);
-    expect(await reads()).toBe(before.reads);
-
-    await page.evaluate(() =>
-      window.inspectionProbe.emit({ type: "geometry" }),
-    );
-    await expect.poll(reads).toBeGreaterThan(before.reads);
-  });
-}
-
-for (const cross of [false, true]) {
-  for (const replacement of ["frame", "request"] as const) {
-    for (const operation of [
-      "geometry",
-      "labels",
-      "highlight",
-      "scroll",
-    ] as const) {
-      for (const fail of [true, false]) {
-        test(`${cross ? "postMessage" : "same-origin"} obsolete ${operation} ${fail ? "failure" : "success"} preserves ${replacement} replacement pick`, async ({
-          page,
-        }) => {
-          await page.goto(fixture.host.url);
-          await startInspection(page, cross);
-          await startViewerPick(page);
-          await page.evaluate((operation) => {
-            const host = window.viewerHarness.get("one");
-            const probe = window.inspectionProbe;
-            probe.hold =
-              operation === "geometry" || operation === "labels"
-                ? "list"
-                : operation;
-            if (operation === "geometry") probe.emit({ type: "geometry" });
-            else {
-              const pending =
-                operation === "scroll"
-                  ? host.ref.current.scrollToInstance(probe.instance)
-                  : host.ref.current.highlightInstance(probe.instance);
-              void pending.then(
-                () => {
-                  probe.outcome = "resolved";
-                },
-                (error: unknown) => {
-                  probe.outcome =
-                    error instanceof Error && "code" in error
-                      ? String(error.code)
-                      : "uncoded rejection";
-                },
-              );
-            }
-          }, operation);
-          await page.waitForFunction(() => window.inspectionProbe.waiting);
-          await page.evaluate((replacement) => {
-            const host = window.viewerHarness.get("one");
-            if (replacement === "frame")
-              host.ref.current.select({ viewport: "desktop" });
-            else host.ref.current.cancelPick();
-          }, replacement);
-          await startViewerPick(page);
-          // The pick labels the instance in each shown frame.
-          const labels = page.locator("[data-mokly-label-layer] button");
-          await expect(labels).toHaveCount(SHOWN_FRAMES);
-          const label = await labels.first().elementHandle();
-          if (operation !== "geometry")
-            await expect
-              .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
-              .toBe("disposed");
-          await releaseInspection(page, fail);
-          expect(
-            await page.evaluate(() =>
-              window.viewerHarness
-                .get("one")
-                .events.filter(
-                  (event) =>
-                    event.name.startsWith("pick") || event.name === "error",
-                ),
-            ),
-          ).toEqual([
-            { name: "pick-start", value: null },
-            {
-              name: "pick-end",
-              value: {
-                reason: replacement === "frame" ? "navigation" : "cancelled",
-              },
-            },
-            { name: "pick-start", value: null },
-          ]);
-          await expect(labels).toHaveCount(SHOWN_FRAMES);
-          expect(await label!.evaluate((element) => element.isConnected)).toBe(
-            true,
-          );
-        });
+    await startInspection(page);
+    await startViewerPick(page);
+    await page.evaluate((operation) => {
+      const host = window.viewerHarness.get("one");
+      const probe = window.inspectionProbe;
+      probe.hold =
+        operation === "geometry" || operation === "labels" ? "list" : operation;
+      if (operation === "geometry") probe.emit({ type: "geometry" });
+      else {
+        const pending =
+          operation === "scroll"
+            ? host.ref.current.scrollToInstance(probe.instance)
+            : host.ref.current.highlightInstance(probe.instance);
+        void pending.then(
+          () => {
+            probe.outcome = "resolved";
+          },
+          (error: unknown) => {
+            probe.outcome =
+              error instanceof Error && "code" in error
+                ? String(error.code)
+                : "uncoded rejection";
+          },
+        );
       }
-    }
-  }
-}
+    }, operation);
+    await page.waitForFunction(() => window.inspectionProbe.waiting);
+    await page.evaluate((replacement) => {
+      const host = window.viewerHarness.get("one");
+      if (replacement === "frame")
+        host.ref.current.select({ viewport: "desktop" });
+      else host.ref.current.cancelPick();
+    }, replacement);
+    await startViewerPick(page);
+    // The pick labels the instance in each shown frame.
+    const labels = page.locator("[data-mokly-label-layer] button");
+    await expect(labels).toHaveCount(SHOWN_FRAMES);
+    const label = await labels.first().elementHandle();
+    if (operation !== "geometry")
+      await expect
+        .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
+        .toBe("disposed");
+    await releaseInspection(page, fail);
+    expect(
+      await page.evaluate(() =>
+        window.viewerHarness
+          .get("one")
+          .events.filter(
+            (event) => event.name.startsWith("pick") || event.name === "error",
+          ),
+      ),
+    ).toEqual([
+      { name: "pick-start", value: null },
+      {
+        name: "pick-end",
+        value: {
+          reason: replacement === "frame" ? "navigation" : "cancelled",
+        },
+      },
+      { name: "pick-start", value: null },
+    ]);
+    await expect(labels).toHaveCount(SHOWN_FRAMES);
+    expect(await label!.evaluate((element) => element.isConnected)).toBe(true);
+  });

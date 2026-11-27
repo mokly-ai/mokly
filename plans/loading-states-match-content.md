@@ -357,7 +357,7 @@ Replaced ways:
   `docs/mockups/styles/product/` stay until Milestone 7, because the app reads
   them through `sync:styles` until then.
 - The tests of the old block move to the new layout with every assertion:
-  `packages/app/src/_tests_/invitation.spec.ts`, `preview-callback.spec.ts` and
+  `packages/app/src/_tests_/invitation.spec.ts` and
   `a11y.spec.ts`, and `docs/mockups/src/_tests_/` `product.spec.ts`,
   `product-pages.test.ts`, `cli-form.test.ts`, `workspaces-account.test.ts`,
   `workspaces-settings.test.ts` and `disk.spec.ts`.

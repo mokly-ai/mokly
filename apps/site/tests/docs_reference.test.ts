@@ -24,22 +24,25 @@ import {
   moklyPackagePath,
 } from "../src/mokly-package.js";
 
-import { publishedProtocols } from "./helpers/published-protocols.js";
+import { PUBLISHED_PROTOCOLS } from "./helpers/published-protocols.js";
 
 const source = (document: { source: string }) =>
   readFileSync(moklyPackagePath(document.source), "utf8");
 
-test("Reference membership and order match the package's published documents", () => {
-  const expected = publishedProtocols(
-    source({ source: "docs/protocol/mokly-guides.md" }),
-  );
+test("Reference membership and order match the published Reference list", () => {
   assert.deepEqual(
-    REFERENCE_DOCUMENTS.map(({ order, source, slug }) => ({
+    REFERENCE_DOCUMENTS.map(({ order, source, slug, title }) => ({
       order,
       source,
       slug,
+      title,
     })),
-    expected,
+    PUBLISHED_PROTOCOLS.map(([source, slug, title], index) => ({
+      order: index + 1,
+      source,
+      slug,
+      title,
+    })),
   );
 });
 

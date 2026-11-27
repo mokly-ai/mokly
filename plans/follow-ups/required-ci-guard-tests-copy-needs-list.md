@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-19, from the branch `calummoore/combine-mokly-cloud-into-repo-704s`, review finding 4: the new option D of its check and the new problems of that check.
-- **Location:** `tests/ci_required_guard.test.ts:13-23` and `:38`, `apps/site/tests/site_ci.test.ts:62-88`, `xtask/tests/cli/workflow_contract.rs:148-158`, `:159-197` and `:198-222`, `xtask/tests/cli/workflow_tests.rs:8` and `:14`, `tests/public_ci.test.ts:167`, `tests/ci_workflow_policies.test.ts:50` and `:88`, `tests/npm_pin.test.ts:41`, `tests/release_evidence_contract.test.ts:35`, and the `required` job at `.github/workflows/ci.yml:705`.
+- **Location:** `tests/ci_required_guard.test.ts:13-23` and `:38`, `apps/site/tests/site_ci.test.ts:62-88`, `xtask/tests/cli/workflow_contract.rs:148-158`, `:159-197` and `:198-222`, `xtask/tests/cli/workflow_tests.rs:8` and `:14`, `tests/public_ci.test.ts:167`, `tests/ci_workflow_policies.test.ts:50` and `:88`, `tests/release_evidence_contract.test.ts:35`, and the `required` job at `.github/workflows/ci.yml:705`.
 - **Reason:** The fix keeps the behaviour of CI, its effort is Medium and its severity is Low, so it waits for a branch of its own.
 
 - **Terms:**
@@ -15,7 +15,7 @@
   - `tests/ci_required_guard.test.ts:38` runs the guard for each of the nine variables with the results `failure`, `skipped`, `cancelled` and an empty value. It copies the nine variable names at lines 13-23.
   - `apps/site/tests/site_ci.test.ts:62` copies the job name, the `if` condition, the `needs` list and the nine bindings at lines 64-88. Then it runs the guard with each result of the report-only `site-lighthouse` job, to show that Lighthouse cannot block Required CI.
   - The RequiredGate check of `xtask/tests/cli/workflow_contract.rs:159-197` copies the job name, the `needs` list, the nine guard lines and three bindings. Its mutation case at `xtask/tests/cli/workflow_tests.rs:14` replaces `${{ always() }}` with `${{ success() }}`.
-  - The ActionPin check of `workflow_contract.rs:148-158` repeats `tests/ci_workflow_policies.test.ts:50`. The fetch-depth and npm-pin parts of the Toolchains check, `workflow_contract.rs:198-222`, repeat `tests/ci_workflow_policies.test.ts:88` and `tests/npm_pin.test.ts:41`.
+  - The ActionPin check of `workflow_contract.rs:148-158` repeats `tests/ci_workflow_policies.test.ts:50`. The fetch-depth part of the Toolchains check, `workflow_contract.rs:198-222`, repeats `tests/ci_workflow_policies.test.ts:88`. Its npm-pin part repeats no Node test: a later branch removed the Node step-order test of the npm pin.
   - The review fix round of 2026-11-19 removed `xtask/tests/cli/ci_capacity_tests.rs`, which ran the same guard cases in Rust, and the repeated failure loop of the site test. The Node guard test is now the only test that runs the failure cases.
   - `requiredResult` at `tests/public_ci.test.ts:167` evaluates the step bindings of a job from a map of `needs` results.
   - `tests/release_evidence_contract.test.ts:35` checks the job name against the constant `REQUIRED_CI_JOB_NAME`. It is not a copy, because the release evidence code at `scripts/release/evidence_contract.mjs:60` reads that constant.
@@ -25,7 +25,7 @@
 - **Root question:** How should the repository test the Required CI guard once, with no copy of its prerequisite list?
 - **Options:**
   - **A.** Make `tests/ci_required_guard.test.ts` the only owner of the guard cases. Derive its cases from `required.needs` and the step bindings with `requiredResult`, and remove its copied variable list. Remove the copies of the site test, and keep its Lighthouse case. Reduce the RequiredGate check to the `always()` condition, and keep its mutation case. Keep `tests/release_evidence_contract.test.ts:35`. Effort: Medium.
-  - **B.** Do A. Also remove the ActionPin check and the fetch-depth and npm-pin parts of the Toolchains check from `workflow_contract.rs`, with their mutation cases in `workflow_tests.rs`. The Node tests that the Background names cover them. For each removal, name the covering test, break the workflow once, and see the kept test fail, as the removal rule of the `testing` skill says. Effort: Medium.
+  - **B.** Do A. Also remove the ActionPin check and the fetch-depth part of the Toolchains check from `workflow_contract.rs`, with their mutation cases in `workflow_tests.rs`. The Node tests that the Background names cover them. For each removal, name the covering test, break the workflow once, and see the kept test fail, as the removal rule of the `testing` skill says. Effort: Medium.
 - **Left out:** Keeping every copy fails the goal. A new test framework adds no coverage. The site test as the owner puts a CI rule into the site project. A test that each verification job is in the `needs` list is a different requirement, which `plans/follow-ups/required-ci-misses-new-verification-jobs.md` holds.
 - **Wider fix:** None. The `testing` skill already asks for one test for each requirement and for no copies of workflow literals.
 - **Previous examples:** Commit `1ca3cd28` replaced prose-regex and workflow-literal tests with gates.

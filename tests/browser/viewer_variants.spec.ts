@@ -59,126 +59,127 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
   await expect(page.locator(CHECKED)).toHaveText("Default");
 }
 
-for (const cross of [false, true]) {
-  const adapter = cross ? "postMessage" : "same-origin";
+// The viewer owns the selection and the routes, so these cases run on one
+// adapter. The adapters have their own specs.
 
-  test(`${adapter} selects a row of the workspace without a route, and the public handle commits a variant`, async ({
-    page,
-  }) => {
-    await openViewer(page, cross);
-    // A row of Inspect's Variants selects its Light frame on the canvas.
-    await page
-      .locator(
-        '[data-inspect-section="variants"] [data-inspect-variant="pane/second"]',
-      )
-      .click();
-    await expect(page.locator(CHECKED)).toHaveText("Second");
-    await expectSelectedVariant(page, "pane/second");
-    await expect(
-      page.frameLocator(SELECTED).getByText("Second content"),
-    ).toBeVisible();
-    expect(await routeEvents(page)).toEqual([]);
-    // The public handle commits a variant's route, whose frame it selects.
+test("same-origin selects a row of the workspace without a route, and the public handle commits a variant", async ({
+  page,
+}) => {
+  await openViewer(page, false);
+  // A row of Inspect's Variants selects its Light frame on the canvas.
+  await page
+    .locator(
+      '[data-inspect-section="variants"] [data-inspect-variant="pane/second"]',
+    )
+    .click();
+  await expect(page.locator(CHECKED)).toHaveText("Second");
+  await expectSelectedVariant(page, "pane/second");
+  await expect(
+    page.frameLocator(SELECTED).getByText("Second content"),
+  ).toBeVisible();
+  expect(await routeEvents(page)).toEqual([]);
+  // The public handle commits a variant's route, whose frame it selects.
+  await page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .ref.current.select({ screenPath: "pane/second" }),
+  );
+  await page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .ref.current.select({ screenPath: "pane/default" }),
+  );
+  await expect(page.locator(CHECKED)).toHaveText("Default");
+  await expectSelectedVariant(page, "pane/default");
+  await expect(
+    page.frameLocator(SELECTED).getByText("First content"),
+  ).toBeVisible();
+  expect(await routeEvents(page)).toEqual([
+    { name: "navigate", value: { screenPath: "pane/second" } },
+    {
+      name: "selection",
+      value: expect.objectContaining({ screenPath: "pane/second" }),
+    },
+    { name: "navigate", value: { screenPath: "pane/default" } },
+    {
+      name: "selection",
+      value: expect.objectContaining({ screenPath: "pane/default" }),
+    },
+  ]);
+});
+
+test("same-origin keeps a controlled variant proposal of the compact frame picker inert until committed", async ({
+  page,
+}) => {
+  await page.setViewportSize(NARROW_WINDOW);
+  await openViewer(page, false, true);
+  // The compact layout shows the selected frame alone; a pick of another
+  // row's frame proposes that row's entry.
+  const shown = ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
+  await page
+    .getByRole("combobox", { name: "Frame", exact: true })
+    .selectOption("pane/second:light");
+  await expect(page.locator(CHECKED)).toHaveText("Default");
+  await expect(
+    page.frameLocator(shown).getByText("First content"),
+  ).toBeVisible();
+  const proposal = await page.evaluate(
+    () =>
+      window.viewerHarness
+        .get("one")
+        .events.find((event) => event.name === "selection")!.value,
+  );
+  expect(proposal).toEqual(
+    expect.objectContaining({ screenPath: "pane/second" }),
+  );
+  await page.evaluate((selection) => {
+    window.viewerHarness.get("one").setSelection(selection as ViewerSelection);
+  }, proposal);
+  await expect(page.locator(CHECKED)).toHaveText("Second");
+  await expect(
+    page.frameLocator(shown).getByText("Second content"),
+  ).toBeVisible();
+  expect(
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .ref.current.select({ screenPath: "pane/second" }),
-    );
-    await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .ref.current.select({ screenPath: "pane/default" }),
-    );
-    await expect(page.locator(CHECKED)).toHaveText("Default");
-    await expectSelectedVariant(page, "pane/default");
-    await expect(
-      page.frameLocator(SELECTED).getByText("First content"),
-    ).toBeVisible();
-    expect(await routeEvents(page)).toEqual([
-      { name: "navigate", value: { screenPath: "pane/second" } },
-      {
-        name: "selection",
-        value: expect.objectContaining({ screenPath: "pane/second" }),
-      },
-      { name: "navigate", value: { screenPath: "pane/default" } },
-      {
-        name: "selection",
-        value: expect.objectContaining({ screenPath: "pane/default" }),
-      },
-    ]);
-  });
-
-  test(`${adapter} keeps a controlled variant proposal of the compact frame picker inert until committed`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(NARROW_WINDOW);
-    await openViewer(page, cross, true);
-    // The compact layout shows the selected frame alone; a pick of another
-    // row's frame proposes that row's entry.
-    const shown = ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
-    await page
-      .getByRole("combobox", { name: "Frame", exact: true })
-      .selectOption("pane/second:light");
-    await expect(page.locator(CHECKED)).toHaveText("Default");
-    await expect(
-      page.frameLocator(shown).getByText("First content"),
-    ).toBeVisible();
-    const proposal = await page.evaluate(
+        .events.filter((event) => event.name === "selection"),
+    ),
+  ).toHaveLength(1);
+  expect(
+    await page.evaluate(
       () =>
         window.viewerHarness
           .get("one")
-          .events.find((event) => event.name === "selection")!.value,
-    );
-    expect(proposal).toEqual(
-      expect.objectContaining({ screenPath: "pane/second" }),
-    );
-    await page.evaluate((selection) => {
+          .events.find((event) => event.name === "navigate")?.value,
+    ),
+  ).toEqual({ screenPath: "pane/second" });
+});
+
+test("same-origin treats an unknown imperative entry as unavailable", async ({
+  page,
+}) => {
+  await openViewer(page, false);
+  await page.evaluate(() => {
+    window.viewerHarness.get("one").ref.current.select({
+      screenPath: "missing",
+    });
+  });
+  await expect(
+    page.getByRole("heading", { name: "Item not found" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .setSelection(selection as ViewerSelection);
-    }, proposal);
-    await expect(page.locator(CHECKED)).toHaveText("Second");
-    await expect(
-      page.frameLocator(shown).getByText("Second content"),
-    ).toBeVisible();
-    expect(
-      await page.evaluate(() =>
-        window.viewerHarness
-          .get("one")
-          .events.filter((event) => event.name === "selection"),
-      ),
-    ).toHaveLength(1);
-    expect(
-      await page.evaluate(
-        () =>
-          window.viewerHarness
-            .get("one")
-            .events.find((event) => event.name === "navigate")?.value,
-      ),
-    ).toEqual({ screenPath: "pane/second" });
-  });
+        .events.filter((event) => event.name === "error"),
+    ),
+  ).toEqual([]);
+});
 
-  test(`${adapter} treats an unknown imperative entry as unavailable`, async ({
-    page,
-  }) => {
-    await openViewer(page, cross);
-    await page.evaluate(() => {
-      window.viewerHarness.get("one").ref.current.select({
-        screenPath: "missing",
-      });
-    });
-    await expect(
-      page.getByRole("heading", { name: "Item not found" }),
-    ).toBeVisible();
-    expect(
-      await page.evaluate(() =>
-        window.viewerHarness
-          .get("one")
-          .events.filter((event) => event.name === "error"),
-      ),
-    ).toEqual([]);
-  });
-
+// The labels read the frame geometry that each adapter measures.
+for (const cross of [false, true]) {
+  const adapter = cross ? "postMessage" : "same-origin";
   for (const canvas of [true, false])
     test(`${adapter} ${canvas ? "on the canvas, inspects the named variant's row and rejects an entry that it does not show" : "below the layout breakpoint, inspects only the selected non-default variant"}`, async ({
       page,

@@ -119,7 +119,11 @@ fn clippy_stage_rejects_a_real_warning() {
 fn test_stage_rejects_a_failing_rust_test() {
     reject_grouped(
         VerificationSuite::Repository,
-        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+    );
+    reject_grouped(
+        VerificationSuite::Repository,
+        "cargo test --locked -p \"mokly-*\" -p xtask --doc",
     );
 }
 
@@ -128,9 +132,7 @@ fn mockup_stage_builds_before_checks_and_propagates_real_failures() {
     let expected = [
         "node xtask/scripts/strict-command.mjs npm run build",
         "node xtask/scripts/strict-command.mjs npm run mockups:build",
-        "node xtask/scripts/strict-command.mjs npm run mockups:check",
         "node xtask/scripts/strict-command.mjs npm run mockups:test",
-        "node xtask/scripts/strict-command.mjs npm run mockups:typecheck",
     ];
     for index in 0..expected.len() {
         assert_eq!(
@@ -144,7 +146,10 @@ fn mockup_stage_builds_before_checks_and_propagates_real_failures() {
 fn site_stage_runs_the_complete_gate_and_propagates_output_failures() {
     let expected = [
         "node xtask/scripts/strict-command.mjs npm run build",
-        "node xtask/scripts/strict-command.mjs npm run site:check",
+        "node xtask/scripts/strict-command.mjs npm run site:build",
+        "node xtask/scripts/strict-command.mjs npm run site:test",
+        "node xtask/scripts/strict-command.mjs npm run site:links",
+        "node xtask/scripts/strict-command.mjs npm run site:browser",
     ];
     for index in 0..expected.len() {
         assert_eq!(

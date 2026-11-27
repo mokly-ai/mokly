@@ -12,7 +12,8 @@ import { publishedViewerReady } from "./support";
 /**
  * The Mokly check in the package's Changes tab. A pull request's publication
  * with a comparison shows the check card after the change stepper and before
- * Compared, and a branch's publication shows none. The contract fixture's
+ * Compared. That a branch's publication shows none is the decision that
+ * `check-card.test.ts` covers. The contract fixture's
  * index counts seven changed entries and none added or removed, and its Start
  * screen is one of the changed entries.
  */
@@ -92,12 +93,4 @@ test("a pull request's publication with a comparison shows the Mokly check in th
   );
   expect(stepper.bottom).toBeLessThanOrEqual((await edges(name)).top);
   expect((await edges(checks)).bottom).toBeLessThanOrEqual(compared.top);
-});
-
-test("a branch's publication shows no check in the Changes tab", async ({
-  page,
-}) => {
-  const tab = await changesTab(page, "changes-no-check", { branch: "main" });
-  await expect(tab.getByText("Mokly", { exact: true })).toHaveCount(0);
-  await expect(tab.getByRole("link", { name: /^#\d+ · / })).toHaveCount(0);
 });

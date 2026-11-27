@@ -1,0 +1,58 @@
+# Node's module cache keeps old run-time builds
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from the finding check of finding 190 in round 3 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `restore` at `packages/mokly/src/sidecar/compiled.ts:55` and line 80, `sideRequire` at `packages/mokly/src/sidecar/importer-resolution.ts:256` and line 279, and its compile-time caller `consumerRequire` at `packages/mokly/src/sidecar/paths.ts:34`.
+- **Reason:** The shared module cache predates the branch, because `origin/main` loads run-time requires through the same `createRequire` calls.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Serve:** Mokly's development server. It shows the catalogue in a browser and builds the changed parts again after each file change.
+  - **Sidecar:** The long-lived Node process that bundles, evaluates, and renders the JavaScript of a catalogue for Mokly.
+  - **Generation:** One compiled bundle that the sidecar keeps in memory, with its own evaluation state. A change to an input of the bundle gives a new generation.
+  - **Restored require:** The `require` function that the sidecar gives to the code of a generation. It loads each module that the bundle keeps for run time through Node.
+  - **Module cache:** Node's table of loaded CommonJS modules, `require.cache`, keyed by the real file path. All `createRequire` functions of one process share it.
+- **Background:**
+  - A bundle keeps some loads for run time. Examples are a shared package such as `react`, which the bundle loads from the installation, and a computed `require(name)`. Other uses of `require` that esbuild cannot resolve stay for run time too.
+  - The restored require loads these modules when the sidecar evaluates or renders the generation.
+  - `restore` makes the restored require of each generation. Line 55 calls `createRequire`, and line 80 loads each module with `native(resolve(name))`. `sideRequire` gives the resolution, and its own `require` loads through `createRequire` too, at line 256 and line 279.
+  - `consumerRequire` at `packages/mokly/src/sidecar/paths.ts:34` also uses `sideRequire`, for the shared packages that a compile resolves. So a change of `sideRequire` also reaches the compile.
+  - Node keeps each CommonJS module that it loads in the module cache. A later `require` of the same real path returns the cached module and does not read the file.
+  - A probe on 2026-11-27 with Node 24.21.0 showed that the load hook of `module.registerHooks` does not run for a cached module either.
+  - A sidecar process serves many generations. Mokly replaces it after 500 renders or above 1 GiB of resident memory, as `docs/protocol/mokly-sidecar.md` says.
+  - The protocol accepts a stale module in one named case. `docs/protocol/mokly-sidecar-recipes.md` lets a compilation keep the old module after an unreadable configuration chain, until another live input changes. No page accepts it for run-time loads.
+  - A decision of 2026-11-19 in `docs/protocol/mokly-sidecar-folder-reuse.md` is a precedent. It concerns the folders that esbuild checks after a package folder mapping. It rejected an accepted gap there, because Serve could then show a stale module until a restart.
+  - `origin/main` loads run-time requires through the same `createRequire` calls.
+- **Problem:**
+  - A new generation in the same sidecar process gets the module that an earlier generation loaded, not the edited file.
+  - A probe on 2026-11-27 ran the sidecar modules of this branch in one test process. A catalogue entry loaded the workspace build `esm/value.js` through a computed `require`. After an edit of the build, the reuse check ended the reuse, but a fresh compile still evaluated the old value `Built`.
+  - After a delete of the module cache entry of the build, a third compile evaluated the new value `Edit!`.
+- **Impact if no action:** After an edit of a file that a run-time require loads, Serve shows the old content until Mokly replaces the sidecar process or Serve restarts. A fix that records run-time loads for the reuse checks cannot give current output alone.
+- **Root question:** How does each new generation evaluate the current content of each repository file that its run-time requires load?
+- **Options:**
+  - **A.** Before a new generation evaluates, delete the module cache entry of each repository file outside `node_modules`, except the files of Mokly itself. Node then reads these files again. Effort: Small.
+    - An older generation that loads such a file later gets the new copy, so one generation can mix two copies of a module.
+  - **B.** Load each repository file outside `node_modules` fresh for each generation, into a module table of that generation. Effort: Medium.
+    - Files in `node_modules` keep Node's shared module cache.
+    - The `require` of a fresh module uses the same rule, so a neighbor file also loads fresh.
+    - The loader must follow Node's CommonJS rules for each file type that the restored require can load, such as `.js`, `.cjs`, and `.json`.
+    - Keep the compile-time resolution of `consumerRequire` as it is.
+  - **C.** Replace the sidecar process when a repository file that a restored require loaded changes. The new process starts with an empty cache, but it loses its warm state, and the Rust side of Mokly must know each run-time load. Effort: Medium.
+  - **D.** Evaluate and render each generation in its own worker thread, which has its own module cache. It moves the render state and the render calls of the sidecar into workers, which changes its request flow and its memory rules. Effort: Large.
+- **Left out:**
+  - A load hook of `module.registerHooks` that returns the current file. Node returns a cached module before it calls the hook, as the probe showed.
+  - Change nothing. It fails the goal, because Serve then shows the old content after an edit.
+- **Wider fix:** B. A module table for each generation removes the shared state, so a later generation cannot get an old copy. The shared record of run-time loads also needs B, because Node runs no load and no load hook for a cached module.
+- **Previous examples:** [in-process-resolution-coherence.md](./in-process-resolution-coherence.md) records in-process reuse that keeps a stale module selection in the same process.
+- **Related:**
+  - [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md): shared wider fix, and work that waits. Its option B records each repository file that a run-time require loads. That record is correct only with the fresh loads of B here.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md): same restored require, and work that waits. When the reuse checks see such a load, a new compile still gets the old build until B lands.
+  - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md): work that waits. Its record of the files that a page render loads misses the files that a cached module loaded before, until B lands.
+  - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code and same fix. Its option E gives each generation its own module cache in the restored require. Do both in one branch, or B first.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. `sideRequire` calls `resolveRequire` and `requireSource` in `importer-resolution.ts`, and both reach `retryRequire`, which that record changes. So both changes touch the restored require.
+  - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md): same risk. It leaves out reuse of evaluated modules across generations, because shared module state could make the output depend on the edit history. Node's module cache already shares the run-time modules.
+  - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md): same file and same symptom. It concerns `reuse` in `compiled.ts`, beside `restore` here, and it also keeps stale output in one process.
+- **Recommendation:** B. It gives each generation the current repository files, and it keeps Node's shared cache for installed packages. D isolates every module, but it moves rendering into workers.
+- **Action:** fix after merge, apply B, because the shared module cache predates this branch, and the fix changes how the sidecar loads run-time modules.

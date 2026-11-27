@@ -5,23 +5,17 @@ import { expect } from "@playwright/test";
 import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { registerCanvasCases } from "./design_canvas_cases.js";
-import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { designFileUrl } from "./design_fixture.js";
 import { CATALOGUE_LINKS } from "./design_links_cases.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerDesignPortable(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignPortable() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   const design = (entryPath: string, viewport: string) =>
     designFileUrl(
       path.join(
@@ -105,42 +99,38 @@ export function registerDesignPortable(
       );
       await context.close();
     });
-
-    test(`${viewport}: a focused portable link draws the dark focus glow`, async ({
-      page,
-    }) => {
-      await page.setViewportSize(
-        viewport === "mobile"
-          ? { width: 390, height: 1000 }
-          : { width: 1440, height: 1000 },
-      );
-      await page.goto(design("design/canvas/overview", `${viewport}.dark`));
-      // The glow of decision 38: a 4px halo of the dark signal at 75%, as a
-      // probe on the artboard's root computes it.
-      const glow = await page
-        .locator(".cv")
-        .first()
-        .evaluate((root) => {
-          const probe = document.createElement("span");
-          probe.style.boxShadow =
-            "0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)";
-          root.append(probe);
-          const shadow = getComputedStyle(probe).boxShadow;
-          probe.remove();
-          return shadow;
-        });
-      const link = page.getByRole("link", { name: "Mokly", exact: true });
-      await link.focus();
-      await expect(link).toHaveCSS("outline-style", "none");
-      await expect(link).toHaveCSS("box-shadow", glow);
-      await expect(link).toHaveCSS(
-        "color",
-        await canvasColor("dark", "--cv-text"),
-      );
-      await page.screenshot({
-        path: `.context/design-dark-focus-${viewport}.png`,
-        fullPage: true,
-      });
-    });
   }
+
+  test("desktop: a focused portable link draws the dark focus glow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(design("design/canvas/overview", "desktop.dark"));
+    // The glow of decision 38: a 4px halo of the dark signal at 75%, as a
+    // probe on the artboard's root computes it.
+    const glow = await page
+      .locator(".cv")
+      .first()
+      .evaluate((root) => {
+        const probe = document.createElement("span");
+        probe.style.boxShadow =
+          "0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)";
+        root.append(probe);
+        const shadow = getComputedStyle(probe).boxShadow;
+        probe.remove();
+        return shadow;
+      });
+    const link = page.getByRole("link", { name: "Mokly", exact: true });
+    await link.focus();
+    await expect(link).toHaveCSS("outline-style", "none");
+    await expect(link).toHaveCSS("box-shadow", glow);
+    await expect(link).toHaveCSS(
+      "color",
+      await canvasColor("dark", "--cv-text"),
+    );
+    await page.screenshot({
+      path: ".context/design-dark-focus-desktop.png",
+      fullPage: true,
+    });
+  });
 }

@@ -20,10 +20,10 @@ import {
   BASE,
   COMPONENT_FILES_LEAD,
   COMPONENT_LEAD,
+  DESKTOP_INSPECTOR,
   EXAMINED_LEAD,
   EXCLUDED_LEAD,
   FILES_LEAD,
-  INSPECTOR_VIEWPORTS,
   OUTSIDE_LEAD,
   VARIANT_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
@@ -32,6 +32,7 @@ import {
   VARIANT_TERMINAL,
   evidenceFiles,
   evidenceSpacing,
+  expectNoStatusWords,
   openChangesEvidence,
   openEvidence,
   type EvidenceFile,
@@ -39,8 +40,10 @@ import {
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
+  chooseFilter,
   comparisonFrames,
   expectNoCompareModes,
+  navRow,
   outcomeLines,
 } from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
@@ -66,123 +69,125 @@ test.beforeEach(({ allowBrowserError, baseURL }) => {
   documentFavicon(allowBrowserError, ownExampleServerUrl() ?? baseURL!);
 });
 
-/** One approved design artboard at one viewport. */
-function designUrl(route: string, viewport: string): string {
+/** One approved design artboard at the desktop viewport. */
+function designUrl(route: string): string {
   return designFileUrl(
     path.join(
       repositoryRoot,
       "examples/basic/mokly-generated",
       route,
-      `index.${viewport}.html`,
+      "index.desktop.html",
     ),
   ).href;
 }
 
-for (const [name, size] of INSPECTOR_VIEWPORTS) {
-  test.describe(`${name} component and screen evidence`, () => {
-    test.use({ viewport: size });
+test.describe("desktop component and screen evidence", () => {
+  test.use({ viewport: DESKTOP_INSPECTOR });
 
-    test("a consuming component shows its styles in Current before any comparison", async ({
-      page,
-    }) => {
-      await page.goto(`/view/${comparisonPaths.consumingComponent}/`);
-      await expect(page.locator("[data-workspace-status]")).toHaveText(
-        "Unmodified",
-      );
-      // Its detail makes the comparison eligible, which adds the Changes tab
-      // that then holds the comparison details.
-      await awaitRoutedDetail(page, comparisonPaths.consumingComponent);
+  test("a consuming component shows its styles in Current before any comparison", async ({
+    page,
+  }) => {
+    await page.goto(`/view/${comparisonPaths.consumingComponent}/`);
+    await expect(page.locator("[data-workspace-status]")).toHaveText(
+      "Unmodified",
+    );
+    // Its detail makes the comparison eligible, which adds the Changes tab
+    // that then holds the comparison details.
+    await awaitRoutedDetail(page, comparisonPaths.consumingComponent);
+    const evidence = await openChangesEvidence(page);
+    await expect(
+      evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
+    ).toBeVisible();
+    await expect
+      .poll(() => evidenceFiles(evidence))
+      .toEqual([[sheets.theme, [[COMPONENT_LEAD, [".accent"]]]]]);
+    await expect(
+      evidence.getByRole("link", { name: "Card", exact: true }),
+    ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
+    // Its own views stay unmodified, but Card changes the shared preview.
+    // The shared-component sentence replaces the no-changes line.
+    await expect(evidence.locator("p").last()).toHaveText(
+      VARIANT_SHARED_IMPACT,
+    );
+    await expect(evidence).not.toContainText(VARIANT_TERMINAL);
+    // Current loads no comparison, so no frame compares.
+    await expect(outcomeLines(page)).toHaveCount(0);
+    await expect(comparisonFrames(page)).toHaveCount(0);
+  });
+
+  test("the changed component keeps its own sentence beside its saved view's", async ({
+    page,
+  }) => {
+    for (const route of [
+      comparisonPaths.changedVariant,
+      comparisonPaths.component,
+    ]) {
+      await page.goto(`/view/${route}/`);
       const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect
-        .poll(() => evidenceFiles(evidence))
-        .toEqual([[sheets.theme, [[COMPONENT_LEAD, [".accent"]]]]]);
-      await expect(
-        evidence.getByRole("link", { name: "Card", exact: true }),
-      ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
-      // Its own views stay unmodified, but Card changes the shared preview.
-      // The shared-component sentence replaces the no-changes line.
-      await expect(evidence.locator("p").last()).toHaveText(
-        VARIANT_SHARED_IMPACT,
-      );
+      await expect.poll(() => evidenceFiles(evidence)).toEqual(CARD_FILES);
       await expect(evidence).not.toContainText(VARIANT_TERMINAL);
-      // Current loads no comparison, so no frame compares.
-      await expect(outcomeLines(page)).toHaveCount(0);
-      await expect(comparisonFrames(page)).toHaveCount(0);
-    });
-
-    test("the changed component keeps its own sentence beside its saved view's", async ({
-      page,
-    }) => {
-      for (const route of [
-        comparisonPaths.changedVariant,
-        comparisonPaths.component,
-      ]) {
-        await page.goto(`/view/${route}/`);
-        const evidence = await openChangesEvidence(page);
-        await expect(
-          evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
-        ).toBeVisible();
-        await expect.poll(() => evidenceFiles(evidence)).toEqual(CARD_FILES);
-        await expect(evidence).not.toContainText(VARIANT_TERMINAL);
-      }
-    });
-
-    test("the shell repeats the approved mockup's layout and copy", async ({
-      page,
-    }) => {
-      await page.goto(`/view/${comparisonPaths.changed}/`);
-      const evidence = await openChangesEvidence(page);
-      await expect
-        .poll(() => evidenceFiles(evidence))
-        .toEqual([
-          [sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]],
-          [sheets.theme, [[OUTSIDE_LEAD, [".accent"]]]],
-        ]);
-      const served = await evidenceSpacing(evidence);
-      await page.goto(
-        designUrl("design/canvas/evidence/styles/unresolved", name),
-      );
-      const card = page.locator(".cv-evidence [data-workspace-evidence]");
-      await expect(card.getByText(FILES_LEAD, { exact: true })).toBeVisible();
-      const approved = await evidenceFiles(card);
-      expect(approved.map(([, outcomes]) => outcomes[0]?.[0])).toEqual([
-        UNRESOLVED_LEAD,
-      ]);
-      const spacing = await evidenceSpacing(card);
-      expect([spacing.sentence, spacing.styles]).toEqual([
-        served.sentence,
-        served.styles,
-      ]);
-    });
-
-    test("an excluded-only screen shows the mockup's Details card and no comparison", async ({
-      page,
-    }) => {
-      const sentences = [EXCLUDED_LEAD, EXAMINED_LEAD, SCREEN_TERMINAL];
-      await page.goto(`/view/${comparisonPaths.unchanged}/`);
-      await expect(page.locator("[data-workspace-status]")).toHaveText(
-        "Unmodified",
-      );
-      const evidence = await openEvidence(page);
-      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
-      await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
-      await expect(evidence.locator("li")).toHaveText([sheets.theme]);
-      // The canvas keeps the current frames, and no frame compares.
-      await expect(page.locator(viewportFrame("mobile"))).toBeVisible();
-      await awaitRoutedDetail(page, comparisonPaths.unchanged);
-      await expectNoCompareModes(page);
-      await expect(
-        page.getByRole("button", { name: "Side by side", exact: true }),
-      ).toBeHidden();
-      await expect(comparisonFrames(page)).toHaveCount(0);
-      await expect(outcomeLines(page)).toHaveCount(0);
-      await page.goto(designUrl("design/canvas/evidence/unchanged", name));
-      const card = page.locator(".cv-evidence [data-workspace-evidence]");
-      await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);
-      await expect(card.locator("li")).toHaveCount(1);
-    });
+    }
   });
-}
+
+  test("the shell repeats the approved mockup's layout and copy", async ({
+    page,
+  }) => {
+    await page.goto(`/view/${comparisonPaths.changed}/`);
+    const evidence = await openChangesEvidence(page);
+    await expect
+      .poll(() => evidenceFiles(evidence))
+      .toEqual([
+        [sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]],
+        [sheets.theme, [[OUTSIDE_LEAD, [".accent"]]]],
+      ]);
+    const served = await evidenceSpacing(evidence);
+    await page.goto(designUrl("design/canvas/evidence/styles/unresolved"));
+    const card = page.locator(".cv-evidence [data-workspace-evidence]");
+    await expect(card.getByText(FILES_LEAD, { exact: true })).toBeVisible();
+    const approved = await evidenceFiles(card);
+    expect(approved.map(([, outcomes]) => outcomes[0]?.[0])).toEqual([
+      UNRESOLVED_LEAD,
+    ]);
+    const spacing = await evidenceSpacing(card);
+    expect([spacing.sentence, spacing.styles]).toEqual([
+      served.sentence,
+      served.styles,
+    ]);
+  });
+
+  test("an excluded-only screen shows the mockup's Details card and no comparison", async ({
+    page,
+  }) => {
+    const sentences = [EXCLUDED_LEAD, EXAMINED_LEAD, SCREEN_TERMINAL];
+    await page.goto(`/view/${comparisonPaths.unchanged}/`);
+    await expect(page.locator("[data-workspace-status]")).toHaveText(
+      "Unmodified",
+    );
+    const evidence = await openEvidence(page);
+    await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
+    await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
+    // The paragraphs come from the entry detail; then the list stays empty.
+    await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
+    await expect(evidence.locator("li")).toHaveText([sheets.theme]);
+    await expectNoStatusWords(evidence);
+    // The canvas keeps the current frames, and no frame compares.
+    await expect(page.locator(viewportFrame("mobile"))).toBeVisible();
+    await awaitRoutedDetail(page, comparisonPaths.unchanged);
+    await expectNoCompareModes(page);
+    await expect(
+      page.getByRole("button", { name: "Side by side", exact: true }),
+    ).toBeHidden();
+    await expect(comparisonFrames(page)).toHaveCount(0);
+    await expect(outcomeLines(page)).toHaveCount(0);
+    // An excluded screen stays out of Changes.
+    await chooseFilter(page, "changed");
+    await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
+    await page.goto(designUrl("design/canvas/evidence/unchanged"));
+    const card = page.locator(".cv-evidence [data-workspace-evidence]");
+    await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);
+    await expect(card.locator("li")).toHaveCount(1);
+  });
+});

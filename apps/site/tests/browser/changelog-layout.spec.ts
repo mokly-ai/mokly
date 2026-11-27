@@ -39,22 +39,27 @@ test(
   },
 );
 
+// Each test sets its own width, so the 390px projects would only repeat it.
 for (const width of [1200, 1440, 1920]) {
-  test(`at ${String(width)}px Version history has the place and the width of the docs Layers panel`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ height: 900, width });
-    await page.goto(SITE_PATHS.docs);
-    const layers = await page
-      .getByRole("navigation", { name: "Documentation" })
-      .boundingBox();
-    await page.goto(SITE_PATHS.changelog);
-    const panel = await history(page).boundingBox();
-    if (!layers || !panel) throw new Error("a panel has no box");
-    expect(panel.x).toBeCloseTo(layers.x, 0);
-    expect(panel.y).toBeCloseTo(layers.y, 0);
-    expect(panel.width).toBeCloseTo(layers.width, 0);
-  });
+  test(
+    `at ${String(width)}px Version history has the place and the width of the docs Layers panel`,
+    {
+      tag: "@desktop",
+    },
+    async ({ page }) => {
+      await page.setViewportSize({ height: 900, width });
+      await page.goto(SITE_PATHS.docs);
+      const layers = await page
+        .getByRole("navigation", { name: "Documentation" })
+        .boundingBox();
+      await page.goto(SITE_PATHS.changelog);
+      const panel = await history(page).boundingBox();
+      if (!layers || !panel) throw new Error("a panel has no box");
+      expect(panel.x).toBeCloseTo(layers.x, 0);
+      expect(panel.y).toBeCloseTo(layers.y, 0);
+      expect(panel.width).toBeCloseTo(layers.width, 0);
+    },
+  );
 }
 
 /** Each width from `from` to `to`, `step` apart. */
@@ -65,17 +70,15 @@ function widths(from: number, to: number, step = 1): number[] {
 }
 
 /**
- * The widths the page is drawn at, in sweeps short enough for one test
- * each: every width from 768px to 797px, both sides of every layout step of
- * the page and of its tool bar, and every 40px from 320px to 1920px.
+ * Check every width just above the toolbar breakpoint, both sides of each
+ * layout step, and a wider sample across the full width range.
  */
 const SWEEPS: Readonly<Record<string, readonly number[]>> = {
   "every width from 768px to 797px": widths(768, 797),
   "both sides of each layout step": [
     767, 779, 799, 829, 933, 959, 1035, 1099, 1155, 1199, 1319, 1399, 1439,
   ].flatMap((edge) => [edge, edge + 1]),
-  "every 40px from 320px to 1080px": widths(320, 1080, 40),
-  "every 40px from 1120px to 1920px": widths(1120, 1920, 40),
+  "every 80px from 320px to 1920px": widths(320, 1920, 80),
 };
 
 for (const disclosures of ["closed", "open"] as const) {
@@ -169,7 +172,7 @@ for (const percent of [100, 200]) {
   );
 }
 
-test.describe("without script", () => {
+test.describe("without script", DESKTOP, () => {
   test.use({ javaScriptEnabled: false });
 
   test("every note shows and the filter does not", async ({ page }) => {

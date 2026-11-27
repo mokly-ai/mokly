@@ -124,8 +124,8 @@ fn prepare_passes_the_captured_head_to_classify() {
     let changes = Arc::new(Unimock::new((
         captured_head(captured_generation.clone()),
         ChangesServiceMock::classify
-            .next_call(matching!(_, _, _, _))
-            .answers_arc(Arc::new(move |_, _, _, head, _| {
+            .next_call(matching!(_, _, _, _, _))
+            .answers_arc(Arc::new(move |_, _, _, head, _, _| {
                 *received_head_for_mock.lock().unwrap() = Some(head);
                 Err(mokly_compare::error::Error::UnsupportedManager)
             })),

@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_css::resolution::Resolution;
 use mokly_css::types::StylesheetRoot;
 use mokly_css::vite;
 
@@ -18,6 +17,7 @@ use crate::stylesheet_cache::CachedStylesheets;
 use crate::stylesheet_compiler::{
     CapturingCompiler, RootCompiler, StylesheetPreparation, ViteRootCompiler,
 };
+use crate::stylesheet_resolution::resolution;
 use crate::vite_stylesheets::ViteStylesheets;
 
 /// Stylesheet services and context ownership for one attempt.
@@ -46,22 +46,11 @@ pub(crate) fn attempt(
     side: &SideInputs,
 ) -> StylesheetAttempt {
     let tree = sources::reader(runtime, config, side);
-    let module_resolution = &side.module_resolution;
-    let resolution = Resolution {
-        config_directory: side.configuration_directory.clone(),
-        dependency_aliases: side.dependency_aliases.clone(),
-        aliases: module_resolution.aliases.clone(),
-        conditions: module_resolution.conditions.clone(),
-        main_fields: module_resolution.main_fields.clone(),
-        dependency_roots: (0..dependency_roots(side).len())
-            .map(mokly_compare::ancestor_roots::logical)
-            .collect(),
-        extensions: module_resolution.resolve_extensions.clone(),
-    };
+    let resolution = resolution(side);
     let mut settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
-        config.modules,
+        (&config.modules.renderer, &config.modules.postcss),
         config.postcss().map(|_| &side.source_root),
         side.module_resolution,
         dependency_roots(side),

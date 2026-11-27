@@ -224,6 +224,8 @@ spec:
   template:
     metadata:
       labels: { app.kubernetes.io/name: api }
+      annotations:
+        mokly.ai/preview-sign-in-rollout-marker: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     spec:
       serviceAccountName: api
       terminationGracePeriodSeconds: 30
@@ -363,6 +365,7 @@ spec:
                     - { key: catalogue-signing-key, path: catalogue-signing-key }
               - secret:
                   name: preview-sign-in
+                  optional: true
                   items:
                     - { key: preview-sign-in, path: preview-sign-in }
 
@@ -928,10 +931,6 @@ spec:
                       name: catalogue-signing-key
                       items:
                         - { key: catalogue-signing-key, path: catalogue-signing-key }
-                  - secret:
-                      name: preview-sign-in
-                      items:
-                        - { key: preview-sign-in, path: preview-sign-in }
 
 ---
 # Source: mokly-cloud/templates/ingress.yaml

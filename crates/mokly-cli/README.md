@@ -150,7 +150,7 @@ foreground request. After `Source::finished` reports a committed classification,
 `mokly-head-return` worker runs one step of the pass at a time while the gate
 is open and no base call waits at it. It holds the pool and the gate only
 weakly, so an idle worker keeps neither alive. Each failed step reaches
-stderr once through the sidecar `Diagnostics` reporter, and a failed reap
+stderr once through the sidecar `Diagnostics` reporter, and a failed exit wait
 adds the warning that background preparation is disabled. The base preparation
 bundles its stylesheet roots on its own thread, not on the shared render
 workers. That thread is the classification thread, or the `mokly-base-prepare`
@@ -470,6 +470,9 @@ changed.
   the Vite adapter makes it true. On the working configuration, it selects the
   early lease of an existing extraction. On the base configuration, it selects
   the dependency step, as a discovered entry module or stories file does.
+  `NativeBase::source_generation` in that file loads the base configuration
+  and keeps the working `sourcePackages` entries beside it, in
+  `ResolvedModules.working_source_packages`.
   [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
   defines `SourceAdmission`, and
   [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)

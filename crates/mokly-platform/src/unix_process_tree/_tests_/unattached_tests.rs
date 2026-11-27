@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::error::{Error, InternalError};
 use crate::unix_process_table::{ChildrenMock, IdentityMock, ProcessIdentity, SignalMock};
+use crate::unix_process_tree::GroupOutcome;
 
 use super::super::group::GroupSignalMock;
 use super::kill;
@@ -40,7 +41,7 @@ fn unattached_cleanup_stops_descendants_without_reading_the_root_identity() {
             .some_call(matching!(1, _))
             .answers_arc(Arc::new(move |_, _, signal| {
                 captured.lock().unwrap().push((1, signal));
-                Ok(false)
+                Ok(GroupOutcome::Delivered)
             })),
     );
     kill(1, &table, &group).unwrap();

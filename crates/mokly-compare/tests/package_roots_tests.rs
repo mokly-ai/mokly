@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_compare::cache_types::Cache;
-use mokly_compare::commands::{Command, Commands, TimedCommands};
+use mokly_compare::commands::{Commands, TimedCommands};
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::inputs::{InputReader, SourceInputs};
@@ -41,8 +41,6 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             .join("repository");
         fs::create_dir(&root).unwrap();
         git(&root, &["init", "-b", "main"]);
-        git(&root, &["config", "user.name", "Mokly Tests"]);
-        git(&root, &["config", "user.email", "tests@mokly.invalid"]);
         write(&root, ".gitignore", b"node_modules\n.npm-cache\n");
         let clock = Arc::new(SystemClock::default());
         let token = Arc::new(Token::default());
@@ -67,10 +65,16 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             } else {
                 format!("{package_root}/")
             };
-            let name = if package_root.is_empty() {
-                "local-root"
+            let (name, lockfile): (&str, &[u8]) = if package_root.is_empty() {
+                (
+                    "local-root",
+                    include_bytes!("fixtures/package-roots/root/package-lock.json"),
+                )
             } else {
-                "local-front"
+                (
+                    "local-front",
+                    include_bytes!("fixtures/package-roots/frontend/package-lock.json"),
+                )
             };
             write(&root, &format!("{prefix}package.json"), format!("{{\"name\":\"independent-app\",\"version\":\"1.0.0\",\"dependencies\":{{\"{name}\":\"file:vendor/local\"}}}}").as_bytes());
             write(
@@ -84,33 +88,21 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                 &format!("{prefix}vendor/local/index.js"),
                 b"module.exports='base';",
             );
-            commands
-                .run(&Command {
-                    program: "npm".into(),
-                    args: [
-                        "install",
-                        "--package-lock-only",
-                        "--ignore-scripts",
-                        "--offline",
-                        "--no-audit",
-                        "--no-fund",
-                        "--cache",
-                        ".npm-cache",
-                    ]
-                    .map(Into::into)
-                    .to_vec(),
-                    scripts: false,
-                    directory: root.join(package_root),
-                    timeout: Duration::from_secs(120),
-                    byte_limit: None,
-                    size_root: None,
-                    cache: None,
-                    node: None,
-                })
-                .unwrap();
+            write(&root, &format!("{prefix}package-lock.json"), lockfile);
         }
         git(&root, &["add", "-A"]);
-        git(&root, &["commit", "-m", "apps"]);
+        git(
+            &root,
+            &[
+                "-c",
+                "user.name=Mokly Tests",
+                "-c",
+                "user.email=tests@mokly.invalid",
+                "commit",
+                "-m",
+                "apps",
+            ],
+        );
         let commit =
             ObjectId::parse(String::from_utf8_lossy(&git(&root, &["rev-parse", "HEAD"])).trim())
                 .unwrap();

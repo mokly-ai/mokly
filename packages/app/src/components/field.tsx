@@ -39,7 +39,11 @@ type FieldContent =
 
 type FieldProps = FieldContent & {
   name: string;
-  type?: "email" | "identifier" | "text";
+  /**
+   * What the field holds: an address, a slug or another identifier, prose, or
+   * the password of an account that exists, which the field masks.
+   */
+  type?: "email" | "identifier" | "text" | "password";
   onFocus?: (value: string) => void;
   onBlur?: () => void;
   helper?: string;
@@ -134,6 +138,9 @@ export function Field(props: FieldProps) {
   const compact = useCompact();
   const size = compact ? "lg" : "md";
   const identifier = type === "identifier";
+  // A password is masked and filled by a password manager, and like an
+  // identifier it is never rewritten by the keyboard.
+  const password = type === "password";
   const waits = props.waiting === true;
   const value = props.waiting ? "" : props.value;
   const describedBy = name + "-waiting";
@@ -154,8 +161,11 @@ export function Field(props: FieldProps) {
       }}
       onBlur={onBlur}
       keyboardType={type === "email" ? "email-address" : "default"}
-      autoComplete={type === "email" ? "email" : "off"}
-      {...(identifier
+      autoComplete={
+        type === "email" ? "email" : password ? "current-password" : "off"
+      }
+      {...(password ? { secureTextEntry: true } : {})}
+      {...(identifier || password
         ? {
             autoCapitalize: "none" as const,
             autoCorrect: false,

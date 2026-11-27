@@ -51,7 +51,6 @@ test("the landings the entry captures are the ones the API links to", async () =
   // desktop shell loads; the scheme test of `desktop-sign-in` pins that one.
   const constants: Record<Exclude<CallbackLanding, "desktop">, string> = {
     email: "EMAIL_CALLBACK",
-    preview: "PREVIEW_CALLBACK",
     "github-callback": "GITHUB_CALLBACK",
     "github-install": "GITHUB_INSTALL",
   };

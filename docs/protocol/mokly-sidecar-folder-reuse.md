@@ -32,11 +32,15 @@ Serve could show a stale module until a restart.
 For each such import, the reuse evidence of a marked compilation records each
 file that can change the selection: the manifest that defines the mapping, the
 `package.json` candidate of each path that esbuild tries before the selection,
-and each PnP state file that esbuild checks. Each entry records a present file
-with its digest, an absent file, or a link with its target. The table holds no
-directory entries, because directory membership stays in the live checks.
+and each PnP state file that esbuild checks. Each entry records a canonical
+regular-file path (`filePath`), a file digest, an absent file, or a link with
+its target. Directory membership stays in the live checks.
 The table can also hold [PnP package roots](#pnp-package-roots) and
 [workspace lookup files](./mokly-sidecar-modules.md#source-and-dependency-files).
+Marked evidence keeps digests for recorded workspace build files when a bundle
+leaves a `require` target unresolved or uses the free `require` outside a direct
+call. It also keeps these digests when the bundle imports the Node `module`
+builtin or references `getBuiltinModule`.
 The evidence keeps `complete` and `durable` false and the `uncaptured: "serveEdit"` marker.
 
 A reuse check compares each entry with the filesystem by the rules of the
@@ -53,6 +57,11 @@ identities, and Changes stay equal. Adding them to the metadata digests of
 both modes was rejected, because a change of an inactive manifest or PnP state
 would then change shared render keys. A new result field was rejected,
 because it changes the wire format.
+
+Decision by Cal on 2026-11-27: keep the recorded kind of each workspace lookup
+so that presence checks need no file reads. Cal rejected limiting path-only
+entries to workspace targets (A), adding a separate result field (B), and
+moving both capture modes to one typed observation model (C).
 
 ## Metadata Bounds
 
