@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.3.0](https://github.com/mokly-ai/mokly/compare/desktop-v0.2.0...desktop-v0.3.0) (2026-11-27)
+
+
+### Features
+
+* **cloud:** make each list row one link or button over the whole row ([#600](https://github.com/mokly-ai/mokly/issues/600)) ([201b2c3](https://github.com/mokly-ai/mokly/commit/201b2c3eb9486e431fff4c3829eee63c5b682c1e))
+* **preview:** sign in to PR previews with a shared preview password ([#563](https://github.com/mokly-ai/mokly/issues/563)) ([895ad2d](https://github.com/mokly-ai/mokly/commit/895ad2d1c60a67118deccdaacc613711261640b2))
+* **viewer:** put Workspace settings on the workspace line as a cog ([#577](https://github.com/mokly-ai/mokly/issues/577)) ([ddda60f](https://github.com/mokly-ai/mokly/commit/ddda60fad314d02c62739faa9970e6ab0acf5950))
+
+
+### Bug Fixes
+
+* **app:** keep the viewer mounted when a panel closes ([#522](https://github.com/mokly-ai/mokly/issues/522)) ([5a9f080](https://github.com/mokly-ai/mokly/commit/5a9f08007323a70332b9b664eeffbdd57e11e6c6))
+* **app:** keep the waiting account placeholder a window drag area ([618153c](https://github.com/mokly-ai/mokly/commit/618153c0611a39f2dcd35cd4bc40b5bcf093ec2f))
+* **app:** let the avatar open the account menu in the Mac app ([#514](https://github.com/mokly-ai/mokly/issues/514)) ([618153c](https://github.com/mokly-ai/mokly/commit/618153c0611a39f2dcd35cd4bc40b5bcf093ec2f))
+* **site:** start the Copy and search islands on a page that never goes idle ([398cf4c](https://github.com/mokly-ai/mokly/commit/398cf4c2576f87394f278d09920a4e0a1e555b7c))
+* **test:** apply the decisions on the open flaky-test items ([#558](https://github.com/mokly-ai/mokly/issues/558)) ([a006e6a](https://github.com/mokly-ai/mokly/commit/a006e6a99e5ec9570f5d12e0092a146b14167657))
+* **test:** fix root causes of flaky viewer and browser tests ([#526](https://github.com/mokly-ai/mokly/issues/526)) ([bde3f11](https://github.com/mokly-ai/mokly/commit/bde3f11a16e7fb28e17343510742328bde79faaf))
+* **test:** remove the sources of three flaky cloud tests ([#521](https://github.com/mokly-ai/mokly/issues/521)) ([398cf4c](https://github.com/mokly-ai/mokly/commit/398cf4c2576f87394f278d09920a4e0a1e555b7c))
+* **test:** resolve the published CLI install as of its release ([398cf4c](https://github.com/mokly-ai/mokly/commit/398cf4c2576f87394f278d09920a4e0a1e555b7c))
+* **test:** wait for the way back before pressing it ([398cf4c](https://github.com/mokly-ai/mokly/commit/398cf4c2576f87394f278d09920a4e0a1e555b7c))
+
+
+### Performance Improvements
+
+* **dev:** skip unchanged builds and unused fixtures in local runs ([#536](https://github.com/mokly-ai/mokly/issues/536)) ([84d9f85](https://github.com/mokly-ai/mokly/commit/84d9f85ca890efd4d6adbd16749362009bc2edc1))
+
 ## [0.2.0](https://github.com/mokly-ai/mokly/compare/desktop-v0.1.0...desktop-v0.2.0) (2026-11-24)
 
 
