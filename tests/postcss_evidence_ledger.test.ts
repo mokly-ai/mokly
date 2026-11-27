@@ -7,6 +7,7 @@ import test from "node:test";
 import type { PostcssEvidence } from "../packages/mokly/src/generated/sidecar/PostcssEvidence.js";
 import {
   beginReadEvidenceGeneration,
+  hasAsynchronousLoader,
   initializeReadEvidenceGeneration,
   loadedModulePaths,
   observeBytes,
@@ -121,6 +122,10 @@ test("every ledger member is read from the shared ledger", (context) => {
       calls.push(`loadedModules ${preloadedModule}`);
       return new Set([preloadedModule]);
     },
+    get asynchronousLoader() {
+      calls.push("asynchronousLoader registered");
+      return true;
+    },
     resetGeneration: (generation) => {
       calls.push(`resetGeneration ${generation}`);
     },
@@ -136,6 +141,7 @@ test("every ledger member is read from the shared ledger", (context) => {
     },
     loadedModules: () =>
       assert.deepEqual([...loadedModulePaths()], [preloadedModule]),
+    asynchronousLoader: () => assert.equal(hasAsynchronousLoader(), true),
     resetGeneration: () => beginReadEvidenceGeneration("generation-2"),
     initializeGeneration: () =>
       initializeReadEvidenceGeneration("generation-1"),

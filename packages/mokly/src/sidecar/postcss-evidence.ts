@@ -15,6 +15,11 @@ import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
 import type { PostcssRead } from "../generated/sidecar/PostcssRead.js";
 
+import {
+  asynchronousLoader,
+  mixedLoadHooksSupported,
+  preloadedCode,
+} from "./postcss-loader-options.js";
 import { resolutionMetadata } from "./postcss-resolution-evidence.js";
 
 const reads = new Map<string, PostcssRead>();
@@ -31,6 +36,7 @@ type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
+let registeredAsynchronousLoader = false;
 const moduleUrlObservers = new Set<(url: string) => void>();
 const ledgerKey = Symbol.for("mokly.postcss.ledger");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
@@ -39,6 +45,7 @@ type Observer = (loaded: Iterable<string>) => PostcssEvidence;
 export interface Ledger {
   readEvidence: Observer;
   loadedModules: ReadonlySet<string>;
+  asynchronousLoader: boolean;
   resetGeneration: (generation: string) => void;
   initializeGeneration: (generation: string) => void;
 }
@@ -46,6 +53,9 @@ export interface Ledger {
 const ledger: Readonly<Ledger> = Object.freeze({
   readEvidence,
   loadedModules,
+  get asynchronousLoader() {
+    return asynchronousLoader || registeredAsynchronousLoader;
+  },
   resetGeneration: resetReadEvidence,
   initializeGeneration: markGeneration,
 });
@@ -105,24 +115,14 @@ export function loadedModulePaths(): Iterable<string> {
   return [...loadedModules, ...(sharedLedger()?.loadedModules ?? [])];
 }
 
-/** Async loaders cannot certify raw source or synchronously load an ESM preload. */
-export const asynchronousLoader = [
-  ...process.execArgv,
-  process.env.NODE_OPTIONS ?? "",
-].some((value) => /--(?:experimental-)?loader(?:=|\s|$)/.test(value));
+export function hasAsynchronousLoader(): boolean {
+  return (sharedLedger() ?? ledger).asynchronousLoader;
+}
 
 /** The first child preload obtains native readers before consumer replacement. */
 export function trustEarlyReaders(): void {
   earlyReaders = true;
 }
-
-/** Preloads can replace file APIs before this child can observe their raw inputs. */
-export const preloadedCode = [
-  ...process.execArgv,
-  process.env.NODE_OPTIONS ?? "",
-].some((value) =>
-  /--(?:import|loader|experimental-loader|require)|(?:^|[\s"'])-r/.test(value),
-);
 
 /** Only equal witnessed versions coalesce; a conflicting version remains evidence. */
 export function observeBytes(
@@ -225,6 +225,7 @@ export function observeModuleLoads(
   if (
     moduleHooksInstalled ||
     asynchronousLoader ||
+    (!mixedLoadHooksSupported && hasAsynchronousLoader()) ||
     typeof nodeModule.registerHooks !== "function"
   )
     return;
@@ -269,6 +270,7 @@ export function observeModuleLoads(
     const original = nodeModule[name];
     Object.defineProperty(nodeModule, name, {
       value: function (...args: unknown[]): unknown {
+        registeredAsynchronousLoader = true;
         customized = true;
         hooks.deregister();
         return Reflect.apply(original, nodeModule, args);

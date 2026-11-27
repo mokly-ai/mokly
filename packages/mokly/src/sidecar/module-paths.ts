@@ -262,14 +262,14 @@ export class ModulePaths {
     }
   }
 
-  /** Node-loaded requires prefer the native target on the selected side. */
+  /** Canonicalize Node-loaded targets in the same form as the side's roots. */
   resolveSync(
     file: string,
     specifier?: string,
     packageTarget?: string,
   ): string {
     if (!path.isAbsolute(file)) return file;
-    const real = fs.realpathSync(file);
+    const real = fs.realpathSync.native(file);
     const target = this.location(
       sourceDependencySync(this, real) ?? real,
       packageTarget,
@@ -278,7 +278,7 @@ export class ModulePaths {
     try {
       if (packageTarget !== undefined)
         this.workspaceLookups.nativeTarget(packageTarget);
-      const real = fs.realpathSync(target.file);
+      const real = fs.realpathSync.native(target.file);
       return this.checked(
         target,
         real,
