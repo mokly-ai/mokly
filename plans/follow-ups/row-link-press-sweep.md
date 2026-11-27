@@ -3,22 +3,22 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 3
-- **Location:** `docs/mockups/src/_tests_/responsive.spec.ts:44-92` and `docs/mockups/styles/controls.css:38-47`.
+- **Location:** `docs/mockups/src/_tests_/responsive.spec.ts:44-92` and `docs/mockups/styles/controls.css:34-63`.
 - **Reason:** The recommended fix adds a test for a whole class of defect, and the user approves each such test.
 - **Category:** Test.
 
 - **Terms:**
-  - **Row link:** the `a.row-link` anchor around a list row's content. `RowLink` draws it in the app, and `MockLink` draws it in the drawings.
-  - **`::after` box:** the row link's generated box in `controls.css:43-47`. It sets `position: absolute` and `inset: 0`, so it fills the list item around the row.
+  - **Row link:** the `a.row-link` anchor around a list row's content, or the `.row-choice` button of a row whose only action is to choose it. `RowContent` draws both in the app, and `MockLink` draws both in the drawings.
+  - **`::after` box:** the row link's generated box in `controls.css:57-61`. It sets `position: absolute` and `inset: 0`, so it fills the list item around the row.
   - **Drawing:** one page of the cloud mockup catalogue under `docs/mockups`, which Mokly builds into static HTML.
   - **Responsive sweep:** the browser spec in `responsive.spec.ts:44-92`. It loads every product drawing at 320px with enlarged text, and it focuses every plain link.
 - **Background:**
-  - The **Record row** rule in `docs/protocol/cloud/folio-chrome.md:35-43` says that a row that leads somewhere is one link over its whole frame.
+  - The **Record row** rule in `docs/protocol/cloud/folio-chrome.md:35-45` says that a row that leads somewhere is one link over its whole frame.
   - Before 2026-11-26, only a small trailing Open or Details word was a link, and a press on the rest of the row did nothing. The user called that bad UX. On 2026-11-26 the user decided that each navigation list row is one link over the whole row.
   - The row link's own box covers only the row's content. The `::after` box adds the list item's padding and the empty end of the row.
   - Playwright's `click()` on a link presses the centre of the link's own box. The link covers that point also without the `::after` box.
   - On 2026-11-26 the branch added two direct checks. `packages/app/src/_tests_/viewer/switcher.spec.ts:92-98` and `packages/app/src/_tests_/settings-mobile.spec.ts:156-173` press the list item 4px from its left edge, at mid-height, and check that the reader moves.
-  - A press in the list item's own padding fails when `.row-link::after` goes, and also when `.content-list-row` becomes positioned. A press in the row's end column fails only in the first case.
+  - A press in the list item's own padding fails when the `::after` rule of `.row-link` and `.row-choice` goes, and also when `.content-list-row` becomes positioned. A press in the row's end column fails only in the first case.
   - The drawings and the app share `controls.css`. `packages/app/scripts/sync-styles.mjs` copies it into the app.
 - **Problem:** Only one switcher row and one settings index row prove the press area. A list whose frame positions its row, or covers the `::after` box, passes every check.
 - **Impact if no action:** Some lists can lose the whole-row press, which brings back the dead press that the user rejected, and no test fails.

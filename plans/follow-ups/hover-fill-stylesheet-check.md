@@ -3,17 +3,17 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 1
-- **Location:** `docs/mockups/styles/controls.css:51-53`, `docs/mockups/styles/product/folio.css:30-33` and `docs/protocol/cloud/folio-chrome.md:197-198`.
+- **Location:** `docs/mockups/styles/controls.css:65-67`, `docs/mockups/styles/product/folio.css:30-33` and `docs/protocol/cloud/folio-chrome.md:201-202`.
 - **Reason:** The recommended fix adds a new stylesheet check, and the always-on rules keep each new gate for the user.
 - **Category:** Test.
 
 - **Terms:**
-  - **Hover rule:** the sentence in `docs/protocol/cloud/folio-chrome.md:197-198`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
+  - **Hover rule:** the sentence in `docs/protocol/cloud/folio-chrome.md:201-202`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
   - **Ink at 5%:** `color-mix(in srgb, var(--mk-color-text) 5%, transparent)`, the text colour mixed at 5% over the surface.
   - **Accent ink at 9%:** `color-mix(in srgb, var(--mk-color-accent) 9%, transparent)`. The settings rail's `.fo-nav-item:hover` uses it.
   - **Product stylesheets:** the CSS files under `docs/mockups/styles`, except `site/` and `email/`. The drawings link them, and `packages/app/scripts/sync-styles.mjs` copies them into the app.
 - **Background:**
-  - The branch `calummoore/click-on-row-ux-0nhj` made each navigation list row one link over its whole row. In `controls.css:51-53`, the list item draws the hover fill while the pointer is over the row's link.
+  - The branch `calummoore/click-on-row-ux-0nhj` made each navigation list row one link over its whole row. In `controls.css:65-67`, the list item draws the hover fill while the pointer is over the row's link.
   - The first version of that fill was `--mk-color-surface-muted`, the colour of the muted wells. It is neither allowed fill.
   - Measured on 2026-11-26 in the built drawings, that fill gave about 1.07:1 against the light panel and 1.05:1 against the dark panel. The ink at 5% gave about 1.11:1 and 1.14:1.
   - On 2026-11-26 the branch changed the row fill to the ink at 5%. The **Record row** text at `folio-chrome.md:39` names it.

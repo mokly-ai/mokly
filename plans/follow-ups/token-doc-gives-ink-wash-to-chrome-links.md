@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
-- **Location:** `docs/protocol/cloud/design-tokens-color.md:141-147` and `:100-101`, and `docs/protocol/cloud/folio-chrome.md:39` and `:197-198`.
+- **Location:** `docs/protocol/cloud/design-tokens-color.md:141-147` and `:100-101`, and `docs/protocol/cloud/folio-chrome.md:39` and `:201-202`.
 - **Reason:** The sentence was on `origin/main` before the branch that found it, and that branch did not change the token doc.
 - **Category:** Docs or spec.
 
@@ -15,9 +15,9 @@
   - It lists three washes: the accent ink at 9% on navigation rows, the ink at 5% on chrome links, and the scrim behind the settings dialog and the viewer's panels.
   - The same doc at line 100 says that chrome links are `text` with an underline.
   - In the stylesheets, a chrome link hovers with its text colour and its underline only. See `docs/mockups/styles/base.css:64-75` and `docs/mockups/styles/product/chrome.css:84-89`. No chrome link draws a fill.
-  - Two elements use the ink at 5% as a hover fill. One is the hovered link row of a list, in `docs/mockups/styles/controls.css:51-53`. The other is the publication pill, over `surfaceMuted`, as `docs/protocol/cloud/folio-viewer.md:98` says.
+  - Two elements use the ink at 5% as a hover fill. One is the hovered link row of a list, in `docs/mockups/styles/controls.css:65-67`. The other is the publication pill, over `surfaceMuted`, as `docs/protocol/cloud/folio-viewer.md:98` says.
   - The settings rail's rows use the accent ink at 9%, in `docs/mockups/styles/product/folio.css:30-33`. Only the token doc assigns that wash to them.
-  - `folio-chrome.md:197-198` holds the hover rule, which allows only these two fills. `folio-chrome.md:39` gives the ink at 5% to a link row on hover.
+  - `folio-chrome.md:201-202` holds the hover rule, which allows only these two fills. `folio-chrome.md:39` gives the ink at 5% to a link row on hover.
 - **Problem:** The token doc gives the ink at 5% to chrome links, which draw no fill. It does not name the rows and the pill that use it.
 - **Impact if no action:** A reader of the token doc can add a fill to chrome links, or not find where the wash belongs.
 - **Root question:** Which page says what element takes each hover wash?

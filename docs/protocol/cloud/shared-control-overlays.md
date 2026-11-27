@@ -9,9 +9,11 @@ The content-list registration is `design/content-list`. Its rows support four
 optional fields: `status`, one of the four semantic tones, rendered as a
 decorative Firna `StatusDot` in the row's leading slot; `meta`, right-aligned
 metadata in the trailing slot; `mono`, which sets the shared monospace
-treatment on that metadata; and `choose`, which makes the row one button over
-its whole frame, for a row the reader picks from a set instead of navigating
-to, with no trailing label such as Select. A row already chosen carries `meta`
+treatment on that metadata; and `choose`, for a row the reader picks from a set
+instead of navigating to. The product draws such a row as one button over its
+whole frame, with no trailing label such as Select. A drawing draws it as one
+link to the chosen state, with the same states, because a drawing leads to
+states. A row already chosen carries `meta`
 and is no button, because there is nothing left to choose. The status stays decorative because the
 row's own description states the state in words, so the meaning is never
 carried by color alone. A row with a destination is one link around

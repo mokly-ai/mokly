@@ -3,14 +3,14 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1
-- **Location:** `packages/tokens/src/shared-ui-theme.ts:28` and `:45`, and `docs/protocol/cloud/folio-chrome.md:197-198`.
+- **Location:** `packages/tokens/src/shared-ui-theme.ts:28` and `:45`, and `docs/protocol/cloud/folio-chrome.md:201-202`.
 - **Reason:** The mapping was on `origin/main` before the branch that found it, and each fix reaches the token package, another repository, or a protocol requirement.
 - **Category:** Product bug.
 
 - **Terms:**
   - **Firna:** `@firna/ui`, the shared control library. The root `package.json`, `packages/app`, `apps/mockups` and `packages/tokens` pin it at 4.0.0.
   - **`soft` and `bg2`:** two Firna theme colours. Firna uses them as its neutral hover and press washes, and for some fills that are not hovers.
-  - **Hover rule:** the sentence in `folio-chrome.md:197-198`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
+  - **Hover rule:** the sentence in `folio-chrome.md:201-202`. It says that a hover fill is the accent ink at 9% or the ink at 5%, and that nothing else tints a surface.
 - **Background:**
   - `sharedUiColors` in `shared-ui-theme.ts` maps each Firna colour to a cloud token. It maps `bg2` at line 28 and `soft` at line 45 to `surfaceMuted`.
   - In Firna 4.0.0, a `plain` Button hovers with `soft` and presses with `bg2`. A `secondary` Button does the same. See `node_modules/@firna/ui/dist/button/buttonStyles.js:174-175` and `:195-198`.

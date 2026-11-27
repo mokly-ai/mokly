@@ -81,15 +81,20 @@ export function PersonAvatar({
  * leads nowhere.
  */
 export type RowPress =
-  | {
-      href?: string;
-      /** Takes the destination's place, for a row whose owner drives the move. */
-      onFollow?: () => void;
-      onChoose?: never;
-    }
-  | { onChoose: () => void; href?: never; onFollow?: never };
+  RowDestination | { onChoose: () => void; href?: never; onFollow?: never };
 
-/** One row of a shared content list. */
+/** Where a row that goes somewhere leads, or nothing for a row that does not. */
+export interface RowDestination {
+  href?: string;
+  /** Takes the destination's place, for a row whose owner drives the move. */
+  onFollow?: () => void;
+  onChoose?: never;
+}
+
+/**
+ * One row of a shared content list. A record list holds no choice, so its
+ * row goes somewhere or nowhere.
+ */
 export type ContentRow = {
   id: string;
   title: string;
@@ -97,7 +102,7 @@ export type ContentRow = {
   meta?: string;
   mono?: boolean;
   status?: StatusTone;
-} & RowPress;
+} & RowDestination;
 
 /**
  * One row of a list whose read runs: the row's own frame, with a bar in place
@@ -118,6 +123,9 @@ export function RowContent({
   row: RowPress;
   children: ReactNode;
 }) {
+  // The native button keeps its own keyboard and focus behaviour. It holds
+  // the package row's block markup, which HTML allows only in phrasing
+  // content, and every browser draws and presses it as one box.
   if (row.onChoose)
     return (
       <button type="button" className="row-choice" onClick={row.onChoose}>
@@ -132,10 +140,7 @@ export function RowContent({
   );
 }
 
-/**
- * The shared rows a panel lists; a row that goes somewhere is a link, and a
- * row that chooses is a button.
- */
+/** The shared rows a panel lists; a row that goes somewhere is a link. */
 export function ContentList({
   label,
   rows,
