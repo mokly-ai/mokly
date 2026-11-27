@@ -135,10 +135,9 @@ export async function expectShellSettings(
     ).getLastWebPreferences();
     return {
       settings,
-      menu: Menu.getApplicationMenu()?.items.flatMap((item) => [
-        item.label,
-        ...(item.submenu?.items.map((child) => child.label) ?? []),
-      ]),
+      help: Menu.getApplicationMenu()
+        ?.items.find((item) => item.role === "help")
+        ?.submenu?.items.map(({ label, enabled }) => ({ label, enabled })),
     };
   });
   for (const key of ["contextIsolation", "sandbox", "webSecurity"] as const)
@@ -150,7 +149,11 @@ export async function expectShellSettings(
   ] as const)
     expect(preferences.settings[key]).toBe(false);
   expect(preferences.settings.preload).toBeUndefined();
-  expect(preferences.menu).toContain("Check for updates");
+  // A development launch keeps the updater off, so its item is disabled.
+  expect(preferences.help).toContainEqual({
+    label: "Check for updates",
+    enabled: false,
+  });
 }
 
 /** Capture the production logger at its real console boundary. */

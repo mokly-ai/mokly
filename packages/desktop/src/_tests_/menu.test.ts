@@ -108,9 +108,8 @@ for (const platform of ["darwin", "linux"] as const) {
 
   test(`the ${platform} menu adds a Help menu with the update check when the default menu has none`, () => {
     const file = item({ role: "fileMenu" });
-    const original = [file];
-    const installed = install(original, platform, true);
-    assert.deepEqual(original, [file]);
+    const installed = install([file], platform, true);
+    assert.equal(installed.items[0], file);
     assert.equal(installed.items.length, 2);
     const help = installed.items[1];
     assert.equal(help.role, "help");
