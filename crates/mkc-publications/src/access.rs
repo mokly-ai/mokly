@@ -32,6 +32,9 @@ pub struct CatalogueContext {
     pub project: Project,
 }
 
+/// Lifetime in seconds of a catalogue capability, its cookie and its bearer token.
+pub const CAPABILITY_LIFETIME_SECONDS: u16 = 300;
+
 /// On-demand read of the catalogue cookie value.
 pub type ReadCatalogueCookie<'a> = dyn FnMut() -> Option<&'a str> + 'a;
 
@@ -150,7 +153,7 @@ impl CatalogueAccess for CatalogueAccessService {
             cookie = Some(self.capabilities.sign(Capability {
                 publication,
                 user,
-                expires: (now + Duration::minutes(5)).timestamp(),
+                expires: (now + Duration::seconds(CAPABILITY_LIFETIME_SECONDS.into())).timestamp(),
             })?);
         }
         cookie.ok_or(Error::Unauthorized)

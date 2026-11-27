@@ -197,10 +197,15 @@ fn valid_cookie_does_not_survive_membership_revocation_or_retention() {
                 },
             ))),
         );
+        let mut clear = true;
         assert!(matches!(
-            service.authorize(PUBLICATION, None, &mut || Some("cookie"), &mut false),
+            service.authorize(PUBLICATION, None, &mut || Some("cookie"), &mut clear),
             Err(Error::NotFound)
         ));
+        assert!(
+            !clear,
+            "a verified cookie stays on denial, expired: {expired}"
+        );
     }
 }
 

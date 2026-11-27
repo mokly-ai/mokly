@@ -13,6 +13,7 @@ use bytes::Bytes;
 use futures_util::{Stream, StreamExt};
 use mkc_domain::client_origins::AdmittedOrigins;
 use mkc_file_store_interface::stream::BlobStream;
+use mkc_publications::access::CAPABILITY_LIFETIME_SECONDS;
 use rpc_error::RpcError;
 use serde::Serialize;
 use tokio::io::BufReader;
@@ -21,8 +22,6 @@ use tokio_util::io::{ReaderStream, StreamReader};
 use crate::catalogue::{Catalogue, FileBody, FileFraming, Served};
 use crate::compression::{Coding, negotiate};
 use crate::error::{Error, ErrorResultExt, Result};
-
-const ACCESS_LIFETIME_SECONDS: u16 = 300;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -199,11 +198,11 @@ fn insert_file_header(
 pub(crate) fn exchanged(token: &str) -> Result<Response> {
     let mut response = Json(AccessExchange {
         token,
-        expires_in: ACCESS_LIFETIME_SECONDS,
+        expires_in: CAPABILITY_LIFETIME_SECONDS,
     })
     .into_response();
     let cookie = format!(
-        "__Host-mkc_catalogue={token}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age={ACCESS_LIFETIME_SECONDS}; Partitioned"
+        "__Host-mkc_catalogue={token}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age={CAPABILITY_LIFETIME_SECONDS}; Partitioned"
     );
     insert_file_header(&mut response, header::SET_COOKIE, &cookie)?;
     response
