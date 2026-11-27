@@ -121,9 +121,9 @@ async fn worker_scope_follows_the_indexed_worker_on_public_and_authorized_routes
     ] {
         let access = Unimock::new(
             CatalogueAccessMock::authorize
-                .each_call(matching!(&ID, _, _))
-                .answers_arc(Arc::new(move |_, _, actual, _| {
-                    assert_eq!(actual, cookie);
+                .each_call(matching!(&ID, None, _, _))
+                .answers_arc(Arc::new(move |_, _, _, actual, _| {
+                    assert_eq!(actual(), cookie);
                     authorized(visibility)
                 })),
         );

@@ -34,7 +34,7 @@ async fn verified_bearer_takes_precedence_even_when_membership_denies_access() {
     for status in [StatusCode::OK, StatusCode::NOT_FOUND] {
         let access = Unimock::new(
             CatalogueAccessMock::authorize
-                .next_call(matching!(&ID, Some("signed"), _))
+                .next_call(matching!(&ID, Some("signed"), _, _))
                 .returns(if status == StatusCode::OK {
                     authorized(Visibility::Private)
                 } else {
@@ -61,17 +61,11 @@ async fn invalid_bearer_falls_back_and_only_an_invalid_cookie_is_cleared() {
         (Some("stale"), StatusCode::UNAUTHORIZED, true),
         (None, StatusCode::UNAUTHORIZED, false),
     ] {
-        let access = Unimock::new((
+        let access = Unimock::new(
             CatalogueAccessMock::authorize
-                .next_call(matching!(&ID, Some("bad-signature"), _))
-                .answers(&|_, _, _, rejected| {
-                    *rejected = true;
-                    Err(Error::Unauthorized)
-                }),
-            CatalogueAccessMock::authorize
-                .next_call(matching!(&ID, _, _))
-                .answers_arc(Arc::new(move |_, _, actual, clear| {
-                    assert_eq!(actual, cookie);
+                .next_call(matching!(&ID, Some("bad-signature"), _, _))
+                .answers_arc(Arc::new(move |_, _, _, actual, clear| {
+                    assert_eq!(actual(), cookie);
                     *clear = expired;
                     if status == StatusCode::OK {
                         authorized(Visibility::Private)
@@ -79,7 +73,7 @@ async fn invalid_bearer_falls_back_and_only_an_invalid_cookie_is_cleared() {
                         Err(Error::Unauthorized)
                     }
                 })),
-        ));
+        );
         let mut request = file_request("/").header(header::AUTHORIZATION, "Bearer bad-signature");
         if let Some(cookie) = cookie {
             request = request.header(header::COOKIE, format!("__Host-mkc_catalogue={cookie}"));
@@ -106,8 +100,11 @@ async fn malformed_or_duplicate_authorization_headers_use_the_cookie() {
     ] {
         let access = Unimock::new(
             CatalogueAccessMock::authorize
-                .next_call(matching!(&ID, Some("fresh"), _))
-                .returns(authorized(Visibility::Private)),
+                .next_call(matching!(&ID, None, _, _))
+                .answers(&|_, _, _, cookie, _| {
+                    assert_eq!(cookie(), Some("fresh"));
+                    authorized(Visibility::Private)
+                }),
         );
         let mut request = file_request("/").header(header::COOKIE, "__Host-mkc_catalogue=fresh");
         for value in headers {
@@ -151,7 +148,7 @@ async fn catalogue_denial_logs_exclude_the_authorization_header_and_token() {
     let _guard = tracing::subscriber::set_default(subscriber);
     let access = Unimock::new(
         CatalogueAccessMock::authorize
-            .next_call(matching!(&ID, Some("sensitive-fixture-token"), _))
+            .next_call(matching!(&ID, Some("sensitive-fixture-token"), _, _))
             .returns(Err(Error::NotFound)),
     );
     let router = credential_router(access, StatusCode::NOT_FOUND);

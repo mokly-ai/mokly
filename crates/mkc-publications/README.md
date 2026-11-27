@@ -67,9 +67,11 @@ Entry paths use the shared `mkc-domain` `EntryPath` grammar. Current-only
 screen listing and screen-specific sharing are unavailable (HTTP 503);
 publication-level sharing works.
 
-`CatalogueAccess` issues one-use grants and rechecks current membership for
-short-lived signed cookies. Invalid cookies fall back to anonymous visibility
-policy and request cookie deletion, including on a private denial.
+`CatalogueAccess` issues one-use grants and verifies the short-lived signed
+capability. It tries the bearer first and reads the cookie when the bearer is
+absent or invalid. One read transaction checks current access. Invalid cookies
+fall back to anonymous visibility policy and request cookie deletion, including
+on a private denial.
 
 `ChecksWorker` delivers the durable event outbox through `dyn CheckRuns`,
 keeping informational success/neutral semantics and a stable check identity
@@ -268,7 +270,7 @@ preview-seed exchanges.
 - [error.rs](./src/error.rs) — `Error`, the typed outcomes the API maps to HTTP, and `DurabilityFailure`, the internal invariant failures.
 - [screens.rs](./src/screens.rs) — `screens::current`, the projection of current screens and view pairs from index screen records.
 - [locations.rs](./src/locations.rs) — `Locations`, the canonical catalogue and viewer URLs, and `branch_alias`, the DNS-safe branch identity.
-- [access.rs](./src/access.rs) — `CatalogueAccess`, one-use grants and signed-cookie authorization.
+- [access.rs](./src/access.rs) — `CatalogueAccess`, one-use grants and bearer-first authorization.
 - [check_worker.rs](./src/check_worker.rs) and [check_summary.rs](./src/check_summary.rs) — `ChecksWorker`, the durable GitHub check delivery, and the Changes counting and summary text.
 - [check_delivery.rs](./src/check_delivery.rs) — `CheckRenderer`, the immutable publication result rendering that publication and build checks share, and the delivery step that keeps provider retry classifications.
 - [check_provider.rs](./src/check_provider.rs) — `GitHubCheckRuns`, the `CheckRuns` adapter over the GitHub App `Checks` client that authorizes delivery through the project's installation and recovers a create whose response was lost.

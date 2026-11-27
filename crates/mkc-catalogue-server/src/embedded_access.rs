@@ -1,4 +1,4 @@
-//! Credential precedence and indexed file delivery for private frame access.
+//! Credential forwarding and indexed file delivery for private frame access.
 
 use mkc_domain::ids::PublicationId;
 use mkc_publications::access::CatalogueContext;
@@ -22,24 +22,19 @@ impl Request {
 }
 
 impl PublishedCatalogue {
-    /// Use the verification result of the bearer to decide whether to read the cookie.
+    /// Pass the bearer and a lazy cookie read to the access service.
     pub(crate) fn authorize_request(
         &self,
         publication: PublicationId,
         request: &Request,
         clear_cookie: &mut bool,
     ) -> error::Result<CatalogueContext> {
-        if let Some(bearer) = request.bearer.as_deref() {
-            let mut invalid_bearer = false;
-            let result = self
-                .access
-                .authorize(publication, Some(bearer), &mut invalid_bearer);
-            if !invalid_bearer {
-                return result;
-            }
-        }
-        self.access
-            .authorize(publication, request.catalogue_cookie(), clear_cookie)
+        self.access.authorize(
+            publication,
+            request.bearer.as_deref(),
+            &mut || request.catalogue_cookie(),
+            clear_cookie,
+        )
     }
 
     /// Resolve only the start page or an exact public Mokly file after a 401.

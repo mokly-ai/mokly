@@ -41,8 +41,11 @@ pub(super) fn embedded_files() -> BTreeMap<String, Vec<u8>> {
 pub(super) fn anonymous_private() -> Unimock {
     Unimock::new(
         CatalogueAccessMock::authorize
-            .each_call(matching!(&ID, None, _))
-            .answers(&|_, _, _, _| Err(Error::Unauthorized)),
+            .each_call(matching!(&ID, None, _, _))
+            .answers(&|_, _, _, cookie, _| {
+                assert_eq!(cookie(), None);
+                Err(Error::Unauthorized)
+            }),
     )
 }
 

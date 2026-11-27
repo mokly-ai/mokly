@@ -131,7 +131,7 @@ fn obsolete_paths_keep_normal_private_access_checks() {
     let service = PublishedCatalogue {
         access: Arc::new(Unimock::new(
             CatalogueAccessMock::authorize
-                .next_call(matching!(_, _, _))
+                .next_call(matching!(_, _, _, _))
                 .returns(Err(PublicationError::Unauthorized)),
         )),
         transactions: empty.clone(),

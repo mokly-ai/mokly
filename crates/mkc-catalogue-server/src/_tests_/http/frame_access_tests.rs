@@ -22,8 +22,9 @@ use super::{file_request, router, send};
 async fn private_iframe_navigation_streams_the_start_page_without_looking_up_the_requested_path() {
     let access = Unimock::new(
         CatalogueAccessMock::authorize
-            .each_call(matching!(&ID, Some("stale"), _))
-            .answers(&|_, _, _, clear_cookie| {
+            .each_call(matching!(&ID, None, _, _))
+            .answers(&|_, _, _, cookie, clear_cookie| {
+                assert_eq!(cookie(), Some("stale"));
                 *clear_cookie = true;
                 Err(Error::Unauthorized)
             }),
@@ -130,8 +131,11 @@ async fn private_iframe_navigation_without_an_indexed_start_page_keeps_the_ordin
 async fn public_iframe_navigation_still_serves_the_requested_file() {
     let access = Unimock::new(
         CatalogueAccessMock::authorize
-            .next_call(matching!(&ID, None, _))
-            .returns(authorized(Visibility::Public)),
+            .next_call(matching!(&ID, None, _, _))
+            .answers(&|_, _, _, cookie, _| {
+                assert_eq!(cookie(), None);
+                authorized(Visibility::Public)
+            }),
     );
     let router = router(embedded_catalogue(access));
     let response = send(&router, iframe(file_request("/static/screen.html"))).await;

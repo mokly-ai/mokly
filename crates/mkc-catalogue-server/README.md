@@ -194,7 +194,7 @@ a unique Postgres schema and a temporary local store.
 - [router.rs](./src/router.rs) — `RouterFactory`, which answers CORS preflight before host routing and sets the isolation headers on every response.
 - [routes.rs](./src/routes.rs) — host parsing into a publication or branch alias and single-decoding path validation, including the refused `__mokly` root.
 - [catalogue.rs](./src/catalogue.rs) — `Catalogue` and `PublishedCatalogue`, the host and indexed path resolution, redirects and cache policy.
-- [embedded_access.rs](./src/embedded_access.rs) — bearer-first authorization and indexed start page and worker selection for uncredentialed requests.
+- [embedded_access.rs](./src/embedded_access.rs) — bearer and lazy cookie forwarding, plus indexed start page and worker selection for uncredentialed requests.
 - [file_response.rs](./src/file_response.rs) — indexed file metadata, weak validators, byte range selection and worker scope.
 - [delivery.rs](./src/delivery.rs) — the body selection between the hot cache and a storage stream, including the single-flight fill.
 - [cache.rs](./src/cache.rs) and [cache_fill.rs](./src/cache_fill.rs) — `BlobCache` and `LruBlobCache`, the lifetime-accounted LRU keyed by `BlobKey`, with `ENTRY_OVERHEAD_BYTES`, `MAX_CACHED_BLOB_BYTES`, the fill reservations and the waiters.

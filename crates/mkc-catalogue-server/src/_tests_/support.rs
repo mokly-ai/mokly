@@ -121,8 +121,8 @@ pub(crate) fn catalogue_with_clear_cookie(
         .collect();
     let access = Unimock::new(
         CatalogueAccessMock::authorize
-            .each_call(matching!(&ID, _, _))
-            .answers_arc(Arc::new(move |_, _, _, clear_cookie| {
+            .each_call(matching!(&ID, _, _, _))
+            .answers_arc(Arc::new(move |_, _, _, _, clear_cookie| {
                 *clear_cookie = expire_cookie;
                 authorized(if private {
                     Visibility::Private

@@ -32,6 +32,9 @@ pub struct CatalogueContext {
     pub project: Project,
 }
 
+/// On-demand read of the catalogue cookie value.
+pub type ReadCatalogueCookie<'a> = dyn FnMut() -> Option<&'a str> + 'a;
+
 /// Shared access policy for the API and isolated catalogue server.
 #[unimock::unimock(api = CatalogueAccessMock)]
 pub trait CatalogueAccess: Send + Sync {
@@ -42,16 +45,17 @@ pub trait CatalogueAccess: Send + Sync {
         project: ProjectId,
         publication: PublicationId,
     ) -> Result<IssuedGrant>;
-    /// Consume a grant atomically and return a signed host-only cookie value.
+    /// Consume a grant atomically and return the capability for the bearer and cookie.
     fn exchange(&self, publication: PublicationId, grant: &str) -> Result<String>;
-    /// Authenticate a cookie or fall back to anonymous access on invalid credentials.
-    /// Set `clear_cookie` when the HTTP response must expire the stale cookie,
-    /// including when anonymous policy rejects access.
-    fn authorize(
+    /// Verify the bearer first and read the cookie when the bearer is absent or invalid.
+    /// Check current access in one read transaction. Set `clear_cookie` only
+    /// when the cookie fails verification, including on an access denial.
+    fn authorize<'request>(
         &self,
         publication: PublicationId,
-        cookie: Option<&str>,
-        clear_cookie: &mut bool,
+        bearer: Option<&'request str>,
+        cookie: &'request mut ReadCatalogueCookie<'request>,
+        clear_cookie: &'request mut bool,
     ) -> Result<CatalogueContext>;
     /// Read API context using its already-authenticated session identity.
     fn read(
@@ -152,29 +156,34 @@ impl CatalogueAccess for CatalogueAccessService {
         cookie.ok_or(Error::Unauthorized)
     }
 
-    fn authorize(
+    fn authorize<'request>(
         &self,
         publication: PublicationId,
-        cookie: Option<&str>,
-        clear_cookie: &mut bool,
+        bearer: Option<&'request str>,
+        cookie: &'request mut ReadCatalogueCookie<'request>,
+        clear_cookie: &'request mut bool,
     ) -> Result<CatalogueContext> {
         *clear_cookie = false;
-        let now = self.runtime.now();
-        let actor = match cookie {
-            Some(cookie) => match self.capabilities.verify(cookie) {
-                Ok(capability)
-                    if capability.publication == publication
-                        && capability.expires > now.timestamp() =>
-                {
-                    Some(capability.user)
-                }
-                Ok(_) | Err(Error::Unauthorized) => {
-                    *clear_cookie = true;
-                    None
-                }
-                Err(error) => return Err(error),
-            },
+        let now = self.runtime.now().timestamp();
+        let verify = |credential: &str| match self.capabilities.verify(credential) {
+            Ok(capability) if capability.publication == publication && capability.expires > now => {
+                Ok(Some(capability.user))
+            }
+            Ok(_) | Err(Error::Unauthorized) => Ok(None),
+            Err(error) => Err(error),
+        };
+        let bearer_actor = match bearer {
+            Some(bearer) => verify(bearer)?,
             None => None,
+        };
+        let actor = if bearer_actor.is_some() {
+            bearer_actor
+        } else if let Some(cookie) = cookie() {
+            let actor = verify(cookie)?;
+            *clear_cookie = actor.is_none();
+            actor
+        } else {
+            None
         };
         let mut result = None;
         self.transactions.run(true, &mut |queries| {

@@ -20,6 +20,9 @@ use super::support::{
     PROJECT, PUBLICATION, USER, clock, locations, now, project, publication, transactions,
 };
 
+#[path = "access_credentials_tests.rs"]
+mod credential_tests;
+
 fn service(queries: Unimock, policy: Unimock, signer: Unimock) -> CatalogueAccessService {
     CatalogueAccessService {
         transactions: transactions(queries),
@@ -155,7 +158,7 @@ fn expired_and_wrong_audience_cookies_use_anonymous_policy() {
         );
         let mut clear = false;
         assert!(matches!(
-            service.authorize(PUBLICATION, Some("cookie"), &mut clear),
+            service.authorize(PUBLICATION, None, &mut || Some("cookie"), &mut clear),
             Err(Error::Unauthorized)
         ));
         assert!(clear);
@@ -195,7 +198,7 @@ fn valid_cookie_does_not_survive_membership_revocation_or_retention() {
             ))),
         );
         assert!(matches!(
-            service.authorize(PUBLICATION, Some("cookie"), &mut false),
+            service.authorize(PUBLICATION, None, &mut || Some("cookie"), &mut false),
             Err(Error::NotFound)
         ));
     }
@@ -225,7 +228,7 @@ fn stale_cookie_does_not_deny_public_catalogue_access() {
     let mut clear = false;
     assert_eq!(
         service
-            .authorize(PUBLICATION, Some("stale"), &mut clear)
+            .authorize(PUBLICATION, None, &mut || Some("stale"), &mut clear)
             .unwrap()
             .project
             .visibility,
