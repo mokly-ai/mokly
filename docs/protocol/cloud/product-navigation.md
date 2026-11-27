@@ -78,10 +78,11 @@ installation that arrived from GitHub without a live flow. It requires a
 signed-in session and returns to sign-in with that address when the reader is
 signed out. A reader who administers no workspace gets **Create a workspace**,
 which opens `/new?installationId=N`. The workspace step carries the ID back to
-the install step. A reader who administers several workspaces chooses one in the Workspace
-select when the address names none. A named workspace, or the only workspace
-the reader administers, appears as a fact row. The action then starts the
-candidate flow and returns to GitHub.
+the install step. When the address names no workspace, the reader chooses one
+in the Workspace select, also when they administer only one. Its last choice,
+**Create a workspace**, opens `/new?installationId=N`. A named workspace
+appears as a fact row. The action then starts the candidate flow and returns
+to GitHub.
 
 Owners, admins and members get **Publish with the CLI instead** on the ordinary
 install step and beneath the repository select. It opens
