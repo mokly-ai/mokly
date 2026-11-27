@@ -19,16 +19,16 @@ export async function loadPostcss(
   paths: ModulePaths,
   phases?: PostcssPhases,
 ): Promise<{ processor: ReturnType<typeof postcss>; modules: string[] }> {
-  const loaded = await (
-    phases?.run("config-load", () => importPostcssModule(file, paths)) ??
-    importPostcssModule(file, paths)
-  ).catch((error: unknown) => {
-    throw new PostcssError({
-      kind: "load",
-      module: paths.name(file),
-      detail: detail(error),
-    });
-  });
+  const load = () => importPostcssModule(file, paths, { kind: "configured" });
+  const loaded = await (phases?.run("config-load", load) ?? load()).catch(
+    (error: unknown) => {
+      throw new PostcssError({
+        kind: "load",
+        module: paths.name(file),
+        detail: detail(error),
+      });
+    },
+  );
   const build = () => buildPostcss(file, loaded, paths);
   return phases?.run("plugin-construction", build) ?? build();
 }
@@ -68,7 +68,10 @@ async function buildPostcss(
       if (!plainObject(options))
         throw new PostcssError({ kind: "options", plugin: name });
       try {
-        const imported = await importPlugin(await resolvePlugin(name, file));
+        const imported = await importPlugin(
+          await resolvePlugin(name, file),
+          name,
+        );
         const factory = imported.default ?? imported;
         if (typeof factory !== "function")
           throw new Error("plugin export is not a factory");

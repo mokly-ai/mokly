@@ -27,5 +27,6 @@
 - **Left out:** Changing the developer's or the CI job's `HOME` changes unrelated tools and goes beyond child-only isolation.
 - **Wider fix:** A. It follows the child-only cache-home rule that the Rust process fixtures already use.
 - **Previous examples:** `crates/mokly-cli/tests/process_support/cache.rs` gives Serve fixtures an owned home. `plans/follow-ups/non-serve-process-cache-homes.md` covers two Rust launchers with the same gap.
+- **Related:** [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md): the same child environment. Both items decide which `HOME` and which Git settings a child of a test or a fixture run reads.
 - **Recommendation:** A. It isolates the cache with no product change.
 - **Action:** fix after merge, apply A. The script was outside the change that found the gap.

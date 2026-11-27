@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -37,6 +38,14 @@ export async function recoveryFixture(signal?: AbortSignal) {
     await fs.rm(root, { recursive: true, force: true });
     throw error;
   }
+}
+/** A private copy of a prepared fixture root; the case owns and removes it. */
+export async function copyFixture(template: string) {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-static-publish-"),
+  );
+  await fs.cp(template, root, { recursive: true, verbatimSymlinks: true });
+  return root;
 }
 export async function faultCommand(
   root: string,

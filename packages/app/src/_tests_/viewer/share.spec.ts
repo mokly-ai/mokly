@@ -2,12 +2,12 @@ import { failWith } from "../api-responses";
 import { expect, open, test } from "../harness";
 import { apiOrigin, appOrigin } from "../origins";
 
+import { holdViewerRead } from "./held-reads";
 import {
   canvasFrame,
   expectSharePreparing,
   expectShownViewport,
   expectViewportToggles,
-  holdViewerRead,
   makePublic,
   publishedViewerReady,
   publishedProject,
@@ -189,99 +189,111 @@ test("a publication with nothing to compare still shares itself", async ({
   await expect(page).toHaveURL(/catalogueScreen=start/);
 });
 
-test("a reader who arrived on a screen can clear it", async ({ page }) => {
-  const made = await publishedProject(page, "clear-screen");
-  const path = made.publicationPath;
-  // The address the reader arrived on pins a screen, which is what the Whole
-  // catalogue row has to be able to clear.
-  await open(page, `${path}?catalogueScreen=start&panel=share`);
-  const panel = page.getByTestId("viewer-panel-share");
-  await expect(panel).toBeVisible();
-  const link = panel.getByLabel("Publication link");
-  await expect(link).toHaveValue(
-    new RegExp(`${path}\\?catalogueScreen=start$`),
-  );
-
-  // The whole row is the button: a press in the row's own padding, outside
-  // the button's content, still selects it.
-  const whole = panel
-    .getByRole("listitem")
-    .filter({ hasText: "Whole catalogue" });
-  const box = await whole.boundingBox();
-  expect(box).not.toBeNull();
-  await whole.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
-  // Whole catalogue means the whole catalogue: the address, the stage and the
-  // link the reader copies all stop naming a screen.
-  await expect(page).not.toHaveURL(/catalogueScreen=/);
-  await expect(page.locator("[data-mokly-stage]")).toHaveCount(0);
-  await expect(page.locator("[data-mokly-view] h2")).toHaveText("Mokly");
-  await expect(link).toHaveValue(appOrigin + path);
-  await expect(
-    panel.getByRole("listitem").filter({ hasText: "Whole catalogue" }),
-  ).toContainText("Selected");
-});
-
-test("a failed screen read keeps the publication link and the viewer selection", async ({
+/*
+ * The screen list of Share: a failed read keeps the publication link and the
+ * viewer selection, and the Whole catalogue row clears a screen the reader
+ * arrived on. Both steps open the same publication with a screen named.
+ */
+test("Share's screen list survives a failed read and clears the screen the reader arrived on", async ({
   page,
 }) => {
-  const made = await publishedProject(page, "share-screen-failure");
-  const screens = `**/publications/${made.publicationId}/screens*`;
-  const shares: string[] = [];
-  page.on("request", (request) => {
-    if (
-      new URL(request.url()).pathname.endsWith(
-        `/publications/${made.publicationId}/share`,
+  const made = await publishedProject(page, "share-screens");
+
+  await test.step("a failed screen read keeps the publication link and the viewer selection", async () => {
+    const screens = `**/publications/${made.publicationId}/screens*`;
+    const shares: string[] = [];
+    page.on("request", (request) => {
+      if (
+        new URL(request.url()).pathname.endsWith(
+          `/publications/${made.publicationId}/share`,
+        )
       )
-    )
-      shares.push(request.url());
-  });
-  await failWith(page, screens, "GET", "unavailable");
-  await open(page, `${made.publicationPath}?catalogueScreen=start&panel=share`);
-  const panel = page.getByTestId("viewer-panel-share");
-  const failed = panel.getByRole("heading", { name: "Screens couldn’t load" });
-  await expect(failed).toBeVisible();
-  await expect(panel.getByLabel("Publication link")).toHaveValue(
-    appOrigin + made.publicationPath,
-  );
-  await expect(panel.getByTestId("share-copy")).toBeVisible();
-  await expect(page).toHaveURL(/catalogueScreen=start/);
-  expect(shares).toHaveLength(1);
-
-  const repeatedFailure = page.waitForResponse(
-    (response) =>
-      response.url().includes("/screens") && response.status() === 503,
-  );
-  await panel.getByRole("button", { name: "Try again" }).click();
-  await repeatedFailure;
-  await expect(failed).toBeVisible();
-  expect(
-    shares,
-    "a repeated walk failure reuses the publication link",
-  ).toHaveLength(1);
-
-  await page.unroute(screens);
-  const held = await holdViewerRead(
-    page,
-    (url) =>
-      url.origin === apiOrigin &&
-      url.pathname.endsWith(`/publications/${made.publicationId}/screens`),
-  );
-  try {
-    await panel.getByRole("button", { name: "Try again" }).click();
-    await expect.poll(held.seen).toBe(true);
-    await expectSharePreparing(panel);
-    expect(shares).toHaveLength(1);
-    held.release();
+        shares.push(request.url());
+    });
+    await failWith(page, screens, "GET", "unavailable");
+    await open(
+      page,
+      `${made.publicationPath}?catalogueScreen=start&panel=share`,
+    );
+    const panel = page.getByTestId("viewer-panel-share");
+    const failed = panel.getByRole("heading", {
+      name: "Screens couldn’t load",
+    });
+    await expect(failed).toBeVisible();
     await expect(panel.getByLabel("Publication link")).toHaveValue(
-      `${appOrigin}${made.publicationPath}?catalogueScreen=start`,
+      appOrigin + made.publicationPath,
     );
-    expect(shares).toHaveLength(2);
-    expect(new URL(shares[1]).searchParams.get("catalogueScreen")).toBe(
-      "start",
-    );
+    await expect(panel.getByTestId("share-copy")).toBeVisible();
     await expect(page).toHaveURL(/catalogueScreen=start/);
-  } finally {
-    held.release();
-    await page.unrouteAll({ behavior: "wait" });
-  }
+    expect(shares).toHaveLength(1);
+
+    const repeatedFailure = page.waitForResponse(
+      (response) =>
+        response.url().includes("/screens") && response.status() === 503,
+    );
+    await panel.getByRole("button", { name: "Try again" }).click();
+    await repeatedFailure;
+    await expect(failed).toBeVisible();
+    expect(
+      shares,
+      "a repeated walk failure reuses the publication link",
+    ).toHaveLength(1);
+
+    await page.unroute(screens);
+    const held = await holdViewerRead(
+      page,
+      (url) =>
+        url.origin === apiOrigin &&
+        url.pathname.endsWith(`/publications/${made.publicationId}/screens`),
+    );
+    try {
+      await panel.getByRole("button", { name: "Try again" }).click();
+      await held.arrived();
+      await expectSharePreparing(panel);
+      expect(shares).toHaveLength(1);
+      held.release();
+      await expect(panel.getByLabel("Publication link")).toHaveValue(
+        `${appOrigin}${made.publicationPath}?catalogueScreen=start`,
+      );
+      expect(shares).toHaveLength(2);
+      expect(new URL(shares[1]).searchParams.get("catalogueScreen")).toBe(
+        "start",
+      );
+      await expect(page).toHaveURL(/catalogueScreen=start/);
+    } finally {
+      held.release();
+      await page.unrouteAll({ behavior: "wait" });
+    }
+  });
+
+  await test.step("a reader who arrived on a screen can clear it", async () => {
+    const path = made.publicationPath;
+    // The address the reader arrived on pins a screen, which is what the Whole
+    // catalogue row has to be able to clear.
+    await open(page, `${path}?catalogueScreen=start&panel=share`);
+    const panel = page.getByTestId("viewer-panel-share");
+    await expect(panel).toBeVisible();
+    const link = panel.getByLabel("Publication link");
+    await expect(link).toHaveValue(
+      new RegExp(`${path}\\?catalogueScreen=start$`),
+    );
+
+    // The whole row is the button: a press in the row's own padding, outside
+    // the button's content, still selects it.
+    const whole = panel
+      .getByRole("listitem")
+      .filter({ hasText: "Whole catalogue" });
+    const box = await whole.boundingBox();
+    expect(box).not.toBeNull();
+    await whole.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
+    // Whole catalogue means the whole catalogue: the address, the stage and the
+    // link the reader copies all stop naming a screen.
+    await expect(page).not.toHaveURL(/catalogueScreen=/);
+    await expect(page.locator("[data-mokly-stage]")).toHaveCount(0);
+    await expect(page.locator("[data-mokly-view] h2")).toHaveText("Mokly");
+    await expect(link).toHaveValue(appOrigin + path);
+    await expect(
+      panel.getByRole("listitem").filter({ hasText: "Whole catalogue" }),
+    ).toContainText("Selected");
+  });
 });

@@ -17,5 +17,6 @@
   - **B.** Run exact lookups with `ls-tree -t`, keep each requested record, and drop the records that no requested path names. Test a directory and its child in one batch and in two. Effort: Medium (estimate).
 - **Left out:** Sorting the result, because it cannot bring back a record that Git never printed.
 - **Wider fix:** B, because it makes every caller independent of the batch layout.
+- **Related:** [ignored-module-large-index.md](./ignored-module-large-index.md): the same Git behaviour in `ls-files`. A folder in a request lists the records below it, which limits its option D. Its option B keeps only the requested records, as option B here does.
 - **Recommendation:** B (estimate). It gives each requested path its own record, as the protocol expects.
 - **Action:** ask the user, because B changes which entries `Repository::lookup` returns on `origin/main`.

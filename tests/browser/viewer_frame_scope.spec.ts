@@ -66,7 +66,6 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
 async function highlight(
   page: Page,
   instance: InstanceRef,
-  cross: boolean,
   frame: Locator | string,
 ) {
   const frames = page.locator("iframe[data-mokly-frame-state]");
@@ -92,14 +91,6 @@ async function highlight(
     "data-highlight-viewport",
     instance.viewport,
   );
-  if (cross) {
-    const frames = page.locator("iframe[data-mokly-fragment-frame]");
-    for (let i = 0; i < (await frames.count()); i++) {
-      await expect(
-        frames.nth(i).contentFrame().locator("[data-mokly-overlay]"),
-      ).toHaveCount(0);
-    }
-  }
   await labels.click();
   const clicked = await page.evaluate(
     () =>
@@ -112,7 +103,8 @@ async function highlight(
   return clicked;
 }
 
-for (const cross of [false, true]) {
+// The adapter builds the frame URL, so the fragment case runs on both.
+for (const cross of [false, true])
   test(`${cross ? "postMessage" : "same-origin"} flow fragment belongs only to its first frame across schemes`, async ({
     page,
   }) => {
@@ -150,101 +142,91 @@ for (const cross of [false, true]) {
     }
   });
 
-  test(`${cross ? "postMessage" : "same-origin"} public highlights retain viewport and scheme scope with Both visible`, async ({
-    page,
-  }) => {
-    await start(page, cross);
-    const key = fixture.usage.instances.find(
-      (item) => item.id === "action",
-    )!.key;
-    for (const colorScheme of ["light", "dark"] as const) {
-      await page.evaluate(
-        (colorScheme) =>
-          window.viewerHarness.get("one").ref.current.select({ colorScheme }),
-        colorScheme,
-      );
-      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-        0,
-      );
-      // The canvas shows each viewport in each scheme; the highlight keeps to
-      // the frame of the instance's viewport and scheme.
-      for (const viewport of ["mobile", "desktop"] as const)
-        await highlight(
-          page,
-          { screenPath: "home", key, viewport, colorScheme },
-          cross,
-          canvasFrame(viewport, colorScheme),
-        );
-    }
-    await page.evaluate(() =>
-      window.viewerHarness.get("one").ref.current.highlightInstance(null),
+// The viewer matches the frames and draws the labels, so the highlight
+// cases run on one adapter. The adapters have their own specs.
+test("same-origin public highlights retain viewport and scheme scope with Both visible", async ({
+  page,
+}) => {
+  await start(page, false);
+  const key = fixture.usage.instances.find((item) => item.id === "action")!.key;
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.evaluate(
+      (colorScheme) =>
+        window.viewerHarness.get("one").ref.current.select({ colorScheme }),
+      colorScheme,
     );
     await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
       0,
     );
-  });
-
-  test(`${cross ? "postMessage" : "same-origin"} highlights retain saved variant scope`, async ({
-    page,
-  }) => {
-    await start(page, cross, "pane");
-    const component = fixture.index.components.find(
-      (entry) => entry.path === "pane",
-    )!;
-    for (const variant of fixture.index.components.filter(
-      (entry) => entry.variantOf === component.path,
-    )) {
-      // The host opens each saved variant, which ends the last highlight.
-      await page.evaluate(
-        (screenPath) =>
-          window.viewerHarness.get("one").ref.current.select({ screenPath }),
-        variant.path,
-      );
-      await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-        0,
-      );
-      const usage = fixture.details.current[variant.path]!.views.find(
-        (view) => view.viewport === "desktop" && view.colorScheme === "light",
-      )!.usage;
-      if (usage.status !== "ready") throw new Error("Expected ready usage");
+    // The canvas shows each viewport in each scheme; the highlight keeps to
+    // the frame of the instance's viewport and scheme.
+    for (const viewport of ["mobile", "desktop"] as const)
       await highlight(
         page,
-        {
-          screenPath: variant.path,
-          key: usage.instances[0]!.key,
-          viewport: "desktop",
-          colorScheme: "light",
-        },
-        cross,
-        `${canvasFrame("desktop")}[data-workspace-variant="${variant.path}"]`,
+        { screenPath: "home", key, viewport, colorScheme },
+        canvasFrame(viewport, colorScheme),
       );
-    }
-  });
+  }
+  await page.evaluate(() =>
+    window.viewerHarness.get("one").ref.current.highlightInstance(null),
+  );
+  await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(0);
+});
 
-  test(`${cross ? "postMessage" : "same-origin"} highlights and events identify repeated flow steps`, async ({
-    page,
-  }) => {
-    await start(page, cross, "tour");
-    const key = fixture.usage.instances.find(
-      (item) => item.id === "action",
-    )!.key;
-    for (const stepIndex of [0, 1, 2]) {
-      const instance = {
-        screenPath: "home",
-        key,
-        viewport: "desktop" as const,
-        colorScheme: "light" as const,
-        stepIndex,
-      };
-      const clicked = await highlight(
-        page,
-        instance,
-        cross,
-        useCaseStepFrame(page, stepIndex + 1),
-      );
-      expect(clicked).toMatchObject({
-        frame: { entryPath: "tour", stepIndex },
-      });
-    }
-  });
-}
+test("same-origin highlights retain saved variant scope", async ({ page }) => {
+  await start(page, false, "pane");
+  const component = fixture.index.components.find(
+    (entry) => entry.path === "pane",
+  )!;
+  for (const variant of fixture.index.components.filter(
+    (entry) => entry.variantOf === component.path,
+  )) {
+    // The host opens each saved variant, which ends the last highlight.
+    await page.evaluate(
+      (screenPath) =>
+        window.viewerHarness.get("one").ref.current.select({ screenPath }),
+      variant.path,
+    );
+    await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
+      0,
+    );
+    const usage = fixture.details.current[variant.path]!.views.find(
+      (view) => view.viewport === "desktop" && view.colorScheme === "light",
+    )!.usage;
+    if (usage.status !== "ready") throw new Error("Expected ready usage");
+    await highlight(
+      page,
+      {
+        screenPath: variant.path,
+        key: usage.instances[0]!.key,
+        viewport: "desktop",
+        colorScheme: "light",
+      },
+      `${canvasFrame("desktop")}[data-workspace-variant="${variant.path}"]`,
+    );
+  }
+});
+
+test("same-origin highlights and events identify repeated flow steps", async ({
+  page,
+}) => {
+  await start(page, false, "tour");
+  const key = fixture.usage.instances.find((item) => item.id === "action")!.key;
+  for (const stepIndex of [0, 1, 2]) {
+    const instance = {
+      screenPath: "home",
+      key,
+      viewport: "desktop" as const,
+      colorScheme: "light" as const,
+      stepIndex,
+    };
+    const clicked = await highlight(
+      page,
+      instance,
+      useCaseStepFrame(page, stepIndex + 1),
+    );
+    expect(clicked).toMatchObject({
+      frame: { entryPath: "tour", stepIndex },
+    });
+  }
+});

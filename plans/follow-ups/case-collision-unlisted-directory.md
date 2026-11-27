@@ -125,6 +125,11 @@
   - `plans/follow-ups/in-process-resolution-coherence.md`, the same code.
     It owns changes during a compile. This item owns a change after a
     completed capture.
+  - [ignored-module-path-spelling.md](./ignored-module-path-spelling.md),
+    the same cause in the Git status reader. Two spellings of one name on a
+    volume that folds case hide an `ignored-module` warning there. Its
+    option D reads the stored name of each path part, as option B here
+    reads the entries that share the folded key.
 - **Recommendation:** B. It keeps the reuse of `main`, and the reproduction
   shows whether a collision can change a result at all.
 - **Action:** fix after merge, apply B, because the gap predates the exact

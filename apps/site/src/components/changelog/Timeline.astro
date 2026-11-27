@@ -6,8 +6,9 @@
  * patch is hollow, a breaking release amber and the release in view green.
  * The timeline is a depiction, hidden from assistive technology with
  * nothing that takes focus, because Version history holds the same links.
- * Each keyframe's `data-release` and `data-version` let the changelog
- * island move the playhead with the reader.
+ * Each keyframe's `data-place`, `data-release` and `data-version` let the
+ * changelog island move the playhead with the reader. The playhead's `--x`
+ * holds its place, which keeps its tag inside the track.
  *
  * Use: `<Timeline current={releases[0]?.version} releases={releases} />`.
  */
@@ -15,7 +16,7 @@ import type { PublishedRelease } from "../../changelog/releases.js";
 import Icon from "../Icon.astro";
 
 import { isBreaking, isPatch } from "./facts.js";
-import { at, timeline } from "./timeline.js";
+import { at, place, timeline } from "./timeline.js";
 
 interface Props {
   /** The version of the release in view. */
@@ -75,6 +76,7 @@ const playhead = keyframes.find((key) => key.release.version === current);
             isBreaking(key.release) && "site-changelog-key--breaking",
             key === playhead && "site-changelog-key--current",
           ]}
+          data-place={place(key.x)}
           data-release={key.release.anchor}
           data-version={key.release.version}
           style={`left: ${at(key.x)}; --lane-narrow: ${key.lanes.narrow}; --lane-wide: ${key.lanes.wide}`}
@@ -82,7 +84,7 @@ const playhead = keyframes.find((key) => key.release.version === current);
       ))}
     </div>
     {playhead !== undefined && (
-      <span class="site-changelog-playhead" style={`left: ${at(playhead.x)}`}>
+      <span class="site-changelog-playhead" style={`--x: ${place(playhead.x)}`}>
         <b>v{playhead.release.version}</b>
       </span>
     )}

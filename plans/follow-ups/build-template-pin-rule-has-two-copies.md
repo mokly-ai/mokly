@@ -1,0 +1,31 @@
+# The template base pin rule has two copies
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-spike-a-plain-debian-base-for-the-aa76`, review finding 8 of round 2, option D of its check.
+- **Location:** `infra/tests/test_build_template.py:25` to line 35, `pinned_base_images` and its check of the real Dockerfile; `xtask/src/policy/build_pins.rs:71`, `e2b_base`; `infra/README.md:60` to line 63.
+- **Reason:** The fix deletes a live check of the checked-in Dockerfile, so it needs the user's approval.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Build template base pin:** the rule that the `FROM` line of `infra/e2b/build/e2b.Dockerfile` names `debian:<tag>@sha256:<64 lowercase hex>`. `docs/protocol/cloud/repository-layout.md`, section "Build Toolchain Checks", states it. Cal chose the Debian form on 2026-11-26.
+  - **Toolchain pins check:** `cargo xtask toolchain-pins`, the `cloud-toolchain-pins` suite of the gate. It reads the Dockerfile's Node pin and base pin.
+- **Background:**
+  - Two parsers check the same rule. `e2b_base` in `xtask/src/policy/build_pins.rs` runs in the toolchain pins check, and its Rust tests `template_bases_require_a_tag_and_a_complete_digest` and `template_rejects_the_previous_base_with_a_complete_digest` cover valid, malformed, and `e2bdev/base` pins.
+  - `pinned_base_images`, a regex defined inside `infra/tests/test_build_template.py`, runs in the infrastructure contracts on the checked-in Dockerfile only. Its own fixture tests were removed on 2026-11-26, because they tested a test helper.
+  - The two parsers differ on inputs that Docker rejects anyway. A valid stage followed by a bare `FROM` as the last line passes the regex and fails `e2b_base`. A bare `FROM` with its image on the next line passes the regex. `FROM --platform= debian:…` passes `e2b_base` and fails the regex.
+  - Both suites run on every CI run. The Python check runs without Terraform and Helm, and the toolchain pins check stops at the first missing tool.
+- **Problem:** One rule has two implementations that can drift apart.
+- **Impact if no action:** A later change of the rule can update one copy and not the other, and the two checks then disagree on the same Dockerfile.
+- **Root question:** Does the build template base pin rule need two implementations, and which check owns it?
+- **Options:**
+  - **A.** Keep both copies, as today. Effort: Small, already applied.
+  - **B.** Give `e2b_base` a pin-only command that both checks call. The infrastructure contracts then need a Rust build. Effort: Medium.
+  - **D.** Keep one copy, in the gate. Delete `pinned_base_images`, `test_checked_in_base_uses_a_tag_and_immutable_digest`, and the `re` import if nothing else uses it, in `infra/tests/test_build_template.py`. Change `infra/README.md:60` to line 63 so it names only the toolchain check. Prove the cover once: put an `e2bdev/base` pin in the Dockerfile, see `cargo xtask toolchain-pins` report the `FROM` violation, and restore the file. A local run without Terraform and Helm then gets no base-pin result. Effort: Small.
+  - **E.** Keep one copy, in the infrastructure contracts. Move the regex into an infra script with fixture tests, and delete `e2b_base`, its tests, and its `FROM` case in `toolchain_stage_rejects_disagreeing_pin_files`. Change `xtask/README.md`, `infra/README.md`, and the pointer in `docs/protocol/cloud/repository-layout.md`. The Dockerfile's pins then split across two suites. Effort: Medium.
+- **Left out:** A shared case table or a shared image pattern: the differences are in how each parser finds the `FROM` lines, so neither removes them.
+- **Wider fix:** D. One copy cannot disagree with itself.
+- **Previous examples:** None found.
+- **Recommendation:** D. The toolchain pins check already owns the Dockerfile's other pin, so one copy there removes the drift at the lowest cost. B is the option that deletes no check.
+- **Action:** ask the user, because D deletes a live check of the checked-in Dockerfile.

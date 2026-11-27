@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import test from "node:test";
+import test, { after, before } from "node:test";
 
 import {
   cleanup,
+  copyFixture,
   files,
   outputDirectory,
   recoveryFixture,
@@ -19,6 +20,17 @@ import {
 } from "./helpers/static_recovery_assertions.js";
 import { signalFault } from "./helpers/static_signal.js";
 
+/** Every case starts from the same committed new site and earlier output. */
+const skip = process.platform === "win32";
+let template = "";
+before(
+  async (context) => {
+    if (!skip) template = await recoveryFixture(context.signal);
+  },
+  { timeout: 120_000 },
+);
+after(() => fs.promises.rm(template, { recursive: true, force: true }));
+
 for (const verb of ["build", "publish"] as const) {
   for (const fault of [
     "config",
@@ -31,9 +43,9 @@ for (const verb of ["build", "publish"] as const) {
   ])
     test(
       `${verb} plain settles configuration staging and captured-output signals (${fault})`,
-      { timeout: 120_000, skip: process.platform === "win32" },
+      { timeout: 120_000, skip },
       async (context) => {
-        const root = await recoveryFixture(context.signal);
+        const root = await copyFixture(template);
         const publication: { output?: string } = {};
         context.after(() => cleanup(root, verb, publication.output));
         const result = await signalFault(

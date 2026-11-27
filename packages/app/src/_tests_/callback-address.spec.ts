@@ -8,7 +8,7 @@ import {
   otherState,
   seedFlow,
 } from "./auth-callbacks";
-import { expect, freshEmail, open, signIn, test } from "./harness";
+import { expect, freshEmail, open, walkSignIn, test } from "./harness";
 
 /**
  * A landing's credential leaves the address once and never returns to it. The
@@ -28,7 +28,7 @@ test("an exchanged email token never returns to the address", async ({
   page,
 }) => {
   await recordAddresses(page);
-  await signIn(page, freshEmail("address"));
+  await walkSignIn(page, freshEmail("address"));
 
   const { first, later } = await landingAddresses(page);
   expect(first).toContain("#token=");

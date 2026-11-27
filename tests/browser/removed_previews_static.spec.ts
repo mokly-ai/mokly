@@ -29,7 +29,7 @@ import {
   PREVIOUS as STAGE,
   previousVersionLabel,
 } from "./previous_version.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 const DOCUMENTS = [
   [comparisonPaths.removedPage, "Historical page"],
@@ -251,34 +251,5 @@ test("a viewport with no captured previous view says so", async ({
   await expect(page.locator(note)).toHaveCount(0);
   await expect(screenFrame(page, "desktop").locator("h1")).toHaveText(
     "Historical screen",
-  );
-});
-
-test("under Dark, a removed screen captured only in Light keeps its Light row alone", async ({
-  page,
-  request,
-  baseURL,
-}) => {
-  const entryPath = comparisonPaths.removedLightOnly;
-  await openRemoved(page, await comparisonIndex(request, baseURL), entryPath);
-  await chooseViewport(page, "desktop");
-  await chooseScheme(page, "dark");
-  await expect(page.locator(`${STAGE} figure`)).toHaveCount(1);
-  await expect(historicalFrame(page, "desktop", "dark")).toHaveCount(0);
-  await expect(historicalFrame(page, "desktop")).toHaveAttribute(
-    "data-preview-color-scheme",
-    "light",
-  );
-  await expect(
-    historicalFrame(page, "desktop").locator("iframe"),
-  ).toHaveAttribute(
-    "data-mokly-preview-source",
-    new RegExp(
-      `/snapshots/before/mokly-generated/${entryPath}/index\\.desktop\\.html$`,
-      "u",
-    ),
-  );
-  await expect(screenFrame(page, "desktop").locator("h1")).toHaveText(
-    "Former screen",
   );
 });

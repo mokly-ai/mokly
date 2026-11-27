@@ -3,12 +3,19 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use mokly_model::namespace;
+use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
+use mokly_model::{namespace, routes};
 
 mod changes_support;
-use changes_support::{base, run, write};
+#[path = "changes_support/ignored_modules.rs"]
+mod ignored_modules;
+#[path = "changes_support/links.rs"]
+mod links;
+use changes_support::{base, run, run_configured, write};
+use ignored_modules::warning_fixture;
+use links::link_directory;
 
 #[test]
 fn nested_configuration_aliases_and_bare_imports_use_working_dependencies_on_both_sides() {
@@ -122,11 +129,79 @@ fn changes_render_workspace_sources_when_only_the_head_has_a_build() {
     assert!(comparison.is_dir(), "{}", comparison.display());
 }
 
-fn link_directory(target: &Path, link: &Path) {
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(target, link).unwrap();
-    #[cfg(windows)]
-    std::os::windows::fs::symlink_dir(target, link).unwrap();
+const WARNINGS: &str = concat!(
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/bundled.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/computed.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/loose.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/native.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/native.json is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/plugin.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/direct.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/nested.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module generated/tailwind/reference.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/disabled/dist/index.cjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/plugin-theme/dist/skin.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/record/esm/index.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for record-plugin\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/ignored-source.cjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/index.mjs is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/package.css is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/package.mjs is ignored by Git, so a later base cannot load it; set moduleResolution.sourcePackages for workspace-theme\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/esm/skin.css is ignored by Git, so a later base cannot load it\n",
+    "[mokly/warning] configuration \"mokly.config.json\": module packages/theme/root.cjs is ignored by Git, so a later base cannot load it\n",
+);
+
+#[test]
+fn build_warns_only_for_ignored_imports_and_strict_preserves_the_output() {
+    let root = warning_fixture();
+    let path = root.path();
+    let run = |args: &[&str]| run_configured(path, args, None, &[], "plain");
+    let build = run(&["build"]);
+    let stderr = String::from_utf8(build.stderr).unwrap();
+    assert_eq!(build.status.code(), Some(0), "{stderr}");
+    assert_eq!(stderr, WARNINGS);
+    let output = path.join("mokly-static");
+    let css = fs::read_to_string(output.join(namespace::generated("styles/style.css"))).unwrap();
+    for text in [".loose", ".untracked", ".theme", ".package", "node-loaded"] {
+        assert!(css.contains(text), "{css}");
+    }
+    let css = fs::read_to_string(output.join(namespace::generated("styles/tailwind.css"))).unwrap();
+    for text in [".direct", ".nested", ".plugin-theme"] {
+        assert!(css.contains(text), "{css}");
+    }
+
+    let index = output.join(namespace::viewer("index.json"));
+    let written = fs::read(&index).unwrap();
+    let installed: CatalogueReadModel = serde_json::from_slice(&written).unwrap();
+    let home = output.join(namespace::generated(&routes::view(
+        "home",
+        Viewport::Desktop,
+        ColorScheme::Light,
+    )));
+    let rendered_home = fs::read_to_string(&home).unwrap();
+    assert!(rendered_home.contains("<p>Home</p>"), "{rendered_home}");
+    write(
+        path,
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<p>Changed Home</p>",
+    );
+    let strict = run(&["build", "--strict"]);
+    assert_eq!(strict.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8(strict.stderr).unwrap(),
+        format!("{WARNINGS}[mokly/build-invalid] 18 build warnings with --strict\n")
+    );
+    let after = fs::read(&index).unwrap();
+    let after_strict: CatalogueReadModel = serde_json::from_slice(&after).unwrap();
+    assert_eq!(after_strict.deployment_id, installed.deployment_id);
+    assert_eq!(after, written);
+    assert_eq!(fs::read_to_string(&home).unwrap(), rendered_home);
+
+    let disabled = run(&["build", "--strict", "--no-changes"]);
+    let stderr = String::from_utf8(disabled.stderr).unwrap();
+    assert_eq!(disabled.status.code(), Some(0), "{stderr}");
+    assert_eq!(stderr, "");
+    let rebuilt = fs::read_to_string(home).unwrap();
+    assert!(rebuilt.contains("<p>Changed Home</p>"), "{rebuilt}");
 }
 
 fn package(root: &Path, name: &str, label: &str) {

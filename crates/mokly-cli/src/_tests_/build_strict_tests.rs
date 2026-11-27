@@ -77,8 +77,8 @@ fn strict_build(head: Vec<Warning>, base: Vec<Warning>) -> Result<BuildSummary, 
         changes: Arc::new(Unimock::new((
             capture_head(),
             ChangesServiceMock::classify
-                .next_call(matching!(_, _, _, _))
-                .answers_arc(Arc::new(move |_, _, _, _, _| Ok(ready(base.clone())))),
+                .next_call(matching!(_, _, _, _, _))
+                .answers_arc(Arc::new(move |_, _, _, _, _, _| Ok(ready(base.clone())))),
         ))),
     };
     let mut options = options();

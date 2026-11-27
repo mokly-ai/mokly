@@ -1,6 +1,7 @@
 //! Build REST behavior against the real HTTP server and isolated Postgres.
 
 mod access_tests;
+mod branch_page_tests;
 mod cancellation_tests;
 mod failure_cause_tests;
 mod fork_tests;

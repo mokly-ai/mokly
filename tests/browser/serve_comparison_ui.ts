@@ -1,5 +1,6 @@
 /**
- * Shared actions for viewer journeys on the private Serve comparison fixture.
+ * Shared actions for viewer journeys on the private and the read-only Serve
+ * comparison fixtures.
  * Serve captures a selected comparison on demand. When the same entry is
  * selected again, Serve reuses the stored comparison while it keeps it, and
  * a refresh captures again. Either way, an action waits for its comparison

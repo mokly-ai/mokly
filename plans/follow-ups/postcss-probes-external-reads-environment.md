@@ -224,6 +224,11 @@
     bytes of opaque reads. This item asks how reuse sees changes to them.
   - [Synchronous workspace source loading](./synchronous-workspace-source-loading.md)
     needs evidence for the relative paths that it probes.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md)
+    and [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md):
+    the same kind of gap and fix in the bundle. The reuse checks miss files
+    that a run-time require loads, and their fix sends the observations
+    with a later result, as the module lookup part here does.
 - **Recommendation:** B. It keeps the native plugin behaviour and the
   mapped-read rule, and it treats each mechanism on its own. C best
   protects the codebase, but it reverses a decision in force.

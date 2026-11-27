@@ -24,31 +24,52 @@ async function expectViewerKept(page: Page): Promise<void> {
   await expect(page.locator("[data-test-kept]")).toHaveCount(1);
 }
 
-test("closing a panel keeps the viewer beneath it", async ({ page }) => {
+test("closing a panel or the settings dialog keeps the viewer beneath it", async ({
+  page,
+}) => {
   const made = await publishedProject(page, "panel-close");
-  // The selection is the viewer's own query, which the router never wrote.
-  await open(page, `${made.publicationPath}?view=changes`);
-  await publishedViewerReady(page);
-  await markViewer(page);
 
-  await page.getByTestId("viewer-project").click();
-  await expect(page.getByTestId("viewer-panel-projects")).toBeVisible();
-  await page.getByTestId("close-projects").click();
-  await expect(page.getByTestId("viewer-panel-projects")).toHaveCount(0);
-  await expect(page).toHaveURL(/view=changes/);
-  await expectViewerKept(page);
+  await test.step("closing a panel keeps the viewer beneath it", async () => {
+    // The selection is the viewer's own query, which the router never wrote.
+    await open(page, `${made.publicationPath}?view=changes`);
+    await publishedViewerReady(page);
+    await markViewer(page);
 
-  // The browser's own Back and Forward over the panel's entry keep it too.
-  await page.getByTestId("viewer-history").click();
-  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
-  await page.goBack();
-  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
-  await page.goForward();
-  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
-  await page.goBack();
-  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
-  await expect(page).toHaveURL(/view=changes/);
-  await expectViewerKept(page);
+    await page.getByTestId("viewer-project").click();
+    await expect(page.getByTestId("viewer-panel-projects")).toBeVisible();
+    await page.getByTestId("close-projects").click();
+    await expect(page.getByTestId("viewer-panel-projects")).toHaveCount(0);
+    await expect(page).toHaveURL(/view=changes/);
+    await expectViewerKept(page);
+
+    // The browser's own Back and Forward over the panel's entry keep it too.
+    await page.getByTestId("viewer-history").click();
+    await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+    await page.goForward();
+    await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+    await expect(page).toHaveURL(/view=changes/);
+    await expectViewerKept(page);
+  });
+
+  await test.step("closing the settings dialog keeps the viewer beneath it", async () => {
+    await open(page, made.publicationPath);
+    await publishedViewerReady(page);
+    await markViewer(page);
+
+    await openSettingsFromAccount(page);
+    await page.getByTestId("close-settings").click();
+    await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
+    await expectViewerKept(page);
+
+    await openSettingsFromAccount(page);
+    await page.goBack();
+    await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
+    await expectViewerKept(page);
+  });
 });
 
 test("closing a panel keeps an unpublished project's viewer", async ({
@@ -65,24 +86,5 @@ test("closing a panel keeps an unpublished project's viewer", async ({
   await expect(page.getByTestId("viewer-panel-projects")).toBeVisible();
   await page.getByTestId("close-projects").click();
   await expect(page.getByTestId("viewer-panel-projects")).toHaveCount(0);
-  await expectViewerKept(page);
-});
-
-test("closing the settings dialog keeps the viewer beneath it", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "settings-close");
-  await open(page, made.publicationPath);
-  await publishedViewerReady(page);
-  await markViewer(page);
-
-  await openSettingsFromAccount(page);
-  await page.getByTestId("close-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
-  await expectViewerKept(page);
-
-  await openSettingsFromAccount(page);
-  await page.goBack();
-  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
   await expectViewerKept(page);
 });

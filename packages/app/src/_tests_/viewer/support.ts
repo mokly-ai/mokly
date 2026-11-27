@@ -243,23 +243,6 @@ export async function makePublic(page: Page, projectId: string): Promise<void> {
   await setVisibility(page, projectId, "public");
 }
 
-/** Hold a successful real read until a test has checked the pending body. */
-export async function holdViewerRead(
-  page: Page,
-  matches: (url: URL) => boolean,
-): Promise<{ seen: () => boolean; release: () => void }> {
-  const pending = Promise.withResolvers<void>();
-  let held = false;
-  await page.route(matches, async (route) => {
-    const response = await route.fetch();
-    expect(response.status()).toBe(200);
-    held = true;
-    await pending.promise;
-    await route.fulfill({ response });
-  });
-  return { seen: () => held, release: () => pending.resolve() };
-}
-
 /** Share offers no link, empty state, or publishing action while it waits. */
 export async function expectSharePreparing(panel: Locator): Promise<void> {
   await expect(

@@ -13,8 +13,9 @@
     and `:195-205`, the Escape clear.
   - `packages/viewer/src/shell/comparison_eligible_frames.ts:185-202`: the set
     gate, `comparisonOffered`.
-  - `tests/browser/right_panel_tabs.spec.ts:64-92`: the only test of a click
-    in Changes.
+  - `tests/browser/right_panel_tabs.spec.ts:69-97`, the test "in Changes a
+    click on a frame selects nothing, and the canvas draws no selection": the
+    only test of a click in Changes.
   - `tests/helpers/comparison_catalogue.ts:24-27` and `:74-80`: the Tag set.
   - `docs/protocol/mokly-viewer-selection-canvas.md:32-37`: the click rule.
 - **Reason:** The click rule holds today, and its guard test needs a new unit

@@ -1,4 +1,11 @@
-import { refusalLayout, refusals, refuseTryAgain } from "./build-refusals";
+import {
+  buildRefusal,
+  publishRefusal,
+  refusalLayout,
+  refusals,
+  refuseTryAgain,
+  scrollsSideways,
+} from "./build-refusals";
 import type { RefusalParts } from "./build-refusals";
 import { buildCard, cardTitle, ciGuide } from "./build-state-parts";
 import type { BuildStateRow } from "./build-state-parts";
@@ -35,8 +42,12 @@ export const publishRefused: BuildStateRow = {
     const { double } = scenario;
     double.branches = [branchRow("topic")];
     double.pullRequests = [pullRow()];
-    const fragment = page.locator(publishFragment);
-    const control = fragment.getByTestId("stage-publish");
+    const state = page.locator(".fo-stage-card .fo-state");
+    const fragment = state.locator(publishFragment);
+    // The shared control with guide: Publish from CI stays beside the
+    // control, between the refusal and Details.
+    const row = fragment.locator(":scope > .fo-control-guide");
+    const control = row.getByTestId("stage-publish");
     for (const refused of [
       {
         path: scenario.branchAt("topic"),
@@ -59,11 +70,21 @@ export const publishRefused: BuildStateRow = {
       );
       await expect(control).toHaveText(refused.label);
       await expect(
-        fragment.getByRole("link", { name: "Publish from CI" }),
+        row.getByRole("link", { name: "Publish from CI" }),
+      ).toHaveCount(1);
+      await expect(
+        row.getByRole("link", { name: "Publish from CI" }),
       ).toHaveAttribute("href", ciGuide);
       await expect(fragment.locator(":scope > details")).toContainText(
         "Details",
       );
+      expect(await state.evaluate(refusalLayout, publishRefusal)).toEqual({
+        outside: [],
+        inside: ["details", "guide"],
+        order: ["refusal above the control", "control above the reference"],
+        guide: "beside the control",
+      });
+      expect(await scrollsSideways(page)).toBe(false);
     }
     expect(double.requests).toEqual([
       { branch: "topic" },
@@ -85,6 +106,13 @@ export const tryAgainRefused: BuildStateRow = {
     for (const [index, kind] of (["closed", "fork"] as const).entries()) {
       const id = buildId(20 + index);
       await refuseTryAgain(page, scenario, id, kind);
+      // The write-failure fragment fills the action column, with the refusal
+      // above the control and Details beneath. No refusal adds a guide, so
+      // the control stands alone.
+      await expect(fragment).toHaveCount(1);
+      await expect(
+        action.locator(".fo-state-pair, .review-inline, .fo-control-guide"),
+      ).toHaveCount(0);
       await expect(fragment.locator(":scope > [role=alert]")).toHaveText(
         refusals[kind].sentence,
       );
@@ -95,6 +123,15 @@ export const tryAgainRefused: BuildStateRow = {
         "Details",
       );
       await expect(action.getByRole("link")).toHaveCount(0);
+      expect(
+        await buildCard(page).evaluate(refusalLayout, buildRefusal),
+      ).toEqual({
+        outside: [],
+        inside: ["details"],
+        order: ["refusal above the control", "control above the reference"],
+        guide: "none",
+      });
+      expect(await scrollsSideways(page)).toBe(false);
       await expect(page).toHaveURL(
         (url) => url.pathname === scenario.buildAt(id),
       );

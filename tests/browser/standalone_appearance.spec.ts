@@ -31,9 +31,14 @@ for (const catalogue of ["mixed", "light-only"] as const) {
     const target =
       catalogue === "mixed" ? screen : `${lightOnlySite.url}/view/home/`;
     const entry = catalogue === "mixed" ? "example/screens/welcome" : "home";
-    for (const choice of ["auto", "light", "dark", "pin"] as const) {
-      await page.goto(target);
-      await page.evaluate(() => localStorage.clear());
+    // The context starts with empty storage, and each choice clears what it
+    // saved, so each choice loads the shell once.
+    for (const [choice, saved] of [
+      ["auto", null],
+      ["light", "light"],
+      ["dark", "dark"],
+      ["pin", null],
+    ] as const) {
       await page.goto(choice === "pin" ? `${target}?scheme=dark` : target);
       if (choice !== "auto" && choice !== "pin")
         await page.locator(select).selectOption(choice);
@@ -49,27 +54,16 @@ for (const catalogue of ["mixed", "light-only"] as const) {
       // Each frame keeps its own scheme; a light-only catalogue has Light
       // frames.
       await expectCanvasFrames(page, entry, catalogue === "mixed");
+      // A choice is the reader's saved preference; a pin dresses one
+      // document and is not saved.
+      expect(
+        await page.evaluate(() => localStorage.getItem("mokly:theme")),
+        choice,
+      ).toBe(saved);
+      await page.evaluate(() => localStorage.clear());
     }
   });
 }
-
-test("a scheme pin paints the document without being saved", async ({
-  page,
-}) => {
-  await page.goto(`${screen}?scheme=dark`);
-  await expect
-    .poll(() => appearance(page))
-    .toEqual({
-      scheme: "dark",
-      theme: "dark",
-      value: "dark",
-    });
-  await expectCanvasFrames(page, "example/screens/welcome", true);
-  // A pin dresses one document; it is not the reader's saved preference.
-  expect(
-    await page.evaluate(() => localStorage.getItem("mokly:theme")),
-  ).toBeNull();
-});
 
 test("a saved appearance is restored on a later visit", async ({ page }) => {
   await page.goto(screen);

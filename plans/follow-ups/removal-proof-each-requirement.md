@@ -17,6 +17,12 @@
   - **B.** Do A, and add an example from this case. Effort: Small.
 - **Left out:** A lint, because no tool can list the requirements of a test.
 - **Wider fix:** A. The rule prevents the class.
-- **Previous examples:** The three rows above, 2026-11-26.
+- **Previous examples:** The three rows above, 2026-11-26. The Browser and
+  Viewer test audit of the same day, branch
+  `calummoore/test-audit-mokly-browser-and-viewer-din6`, review findings 2,
+  3, 5, 6, 7, and 8: each removal, port, or merge passed its one break and
+  still lost a check, such as visibility, a computed colour, an end-of-file
+  flag, a first-load state, a directory index, or a version floor. Each lost
+  check came back in that branch.
 - **Recommendation:** B. The example shows the class better than the rule alone.
 - **Action:** fix after merge, apply B, in the shared skills repository.

@@ -36,6 +36,7 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 - Install base dependencies with scripts disabled by default, a deadline, and a
   size bound. The working-tree configuration or CLI can opt into scripts.
 - Return bundle settings and a configuration warning when an install fails.
+- Warn when the head loads a repository file that Git ignores.
 
 ## What This Crate Does
 
@@ -382,6 +383,18 @@ announces reading and comparing, and the base provider announces rendering.
 `DependencyTiers` announces installing when a dependency build starts. A
 complete entry announces nothing.
 
+`ChangesService::classify` also takes the warning list of the caller. After
+the pin, and before the kept-base lookup, `Changes` adds the `ignored-module`
+warnings of the head to that list, so the caller keeps them also when the
+base fails. The private `ignored_modules` module reads the files that the
+head loaded through `RenderGeneration::module_imports`. Then
+`Repository::working_path_statuses` checks each path and supplies the cause
+for ignored files, nested checkouts, and submodules. When Git cannot give the
+statuses, the check records a debug event and classification continues without
+these warnings. Cancellation stops classification. The
+[ignored modules rule](../../docs/protocol/mokly-comparison-packages.md#ignored-modules)
+owns which files count and the message.
+
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
 classification onto current or historical public records of the same retained
@@ -526,6 +539,12 @@ dependencies, and no test uses the internet.
   reuse. Each fresh preparation takes the provider's historical sources when
   it has them. It holds the `PrefetchGuard` of a fresh base until the capture
   of that base returns, so each exit stops its early renders and waits for them.
+  After the pin, it adds the `ignored-module` warnings of the head to the
+  warning list of the caller.
+- The private [`src/ignored_modules.rs`](./src/ignored_modules.rs) builds the
+  `ignored-module` warnings from exact path statuses in `mokly-git`. It uses
+  the workspace layout rule in `mokly-css` to check source recovery and
+  select the override hint for ignored files.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,

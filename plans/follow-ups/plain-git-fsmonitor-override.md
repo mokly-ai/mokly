@@ -114,6 +114,9 @@
   - `plans/follow-ups/managed-child-spawn-trampoline.md`: option C.
   - `plans/follow-ups/git-helpers-outlive-commands.md`: helpers that start
     their own session, after a normal finish, in both modes.
+  - [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md):
+    the same code. Its option B gives `SystemRunner` default environment
+    entries for tests, which reach `git_command` as option D here does.
 - **Recommendation:** D. It covers `check-attr` and `rev-parse` and every
   later plain call, keeps Git's attribute results and the speed gain, and
   costs one re-extraction of each cached base.

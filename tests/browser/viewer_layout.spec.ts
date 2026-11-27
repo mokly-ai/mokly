@@ -53,8 +53,9 @@ test("embedded viewer fills a host shorter than the viewport", async ({
 });
 
 /**
- * The width and the scheme of each layout test. At 390 px only Light runs:
- * its compact search branch has no scheme input.
+ * The width and the scheme of each layout test. At 390 and 320 px only Light
+ * runs: the compact search branch has no scheme input, and the selected
+ * scheme reaches only the frame surfaces inside the stage.
  */
 const LAYOUT_CASES = [
   [1440, "light"],
@@ -63,7 +64,6 @@ const LAYOUT_CASES = [
   [900, "dark"],
   [390, "light"],
   [320, "light"],
-  [320, "dark"],
 ] as const;
 
 for (const [width, colorScheme] of LAYOUT_CASES) {

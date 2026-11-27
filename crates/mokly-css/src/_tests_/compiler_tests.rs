@@ -63,6 +63,7 @@ fn compiler(files: &[(&str, &str)], assets: bool) -> Compiler {
     Compiler {
         tree: mock.clone(),
         repo_root: "/repo".into(),
+        resolution: Default::default(),
         resolver: Arc::new(SourceResolver {
             settings: Default::default(),
             tree: mock,
@@ -161,6 +162,7 @@ fn renderer_owned_imports_are_removed_before_postcss_is_called() {
     let compiler: &dyn StylesheetBundler = &Compiler {
         tree: mock.clone(),
         repo_root: "/repo".into(),
+        resolution: Default::default(),
         resolver: mock.clone(),
         processor: mock,
     };

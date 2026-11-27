@@ -7,7 +7,7 @@ use crate::changes::Change;
 use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
-use crate::repository::{GitRepository, Repository};
+use crate::repository::{GitRepository, Repository, WorkingPathStatus};
 use crate::source_key::CheckoutIdentity;
 use crate::tree::{self, Entry, Limits};
 
@@ -116,6 +116,10 @@ impl Repository for GitRepository {
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {
         self.candidates()
+    }
+
+    fn working_path_statuses(&self, paths: &[RepoPath]) -> Result<Vec<WorkingPathStatus>> {
+        self.classify_working_paths(paths)
     }
 
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>> {

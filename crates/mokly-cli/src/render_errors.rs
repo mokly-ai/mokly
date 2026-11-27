@@ -166,6 +166,13 @@ fn css(error: &CssError) -> String {
         } => format!(
             "could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot"
         ),
+        CssError::WorkspaceImport {
+            stylesheet,
+            specifier,
+            package,
+        } => format!(
+            "could not resolve CSS @import in {stylesheet}: {specifier}; set moduleResolution.sourcePackages for {package}"
+        ),
         CssError::RootRoute { path } => format!(
             "cannot deliver imported CSS for {path}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)"
         ),

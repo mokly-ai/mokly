@@ -85,6 +85,7 @@ fn postcss(directory: &str) -> Plan {
         path: directory.into(),
         glob: "**/*".into(),
         origin: PluginInput {
+            import: None,
             plugin: "fixture".into(),
             stylesheet: "style.css".into(),
         },

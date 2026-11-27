@@ -103,7 +103,7 @@ test("the account header moves the window and keeps clear of its buttons, and it
   await expectBarsClearOfButtons(page, { "the account header": header });
 });
 
-test("the viewer's cloud bars move the window and keep clear of its buttons, while their controls and overlays take clicks", async ({
+test("the viewer's cloud bars move the window and keep clear of its buttons, while their controls and overlays take clicks, and the package's mark follows the buttons", async ({
   page,
 }) => {
   const made = await publishedProject(page, "mac-window-viewer");
@@ -128,6 +128,12 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
   await publishedViewerReady(page);
   const start = page.locator(".fo-package-slot-start");
   const centre = page.locator(".fo-package-slot-center");
+  // The package's start column: its menu button where it shows, its mark and
+  // the cloud's start slot.
+  const mark = page
+    .locator("[data-mokly-shell]")
+    .getByRole("link", { name: "Mokly", exact: true })
+    .locator("..");
   for (const [width, composition] of [
     [1440, "full"],
     [960, "compact"],
@@ -144,6 +150,16 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
       "centre slot": centre,
       "end slot": page.locator(".fo-package-slot-end"),
     };
+    await test.step(`the viewer package's mark comes after the Mac window's buttons, on the ${composition} bar`, async () => {
+      await emulateMacWindow(page, "start");
+      await expect
+        .poll(
+          () => partsUnderButtons(mark, "start"),
+          `the ${composition} bar's mark keeps clear of the buttons`,
+        )
+        .toEqual([]);
+      await clearMacWindow(page);
+    });
     for (const [label, slot] of Object.entries(slots)) {
       await expectBarRegions(slot, `the ${composition} bar's ${label}`);
     }
@@ -195,37 +211,4 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
     .click();
   await expect(page.getByTestId("settings-dialog")).toBeVisible();
   await expectTakesClicks(page.getByRole("dialog"), "the settings dialog");
-});
-
-test("the viewer package's mark comes after the Mac window's buttons in both compositions", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "mac-window-viewer-mark");
-  await open(page, made.publicationPath);
-  await publishedViewerReady(page);
-  // The package's start column: its menu button where it shows, its mark and
-  // the cloud's start slot.
-  const start = page
-    .locator("[data-mokly-shell]")
-    .getByRole("link", { name: "Mokly", exact: true })
-    .locator("..");
-  for (const [width, composition] of [
-    [1440, "full"],
-    [960, "compact"],
-  ] as const) {
-    await page.setViewportSize({ width, height: 900 });
-    await expect(
-      page.getByTestId(
-        composition === "full" ? "viewer-history" : "viewer-more",
-      ),
-    ).toBeVisible();
-    await emulateMacWindow(page, "start");
-    await expect
-      .poll(
-        () => partsUnderButtons(start, "start"),
-        `the ${composition} bar's mark keeps clear of the buttons`,
-      )
-      .toEqual([]);
-    await clearMacWindow(page);
-  }
 });

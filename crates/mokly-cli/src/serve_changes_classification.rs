@@ -135,12 +135,19 @@ impl Source {
             comparison,
             steps,
         };
-        match changes.classify(
+        let mut warnings = Vec::new();
+        let result = changes.classify(
             &self.config,
             self.services.base.as_deref(),
             self.head.clone(),
             self.services.install_scripts,
-        ) {
+            &mut warnings,
+        );
+        self.pending
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .extend(warnings);
+        match result {
             Ok(result) if !cancel.cancelled() => Ok(result),
             Ok(_) => Err(ServerError::ChangesReplaced),
             Err(source) => Err(ServerError::Comparison {

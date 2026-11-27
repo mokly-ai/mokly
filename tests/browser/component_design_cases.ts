@@ -43,22 +43,22 @@ export function registerComponentDesign() {
   const { designDocumentUrl } = designDocumentFixture();
 
   // A document's width does not depend on its delivery, so Serve alone
-  // checks that each Canvas artboard fits its viewport.
+  // checks that each Canvas artboard fits its viewport. One page visits every
+  // design in turn, and a soft assertion names each design that overflows.
   if (!builtCatalogueDelivery())
-    for (const route of CANVAS_SCREENS)
-      test(`${route}: both artboards fit their viewport's width`, async ({
+    for (const [viewport, size] of Object.entries(VIEWPORTS))
+      test(`every Canvas ${viewport} artboard fits its viewport's width`, async ({
         page,
       }) => {
-        for (const [viewport, size] of Object.entries(VIEWPORTS)) {
-          await page.setViewportSize(size);
+        await page.setViewportSize(size);
+        for (const route of CANVAS_SCREENS) {
           await page.goto(designDocumentUrl(route, viewport));
           const overflow = await page.evaluate(
             () => document.documentElement.scrollWidth > window.innerWidth,
           );
-          expect(
-            overflow,
-            `${route} ${viewport} has no document overflow`,
-          ).toBe(false);
+          expect
+            .soft(overflow, `${route} ${viewport} has no document overflow`)
+            .toBe(false);
         }
       });
 

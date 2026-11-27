@@ -1,11 +1,56 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type { PluginBuild, ResolveOptions, ResolveResult } from "esbuild";
+
 import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { bareSpecifier, packageName } from "./specifier.js";
 
 const caches = new WeakMap<ModulePaths, Map<string, Promise<string>>>();
+
+/** Repeat esbuild's lookup inside the package after applying the authored alias once. */
+export async function resolveInPackage(
+  build: PluginBuild,
+  name: string,
+  directory: string,
+  options: ResolveOptions,
+): Promise<ResolveResult> {
+  const lookup = { ...options, resolveDir: directory };
+  const { alias, conditions, mainFields, platform, resolveExtensions } =
+    build.initialOptions;
+  if (
+    !Object.keys(alias ?? {}).some(
+      (key) => name === key || name.startsWith(key + "/"),
+    )
+  )
+    return build.resolve(name, lookup);
+
+  let resolved: ResolveResult | undefined;
+  await build.esbuild.build({
+    absWorkingDir: directory,
+    stdin: { contents: "" },
+    bundle: true,
+    write: false,
+    logLevel: "silent",
+    ...(conditions && { conditions }),
+    ...(mainFields && { mainFields }),
+    ...(platform && { platform }),
+    ...(resolveExtensions && { resolveExtensions }),
+    plugins: [
+      {
+        name: "mokly-workspace-package",
+        setup(builder) {
+          builder.onStart(async () => {
+            resolved = await builder.resolve(name, lookup);
+          });
+        },
+      },
+    ],
+  });
+  if (!resolved) throw new Error("workspace package lookup did not run");
+  return resolved;
+}
 
 /** Map a bare importer's position into the selected installation repository. */
 export function importerDirectory(

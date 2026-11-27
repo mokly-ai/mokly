@@ -1,6 +1,11 @@
 import path from "node:path";
 
-import { expect, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  type Browser,
+  type Page,
+  type Request,
+} from "@playwright/test";
 
 import { viewHref, viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -13,6 +18,21 @@ import {
   designResourceExists,
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
+
+/** The saved samples of the shared design library, by library family. */
+function sampleFamilies(): Map<string, (typeof designCases)[number][]> {
+  const families = new Map<string, (typeof designCases)[number][]>();
+  for (const entry of designCases)
+    if (
+      entry.kind === "component" &&
+      entry.variantOf &&
+      entry.path.startsWith("design/library/")
+    ) {
+      const family = entry.path.split("/").slice(0, 3).join("/");
+      families.set(family, [...(families.get(family) ?? []), entry]);
+    }
+  return families;
+}
 
 /**
  * Run one viewport's assertions against a catalogue delivery. Each viewport
@@ -62,39 +82,49 @@ export function registerDesignLibrary(viewport: "desktop" | "mobile") {
   test.describe(`${viewport} shared design library`, () => {
     test.use({ javaScriptEnabled: false, viewport: size });
 
-    for (const entry of designCases.filter(
-      (entry) =>
-        entry.kind === "component" &&
-        entry.variantOf &&
-        entry.path.startsWith("design/library/"),
-    ))
-      test(`${entry.path}: saved sample loads with confined styles and links`, async ({
+    // One test for each library family visits each saved sample of the
+    // family on one page. A soft assertion names each sample that fails, and
+    // each linked file's existence is read once for the family.
+    for (const [family, entries] of sampleFamilies())
+      test(`${family}: each saved sample loads with confined styles and links`, async ({
         page,
       }, testInfo) => {
-        const failed: string[] = [];
-        page.on("requestfailed", (request) => failed.push(request.url()));
-        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-        await expect(page.locator(".mbk-library-host")).toBeVisible();
-        expect(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth,
-          ),
-          `${entry.variantOf}/${entry.path} fits`,
-        ).toBe(true);
-        const urls = await page
-          .locator("a[href],link[rel=stylesheet]")
-          .evaluateAll((nodes) =>
-            nodes.map((node) => (node as HTMLAnchorElement).href),
-          );
-        for (const url of new Set(urls)) {
-          await assertDesignResource(url, page.url());
-          expect(await designResourceExists(page.request, url), url).toBe(true);
+        const exists = new Map<string, boolean>();
+        for (const entry of entries) {
+          const sample = `${entry.variantOf}/${entry.path}`;
+          const failed: string[] = [];
+          const onFailed = (request: Request) => failed.push(request.url());
+          page.on("requestfailed", onFailed);
+          await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+          await expect
+            .soft(page.locator(".mbk-library-host"), sample)
+            .toBeVisible();
+          expect
+            .soft(
+              await page.evaluate(
+                () => document.documentElement.scrollWidth <= innerWidth,
+              ),
+              `${sample} fits`,
+            )
+            .toBe(true);
+          const urls = await page
+            .locator("a[href],link[rel=stylesheet]")
+            .evaluateAll((nodes) =>
+              nodes.map((node) => (node as HTMLAnchorElement).href),
+            );
+          for (const url of new Set(urls)) {
+            await assertDesignResource(url, page.url());
+            if (!exists.has(url))
+              exists.set(url, await designResourceExists(page.request, url));
+            expect.soft(exists.get(url), `${sample}: ${url}`).toBe(true);
+          }
+          await page.screenshot({
+            path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
+            fullPage: true,
+          });
+          page.off("requestfailed", onFailed);
+          expect.soft(failed, `${sample} requests`).toEqual([]);
         }
-        await page.screenshot({
-          path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
-          fullPage: true,
-        });
-        expect(failed).toEqual([]);
       });
 
     test("the top-bar logo keeps the in-screen colors in isolation", async ({

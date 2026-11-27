@@ -11,6 +11,7 @@
     "packages/plain/src/feature.ts": "",
     "packages/plain/src/styles.css": "",
     "packages/plain/src/no-style.ts": "",
+    "packages/plain/alternate/button.ts": "",
     "packages/plain/dist/built-only.js": "",
     "packages/plain/dist/nested/package.json": "{}",
     "packages/plain/src/nested/entry.ts": "",
@@ -43,6 +44,15 @@
     "packages/outside/tsconfig.json": "{\"compilerOptions\": {\"outDir\": \"../compiled\", \"rootDir\": \"authoring\"}}",
     "packages/outside/src/widget.ts": "",
     "packages/outside/authoring/widget.ts": "",
+    "packages/renamed/package.json": "{\"name\": \"@example/ui\"}",
+    "packages/renamed/source/page.ts": "",
+    "packages/renamed/source/deep/page.ts": "",
+    "packages/renamed/source/deep/outer-only.ts": "",
+    "packages/renamed/nested/page.ts": "",
+    "packages/renamed/historical/page.ts": "",
+    "packages/renamed/common/page.cts": "",
+    "packages/renamed/esm/only-built.js": "",
+    "packages/renamed/root.ts": "",
     "node_modules/installed/package.json": "{\"name\": \"installed\"}",
     "node_modules/installed/tsconfig.json": "{\"compilerOptions\": {\"outDir\": \"../../packages/reset-layout/compiled\"}}",
     "node_modules/installed/src/widget.ts": "",
@@ -151,6 +161,127 @@
     {
       "name": "a repository folder without a package is outside the rule",
       "target": "unpackaged/dist/widget.js",
+      "expected": null
+    },
+    {
+      "name": "an override maps esm to source by manifest name",
+      "target": "packages/renamed/esm/page.js",
+      "sourcePackages": [{ "@example/ui": { "esm": "source" } }],
+      "expected": "packages/renamed/source/page.ts"
+    },
+    {
+      "name": "the longest build folder in one layout wins",
+      "target": "packages/renamed/esm/deep/page.js",
+      "sourcePackages": [
+        { "@example/ui": { "esm": "source", "esm/deep": "nested" } }
+      ],
+      "expected": "packages/renamed/nested/page.ts"
+    },
+    {
+      "name": "a longer build folder that misses does not try its parent in the same layout",
+      "target": "packages/renamed/esm/deep/outer-only.js",
+      "sourcePackages": [
+        { "@example/ui": { "esm": "source", "esm/deep": "nested" } }
+      ],
+      "expected": null
+    },
+    {
+      "name": "one layout can map a second build folder",
+      "target": "packages/renamed/cjs/page.cjs",
+      "extensions": [".ts", ".cts"],
+      "sourcePackages": [
+        { "@example/ui": { "esm": "source", "cjs": "common" } }
+      ],
+      "expected": "packages/renamed/common/page.cts"
+    },
+    {
+      "name": "a source folder can be the package root",
+      "target": "packages/renamed/esm/root.js",
+      "sourcePackages": [{ "@example/ui": { "esm": "." } }],
+      "expected": "packages/renamed/root.ts"
+    },
+    {
+      "name": "false stops the detected layout",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [{ "plain": false }],
+      "expected": null
+    },
+    {
+      "name": "an entry for an absent package leaves detection in effect",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [{ "absent": false }],
+      "expected": "packages/plain/src/button.tsx"
+    },
+    {
+      "name": "the base layout wins when the working layout also has source",
+      "target": "packages/renamed/esm/page.js",
+      "sourcePackages": [
+        { "@example/ui": { "esm": "historical" } },
+        { "@example/ui": { "esm": "source" } }
+      ],
+      "expected": "packages/renamed/historical/page.ts"
+    },
+    {
+      "name": "the working layout supplies a file the base layout lacks",
+      "target": "packages/renamed/esm/page.js",
+      "sourcePackages": [
+        { "@example/ui": { "esm": "missing" } },
+        { "@example/ui": { "esm": "source" } }
+      ],
+      "expected": "packages/renamed/source/page.ts"
+    },
+    {
+      "name": "a base entry of false stops before the working layout",
+      "target": "packages/renamed/esm/page.js",
+      "sourcePackages": [
+        { "@example/ui": false },
+        { "@example/ui": { "esm": "source" } }
+      ],
+      "expected": null
+    },
+    {
+      "name": "a working entry of false keeps an earlier base match",
+      "target": "packages/renamed/esm/page.js",
+      "sourcePackages": [
+        { "@example/ui": { "esm": "historical" } },
+        { "@example/ui": false }
+      ],
+      "expected": "packages/renamed/historical/page.ts"
+    },
+    {
+      "name": "the detected folders do not enter an earlier override layout",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [
+        { "plain": { "esm": "source" } },
+        { "plain": { "dist": "alternate" } }
+      ],
+      "expected": "packages/plain/alternate/button.ts"
+    },
+    {
+      "name": "detection runs after each matching override misses",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [{ "plain": { "dist": "missing" } }],
+      "expected": "packages/plain/src/button.tsx"
+    },
+    {
+      "name": "a working entry of false stops detection after the base layout misses",
+      "target": "packages/plain/dist/button.js",
+      "sourcePackages": [
+        { "plain": { "dist": "missing" } },
+        { "plain": false }
+      ],
+      "expected": null
+    },
+    {
+      "name": "a missing source in every layout leaves the original build target",
+      "target": "packages/renamed/esm/only-built.js",
+      "sourcePackages": [{ "@example/ui": { "esm": "source" } }],
+      "expected": null
+    },
+    {
+      "name": "an installed package ignores its override",
+      "target": "node_modules/installed/dist/widget.js",
+      "sourcePackages": [{ "installed": { "dist": "src" } }],
       "expected": null
     }
   ]

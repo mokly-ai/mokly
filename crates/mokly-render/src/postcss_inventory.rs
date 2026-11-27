@@ -4,9 +4,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use mokly_catalogue::config::{normalize, relative};
-use mokly_css::dependencies::{DirectoryDependency, PluginInput};
+use mokly_css::dependencies::{DirectoryDependency, ImportKind, PluginInput};
 use mokly_model::canonical::compare_utf16;
-use mokly_sidecar::results::{Dependency, DependencyKind};
+use mokly_sidecar::results::{Dependency, DependencyKind, DependencySource};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{DependencyFailure, RenderError, Result};
@@ -50,19 +50,22 @@ pub(crate) fn collect(
             continue;
         };
         let path = root.join(logical);
-        if matches!(dependency.kind, DependencyKind::File)
-            && inputs.inputs.contains_key(&relative(&path, root))
-        {
-            continue;
-        }
         let origin = PluginInput {
             plugin: dependency
                 .plugin
                 .clone()
                 .unwrap_or_else(|| "unknown".into()),
             stylesheet: stylesheet.into(),
+            import: file_import(&dependency, &path),
         };
         let projected = scan.project(tree, &path)?;
+        if matches!(dependency.source, Some(DependencySource::Node))
+            && projected
+                .as_ref()
+                .is_none_or(|node| node.kind != FileKind::File)
+        {
+            continue;
+        }
         let Some(node) = projected else {
             return Err(failure(
                 &dependency,
@@ -153,6 +156,19 @@ pub(crate) fn collect(
     Ok(inputs)
 }
 
+fn file_import(dependency: &Dependency, path: &Path) -> Option<ImportKind> {
+    if !matches!(dependency.kind, DependencyKind::File) {
+        return None;
+    }
+    match dependency.source? {
+        DependencySource::BundledImport | DependencySource::Node => Some(ImportKind::File),
+        DependencySource::BundledPackageImport => Some(ImportKind::Package),
+        DependencySource::NodePackageRequire => Some(ImportKind::NodePackage),
+        DependencySource::Plugin => (path.extension().is_some_and(|ext| ext == "css"))
+            .then_some(ImportKind::PluginStylesheet),
+    }
+}
+
 fn read(
     tree: &dyn SourceTree,
     scan: &mut Scan,
@@ -162,17 +178,28 @@ fn read(
     origin: &PluginInput,
     inputs: &mut Inventory,
 ) -> Result<()> {
-    let name = relative(path, root);
-    if inputs.inputs.contains_key(&name) {
-        return Ok(());
-    }
     let digest = scan.digest(tree, identity)?;
-    inputs.plugin_inputs.insert(name.clone(), origin.clone());
-    inputs
-        .plugin_inputs
-        .insert(relative(identity, root), origin.clone());
-    inputs.inputs.insert(name, digest.clone());
-    inputs.inputs.insert(relative(identity, root), digest);
+    // The reported path and its target can each be needed in the base.
+    let target_import = origin
+        .import
+        .filter(|kind| *kind != ImportKind::NodePackage);
+    for (name, import) in [
+        (relative(path, root), origin.import),
+        (relative(identity, root), target_import),
+    ] {
+        inputs
+            .inputs
+            .entry(name.clone())
+            .or_insert_with(|| digest.clone());
+        inputs
+            .plugin_inputs
+            .entry(name)
+            .and_modify(|present| present.import = present.import.max(import))
+            .or_insert_with(|| PluginInput {
+                import,
+                ..origin.clone()
+            });
+    }
     Ok(())
 }
 

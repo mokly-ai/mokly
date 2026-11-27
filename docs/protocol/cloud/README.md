@@ -210,8 +210,9 @@ Change a doc only when a requirement or a decision changes.
   and [build checks](./changes-check-builds.md) the check of each cloud build.
 - [Cloud builds](./cloud-builds.md) — triggers, the build lifecycle, leases,
   supersession and retention, with [records and leases](./cloud-build-lifecycle.md),
-  the [runner](./cloud-build-runner.md) and its
-  [sandbox](./cloud-build-sandbox.md), the
+  the [runner](./cloud-build-runner.md), its
+  [sandbox](./cloud-build-sandbox.md) and its
+  [template](./cloud-build-template.md), the
   [build API](./cloud-build-api.md), [viewer cards and output](./viewer-builds.md)
   and [viewer build navigation](./viewer-build-navigation.md).
 - [Retention](./retention.md) — successful publications kept until parent deletion, attempt and grant cleanup, and fenced content collection.

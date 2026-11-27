@@ -85,7 +85,13 @@ fn live_only_admission_requires_the_exact_marker_and_a_toolchain() {
             "fixture",
             Some("generation"),
         ),
-        (false, false, Some(PhysicalInput::FilePath), "fixture", None),
+        (
+            false,
+            false,
+            Some(PhysicalInput::FilePath),
+            "fixture",
+            Some("generation"),
+        ),
         (
             false,
             false,

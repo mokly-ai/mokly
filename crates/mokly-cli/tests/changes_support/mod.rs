@@ -112,6 +112,10 @@ pub fn base(files: &[(&str, &str)]) -> TempDir {
         write(directory.path(), path, body);
     }
     git(directory.path(), &["init", "--initial-branch=fixture-base"]);
+    git(
+        directory.path(),
+        &["config", "--local", "core.excludesFile", ""],
+    );
     git(directory.path(), &["add", "."]);
     git(
         directory.path(),

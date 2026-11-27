@@ -14,7 +14,7 @@ import {
 import type { ApiBody } from "./harness";
 import {
   chooseRepository,
-  createProject,
+  walkToProject,
   repositoryField,
 } from "./project-setup";
 
@@ -23,7 +23,7 @@ test("onboarding creates a workspace and a project from a repository", async ({
 }) => {
   const email = freshEmail("onboard");
   await signIn(page, email);
-  const projectId = await createProject(page, "Folio Team");
+  const projectId = await walkToProject(page, "Folio Team");
   expect(projectId).toMatch(/^[0-9a-f-]{36}$/);
   await expect(
     page.getByRole("heading", { level: 1, name: /is ready/ }),
@@ -57,7 +57,7 @@ test("a workspace that has installed is not asked to install again", async ({
   page,
 }) => {
   await signIn(page, freshEmail("bound"));
-  await createProject(page, "Bound Org");
+  await walkToProject(page, "Bound Org");
   const workspaceId = await currentWorkspaceId(page);
 
   const workspace = await workspaceAddress(page, workspaceId);
@@ -88,7 +88,7 @@ test("a repository that already has a project offers the existing one", async ({
   page,
 }) => {
   await signIn(page, freshEmail("duplicate"));
-  const projectId = await createProject(page, "Dup Org");
+  const projectId = await walkToProject(page, "Dup Org");
   const workspaceId = await currentWorkspaceId(page);
   const workspace = await workspaceAddress(page, workspaceId);
   await open(page, `${workspace.path}/-/new`);

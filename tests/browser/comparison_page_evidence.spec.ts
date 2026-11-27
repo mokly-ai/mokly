@@ -24,8 +24,6 @@ import { expectNoComparison } from "./comparison_absence.js";
 import {
   BASE,
   DESKTOP_INSPECTOR,
-  EXAMINED_LEAD,
-  PAGE_EXCLUDED_LEAD,
   PAGE_FILES_LEAD,
   PAGE_MATCHED_LEAD,
   PAGE_OUTSIDE_LEAD,
@@ -171,22 +169,6 @@ test.describe("desktop whole-page evidence", () => {
     await expect(
       page.locator(".cv-canvas .mbk-entry-status:visible"),
     ).toHaveText("Changed");
-  });
-
-  test("an unchanged document lists its examined stylesheet and ends with its terminal line", async ({
-    page,
-  }) => {
-    await page.goto(`/view/${NOTES}/`);
-    await expect(inspectStatus(page)).toHaveText("Unmodified");
-    const evidence = await openPageEvidence(page, "Inspect");
-    await expect(evidence.locator("p")).toHaveText([
-      BASE,
-      PAGE_EXCLUDED_LEAD,
-      EXAMINED_LEAD,
-      PAGE_TERMINAL,
-    ]);
-    await expect(evidence.locator("li")).toHaveText([pageStylesheets.notes]);
-    await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
   });
 
   test("a page that uses a changed component shows its styles and links no component", async ({

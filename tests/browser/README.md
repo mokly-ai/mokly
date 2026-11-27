@@ -217,6 +217,29 @@ of its generation, which answers 204.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
 
+### Read-only Serve per spec file
+
+`serve_comparison_renewal_panes`, `serve_comparison_expiry`,
+`serve_selected_comparisons`, and `right_panel_tabs` import `test` from
+[`serve_comparison_read_only_test.ts`](./serve_comparison_read_only_test.ts)
+instead. The tests of one file share one Serve of the default catalogue, and
+each spec closes it with `test.afterAll(closeReadOnlyCatalogue)`. Its
+`changes` fixture holds only the named paths, the URL, the base and head
+commits, and `index`. It has no source root, no `edit`, and no base move, so
+no test changes the sources or the base of the next test. Serve's selection
+cache is shared, as the next paragraph says. A test of these files that
+edits a source or moves the base imports the private `test` of
+`serve_comparison_test.ts`, as the new-evidence test of
+`serve_comparison_renewal_panes` does. Every other spec keeps the private
+fixture, and a spec moves to the shared one only by an explicit decision.
+
+Serve keeps its cached selections and generations between the tests of a
+file, and collects a generation after 60 idle seconds. A test of these files
+therefore counts the selection requests of its own page, never Serve's
+captures, and it forces a new capture only with a refresh. A failed test ends
+its worker, which closes the shared Serve, so the next test starts a fresh
+one.
+
 ### Viewer journeys on Serve
 
 `serve_comparison_ui.ts` holds the shared viewer actions, including the waits

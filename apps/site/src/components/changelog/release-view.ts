@@ -126,7 +126,7 @@ export function followReleaseInView(
       const on = key.dataset["release"] === frame.id;
       key.classList.toggle("site-changelog-key--current", on);
       if (!on || playhead === null) continue;
-      playhead.style.left = key.style.left;
+      playhead.style.setProperty("--x", key.dataset["place"] ?? "0");
       const label = playhead.querySelector("b");
       if (label !== null)
         label.textContent = `v${key.dataset["version"] ?? ""}`;

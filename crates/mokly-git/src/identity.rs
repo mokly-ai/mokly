@@ -62,6 +62,14 @@ impl RepoPath {
                 .strip_prefix(&root.0)
                 .is_some_and(|rest| rest.starts_with('/'))
     }
+
+    /// Path prefixes from the top-level entry to the full path.
+    pub(crate) fn prefixes(&self) -> impl Iterator<Item = &str> {
+        self.0
+            .match_indices('/')
+            .map(|(end, _)| &self.0[..end])
+            .chain(std::iter::once(self.as_str()))
+    }
 }
 
 impl fmt::Display for RepoPath {

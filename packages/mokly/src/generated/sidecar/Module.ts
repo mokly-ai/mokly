@@ -13,4 +13,8 @@ path: string,
 /**
  * Resolved logical paths in source order.
  */
-imports: Array<string>, };
+imports: Array<string>,
+/**
+ * A bundled import reached this module by package name.
+ */
+packageImport?: boolean, };

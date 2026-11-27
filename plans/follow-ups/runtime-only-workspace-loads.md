@@ -1,0 +1,62 @@
+# Run-time-only workspace loads escape reuse checks
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from the finding check of finding 190 in round 3 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `WorkspaceLookups.runtimeBuilds` at `packages/mokly/src/sidecar/workspace-lookups.ts:206`, the `buildFiles` record in `buildTarget` at line 114 and `nativeTarget` at line 139 of the same file, `reuse` at `packages/mokly/src/sidecar/compiled.ts:128`, and the bundle fast path in `describe` at `crates/mokly-render/src/bundle.rs:49`.
+- **Reason:** The gap predates the branch, because `origin/main` records no run-time load, and the fix changes both reuse readers.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Serve:** Mokly's development server. It shows the catalogue in a browser and builds the changed parts again after each file change.
+  - **Sidecar:** The long-lived Node process that bundles, evaluates, and renders the JavaScript of a catalogue for Mokly.
+  - **Restored require:** The `require` function that the sidecar gives to the code of a compiled bundle. It loads each module that the bundle keeps for run time through Node.
+  - **Reuse evidence:** The record of the files that a compiled bundle depends on. Serve checks it before it reuses the bundle after an edit.
+  - **Workspace package:** A package whose `package.json` and files are in the repository, outside `node_modules`.
+- **Background:**
+  - A catalogue can load a workspace package only at run time, for example with `require(name)` where the code builds `name`. esbuild keeps such a call for run time, and the restored require loads the build file of the package through Node.
+  - A compile records its reuse evidence in one of two capture modes. A `full` capture records each input, and Serve reuses the bundle while every input matches.
+  - Serve uses a `serveEdit` capture for a compile after an edit. It records marked evidence, which holds only some entries and the marker `uncaptured: "serveEdit"`. Serve reuses such a bundle while the marked entries match.
+  - On 2026-11-27 Cal chose path-only entries in the marked evidence for build files that a lookup records only for their presence. A build that a `require` loaded by Node keeps carries a digest, because its content reaches the render.
+  - `WorkspaceLookups` records the build file of a workspace package in `buildFiles` only when a lookup of the compile reaches the package. Such a lookup comes from a bundled import, or from a shared package such as `react` that the compile resolves through Node.
+  - When the bundle has an unresolved require, `runtimeBuilds` keeps a digest for each file in `buildFiles`. Since 2026-11-27, an unresolved require also covers each of these:
+    - a use of the free `require` that is not a direct call
+    - an import of the Node `module` builtin
+    - a reference to `getBuiltinModule`
+  - Two readers check the reuse evidence before they reuse a bundle. They are `reuse` in the sidecar and the bundle fast path in `describe` on the Rust side of Mokly.
+  - `origin/main` has no rule for run-time loads, so the same gap exists there.
+- **Problem:**
+  - A computed require of a workspace package that no lookup of the compile reaches leaves the build of that package with no evidence entry. So both readers can reuse the bundle after an edit of the build.
+  - A probe on 2026-11-27 ran the sidecar modules of this branch in one test process. The entry held only `export const observed = require(specifier)`, with `specifier` built from `["lo", "cal"]`. `local` was a linked workspace package.
+  - In `serveEdit` capture, the marked evidence held no entry, and `reuse` returned the old bundle after an edit of the build. In `full` capture, the evidence was complete without the build, and `reuse` also returned the old bundle.
+  - A read of the code shows the same gap for a computed require of another repository file, such as a relative path. Nobody ran that case.
+- **Impact if no action:** Serve can reuse the bundle after an edit of such a file and show the old output.
+- **Root question:** How do the reuse checks learn of each repository file that a bundle loads only at run time?
+- **Options:**
+  - **A.** When a bundle has an unresolved require, keep a digest for each workspace build that the `node_modules` folders of the bundle can reach. Today only the builds that a lookup recorded get a digest. Effort: Medium.
+    - A build above the bound of 1 MiB for each file that the evidence reads, `METADATA_FILE_LIMIT` at `packages/mokly/src/sidecar/physical-input-reader.ts:15`, then ends edit reuse.
+    - A computed require of another repository file stays unchecked.
+  - **B.** When a bundle has an unresolved require, make its reuse evidence incomplete and give it no `serveEdit` marker. Serve then compiles it again after each edit. Effort: Small.
+    - It changes the rule of the "Private Folder Files" section of `docs/protocol/mokly-sidecar-folder-reuse.md`, which keeps the marker and the digests for such a bundle. So only Cal can approve it.
+    - Each bundle with an unresolved require loses edit reuse. The performance orchestrator rejected a withheld marker for other imports on 2026-11-18 and on 2026-11-19 for this reason.
+  - **C.** Record each repository file that the restored require loads while the sidecar evaluates and renders a bundle. Return the record before either reader accepts the bundle, and check the digest of each file. Effort: Large.
+    - It needs a new path from the evaluation and render results to both readers.
+    - It changes the digest rule of the "Private Folder Files" section. Cal's choice of 2026-11-27 covers the change, because C keeps a digest for each build whose content reaches the render.
+    - Two earlier decisions rejected a new result field for reuse data. The performance orchestrator rejected one for folder files on 2026-11-19, because it changes the wire format. Cal rejected one for path-only entries on 2026-11-27. Carry the record in an existing result where possible, and bring a new field to Cal.
+    - It needs the fresh loads for each compiled bundle of `restored-require-module-cache.md`.
+- **Left out:** Keep a digest for every workspace build in every bundle. A large unused build then ends edit reuse, which Cal's choice of path-only entries on 2026-11-27 avoids.
+- **Wider fix:** C. Run-time loads then become the source of the reuse checks, so no load form can escape them.
+- **Previous examples:**
+  - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md) records in-process reuse that keeps a stale module selection, because the reuse evidence misses an input.
+  - On 2026-11-27 a review found that `require.call` and other indirect uses of `require` left a path-only entry for a build that evaluation loads. This branch widened the unresolved require check for it.
+- **Related:**
+  - [restored-require-module-cache.md](./restored-require-module-cache.md): same restored require, and work that waits. With an evidence entry, a new compile still gets the old build from Node's module cache until that item lands.
+  - [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md): shared wider fix. Its option B is the same record of run-time loads as C here.
+  - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md): shared fix. Its option A records the files that a page render loads, which is the same record as C here.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): shared wider fix. Its record covers the requires that Node loads, for the reuse evidence too.
+  - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): shared fix. Its option E keeps the input observations of each restored require that recovers a source, which is part of the record of C here.
+  - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md): same code and same symptom. It shares both readers, `reuse` and `describe`, and it also keeps stale output in one process.
+  - [postcss-probes-external-reads-environment.md](./postcss-probes-external-reads-environment.md): same kind of gap and fix. The Rust side of Mokly gets no lookup candidates of the PostCSS child, and its fix sends the observations with the PostCSS result.
+- **Recommendation:** C. It covers each run-time load, also of a relative path and of a file that a module loaded by Node loads. A covers only workspace builds, and B needs Cal and loses reuse.
+- **Action:** fix after merge, apply C, because the gap predates this branch, and the record changes both reuse readers.

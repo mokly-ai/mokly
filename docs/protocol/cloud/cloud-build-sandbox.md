@@ -3,7 +3,8 @@
 This sub-contract of [Cloud build runner](./cloud-build-runner.md) defines the
 one-shot sandbox of each attempt, the output stream of its processes and the
 reconciliation of sandboxes that outlive their attempt. The runner defines the
-request, the outcomes, the template, the steps and the budgets.
+request, the outcomes, the steps and the budgets. The
+[template contract](./cloud-build-template.md) defines the template.
 
 ## Sandbox
 

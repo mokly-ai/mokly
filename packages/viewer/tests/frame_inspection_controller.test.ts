@@ -2,32 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
-import type { FrameAdapter, MountedFrame } from "@mokly/frame";
-import type { CatalogueUsage } from "@mokly/model";
+import type { MountedFrame } from "@mokly/frame";
 
-import type { InstanceRef } from "../src/host/types.js";
 import { ShellInspectionController } from "../src/shell/frame_inspection_controller.js";
+import { ShellFrameRegistry } from "../src/shell/frame_registry.js";
+
 import {
-  ShellFrameRegistry,
-  type ShellFrameSession,
-} from "../src/shell/frame_registry.js";
-
-interface Deferred<T> {
-  promise: Promise<T>;
-  reject(error: unknown): void;
-  resolve(value: T): void;
-}
-
-interface Presentation {
-  keys: readonly string[];
-  mode: "off" | "highlight" | "pick";
-}
-
-const adapter: FrameAdapter = {
-  async mount() {
-    throw new Error("The controller fixture never mounts through an adapter.");
-  },
-};
+  adapter,
+  deferred,
+  instanceKey,
+  reference,
+  sessionFixture,
+  settled,
+} from "./frame_inspection_fixture.js";
 
 test("a newer highlight supersedes an older request before readiness", async () => {
   const registry = new ShellFrameRegistry(adapter);
@@ -132,6 +119,51 @@ for (const lateFailure of [false, true]) {
   });
 }
 
+for (const lateFailure of [false, true]) {
+  test(`scrollToInstance rejects disposed and ignores a late ${lateFailure ? "failure" : "success"} when clearing replaces the operation`, async () => {
+    const registry = new ShellFrameRegistry(adapter);
+    const calls: string[] = [];
+    const session = sessionFixture(
+      registry,
+      "scroll",
+      [],
+      undefined,
+      async (_keys, mode) => {
+        calls.push(mode);
+      },
+    );
+    const scrolled = deferred<void>();
+    session.mounted!.scrollTo = async () => {
+      calls.push("scroll");
+      await scrolled.promise;
+      if (lateFailure) throw new Error("Late adapter failure");
+    };
+    const controller = registry.inspection;
+    const outcome = controller
+      .scrollToInstance(reference(session), [session])
+      .then(
+        () => "resolved",
+        (error: unknown) =>
+          error instanceof Error && "code" in error
+            ? String(error.code)
+            : "uncoded rejection",
+      );
+    await setImmediate();
+    try {
+      assert.deepEqual(calls, ["scroll"]);
+      // The host bridge clears every presentation this way when a pick
+      // ends or a frame changes.
+      await controller.highlightInstances([]);
+      assert.equal(await settled(outcome), "disposed");
+    } finally {
+      scrolled.resolve();
+    }
+    await setImmediate();
+    assert.equal(await outcome, "disposed");
+    assert.deepEqual(calls, ["scroll", "off"]);
+  });
+}
+
 for (const kind of ["highlight", "pick"] as const) {
   test(`${kind} does not await an unrelated frame turning off`, async () => {
     const registry = new ShellFrameRegistry(adapter);
@@ -190,91 +222,3 @@ test("a failed pending pick does not create an unhandled rejection", async () =>
     process.off("unhandledRejection", receive);
   }
 });
-
-function sessionFixture(
-  registry: ShellFrameRegistry,
-  id: string,
-  presentations: Presentation[] = [],
-  ready?: Promise<MountedFrame>,
-  highlight: MountedFrame["highlight"] = async (keys, mode) => {
-    presentations.push({ keys: [...keys], mode });
-  },
-): ShellFrameSession & { presentations: Presentation[] } {
-  const mounted: MountedFrame = {
-    dispose() {},
-    highlight,
-    async listInstanceBoundaries() {
-      return [];
-    },
-    async scrollTo() {},
-    subscribe: () => () => {},
-  };
-  const session: ShellFrameSession & { presentations: Presentation[] } = {
-    controller: new AbortController(),
-    element: {} as HTMLIFrameElement,
-    generation: registry.nextGeneration(),
-    identity: {
-      colorScheme: "light",
-      entryPath: id,
-      viewport: "desktop",
-    },
-    mounted,
-    presentations,
-    ready: ready ?? Promise.resolve(mounted),
-    source: `/${id}.html`,
-    status: "ready",
-    usage: usage(instanceKey(id)),
-    usageRevision: 0,
-  };
-  registry.add(session);
-  return session;
-}
-
-function usage(key: string): CatalogueUsage {
-  return {
-    status: "ready",
-    instances: [
-      {
-        componentId: "component",
-        id: "instance",
-        key,
-        order: 0,
-        owner: { kind: "entry" },
-        props: {},
-        propsKey: "props",
-      },
-    ],
-    ranges: [{ id: "r-0", target: { kind: "instance", instanceKey: key } }],
-    slots: [],
-  };
-}
-
-function reference(session: ShellFrameSession): InstanceRef {
-  return {
-    colorScheme: "light",
-    key: instanceKey(session.identity.entryPath),
-    screenPath: session.identity.entryPath,
-    viewport: "desktop",
-  };
-}
-
-function deferred<T>(): Deferred<T> {
-  let reject = (_error: unknown): void => undefined;
-  let resolve = (_value: T): void => undefined;
-  const promise = new Promise<T>((complete, fail) => {
-    reject = fail;
-    resolve = complete;
-  });
-  return { promise, reject, resolve };
-}
-
-function instanceKey(id: string): string {
-  const value = [...id].reduce((sum, character) => {
-    return sum + character.charCodeAt(0);
-  }, 0);
-  return (value % 16).toString(16).repeat(64);
-}
-
-async function settled<T>(promise: Promise<T>): Promise<T | "pending"> {
-  return Promise.race([promise, setImmediate().then(() => "pending" as const)]);
-}

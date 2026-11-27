@@ -116,8 +116,10 @@ and renders those local archives; it reports an explicit skip if the first pull
 cannot reach the chart repositories. Platform scripts also require OpenSSL for
 the certificate checks and the system `libpsl` runtime for the ICANN/private
 suffix validation, which finishes before any provider call. The build template
-test runs the template probe's Git checks with the host Git, so it needs Git
-2.43 or newer, the template's own floor. Run
+test requires host Git 2.43 or newer, the template's own floor. It also needs
+host `make`, `cc`, `g++`, and `ar` on `PATH`. It checks that the probe asks for
+its 10-second limit on each command, but it runs the host tools without that
+limit, so a slow host cannot fail it. Run
 `python3 infra/scripts/run-infrastructure-tests.py contracts` to replay the
 preview lifecycle's recorded Cloudflare, gcloud, Helm, kubectl and API-log
 fixtures and the workspace Mokly CLI's recorded capture output without cloud
