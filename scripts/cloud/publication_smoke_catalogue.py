@@ -11,8 +11,12 @@ def private_access(api, catalogue, owner, project, publication, fixture_files):
     api.call("POST", path, {}, expected=401)
     grant, _ = api.call("POST", path, {}, owner, 201)
     assert api.sql("SELECT count(*) FROM catalogue_grants WHERE digest='" + hashlib.sha256(grant["grant"].encode()).hexdigest() + "'") == "1"
-    cookie, _ = exchange_catalogue_grant(catalogue, publication, grant["grant"], api.origin)
+    cookie, token = exchange_catalogue_grant(catalogue, publication, grant["grant"], api.origin)
     catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=401)
+    bearer_body, _ = catalogue.fetch(
+        publication, "/index.html", expected=200, request_headers={"Authorization": f"Bearer {token}"},
+    )
+    assert bearer_body == fixture_files["index.html"]
     fragment = next(name for name in fixture_files if name.startswith("static/") and name.endswith(".html"))
     for route, owned, status in [("/", "index.html", 200), ("/index.html", "index.html", 200), ("/" + fragment, fragment, 200), ("/404.html", "404.html", 200), ("/unknown/route", "404.html", 404)]:
         body, headers = catalogue.fetch(publication, route, cookie=cookie, expected=status)
@@ -36,7 +40,7 @@ def private_access(api, catalogue, owner, project, publication, fixture_files):
     assert private_body == fixture_files["index.html"]
     assert "content-encoding" not in private_headers
     assert private_headers["cache-control"] == "no-store"
-    print("PASS private grants: one-use exchange, signed cookies, GET/HEAD, fragments, 404 and identity delivery")
+    print("PASS private grants: one-use exchange, signed cookies and bearer reads, GET/HEAD, fragments, 404 and identity delivery")
     return cookie
 
 
