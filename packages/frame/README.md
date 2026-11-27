@@ -1,7 +1,10 @@
 # @mokly/frame
 
+Status: The package does not have the frame access route yet: `postMessageAdapter` takes no access options, the probe has no access relay, and the build writes no start page or access worker. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
+
 `@mokly/frame` holds Mokly's frame adapter interface, the built-in adapters,
-and the frame probe that runs inside published pages. The Browse shell uses
+the frame probe that runs inside published pages, and the start page and the
+access worker of the frame access route. The Browse shell uses
 these adapters to read and inspect catalogue previews. A host that embeds a
 catalogue imports the public adapters and frame types from `@mokly/viewer`.
 
@@ -11,6 +14,9 @@ catalogue imports the public adapters and frame types from `@mokly/viewer`.
   adapters.
 - Both ends of the frame probe wire protocol: the host transport and the
   probe inside a published page.
+- Both ends of the frame access route: the access phase and the token renewal
+  of `postMessageAdapter`, and the start page, the access worker and the
+  probe's relay on the frame origin.
 - The shared event runtime and the geometry rules that both adapters use.
 - The frame session state, the mount ownership, and the temporary preview
   adapter, which only the viewer uses, through the internal entry.
@@ -20,7 +26,8 @@ catalogue imports the public adapters and frame types from `@mokly/viewer`.
 The root entry exports the public frame types, `sameOriginAdapter`, and
 `postMessageAdapter`. The one internal entry, `@mokly/frame/internal`, holds
 the frame operations that only `@mokly/viewer` uses. The package builds the
-frame probe script, which the viewer copies into its browser outputs.
+frame probe script, the start page and the access worker, which the viewer
+copies into its browser outputs.
 
 The package depends on the exact shared version of `@mokly/model`. It never
 imports the viewer, the CLI, or consumer code. The viewer depends on this
@@ -65,6 +72,14 @@ define the cross-origin session, and the
 [frame link navigation contract](../../docs/protocol/mokly-frame-link-navigation.md)
 defines the navigation events that the host resolves.
 
+When the server of the frame origin needs a credential on every file, the host
+passes `postMessageAdapter` an `access` callback, which answers with an access
+token of that server, and `onAccessFailure`. A frame without a credential then loads
+the start page, which asks the adapter for a token and registers the access
+worker. The worker adds the token to the requests of the frame. The
+[frame access contract](../../docs/protocol/mokly-frame-access.md) defines the
+start page, the worker, the access channel, the loop guard and the renewal.
+
 ### Usage updates
 
 The viewer's [`stage_sources.ts`](../viewer/src/shell/stage_sources.ts)
@@ -72,8 +87,8 @@ normalizes the omitted usage of a view whose entry detail is not held yet to
 the same pending frame state as a view awaiting evidence before it reaches an
 adapter, so it shows the existing waiting copy rather than empty or
 unavailable inspection. The
-[frame adapter contract](../../docs/protocol/mokly-frame-adapter.md) defines
-`updateUsage`, the usage rules, and the inspection ownership.
+[frame adapter usage contract](../../docs/protocol/mokly-frame-adapter-usage.md)
+defines `updateUsage`, the usage rules, and the inspection ownership.
 
 ### Canvas input
 
@@ -104,7 +119,9 @@ adapter. Serve and the static build deliver it at
 [frame probe contract](../../docs/protocol/mokly-frame-probe.md), and the
 static build injects it into the current documents that it writes. The
 [frame probe README](./src/probe/README.md) describes its bundle, its
-validation, the published map and markers, and its geometry.
+validation, the published map and markers, and its geometry. After its
+handshake, the probe also relays renewed access tokens to the access worker
+that controls its document.
 
 ## Quick Start
 
@@ -126,9 +143,10 @@ cargo xtask check --suite viewer
 
 `npm run build` builds this package after `@mokly/model` and before
 `@mokly/viewer`. The package build compiles `src` into `dist`, then bundles
-the frame probe into `dist/browser/frame-probe.js`. The viewer build copies
-that script into `packages/viewer/dist/browser` and lists it in the viewer's
-browser module inventory.
+the frame probe into `dist/browser/frame-probe.js` and builds the start page
+and the access worker. The viewer build copies those files into
+`packages/viewer/dist/browser` and lists them in the viewer's browser module
+inventory.
 
 `npm run typecheck` includes its source and tests. The root
 test runner discovers package tests under `tests/`. Run one with
@@ -213,6 +231,8 @@ of spelling them in source.
 
 - [Frame package contract](../../docs/protocol/mokly-frame-package.md)
 - [Frame adapter contract](../../docs/protocol/mokly-frame-adapter.md)
+- [Frame adapter usage contract](../../docs/protocol/mokly-frame-adapter-usage.md)
+- [Frame access contract](../../docs/protocol/mokly-frame-access.md)
 - [Frame content box contract](../../docs/protocol/mokly-frame-content-box.md)
 - [Frame canvas input contract](../../docs/protocol/mokly-frame-canvas-input.md)
 - [Frame probe contract](../../docs/protocol/mokly-frame-probe.md)

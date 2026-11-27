@@ -204,7 +204,9 @@ Change a doc only when a requirement or a decision changes.
   owns the delta exchange and build uploads;
   [blob durability](./publication-blob-durability.md) owns durability markers
   and parallel storage writes.
-- [Catalogue hosting](./catalogue-hosting.md) — isolated origins, private access and static delivery.
+- [Catalogue hosting](./catalogue-hosting.md) — isolated origins and static delivery;
+  [private access](./catalogue-private-access.md) owns the access grant, the
+  cookie, the bearer token and the embedded access route.
 - [Catalogue delivery](./catalogue-delivery.md) — headers, ranges, compression and cache.
 - [Changes check](./changes-check.md) — immutable check results and rerequests,
   and [build checks](./changes-check-builds.md) the check of each cloud build.

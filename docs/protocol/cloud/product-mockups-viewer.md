@@ -147,11 +147,12 @@ moves nobody; `product/viewer/standalone/latest` draws that offer as a screen be
 `product/viewer/standalone`.
 
 A ready publication is still behind its own host's credential, so the stage has
-three more cards before a catalogue mounts: the exchange in flight, the refusal
-another press can fix, and the blocked third-party cookie, whose card is a
-final message with no action.
+three more cards in place of a catalogue: the exchange in flight, the refusal
+another press can fix, and the browser that can open no access route, whose
+card is the final message of [Catalogue isolation](./viewer.md#catalogue-isolation),
+with its title and text and no action.
 `product/viewer/standalone/catalogue` draws all three, as a screen beside
-`product/viewer/standalone` that draws the blocked cookie, with the exchange in
+`product/viewer/standalone` that draws the blocked browser, with the exchange in
 flight and the refusal as its variants, because the chrome and the branch are
 the same in each and only the card inside the stage differs.
 

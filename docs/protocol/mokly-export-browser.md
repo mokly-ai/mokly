@@ -1,5 +1,7 @@
 # Static Build Browser And Identity
 
+Status: The inventory does not hold the start page and the access worker yet, and the frame probe cap is still 11,264 bytes. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the files and raises the cap.
+
 This page supplements [Static Delivery](./mokly-export-delivery.md) with the
 standalone browser inventory and the deployment identity algorithm that the
 [shell delivery contract](./mokly-shell-delivery.md#identity) names.
@@ -36,12 +38,16 @@ Removed-content requests are limited to the generation that the index's
 removed page or document, and the snapshot documents beneath that
 generation's permitted sides. There is no parallel vanilla Browse or preview runtime.
 
-The frame probe is `client/frame-probe.js`: React-free, at the 11,264-byte cap
+The frame probe is `client/frame-probe.js`: React-free, at the 12,288-byte cap
 of the [frame probe contract](./mokly-frame-probe.md), and built by the
 [frame package](./mokly-frame-package.md). It runs inside consumer documents
 under the [frame adapter](./mokly-frame-adapter.md) and shares nothing with the
-shell bundle. No server module, watcher entry, or live-host module enters the
-inventory. Module changes alter the deployment identity as required below.
+shell bundle. `client/access-start.html` and `client/access-worker.js` are the
+start page and the access worker of the
+[frame access contract](./mokly-frame-access.md). The frame package builds
+them too. They are React-free and share nothing with the shell bundle. No
+server module, watcher entry, or live-host module enters the inventory. Module
+changes alter the deployment identity as required below.
 
 ## Deployment Identity
 

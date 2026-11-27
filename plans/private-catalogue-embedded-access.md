@@ -161,6 +161,17 @@ The user answered D1 to D7 with "1 = A, 2 = A, 3 = B, 4 = A, 5 = A, 6 = A,
   gives a way forward that works, in the same pull request. The answer also
   resolves that follow-up item.
 
+### Open decision, 2026-11-27
+
+- **D8. The words on the private comparison overlay.** The overlay reuses the
+  blocked stage card, so D7 gives it words that are false there. The message
+  of 2026-11-27 asks the user. The options are those of
+  `plans/follow-ups/private-comparison-overlay-blocks-current.md`, and the
+  recommendation is B: a card of its own with the title **Comparisons aren’t
+  available for private publications** and the text "Choose another screen to
+  keep browsing." D8 blocks the last TODO of Milestone 4 and the overlay part
+  of Milestone 9.
+
 ### Design calls
 
 My calls, 2026-11-25, under the decision test:
@@ -238,6 +249,50 @@ My calls, 2026-11-25, under the decision test:
   private access rules move to their own cloud page when they pass the cap.
 - **Rust file length.** `catalogue.rs` has 294 of 300 lines. The bearer and
   start page rules go into a new module.
+
+Calls of 2026-11-27, made by the Milestone 5 docs agent and checked by the
+orchestrator. `docs/protocol/mokly-frame-access.md` states them:
+
+- **Channel messages.** `request`, `token` (`token`, `expiresAt`), `reload`
+  and `unavailable`, up to 8,192 bytes, without a nonce. Reason: `reload`
+  keeps the rule of no load time limit, and `unavailable` makes an iOS in-app
+  browser fail at once.
+- **Token format.** `token68` with 1 to 4,096 characters, and `expiresAt` in
+  milliseconds since the epoch. Reason: the worker puts the token in a header.
+- **Deadline.** 10 seconds from the token to `reload` or `unavailable`. The
+  access phase ends at `ready`.
+- **Failure callback.** `onAccessFailure` fires at most once for each mount:
+  for a second request, `unavailable`, the deadline, or a failed handshake
+  after the reload. A rejected `access` call does not fire it, because the
+  host knows its own failure.
+- **Renewal timing.** Renewal starts 60 seconds before expiry, never sooner
+  than 10 seconds after the last call, and goes to every frame whose
+  handshake completed. The app reuses its shared token while more than two
+  minutes remain.
+- **Worker.** It keeps the newest token, replaces no existing `Authorization`
+  header, drops no cookies, and stores no response.
+- **Server.** When the bearer verifies, the server ignores the cookie. It
+  never logs `Authorization`.
+- **Failed bearer confirmation.** It stays retryable. Only `onAccessFailure`
+  and the start page check below give the blocked stage.
+- **Page splits.** The private access rules moved to
+  `docs/protocol/cloud/catalogue-private-access.md`. The usage rules of the
+  adapter page moved to `docs/protocol/mokly-frame-adapter-usage.md`, because
+  of the 250-line cap.
+
+My call, 2026-11-27, under D3 B:
+
+- **Start page check.** Before the bearer confirmation, the app reads the
+  publication's `mokly-viewer/client/access-start.html` once. A 404 shows the
+  blocked stage. Reason: the frames of a publication without the start page,
+  which is every publication from an older Mokly release, never reach the
+  embedded route, so the adapter reports no failure, and each frame would
+  show an error whose Try again cannot work. Safari before 16.4 still gets
+  frame errors, because it sends no `Sec-Fetch-Dest`. Not chosen: change
+  nothing; a failed first handshake reported as a failure, which turns a
+  passing network error into a final stage; a user-agent check, which breaks
+  easily; a server that refuses the bearer for old publications, which gives
+  the retryable card.
 
 ## Contract owners
 
@@ -324,21 +379,21 @@ D7 B gives the blocked stage new words and removes its new-tab action.
 
 Depends on: 2, 3, 4
 
-- [ ] Write `docs/protocol/mokly-frame-access.md`: the two files, the start
+- [x] Write `docs/protocol/mokly-frame-access.md`: the two files, the start
       page flow, the access channel messages, the worker rules and its scope
       `/` with the limit of D6, the loop guard, the `access` callback of
       `postMessageAdapter`, and the failure callback of D3. No cloud name.
-- [ ] Update the frame probe, probe wire, viewer, and export inventory pages
+- [x] Update the frame probe, probe wire, viewer, and export inventory pages
       for the access relay, the new files, and the callbacks. Raise the probe
       budget to 12 KiB (12,288 bytes), as D4 says.
-- [ ] Update the cloud private access rules: the bearer header, the token of
+- [x] Update the cloud private access rules: the bearer header, the token of
       D2, the start page answer, the public Mokly files of D5, the `/_access`
       answer, CORS, and `Vary`. Update `viewer.md` and `viewer-host.md` for
       the app's bearer reads and the blocked stage of D3 and D7.
-- [ ] Update each protocol statement that waits for
+- [x] Update each protocol statement that waits for
       `blocked-cookie-message-has-no-words.md`, which that item lists, to the
       words of D7.
-- [ ] Update the READMEs of the four areas.
+- [x] Update the READMEs of the four areas.
 
 ## Milestone 6: Catalogue server bearer and start page
 
@@ -373,6 +428,9 @@ Runs in parallel with Milestone 6. The files do not overlap.
 - [ ] Package tests for the channel validation, the adapter states, and the
       worker's header rule. Regenerate the contract fixtures with
       `cargo xtask mokly-fixtures`.
+- [ ] Add the frame access envelope, version 1, to the version table of
+      `docs/protocol/cloud/mokly-artifact-compatibility.md`. The page has 250
+      of 250 lines, so split it first.
 
 ## Milestone 8: App access through the bearer token
 
@@ -381,6 +439,9 @@ Depends on: 6, 7
 - [ ] Keep the token from `/_access` in `access.ts`, share it, and renew it
       before expiry.
 - [ ] Send the bearer on the app's private reads and the reachability check.
+- [ ] Before the bearer confirmation, read `mokly-viewer/client/access-start.html`
+      once, and show the blocked access state on a 404, as the start page
+      check design call says.
 - [ ] Pass the `access` callback and the failure callback to
       `postMessageAdapter` in `published.web.tsx`, and set the blocked access
       state when the failure callback fires.
@@ -411,6 +472,9 @@ Depends on: 9
       `private-frames-break-after-cookie-expiry.md` and
       `private-comparison-overlay-blocks-current.md`. Delete
       `blocked-cookie-message-has-no-words.md`, which D7 resolves.
+- [ ] Update `docs/architecture/cloud.md`, `docs/architecture/cloud-data-flows.md`
+      and `packages/viewer/docs/deployment/README.md` for the bearer token and
+      the embedded route.
 
 ## Milestone 11: Verification, commit, review, and pull request
 

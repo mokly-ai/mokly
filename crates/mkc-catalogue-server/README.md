@@ -1,5 +1,7 @@
 # mkc-catalogue-server
 
+Status: The server does not accept the bearer token, answer `/_access` with the token, serve the start page or the public Mokly files, or admit the `authorization` header yet. The [catalogue server bearer and start page milestone](../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them.
+
 The isolated HTTP host for Mokly Cloud publications. Run this binary on the
 wildcard catalogue domain; it serves indexed user-authored HTML and assets.
 The API and app never serve these publication files.
@@ -19,21 +21,36 @@ Missing paths serve `404.html` with status 404. Decoded `__mokly` roots are
 refused without ASCII case sensitivity, including immutable blob lookups.
 These refusals use the indexed `404.html` bytes and `no-store`; HEAD returns
 the same metadata without a body. Private files
-require a signed cookie exchanged from a one-use API grant. The cookie and its
+require a signed capability, which `/_access` gives in exchange for a one-use
+API grant. `/_access` answers 200 with the capability as a JSON `token` and its
+`expiresIn`, and sets the same capability as a cookie. A request carries it as
+`Authorization: Bearer` or as the cookie. The server reads the bearer first and
+the cookie when the bearer is missing or invalid. The cookie and its
 clearing cookie carry `Partitioned`, so a browser with partitioned cookies
 keeps the cookie for the app's top-level site, also where it blocks other
 third-party cookies.
-[Private access](../../docs/protocol/cloud/catalogue-hosting.md#private-access)
+[Catalogue private access](../../docs/protocol/cloud/catalogue-private-access.md)
 gives every attribute. Stale cookies are cleared with a non-cacheable
-response; public access remains available.
+response, and an invalid bearer clears no cookie; public access remains
+available.
+
+A browser that refuses the cookie opens private screens through the Mokly
+[frame access route](../../docs/protocol/mokly-frame-access.md). A frame
+navigation of a private publication without a valid credential gets the
+publication's own Mokly start page, with status 401, for every path. The start
+page and the Mokly access worker are the only private files that the server
+serves without a credential, and the worker carries
+`Service-Worker-Allowed: /`.
 Path lookup joins through the publication file's project and hash, so equal
 bytes in different projects resolve to their separate incarnations and
 objects. Physical keys are hash/incarnation values.
 
 Public owned blob URLs are immutable; other public files revalidate and
 private responses and `mokly-viewer/diffs/**` resources use `no-store`. Exact admitted-origin CORS, nosniff, referrer
-restrictions and `Vary: Origin, Cookie, Accept-Encoding` apply to every
-response, including preflight and errors. CSP permits only the same publication
+restrictions and `Vary: Origin, Cookie, Authorization, Sec-Fetch-Dest,
+Accept-Encoding` apply to every response, including preflight and errors.
+CORS admits the `authorization` request header, and its preflight answers
+carry `Access-Control-Max-Age: 600`. CSP permits only the same publication
 origin and the admitted client origins as frame ancestors, so the standalone viewer
 can render its own documents without allowing cross-publication embedding. See
 [Catalogue hosting](../../docs/protocol/cloud/catalogue-hosting.md) for the framing
@@ -191,7 +208,9 @@ a unique Postgres schema and a temporary local store.
 ### Related Docs
 
 - [Catalogue hosting](../../docs/protocol/cloud/catalogue-hosting.md)
+- [Catalogue private access](../../docs/protocol/cloud/catalogue-private-access.md)
 - [Catalogue delivery](../../docs/protocol/cloud/catalogue-delivery.md)
+- [Frame access](../../docs/protocol/mokly-frame-access.md)
 - [Desktop application](../../docs/protocol/cloud/desktop-app.md#api-and-catalogue-admission)
 - [Retention](../../docs/protocol/cloud/retention.md)
 - [Changes check](../../docs/protocol/cloud/changes-check.md)

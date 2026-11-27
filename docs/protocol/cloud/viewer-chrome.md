@@ -216,10 +216,11 @@ drawings or a minimum drawing width, because a copy can drift and a minimum
 width makes readers scroll sideways to reach the controls. Every other state
 renders one card inside the canvas — Set up publishing, a named pending
 operation, or the unavailable publication with the switcher as recovery. The
-three answers the publication's own host can give before a catalogue mounts are
-the access pages: the exchange in flight, the refusal a retry can still fix, and
-the browser that keeps the host's cookie out of this page, whose final message
-offers no action. Their parent entry is `product/viewer/standalone/catalogue`.
+three access pages show the answers of the publication's own host in place of a
+catalogue: the exchange in flight, the refusal a retry can still fix, and the
+browser that can open no access route, whose final message of
+[Catalogue isolation](./viewer.md#catalogue-isolation) offers no action. Their
+parent entry is `product/viewer/standalone/catalogue`.
 The build card of [Viewer builds](./viewer-builds.md) fills the same canvas in
 the catalogue's build drawings, which the [viewer
 inventory](./product-mockups-viewer.md#builds) lists.

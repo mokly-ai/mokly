@@ -1,5 +1,7 @@
 # Frame Probe Handshake And Wire Protocol
 
+Status: The adapter runs no access phase before its handshake yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds it.
+
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the [frame probe](./mokly-frame-probe.md).
@@ -42,6 +44,11 @@ seconds after hello, and each reply within five seconds after its request.
 A timeout disposes the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
 At most 16 requests are pending.
+
+A frame that asks for access first runs the access phase of the
+[frame access contract](./mokly-frame-access.md#access-phase). The adapter then
+sends `hello` to the document that loads after the start page, and these rules
+apply to that document.
 
 ## Wire Protocol v3
 
@@ -177,10 +184,14 @@ Static injection, inert document metadata, the rule that the script draws
 nothing, and the script budget are defined by the
 [frame probe contract](./mokly-frame-probe.md).
 They do not change the handshake, the wire messages, or the same-origin adapter.
+The access relay of the frame probe uses the separate access channel of the
+[frame access contract](./mokly-frame-access.md#access-channel), so this wire
+and its version stay unchanged.
 
 ## Related Docs
 
 - [Viewer frame adapter](./mokly-frame-adapter.md)
 - [Frame probe](./mokly-frame-probe.md)
+- [Frame access](./mokly-frame-access.md)
 - [Frame package](./mokly-frame-package.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)

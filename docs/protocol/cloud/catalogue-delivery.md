@@ -1,5 +1,7 @@
 # Catalogue Delivery
 
+Status: CORS does not admit the `authorization` header or send `Access-Control-Max-Age` yet, and `Vary` does not name `Authorization` and `Sec-Fetch-Dest` yet. The [catalogue server bearer and start page milestone](../../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them.
+
 This is the header, range, compression and cache sub-contract of
 [Catalogue hosting](./catalogue-hosting.md).
 
@@ -26,17 +28,23 @@ of [Desktop application](./desktop-app.md#api-and-catalogue-admission) when
 API origin and unrelated publication origins are forbidden. Frame embedding
 follows [Viewer](./viewer.md#catalogue-isolation).
 The app's iframe adds its own `sandbox` restriction. CORS allows credentials
-only for the exact app origin, and the admitted desktop origin, and never `*`. Every response, including errors,
+only for the exact app origin, and the admitted desktop origin, and never `*`.
+For those origins CORS also admits the `authorization` request header of the
+[bearer token](./catalogue-private-access.md#credentials), and each preflight
+answer to them carries `Access-Control-Max-Age: 600`, so that a reader on the
+bearer route does not repeat the preflight of a file for ten minutes. Every response, including errors,
 redirects, HEAD and preflight, carries the canonical field `Vary: Origin,
-Cookie, Accept-Encoding` because those request headers affect authorization,
-response headers or representation. Preflight is answered before host
+Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding` because those request
+headers affect authorization, response headers or representation. Preflight is answered before host
 routing, so an unknown host still receives a preflight answer.
 
 Comparison files under `mokly-viewer/diffs/**` use `no-store`, including
 when reached through a public immutable blob URL. The released delivery
 contract permits `no-store` for a comparison generation.
 Private responses, comparison resources, grant exchange, errors and aliases
-use `Cache-Control: no-store`. Public shell stubs, the index, the entry
+use `Cache-Control: no-store`. The start page answer and the two Mokly files
+that a private publication serves without a credential are private responses.
+Public shell stubs, the index, the entry
 details, the deployment file and ordinary assets use `no-cache`.
 Only public `/__blobs/` URLs use `public, max-age=31536000, immutable`.
 Previously public cached bytes cannot be recalled by a visibility change;

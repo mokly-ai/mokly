@@ -23,7 +23,7 @@
   <a href="#development">Development</a>
 </p>
 
-Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. The viewer does not deliver the start page and the access worker yet, and `postMessageAdapter` takes no access options yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
 
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
@@ -170,6 +170,14 @@ catalogue.
 Read [Deployment and security](./docs/deployment/README.md) before you ship this
 configuration.
 
+When the catalogue host needs a credential on every file, also pass
+`postMessageAdapter` an `access` callback and an `onAccessFailure` callback.
+`access` returns a promise of `{ token, expiresAt }`: an access token of the
+catalogue host, and its expiry in milliseconds since the Unix epoch. `onAccessFailure` tells
+your application that this browser can open no access route. The
+[frame access contract](../../docs/protocol/mokly-frame-access.md) gives the
+requirements of the catalogue host, the start page, and the access worker.
+
 ## Guides
 
 - [Core concepts](./docs/concepts/README.md): catalogue sources, selection,
@@ -236,7 +244,8 @@ package build starts after the builds whose outputs it reads, and the
 [workspace build](../../scripts/build/README.md) skips a package build whose
 inputs and outputs did not change. The viewer build bundles the standalone shell into
 `dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
-into `dist/browser/frame-probe.js`. It writes `shell.css` and `styles.css`
+into `dist/browser/frame-probe.js`. It also copies the start page and the
+access worker of the frame access route into `dist/browser`. It writes `shell.css` and `styles.css`
 from the `@font-face` rules of the shell fonts and the UI package's
 `styles.css`, whose rules keep the cascade order that
 `packages/ui/src/styles.css` lists. The shell fonts are Geist and Geist Mono,
@@ -294,6 +303,7 @@ See [viewer modules](./code.md) for more entry points.
 - [Model package contract](../../docs/protocol/mokly-model-package.md)
 - [Frame package contract](../../docs/protocol/mokly-frame-package.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
+- [Frame access](../../docs/protocol/mokly-frame-access.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Component controls](../../docs/protocol/mokly-component-controls.md)

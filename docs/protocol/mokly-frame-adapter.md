@@ -1,5 +1,7 @@
 # Viewer Frame Adapter
 
+Status: `postMessageAdapter` takes no `access` or `onAccessFailure` option yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
+
 ## Public Interface
 
 The [frame package](./mokly-frame-package.md) defines these types and the
@@ -93,6 +95,8 @@ interface FrameAdapter {
 declare function sameOriginAdapter(): FrameAdapter;
 declare function postMessageAdapter(options: {
   frameOrigin: string;
+  access?: () => Promise<{ token: string; expiresAt: number }>;
+  onAccessFailure?: () => void;
 }): FrameAdapter;
 ```
 
@@ -135,36 +139,8 @@ while host presentation activates or a measurement runs causes one trailing
 refresh of the current session. It starts no competing boundary list and is
 not lost behind a stale result.
 
-Automatic inspection subscriptions require that frame's own ready, validated,
-bounded usage. Pending or unavailable usage and usage limit failures still
-allow navigation and opted-in canvas input. Ordinary pointer input then
-triggers no hover or click measurement, geometry refresh, or instance event.
-Both adapters share this rule. Explicit inspection requests still reject
-unavailable usage.
-
-Both built-in adapters implement optional `updateUsage` for validated evidence
-on the same document. It clears that frame's old inspection state,
-replaces the usage snapshot and updates its event subscription. A
-pending/unavailable-to-ready update enables hover/click inspection without a
-document load or new session. The reverse transition disables inspection.
-Navigation and opted-in canvas input continue. The viewer calls `updateUsage`
-when the URL, viewport, scheme and step stay the same. A custom adapter that
-omits it receives a replacement mount
-for changed usage. Updates reject after disposal and their failures retain
-session cancellation ownership. `updateUsage` is a host-side method. The wire
-protocol has no message for it.
-
-When a frame's usage changes, the viewer invalidates its old inspection work.
-It restores valid masks, outlines and host labels after the selected sessions
-finish updating. Public highlights remain confined to their referenced frame,
-including when a sibling is pending or updates independently. Every previously
-referenced key must remain in ready usage; otherwise clear all current
-presentation and end an active pick once with the viewer's `evidence` reason.
-Pending pick activation is cancelled with `disposed` and no start/end event; a
-fresh activation waits for the updated sessions. Unrelated updates do not
-cancel or redraw inspection. Updates are ordered per session; superseded
-success/failure has no current host effects. This coordination belongs to the
-viewer, not the frame probe protocol.
+The [frame adapter usage contract](./mokly-frame-adapter-usage.md) defines how
+the usage of a frame gates its inspection, and how `updateUsage` replaces it.
 
 Boxes are finite CSS pixels relative to the frame's visible content viewport,
 after internal scrolling, clipping ancestors and occlusion, before host scaling.
@@ -231,11 +207,15 @@ documents bypass it.
 [frame probe handshake and wire protocol](./mokly-frame-probe-wire.md) define
 its mount, its handshake with the frame probe, and its wire protocol. The
 [frame probe contract](./mokly-frame-probe.md) defines the frame probe script
-that the static build injects.
+that the static build injects. The [frame access contract](./mokly-frame-access.md)
+defines the `access` and `onAccessFailure` options, which open screens from a
+frame host that needs a credential on every file.
 
 ## Related Docs
 
 - [Frame package](./mokly-frame-package.md)
+- [Frame access](./mokly-frame-access.md)
+- [Frame adapter usage](./mokly-frame-adapter-usage.md)
 - [Frame box model](./mokly-frame-box-model.md)
 - [Frame canvas input](./mokly-frame-canvas-input.md)
 - [Frame content box](./mokly-frame-content-box.md)

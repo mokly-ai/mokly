@@ -1,5 +1,7 @@
 # Frame Package
 
+Status: The package does not have the frame access route yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the access phase, the start page and the access worker.
+
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 
 ## Package And Entries
@@ -9,7 +11,10 @@ frame adapter interface, the built-in adapters `sameOriginAdapter` and
 `postMessageAdapter`, and both ends of the
 [frame probe wire protocol](./mokly-frame-probe-wire.md): the host side and
 the [frame probe](./mokly-frame-probe.md) script that runs inside published
-pages.
+pages. It also holds both ends of the
+[frame access route](./mokly-frame-access.md): the access phase of
+`postMessageAdapter`, and the start page and the access worker that run on
+the frame origin.
 
 The root entry exports the
 [public interface](./mokly-frame-adapter.md#public-interface) of the frame
@@ -19,9 +24,10 @@ only the viewer uses, and only `@mokly/viewer` imports it. Decision: one
 internal subpath, not more exports of the root entry, so that the shell's
 session data stays out of the public frame interface.
 
-The package builds the frame probe script. The viewer package lists that
-script in its browser module inventory, so Serve and the static build deliver
-it from the viewer at the path that the frame probe contract names.
+The package builds the frame probe script, the start page and the access
+worker. The viewer package lists those files in its browser module inventory,
+so Serve and the static build deliver them from the viewer at the paths that
+the frame probe and frame access contracts name.
 
 ## Package Boundary
 

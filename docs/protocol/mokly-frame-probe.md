@@ -1,5 +1,7 @@
 # Frame Probe
 
+Status: The frame probe has no access relay yet, and its budget is still 11 KiB. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the relay and raises the budget.
+
 The frame probe is the in-frame script of the cross-origin
 [frame adapter](./mokly-frame-adapter.md). The
 [frame package](./mokly-frame-package.md) builds it. Decision: the script and
@@ -82,6 +84,15 @@ public catalogue titles. Do not clone or restyle consumer content.
 Outgoing fields contain only validated ASCII identities and control values,
 numeric geometry and input values, and focus visibility.
 
+## Access Relay
+
+The frame probe also holds the access relay of the
+[frame access contract](./mokly-frame-access.md#access-relay). After the
+handshake, the relay forwards a valid access token from the host to the access
+worker that controls the document, and it sends nothing to the host. The relay
+uses the separate access channel, so it changes no message of the
+[wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v4).
+
 ## Delivery Constraints
 
 Served documents and comparison snapshots stay byte-unmodified. Snapshots never
@@ -90,8 +101,9 @@ same-origin adapter's inspection even when published copies contain the inert
 script.
 No React, server module, cookie, network request, or host-specific integration is
 included in the IIFE. The built `client/frame-probe.js` stays within a
-**11 KiB (11,264 bytes) minified, uncompressed** script budget.
-Decision: 11 KiB, not 10 KiB, because the canvas input and the focus events need the room.
+**12 KiB (12,288 bytes) minified, uncompressed** script budget.
+Decision: 12 KiB, not 11 KiB, because the canvas input, the focus events and
+the access relay need the room.
 The budget excludes the separately bounded per-document inert metadata, which
 is not executable code.
 
@@ -99,6 +111,7 @@ is not executable code.
 
 - [Viewer frame adapter](./mokly-frame-adapter.md)
 - [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
+- [Frame access](./mokly-frame-access.md)
 - [Frame package](./mokly-frame-package.md)
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md)
 - [Static delivery](./mokly-export-delivery.md)

@@ -1,5 +1,7 @@
 # Viewer Host
 
+Status: The host does not read with the bearer token or pass the frame access options yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds them.
+
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
 what the cloud guarantees to the workspace `@mokly/viewer`
 and what the reader sees when the package reports a version
@@ -52,11 +54,13 @@ it passes the index with `baseUrl` set to the root of the catalogue origin.
 The package asks the `detail` source for one entry at a time,
 by entry path, and adds the `snapshotId` of a removed record. The host answers
 with the current or removed entry detail that it reads. Each
-read omits credentials for a public catalogue, includes them for a private
-catalogue only after its access exchange has been confirmed, and rejects
+read omits credentials for a public catalogue. For a private catalogue, a read
+waits until the access exchange has been confirmed, and then carries the
+credential that confirmed: the catalogue cookie, or `Authorization: Bearer`
+with the shared token when only the bearer confirmed. Each read rejects
 redirects to another origin and unsuccessful responses. A
 private detail read that answers 401 runs the access exchange once more and
-repeats the read once, because the catalogue cookie lives 300 seconds and
+repeats the read once, because the catalogue credential lives 300 seconds and
 details load during navigation. Decision: the host reads the
 index and the details itself rather than passing their URLs, because the
 package reads a URL source without credentials. It does so for
@@ -71,9 +75,18 @@ The host keeps one source, the index it read and its `detail` function, for
 one publication origin and access policy, in memory only. The
 source changes only when the publication origin or the access policy changes,
 and the `postMessageAdapter({ frameOrigin: catalogueOrigin })` frame boundary
-changes only with that origin; the package runtime remounts only when one of
-them changes. A traversal that reconstructs the route keeps the same source
-and its version failure.
+changes only with that origin and access policy; the package runtime remounts
+only when one of them changes. A traversal that reconstructs the route keeps
+the same source and its version failure.
+
+For a private catalogue, the frame boundary also takes the `access` and
+`onAccessFailure` options of the [frame access contract](../mokly-frame-access.md).
+The host keeps the token of the latest exchange in memory only, and its reads
+and its frames share that token. `access` answers with that token while it has
+more than two minutes left, and otherwise runs a new exchange first, so that
+each renewal of the adapter, which starts with one minute left, gets a new
+token. `onAccessFailure` sets the blocked stage of
+[Catalogue isolation](./viewer.md#catalogue-isolation).
 
 Link the public `@mokly/viewer/styles.css` export once, and serve the font
 bytes it declares unchanged beside it. The package and the app chrome take
@@ -95,7 +108,7 @@ to fill that budget. The app does not deep-import package rendering code.
 The package has no ready or loading callback, and the host does not
 manufacture lifecycle events. Cloud consumes only the documented `onError`
 codes: `catalogue`, `version`, `selection`, `frame`, `comparison` and
-`markers`.
+`markers`, and the frame adapter's `onAccessFailure`.
 
 ### Version Failure
 

@@ -1,5 +1,7 @@
 # Publication Viewer
 
+Status: The app does not confirm with the bearer token or show the blocked stage on the report of the frame adapter yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds them. The blocked stage does not have its title and text yet, and it still offers a new tab. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) adds them.
+
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
 links. The app hosts the workspace `@mokly/viewer` and fills its slots with
@@ -150,25 +152,47 @@ defines the final headers.
 
 For a private catalogue, obtain a short-lived, one-use access grant through the
 authorized API; exchange it at that publication's host for a host-only secure
-HttpOnly cookie before mounting. Only that exchange, the app's `POST /_access`,
-sets the catalogue cookie. Where the browser refuses it, no other tab or page
-of the catalogue host has it either. Confirm the exchange by reading the
-catalogue root from that host once: a browser that refuses the cookie answers
-exactly as an expired one does, and only that confirmation tells a retry that
-will work from one that cannot. Readiness belongs to the exact project,
+HttpOnly cookie and a bearer token before mounting. Only that exchange, the
+app's `POST /_access`, sets the catalogue cookie or issues the token, as
+[Catalogue private access](./catalogue-private-access.md) defines. Where the
+browser refuses the cookie, no other tab or page of the catalogue host has it
+either. Confirm the exchange by reading the catalogue root from that host once
+with the cookie: a browser that refuses the cookie answers exactly as an
+expired one does. When that read fails, repeat it once with
+`Authorization: Bearer` and the token of the exchange. Decision: the bearer
+only after the cookie fails, so that a browser whose cookie works sends no
+CORS preflight, and the reads of a browser that refuses the cookie still work
+with app code alone. Readiness belongs to the exact project,
 publication, access mode and attempt being rendered: navigation immediately
 returns to the granting state, and a previous or late grant result cannot
 mount a new source. A public catalogue skips the exchange entirely, and the
 app reads its index and details without credentials. Never pass
 the app session to the catalogue origin or use a wildcard-domain
 authentication cookie. Only after private confirmation does the app read
-`mokly-viewer/index.json` and the entry details with credentials, and it
-renews the exchange as the [host sources](./viewer-host.md#sources) define.
-A refused or expired grant exchange stays in the retryable
-access state. A browser that refuses the cookie gets a final message with no
-action, because nothing inside the app can give that browser the cookie.
-The [private artifact limit](#private-artifact-limit) records
-why it offers no new tab.
+`mokly-viewer/index.json` and the entry details, with the credential that
+confirmed, and it renews the exchange as the
+[host sources](./viewer-host.md#sources) define.
+A refused or expired grant exchange stays in the retryable access state, and so
+does a bearer confirmation that fails.
+
+Before the bearer confirmation, the app reads the publication's
+`mokly-viewer/client/access-start.html` once. When the host answers 404, the
+app shows the blocked stage below and does not mount the viewer. Decision: the
+app checks for the start page, because the frames of a publication without it
+can never reach the embedded route, and the frame adapter then reports no
+failure. Safari before 16.4 sends no `Sec-Fetch-Dest`, so its frames show the
+frame error of the viewer.
+
+When the frame adapter reports through `onAccessFailure` that a frame can open
+no access route, the app replaces the catalogue with the blocked stage. The
+stage is one final message: the title
+**This publication can’t open in this browser**, the text “Open it in Chrome,
+Edge or Firefox on a computer.” and no action. Decision: one blocked stage, not
+the frame error of each frame, because one clear stage is better than many
+broken frames. Decision: the text names the browsers on a computer that open
+every publication, because that recovery works for every reader. The
+[private artifact limit](#private-artifact-limit) records why it offers no new
+tab.
 
 ## Frame Access
 
@@ -179,7 +203,11 @@ with an exact origin, a per-mount session nonce and bounded message shapes.
 The app never injects scripts into publication HTML, inspects the frame DOM,
 or invents a URL convention for preselection. It sets
 `sandbox="allow-same-origin allow-scripts"`, adds `mokly-host`, and accepts
-messages only from the exact frame origin with its per-mount nonce.
+probe messages only from the exact frame origin with its per-mount nonce. For
+a private catalogue the app also passes the adapter's `access` and
+`onAccessFailure` options, as [Viewer host](./viewer-host.md#sources) defines,
+and the adapter accepts the access messages of the
+[frame access contract](../mokly-frame-access.md) only from that exact origin.
 User-authored HTML is untrusted even after a valid handshake; every write
 revalidates server-side.
 
