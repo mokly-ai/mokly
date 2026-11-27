@@ -59,10 +59,13 @@ screen title is **Connect a GitHub account** and its action is **Continue on
 GitHub**, with the GitHub glyph. The action starts the candidate flow for the
 selected workspace.
 
-When the reader administers more than one workspace and the address names none,
-the screen shows a **Workspace** select over those workspaces. When the address
-names one workspace, or the reader administers exactly one, it shows a
-**Workspace** fact row with the workspace name. While the workspaces load it
+When the address names no workspace and the reader administers at least one,
+the screen shows a **Workspace** select over those workspaces, starting on the
+first. The select's last choice is **Create a workspace**, which opens
+`/new?installationId=N`. The select shows also for one workspace, so the reader
+can always put the account in a new workspace instead. When the address names a
+workspace that the reader administers, the screen shows a **Workspace** fact
+row with the workspace name. While the workspaces load it
 says "Loading your workspaces". If the read fails it says "Workspaces couldn’t
 load" and offers **Try again**. A reader who administers no workspace sees the
 line "Create a workspace to connect this account." and the action **Create a

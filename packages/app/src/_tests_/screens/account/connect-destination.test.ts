@@ -34,8 +34,8 @@ test("a reader who administers no workspace is offered one to create", () => {
   });
 });
 
-test("one administered workspace, or a named one, is a fact", () => {
-  assert.deepEqual(connectDestination([joined, run], undefined, undefined), {
+test("a named administered workspace is a fact", () => {
+  assert.deepEqual(connectDestination([joined, run], "run", undefined), {
     kind: "fact",
     workspace: run,
   });
@@ -47,6 +47,14 @@ test("one administered workspace, or a named one, is a fact", () => {
   assert.deepEqual(connectDestination([owned, run], "run", "owned"), {
     kind: "fact",
     workspace: run,
+  });
+});
+
+test("one administered workspace is still a choice, so a new one can be made", () => {
+  assert.deepEqual(connectDestination([joined, run], undefined, undefined), {
+    kind: "select",
+    workspace: run,
+    options: [run],
   });
 });
 

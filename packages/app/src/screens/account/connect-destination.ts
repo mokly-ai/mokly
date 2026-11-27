@@ -3,9 +3,10 @@ import type { Workspace } from "../../api/types";
 /**
  * Where the connect situation puts the arriving account: nowhere yet, for a
  * reader who administers no workspace; one workspace stated as a fact, when
- * the address names one the reader administers or the reader administers
- * exactly one; or a choice over every workspace the reader administers,
- * which starts on the first of them.
+ * the address names one the reader administers; or a choice over every
+ * workspace the reader administers, which starts on the first of them. The
+ * choice stands for one workspace too, because its last entry makes a new
+ * workspace for the account instead.
  */
 export type ConnectDestination =
   | { kind: "none" }
@@ -33,7 +34,6 @@ export function connectDestination(
   if (fixed) return { kind: "fact", workspace: fixed };
   const [first] = options;
   if (first === undefined) return { kind: "none" };
-  if (options.length === 1) return { kind: "fact", workspace: first };
   const selected =
     options.find((workspace) => workspace.id === chosen) ?? first;
   return { kind: "select", workspace: selected, options };

@@ -134,7 +134,9 @@ for (const { arrival, address, seeded } of [
     await expect(
       page.getByRole("heading", { level: 1, name: "Connect a GitHub account" }),
     ).toBeVisible();
-    await expect(page.locator(".fo-facts")).toContainText("Callback Org");
+    await expect(page.getByLabel("Workspace", { exact: true })).toContainText(
+      "Callback Org",
+    );
     expect(await page.evaluate(() => window.history.length)).toBe(before + 1);
     expect(
       await page.locator('meta[name="referrer"]').getAttribute("content"),

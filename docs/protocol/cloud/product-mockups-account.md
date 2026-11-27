@@ -130,7 +130,7 @@ pages above, and six screens stand beside it:
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `product/account/install-app/member`               | The step for a member: the title, "Ask an owner or admin to install it." and no action                                                                                           |
 | `product/account/install-app/reviewer`             | The step for a reviewer: **No projects yet**, "Ask an owner or admin to create the first project." and no action                                                                 |
-| `product/account/install-app/connect`              | The connect situation, `/install?installationId=N`, with its states, its fact-row variant and the `connecting` screen in its folder                                              |
+| `product/account/install-app/connect`              | The connect situation, `/install?installationId=N`, with its states, its fact-row variant and the `open` and `connecting` screens in its folder                                  |
 | `product/account/install-app/suspended-unreadable` | The suspension when the installation list could not be read: **Suspended**, "Couldn’t load" and a quiet **Try again** where **Resume on GitHub** would be, above the same action |
 | `product/account/install-app/suspended-loading`    | The suspension while the installation list is read: **Suspended** and a placeholder where **Resume on GitHub** would be, above the same action                                   |
 | `product/account/install-app/installing`           | The step while its write runs: **Install on GitHub**, busy with "Installing…", with Back and the CLI line                                                                        |
@@ -147,7 +147,9 @@ The connect situation does not draw it.
 The connect situation is step 2 of the strip, with the title **Connect a
 GitHub account**. Its canonical page draws a **Workspace** select over the
 workspaces that the reader administers, then **Continue on GitHub** with the
-GitHub glyph. The `one-workspace` variant draws the workspace as a fact row.
+GitHub glyph. The `named-workspace` variant draws the workspace as a fact row.
+The `open` screen draws the select open: the search field, the workspaces with
+the chosen one marked, then **Create a workspace** with the start glyph.
 The empty variant draws the line "Create a workspace to connect this
 account." and **Create a workspace**. The loading variant says "Loading your
 workspaces". The error variant says "Workspaces couldn’t load" and offers

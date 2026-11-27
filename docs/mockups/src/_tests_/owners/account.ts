@@ -212,9 +212,16 @@ export const accountOwners = {
   // workspace choice and its candidate flow are a module of their own.
   "product/account/install-app/connect": {
     region: "panelled",
+    files: [
+      "screens/account/connect-screen.tsx",
+      "screens/account/workspace-choice.tsx",
+    ],
+  },
+  "product/account/install-app/connect/named-workspace": {
+    region: "panelled",
     files: ["screens/account/connect-screen.tsx"],
   },
-  "product/account/install-app/connect/one-workspace": {
+  "product/account/install-app/connect/open": {
     region: "panelled",
     files: ["screens/account/connect-screen.tsx"],
   },

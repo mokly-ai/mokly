@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
+import { OptionsList } from "../../../entries/design/options-list.mockup";
 import { Selector } from "../../../entries/design/selector.mockup";
 import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
@@ -16,37 +17,63 @@ import { ControlPlaceholder } from "../placeholders";
 import { AccountShell } from "./account-shell";
 
 /**
- * The four states, the address that names one workspace or a reader with one,
- * and Continue on GitHub while its write runs.
+ * The four states, the address that names a workspace, the select open, and
+ * Continue on GitHub while its write runs.
  */
-type Situation = ScreenState | "one-workspace" | "connecting";
+type Situation = ScreenState | "named-workspace" | "open" | "connecting";
+
+/** The select's last choice, which opens the workspace step instead. */
+const createWorkspace = { id: "create-workspace", label: "Create a workspace" };
 
 /** Only a workspace the reader administers can take a GitHub account. */
 const administered = workspaces.filter((candidate) => candidate.administrator);
 
 /**
- * Where the account goes: a select when the reader administers several
- * workspaces and the address names none, and a fact when there is only one
- * place it can go. The one action leaves for GitHub to prove the reader
- * administers the account, and returns to the repository step. While the
- * workspaces are read, `waiting` is the read's name: the select holds it, and
- * the control, whose label the workspaces decide, is a placeholder in its own
- * box. While the control's write runs, it carries the wait until the page
- * leaves for GitHub, and the choice stays as the reader left it.
+ * The open list, drawn where the live select opens it: the package's surface
+ * beneath the field, the search field, the workspaces the reader administers
+ * with the chosen one marked, and Create a workspace last.
+ */
+function OpenList() {
+  return (
+    <OptionsList
+      moklyInstance="connect-workspace-options"
+      label={"Workspace, " + sample.workspace}
+      selected={sample.workspace}
+      options={administered.map((candidate) => ({
+        id: candidate.name,
+        label: candidate.name,
+      }))}
+      search="Search options"
+      action={createWorkspace}
+      anchored
+    />
+  );
+}
+
+/**
+ * Where the account goes: a select over the workspaces the reader
+ * administers, whose last choice is Create a workspace, when the address
+ * names none, and a fact when the address names one. The one action leaves
+ * for GitHub to prove the reader administers the account, and returns to the
+ * repository step. While the workspaces are read, `waiting` is the read's
+ * name: the select holds it, and the control, whose label the workspaces
+ * decide, is a placeholder in its own box. While the control's write runs, it
+ * carries the wait until the page leaves for GitHub, and the choice stays as
+ * the reader left it.
  */
 function Destination({
   situation,
   waiting,
   connecting = false,
 }: {
-  situation: "default" | "one-workspace";
+  situation: "default" | "named-workspace" | "open";
   waiting?: ReactNode;
   connecting?: boolean;
 }) {
   const waits = waiting !== undefined;
   return (
     <>
-      {situation === "one-workspace" ? (
+      {situation === "named-workspace" ? (
         <Facts ruled rows={[["Workspace", sample.workspace]]} />
       ) : (
         <div className="fo-account-selector">
@@ -59,15 +86,18 @@ function Destination({
               hold={waiting}
             />
           ) : (
-            <Selector
-              moklyInstance="connect-workspace"
-              label="Workspace"
-              value={sample.workspace}
-              options={administered.map((candidate) => ({
-                value: candidate.name,
-                label: candidate.name,
-              }))}
-            />
+            <div className="fo-selector-anchor">
+              <Selector
+                moklyInstance="connect-workspace"
+                label="Workspace"
+                value={sample.workspace}
+                options={administered.map((candidate) => ({
+                  value: candidate.name,
+                  label: candidate.name,
+                }))}
+              />
+              {situation === "open" && <OpenList />}
+            </div>
           )}
         </div>
       )}
@@ -147,7 +177,8 @@ function ConnectBody({
 function ConnectPage({ situation }: { situation: Situation }) {
   const known =
     situation === "default" ||
-    situation === "one-workspace" ||
+    situation === "named-workspace" ||
+    situation === "open" ||
     situation === "connecting";
   if (situation === "loading")
     // The workspaces decide whether a select, a fact or Create a workspace is
@@ -198,8 +229,14 @@ export function ConnectErrorScreen(_props: { viewport: Viewport }) {
   return <ConnectPage situation="error" />;
 }
 
-export function ConnectOneWorkspaceScreen(_props: { viewport: Viewport }) {
-  return <ConnectPage situation="one-workspace" />;
+/** The address names a workspace, as the workspace step hands it on. */
+export function ConnectNamedWorkspaceScreen(_props: { viewport: Viewport }) {
+  return <ConnectPage situation="named-workspace" />;
+}
+
+/** The Workspace select open, with Create a workspace as its last choice. */
+export function ConnectOpenScreen(_props: { viewport: Viewport }) {
+  return <ConnectPage situation="open" />;
 }
 
 /** Continue on GitHub while its write runs, busy until the page leaves. */

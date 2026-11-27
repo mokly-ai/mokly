@@ -55,9 +55,10 @@ test("a stateless return connects the installation to the reader's workspace", a
   // that has nothing left to finish.
   expect(await page.evaluate(() => window.history.length)).toBe(before + 1);
 
-  // One workspace is the only place the account can go, so it is a fact.
-  await expect(page.locator(".fo-facts")).toContainText("Connect One Org");
-  await expect(page.getByTestId("workspace-select")).toHaveCount(0);
+  // One workspace is still a choice, because a new one can take the account.
+  const select = page.getByLabel("Workspace", { exact: true });
+  await expect(select).toContainText("Connect One Org");
+  await expect(page.locator(".fo-facts")).toHaveCount(0);
   await expectCompletedSteps(page, ["Workspace"]);
   await expect(
     page.getByRole("link", { name: "Publish with the CLI instead" }),
@@ -69,6 +70,35 @@ test("a stateless return connects the installation to the reader's workspace", a
   expect(new URL(page.url()).pathname).toBe(`${workspace.path}/-/new`);
   await chooseRepository(page);
   await expect(repositoryField(page)).toContainText(installedRepository);
+});
+
+test("Create a workspace in the select makes a new workspace for the account", async ({
+  page,
+}) => {
+  await signIn(page, freshEmail("connect-new"));
+  await createWorkspace(page, "Connect Old Org");
+  releaseRecordedGitHub();
+
+  await page.goto(statelessReturn);
+  await atConnectSituation(page, 1);
+  await page.getByLabel("Workspace", { exact: true }).click();
+  await page.getByRole("option", { name: "Create a workspace" }).click();
+  await page.waitForURL(
+    (url) =>
+      url.pathname === "/new" && url.searchParams.get("installationId") === "1",
+  );
+
+  await page.getByLabel("Workspace name").fill("Connect New Org");
+  await page.getByRole("button", { name: "Create workspace" }).click();
+  await atConnectSituation(page, 1);
+  const workspaceId = new URL(page.url()).searchParams.get("workspaceId");
+  expect(workspaceId).toBeTruthy();
+  await expect(page.locator(".fo-facts")).toContainText("Connect New Org");
+
+  await continueOnGitHub(page);
+  await atRepositoryStep(page);
+  const workspace = await workspaceAddress(page, workspaceId ?? "");
+  expect(new URL(page.url()).pathname).toBe(`${workspace.path}/-/new`);
 });
 
 test("a reader who administers several workspaces chooses one", async ({
@@ -199,6 +229,8 @@ test("the connect situation says when the workspaces could not load", async ({
   await expect(failed.locator("details")).toHaveCount(1);
   await expectCompletedSteps(page, []);
   await page.getByTestId("retry-workspaces").click();
-  await expect(page.locator(".fo-facts")).toContainText("Unread Org");
+  await expect(page.getByLabel("Workspace", { exact: true })).toContainText(
+    "Unread Org",
+  );
   await page.unrouteAll();
 });

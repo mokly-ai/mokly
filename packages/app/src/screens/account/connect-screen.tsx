@@ -1,4 +1,3 @@
-import { DropdownSelector } from "@firna/ui/dropdown";
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -13,7 +12,6 @@ import {
 import { installGitHubApp } from "../../data/auth";
 import { useResource } from "../../data/use-resource";
 import { listEveryWorkspace } from "../../data/workspaces";
-import { useCompact } from "../../layout/viewport";
 import { isDesktopShell } from "../../navigation/desktop-shell";
 import {
   connectInstallationPath,
@@ -29,6 +27,7 @@ import { connectDestination } from "./connect-destination";
 import type { ConnectDestination } from "./connect-destination";
 import { InstallRefusal } from "./install-refusal";
 import { completedSteps } from "./setup-progress";
+import { WorkspaceChoice } from "./workspace-choice";
 
 /** The frame of the connect situation, which its every form shares. */
 const frame = {
@@ -88,9 +87,11 @@ export function ConnectWait({ identity }: { identity: WaitingIdentity }) {
 }
 
 /**
- * The workspace the account goes to, and the one action: a select when the
- * reader administers several and the address names none, a fact when there
- * is only one place it can go. Continue on GitHub starts the flow with the
+ * The workspace the account goes to, and the one action: a select over the
+ * workspaces the reader administers when the address names none, and a fact
+ * when it names one. The select's last choice, Create a workspace, opens the
+ * workspace step, which carries the installation on to this step with the new
+ * workspace named. Continue on GitHub starts the flow with the
  * arriving installation recorded as its candidate and leaves for GitHub's
  * authorization, which proves the reader administers the account; the flow
  * returns to that workspace's install step, which hands a connected
@@ -111,7 +112,6 @@ function Destination({
   workspaceId?: string;
   onChoose: (workspaceId: string) => void;
 }) {
-  const compact = useCompact();
   const target = destination.workspace;
   const onWeb = isDesktopShell();
   const write = useWrite(nothingToDo, alwaysSendable);
@@ -135,26 +135,13 @@ function Destination({
           destination.kind === "fact" ? (
             <Facts ruled rows={[["Workspace", target.name]]} />
           ) : (
-            <div className="fo-account-selector">
-              <DropdownSelector
-                label="Workspace"
-                // The trigger carries the chosen workspace, so its composed
-                // name would change with the value; naming it once keeps the
-                // control the same control however the reader has answered it.
-                triggerLabel="Workspace"
-                value={target.id}
-                options={destination.options.map((workspace) => ({
-                  value: workspace.id,
-                  label: workspace.name,
-                }))}
-                variant="field"
-                size={compact ? "lg" : "md"}
-                searchable
-                readOnly={write.working}
-                onValueChange={onChoose}
-                testID="workspace-select"
-              />
-            </div>
+            <WorkspaceChoice
+              chosen={target.id}
+              workspaces={destination.options}
+              installationId={installationId}
+              readOnly={write.working}
+              onChoose={onChoose}
+            />
           )
         }
         control={

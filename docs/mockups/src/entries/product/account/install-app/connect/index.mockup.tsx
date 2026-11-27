@@ -4,7 +4,7 @@ import {
   ConnectEmptyScreen,
   ConnectErrorScreen,
   ConnectLoadingScreen,
-  ConnectOneWorkspaceScreen,
+  ConnectNamedWorkspaceScreen,
   ConnectScreen,
 } from "../../../../../screens/product/account/connect-screen";
 
@@ -14,13 +14,13 @@ const screens = {
   empty: ConnectEmptyScreen,
   loading: ConnectLoadingScreen,
   error: ConnectErrorScreen,
-  "one-workspace": ConnectOneWorkspaceScreen,
+  "named-workspace": ConnectNamedWorkspaceScreen,
 };
 
 export default defineScreen({
   title: "Connect a GitHub account",
   description:
-    "The install step at /install?installationId=N, for an installation that arrived from GitHub with no flow behind it: a Workspace select over the workspaces the reader administers, and Continue on GitHub, which proves the reader administers the account. Static controls depict the documented action; no live writes occur.",
+    "The install step at /install?installationId=N, for an installation that arrived from GitHub with no flow behind it: a Workspace select over the workspaces the reader administers, whose last choice is Create a workspace, and Continue on GitHub, which proves the reader administers the account. Static controls depict the documented action; no live writes occur.",
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/product-navigation.md",
@@ -34,7 +34,7 @@ export default defineScreen({
     required: ["state"],
     properties: {
       state: {
-        enum: ["default", "empty", "loading", "error", "one-workspace"],
+        enum: ["default", "empty", "loading", "error", "named-workspace"],
       },
     },
   } as const,
@@ -69,12 +69,12 @@ export default defineScreen({
       props: { state: "error" },
     },
     {
-      slug: "one-workspace",
-      title: "Connect a GitHub account · One workspace",
+      slug: "named-workspace",
+      title: "Connect a GitHub account · Named workspace",
       description:
-        "The address names one workspace, or the reader administers exactly one, so the workspace is a fact row rather than a choice. Static controls depict the documented action; no live writes occur.",
+        "The address names a workspace the reader administers, as when the workspace step hands the installation on, so the workspace is a fact row rather than a choice. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "account", "default"],
-      props: { state: "one-workspace" },
+      props: { state: "named-workspace" },
     },
   ],
 });

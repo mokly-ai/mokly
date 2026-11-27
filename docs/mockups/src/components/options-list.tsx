@@ -7,6 +7,7 @@ import { View } from "react-native";
 import type { ViewStyle } from "react-native";
 
 import { githubAccounts, sample } from "../fixtures/product";
+import { iconSize, iconStroke, icons } from "../screens/product/icons";
 
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
@@ -30,13 +31,48 @@ const optionSchema = {
 } as const;
 
 /**
+ * The row of a select whose last choice starts something rather than naming
+ * a value: its words, with the start glyph where a chosen row's check sits.
+ */
+function actionEntry(action: { id: string; label: string }): DropdownListEntry {
+  const Glyph = icons.start;
+  return {
+    id: action.id,
+    label: action.label,
+    type: "item",
+    right: ({ color }) => (
+      <Glyph
+        size={iconSize.row}
+        strokeWidth={iconStroke}
+        color={color}
+        aria-hidden
+      />
+    ),
+    onPress: staticNoop,
+  };
+}
+
+/**
  * The rows the package lists. Titled sections take the place of the flat
  * options, each title its own row ahead of the options it holds, exactly as
- * the package's selector builds them from its `sections`.
+ * the package's selector builds them from its `sections`. An action closes
+ * the list, as its own untitled last section.
  */
 function listEntries(
   options: readonly Option[],
   sections: readonly { title: string; options: readonly Option[] }[] = [],
+  selected: string,
+  action?: { id: string; label: string },
+): DropdownListEntry[] {
+  return [
+    ...valueEntries(options, sections, selected),
+    ...(action === undefined ? [] : [actionEntry(action)]),
+  ];
+}
+
+function valueEntries(
+  options: readonly Option[],
+  sections: readonly { title: string; options: readonly Option[] }[],
   selected: string,
 ): DropdownListEntry[] {
   const row = (option: Option): DropdownListEntry => ({
@@ -113,6 +149,13 @@ export const optionsListInput = componentInput({
       },
       /** The search field's placeholder; a list with none draws no field. */
       search: { type: "string" },
+      /** A last row that starts something, such as creating a workspace. */
+      action: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "label"],
+        properties: { id: { type: "string" }, label: { type: "string" } },
+      },
       anchored: { type: "boolean" },
     },
   },
@@ -132,7 +175,15 @@ export const optionsListInput = componentInput({
     search: { kind: "text" },
     anchored: { kind: "boolean" },
   },
-  render: ({ label, options, selected, sections, search, anchored }) => {
+  render: ({
+    label,
+    options,
+    selected,
+    sections,
+    search,
+    action,
+    anchored,
+  }) => {
     const list = (
       <DropdownList
         label={label}
@@ -153,7 +204,7 @@ export const optionsListInput = componentInput({
             />
           )
         }
-        entries={listEntries(options, sections, selected)}
+        entries={listEntries(options, sections, selected, action)}
         testID="firna-options-list"
       />
     );

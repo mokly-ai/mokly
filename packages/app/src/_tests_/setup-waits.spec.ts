@@ -168,5 +168,7 @@ test("every setup step waits in its own layout", async ({ page }) => {
   await expect(page.getByText("Loading your workspaces…")).toBeVisible();
   await expectCompletedSteps(page, []);
   workspaces.release();
-  await expect(page.locator(".fo-facts")).toContainText("Waits Org");
+  await expect(page.getByLabel("Workspace", { exact: true })).toContainText(
+    "Waits Org",
+  );
 });

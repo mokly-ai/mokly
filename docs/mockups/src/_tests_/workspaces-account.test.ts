@@ -15,6 +15,7 @@ import type { ComponentInstanceRecord } from "@mokly/viewer";
 import { selectorInput } from "../components/selector";
 import { MockupDocument } from "../document";
 import { githubAccounts, sample } from "../fixtures/product";
+import { workspaces } from "../fixtures/publications";
 
 import { catalogueEntries, viewUsage } from "./catalogue-index";
 import {
@@ -121,10 +122,33 @@ test("an installation from GitHub is connected to a workspace the reader adminis
     assert.deepEqual(facts(chosen), []);
     assert.equal(stepsDone(chosen), 1);
 
-    const one = drawnPage(id("one-workspace"), viewport);
-    assert.deepEqual(facts(one), [["Workspace", sample.workspace]]);
-    assert.ok(!one.html.includes('data-testid="firna-selector"'));
-    assert.deepEqual(actions(one), continueOnGitHub);
+    const named = drawnPage(id("named-workspace"), viewport);
+    assert.deepEqual(facts(named), [["Workspace", sample.workspace]]);
+    assert.ok(!named.html.includes('data-testid="firna-selector"'));
+    assert.deepEqual(actions(named), continueOnGitHub);
+
+    // The open select lists the workspaces the reader administers, the chosen
+    // one marked, and ends with the choice that creates a workspace.
+    const open = drawnPage(id("open"), viewport);
+    const list = open.html.slice(
+      open.html.indexOf('data-testid="firna-options-list"'),
+    );
+    const rows = [
+      ...workspaces
+        .filter((candidate) => candidate.administrator)
+        .map((candidate) => ">" + candidate.name + "<"),
+      ">Create a workspace<",
+    ].map((text) => list.indexOf(text));
+    assert.ok(
+      rows.every((index) => index >= 0),
+      viewport + " " + rows.join(),
+    );
+    assert.deepEqual(
+      [...rows].sort((a, b) => a - b),
+      rows,
+    );
+    assert.equal(list.match(/aria-selected="true"/g)?.length, 1);
+    assert.deepEqual(actions(open), continueOnGitHub);
 
     const none = drawnPage(id("empty"), viewport);
     assert.ok(
@@ -149,7 +173,8 @@ test("an installation from GitHub is connected to a workspace the reader adminis
 
     for (const slug of [
       "",
-      "one-workspace",
+      "named-workspace",
+      "open",
       "empty",
       "loading",
       "error",

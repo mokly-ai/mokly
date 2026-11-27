@@ -160,11 +160,22 @@ export const onboardingSituations = [
     states: productStates,
   },
   {
-    path: "product/account/install-app/connect/one-workspace",
+    path: "product/account/install-app/connect/named-workspace",
     family: "account",
     screen: "install-app",
-    name: "one-workspace",
+    name: "named-workspace",
     parent: "product/account/install-app/connect",
+    states: ["default"],
+  },
+  // The select open is a screen beside the step, in its folder, as the
+  // repository step's is.
+  {
+    path: "product/account/install-app/connect/open",
+    family: "account",
+    screen: "install-app",
+    name: "open",
+    parent: "product/account/install-app/connect",
+    sibling: true,
     states: ["default"],
   },
   // Continue on GitHub's write: the connect situation already draws five, so
