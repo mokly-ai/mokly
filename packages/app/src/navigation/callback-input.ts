@@ -1,4 +1,4 @@
-import { statelessInstallation } from "./github-flow";
+import { installationToConnect } from "./github-flow";
 import { connectInstallationPath } from "./paths";
 
 /** The authentication landings whose address arrives carrying provider input. */
@@ -56,9 +56,10 @@ function withholdReferrer(): void {
  * and Android, `window` has no history, and any location Expo gives it is the
  * app's origin, so nothing is captured there.
  *
- * A stateless installation return has no flow for the landing to finish, so
- * it is not captured at all: its address becomes the connect situation for
- * the installation it names, and the router starts there.
+ * An installation return without this tab's setup trip behind it has no flow
+ * for the landing to finish, so it is not captured at all: its address
+ * becomes the connect situation for the installation it names, and the router
+ * starts there.
  */
 export function captureCallbackInput(): void {
   captured = undefined;
@@ -74,15 +75,15 @@ export function captureCallbackInput(): void {
   if (landing === undefined) return;
   const inFragment = callbackLandings[landing].carrier === "fragment";
   if (!inFragment) withholdReferrer();
-  const stateless =
+  const toConnect =
     landing === "github-install"
-      ? statelessInstallation(new URLSearchParams(search))
+      ? installationToConnect(new URLSearchParams(search))
       : undefined;
-  if (stateless !== undefined) {
+  if (toConnect !== undefined) {
     window.history.replaceState(
       window.history.state,
       "",
-      connectInstallationPath(stateless),
+      connectInstallationPath(toConnect),
     );
     return;
   }

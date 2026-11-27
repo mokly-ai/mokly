@@ -9,8 +9,10 @@ import {
   installUrl,
   issued,
   json,
+  otherState,
   workspaceId,
   routeSignedInSession,
+  seedFlow,
   storedFlow,
 } from "./auth-callbacks";
 import type { ApiBody } from "./harness";
@@ -93,38 +95,53 @@ test("GitHub App setup transitions into authorization and resumes", async ({
   expect(await storedFlow(page, flowKeys.installAuthorize)).toBeNull();
 });
 
-test("a stateless return opens the connect situation in the landing's place", async ({
-  page,
-}) => {
-  let callbacks = 0;
-  await routeSignedInSession(page);
-  await routeWorkspaces(page);
-  await page.route("**/v1/github/installations/callback", (route) => {
-    callbacks += 1;
-    return route.continue();
-  });
-  await open(page, "/sign-in");
-  const before = await page.evaluate(() => window.history.length);
-  await page.goto(
-    "/auth/github/install?installation_id=42&setup_action=update",
-  );
-  await page.waitForURL(
-    (url) =>
-      url.pathname === "/install" &&
-      url.searchParams.get("installationId") === "42",
-  );
-  await ready(page);
+// A return carries no state when it comes from Redirect on update or an
+// install started on GitHub. GitHub's own pages can also keep the state of a
+// setup trip that this tab no longer holds, which no landing can finish.
+for (const { arrival, address, seeded } of [
+  {
+    arrival: "a stateless return",
+    address: "/auth/github/install?installation_id=42&setup_action=update",
+    seeded: false,
+  },
+  {
+    arrival: "a return whose state this tab does not hold",
+    address: installUrl(otherState).replace(/^https?:\/\/[^/]+/, ""),
+    seeded: true,
+  },
+]) {
+  test(`${arrival} opens the connect situation in the landing's place`, async ({
+    page,
+  }) => {
+    let callbacks = 0;
+    await routeSignedInSession(page);
+    await routeWorkspaces(page);
+    await page.route("**/v1/github/installations/callback", (route) => {
+      callbacks += 1;
+      return route.continue();
+    });
+    await open(page, "/sign-in");
+    if (seeded) await seedFlow(page, flowKeys.installSetup);
+    const before = await page.evaluate(() => window.history.length);
+    await page.goto(address);
+    await page.waitForURL(
+      (url) =>
+        url.pathname === "/install" &&
+        url.searchParams.get("installationId") === "42",
+    );
+    await ready(page);
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Connect a GitHub account" }),
-  ).toBeVisible();
-  await expect(page.locator(".fo-facts")).toContainText("Callback Org");
-  expect(await page.evaluate(() => window.history.length)).toBe(before + 1);
-  expect(
-    await page.locator('meta[name="referrer"]').getAttribute("content"),
-  ).toBe("no-referrer");
-  expect(callbacks).toBe(0);
-});
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Connect a GitHub account" }),
+    ).toBeVisible();
+    await expect(page.locator(".fo-facts")).toContainText("Callback Org");
+    expect(await page.evaluate(() => window.history.length)).toBe(before + 1);
+    expect(
+      await page.locator('meta[name="referrer"]').getAttribute("content"),
+    ).toBe("no-referrer");
+    expect(callbacks).toBe(0);
+  });
+}
 
 test("Continue on GitHub starts the candidate flow into authorization", async ({
   page,

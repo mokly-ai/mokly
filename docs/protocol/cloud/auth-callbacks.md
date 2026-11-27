@@ -8,12 +8,12 @@ consumes credentials, binds a GitHub flow or chooses the stored `returnTo`.
 
 ## Routes
 
-| Route                    | Browser input                                                                                | API call                                                                                            | Completion                                                                                     |
-| ------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `/auth/email/callback`   | One `token` in the fragment                                                                  | `POST /v1/auth/callback` with Origin                                                                | Adopt the session and replace with the returned `returnTo`                                     |
-| `/auth/desktop/callback` | One `grant` in the fragment; the verifier in tab storage                                     | `POST /v1/auth/desktop/callback` with Origin                                                        | Adopt the session and replace with the returned `returnTo`                                     |
-| `/auth/github/callback`  | One `code` and `state` in the query                                                          | `POST /v1/auth/github/callback` with Origin, plus session CSRF for a connected or installation flow | Adopt the rotated session and replace with the returned `returnTo`                             |
-| `/auth/github/install`   | `installation_id` with `state`, `installation_id` without `state`, or `setup_action=request` | Callback POST for the stateful arrival; no API call for the other arrivals                          | Continue authorization, replace with `/install?installationId=<id>`, or draw the request state |
+| Route                    | Browser input                                                                                          | API call                                                                                            | Completion                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `/auth/email/callback`   | One `token` in the fragment                                                                            | `POST /v1/auth/callback` with Origin                                                                | Adopt the session and replace with the returned `returnTo`                                     |
+| `/auth/desktop/callback` | One `grant` in the fragment; the verifier in tab storage                                               | `POST /v1/auth/desktop/callback` with Origin                                                        | Adopt the session and replace with the returned `returnTo`                                     |
+| `/auth/github/callback`  | One `code` and `state` in the query                                                                    | `POST /v1/auth/github/callback` with Origin, plus session CSRF for a connected or installation flow | Adopt the rotated session and replace with the returned `returnTo`                             |
+| `/auth/github/install`   | `installation_id` with the tab's setup `state`, any other `installation_id`, or `setup_action=request` | Callback POST for the matched arrival; no API call for the other arrivals                           | Continue authorization, replace with `/install?installationId=<id>`, or draw the request state |
 
 Every landing is an account-shell screen with a pending state and the exact
 provider-specific recovery below.
@@ -21,13 +21,12 @@ provider-specific recovery below.
 ## Address Cleanup
 
 A landing's provider input leaves the address before the app router starts.
-The cleanup removes the whole GitHub query, except that a stateless
-`installation_id` arrival replaces the address with
-`/install?installationId=<id>`. It removes the email or desktop fragment
-while keeping any query. It creates no history entry, never copies a
-credential into a path or query, and sets a `no-referrer` policy on the GitHub
-landings. No address a landing's document takes after it loads carries its
-credential.
+The cleanup removes the whole GitHub query, except that a connect arrival,
+defined below, replaces the address with `/install?installationId=<id>`. It
+removes the email or desktop fragment while keeping any query. It creates no
+history entry, never copies a credential into a path or query, and sets a
+`no-referrer` policy on the GitHub landings. No address a landing's document
+takes after it loads carries its credential.
 
 Each landing takes its input exactly once. A landing reached any other way,
 including a reload, has no input, which is the missing-input recovery below.
@@ -62,9 +61,11 @@ authorization URL, `returnTo`, session or CSRF token.
 Each landing requires exactly one non-empty value for every required query or
 fragment field. It compares query `state` with the relevant stored state before
 calling the API. Missing, malformed, duplicate or mismatched values are a local
-invalid-flow recovery: no request is sent. Initializing a landing consumes its
-matching record; an invalid GitHub callback clears all callback-purpose records
-in that tab, while an invalid installation return clears the setup record.
+invalid-flow recovery: no request is sent. The one exception is an installation
+return with a valid `installation_id`, which is the connect arrival below.
+Initializing a landing consumes its matching record; an invalid GitHub callback
+clears all callback-purpose records in that tab, while an invalid installation
+return clears the setup record.
 Reload therefore cannot replay browser-held flow material. API state,
 verifier, expiry, session binding and CSRF checks are authoritative.
 
@@ -166,7 +167,8 @@ invented reference.
 
 ## GitHub Installation Setup
 
-The stateful installation landing requires a signed-in session. It validates
+A matched arrival carries the `state` of the tab's installation-setup record.
+The installation landing requires a signed-in session for it. It validates
 the installation-setup record and positive base-10 `installation_id`, then
 posts `installationId`, `state` and the stored `codeVerifier`. Success stores
 the returned authorization flow as described above and continues to the
@@ -174,17 +176,23 @@ returned authorization URL in the same window. The next GitHub return lands on
 `/auth/github/callback`; its successful `SessionIssued.returnTo` is the
 destination originally stored by `POST /v1/github/installations`.
 
-A stateless arrival has a positive `installation_id` and no `state`, without
-`setup_action=request`. It does not call the API. It replaces its address with
+A connect arrival has a positive `installation_id`, no `setup_action=request`,
+and no `state` that matches the tab's installation-setup record. It comes from
+Redirect on update, from an installation started on GitHub, or from a GitHub
+page that kept the `state` of a trip that has ended or that a newer trip
+replaced. It does not call the API. It replaces its address with
 `/install?installationId=<id>` without adding a history entry. The install
-screen then requires a signed-in session and starts the candidate flow.
+screen then requires a signed-in session and starts the candidate flow. A
+connect arrival never shows **Installation expired**: the candidate flow proves
+account administration again, and an expired page on GitHub would otherwise
+leave an installed account with no way to connect.
 
-An arrival with `setup_action=request` takes precedence over the stateless
+An arrival with `setup_action=request` takes precedence over the connect
 arrival and draws **Installation requested**. It
 shows the line "An owner of the GitHub organization approves it on GitHub."
 It offers **Back to install**.
 
-Missing or mismatched local input and `github-auth-invalid` show
+Missing or malformed local input and `github-auth-invalid` show
 **Installation expired**. `operation-unavailable` shows
 **GitHub installation opens soon**. Provider, transport and internal failures
 show **Installation wasn’t completed**. Each offers only **Back to install** at

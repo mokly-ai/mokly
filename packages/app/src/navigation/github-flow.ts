@@ -215,16 +215,25 @@ export function consumeGitHubInstallation(
 }
 
 /**
- * The installation a stateless setup return names: a positive
- * `installation_id` with no `state`, from Redirect on update or an install
- * started on GitHub, and not a request waiting for approval, which is drawn
- * as one. No flow stands behind it, so the landing hands it to the connect
- * situation rather than to the API.
+ * The installation a setup return names when no setup trip of this tab stands
+ * behind it: a positive `installation_id`, not a request waiting for approval,
+ * which is drawn as one, and no `state` that matches the tab's setup record.
+ * Such a return comes from Redirect on update, from an install started on
+ * GitHub, or from a GitHub page that kept the `state` of a trip that has since
+ * ended or been replaced. The landing hands it to the connect situation, which
+ * proves administration of the account again, rather than to the API. A
+ * matching record is left for the landing to consume.
  */
-export function statelessInstallation(
+export function installationToConnect(
   input: URLSearchParams,
 ): number | undefined {
-  if (input.getAll("state").length > 0) return undefined;
   if (one(input, "setup_action") === "request") return undefined;
-  return parseInstallationId(one(input, "installation_id"));
+  const installationId = parseInstallationId(one(input, "installation_id"));
+  if (installationId === undefined) return undefined;
+  const state = one(input, "state");
+  const storage = browserStorage();
+  const flow = storage && stored(storage, "install-setup");
+  return state !== undefined && flow?.state === state
+    ? undefined
+    : installationId;
 }

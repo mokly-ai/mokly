@@ -58,13 +58,13 @@ each environment's state.
    `installation_id`, `state` and advisory `setup_action`. The app sends the
    first two and its verifier to `POST /v1/github/installations/callback` using
    the same session and CSRF. The response supplies the OAuth authorization URL
-   and the landing follows it in the same window. A stateless arrival has
-   `installation_id` without `state` and without `setup_action=request`; it replaces its address with
-   `/install?installationId=<id>` without adding a history entry. It comes from
-   Redirect on update or from an installation started on GitHub. An arrival with
-   `setup_action=request` draws **Installation requested**, the line "An owner
-   of the GitHub organization approves it on GitHub.", and **Back to install**.
-   Callback query parameters grant no authority.
+   and the landing follows it in the same window. An `installation_id` arrival
+   without `setup_action=request` or the tab's setup `state` replaces its
+   address with `/install?installationId=<id>`, adding no history entry. It
+   comes from Redirect on update, a GitHub-started install or a kept old `state`.
+   An arrival with `setup_action=request` draws **Installation requested**, the
+   line "An owner of the GitHub organization approves it on GitHub.", and
+   **Back to install**. Callback query parameters grant no authority.
 3. The OAuth callback verifies the GitHub user, checks the selected installation
    belongs to this App, and proves account administration with the user token:
    personal account IDs must match; GitHub organization membership must be `active`

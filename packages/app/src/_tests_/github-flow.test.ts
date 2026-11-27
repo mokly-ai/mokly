@@ -5,7 +5,7 @@ import {
   consumeGitHubCallback,
   consumeGitHubInstallation,
   githubFlowKeys,
-  statelessInstallation,
+  installationToConnect,
   storeGitHubFlow,
 } from "../navigation/github-flow";
 
@@ -211,33 +211,67 @@ test("a request waiting for approval ends the setup trip and sends nothing", () 
   );
 });
 
-test("a stateless setup return names its installation and nothing else does", () => {
+test("a setup return without this tab's setup trip names its installation", () => {
+  const other = "c".repeat(64);
+  withBrowser((storage) => {
+    // No trip in this tab: a return from Redirect on update, from an install
+    // started on GitHub, or one carrying a state a newer trip replaced.
+    for (const input of [
+      "installation_id=42",
+      "installation_id=42&setup_action=update",
+      `installation_id=42&state=${state}&setup_action=update`,
+      "installation_id=42&state=",
+    ]) {
+      assert.equal(
+        installationToConnect(new URLSearchParams(input)),
+        42,
+        input,
+      );
+    }
+    storage.setItem(
+      githubFlowKeys["install-setup"],
+      JSON.stringify({ state: other, codeVerifier: verifier }),
+    );
+    assert.equal(
+      installationToConnect(
+        new URLSearchParams(`installation_id=42&state=${state}`),
+      ),
+      42,
+    );
+  });
+  // Without a tab store no trip can stand behind the return either.
   assert.equal(
-    statelessInstallation(new URLSearchParams("installation_id=42")),
-    42,
-  );
-  assert.equal(
-    statelessInstallation(
-      new URLSearchParams("installation_id=42&setup_action=update"),
+    installationToConnect(
+      new URLSearchParams(`installation_id=42&state=${state}`),
     ),
     42,
   );
-  for (const input of [
-    `installation_id=42&state=${state}`,
-    "installation_id=42&state=",
-    "installation_id=42&setup_action=request",
-    "installation_id=42&installation_id=43",
-    "installation_id=0",
-    "installation_id=042",
-    "installation_id=abc",
-    "installation_id=9007199254740992",
-    "setup_action=update",
-    "",
-  ]) {
-    assert.equal(
-      statelessInstallation(new URLSearchParams(input)),
-      undefined,
-      input,
+});
+
+test("a setup return the tab's trip matches, a request or no installation names none", () => {
+  withBrowser((storage) => {
+    storage.setItem(
+      githubFlowKeys["install-setup"],
+      JSON.stringify({ state, codeVerifier: verifier }),
     );
-  }
+    for (const input of [
+      `installation_id=42&state=${state}`,
+      "installation_id=42&setup_action=request",
+      "installation_id=42&installation_id=43",
+      "installation_id=0",
+      "installation_id=042",
+      "installation_id=abc",
+      "installation_id=9007199254740992",
+      "setup_action=update",
+      "",
+    ]) {
+      assert.equal(
+        installationToConnect(new URLSearchParams(input)),
+        undefined,
+        input,
+      );
+    }
+    // Naming the installation leaves the trip for the landing to finish.
+    assert.notEqual(storage.getItem(githubFlowKeys["install-setup"]), null);
+  });
 });

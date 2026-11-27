@@ -5,6 +5,9 @@ import {
   captureCallbackInput,
   takeCallbackInput,
 } from "../navigation/callback-input";
+import { githubFlowKeys } from "../navigation/github-flow";
+
+const setupState = "a".repeat(64);
 
 interface Meta {
   name: string;
@@ -19,9 +22,15 @@ interface Browser {
 
 /**
  * Run with a document loaded at `initial`: the address, the history writes it
- * takes and the head a referrer policy would land in are all this test's.
+ * takes and the head a referrer policy would land in are all this test's. A
+ * tab that left for GitHub App setup holds that trip's record in its session
+ * storage.
  */
-function withDocument(initial: string, run: (browser: Browser) => void): void {
+function withDocument(
+  initial: string,
+  run: (browser: Browser) => void,
+  setupTrip?: string,
+): void {
   const saved = ["window", "document"].map((name) => ({
     name,
     descriptor: Object.getOwnPropertyDescriptor(globalThis, name),
@@ -57,9 +66,17 @@ function withDocument(initial: string, run: (browser: Browser) => void): void {
     prepend: (meta: Meta) => metas.unshift(meta),
   };
   const document = { head, createElement: () => ({ name: "", content: "" }) };
+  const records = new Map<string, string>();
+  if (setupTrip !== undefined) {
+    records.set(
+      githubFlowKeys["install-setup"],
+      JSON.stringify({ state: setupTrip, codeVerifier: "b".repeat(64) }),
+    );
+  }
+  const sessionStorage = { getItem: (key: string) => records.get(key) ?? null };
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { location, history },
+    value: { location, history, sessionStorage },
   });
   Object.defineProperty(globalThis, "document", {
     configurable: true,
@@ -141,7 +158,7 @@ test("GitHub's query leaves both GitHub landings, which send no referrer", () =>
     },
   );
   withDocument(
-    "https://app.test/auth/github/install/?installation_id=42&state=abc",
+    `https://app.test/auth/github/install/?installation_id=42&state=${setupState}`,
     (browser) => {
       captureCallbackInput();
       assert.equal(browser.address(), "https://app.test/auth/github/install/");
@@ -151,42 +168,53 @@ test("GitHub's query leaves both GitHub landings, which send no referrer", () =>
         "42",
       );
     },
+    setupState,
   );
 });
 
-test("a stateless installation return becomes the connect situation", () => {
+test("an installation return without the tab's trip becomes the connect situation", () => {
   for (const initial of [
     "https://app.test/auth/github/install?installation_id=42",
     "https://app.test/auth/github/install/?installation_id=42&setup_action=update",
+    // GitHub kept the state of a trip this tab no longer holds.
+    `https://app.test/auth/github/install?installation_id=42&state=${"c".repeat(64)}&setup_action=update`,
   ]) {
-    withDocument(initial, (browser) => {
-      captureCallbackInput();
-      // One write, in place: the router starts on the connect situation, and
-      // Back does not return to a landing with nothing left to finish.
-      assert.equal(
-        browser.address(),
-        "https://app.test/install?installationId=42",
-      );
-      assert.equal(browser.writes(), 1);
-      assert.equal(browser.referrer(), "no-referrer");
-      assert.equal(takeCallbackInput("github-install").toString(), "");
-    });
+    withDocument(
+      initial,
+      (browser) => {
+        captureCallbackInput();
+        // One write, in place: the router starts on the connect situation, and
+        // Back does not return to a landing with nothing left to finish.
+        assert.equal(
+          browser.address(),
+          "https://app.test/install?installationId=42",
+        );
+        assert.equal(browser.writes(), 1);
+        assert.equal(browser.referrer(), "no-referrer");
+        assert.equal(takeCallbackInput("github-install").toString(), "");
+      },
+      setupState,
+    );
   }
 });
 
-test("a setup return with a state or a request stays on the landing", () => {
+test("a setup return with the tab's state or a request stays on the landing", () => {
   for (const query of [
-    "installation_id=42&state=abc",
+    `installation_id=42&state=${setupState}`,
     "installation_id=42&setup_action=request",
     "setup_action=request",
     "installation_id=abc",
   ]) {
-    withDocument(`https://app.test/auth/github/install?${query}`, (browser) => {
-      captureCallbackInput();
-      assert.equal(browser.address(), "https://app.test/auth/github/install");
-      assert.equal(browser.writes(), 1);
-      assert.equal(takeCallbackInput("github-install").toString(), query);
-    });
+    withDocument(
+      `https://app.test/auth/github/install?${query}`,
+      (browser) => {
+        captureCallbackInput();
+        assert.equal(browser.address(), "https://app.test/auth/github/install");
+        assert.equal(browser.writes(), 1);
+        assert.equal(takeCallbackInput("github-install").toString(), query);
+      },
+      setupState,
+    );
   }
 });
 

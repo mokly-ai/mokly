@@ -8,7 +8,6 @@ import {
   githubState,
   installUrl,
   json,
-  otherState,
   routeSignedInSession,
   seedFlow,
   session,
@@ -17,7 +16,7 @@ import {
 import { expect, open, ready, test } from "./harness";
 import { githubOrigin } from "./origins";
 
-test("the installation landing rejects missing and mismatched local state", async ({
+test("the installation landing rejects a return with no input", async ({
   page,
 }) => {
   let requests = 0;
@@ -38,15 +37,6 @@ test("the installation landing rejects missing and mismatched local state", asyn
     await page.locator('meta[name="referrer"]').getAttribute("content"),
   ).toBe("no-referrer");
   expect(new URL(page.url()).search).toBe("");
-
-  await seedFlow(page, flowKeys.installSetup);
-  await page.goto(installUrl(otherState).replace(/^https?:\/\/[^/]+/, ""));
-  await ready(page);
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Installation expired" }),
-  ).toBeVisible();
-  expect(new URL(page.url()).search).toBe("");
-  expect(await storedFlow(page, flowKeys.installSetup)).toBeNull();
   expect(requests).toBe(0);
 });
 
