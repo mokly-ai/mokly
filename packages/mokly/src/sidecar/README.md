@@ -55,8 +55,9 @@ its requests and results. The paths below are relative to the package root.
   attempts, while each attempt keeps its own consumed-file and CSS-module
   records. Each attempt takes its esbuild options and plugin order from
   `bundleOptions` in [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
-  Only a native compile gets its log override, which makes a handled
-  `require` failure an error. esbuild resolves most imports itself, and
+  A native compile treats a handled `require` failure as an error. Serve edit
+  compiles retain diagnostics for `require` targets that can be unknown until
+  evaluation. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` records each planned import through
@@ -191,9 +192,9 @@ its requests and results. The paths below are relative to the package root.
   bytes of those texts. It keeps both texts when it drops the plan, and it
   encodes `compiled` again when it drops the evidence. A `serveEdit` compile
   gets incomplete evidence with the `uncaptured: "serveEdit"` marker, and its
-  inputs hold only its private folder files. A compile without a toolchain
-  identity gets no marker. A `serveEdit` compile also gets no marker when
-  `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
+  inputs hold its private folder and workspace lookup files. A compile without
+  a toolchain identity gets no marker. A `serveEdit` compile also gets no
+  marker when `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
 - [`src/sidecar/recipe-encoding.ts`](./recipe-encoding.ts) keeps the texts
   of a new compile from its size check until its response. As its last
@@ -326,11 +327,37 @@ its requests and results. The paths below are relative to the package root.
   `${configDir}` prefix from the folder of the top-level configuration, as
   found. [`src/sidecar/config-json.ts`](./config-json.ts) parses JSON
   with comments and trailing commas.
-- [`module-paths.ts`](./module-paths.ts) maps resolved paths to the selected
-  source tree. [`workspace-sources.ts`](./workspace-sources.ts) finds matching
-  source files for workspace build targets. It uses `ConfigChain` to read
-  `rootDir` and `outDir`. [`workspace-lookups.ts`](./workspace-lookups.ts)
-  records the candidate files and directories that can change that choice.
+- [`src/sidecar/module-paths.ts`](./module-paths.ts) holds `ModulePaths`,
+  which maps resolved paths to the selected source tree. Its `resolve` and
+  `resolveSync` add the `moduleResolution.sourcePackages` hint when lookup
+  by package name reaches a missing target below a subfolder of the package
+  root. An entry of `false` suppresses the hint when lookup reaches it.
+  `resolveSync` serves the requires that Node loads.
+  `ConfiguredModuleFiles` in
+  [`src/sidecar/module-configured-files.ts`](./module-configured-files.ts)
+  holds the configured entry, stories, renderer, and PostCSS files and each
+  added preview file. Its `has` matches the queried path directly or compares
+  its real path with the configured files' real paths on the render side.
+  `ModulePaths` skips the workspace package source rule for these files, so
+  they keep their exact paths.
+  [`src/sidecar/workspace-sources.ts`](./workspace-sources.ts) holds
+  `WorkspaceSources`, which finds the source file of a workspace build target
+  under the
+  [workspace package source rule](../../../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+  It takes the `sourcePackages` maps of the request in layout order. It tries
+  the entry of each map for the package `name`, and then the detected layout,
+  for which it uses `ConfigChain` to read `rootDir` and `outDir`.
+  [`src/sidecar/workspace-lookups.ts`](./workspace-lookups.ts) holds
+  `WorkspaceLookups`, which records the candidate files and directories that
+  can change that choice. It records each `package.json` probe that
+  `WorkspaceSources` uses to find the package root, including misses. Its
+  `buildTarget` records the build target of each entry that `WorkspaceSources`
+  tries. `marked` keeps the captured kind of each entry. Presence checks keep
+  paths. Manifests, layout files, and workspace files loaded by the restored
+  Node require through resolved peers keep digests. Recorded workspace builds
+  also keep digests when the emitted bundle leaves a `require` target unresolved,
+  uses the free `require` outside a direct call, imports the Node `module`
+  builtin, or references `getBuiltinModule`.
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`
@@ -508,6 +535,12 @@ its requests and results. The paths below are relative to the package root.
   of its context, and that call takes the child, also after the child failed.
   `dispose` also stops a start whose path lookup still runs, so that start
   forks no child.
+- [`src/sidecar/postcss-module.ts`](./postcss-module.ts) holds
+  `importPostcssModule`, which bundles the PostCSS module or a plugin module of
+  the repository with esbuild. [`src/sidecar/postcss-worker.ts`](./postcss-worker.ts)
+  marks dependencies reached by a bundle, loaded by Node, or reported as
+  an exact file by a plugin. The core uses these marks for the
+  [`ignored-module` warning](../../../../docs/protocol/mokly-comparison-packages.md#ignored-modules).
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
   `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short

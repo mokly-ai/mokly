@@ -33,6 +33,8 @@ pub struct JavaScriptGeneration {
     pub module_digests: BTreeMap<String, Option<String>>,
     /// Logical module paths and ordered imports, including dependencies.
     pub modules: BTreeMap<String, Vec<String>>,
+    /// Module targets reached by a bundled package-name import.
+    pub package_imports: BTreeSet<String>,
     /// Digest of the bundle settings without the source root, the selected dependency
     /// directories, and the resolved runtime packages, shared by every render input key.
     pub environment: String,

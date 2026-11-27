@@ -60,6 +60,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                                 modules: vec!["/repo/postcss.mjs".into()],
                             },
                             dependencies: vec![Dependency {
+                                source: None,
                                 kind: DependencyKind::File,
                                 path: "/repo/input.txt".into(),
                                 plugin: Some("fixture".into()),
@@ -73,6 +74,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                             let mut reply = result(startup.then(plan), evidence());
                             reply.generation = if *count == 1 { "old" } else { "new" }.into();
                             reply.modules = vec![Module {
+                                package_import: None,
                                 path: "renderer.ts".into(),
                                 imports: vec!["theme.module.css".into()],
                                 digest: None,
@@ -146,6 +148,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
         let params = bundle_inputs::params(&config, &[], &side);
         let previous = result(None, evidence());
         let state = Arc::new(BundleState {
+            package_imports: Default::default(),
             persistence_identity: None,
             repository: config.repo_root.clone(),
             settings: bundle_inputs::cache_key(

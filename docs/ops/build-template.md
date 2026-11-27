@@ -316,7 +316,9 @@ health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
 If verification fails, restore the previous key version, or a previous build
 reference chosen as "Verify The Streaming Boundary" says, and restart the API.
-When no build reference qualifies, disable builds. Keep keys needed by old pods until recovery completes.
+When no build reference qualifies, disable builds. No verified fallback
+release is kept for the release in use, so disabling builds is the accepted
+fallback (decided 2026-11-26). Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
 [live-lease renewal rule](../protocol/cloud/cloud-builds.md#claims-leases-and-retries).
@@ -529,5 +531,18 @@ main-preview builds moved to the `mokly-build-v5` build reference. Later that
 day they moved to the `mokly-build-v6` build reference, through the Deploy
 run with ID 45818241716. On `mokly-build-v6`, the test repository's pull request build at
 `c11aa3fe8` published at 2026-11-26T12:46:31Z with the check "Catalogue ready
-to review." (2 changed). No Re-run is recorded yet, so no complete build proof
-is recorded. Record the first main-preview and production build proofs here.
+to review." (2 changed).
+
+Main-preview build proof, 2026-11-26: main-preview builds moved to the
+`mokly-build-v8` build reference
+`gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291`, source revision
+`215f094f9`, through Deploy run 45895225148. Before the switch, the probe from
+`main` at `215f094f9` passed on that reference at 20:58:39Z, and failed on
+v6 as expected. The test repository's pull request
+[mokly-build-smoke#2](https://github.com/mokly-ai/mokly-build-smoke/pull/2)
+at `cb6cf71a0` started build `01a219ca-02ca-7668-bf90-31b7ee9c1c8a`. Its check ran from
+21:36:41Z to 21:36:52Z, checkout, cold install in a fresh sandbox and publish
+included. The build published `01a219ca-2d77-768d-a44f-6949a6ffb980`. The test repository has
+no other producer. Its GitHub check `140180940938` said "Catalogue ready to
+review." (1 changed) with its Changes link. A Re-run at 21:43:21Z delivered
+the same result to the same check. Record the production build proof here.

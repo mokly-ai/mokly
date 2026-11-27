@@ -20,6 +20,7 @@ impl Fixture {
     pub fn new() -> Self {
         let fixture = Self(tempfile::tempdir().unwrap());
         fixture.git(&["init", "-b", "main"]);
+        fixture.git(&["config", "--local", "core.excludesFile", ""]);
         fixture.git(&["config", "user.name", "Mokly Tests"]);
         fixture.git(&["config", "user.email", "tests@mokly.invalid"]);
         fixture

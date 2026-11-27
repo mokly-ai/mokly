@@ -10,56 +10,55 @@ import {
   publishedProject,
 } from "./support";
 
-test("the projects panel lists what the reader can open and creates the next", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "projects");
-  await open(page, made.publicationPath);
-  await publishedViewerReady(page);
-  await page.getByTestId("viewer-project").click();
-  const panel = page.getByTestId("viewer-panel-projects");
-  await expect(panel).toBeVisible();
-  // The workspace is named with the GitHub accounts it connects, which the
-  // installation list answers for every workspace at once.
-  await expect(panel.locator(".fo-ref-head .fo-ref-detail")).toHaveText(
-    installedAccount,
-  );
-  await expect(panel.getByText("Current")).toBeVisible();
-  await expect(
-    panel.getByText(new URL(appOrigin).host + made.projectPath),
-  ).toBeVisible();
-  await panel.getByTestId("projects-create").click();
-  await expect(page).toHaveURL((url) => /^\/[^/]+\/-\/new$/.test(url.pathname));
-});
-
-test("one overlay is one entry, however the reader reached it", async ({
+test("one overlay is one entry, and the projects panel lists what the reader can open and creates the next", async ({
   page,
 }) => {
   await signIn(page, freshEmail("one-entry"));
   const projectId = await createProject(page, "One Entry Org");
   const here = await projectPathFor(page, projectId);
-  await open(page, here);
 
-  // A panel opened from a panel replaces it, so closing lands on the page
-  // rather than on the panel the reader came through.
-  await page.getByTestId("viewer-history").click();
-  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
-  await page.getByTestId("history-choose-publication").click();
-  await expect(page.getByTestId("viewer-panel-switcher")).toBeVisible();
-  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
-  await page.getByTestId("close-switcher").click();
-  await expect(page.getByTestId("viewer-panel-switcher")).toHaveCount(0);
-  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
-  await expect(page).toHaveURL((url) => url.pathname === here);
+  await test.step("one overlay is one entry, however the reader reached it", async () => {
+    await open(page, here);
 
-  // And the settings dialog obeys the same rule the panels do: one entry,
-  // undone on close, so one press of Back leaves the page.
-  await openSettingsFromAccount(page);
-  await page.getByTestId("close-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
-  await expect(page).toHaveURL((url) => url.pathname === here);
-  await page.goBack();
-  await expect(page).not.toHaveURL((url) => url.pathname === here);
+    // A panel opened from a panel replaces it, so closing lands on the page
+    // rather than on the panel the reader came through.
+    await page.getByTestId("viewer-history").click();
+    await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
+    await page.getByTestId("history-choose-publication").click();
+    await expect(page.getByTestId("viewer-panel-switcher")).toBeVisible();
+    await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+    await page.getByTestId("close-switcher").click();
+    await expect(page.getByTestId("viewer-panel-switcher")).toHaveCount(0);
+    await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+    await expect(page).toHaveURL((url) => url.pathname === here);
+
+    // And the settings dialog obeys the same rule the panels do: one entry,
+    // undone on close, so one press of Back leaves the page.
+    await openSettingsFromAccount(page);
+    await page.getByTestId("close-settings").click();
+    await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
+    await expect(page).toHaveURL((url) => url.pathname === here);
+    await page.goBack();
+    await expect(page).not.toHaveURL((url) => url.pathname === here);
+  });
+
+  await test.step("the projects panel lists what the reader can open and creates the next", async () => {
+    await open(page, here);
+    await page.getByTestId("viewer-project").click();
+    const panel = page.getByTestId("viewer-panel-projects");
+    await expect(panel).toBeVisible();
+    // The workspace is named with the GitHub accounts it connects, which the
+    // installation list answers for every workspace at once.
+    await expect(panel.locator(".fo-ref-head .fo-ref-detail")).toHaveText(
+      installedAccount,
+    );
+    await expect(panel.getByText("Current")).toBeVisible();
+    await expect(panel.getByText(new URL(appOrigin).host + here)).toBeVisible();
+    await panel.getByTestId("projects-create").click();
+    await expect(page).toHaveURL((url) =>
+      /^\/[^/]+\/-\/new$/.test(url.pathname),
+    );
+  });
 });
 
 test("a trigger says which overlay it opens, and whether it is open", async ({

@@ -164,4 +164,20 @@ export class MetafileEdges {
             : [this.physical(edge.path)],
     );
   }
+
+  /** Package-name edges reach the selected module of a style wrapper. */
+  packageImports(): Set<string> {
+    const modules = new Set<string>();
+    for (const [file, input] of Object.entries(this.metafile.inputs)) {
+      if (this.own(file)) continue;
+      for (const edge of input.imports) {
+        if (edge.external || !edge.original || !bareSpecifier(edge.original))
+          continue;
+        const selected = this.selection(edge.path);
+        if (selected.kind === "physical") modules.add(selected.file);
+        else if (!this.own(edge.path)) modules.add(this.physical(edge.path));
+      }
+    }
+    return modules;
+  }
 }

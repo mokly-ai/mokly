@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
+import { isBuiltin } from "node:module";
 import path from "node:path";
 
+import { parse } from "@babel/parser";
+import traverseModule from "@babel/traverse";
 import type { BuildResult } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
@@ -11,9 +14,11 @@ import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
+import { runtimeRequireWarnings } from "./bundle-options.js";
 import type { Bundled } from "./bundle.js";
 import { capturedPlan } from "./captured-plan.js";
 import { bundleResult, generationId, restore } from "./compiled.js";
+import { cssModulePrefix } from "./css-modules.js";
 import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -30,13 +35,67 @@ export interface CompiledBundle {
   paths: ModulePaths;
   require: ConsumerRequire;
   inputs: { files: Map<string, Uint8Array>; cssModules: Set<string> };
-  compiled: Pick<BuildResult, "metafile" | "outputFiles">;
+  compiled: Pick<BuildResult, "metafile" | "outputFiles" | "warnings">;
   inputPaths: Map<string, string>;
   preview: string | null | undefined;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
   plan: ResolutionPlan | undefined;
+}
+
+/** Detect runtime loads that leave no import edge. */
+function usesRuntimeRequire(code: string): boolean {
+  if (code.includes("getBuiltinModule")) return true;
+  if (!/\brequire\b(?!\s*\()|\bnew\s+(?:require\b|\/[/*])/.test(code))
+    return false;
+
+  try {
+    let found = false;
+    traverseModule.default(parse(code, { sourceType: "commonjs" }), {
+      ReferencedIdentifier(reference) {
+        const { node, parent, scope } = reference;
+        if (node.name !== "require" || scope.hasBinding("require")) return;
+        if (parent.type === "CallExpression" && parent.callee === node) return;
+        found = true;
+        reference.stop();
+      },
+    });
+    return found;
+  } catch {
+    return true;
+  }
+}
+
+/** Check for emitted requires whose targets are outside the captured resolution. */
+function hasUnresolvedRequire(
+  compiled: CompiledBundle["compiled"],
+  peers: Record<string, string | null>,
+  runtimeKey: string,
+): boolean {
+  if (
+    compiled.warnings.some(({ id }) =>
+      Object.hasOwn(runtimeRequireWarnings, id),
+    )
+  )
+    return true;
+  const resolvedPeers = new Set(Object.values(peers));
+  return (
+    Object.values(compiled.metafile!.outputs).some(({ imports }) =>
+      imports.some(
+        ({ external, kind, path }) =>
+          external &&
+          (path === "module" ||
+            path === "node:module" ||
+            (kind === "require-call" &&
+              !isBuiltin(path) &&
+              !Object.hasOwn(peers, path) &&
+              !resolvedPeers.has(path) &&
+              path !== runtimeKey &&
+              !path.startsWith(runtimeKey + cssModulePrefix))),
+      ),
+    ) || compiled.outputFiles!.some(({ text }) => usesRuntimeRequire(text))
+  );
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -56,12 +115,16 @@ export async function bundleRecipe(
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
+  const peers = require.snapshot();
   const folderEvidence = editImports
-    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
-        paths.workspaceLookups.marked(
-          editImports.record(compiled.metafile!, paths),
-        ),
-      )
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () => {
+        const evidence = editImports.record(compiled.metafile!, paths);
+        if (!evidence) return undefined;
+        paths.workspaceLookups.runtimeFiles(Object.values(peers));
+        if (hasUnresolvedRequire(compiled, peers, runtimeKey))
+          paths.workspaceLookups.runtimeBuilds();
+        return paths.workspaceLookups.marked(evidence);
+      })
     : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
@@ -126,7 +189,6 @@ export async function bundleRecipe(
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
-  const peers = require.snapshot();
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence
     ? await evidence.finish(compiled.metafile!)

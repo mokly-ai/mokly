@@ -8,7 +8,6 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::names::ModuleNames;
-use mokly_css::paths;
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::canonical::compare_utf16;
@@ -16,6 +15,7 @@ use mokly_model::catalogue::EntryContent;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
+use crate::comparison_input;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{GraphError, Result};
 use crate::key::{NodeKind, key};
@@ -26,7 +26,7 @@ use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{
     config_key, dependency_inputs, error, markdown_assets, markdown_sources, planning, styles,
-    stylesheet_keys, watch_rules,
+    stylesheet_jobs, stylesheet_keys, watch_rules,
 };
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -103,6 +103,7 @@ impl Graph {
         let mut imported_by = BTreeMap::new();
         let mut plugin_inputs = BTreeMap::new();
         let mut directories = BTreeSet::new();
+        let mut stylesheet_imports = BTreeMap::new();
         let mut stylesheet_resolution_files = BTreeSet::new();
         let mut stylesheet_resolution_roots = BTreeMap::new();
         let roots = styles::roots(&config, &self.inputs);
@@ -124,6 +125,7 @@ impl Graph {
         let roots: Vec<_> = roots.into_values().collect();
         let bundles = self.workers.stylesheets(&roots, self)?;
         for (root, bundle) in roots.into_iter().zip(bundles) {
+            comparison_input::stylesheet_imports(&mut stylesheet_imports, &root, &bundle);
             stylesheet_resolution_files.extend(bundle.resolution_files.iter().cloned());
             stylesheet_resolution_roots.extend(
                 bundle
@@ -172,35 +174,7 @@ impl Graph {
                         dependency_inputs::directory(path, &self.inputs.dependency_aliases)
                     }),
             );
-            for (route, asset) in bundle.assets {
-                names.insert(&route, true)?;
-                let asset_key = key(
-                    NodeKind::Stylesheet,
-                    &[route.as_bytes(), asset.digest.as_bytes()],
-                );
-                if resources
-                    .get(&route)
-                    .is_some_and(|previous| previous.key != asset_key)
-                {
-                    return Err(error::invalid(
-                        &route,
-                        format!(
-                            "CSS asset bytes disagree at {route}; keep shared asset inputs stable during the build"
-                        ),
-                    ));
-                }
-                resources
-                    .entry(route.clone())
-                    .or_insert_with(|| ResourcePlan {
-                        document_key: asset_key.clone(),
-                        key: asset_key,
-                        content_type: paths::content_type(&route)
-                            .unwrap_or("application/octet-stream")
-                            .into(),
-                        root: root.clone(),
-                        asset: Some(asset),
-                    });
-            }
+            stylesheet_jobs::register_assets(&root, bundle.assets, &mut names, &mut resources)?;
             catalogue.model.sources.extend(
                 bundle
                     .inputs
@@ -215,7 +189,12 @@ impl Graph {
                                 || original_sources.contains(path))
                     }),
             );
-            imported_by.extend(bundle.imported_by);
+            imported_by.extend(
+                bundle
+                    .imported_by
+                    .into_iter()
+                    .map(|(path, origin)| (path, origin.stylesheet)),
+            );
             plugin_inputs.extend(bundle.plugin_inputs);
             directories.extend(bundle.directories);
         }
@@ -288,6 +267,7 @@ impl Graph {
                 generation_key,
                 matchers,
                 directories: directories.into_iter().collect(),
+                stylesheet_imports,
                 stylesheet_resolution_files,
                 stylesheet_resolution_roots,
             },

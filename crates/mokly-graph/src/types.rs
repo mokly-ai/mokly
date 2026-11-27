@@ -18,7 +18,7 @@ use crate::cache::Artifact;
 use crate::capture_window::{self, CaptureConsumer};
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
-use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
+use crate::comparison_input::{ModuleImports, RetainedComparisonInput, RetainedDocumentEvidence};
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
@@ -134,6 +134,10 @@ pub trait RenderGeneration: GeneratedResources {
     }
     /// Validated private catalogue, including its complete source inventory.
     fn catalogue(&self) -> &PreparedCatalogue;
+    /// Loaded import evidence for the working side's Changes warnings.
+    fn module_imports(&self) -> Option<ModuleImports<'_>> {
+        None
+    }
     /// Obtain one document, using the cache or rendering an evicted node again.
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Compose comparison material before closure checks, without changing document bytes.

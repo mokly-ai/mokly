@@ -4,6 +4,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
@@ -174,13 +175,14 @@ pub trait ChangesService: Send + Sync {
     /// Validate and retain the working-tree head before static output reads it.
     fn capture_head(&self, head: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>>;
 
-    /// Select the merge base once, prepare sources, and compare with the supplied head.
+    /// Compare with the merge base and retain head import warnings on either outcome.
     fn classify(
         &self,
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
         install_scripts: Option<bool>,
+        warnings: &mut Vec<Warning>,
     ) -> Result<ComparisonResult>;
 }
 
@@ -211,8 +213,9 @@ impl ChangesService for Changes {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
         install_scripts: Option<bool>,
+        warnings: &mut Vec<Warning>,
     ) -> Result<ComparisonResult> {
-        self.classify_base(config, base, head, install_scripts)
+        self.classify_base(config, base, head, install_scripts, warnings)
     }
 }
 

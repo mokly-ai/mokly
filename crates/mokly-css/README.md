@@ -38,6 +38,15 @@ directories. Imports inside a logical dependency root try package-local
 ancestors. This keeps package CSS and JavaScript on the same copy.
 Workspace package stylesheets can resolve to sources in the selected tree.
 See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+`Resolution.source_packages` carries the `sourcePackages` entries of each
+configuration in the
+[layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order),
+with `None` for `false`. `SourceResolver` returns `CssError::WorkspaceImport`
+when lookup by package name reaches a missing target below a subfolder of
+the package root. An entry of `false` suppresses the hint when lookup
+reaches it. The public `workspace_package_name` finds the
+package `name` of a target on one side. `mokly-compare` uses it for the
+`ignored-module` warning.
 
 The same contract owns the `styles/` and `assets/` delivery routes. URLs keep
 query and fragment suffixes. Public resources never read private CSS inputs by
@@ -163,8 +172,13 @@ also fails when that exception no longer differs.
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
   `SourceResolver`, which resolve imports through the injected source tree.
+- [`src/resolution.rs`](./src/resolution.rs) defines `Resolution`, the
+  settings that CSS shares with the sidecar's module graph, with the
+  `sourcePackages` entries in layout order.
 - [`src/workspace_sources.rs`](./src/workspace_sources.rs) checks for a matching
-  source when a package target names a build file.
+  source when a package target names a build file. It tries the
+  `sourcePackages` entries of the package, then the detected layout. It also
+  provides `workspace_package_name`.
 - [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the
   CSS Modules renamer.
 - [`src/rule_collection.rs`](./src/rule_collection.rs) and
@@ -189,6 +203,7 @@ also fails when that exception no longer differs.
 - [CSS Modules](../../docs/protocol/mokly-imported-styles-modules.md).
 - [CSS assets](../../docs/protocol/mokly-imported-styles-assets.md).
 - [PostCSS boundary](../../docs/protocol/mokly-imported-styles-postcss.md).
+- [Package selection](../../docs/protocol/mokly-comparison-packages.md).
 - [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 - [CSS attribution rules](../../docs/protocol/mokly-css-attribution-rules.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

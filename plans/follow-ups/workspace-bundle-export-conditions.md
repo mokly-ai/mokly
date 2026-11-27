@@ -21,6 +21,7 @@
 - **Left out:** Checking if any declared file is absent cannot establish that the request can use its export. A clean base can lack every target.
 - **Wider fix:** E. It uses the native resolver's chosen target. F avoids the extra compile and verifies the copied rule with built fixtures.
 - **Previous examples:** Commit `70a565d46` corrected a copy of esbuild's export precedence. The shared target walker captures export evidence in `package-map.ts`.
+- **Related:** [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): work that waits. Its shared record of each workspace import needs the active export target of a failed lookup, which option F selects.
 - **Recommendation:** F. The single active target resolves both the invalid recovery and the inactive-`types` failure.
 - **Action:** fix after merge, apply F. The bundle rule needs its own review and esbuild parity checks.
 - **Done when:** A table compares the active target with esbuild on built fixtures. It covers kind-specific and configured conditions, `null`, and `module` with absent or supplied conditions. Recovery declines an ineligible export. A missing active `import` target recovers with the inactive `types` example above. Update `docs/protocol/mokly-comparison-packages.md`.

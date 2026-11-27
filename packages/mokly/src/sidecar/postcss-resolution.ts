@@ -5,22 +5,23 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, transformSync } from "esbuild";
 
 import { detail } from "./errors.js";
-import {
-  importPath,
-  missingModule,
-  requireSource,
-  resolveImport,
-} from "./importer-resolution.js";
+import { importPath, resolveImport } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
-import { importerDirectory } from "./package-directory.js";
 import { moduleBytes } from "./postcss-evidence.js";
+import { ownJsonRequire, postcssNativeImport } from "./postcss-path-hooks.js";
+import { postcssRequireTarget } from "./postcss-require-target.js";
 import { postcssScriptLoaders } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
+import { bareSpecifier } from "./specifier.js";
 
 let sources: ModulePaths;
 const dynamicFiles = new Set<string>();
 const commonJs = new Map<string, { exports: unknown }>();
+const requiredFiles = new Map<
+  string,
+  { named: Set<string>; byPackage: boolean }
+>();
 
 export async function configureResolution(
   params: ModuleSources,
@@ -83,56 +84,19 @@ export async function resolvePlugin(
 
 export async function importPlugin(
   file: string,
+  specifier: string,
 ): Promise<Record<string, unknown>> {
   if (path.isAbsolute(file) && sources.repositoryOwned(file)) {
     const { importPostcssModule } = await import("./postcss-module.js");
-    const { module, modules } = await importPostcssModule(file, sources);
+    const { module, modules } = await importPostcssModule(file, sources, {
+      kind: "import",
+      specifier,
+    });
     modules.forEach((file) => dynamicFiles.add(file));
     return module;
   }
-  return import(path.isAbsolute(file) ? pathToFileURL(file).href : file);
-}
-
-function nativePath(
-  name: string,
-  file: string,
-  options?: { paths?: string[] },
-): string {
-  const authored = name;
-  const alias = Object.keys(sources.settings.aliases)
-    .sort((a, b) => b.length - a.length)
-    .find((key) => name === key || name.startsWith(key + "/"));
-  if (alias) name = sources.settings.aliases[alias] + name.slice(alias.length);
-  const mapped = requireTarget(name, file, options);
-  sources.dependencyUsage.resolvedSync(authored, path.dirname(file), mapped);
-  return mapped;
-}
-
-function requireTarget(
-  name: string,
-  file: string,
-  options?: { paths?: string[] },
-): string {
-  const directory = importerDirectory(sources, name, path.dirname(file));
-  const native = createRequire(path.join(directory, path.basename(file)));
-  const resolvers = [native];
-  try {
-    return sources.resolveSync(native.resolve(name, options), name);
-  } catch (error) {
-    if (!missingModule(error)) throw error;
-    for (const root of sources.dependencyRoots) {
-      const resolver = createRequire(
-        path.join(path.dirname(root), "package.json"),
-      );
-      resolvers.push(resolver);
-      try {
-        return sources.resolveSync(resolver.resolve(name, options), name);
-      } catch (next) {
-        if (!missingModule(next)) throw next;
-      }
-    }
-    return requireSource(sources, name, directory, resolvers, error, options);
-  }
+  const url = path.isAbsolute(file) ? pathToFileURL(file).href : file;
+  return postcssNativeImport(url, () => import(url));
 }
 
 function requireLocal(file: string): unknown {
@@ -140,7 +104,7 @@ function requireLocal(file: string): unknown {
   if (cached) return cached.exports;
   if (path.extname(file) === ".json") {
     dynamicFiles.add(file);
-    return createRequire(file)(file);
+    return ownJsonRequire(file, () => createRequire(file)(file));
   }
   const module = { exports: {} };
   commonJs.set(file, module);
@@ -175,7 +139,7 @@ function requireLocal(file: string): unknown {
 export function context(file: string) {
   const native = createRequire(file);
   const resolve = (name: string, options?: { paths?: string[] }) =>
-    nativePath(name, file, options);
+    postcssRequireTarget(sources, name, file, options).file;
   const require = Object.assign(
     (name: string) => {
       if (
@@ -183,10 +147,25 @@ export function context(file: string) {
         fileURLToPath(new URL("./postcss-resolution.js", import.meta.url))
       )
         return { context };
-      const target = resolve(name);
-      return path.isAbsolute(target) && sources.repositoryOwned(target)
-        ? requireLocal(target)
-        : native(target);
+      const { file: target, named } = postcssRequireTarget(
+        sources,
+        name,
+        file,
+        undefined,
+        true,
+      );
+      if (!path.isAbsolute(target) || !sources.repositoryOwned(target))
+        return native(target);
+      const loaded = requireLocal(target);
+      let entry = requiredFiles.get(target);
+      if (!entry)
+        requiredFiles.set(
+          target,
+          (entry = { named: new Set(), byPackage: true }),
+        );
+      entry.named.add(named);
+      entry.byPackage &&= bareSpecifier(name) && !path.isAbsolute(name);
+      return loaded;
     },
     native,
     { resolve },
@@ -201,33 +180,52 @@ export function context(file: string) {
           ? name
           : await resolvePlugin(name, file);
       if (path.isAbsolute(resolved)) dynamicFiles.add(resolved);
-      if (options)
-        return import(
-          path.isAbsolute(resolved) ? pathToFileURL(resolved).href : resolved,
-          options
-        );
-      return importPlugin(resolved);
+      if (options) {
+        const url = path.isAbsolute(resolved)
+          ? pathToFileURL(resolved).href
+          : resolved;
+        return postcssNativeImport(url, () => import(url, options));
+      }
+      return importPlugin(resolved, name);
     },
   };
 }
 
 export function loadedFiles(root: string): string[] {
-  const runtime = path.resolve(import.meta.dirname, "../..");
-  return [
-    ...new Set([
-      ...dynamicFiles,
-      ...Object.keys(createRequire(import.meta.url).cache),
-    ]),
-  ].filter((file) => {
-    const relative = path.relative(root, file);
-    return (
-      relative !== ".." &&
-      !relative.startsWith(`..${path.sep}`) &&
-      !path.isAbsolute(relative) &&
-      !relative.split(path.sep).includes("node_modules") &&
-      !file.startsWith(runtime + path.sep)
-    );
-  });
+  return [...dynamicFiles].filter((file) => repositoryModule(root, file));
+}
+
+/** The executed files omit resolution-only probes and ordinary file reads. */
+export function nodeLoadedFiles(
+  root: string,
+  observed: Iterable<string>,
+): Map<string, boolean> {
+  const native = new Set(observed);
+  const files = new Map(
+    [...native]
+      .filter((file) => repositoryModule(root, file))
+      .map((file): [string, boolean] => [file, false]),
+  );
+  for (const [file, entry] of requiredFiles) {
+    const byPackage = entry.byPackage && !native.has(file);
+    for (const named of entry.named)
+      if (repositoryModule(root, named))
+        files.set(named, (files.get(named) ?? true) && byPackage);
+  }
+  return files;
+}
+
+const runtime = path.resolve(import.meta.dirname, "../..");
+
+function repositoryModule(root: string, file: string): boolean {
+  const relative = path.relative(root, file);
+  return (
+    relative !== ".." &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative) &&
+    !relative.split(path.sep).includes("node_modules") &&
+    !file.startsWith(runtime + path.sep)
+  );
 }
 
 export function plainObject(value: unknown): value is Record<string, unknown> {

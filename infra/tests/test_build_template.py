@@ -52,37 +52,43 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
             return self.run_command(argv, **kwargs)
         return run
 
+    def run_on_host(self, argv, environment, kwargs):
+        """Run one probe command with a host tool, after checking the probe's call options.
+
+        `check_probe_call` requires the probe's 10-second limit. That limit is for the
+        template's sandbox, so the host tool runs without it: the speed of the test host
+        must not decide the result. The CI job's time limit stops a hung tool.
+        """
+        self.check_probe_call(kwargs)
+        options = {key: value for key, value in kwargs.items() if key != "timeout"}
+        options["cwd"] = options.get("cwd") or self.workspace
+        return HOST_RUN(argv, env=environment, **options)
+
     def run_with_host_tools(self, argv, *, make_path, **kwargs):
         """Run the probe's Git, npm ci, and native build commands with host tools."""
         if argv[0] == "git":
             return self.run_with_host_git(argv, **kwargs)
         if argv[0] in ("make", "./probe"):
-            self.check_probe_call(kwargs)
             path = make_path if argv[0] == "make" else HOST_PATH
-            environment = {"PATH": path, "HOME": str(self.scratch)}
-            kwargs["cwd"] = kwargs.get("cwd") or self.workspace
-            return HOST_RUN(argv, env=environment, **kwargs)
+            return self.run_on_host(argv, {"PATH": path, "HOME": str(self.scratch)}, kwargs)
         if argv[:2] != ["npm", "ci"]:
             return self.run_command(argv, **kwargs)
-        self.check_probe_call(kwargs)
         self.assertIsNotNone(HOST_NPM, "this test needs npm on PATH")
         npm_home = self.scratch / "npm-home"
         environment = {"PATH": HOST_PATH, "HOME": str(npm_home),
                        "npm_config_cache": str(npm_home / "cache"),
                        "npm_config_userconfig": str(npm_home / "npmrc"),
                        "npm_config_globalconfig": str(npm_home / "global-npmrc")}
-        return HOST_RUN([HOST_NPM, *argv[1:]], env=environment, **kwargs)
+        return self.run_on_host([HOST_NPM, *argv[1:]], environment, kwargs)
 
     def run_with_host_git(self, argv, **kwargs):
-        self.check_probe_call(kwargs)
         self.assertIsNotNone(HOST_GIT, "this test needs git on PATH")
         # The probe starts in /workspace, so a Git call without its own directory runs there,
         # and the search stops at the scratch folder instead of finding the Mokly checkout.
         environment = {"PATH": HOST_PATH, "HOME": str(self.scratch),
                        "GIT_CEILING_DIRECTORIES": str(self.scratch),
                        "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull}
-        kwargs["cwd"] = kwargs.get("cwd") or self.workspace
-        return HOST_RUN([HOST_GIT, *argv[1:]], env=environment, **kwargs)
+        return self.run_on_host([HOST_GIT, *argv[1:]], environment, kwargs)
 
     def test_complete_template_passes_with_one_added_entry(self):
         self.assertIsNotNone(HOST_AR, "this test needs ar on PATH")

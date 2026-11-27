@@ -264,6 +264,7 @@ impl Harness {
             } else {
                 Unimock::new(())
             });
-        self.changes.classify(&config(), None, head, None)
+        self.changes
+            .classify(&config(), None, head, None, &mut Vec::new())
     }
 }

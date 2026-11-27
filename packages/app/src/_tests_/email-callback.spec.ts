@@ -1,7 +1,13 @@
 import type { Page } from "@playwright/test";
 
 import { stateDocumentViolations } from "./document-policy";
-import { expect, freshEmail, navigateMagicLink, signIn, test } from "./harness";
+import {
+  expect,
+  freshEmail,
+  navigateMagicLink,
+  walkSignIn,
+  test,
+} from "./harness";
 import { expectScreenPolicy } from "./screen-policy";
 
 /**
@@ -21,7 +27,7 @@ async function expectEmailRecovery(page: Page, label: string): Promise<void> {
 
 test("a used link says so and offers another one", async ({ page }) => {
   const email = freshEmail("used");
-  await signIn(page, email);
+  await walkSignIn(page, email);
   await page.waitForURL((url) => url.pathname === "/new");
   const { magicLinkFor } = await import("./api-server");
   await navigateMagicLink(page, magicLinkFor(email) as string);

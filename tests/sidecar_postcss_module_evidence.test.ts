@@ -87,6 +87,18 @@ fs.writeFileSync('helper.ts', "export const value = 'changed';");
   const result = await sidecar.call<CssResult>("processCss", params);
   assert.match(result.text, /esm-json-common/);
   assert.match(result.text, /local-typescript/);
+  const config = path.join(base, "postcss.mjs");
+  const helper = path.join(base, "helper.ts");
+  assert.deepEqual(
+    [config, helper].map((file) =>
+      result.dependencies.find((dependency) => dependency.path === file),
+    ),
+    [
+      { kind: "file", path: config },
+      { kind: "file", path: helper, source: "bundled-import" },
+    ],
+  );
+  assert.equal(Object.hasOwn(result.readEvidence, "bundledImports"), false);
   for (const [file, bytes] of content) {
     if (file.endsWith("package.json")) continue;
     assert.ok(

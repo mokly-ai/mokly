@@ -22,6 +22,18 @@ export interface CapturedMetadata {
 export type FilePathProbe =
   { kind: "file"; path: string } | { kind: "absent" } | { kind: "other" };
 
+/** Marked edits keep only file observations alongside their live checks. */
+export function markedEvidence(evidence: ReuseEvidence): boolean {
+  return (
+    evidence.uncaptured === "serveEdit" &&
+    !evidence.complete &&
+    !evidence.durable &&
+    Object.values(evidence.inputs).every((value) =>
+      ["file", "filePath", "absent", "link"].includes(value.kind),
+    )
+  );
+}
+
 /** Protected filesystem primitives of the one PhysicalInputs owner. */
 export class PhysicalInputReader {
   complete = true;
@@ -203,15 +215,7 @@ export class PhysicalInputReader {
   }
 
   markedCurrent(evidence: ReuseEvidence): boolean {
-    return (
-      evidence.uncaptured === "serveEdit" &&
-      !evidence.complete &&
-      !evidence.durable &&
-      Object.values(evidence.inputs).every((value) =>
-        ["file", "absent", "link"].includes(value.kind),
-      ) &&
-      this.entriesCurrent(evidence)
-    );
+    return markedEvidence(evidence) && this.entriesCurrent(evidence);
   }
 
   private entriesCurrent(evidence: ReuseEvidence): boolean {

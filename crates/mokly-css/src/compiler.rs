@@ -8,6 +8,7 @@ use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{AssetFailure, CssError, Result, TransformFailure};
+use crate::resolution::Resolution;
 use crate::resolver::ImportResolver;
 use crate::types::{Bundle, CssProcessor, StylesheetBundler, StylesheetRoot};
 use crate::{delivery, modules, paths, syntax};
@@ -20,6 +21,8 @@ pub struct Compiler {
     pub repo_root: PathBuf,
     /// Consumer-compatible stylesheet resolver.
     pub resolver: Arc<dyn ImportResolver>,
+    /// Resolution settings used to identify package-name imports.
+    pub resolution: Resolution,
     /// Identity or sidecar PostCSS step.
     pub processor: Arc<dyn CssProcessor>,
 }
@@ -144,7 +147,12 @@ impl Preparation<'_> {
             .compiler
             .processor
             .process(path, &pruned, &self.root.excluded)?;
-        self.result.plugin_inputs.extend(processed.plugin_inputs);
+        for (file, mut origin) in processed.plugin_inputs {
+            if let Some(prior) = self.result.plugin_inputs.get(&file) {
+                origin.import = origin.import.max(prior.import);
+            }
+            self.result.plugin_inputs.insert(file, origin);
+        }
         self.result.read_evidence.extend(processed.read_evidence);
         self.result.directories.extend(processed.directories);
         self.result.dependency_digests.extend(processed.inputs);
@@ -170,8 +178,15 @@ impl Preparation<'_> {
                     }
                 } else {
                     self.resolutions
-                        .insert((path.into(), reference.value), target.clone());
+                        .insert((path.into(), reference.value.clone()), target.clone());
                     self.source(&target, path)?;
+                    if self
+                        .compiler
+                        .resolution
+                        .is_package_import(path, &reference.value, &target)
+                    {
+                        self.record_package_import(&target);
+                    }
                 }
             } else {
                 let rewritten = self.asset(path, &reference.value)?;

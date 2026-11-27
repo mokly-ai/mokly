@@ -44,6 +44,7 @@ impl Session {
                 observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
+                stylesheet_imports: input.stylesheet_imports,
                 stylesheet_resolution_files: input.stylesheet_resolution_files,
                 stylesheet_resolution_roots: input.stylesheet_resolution_roots,
                 document_keys,

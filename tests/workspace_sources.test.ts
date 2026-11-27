@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import type { SourcePackage } from "../packages/mokly/src/generated/sidecar/SourcePackage.js";
 import { jsonObject } from "../packages/mokly/src/sidecar/config-json.js";
 import { WorkspaceSources } from "../packages/mokly/src/sidecar/workspace-sources.js";
 
@@ -28,6 +29,7 @@ test("workspace package targets follow the shared source lookup cases", () => {
   const files = {
     regular,
     candidate: regular,
+    buildTarget: () => true,
     manifest: (file: string) => contents.get(file),
     metadata: () => {},
     read: (file: string) => {
@@ -38,12 +40,24 @@ test("workspace package targets follow the shared source lookup cases", () => {
   };
   for (const entry of cases) {
     assert(jsonObject(entry));
-    const { name, target, extensions = [], expected } = entry;
+    const {
+      name,
+      target,
+      extensions = [],
+      sourcePackages = [],
+      expected,
+    } = entry;
     assert(typeof name === "string");
     assert(typeof target === "string");
     assert(Array.isArray(extensions) && extensions.every(isString));
     assert(expected === null || typeof expected === "string");
-    const sources = new WorkspaceSources(root, extensions, files);
+    assert(Array.isArray(sourcePackages) && sourcePackages.every(isPackageMap));
+    const sources = new WorkspaceSources(
+      root,
+      extensions,
+      files,
+      sourcePackages,
+    );
     assert.equal(
       sources.source(path.resolve(root, target)),
       expected === null ? undefined : path.resolve(root, expected),
@@ -54,4 +68,15 @@ test("workspace package targets follow the shared source lookup cases", () => {
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function isPackageMap(value: unknown): value is Record<string, SourcePackage> {
+  return (
+    jsonObject(value) &&
+    Object.values(value).every(
+      (entry) =>
+        entry === false ||
+        (jsonObject(entry) && Object.values(entry).every(isString)),
+    )
+  );
 }

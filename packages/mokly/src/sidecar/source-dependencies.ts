@@ -130,7 +130,7 @@ export function sourceDependencySync(
 ): string | undefined {
   for (const candidate of candidates(paths, file)) {
     try {
-      return confined(paths, fs.realpathSync(candidate));
+      return confined(paths, fs.realpathSync.native(candidate));
     } catch (error) {
       if (!absent(error)) throw error;
     }

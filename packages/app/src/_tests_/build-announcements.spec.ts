@@ -1,11 +1,14 @@
+import { installPollClock, nextPoll, settledReads } from "./build-clock";
 import { focusOutline, tokenOutline } from "./build-refusals";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
 import { build, buildId } from "./viewer/build-fixtures";
 
 /**
- * What a build card says to a reader who cannot see it change: the title and
- * the line a failure announces, and where the reader lands after Cancel.
+ * What a build card says to a reader who cannot see it change: where the
+ * reader lands after Cancel, and that a late read does not undo it. The title
+ * and the line a failure announces are the failed row of the shared build
+ * state table in `build-states.spec.ts`.
  */
 
 test("Cancel from the keyboard leaves the reader on the new title", async ({
@@ -36,74 +39,6 @@ test("Cancel from the keyboard leaves the reader on the new title", async ({
   await expect(page.getByTestId("build-try-again")).toBeFocused();
 });
 
-test("a failure announces only its title and line", async ({ page }) => {
-  const scenario = await buildScenario(page, "build-alert");
-  const { double, projectId } = scenario;
-  const id = buildId(32);
-  double.builds.set(
-    id,
-    build({
-      id,
-      projectId,
-      state: "failed",
-      canCancel: false,
-      failure: { step: "install", cause: "exit", exitCode: 1 },
-    }),
-  );
-  await open(page, scenario.buildAt(id));
-  const card = page.locator(".fo-build");
-  const alert = card.getByRole("alert");
-  await expect(alert).toHaveCount(1);
-  await expect(alert.locator(":scope > *")).toHaveText([
-    "Unable to publish this branch",
-    "Installing dependencies failed.",
-  ]);
-  await expect(
-    alert.locator(".fo-build-reference, a, button, [role=button]"),
-  ).toHaveCount(0);
-  await expect(card.locator(".fo-build-reference")).toContainText("topic");
-
-  // The reference reads after the message and still sits between the title
-  // and the line on screen, one space step from each.
-  const layout = await card.locator(".fo-build-summary").evaluate((summary) => {
-    const box = (selector: string) =>
-      summary.querySelector(selector)?.getBoundingClientRect();
-    const title = box(".fo-state-title");
-    const reference = box(".fo-build-reference");
-    const line = box(".fo-build-line");
-    if (!title || !reference || !line) return ["missing a row"];
-    const step =
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize) *
-      0.25;
-    const near = (a: number, b: number) => Math.abs(a - b) <= 1;
-    const problems: string[] = [];
-    if (!near(reference.top - title.bottom, step))
-      problems.push("reference is not one step below the title");
-    if (!near(line.top - reference.bottom, step))
-      problems.push("line is not one step below the reference");
-    if (!near(reference.left, title.left) || !near(line.left, title.left))
-      problems.push("rows are not aligned");
-    return problems;
-  });
-  expect(layout).toEqual([]);
-
-  // A refused Try again is announced beside its control, and the message's
-  // alert keeps only the title and the line.
-  double.refuseRequest = { reason: "builds-unavailable" };
-  await page.getByTestId("build-try-again").click();
-  await expect(card.locator(".fo-write-failure [role=alert]")).toHaveText(
-    "This project publishes from CI.",
-  );
-  await expect(card.locator(".fo-build-message")).toHaveAttribute(
-    "role",
-    "alert",
-  );
-  await expect(card.locator(".fo-build-message > *")).toHaveText([
-    "Unable to publish this branch",
-    "Installing dependencies failed.",
-  ]);
-});
-
 test("a read that answers after Cancel leaves the card, its status and focus in step", async ({
   page,
 }) => {
@@ -111,17 +46,21 @@ test("a read that answers after Cancel leaves the card, its status and focus in 
   const { double, projectId } = scenario;
   const id = buildId(33);
   double.builds.set(id, build({ id, projectId }));
+  await installPollClock(page);
   await open(page, scenario.buildAt(id));
   const card = page.locator(".fo-build");
   await expect(
     card.getByRole("heading", { name: "Publishing this branch" }),
   ).toBeVisible();
 
-  // The next poll's build read waits, holding the build as it was then.
+  // The next poll's build read waits, holding the build as it was then. The
+  // first poll ends before the hold, so the clock jump starts the next one.
+  await settledReads(page);
   let release = () => {};
   double.holdBuildReads = new Promise((resolve) => {
     release = resolve;
   });
+  await nextPoll(page);
   await expect.poll(() => double.heldBuildReads).toBe(1);
   await page.getByTestId("build-cancel").focus();
   await page.keyboard.press("Enter");
@@ -145,7 +84,17 @@ test("a read that answers after Cancel leaves the card, its status and focus in 
   double.holdBuildReads = undefined;
   release();
   await expect.poll(() => double.heldBuildReads).toBe(0);
-  await page.waitForTimeout(1_000);
+  // The card starts a poll only once the one before it has settled, held
+  // read included, so a build read that a later poll starts proves the card
+  // has taken the held answer. The log is not whole yet, so the card still
+  // polls; each look lets one more poll interval pass on the page.
+  const taken = double.reads.length;
+  await expect
+    .poll(async () => {
+      await nextPoll(page);
+      return double.reads.slice(taken).includes("build:" + id);
+    })
+    .toBe(true);
   const seen = await page.evaluate(
     () => (window as unknown as { seenBuildCard: string[] }).seenBuildCard,
   );

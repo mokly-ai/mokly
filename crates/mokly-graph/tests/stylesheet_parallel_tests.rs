@@ -234,6 +234,7 @@ fn the_first_failed_root_in_root_order_gives_the_error_when_a_later_root_fails_f
         inner: Arc::new(Compiler {
             tree: tree.clone(),
             repo_root: config.repo_root.clone(),
+            resolution: Default::default(),
             resolver: Arc::new(SourceResolver {
                 settings: Default::default(),
                 tree: tree.clone(),
