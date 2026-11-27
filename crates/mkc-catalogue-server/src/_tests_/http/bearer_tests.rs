@@ -1,6 +1,7 @@
 //! Bearer precedence and credential privacy at the HTTP boundary.
 
 use std::io::{self, Write};
+use std::str;
 use std::sync::{Arc, Mutex};
 
 use axum::Router;
@@ -161,7 +162,7 @@ async fn catalogue_denial_logs_exclude_the_authorization_header_and_token() {
     .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     let output = output.lock().unwrap();
-    let logs = std::str::from_utf8(&output).unwrap().to_ascii_lowercase();
+    let logs = str::from_utf8(&output).unwrap().to_ascii_lowercase();
     assert!(logs.contains("rpc error"));
     assert!(logs.contains("status=404"));
     assert!(!logs.contains("authorization"));
