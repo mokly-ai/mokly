@@ -72,7 +72,7 @@ const panelWaits = [
     controls: [
       ["Close", false],
       ["Create project", true],
-      // A new workspace needs nothing the read answers.
+      // Create workspace sits outside the read's region, so it never waits.
       ["Create workspace", false],
     ],
     placeholders: 1,

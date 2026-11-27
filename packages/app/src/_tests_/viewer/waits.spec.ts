@@ -203,6 +203,10 @@ test("a pull request alias names its pull request while it waits, and each panel
     await expect(heardIn(panel)).toHaveText("Loading projects…");
     await expect(panel.getByRole("list", { name: "Projects" })).toBeVisible();
     await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
+    // Create workspace sits outside the read's region, so it never waits.
+    await expect(
+      panel.getByRole("button", { name: "Create workspace" }),
+    ).toBeEnabled();
     read.release();
     await expect(panel.getByText(made.workspaceName)).toBeVisible();
     await page.getByTestId("close-projects").click();

@@ -237,8 +237,8 @@ export function ProjectsPanel({
             onPress={() => onCreateProject(workspaceId)}
             testID="projects-create"
           />
-          {/* A new workspace needs nothing the read answers, so it never
-              waits for it. */}
+          {/* Create workspace sits outside the read's region and opens
+              no workspace of the read, so it never waits for it. */}
           <Action
             label="Create workspace"
             size="md"
