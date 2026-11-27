@@ -4,7 +4,7 @@ import { createStatusDotStyles } from "@firna/ui/status-dot";
 import { useSharedUiTheme } from "@firna/ui/theme";
 import type { ReactNode } from "react";
 
-import { ControlPlaceholder, TextBar } from "./placeholders";
+import { TextBar } from "./placeholders";
 
 /**
  * The placeholder forms of the local list rows: each draws the row's own frame
@@ -126,11 +126,11 @@ export function WaitingDot() {
 
 /**
  * A content-list row while the list's read runs: the package's own row, with
- * a bar in place of each text that the answer supplies and its control in
- * placeholder form. An empty title or detail is the answer's, so it draws as a
- * bar; one the caller already knows, such as a settings pane's own name in the
- * settings index, stays text. A row that leads somewhere is no link yet,
- * because its target needs the answer.
+ * a bar in place of each text that the answer supplies. An empty title or
+ * detail is the answer's, so it draws as a bar; one the caller already knows,
+ * such as a settings pane's own name in the settings index, stays text. A row
+ * that leads somewhere or chooses is no link and no button yet, because its
+ * target needs the answer.
  */
 export function WaitingListRow({
   row,
@@ -142,7 +142,6 @@ export function WaitingListRow({
     status?: string;
     meta?: string;
     mono?: boolean;
-    choose?: boolean;
   };
   size: "sm" | "md";
 }) {
@@ -169,7 +168,6 @@ export function WaitingListRow({
           )
         }
       />
-      {row.choose && <ControlPlaceholder size="sm" width={64} />}
     </div>
   );
 }

@@ -40,7 +40,9 @@ its whole frame, with the ink at 5% on hover and the focus outline inside its
 frame. It carries no trailing label, such as Open, because its title already
 names where it goes. On such a row, a trailing control is only for a second,
 different action, such as a menu. It sits outside the link and wraps beneath
-the row when enlarged text needs the width.
+the row when enlarged text needs the width. A row whose only action is to
+choose it is one button over its whole frame in the same way, with no trailing
+Select.
 
 **Form**. One 460px column, 20px between fields. Labels, placeholders and
 helper text come from the control. A placeholder shows the shape of an answer
@@ -180,10 +182,12 @@ The [viewer guide rule](./viewer-build-navigation.md#request-a-build)
 decides when Publish from CI appears; the fragment never adds a guide because
 a refusal occurred.
 
-**Selection**. A list the user chooses from is the registered options list in
-its ring highlight: the chosen row takes `accentSoft`, an `accentSolid`
-hairline and a trailing check. It is never a solid fill, which would read as a
-second primary action on the screen.
+**Selection**. A list the user chooses from in a select is the registered
+options list in its ring highlight: the chosen row takes `accentSoft`, an
+`accentSolid` hairline and a trailing check. It is never a solid fill, which
+would read as a second primary action on the screen. A panel's list of choices,
+such as Share's screens, is instead a list of whole-row buttons, as the
+Publication row in [Viewer compositions](./folio-viewer.md#compositions) says.
 
 ## Density And Discipline
 

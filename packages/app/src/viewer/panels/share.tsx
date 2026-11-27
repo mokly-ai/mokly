@@ -15,22 +15,17 @@ import { PanelList } from "./panel-rows";
 import type { WaitingPanelRow } from "./panel-rows";
 import { Link, LinkWait } from "./share-link";
 
-/** The row the link points at, which says so in place of its choice. */
+/** The row the link points at, which says so and is no button. */
 const chosen = { current: true, mark: "Selected" } as const;
 
 /**
  * The screens while they are read: the whole catalogue keeps its known name,
  * one placeholder row stands for the screens, and which row is selected is
- * the read's, so each row's choice is a placeholder.
+ * the read's, so no row is a button or says Selected yet.
  */
 const waitingScreens: WaitingPanelRow[] = [
-  {
-    id: "whole-catalogue",
-    waiting: true,
-    title: "Whole catalogue",
-    choose: true,
-  },
-  { id: "waiting", waiting: true, title: "", choose: true },
+  { id: "whole-catalogue", waiting: true, title: "Whole catalogue" },
+  { id: "waiting", waiting: true, title: "" },
 ];
 
 function ScreenChoice({
@@ -66,8 +61,9 @@ function ScreenChoice({
           // A link pins the screen and the way it is drawn together, so the
           // list holds the screens this publication draws in the reader's
           // view, with those the viewer shows through its light fallback under
-          // Dark. The selected screen comes from the same rule, and its row
-          // takes the signal-soft fill and says Selected in place of a choice.
+          // Dark. Each other row is one button that selects it. The selected
+          // screen comes from the same rule, and its row is no button: it
+          // takes the signal-soft fill and says Selected.
           const items = shareableScreens(all.items, selection);
           return (
             <PanelList
@@ -78,20 +74,14 @@ function ScreenChoice({
                   title: "Whole catalogue",
                   ...(selected === undefined
                     ? chosen
-                    : {
-                        action: "Select",
-                        onChoose: () => onSelect(undefined),
-                      }),
+                    : { onChoose: () => onSelect(undefined) }),
                 },
                 ...items.map((screen) => ({
                   id: screen.path,
                   title: screen.title,
                   ...(selected === screen.path
                     ? chosen
-                    : {
-                        action: "Select",
-                        onChoose: () => onSelect(screen.path),
-                      }),
+                    : { onChoose: () => onSelect(screen.path) }),
                 })),
               ]}
             />

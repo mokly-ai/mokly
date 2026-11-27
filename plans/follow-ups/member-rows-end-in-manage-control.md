@@ -30,9 +30,9 @@
   - **C.** Keep Manage, and record the Members list as an exception to the `product-ui` rule. Effort: Small.
 - **Left out:** None.
 - **Wider fix:** None. The `product-ui` rule of 2026-11-26 already states the class.
-- **Previous examples:** The navigation list rows, which ended in Open or Details until 2026-11-26.
-- **Related:**
-  - `plans/follow-ups/member-row-role-on-phones.md`: the same row and its phone grid. A change of the row's control changes that grid too, so do both in one change.
-  - `plans/follow-ups/share-choice-rows-break-row-rule.md`: the same class, a row whose only action is a trailing control. One answer can settle both.
+- **Previous examples:**
+  - The navigation list rows, which ended in Open or Details until 2026-11-26.
+  - The Share panel's screen rows, which ended in a quiet Select until 2026-11-27. The user then chose that each is one button over its whole frame. The app draws it as `RowContent` in `packages/app/src/components/controls.tsx`, with the `row-choice` class, and option A can use the same component.
+- **Related:** `plans/follow-ups/member-row-role-on-phones.md`: the same row and its phone grid. A change of the row's control changes that grid too, so do both in one change.
 - **Recommendation:** A. It follows the rule, and the pane keeps its inline management.
 - **Action:** ask the user, because the decision of 2026-11-26 names only the navigation lists, and A removes a drawn and shipped control on `origin/main`.

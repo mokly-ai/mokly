@@ -1,11 +1,10 @@
 import { createListStyles, List, ListItem } from "@firna/ui/list";
 import { useSharedUiTheme } from "@firna/ui/theme";
 
-import { Action } from "../../components/action";
-import { RowLink, StateDot } from "../../components/controls";
+import { RowContent, StateDot } from "../../components/controls";
 import type { RowPress, StatusTone } from "../../components/controls";
 import { WaitingDot } from "../../components/placeholder-rows";
-import { ControlPlaceholder, TextBar } from "../../components/placeholders";
+import { TextBar } from "../../components/placeholders";
 import { useCompact } from "../../layout/viewport";
 
 /**
@@ -17,8 +16,9 @@ type TitleForm = "plain" | "reference" | "pullRequest";
 /**
  * One row of a panel's list: the switcher's references, History's
  * publications and builds, Share's screens and the projects panel's projects.
- * A row that goes somewhere is the link as a whole. The row the reader is on
- * takes the signal-soft fill, and its `mark` says so at the row's end.
+ * A row that goes somewhere is the link as a whole, and a row that chooses is
+ * the button as a whole. The row the reader is on takes the signal-soft fill,
+ * and its `mark` says so at the row's end.
  */
 export type PanelRow = {
   id: string;
@@ -37,9 +37,8 @@ export type PanelRow = {
 /**
  * One row while the list's read runs, in the loaded row's own frame: an empty
  * title or detail is the answer's, so it draws as a bar, a detail that is
- * absent draws no line, and the row's end draws its choice as a placeholder.
- * A row that goes somewhere is no link yet, because its target needs the
- * answer.
+ * absent draws no line. A row that goes somewhere or chooses is no link and no
+ * button yet, because its target needs the answer.
  */
 export interface WaitingPanelRow {
   id: string;
@@ -50,8 +49,6 @@ export interface WaitingPanelRow {
   status?: boolean;
   /** Whether the loaded row carries a short SHA. */
   sha?: boolean;
-  /** Whether the row ends in a control that chooses. */
-  choose?: boolean;
 }
 
 /** The size of a row's density in the package's list scale. */
@@ -84,32 +81,21 @@ function Title({ title, form = "plain" }: Pick<PanelRow, "title" | "form">) {
 }
 
 /**
- * The row's end: the mark of the row the reader is on, its choice, or an
- * empty column that keeps the SHAs in line.
+ * The row's end: the mark of the row the reader is on, or an empty column that
+ * keeps the SHAs in line.
  */
 function End({ row }: { row: PanelRow }) {
-  if (row.mark !== undefined)
-    return (
-      <span className="fo-canvas-row-end fo-canvas-row-mark">{row.mark}</span>
-    );
-  if (row.onChoose)
-    return (
-      <span className="fo-canvas-row-end fo-canvas-row-choice">
-        <Action
-          label={row.action}
-          tone="quiet"
-          size="sm"
-          onPress={row.onChoose}
-          testID={"choose-" + row.id}
-        />
-      </span>
-    );
-  return <span className="fo-canvas-row-end" />;
+  return row.mark === undefined ? (
+    <span className="fo-canvas-row-end" />
+  ) : (
+    <span className="fo-canvas-row-end fo-canvas-row-mark">{row.mark}</span>
+  );
 }
 
 /**
  * One loaded row: the package's list row, the link as a whole when the row
- * goes somewhere, with the row's end beside it.
+ * goes somewhere or the button as a whole when it chooses, with the row's end
+ * beside it.
  */
 function Row({ row, size }: { row: PanelRow; size: Size }) {
   return (
@@ -120,7 +106,7 @@ function Row({ row, size }: { row: PanelRow; size: Size }) {
           : "content-list-row"
       }
     >
-      <RowLink row={row}>
+      <RowContent row={row}>
         <ListItem
           size={size}
           title={<Title title={row.title} form={row.form} />}
@@ -132,7 +118,7 @@ function Row({ row, size }: { row: PanelRow; size: Size }) {
             )
           }
         />
-      </RowLink>
+      </RowContent>
       <End row={row} />
     </div>
   );
@@ -156,7 +142,7 @@ function WaitingDetail({ size }: { size: Size }) {
 /**
  * One row while the list's read runs, in the loaded row's own frame: the
  * same title, detail, dot and SHA places, each a bar where the answer
- * supplies it, and the row's end in its waiting form.
+ * supplies it, and the row's end empty.
  */
 function WaitingRow({ row, size }: { row: WaitingPanelRow; size: Size }) {
   return (
@@ -186,13 +172,7 @@ function WaitingRow({ row, size }: { row: WaitingPanelRow; size: Size }) {
           ) : undefined
         }
       />
-      {row.choose ? (
-        <span className="fo-canvas-row-end fo-canvas-row-choice">
-          <ControlPlaceholder size="sm" width={64} />
-        </span>
-      ) : (
-        <span className="fo-canvas-row-end" />
-      )}
+      <span className="fo-canvas-row-end" />
     </div>
   );
 }

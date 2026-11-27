@@ -8,7 +8,6 @@ import type { ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
 
-import { Action } from "./action";
 import { AppLink } from "./app-link";
 import { WaitingListRow } from "./placeholder-rows";
 import type { WaitingRow } from "./placeholder-rows";
@@ -75,20 +74,20 @@ export function PersonAvatar({
 
 /**
  * What a press on a row does. A row that goes to one place is the link as a
- * whole, so it carries no label of its own: its title already names where it
- * goes. A row whose choice changes what its panel shows, rather than going
- * anywhere, ends in a quiet control with its label and is not openable in a
- * second tab. A row with neither leads nowhere.
+ * whole, and a row whose only action is to choose it, rather than go
+ * anywhere, is a button as a whole. Neither carries a label of its own: its
+ * title already names what it opens or chooses. A choice changes what its
+ * panel shows, so it is not openable in a second tab. A row with neither
+ * leads nowhere.
  */
 export type RowPress =
   | {
       href?: string;
       /** Takes the destination's place, for a row whose owner drives the move. */
       onFollow?: () => void;
-      action?: never;
       onChoose?: never;
     }
-  | { onChoose: () => void; action: string; href?: never; onFollow?: never };
+  | { onChoose: () => void; href?: never; onFollow?: never };
 
 /** One row of a shared content list. */
 export type ContentRow = {
@@ -108,16 +107,23 @@ export type ContentRow = {
 export type WaitingContentRow = WaitingRow & { id: string; waiting: true };
 
 /**
- * A row's content, as the link of a row that goes somewhere: the whole row
- * takes the click, and the link reaches the row's full frame.
+ * A row's content, as the link of a row that goes somewhere or the button of
+ * a row that chooses: the whole row takes the click, and the link or the
+ * button reaches the row's full frame.
  */
-export function RowLink({
+export function RowContent({
   row,
   children,
 }: {
   row: RowPress;
   children: ReactNode;
 }) {
+  if (row.onChoose)
+    return (
+      <button type="button" className="row-choice" onClick={row.onChoose}>
+        {children}
+      </button>
+    );
   if (row.href === undefined) return children;
   return (
     <AppLink href={row.href} onPress={row.onFollow} className="row-link">
@@ -126,7 +132,10 @@ export function RowLink({
   );
 }
 
-/** The shared rows a panel lists; a row that goes somewhere is a link. */
+/**
+ * The shared rows a panel lists; a row that goes somewhere is a link, and a
+ * row that chooses is a button.
+ */
 export function ContentList({
   label,
   rows,
@@ -147,7 +156,7 @@ export function ContentList({
           <WaitingListRow row={row} size={size} />
         ) : (
           <div className="content-list-row">
-            <RowLink row={row}>
+            <RowContent row={row}>
               <ListItem
                 size={size}
                 title={row.title}
@@ -169,16 +178,7 @@ export function ContentList({
                   ) : undefined
                 }
               />
-            </RowLink>
-            {row.onChoose && (
-              <Action
-                label={row.action}
-                tone="quiet"
-                size="sm"
-                onPress={row.onChoose}
-                testID={"choose-" + row.id}
-              />
-            )}
+            </RowContent>
           </div>
         )
       }

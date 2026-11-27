@@ -27,6 +27,6 @@
 - **Left out:** Keep Manage members, and let it say that the workspace manages its members. It adds copy to a control that leads nowhere for this reader. Fewer than three approaches are real, because the control can only hide in the pane or in `PaneLink`.
 - **Wider fix:** B. A `PaneLink` that hides for an unavailable pane removes the case for every pane link.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/access-grant-row-links-to-members.md`: its recommended option keeps Manage members as the only way from the Access pane to the Members pane.
+- **Related:** None. Since 2026-11-27 the Access drawing's grant rows are plain rows, as in the app, so Manage members is the only way from the Access pane to the Members pane.
 - **Recommendation:** B. One rule in `PaneLink` covers this control and each later pane link.
 - **Action:** fix after merge, apply B, because the control was on `origin/main`, and `settings-dialog.md` already says that a project-only guest sees no Members pane.

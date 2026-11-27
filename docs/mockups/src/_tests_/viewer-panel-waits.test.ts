@@ -99,7 +99,8 @@ const panelWaits = [
       ["Close", false],
       ["Copy link", true],
     ],
-    placeholders: 2,
+    // Each screen row is one button, so a waiting row draws no control.
+    placeholders: 0,
     hidden: [
       // Every link that the answer supplies starts with this address.
       publicationAddress,

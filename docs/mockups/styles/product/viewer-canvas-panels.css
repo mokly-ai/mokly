@@ -193,19 +193,14 @@
   font-weight: var(--mk-font-semibold);
 }
 
-/* The row's end: its choice or its mark, in one column of one width, empty on
-   a row that is a link, so the short SHAs before it line up; a phone's
-   narrower column leaves the row's title more room. A choice's quiet control
-   reaches past the column by its own padding, so its label ends where the
-   other ends do. */
+/* The row's end: its mark, in one column of one width, empty on a row that
+   is a link or a choice, so the short SHAs before it line up; a phone's
+   narrower column leaves the row's title more room. */
 [data-color-scheme] .fo-canvas-row-end {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 4.5rem;
-}
-[data-color-scheme] .fo-canvas-row-choice {
-  margin-inline-end: calc(-1 * var(--mk-space-3));
 }
 /* The mark of the row the reader is on, in the signal-deep ink. */
 [data-color-scheme] .fo-canvas-row-mark {

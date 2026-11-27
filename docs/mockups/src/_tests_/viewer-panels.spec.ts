@@ -207,9 +207,17 @@ for (const viewport of ["desktop", "mobile"] as const)
         await expect(choices.filter({ hasText: "Selected" })).toHaveText([
           /^Home/,
         ]);
-        await expect(
-          choices.getByRole("link", { name: "Select", exact: true }),
-        ).toHaveCount(4);
+        // Each other row is one control named by its screen, with no
+        // trailing Select, and the selected row is none.
+        await expect(choices.getByRole("link")).toHaveText([
+          /^Whole catalogue/,
+          /^Account/,
+          /^Checkout/,
+          /^Pricing/,
+        ]);
+        await expect(choices.getByText("Select", { exact: true })).toHaveCount(
+          0,
+        );
         await expect(
           page.getByText("Project members can open this link."),
         ).toBeVisible();

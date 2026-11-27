@@ -40,7 +40,6 @@ function Grants({ state }: { state: ScreenState }) {
                     title: membership.selected.name,
                     detail: membership.selected.email,
                     meta: "Reviewer",
-                    to: "product/settings/members",
                   },
             ]}
           />

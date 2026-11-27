@@ -45,11 +45,7 @@ test("Share copies the canonical link and says who can open it", async ({
   // A screen this publication draws at this viewport and scheme pins the link
   // to it, and the address follows. Both is the default viewport, so neither
   // the address nor the link names one.
-  await panel
-    .getByRole("listitem")
-    .filter({ hasText: "Start" })
-    .getByText("Select")
-    .click();
+  await panel.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page).toHaveURL(/catalogueScreen=start/);
   await expect(link).toHaveValue(
     new RegExp(`${path}\\?catalogueScreen=start$`),
@@ -119,9 +115,16 @@ test("Share copies the canonical link and says who can open it", async ({
   // the light view the reader sees.
   await open(page, `${path}?catalogueScreen=start&scheme=dark&panel=share`);
   const choices = panel.getByRole("listitem");
+  // Each other row is one button named by its screen, and the selected row
+  // is no button.
   await expect(choices.filter({ hasText: "Start" })).toContainText("Selected");
   await expect(
-    choices.filter({ hasText: "Finish" }).getByText("Select", { exact: true }),
+    choices.filter({ hasText: "Start" }).getByRole("button"),
+  ).toHaveCount(0);
+  await expect(
+    choices
+      .filter({ hasText: "Finish" })
+      .getByRole("button", { name: "Finish", exact: true }),
   ).toBeVisible();
   await expect(link).toHaveValue(
     appOrigin + path + "?catalogueScreen=start&scheme=light",
@@ -199,7 +202,14 @@ test("a reader who arrived on a screen can clear it", async ({ page }) => {
     new RegExp(`${path}\\?catalogueScreen=start$`),
   );
 
-  await panel.getByTestId("choose-whole-catalogue").click();
+  // The whole row is the button: a press in the row's own padding, outside
+  // the button's content, still selects it.
+  const whole = panel
+    .getByRole("listitem")
+    .filter({ hasText: "Whole catalogue" });
+  const box = await whole.boundingBox();
+  expect(box).not.toBeNull();
+  await whole.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
   // Whole catalogue means the whole catalogue: the address, the stage and the
   // link the reader copies all stop naming a screen.
   await expect(page).not.toHaveURL(/catalogueScreen=/);

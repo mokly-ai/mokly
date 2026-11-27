@@ -30,28 +30,42 @@
   flex: 1 1 14rem;
   min-width: 0;
 }
-/* A row that leads somewhere is one link: its content is the anchor, and the
-   anchor's ::after reaches the list item's own frame, padding included, so
-   the whole row takes the click. The list item draws the row's states, so
-   they take its own corners: the hover fill, the text at 5% that the chrome's
-   hover rule allows, and the focus outline inside its frame. */
+/* A row that leads somewhere is one link, and a row whose only action is to
+   choose it is one button: its content is the anchor or the button, whose
+   ::after reaches the list item's own frame, padding included, so the whole
+   row takes the click. The list item draws the row's states, so they take
+   its own corners: the hover fill, the text at 5% that the chrome's hover
+   rule allows, and the focus outline inside its frame. */
 .row-link {
   display: block;
   color: inherit;
   text-decoration: none;
 }
-.row-link::after {
+.row-choice {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+:is(.row-link, .row-choice)::after {
   content: "";
   position: absolute;
   inset: 0;
 }
-.row-link:focus-visible {
+:is(.row-link, .row-choice):focus-visible {
   outline: none;
 }
-li:has(> .content-list-row > .row-link:hover) {
+li:has(> .content-list-row > :is(.row-link, .row-choice):hover) {
   background: color-mix(in srgb, var(--mk-color-text) 5%, transparent);
 }
-li:has(> .content-list-row > .row-link:focus-visible) {
+li:has(> .content-list-row > :is(.row-link, .row-choice):focus-visible) {
   outline: 2px solid var(--mk-color-focus);
   outline-offset: -2px;
 }
@@ -66,7 +80,7 @@ li:has(> .content-list-row > .row-link:focus-visible) {
   border-end-end-radius: calc(var(--mk-radius-medium) - 1px);
 }
 @media (forced-colors: active) {
-  li:has(> .content-list-row > .row-link:focus-visible) {
+  li:has(> .content-list-row > :is(.row-link, .row-choice):focus-visible) {
     outline-color: Highlight;
   }
 }

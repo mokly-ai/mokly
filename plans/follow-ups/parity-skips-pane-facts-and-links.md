@@ -27,7 +27,7 @@
 - **Related:**
   - `plans/follow-ups/workspace-pane-mockup-lacks-role.md`, same cause.
   - `plans/follow-ups/access-drawing-shows-grantee-addresses.md`, same class. The parity suite does not compare the detail line of a row either, so it did not report the drawn addresses on the Access pane.
-  - `plans/follow-ups/access-grant-row-links-to-members.md`: its option D widens the same suite to compare row links.
+  - Row links, the same class. Until 2026-11-27 the Access drawing's grant row linked to the Members pane, but the app's row was plain, and the parity suite did not report it. B can also compare the row links of each drawing with the app's rows.
 - **Recommendation:** B. Fact rows are part of what a pane says.
 - **Action:** ask the user, because condition 3 holds: B adds stricter validation.
 

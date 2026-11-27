@@ -28,7 +28,6 @@
 - **Wider fix:** None in this item. `plans/follow-ups/parity-skips-pane-facts-and-links.md` holds the open choice to compare more text in the parity suite. A row's detail line needs the same widening.
 - **Previous examples:** `plans/follow-ups/access-pane-section-title-mismatch.md`, another difference between the same drawing and the app.
 - **Related:**
-  - `plans/follow-ups/access-grant-row-links-to-members.md`: the same rows of the same drawing. Apply both answers in one change.
   - `plans/follow-ups/access-pane-section-title-mismatch.md`: the same pane, the section title.
   - `plans/follow-ups/parity-skips-pane-facts-and-links.md`: the same class. The parity suite does not compare this text.
 - **Recommendation:** A. The app ships without addresses, and B widens what a project-only guest can read.

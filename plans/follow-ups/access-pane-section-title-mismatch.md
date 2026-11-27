@@ -21,6 +21,6 @@
 - **Previous examples:** `plans/follow-ups/workspace-pane-mockup-lacks-role.md` records another pane difference that the parity suite does not see.
 - **Related:**
   - `plans/follow-ups/parity-skips-pane-facts-and-links.md`, same class. It holds the open choice to widen the parity suite to fact values and external-link labels.
-  - `plans/follow-ups/access-grant-row-links-to-members.md` and `plans/follow-ups/access-drawing-shows-grantee-addresses.md`: two more differences between the same drawing and the app pane. One change can apply all three answers.
+  - `plans/follow-ups/access-drawing-shows-grantee-addresses.md`: another difference between the same drawing and the app pane. One change can apply both answers.
 - **Recommendation:** A (estimate). The inherited grants come from the workspace, and the section description already says so.
 - **Action:** ask the user, because condition 3 holds. A and B choose between the mockup and the product. C adds stricter validation. No user choice is recorded.

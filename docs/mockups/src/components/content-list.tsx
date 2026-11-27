@@ -3,7 +3,6 @@ import { StatusDot } from "@firna/ui/status-dot";
 
 import { MockLink } from "@mokly/mokly";
 
-import { Button } from "../entries/design/button.mockup";
 import { WaitingListRow } from "../screens/product/placeholder-rows";
 
 import { componentInput, componentMetadata } from "./metadata";
@@ -18,7 +17,7 @@ const tones = {
 export const contentListInput = componentInput({
   ...componentMetadata(
     "Content list",
-    "Shared rows with a status, aligned metadata, and a whole-row link or a choice.",
+    "Shared rows with a status, aligned metadata, and a whole-row link or choice.",
   ),
   propSchema: {
     type: "object",
@@ -36,10 +35,8 @@ export const contentListInput = componentInput({
             id: { type: "string" },
             title: { type: "string" },
             detail: { type: "string" },
-            /** Where the row leads: the whole row is the link, unless it is a choice. */
+            /** Where the row leads: the whole row is the link, or the button of a choice. */
             to: { type: "string" },
-            /** The label of a choice's control; only a choice has one. */
-            action: { type: "string" },
             status: { enum: ["neutral", "success", "warning", "danger"] },
             meta: { type: "string" },
             mono: { type: "boolean" },
@@ -103,21 +100,15 @@ export const contentListInput = componentInput({
           );
           return (
             <div className="content-list-row">
-              {row.to && !row.choose ? (
-                <MockLink className="row-link" to={row.to}>
+              {!row.to ? (
+                item
+              ) : row.choose ? (
+                <MockLink className="row-choice" to={row.to}>
                   {item}
                 </MockLink>
               ) : (
-                item
-              )}
-              {row.to && row.choose && (
-                <MockLink asChild to={row.to}>
-                  <Button
-                    moklyInstance={"choose-" + row.id}
-                    label={row.action ?? "Select"}
-                    tone="quiet"
-                    size="sm"
-                  />
+                <MockLink className="row-link" to={row.to}>
+                  {item}
                 </MockLink>
               )}
             </div>
@@ -161,7 +152,6 @@ export const contentListInput = componentInput({
             id: "pricing",
             title: "Pricing",
             to: "product/viewer/share",
-            action: "Select",
             choose: true,
           },
         ],

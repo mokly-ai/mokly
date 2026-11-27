@@ -4,7 +4,7 @@ import { createStatusDotStyles } from "@firna/ui/status-dot";
 import { useSharedUiTheme } from "@firna/ui/theme";
 import type { ReactNode } from "react";
 
-import { ControlPlaceholder, TextBar } from "./placeholders";
+import { TextBar } from "./placeholders";
 
 /**
  * The placeholder forms of the local list rows, the same forms the catalogue
@@ -135,16 +135,14 @@ export interface WaitingRow {
   /** Whether the loaded row ends with metadata, in mono where it is an id. */
   meta?: boolean;
   mono?: boolean;
-  /** Whether the row ends in a control that chooses. */
-  choose?: boolean;
 }
 
 /**
  * A content-list row while the list's read runs: the package's own row, with
- * a bar in place of each text that the answer supplies and its control in
- * placeholder form. An empty title or detail is the answer's, so it draws as a
- * bar; one the caller already knows stays text. A row that goes somewhere is
- * no link yet, because its target needs the answer. `size` is the density
+ * a bar in place of each text that the answer supplies. An empty title or
+ * detail is the answer's, so it draws as a bar; one the caller already knows
+ * stays text. A row that goes somewhere or chooses is no link and no button
+ * yet, because its target needs the answer. `size` is the density
  * `ContentList` gives its rows.
  */
 export function WaitingListRow({
@@ -177,7 +175,6 @@ export function WaitingListRow({
           ) : undefined
         }
       />
-      {row.choose && <ControlPlaceholder size="sm" width={64} />}
     </div>
   );
 }

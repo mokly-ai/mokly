@@ -65,8 +65,8 @@ for (const id of screens) {
       // package's shell, inside its `.mbk` root, shows the focus glow of
       // decision 38: no outline and a box shadow, on the link or, for a
       // catalogue row, on its pill. The cloud's own links keep the solid
-      // outline; a row that is a link as a whole draws it on its list item,
-      // which takes the row's corners.
+      // outline; a row that is a link or a choice as a whole draws it on its
+      // list item, which takes the row's corners.
       const overlay = await page.locator(".fo-viewer-backdrop").count();
       const links = await plainLinks(page).all();
       if (overlay === 0) expect(links.length).toBeGreaterThan(0);
@@ -82,7 +82,8 @@ for (const id of screens) {
             (part) => getComputedStyle(node, part).boxShadow !== "none",
           ),
           outline: getComputedStyle(
-            (node.classList.contains("row-link") && node.closest("li")) || node,
+            (node.matches(".row-link, .row-choice") && node.closest("li")) ||
+              node,
           ).outlineStyle,
           shell: node.closest(".mbk") !== null,
         }));

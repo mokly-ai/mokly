@@ -22,7 +22,7 @@ export interface CatalogueSource {
 }
 
 /** A version failure latched against one source, with its plain diagnostic. */
-export interface VersionFailure {
+export interface SourceVersionFailure {
   details?: string;
 }
 
@@ -37,12 +37,12 @@ export type IndexRead =
 export interface SourceState {
   read: IndexRead;
   /** The first version failure, of the index or of a detail. */
-  failure?: VersionFailure;
+  failure?: SourceVersionFailure;
 }
 
 /** An index read's answer: the index copy or its version failure. */
 export type IndexAnswer =
-  { index: CatalogueReadModel } | { failure: VersionFailure };
+  { index: CatalogueReadModel } | { failure: SourceVersionFailure };
 
 /** What one source reads with; the web document supplies the real reads. */
 export interface SourceReads {

@@ -9,17 +9,14 @@ The content-list registration is `design/content-list`. Its rows support four
 optional fields: `status`, one of the four semantic tones, rendered as a
 decorative Firna `StatusDot` in the row's leading slot; `meta`, right-aligned
 metadata in the trailing slot; `mono`, which sets the shared monospace
-treatment on that metadata; and `choose`, which draws the row's action as a
-quiet Firna button, for a row the reader picks from a set instead of
-navigating to. A row already chosen carries `meta` instead of an action,
-because there is nowhere for it to go. The status stays decorative because the
+treatment on that metadata; and `choose`, which makes the row one button over
+its whole frame, for a row the reader picks from a set instead of navigating
+to, with no trailing label such as Select. A row already chosen carries `meta`
+and is no button, because there is nothing left to choose. The status stays decorative because the
 row's own description states the state in words, so the meaning is never
 carried by color alone. A row with a destination is one link around
-`ListItem` that covers the row's whole frame, with no trailing label. A choice
-is a sibling of `ListItem` in a wrapping row: it sits at the right edge and
-wraps beneath the row only when enlarged text needs the width, which keeps
-ordinary rows compact while still fitting 320px at 200% text. Its waiting row is the row's
-own frame with bars in place of its text, not the `loading` rows of Firna's
+`ListItem` that covers the row's whole frame, with no trailing label. Its
+waiting row is the row's own frame with bars in place of its text, not the `loading` rows of Firna's
 `List`, because their heights differ from the rows they would stand for.
 
 The product controls are thin wrappers over the public `/input`, `/segmented`,
