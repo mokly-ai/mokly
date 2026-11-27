@@ -597,6 +597,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e4de3bc4ea267985becf712dc6d9eed8b04c953b3fcfb339ebc87acd9804901"
 
 [[package]]
+name = "cipher"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8cf2a2c93cd704877c0858356ed03480ff301ee950b43f1cbe4573b088bfa6c"
+dependencies = [
+ "block-buffer",
+ "crypto-common",
+ "inout",
+]
+
+[[package]]
 name = "clap"
 version = "4.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1982,6 +1993,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inout"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a580c13f0ffc335ef42dd3f6b1a41b726051c5e1656d9a3aa6fddb3c5dfbbf9"
+dependencies = [
+ "hybrid-array",
+]
+
+[[package]]
 name = "insta"
 version = "1.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2618,12 +2638,14 @@ dependencies = [
 name = "mkc-auth"
 version = "0.1.0"
 dependencies = [
+ "base64 0.23.1",
  "chrono",
  "getrandom 0.4.3",
  "internal-error",
  "mkc-domain",
  "mkc-email-interface",
  "mkc-store-interface",
+ "scrypt",
  "sha2",
  "subtle",
  "thiserror",
@@ -2770,6 +2792,7 @@ version = "0.1.0"
 dependencies = [
  "internal-error",
  "ipnet",
+ "mkc-auth",
  "mkc-domain",
  "mkc-file-store-interface",
  "psl",
@@ -2970,7 +2993,6 @@ dependencies = [
  "hex",
  "hmac",
  "internal-error",
- "mime_guess",
  "mkc-auth",
  "mkc-build-interface",
  "mkc-db",
@@ -2983,6 +3005,7 @@ dependencies = [
  "mkc-store-pg",
  "mkc-test-pg",
  "mkc-upload-memory",
+ "mokly-content-types",
  "sandbox-interface",
  "serde",
  "serde_json",
@@ -3022,6 +3045,7 @@ dependencies = [
  "mkc-domain",
  "mkc-store-interface",
  "mkc-test-pg",
+ "scheduled-thread-pool",
  "thiserror",
  "unimock",
  "uuid",
@@ -3157,6 +3181,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mokly-content-types"
+version = "0.14.0"
+dependencies = [
+ "mime_guess",
+]
+
+[[package]]
 name = "mokly-css"
 version = "0.14.0"
 dependencies = [
@@ -3165,7 +3196,7 @@ dependencies = [
  "insta",
  "jsonc-parser",
  "lightningcss",
- "mokly-css",
+ "mokly-content-types",
  "mokly-model",
  "mokly-source-interface",
  "precomputed-hash",
@@ -3184,6 +3215,7 @@ version = "0.14.0"
 dependencies = [
  "dunce",
  "mokly-platform",
+ "mokly-test-support",
  "sha2",
  "tempfile",
  "thiserror",
@@ -3199,6 +3231,7 @@ dependencies = [
  "globset",
  "insta",
  "mokly-catalogue",
+ "mokly-content-types",
  "mokly-css",
  "mokly-html",
  "mokly-model",
@@ -3215,6 +3248,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "unimock",
+ "url",
 ]
 
 [[package]]
@@ -3260,6 +3294,7 @@ name = "mokly-platform"
 version = "0.14.0"
 dependencies = [
  "libc",
+ "mokly-platform",
  "tempfile",
  "thiserror",
  "tracing",
@@ -3335,9 +3370,9 @@ dependencies = [
  "hyper",
  "hyper-util",
  "insta",
- "mime_guess",
  "mokly-catalogue",
  "mokly-compare",
+ "mokly-content-types",
  "mokly-css",
  "mokly-graph",
  "mokly-html",
@@ -3425,6 +3460,8 @@ dependencies = [
 name = "mokly-test-support"
 version = "0.14.0"
 dependencies = [
+ "libc",
+ "mokly-platform",
  "tempfile",
  "tracing",
  "tracing-subscriber",
@@ -4010,6 +4047,16 @@ name = "pathdiff"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
+
+[[package]]
+name = "pbkdf2"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "112d82ceb8c5bf524d9af484d4e4970c9fd5a0cc15ba14ad93dccd28873b0629"
+dependencies = [
+ "digest",
+ "hmac",
+]
 
 [[package]]
 name = "pem"
@@ -4816,6 +4863,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04d056b875a9d2e6cb9a61d127afee9ac5999b9f87bcb32079d1318e505be714"
 
 [[package]]
+name = "salsa20"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f874456e72520ff1375a06c588eaf074b0f01f9e9e1aada45bd9b7954a6e42c"
+dependencies = [
+ "cfg-if 1.0.5",
+ "cipher",
+]
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4827,7 +4884,7 @@ dependencies = [
 [[package]]
 name = "sandbox-e2b"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/sandbox.git?rev=86d82340715ed443b596565f3509ced58c299fc2#86d82340715ed443b596565f3509ced58c299fc2"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4837,6 +4894,7 @@ dependencies = [
  "internal-error",
  "reqwest",
  "sandbox-interface",
+ "sandbox-runtime-assets",
  "serde",
  "serde_json",
  "sha2",
@@ -4851,7 +4909,7 @@ dependencies = [
 [[package]]
 name = "sandbox-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/sandbox.git?rev=86d82340715ed443b596565f3509ced58c299fc2#86d82340715ed443b596565f3509ced58c299fc2"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4865,6 +4923,11 @@ dependencies = [
  "url",
  "uuid",
 ]
+
+[[package]]
+name = "sandbox-runtime-assets"
+version = "0.2.0"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 
 [[package]]
 name = "schannel"
@@ -4889,6 +4952,18 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "scrypt"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d87af57419b594aa23fa95f09f0e06d80d84ba01c26148c43844cad6ff4485f0"
+dependencies = [
+ "cfg-if 1.0.5",
+ "pbkdf2",
+ "salsa20",
+ "sha2",
+]
 
 [[package]]
 name = "seahash"
@@ -5390,7 +5465,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

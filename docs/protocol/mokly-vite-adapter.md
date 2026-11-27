@@ -33,8 +33,7 @@ Without `config`, Mokly uses no optional file, as for `renderer` and
 [traversal rejection](./mokly-configuration.md#validation).
 
 The field is a bundle setting. A change to it gives a new generation and moves
-every
-[render input key](./mokly-watch.md#invalidation-through-the-render-graph).
+every [render input key](./mokly-watch.md#invalidation-through-the-render-graph).
 Each side reads the field from its own configuration.
 
 ## Loading Vite
@@ -58,18 +57,14 @@ rejected, because it adds a new error.
 
 ## The Setup
 
-One setup compiles every JavaScript entry of a side: each entry module, each
-stories file, the renderer, and the selected preview file of each
-[Storybook folder](./mokly-storybook.md#storybook-folders) of the stories
-files. With a Storybook folder, Mokly loads Storybook's merged Vite setup for
-every JavaScript entry.
+One setup per side compiles every entry module, stories file, renderer, and
+selected preview file of each [Storybook folder](./mokly-storybook.md#storybook-folders) used by the stories.
+With a Storybook folder, every JavaScript entry uses Storybook's merged Vite setup.
 
 Without a Storybook folder, Mokly loads the app setup for every JavaScript
-entry. The app setup comes from the first Vite config file that Vite's own
-lookup finds in the configuration directory. The lookup uses Vite's file names
-and order. Without such a file, Vite's defaults apply. Mokly loads every
-config file that Vite's default config loader accepts, in ES module or
-CommonJS form.
+entry. The setup uses the first config in the configuration directory in Vite's
+file name order. Vite's defaults apply when there is no file. Mokly loads the
+same ES module and CommonJS config files as Vite's default loader.
 
 Decision: one setup compiles every JavaScript entry, and a Storybook folder
 selects Storybook's merged setup. Stories then match Storybook, and each module
@@ -114,10 +109,10 @@ the setup keep the consumer build's trust, as consumer PostCSS does under the
 
 ## Mokly's Plugin
 
-Mokly adds its own Vite plugin, named `mokly`, to every setup. The plugin
-handles the items below. Each item keeps its rule from the esbuild path,
-except the class map of a CSS Module. The plugin handles each import in this
-list before every plugin of the setup:
+Mokly adds its own plugins to every Vite setup. These plugins handle the
+items below. Each item keeps its rule from the esbuild path, except the class
+map of a CSS Module. Mokly's plugins handle each import in this list before
+every plugin of the setup:
 
 - the virtual entry, which exports every entry module, stories file, the
   renderer, and the selected preview file of each Storybook folder, under the
@@ -194,11 +189,6 @@ a marked Vite compile under the live checks. A Vite compile emits the
 [operation event](./mokly-sidecar-recipes.md#operation-events) `vite`, as an
 esbuild call emits `esbuild`.
 
-## Inputs And Serve
-
-The [Vite adapter input rules](./mokly-vite-adapter-inputs.md) define the
-inputs of a Vite compile, how Serve rebuilds, and the setup of the base side.
-
 ## Replaced Settings
 
 Under the adapter, the setup takes the place of the `postcss` module and of
@@ -210,13 +200,35 @@ copy of the project's setup. `packageRoots` still names the dependency roots.
 On both sides, the `node_modules` directories of the package roots supplement
 the setup's lookup as the last fallback, as on the
 [esbuild path](./mokly-configuration.md#module-resolution).
+The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+and `sourcePackages` still apply after the setup selects a file.
 
 Mokly's `"empty"` opt-outs for `.css` and `.module.css` still apply, and they
 cover every stylesheet language. `.css` skips every plain and module
 stylesheet. `.module.css` skips every module stylesheet.
 
-## Stylesheet Transforms
+Under the adapter, each replaced setting that the configuration holds gives
+one `vite-replaced-setting` configuration warning, also when its list or map
+is empty. `loaders` is the exception: it gives the warning only when it holds
+a key other than `.css` and `.module.css`. `{field}` names the setting, such
+as `postcss` or `moduleResolution.aliases`. `{keys}` lists the other keys in
+lexical order, each JSON-quoted, joined with `, `. The messages are:
 
+```text
+setting "{field}" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup.
+setting "moduleResolution.loaders" has no effect under the Vite adapter for keys {keys}, because the Vite setup replaces them. Remove those keys, or move them to the Vite setup.
+```
+
+The [strict rule](./mokly-build-warnings.md#strict-mode) counts the warning.
+Decision: a warning names each setting that has no effect, as the
+[warnings contract](./mokly-build-warnings.md#scope) does for an ignored
+input. Rejected: no warning, a `config-invalid` failure, and Mokly's aliases
+after the setup's own aliases, which would give two alias sources.
+
+## Inputs, Serve, And Stylesheets
+
+The [Vite adapter input rules](./mokly-vite-adapter-inputs.md) define the
+inputs of a Vite compile, how Serve rebuilds, and the setup of the base side.
 The [Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md) define how
 the setup transforms each local stylesheet.
 

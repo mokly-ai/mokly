@@ -70,7 +70,7 @@ fn declared(bundle: &PlanBundle) -> Vec<(BlobHash, String, i64)> {
 fn blob_rows(bundle: &PlanBundle, stored_at: Option<DateTime<Utc>>) -> HashMap<BlobHash, Blob> {
     declared(bundle)
         .into_iter()
-        .map(|(hash, path, size)| {
+        .map(|(hash, _, size)| {
             (
                 hash.clone(),
                 Blob {
@@ -80,10 +80,7 @@ fn blob_rows(bundle: &PlanBundle, stored_at: Option<DateTime<Utc>>) -> HashMap<B
                         incarnation: Uuid::from_u128(11),
                     },
                     size,
-                    content_type: mime_guess::from_path(&path)
-                        .first_or_octet_stream()
-                        .essence_str()
-                        .into(),
+                    content_type: "application/octet-stream".into(),
                     ref_count: 1,
                     deleting: false,
                     unreferenced_at: None,
@@ -296,3 +293,6 @@ fn reservation_touches_blobs_by_hash_then_path() {
         .collect();
     assert_eq!(actual, expected);
 }
+
+#[path = "reservation_content_type_tests.rs"]
+mod reservation_content_type_tests;

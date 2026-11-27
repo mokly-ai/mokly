@@ -1,0 +1,31 @@
+# No test fails without the stylesheet asset stamp
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the Rust native test audit of the branch `calummoore/test-audit-rust-native-and-repository-o6nv` (PR #579), item 5 of its first decision batch.
+- **Location:** `crates/mokly-render/src/input_stamp.rs:148-150` (the `assets` clause of `InputStamp::matches`) and `:171-177` (`asset_stamp`), `crates/mokly-render/tests/integration/base_stylesheet_differential_tests.rs`, `crates/mokly-render/tests/integration/base_stylesheet_postcss_tests.rs`, and `crates/mokly-render/tests/integration/base_stylesheet_symlink_tests.rs`.
+- **Reason:** The audit branch only made the tests faster and moved tests between suites, so a new test or a product change belongs to a separate branch.
+- **Category:** Test.
+
+- **Terms:**
+  - **Input stamp:** the record of every input that one stylesheet compilation read. `InputStamp::matches` in `crates/mokly-render/src/input_stamp.rs` decides whether a cached head record can serve the base side of a comparison.
+  - **Asset clause:** the check `assets.iter().all(|(path, stamp)| asset_stamp(tree, path) == *stamp)` at `input_stamp.rs:148-150`. For each asset that the stylesheet references by `url()`, it compares the projected node and the unretained digest.
+- **Background:**
+  - `InputStamp::matches` checks its clauses in order: repository file digests, `node_modules` file digests, unretained digests, projections, memberships, assets, file identities, and directory scans. It stops at the first entry that differs.
+  - The historical stylesheet tests check that a head record is reused for the base only when every input is equal. They report the miss reasons, such as `["stamp-mismatch"]`, at `base_stylesheet_differential_tests.rs:16`.
+  - `changed_url_asset_preserves_the_base_asset_bytes` edits the asset `icon.svg` that `tokens.css` references by `url('./icon.svg')`, and expects `["stamp-mismatch"]`.
+- **Problem:**
+  - The asset clause was replaced with `.all(|_| true)` once, and the tests ran again.
+  - All 8 tests of `base_stylesheet_differential_tests`, `base_stylesheet_postcss_tests`, and `base_stylesheet_symlink_tests` still passed. This includes `changed_url_asset_preserves_the_base_asset_bytes`.
+  - The result is the same with the base fixture of `origin/main` before the audit and with the faster fixture of the audit branch.
+  - So no test fails when the asset clause is ignored. An earlier clause, probably the unretained digests, may already catch every changed asset. Then the asset clause is dead code.
+- **Impact if no action:** A change that breaks the asset clause passes every test. If the clause is the only check of some asset change, a stale head record can serve wrong base CSS.
+- **Root question:** Does the asset clause protect a case that no other clause covers?
+- **Options:**
+  - **A.** Find a case that only the asset clause catches and add it to `base_stylesheet_differential_tests`. Or show that the earlier clauses cover every asset change, and then remove the clause as dead code. Effort: Small.
+  - **B.** Keep this item as a record and change nothing now. Effort: Small.
+- **Left out:** A test for the class, such as a mutation check over every stamp clause. It needs the user's approval as a new gate, and one case or one removal settles this clause.
+- **Wider fix:** None. This item covers one clause, and option A settles it.
+- **Previous examples:** None found.
+- **Recommendation:** A. One case or one removal settles whether the clause protects anything.
+- **Action:** fix after merge, apply A, because the audit branch makes no product or new-test change.

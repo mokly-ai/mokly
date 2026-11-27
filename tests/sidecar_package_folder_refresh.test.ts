@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import syncFs from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -32,22 +33,15 @@ test("marked ordinary roots refresh before folder capture and unseen metadata", 
       path.join(root, "entry.mjs"),
       'export {exact} from "chosen/exact"; export {value} from "chosen/sub/value";',
     );
-    await write(
-      path.join(one, "package.json"),
-      JSON.stringify({
-        name: "chosen",
-        ...(barrier === "folder"
-          ? { exports: { "./exact": "./exact.js", "./sub/": "./lib/" } }
-          : {}),
-      }),
-    );
-    await write(
-      path.join(two, "package.json"),
-      JSON.stringify({
-        name: "chosen",
-        ...(barrier === "metadata" ? { padding: "x".repeat(1_048_576) } : {}),
-      }),
-    );
+    const firstManifest = JSON.stringify({
+      name: "chosen",
+      ...(barrier === "folder"
+        ? { exports: { "./exact": "./exact.js", "./sub/": "./lib/" } }
+        : {}),
+    });
+    const secondManifest = '{"name":"chosen"}';
+    await write(path.join(one, "package.json"), firstManifest);
+    await write(path.join(two, "package.json"), secondManifest);
     for (const directory of [one, two])
       await write(
         path.join(directory, "exact.js"),
@@ -64,8 +58,20 @@ test("marked ordinary roots refresh before folder capture and unseen metadata", 
       await fs.mkdir(path.dirname(index), { recursive: true });
       await fs.symlink(selected, index, "file");
     }
-    const params = nativeParams(root);
-    params.moduleResolution.packageRoots = [root, firstRoot, secondRoot];
+    const packageRoots = [root, firstRoot];
+    if (barrier === "metadata") {
+      const unusedRoot = path.join(root, "lookup-unused");
+      await write(
+        path.join(unusedRoot, "node_modules/chosen/package.json"),
+        JSON.stringify({ name: "chosen", padding: "x".repeat(1_048_576) }),
+      );
+      packageRoots.push(unusedRoot);
+    }
+    const params = nativeParams(
+      root,
+      {},
+      { packageRoots: [...packageRoots, secondRoot] },
+    );
     const trigger =
       barrier === "folder" ? path.join(firstPackage, "exact.js") : firstPackage;
     let changed = false;
@@ -107,7 +113,17 @@ test("marked ordinary roots refresh before folder capture and unseen metadata", 
     assert.deepEqual(
       first.result.compiled.reuseEvidence.inputs,
       {
+        [path.join(one, "package.json")]: {
+          kind: "file",
+          digest: createHash("sha256").update(firstManifest).digest("hex"),
+        },
         [path.join(one, "tsconfig.json")]: { kind: "absent" },
+        [path.join(two, "package.json")]: {
+          kind: "file",
+          digest: createHash("sha256").update(secondManifest).digest("hex"),
+        },
+        [path.join(two, "sub/package.json")]: { kind: "absent" },
+        [path.join(two, "sub/value/package.json")]: { kind: "absent" },
         [path.join(two, "tsconfig.json")]: { kind: "absent" },
       },
       barrier,

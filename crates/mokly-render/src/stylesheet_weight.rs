@@ -20,7 +20,13 @@ pub(crate) fn bundle(value: &Bundle) -> usize {
             + asset.aliases.capacity() * size_of::<String>()
             + asset.aliases.iter().map(String::capacity).sum::<usize>();
     }
-    for (path, value) in value.imported_by.iter().chain(&value.dependency_digests) {
+    for (path, origin) in &value.imported_by {
+        bytes += size_of_val(path)
+            + size_of_val(origin)
+            + path.capacity()
+            + origin.stylesheet.capacity();
+    }
+    for (path, value) in &value.dependency_digests {
         bytes += size_of::<(String, String)>() + path.capacity() + value.capacity();
     }
     for (path, root) in &value.resolution_roots {
@@ -33,7 +39,11 @@ pub(crate) fn bundle(value: &Bundle) -> usize {
     {
         bytes += size_of::<String>() + path.capacity();
     }
-    for (path, names) in &value.css_modules {
+    for (path, names) in value
+        .css_modules
+        .iter()
+        .chain(&value.css_module_named_exports)
+    {
         bytes += path.capacity() + size_of_val(names);
         for (name, value) in names {
             bytes += size_of::<(String, String)>() + name.capacity() + value.capacity();

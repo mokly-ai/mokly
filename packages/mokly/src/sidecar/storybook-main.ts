@@ -12,7 +12,7 @@ import type { ReadStorybookResult } from "../generated/sidecar/ReadStorybookResu
 
 import { detail } from "./errors.js";
 import { fileDigest } from "./file-digests.js";
-import { dependencyDirectory, missingModule } from "./importer-resolution.js";
+import { dependencyDirectory } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import {
@@ -210,7 +210,7 @@ async function resolveReact(
     const react = createRequire(framework).resolve("@storybook/react");
     return await paths.resolve(react, "@storybook/react");
   } catch (error) {
-    if (!missingModule(error)) throw error;
+    if (!viteMissingImport(error)) throw error;
   }
 }
 

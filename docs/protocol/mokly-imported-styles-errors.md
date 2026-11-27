@@ -8,26 +8,31 @@ paths. `{line}` and `{column}` refer to the CSS that the scoper or the bundler
 received, after PostCSS, never to a source-map origin. Under the
 [Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
 setup's transform takes the place of PostCSS in this rule. `{config-path}` is
-the `postcss` value as the configuration spells it. Only `{detail}` may carry
-raw tool text.
+the `postcss` value as the configuration spells it. `{package}` is the
+`package.json` `name` of the workspace package that holds the target. Only
+`{detail}` may carry raw tool text.
 
 ## Configuration (`config-invalid`)
 
-| Failure                                                    | Exact message                                                                                                                             |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`                     |
-| Consumer `css` loader on another extension                 | `moduleResolution.loaders[{extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`                   |
-| `postcss` empty, non-string, or escaping path              | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file`         |
-| `postcss` missing, non-file, or unsupported suffix         | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                             |
-| `postcss` module load or default export failure            | `could not load postcss module {module}: {detail}; default-export an object with plugins`                                                 |
-| Unsupported module object key                              | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                                    |
-| Invalid or missing `plugins`                               | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                               |
-| Invalid plugin array element                               | `postcss plugins[{index}] is not a PostCSS 8 plugin: {detail}; use a plugin instance, creator, function or object with a postcss factory` |
-| Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
-| Plugin name resolution or factory failure                  | `could not load PostCSS plugin {plugin} from {module}: {detail}; install and configure it in the consumer repository`                     |
+| Failure                                                              | Exact message                                                                                                                             |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Consumer `.css` or `.module.css` loader other than `empty`           | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`                     |
+| Consumer `css` loader on another extension                           | `moduleResolution.loaders[{extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`                   |
+| `postcss` empty, non-string, or escaping path                        | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file`         |
+| `postcss` missing, non-file, or unsupported suffix, default compiler | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                             |
+| `postcss` module load or default export failure                      | `could not load postcss module {module}: {detail}; default-export an object with plugins`                                                 |
+| Unsupported module object key                                        | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                                    |
+| Invalid or missing `plugins`                                         | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                               |
+| Invalid plugin array element                                         | `postcss plugins[{index}] is not a PostCSS 8 plugin: {detail}; use a plugin instance, creator, function or object with a postcss factory` |
+| Invalid plugin options                                               | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
+| Plugin name resolution or factory failure                            | `could not load PostCSS plugin {plugin} from {module}: {detail}; install and configure it in the consumer repository`                     |
 
 `{index}` is zero-based. Configuration validation checks the module suffix,
-path, and file before any sidecar starts. Other configuration errors keep their messages under the
+path, and file before any sidecar starts. Under the
+[Vite adapter](./mokly-vite-adapter.md#replaced-settings), validation keeps
+only the empty, text, and lexical path checks of `postcss`: a lexical escape
+gives the escaping-path row, and the real-path, suffix, and file checks do not
+apply, because the setup replaces the module. Other configuration errors keep their messages under the
 [configuration contract](./mokly-configuration.md).
 
 ## Build (`build-invalid`)
@@ -45,7 +50,9 @@ the row for a nested renderer-owned import does not apply either. Under the
 [inventory rule of the adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms),
 the rows for a malformed plugin dependency message and for a missing explicit
 plugin dependency do not apply. The row for a missing plugin directory
-dependency does not apply either, because the setup reports only files.
+dependency does not apply either. The adapter applies the same
+[plugin report rules](./mokly-vite-adapter-inputs.md#inputs-and-serve) to
+JavaScript and stylesheets.
 
 Under the adapter, a stylesheet that the setup cannot transform fails with the
 Vite setup row. This also holds for a CSS Module and for a syntax error. Under
@@ -89,6 +96,7 @@ rejected, because they belong to another file.
 | Consumer `file` loader on a type that Mokly does not deliver | `file loader cannot deliver {file}; use a binary or text loader for this type`                                                                                                                                            |
 | JavaScript reaches CSS outside the side's allowed roots      | `module {logical-module} is outside sourceRoot and selected dependency roots`, at the importing source location                                                                                                           |
 | Missing mapped repository source                             | `module {logical-module} has no source in this side`, at the importing source location                                                                                                                                    |
+| Missing mapped source eligible for the workspace hint        | `module {logical-module} has no source in this side; set moduleResolution.sourcePackages for {package}`, at the importing source location                                                                                 |
 | Late local CSS `@import`                                     | `CSS @import must come before style rules in {stylesheet}: {specifier}; move the import before other rules`                                                                                                               |
 | Quoted local string URL in `image-set()`                     | `image-set() string URL is unsupported in {stylesheet}: {url}; wrap the URL in url() so Mokly can validate and deliver the asset`                                                                                         |
 | Root-absolute CSS URL                                        | `root-absolute CSS url() is not portable in {stylesheet}: {url}; use a path relative to the stylesheet`                                                                                                                   |
@@ -97,6 +105,7 @@ rejected, because they belong to another file.
 | Non-portable asset route                                     | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`                        |
 | Non-portable JavaScript asset route                          | `asset route is not portable: {file}, imported by {module}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`      |
 | Missing or invalid local CSS `@import`                       | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                  |
+| Missing CSS `@import` eligible for the workspace hint        | `could not resolve CSS @import in {stylesheet}: {specifier}; set moduleResolution.sourcePackages for {package}`                                                                                                           |
 | `lightningcss` bundle failure                                | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                   |
 | PostCSS plugin throws                                        | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                   |
 | The Vite setup cannot transform a stylesheet                 | `Vite plugin {plugin} failed for {stylesheet}: {detail}; fix the Vite setup or the stylesheet`                                                                                                                            |
@@ -107,6 +116,10 @@ rejected, because they belong to another file.
 | Document references a plugin-reported dependency             | `protected target {reference}: PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}" or source(none) with explicit @source)` |
 | Document references a file that the Vite setup reported      | `protected target {reference}: the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}")`                                                |
 | Document references an imported stylesheet or asset          | `protected target {reference}: imported by {importer}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`                                                                        |
+
+An import is eligible for the workspace hint when lookup by package name
+reaches a target below a subfolder of the package root. An entry of `false`
+suppresses the hint when lookup reaches it.
 
 The three protected-target rows are `<reason>` texts of the document-link
 diagnostic below; the policy denial names the lister so the author can act
@@ -130,6 +143,9 @@ diagnostic of the [referenced closure](./mokly-public-closure.md):
 A sidecar failure while `processCss` runs, that is a crash, a timeout, or a
 protocol error, uses the [fail-closed codes](./mokly-sidecar.md#fail-closed-rules)
 of the sidecar contract. Under the Vite adapter, the same rule holds for a
-sidecar failure while the setup transforms a stylesheet. The
-[build warning record](./mokly-build-warnings.md)
-carries no stylesheet warning; every stylesheet problem is an error.
+sidecar failure while the setup transforms a stylesheet. These stylesheet
+processing diagnostics are errors under the
+[build warning contract](./mokly-build-warnings.md).
+
+Changes can report a Git-ignored stylesheet with
+[`ignored-module`](./mokly-comparison-packages.md#ignored-modules).

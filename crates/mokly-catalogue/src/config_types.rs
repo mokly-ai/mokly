@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use mokly_model::axes::ColorScheme;
 use serde::{Deserialize, Serialize};
 
+pub use crate::config_source_packages::{SourcePackage, SourcePackages};
 use crate::discovery::{SourceFile, SourceKind};
 use crate::storybook_roots::ResolvedStorybook;
 
@@ -116,6 +117,9 @@ pub struct ModuleResolution {
     pub package_roots: Option<Vec<String>>,
     /// Ordered extension lookup list.
     pub resolve_extensions: Option<Vec<String>>,
+    /// Workspace source overrides keyed by package name.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_packages: Option<SourcePackages>,
 }
 
 /// Supported sidecar loaders. CSS is owned by the core.
@@ -239,15 +243,27 @@ impl ResolvedConfig {
             })
             .collect()
     }
+
+    /// Normalized source overrides authored by this side.
+    pub fn source_packages(&self) -> Option<&SourcePackages> {
+        self.input
+            .module_resolution
+            .as_ref()?
+            .source_packages
+            .as_ref()
+    }
 }
 
-/// Configured module identities after lexical normalization and source-tree projection.
+/// Configured module identities and retained source resolution settings.
 #[derive(Clone, Debug, PartialEq, Default, Serialize)]
 pub struct ResolvedModules {
     /// Renderer module's repository-relative POSIX identity.
     pub renderer: Option<String>,
     /// PostCSS module's repository-relative POSIX identity.
     pub postcss: Option<String>,
+    /// Working override map attached when the base configuration loads.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub working_source_packages: Option<SourcePackages>,
 }
 
 /// One root with its projected physical identity.

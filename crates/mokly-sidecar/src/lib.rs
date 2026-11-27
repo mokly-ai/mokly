@@ -4,6 +4,7 @@
 
 pub mod bindings;
 pub mod bundle_outcomes;
+pub mod bundle_params;
 pub mod bundle_reply;
 mod bundle_reply_decode;
 pub mod bundle_store;
@@ -34,6 +35,7 @@ mod pool_affinity;
 mod pool_bundle_cache;
 pub mod pool_claim;
 mod pool_cleanup;
+mod pool_deadlines;
 mod pool_eager;
 mod pool_exchange;
 mod pool_head;
@@ -82,6 +84,7 @@ pub mod storybook;
 pub mod typescript;
 pub mod usage;
 pub mod vite_css;
+pub mod vite_env;
 pub mod wire;
 mod wire_decode;
 pub mod workers;

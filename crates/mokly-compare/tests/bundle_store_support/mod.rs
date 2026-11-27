@@ -54,6 +54,7 @@ pub fn cache(root: PathBuf) -> DiskCache {
 pub fn params(entry: &str) -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec![entry.into()],
         renderer: None,

@@ -4,13 +4,25 @@ use std::fs;
 use std::path::Path;
 use std::process::{Command, Output};
 
-use serde_json::Value;
+use mokly_model::public_index::CatalogueReadModel;
+use mokly_model::public_metadata::ChangesStatus;
+use mokly_model::review_affected::ReviewSide;
+use mokly_model::{namespace, routes};
+use serde_json::{Value, json};
 use tempfile::TempDir;
 
+#[expect(dead_code, reason = "this test uses the configured CLI command")]
+mod changes_support;
+#[path = "changes_support/links.rs"]
+mod links;
+mod publish_support;
 #[path = "html_dependencies/scoped_tests.rs"]
 mod scoped_tests;
 #[path = "html_dependencies/strict_tests.rs"]
 mod strict_tests;
+
+use changes_support::{base, run_configured};
+use links::link_directory;
 
 /// The plain line of the warning for differing dependency identities.
 const WARNING_LINE: &str = "[mokly/warning] configuration \"mokly.config.json\": Base dependencies differ. HTML comparison uses working-tree dependencies.\n";
@@ -21,9 +33,19 @@ fn write(root: &Path, path: &str, text: &str) {
     fs::write(path, text).unwrap();
 }
 
+/// The commit identity of the fixture repositories. Each test Git command
+/// sets it, so no fixture runs `git config` processes for it.
+const IDENTITY: [(&str, &str); 4] = [
+    ("GIT_AUTHOR_NAME", "Fixture"),
+    ("GIT_AUTHOR_EMAIL", "fixture@example.test"),
+    ("GIT_COMMITTER_NAME", "Fixture"),
+    ("GIT_COMMITTER_EMAIL", "fixture@example.test"),
+];
+
 fn git(root: &Path, args: &[&str]) {
     let result = Command::new("git")
         .args(args)
+        .envs(IDENTITY)
         .current_dir(root)
         .output()
         .unwrap();
@@ -37,11 +59,6 @@ fn git(root: &Path, args: &[&str]) {
 fn fixture() -> TempDir {
     let root = TempDir::new().unwrap();
     git(root.path(), &["init", "-q"]);
-    git(root.path(), &["config", "user.name", "Fixture"]);
-    git(
-        root.path(),
-        &["config", "user.email", "fixture@example.test"],
-    );
     write(root.path(), ".gitignore", ".context/\nnode_modules/\n");
     write(root.path(), ".gitattributes", "package.json text eol=lf\n");
     write(
@@ -96,7 +113,7 @@ fn build(root: &Path, strict: bool) -> Output {
 }
 
 #[test]
-fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
+fn html_package_upgrade_warns_without_node_and_passes_a_strict_build() {
     let root = fixture();
     let first = build(root.path(), true);
     assert!(
@@ -111,23 +128,20 @@ fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
         "package.json",
         "{\"dependencies\":{\"theme\":\"2.0.0\"}}",
     );
-    for strict in [true, false] {
-        fs::remove_dir_all(&site).unwrap();
-        let result = build(root.path(), strict);
-        let stderr = String::from_utf8_lossy(&result.stderr);
-        assert!(result.status.success(), "{stderr}");
-        assert_eq!(stderr, WARNING_LINE);
-        let index: Value =
-            serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap())
-                .unwrap();
-        assert_eq!(index["changesStatus"], "ready");
-        assert_eq!(index["screens"][0]["changes"]["included"], false);
-        assert!(
-            fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
-                .unwrap()
-                .contains("7px")
-        );
-    }
+    fs::remove_dir_all(&site).unwrap();
+    let result = build(root.path(), true);
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(result.status.success(), "{stderr}");
+    assert_eq!(stderr, WARNING_LINE);
+    let index: Value =
+        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
+    assert_eq!(index["changesStatus"], "ready");
+    assert_eq!(index["screens"][0]["changes"]["included"], false);
+    assert!(
+        fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
+            .unwrap()
+            .contains("7px")
+    );
 }
 
 #[test]
@@ -154,4 +168,67 @@ fn html_dependency_warning_uses_clean_identity_and_detects_lockfile_only_edits()
         String::from_utf8_lossy(&changed.stderr)
     );
     assert!(String::from_utf8_lossy(&changed.stderr).contains("Base dependencies differ."));
+}
+
+#[test]
+fn html_base_uses_the_working_source_package_layout_without_node() {
+    let fixture = base(&[
+        (
+            "package.json",
+            r#"{"name":"catalogue","private":true,"workspaces":["packages/*"]}"#,
+        ),
+        (
+            "mokly.config.json",
+            r#"{"review":{"base":"fixture-base"},"stylesheets":[{"match":"**","stylesheets":["style.css"]}]}"#,
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p class=\"theme\">Home</p>",
+        ),
+        ("style.css", "@import 'theme/skin.css';"),
+        (
+            "packages/theme/package.json",
+            r#"{"name":"theme","exports":{"./skin.css":"./esm/skin.css"}}"#,
+        ),
+        (
+            "packages/theme/source/skin.css",
+            ".theme { --workspace-tone: base-source; }",
+        ),
+    ]);
+    let root = fixture.path();
+    fs::create_dir(root.join("node_modules")).unwrap();
+    link_directory(
+        &root.join("packages/theme"),
+        &root.join("node_modules/theme"),
+    );
+    let mut working: Value =
+        serde_json::from_slice(&fs::read(root.join("mokly.config.json")).unwrap()).unwrap();
+    working["moduleResolution"] = json!({"sourcePackages": {"theme": {"esm": "source"}}});
+    write(root, "mokly.config.json", &working.to_string());
+    write(
+        root,
+        "packages/theme/source/skin.css",
+        ".theme { --workspace-tone: working-source; }",
+    );
+
+    let output = run_configured(
+        root,
+        &["build", "--out", ".context/site"],
+        Some(&root.join("missing-node")),
+        &[],
+        "plain",
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(output.status.success(), "{stderr}");
+    let site = root.join(".context/site");
+    let index: CatalogueReadModel =
+        serde_json::from_slice(&fs::read(site.join(namespace::viewer("index.json"))).unwrap())
+            .unwrap();
+    assert_eq!(index.changes_status, ChangesStatus::Ready, "{stderr}");
+    let style = routes::comparison_snapshot(
+        ReviewSide::Before,
+        &format!("{}/styles/style.css", namespace::GENERATED_DIRECTORY),
+    );
+    let css = fs::read_to_string(site.join(index.comparison_url.0.unwrap()).join(style)).unwrap();
+    assert!(css.contains("--workspace-tone: base-source"), "{css}");
 }

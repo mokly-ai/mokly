@@ -70,7 +70,6 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Render Sidecar](./mokly-sidecar.md)
 - [Sidecar Definition Transport](./mokly-sidecar-definitions.md)
 - [Sidecar Module Sources](./mokly-sidecar-modules.md)
-- [Sidecar Render Records](./mokly-sidecar-render-records.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
 - [Vite Adapter](./mokly-vite-adapter.md)
 
@@ -219,6 +218,7 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 
 The repository gate, remote verification, dependency audits, test rules, and the npm release contracts.
 
+- [CI Duration Budgets](./ci-duration-budgets.md)
 - [CI Suite Evidence](./ci-suite-evidence.md)
 - [CI Test Timing](./ci-test-timing.md)
 - [CI Verification](./ci-verification.md)

@@ -102,8 +102,8 @@ outline a focused title draws, for the desktop specs and the 390px, 320px and
 shows and the outline it draws. `src/_tests_/build-reader.ts` reads a build as
 a reviewer, who may neither request nor cancel one.
 
-`src/_tests_/build-states.ts` is the one table of build states the desktop and
-phone browser tests read: every build state, card action and request
+`src/_tests_/build-states.ts` is the one table of build states the desktop
+browser tests read: every build state, card action and request
 control's refusal and wait, the answers that open an active build or a published
 publication, the reviewer's publishing card, and builds in History and the
 switcher. Its records are keyed by `BuildState`, `BuildAction` and
@@ -112,9 +112,15 @@ until a row shows it. The rows are in `build-state-cards.ts`,
 `build-state-readers.ts`, `build-state-refusals.ts`, `build-state-busy.ts` and
 `build-state-lists.ts`, with the two surfaces and the card's parts in
 `build-state-parts.ts`.
-`build-states.spec.ts` runs every row on the desktop and
-`build-states-mobile.spec.ts` on a phone at 390px, with the page the row ends
-on checked at 320px too.
+`build-states.spec.ts` runs every row on the desktop.
+`build-states-mobile.spec.ts` runs on a phone at 390px the two rows whose steps
+differ there: History opens from More, and Open billing opens Billing as a
+route. Its other test walks every state a build card or the publishing card
+draws, and the catalogue a published build opens, and names each state that
+scrolls sideways at 390px or 320px. `build-card-walk.ts` keys those states by
+the same three unions, so a new state, action or request control also fails
+to compile until a phone state shows it. The states are in
+`build-card-states.ts` and `build-stage-states.ts`.
 
 `build-api.spec.ts` follows a real build instead of the double. It alone swaps
 the ordinary API for the test-only `fake-build-api` example of `mkc-api`. The

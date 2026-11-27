@@ -10,6 +10,7 @@ import {
   macAgent,
   openWidestCentre,
   switchWidth,
+  widestPull,
 } from "../viewer/widest-centre";
 
 import { clearMacWindow, emulateMacWindow, partsUnderButtons } from "./regions";
@@ -115,14 +116,48 @@ async function expectWholeBar(page: Page, viewer: Locator, edge?: WindowEdge) {
 test.describe("on a Mac", () => {
   test.use({ userAgent: macAgent });
 
-  test("at the switch width, the widest centre keeps every control whole beside the window buttons", async ({
+  test("at the switch width, the widest centre keeps every control whole beside the window buttons, and the squeezed pill keeps its whole name", async ({
     page,
   }) => {
-    const { viewer } = await openWidestCentre(page, "switch-width-widest-mac");
-    // The key cap draws its `⌘` as a glyph beside the `K`.
-    await expect(viewer.locator(".mbk-search-hint")).toHaveText("K");
-    for (const edge of ["start", "end"] as const)
-      await expectWholeBar(page, viewer, edge);
+    const { viewer, head } = await openWidestCentre(
+      page,
+      "switch-width-widest-mac",
+    );
+    await test.step("at the switch width, the widest centre keeps every control whole beside the window buttons", async () => {
+      // The key cap draws its `⌘` as a glyph beside the `K`.
+      await expect(viewer.locator(".mbk-search-hint")).toHaveText("K");
+      for (const edge of ["start", "end"] as const)
+        await expectWholeBar(page, viewer, edge);
+    });
+
+    await test.step("squeezed by the widest centre beside the window buttons, the pill keeps its whole name and tooltip", async () => {
+      await emulateMacWindow(page, "start");
+      const pill = viewer.locator(".fo-package-slot-center .fo-canvas-pill");
+      // At a 1022px window the pill keeps its glyph and the start of its
+      // reference: it cuts the reference, and it draws neither the state's
+      // phrase nor the short SHA.
+      await expect
+        .poll(
+          () =>
+            pill
+              .locator(".fo-canvas-pill-name")
+              .evaluate((name) => name.scrollWidth > name.clientWidth),
+          "the reference is cut",
+        )
+        .toBe(true);
+      await expect(pill.locator(".fo-top-state-detail")).toBeHidden();
+      await expect(pill.locator(".mono-value")).toBeHidden();
+      // The tooltip and the Button's name still give the whole reference, the
+      // state's phrase and the short SHA, in the order the full pill shows them.
+      const whole = new RegExp(
+        `^#${widestPull.number} ${widestPull.title}, ${widestPull.author} · ` +
+          `Ready · [^,]+, ${head.slice(0, 7)}$`,
+      );
+      await expect(pill).toHaveAttribute("title", whole);
+      await expect(
+        viewer.getByTestId("viewer-publication"),
+      ).toHaveAccessibleName(whole);
+    });
   });
 });
 

@@ -8,12 +8,13 @@ use mokly_html::error::{HtmlError, InternalError};
 use mokly_html::fragment::StyleAttribution;
 use mokly_html::fragment::{
     Fragment, FragmentMarker, FragmentMarkerKind, FragmentRenderer, FragmentRequest, OwnedStyle,
-    RenderKind,
+    RenderKind, StoryRenderFailure,
 };
 use mokly_model::usage::{ComponentInstanceRecord, ComponentSlotRecord};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::render_records::MarkerPayload;
-use mokly_sidecar::results::Render;
+use mokly_sidecar::results::{Render, StoryRender};
+use mokly_sidecar::wire::MethodResult;
 
 use crate::error::{RenderError, Result};
 use crate::{render_call, transport_values};
@@ -63,6 +64,22 @@ impl Fragments {
                 resources: result.resources,
                 ..Default::default()
             })
+        } else if let MethodResult::StoryRender(story) = result {
+            match story {
+                StoryRender::Rendered(render) => fragment(render),
+                StoryRender::Failed {
+                    story_id,
+                    name,
+                    reason,
+                } => Ok(Fragment {
+                    story_failure: Some(Box::new(StoryRenderFailure {
+                        story_id,
+                        name,
+                        reason,
+                    })),
+                    ..Default::default()
+                }),
+            }
         } else {
             fragment(result.into_render())
         }
@@ -126,6 +143,7 @@ pub(crate) fn fragment(result: Render) -> Result<Fragment> {
         });
     }
     Ok(Fragment {
+        story_failure: None,
         html: result.html,
         markers,
         instances: instances.into_values().collect(),

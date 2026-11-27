@@ -13,6 +13,7 @@ import { useRemovedPreview } from "../src/shell/use_removed_preview.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { FakeDataSource, flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 test("a failed live preview renewal waits for a fenced route detail before new documents", async (t) => {
   const index = indexFixture();
@@ -97,7 +98,7 @@ test("a failed live preview renewal waits for a fenced route detail before new d
   );
   t.after(async () => {
     hook.unmount();
-    await GlobalRegistrator.unregister();
+    await unregisterDom();
   });
   const status = () => hook.result.current.state.status;
   await act(flush);

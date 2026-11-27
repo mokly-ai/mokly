@@ -1,0 +1,38 @@
+# Auth admission keys the full IPv6 address
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from the check of finding 1 of the round 1 review of the branch `calummoore/preview-password-sign-in-jofl`, as a new problem outside its scope.
+- **Location:** `crates/mkc-auth/src/preview.rs` (`AuthService::preview_sign_in`, the key `preview:{peer}`), `crates/mkc-auth/src/links.rs:37-38`, `crates/mkc-auth/src/desktop_grant.rs:116-119`, `crates/mkc-api/src/github/flow.rs:74`, `crates/mkc-api/src/router.rs` (`RouterFactory::build_document`, where `peer: client_ip.to_string()` sets the key), `crates/mkc-config/src/proxy.rs:20` (`TrustedProxies::client_ip`), `docs/protocol/cloud/auth-sessions.md:20-24` and `:97-98`, `docs/protocol/cloud/preview-sign-in.md`, section "Password Exchange", `docs/protocol/cloud/rest-proxies.md:15-16`, and `docs/protocol/cloud/github-sign-in.md:21`.
+- **Reason:** All four admissions key the full address on `origin/main` too, so the fix belongs to a separate branch.
+- **Category:** Security.
+
+- **Terms:**
+  - **Admission:** the API's persistent count of attempts per key in a 60-second window, kept in the database. A full window answers 429 `rate-limited`. `admit` in `crates/mkc-auth/src/links.rs:107` implements it.
+  - **Selected client IP:** the client address that `TrustedProxies::client_ip` takes from the trusted `X-Forwarded-For` chain, or else the socket peer.
+  - **/64 prefix:** the first 64 bits of an IPv6 address. An internet provider usually gives one customer at least a /64, so one client controls 2^64 addresses.
+- **Background:**
+  - Four admissions key their count on the selected client IP as text:
+    - The preview password exchange: `preview:{peer}`, 20 per 60 seconds, in `AuthService::preview_sign_in` of `crates/mkc-auth/src/preview.rs`.
+    - The email-link request: `peer:{peer}`, 20 per 60 seconds, beside one link per email address per 60 seconds, in `crates/mkc-auth/src/links.rs:37-38`.
+    - The desktop grant issue and exchange: `desktop-grant-{endpoint}:{peer}`, 20 per 60 seconds each, in `crates/mkc-auth/src/desktop_grant.rs:116-119`.
+    - The GitHub flow start: `github:{peer}`, 20 per 60 seconds, in `crates/mkc-api/src/github/flow.rs:74`.
+  - The router sets `peer` to `client_ip.to_string()`. So an IPv6 client gets its full 128-bit address as its key.
+  - The docs state each limit per peer IP or per socket peer: `docs/protocol/cloud/auth-sessions.md:20-24` and `:97-98`, the section "Password Exchange" of `docs/protocol/cloud/preview-sign-in.md`, `docs/protocol/cloud/rest-proxies.md:15-16` and `docs/protocol/cloud/github-sign-in.md:21`.
+  - Cloudflare fronts every API. The only zone setting in Terraform is the TLS mode, in `infra/terraform/foundation/main.tf:98-103`. So the zone keeps Cloudflare's defaults, which accept IPv6 clients and forward their IPv6 addresses to the origin.
+  - Other limits stay in place. Each email address gets one link per 60 seconds. Each API process checks two passwords at once. The preview password has 32 random characters.
+- **Problem:** One client with an IPv6 /64 can use a new address for each request. Each address starts a fresh window, so the per-address limits do not bound that client.
+- **Impact if no action:** One client can send many more sign-in links to different addresses, password attempts, desktop grant attempts and GitHub flow starts than the limits intend.
+- **Root question:** How can admission count one client with many IPv6 addresses as one client?
+- **Options:**
+  - **A.** Key each IPv6 address by its /64 prefix in the four admissions, and keep each IPv4 address as it is. Treat an IPv4-mapped IPv6 address as IPv4. Clients that share one /64, such as one office, then share one window. Update the limit sentences of the four doc pages. Effort: Small.
+  - **B.** As A, through one shared function that turns a selected client IP into its admission subject. All four admissions call it, so a new admission cannot key the raw address. Effort: Medium.
+  - **C.** Keep the per-address keys, and add a second, larger window for each IPv6 /48 or /56 prefix. It bounds a client with a large block while each address keeps its own window. It adds a second count to each admission. Effort: Medium.
+- **Left out:**
+  - Change nothing. One client still exceeds every limit, so it fails the goal.
+  - A rate limit at Cloudflare's edge. It moves admission out of the API's persistent windows, which the protocol pages define, and it needs Cloudflare rules that Terraform does not manage today.
+- **Wider fix:** B. One function decides the admission subject for every admission.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/api-operations-share-one-blocking-pool.md`: admission bounds how many password attempts one client can queue for the API's blocking workers.
+- **Recommendation:** B. It counts one /64 as one client in every admission, through one function.
+- **Action:** ask the user, because option B changes the per-address admission rule of four protocol pages, and it adds refusals for clients that share a /64.

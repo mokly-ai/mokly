@@ -103,7 +103,7 @@ fn unsafe_url_schemes_name_the_attribute_url_and_source_once() {
         ),
         (
             "<img src=\"data:image/png;base64,AA\">",
-            "src on <img> is not an allowed URL: \"data:image/png;base64,AA\"",
+            "src on <img> is not an allowed URL: \"data:image/png;base64,AA\"; remove the dataurl loader from moduleResolution.loaders so that Mokly delivers the imported file",
         ),
         (
             "<a href=\"//example.com/a\">Go</a>",

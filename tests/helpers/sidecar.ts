@@ -38,6 +38,7 @@ export function startSidecar(
     stderr += String(chunk);
   });
   const operations: Array<{ operation: Operation; pid: number }> = [];
+  const diagnostics: string[] = [];
   let next = 0;
   const pending = new Map<
     number,
@@ -49,7 +50,11 @@ export function startSidecar(
       operations.push(value.params);
       return;
     }
-    if (value.event === "diagnostic") return;
+    if (value.event === "diagnostic") {
+      if (typeof value.params?.message === "string")
+        diagnostics.push(value.params.message);
+      return;
+    }
     const waiter = pending.get(value.id);
     assert.ok(waiter, `unexpected frame ${line}`);
     pending.delete(value.id);
@@ -79,7 +84,7 @@ export function startSidecar(
       );
     });
   };
-  return { call, child, operations, stderr: () => stderr };
+  return { call, child, diagnostics, operations, stderr: () => stderr };
 }
 
 export function bundleParams(

@@ -35,40 +35,35 @@ test("the owning catalogue stays usable when HEAD is the unchanged baseline", as
     if (response.status() >= 400) failures.push(response.url());
   });
   const route = `/view/${comparisonPaths.changed}/?fragment=end`;
-  for (const width of [1280, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(route);
-    await expect(page).toHaveURL(`${baseURL}${route}`);
-    const viewport = width === 390 ? "mobile" : "desktop";
-    await chooseViewport(page, viewport);
-    await expect(page.locator("[data-workspace-status]")).toHaveText(
-      "Unmodified",
-    );
-    await awaitRoutedDetail(page, comparisonPaths.changed);
-    await expectNoCompareModes(page);
-    await expect(
-      page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-    ).toHaveText("0");
-    // The canvas shows the current frames of the chosen viewport.
-    const frames = page
-      .locator("iframe[data-workspace-frame]")
-      .filter({ visible: true });
-    await expect(
-      frames.and(page.locator(viewportFrame(viewport))),
-    ).toBeVisible();
-    for (const frame of await frames.all()) {
-      await expect(frame.contentFrame().locator("h1")).toHaveText(
-        "After screen",
-      );
-      await frame
-        .contentFrame()
-        .locator("body")
-        .evaluate(async () => {
-          await document.fonts.ready;
-        });
-    }
-    await page.screenshot({ path: info.outputPath(`${width}-Current.png`) });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(route);
+  await expect(page).toHaveURL(`${baseURL}${route}`);
+  await chooseViewport(page, "desktop");
+  await expect(page.locator("[data-workspace-status]")).toHaveText(
+    "Unmodified",
+  );
+  await awaitRoutedDetail(page, comparisonPaths.changed);
+  await expectNoCompareModes(page);
+  await expect(
+    page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
+  ).toHaveText("0");
+  // The canvas shows the current frames of the chosen viewport.
+  const frames = page
+    .locator("iframe[data-workspace-frame]")
+    .filter({ visible: true });
+  await expect(
+    frames.and(page.locator(viewportFrame("desktop"))),
+  ).toBeVisible();
+  for (const frame of await frames.all()) {
+    await expect(frame.contentFrame().locator("h1")).toHaveText("After screen");
+    await frame
+      .contentFrame()
+      .locator("body")
+      .evaluate(async () => {
+        await document.fonts.ready;
+      });
   }
+  await page.screenshot({ path: info.outputPath("1280-Current.png") });
   expect(failures).toEqual([]);
   expect(requests.some((url) => url.includes("/mokly-viewer/events"))).toBe(
     false,

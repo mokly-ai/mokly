@@ -1,74 +1,103 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import ciShards from "./ci-shards.json" with { type: "json" };
 import { readReport } from "./evidence.mjs";
-import {
-  validateUnshardedReport,
-  validateShardReports,
-} from "./report-validation.mjs";
+import { validateShardReports } from "./report-validation.mjs";
 
-const RUNTIME_PROFILES = [["node-22.15.0"], ["node-22.15.0", "node-24"]];
+const SUITES = ["viewer", "browser"];
 /**
- * Validate one commit's complete CI evidence: per runtime, exactly one viewer
- * report and four browser shards on one Node version. CI aggregation runs it,
- * and the release evidence check reruns it once the reports match the tagged
- * tree, before it compares their inventories with the tag checkout.
+ * The supported runtime profiles of CI, keyed by their runtime list, and the
+ * runtimes on which each suite runs in that profile. The ordinary profile
+ * runs both suites on Node 22.15.0. The Release Please profile also runs the
+ * viewer suite on Node 24; the browser suite stays on Node 22.15.0.
  */
-export function validateCiReports(reports, commit, runtimes) {
-  if (!/^[a-f0-9]{40}$/.test(commit))
-    throw new Error("expected commit must be a full lowercase Git SHA");
-  validateRuntimeProfile(runtimes);
-  if (reports.length !== runtimes.length * 5)
-    throw new Error(
-      `missing or extra CI evidence: expected ${runtimes.length * 5} reports`,
-    );
-  for (const report of reports)
-    if (
-      !["viewer", "browser"].includes(report.suite) ||
-      !runtimes.includes(report.runtime)
-    )
-      throw new Error("unexpected CI evidence group");
-  for (const runtime of runtimes) {
-    const group = reports.filter(
-      (report) => report.runtime === runtime && report.suite === "viewer",
-    );
-    if (group.length !== 1)
-      throw new Error(
-        `viewer ${runtime} evidence failed: expected exactly one report`,
-      );
-    validateUnshardedReport(group[0], { commit, runtime, suite: "viewer" });
-    const browser = reports.filter(
-      (report) => report.runtime === runtime && report.suite === "browser",
-    );
-    try {
-      validateShardReports(browser, {
-        commit,
-        runtime,
-        suite: "browser",
-        total: 4,
-      });
-    } catch (error) {
-      throw new Error(`browser ${runtime} evidence failed: ${error.message}`, {
-        cause: error,
-      });
-    }
-    if (browser.some((report) => report.nodeVersion !== group[0].nodeVersion))
-      throw new Error("suites used different Node versions");
-  }
-}
+const RUNTIME_PROFILES = [
+  {
+    runtimes: ["node-22.15.0"],
+    suites: { viewer: ["node-22.15.0"], browser: ["node-22.15.0"] },
+  },
+  {
+    runtimes: ["node-22.15.0", "node-24"],
+    suites: { viewer: ["node-22.15.0", "node-24"], browser: ["node-22.15.0"] },
+  },
+];
 
-function validateRuntimeProfile(runtimes) {
-  const supported =
-    Array.isArray(runtimes) &&
-    RUNTIME_PROFILES.some(
-      (profile) =>
-        profile.length === runtimes.length &&
-        profile.every((runtime, index) => runtime === runtimes[index]),
-    );
-  if (!supported)
+/**
+ * The runtimes of each suite in the profile that `runtimes` names. Throws for
+ * an unsupported profile.
+ */
+export function suiteRuntimes(runtimes) {
+  const profile = RUNTIME_PROFILES.find(
+    (candidate) =>
+      Array.isArray(runtimes) &&
+      candidate.runtimes.length === runtimes.length &&
+      candidate.runtimes.every((runtime, index) => runtime === runtimes[index]),
+  );
+  if (!profile)
     throw new Error(
       "unsupported CI runtime profile; expected node-22.15.0 or node-22.15.0,node-24",
     );
+  return profile.suites;
+}
+
+/**
+ * Validate one commit's complete CI evidence: every shard of each suite on
+ * each runtime that the runtime profile selects for that suite. The shard
+ * totals come from `ci-shards.json`, which the CI matrix and remote
+ * verification also read. CI aggregation runs it, and the release evidence
+ * check reruns it once the reports match the tagged tree, before it compares
+ * their inventories with the tag checkout.
+ */
+export function validateCiReports(
+  reports,
+  commit,
+  runtimes,
+  totals = ciShards,
+) {
+  if (!/^[a-f0-9]{40}$/.test(commit))
+    throw new Error("expected commit must be a full lowercase Git SHA");
+  const suites = suiteRuntimes(runtimes);
+  validateTotals(totals);
+  const expected = SUITES.reduce(
+    (sum, suite) => sum + suites[suite].length * totals[suite],
+    0,
+  );
+  if (reports.length !== expected)
+    throw new Error(
+      `missing or extra CI evidence: expected ${expected} reports`,
+    );
+  for (const report of reports)
+    if (
+      !SUITES.includes(report.suite) ||
+      !suites[report.suite].includes(report.runtime)
+    )
+      throw new Error("unexpected CI evidence group");
+  for (const suite of SUITES)
+    for (const runtime of suites[suite]) {
+      const group = reports.filter(
+        (report) => report.runtime === runtime && report.suite === suite,
+      );
+      try {
+        validateShardReports(group, {
+          commit,
+          runtime,
+          suite,
+          total: totals[suite],
+        });
+      } catch (error) {
+        throw new Error(
+          `${suite} ${runtime} evidence failed: ${error.message}`,
+          { cause: error },
+        );
+      }
+    }
+}
+
+function validateTotals(totals) {
+  for (const suite of SUITES)
+    if (!Number.isSafeInteger(totals?.[suite]) || totals[suite] < 1)
+      throw new Error(`invalid ${suite} shard total in ci-shards.json`);
 }
 
 export async function readReports(root) {

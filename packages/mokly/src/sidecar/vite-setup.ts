@@ -2,32 +2,111 @@ import path from "node:path";
 
 import type { InlineConfig, Plugin, UserConfig } from "vite";
 
-import { fileDigest } from "./file-digests.js";
-import { directoryFiles } from "./resolution-inputs.js";
-import { loadViteConfig, viteConfigFiles } from "./vite-config.js";
+import type { ViteSetupInputs } from "../generated/sidecar/ViteSetupInputs.js";
+
+import { recordViteConfigResolution } from "./vite-config-resolution.js";
+import { loadViteConfig } from "./vite-config.js";
 import { configureViteCss, hookViteCss } from "./vite-css-hooks.js";
 import type { ViteCssTransform } from "./vite-css-transform.js";
 import type { loadVite } from "./vite-peers.js";
-import { vitePeerPlugin } from "./vite-react-peers.js";
-import type { VitePeers } from "./vite-react-peers.js";
+import { VitePluginReports } from "./vite-plugin-inputs.js";
+import { moklyViteFirstPlugin, moklyVitePlugin } from "./vite-plugin.js";
+import type { ViteInputs } from "./vite-plugin.js";
+import { VitePostcssLookup } from "./vite-postcss-lookup.js";
 import type { ViteLookup } from "./vite-resolution.js";
+import { ConfigReads } from "./vite-setup-input.js";
+import {
+  rebuildInputs,
+  setupEvidence,
+  setupSnapshot,
+  verifyConfigReads,
+  verifyInputs,
+} from "./vite-setup-snapshot.js";
+import type { SetupFiles } from "./vite-setup-snapshot.js";
+import { ViteWatchEvents } from "./vite-watch-events.js";
+import { envFiles, ViteEnv } from "./vite-working-env.js";
+
+const mode = "development";
 
 /** Load the app setup without writing a config bundle or starting a watcher. */
 export async function viteSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
-  plugin: Plugin,
+  current: () => ViteInputs,
   lookup: ViteLookup,
-  peers: () => VitePeers,
   css: ViteCssTransform,
+  inputs: ViteSetupInputs | undefined,
+  diagnostic: (line: string) => void,
+  configuration = new ConfigReads(),
 ) {
-  const loaded = await loadViteConfig(vite, directory, lookup);
-  const config = loaded?.config ?? {};
+  const paths = lookup.paths;
+  const rebuild = inputs?.rebuildFiles ?? [];
+  const watched = await rebuildInputs(rebuild, paths);
+  const postcss = new VitePostcssLookup(paths, diagnostic);
+  const env = new ViteEnv(inputs?.baseEnv, paths, mode);
+  const pluginReports = new VitePluginReports();
+  const watchEvents = new ViteWatchEvents(vite.normalizePath);
+  const first = {
+    ...moklyViteFirstPlugin(current, pluginReports, css),
+    configureServer: watchEvents.capture,
+  };
+  const setup = await env.run(() =>
+    recordViteConfigResolution(lookup, configuration, () =>
+      loadSetup(
+        vite,
+        directory,
+        [
+          pluginReports.resolvePlugin(current),
+          first,
+          moklyVitePlugin(current, css),
+        ],
+        lookup,
+        css,
+        postcss,
+        env,
+        rebuild,
+        configuration,
+      ),
+    ),
+  );
+  try {
+    watchEvents.configured(setup.server.watcher);
+    const state = await setupSnapshot(setup.files, directory, paths);
+    verifyConfigReads(setup.files.configuration, state, paths);
+    verifyInputs(watched, state.rebuild);
+    verifyInputs(await postcss.initial, state.postcss);
+    env.verify(state.env);
+    return {
+      ...setup,
+      state,
+      pluginReports,
+      watchEvents,
+      ownedRebuildFiles: new Set<string>(),
+    };
+  } catch (error) {
+    await setup.server.close();
+    throw error;
+  }
+}
+
+async function loadSetup(
+  vite: Awaited<ReturnType<typeof loadVite>>["api"],
+  directory: string,
+  plugins: Plugin[],
+  lookup: ViteLookup,
+  css: ViteCssTransform,
+  postcss: VitePostcssLookup,
+  env: ViteEnv,
+  rebuild: string[],
+  configuration: ConfigReads,
+) {
+  const config =
+    (await loadViteConfig(vite, directory, lookup, configuration)) ?? {};
   const inline: InlineConfig = {
     ...config,
     configFile: false,
     root: config.root ? path.resolve(directory, config.root) : directory,
-    mode: "development",
+    mode,
     logLevel: "silent",
     appType: "custom",
     server: {
@@ -38,38 +117,41 @@ export async function viteSetup(
       ws: false,
     },
     plugins: [
-      plugin,
+      ...plugins,
       ...(config.plugins ?? []),
       noOptimizer(),
-      vitePeerPlugin(lookup, peers),
       css.capture(),
     ],
   };
-  const resolved = await vite.resolveConfig(
-    inline,
-    "serve",
-    "development",
-    "development",
-    false,
-    (config) => configureViteCss(config, lookup, css),
-    (plugins) => hookViteCss(plugins, css),
-  );
-  const server = await vite.createServer(resolved);
+  const server = await postcss.run(async () => {
+    const resolved = await vite.resolveConfig(
+      inline,
+      "serve",
+      mode,
+      "development",
+      false,
+      (config) => {
+        postcss.configure(vite, config);
+        configureViteCss(config, lookup, css);
+      },
+      (plugins) => hookViteCss(plugins, css),
+    );
+    return vite.createServer(resolved);
+  });
   lookup.bind(vite, server.environments.ssr!);
-  const envDirectory = server.config.envDir;
-  const files = [
-    ...viteConfigFiles.map((file) => path.join(directory, file)),
-    ...(loaded?.dependencies ?? []),
-    ...(envDirectory === false
-      ? []
-      : [
-          ".env",
-          ".env.local",
-          ".env.development",
-          ".env.development.local",
-        ].map((file) => path.join(envDirectory, file))),
-  ];
-  return { server, files: [...new Set(files)] };
+  const paths = lookup.paths;
+  for (const file of paths.lookupFiles) configuration.record(file);
+  for (const [file, digest] of paths.workspaceLookups.fileObservations())
+    configuration.record(file, digest);
+  const files: SetupFiles = {
+    configuration,
+    lookupDirectories: new Set(paths.lookupDirectories),
+    envFiles: envFiles(server.config.mode, server.config.envDir),
+    env,
+    rebuild,
+    postcss,
+  };
+  return { server, files };
 }
 
 /** Config and environment hooks run after app plugins can add optimizer entries. */
@@ -102,15 +184,28 @@ function noOptimizer(): Plugin {
   };
 }
 
-/** Config imports, env bytes, and config lookup membership decide server reuse. */
-export async function setupStamp(
-  files: string[],
-  directory: string,
-): Promise<string> {
-  return JSON.stringify([
-    await Promise.all(
-      files.map(async (file) => [file, await fileDigest(file)]),
-    ),
-    await directoryFiles(directory),
-  ]);
+export type ViteSetup = Awaited<ReturnType<typeof viteSetup>>;
+
+/** Keep graph-owned files out of the additional setup inputs once found. */
+export function excludeRebuildFiles(
+  setup: ViteSetup,
+  sources: ReadonlySet<string>,
+): void {
+  const { files, ownedRebuildFiles, state } = setup;
+  const rebuild = files.rebuild.filter((name) => {
+    if (!sources.has(name)) return true;
+    ownedRebuildFiles.add(name);
+    return false;
+  });
+  if (rebuild.length === files.rebuild.length) return;
+  files.rebuild = rebuild;
+  setup.state = setupEvidence(
+    state.configuration,
+    state.probes,
+    state.env,
+    state.postcss,
+    state.rebuild.filter(({ name }) => !sources.has(name)),
+    state.entries,
+    state.lookupDirectories,
+  );
 }

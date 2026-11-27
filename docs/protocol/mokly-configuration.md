@@ -2,9 +2,8 @@
 
 Status: The `vite.config` field is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
 
-This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). It names every field, where each path
-resolves, and the validation that rejects an unsafe configuration.
+This page defines the fields, path resolution, and validation of the
+[package contract](./mokly-package.md).
 
 ## Configuration Discovery
 
@@ -15,8 +14,6 @@ none is found. The configuration is data: the core reads it without Node.js.
 No sidecar starts for it, except to read the `main.*` of a root without `dir`
 under the [roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
 
-The config's filesystem paths resolve relative to the config file, never
-relative to the installed package or a transient npx cache.
 Repository-matching globs operate on repo-relative POSIX paths. The core validates
 the file against the JSON Schema that the package ships as
 `@mokly/mokly/config.schema.json`; a `$schema` property that names it gives
@@ -34,11 +31,10 @@ following contract:
   renders with the product's providers;
 - `stylesheets`: declarative route-to-stylesheet rules;
 - `postcss` and `moduleResolution`: the consumer's PostCSS module and the
-  package roots, aliases, conditions, fields, extensions, and loaders that the
-  [sidecar](./mokly-sidecar.md) bundles with;
-- `vite`: `true`, `false`, or an object with an optional `config` path, which
-  turns the [Vite adapter](./mokly-vite-adapter.md) on or off, defaulting to
-  off;
+  package roots, aliases, conditions, fields, extensions, loaders, and
+  workspace package layouts that the [sidecar](./mokly-sidecar.md) bundles with;
+- `vite`: `true`, `false`, or an object with an optional `config` path,
+  which controls the [Vite adapter](./mokly-vite-adapter.md), off by default;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base, defaulting to `origin/main`;
 - `review.baseInstallScripts`: whether base dependency installs run lifecycle
@@ -67,31 +63,26 @@ The shipped [configuration schema](../../packages/mokly/config.schema.json)
 defines the normative shape: every field, its type, and its accepted values.
 The rules below define how Mokly resolves and applies the fields.
 
-Filesystem fields (`repoRoot`, `roots[].dir`, `roots[].storybook`,
-`renderer`, `postcss`, `vite.config`, module resolution package roots, and
-local stylesheet paths) are config-relative.
-Each one names the path that it reaches from the configuration file's
-directory after `.` segments, `..` segments, and empty segments are removed,
-in the working tree and in the base tree of a comparison. A symbolic link
-before a `..` segment does not change that path: `link/../ui` names `ui`.
-Spellings with the same path behave the same in every command. A
-configuration validation message repeats the authored value, and any other
-message names the path without `.` or `..` segments. Mokly removes `..` from
-the spelling and never follows a link first. Following the link was
-rejected, because one field must have one meaning in the core, in the
-sidecar, and on both sides of a comparison.
+Filesystem fields resolve from the configuration directory in both trees.
+They include `repoRoot`, `roots[].dir`, `roots[].storybook`, `renderer`,
+`postcss`, `vite.config`, package roots, and local stylesheet paths.
+Mokly removes `.`, `..`, and empty segments before resolving symbolic links,
+so `link/../ui` names `ui`.
+Equivalent spellings behave the same in every command. A validation message
+repeats the authored value. Other messages use paths without `.` or `..`.
+This order gives each field one meaning in the core, in the sidecar, and
+on both sides of a comparison.
 
-After that lexical step, the `renderer` and `postcss` modules each have one
-resolved path: the repository-relative path of the file that the path
-reaches, with symbolic links resolved. After configuration validation, each
-use of the module and each message that names it gives the resolved path.
-Keeping the link path was rejected, because the sidecar's module graph names
-each module by its resolved path, so a link path would miss the module and
-its stylesheets.
+After validation, each use of `renderer` and `postcss` names the resolved
+repository-relative file, including in messages. Resolving symbolic links
+matches the paths of modules and their stylesheets in the sidecar graph.
 
-`roots[].files` globs are relative to their root; `watch.rules[].paths` are
-repository-relative POSIX globs; a stylesheet `match` matches catalogue
-entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
+`roots[].files` globs are relative to their root. `watch.rules[].paths` are
+repository-relative POSIX globs. A stylesheet `match` applies to catalogue
+entry routes of the form `path/index.html`. For the origin of
+`moduleResolution.sourcePackages` folders, see [Source Packages](#source-packages).
+
+Globs are case-sensitive POSIX globs:
 `*` does not cross `/`, and `**` can cross directories. Stylesheet matchers
 accept brace alternatives and character classes. A backslash does not escape
 a character. Root-file validation and expansion apply to `roots[].files`.
@@ -122,27 +113,33 @@ validation and placement rules, and
 
 ## Validation
 
+Mokly keeps the last value of a repeated JSON key.
 Configuration accepts only the declared fields. An undeclared field fails with
 `config-invalid` and `unknown configuration field: <field>`; no removed field
 has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
-- path traversal: a `dir`, Storybook folder, `renderer`, `postcss`,
-  `vite.config`, package root, or local stylesheet whose lexical path or real
-  path is outside the real path of `repoRoot`; `..` segments that resolve
-  inside it are accepted;
+- path traversal in `dir`, `storybook`, `renderer`, `postcss`, `vite.config`,
+  package roots, or local stylesheets. Both lexical and real paths must stay
+  inside the real `repoRoot`, including paths with `..` segments. Under Vite,
+  `postcss` needs only the lexical check.
 - a named Storybook folder that is not an existing directory, naming
-  `roots[<index>].storybook`, as for `dir`;
+  `roots[<index>].storybook`, as for `dir`.
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
-  [module resolution rules](#module-resolution) below.
+  [module resolution rules](#module-resolution) below, including an invalid
+  [source package](#source-packages) entry.
 
 Path traversal uses one limit for every field. A second limit at the lexical
 path of `repoRoot` was rejected, because a directory could then pass for one
 field and fail for another.
+
+An invalid source package entry fails as every other `moduleResolution` value
+does. A warning that skips the entry was rejected, because a folder outside
+the package root is unsafe, not only wrong.
 
 Additional watch rules cannot override the package-owned classifications: the
 rebuild of configured sources and modules, the reload for configured and
@@ -155,15 +152,13 @@ through `definePage`.
 
 ## Git Boundary
 
-Before reading Git, `repoRoot` must resolve through symlinks to the same path
-as `git rev-parse --show-toplevel` run from that directory. A nested root fails
-with `config-invalid`, naming both paths. This validation belongs to the Git
-boundary, not to unconditional config loading: Serve without a comparison and
-`build` without Changes work without Git, and an explicit comparison request
-keeps the configuration error. Missing refs or history keep their
-command-specific errors. `publish` requires a clean checkout under the
-[upload contract](./mokly-upload.md). Serve, `build`, and Changes validate
-before their first Git read.
+Before a Git read, `repoRoot` must resolve through symlinks to the path that
+`git rev-parse --show-toplevel` gives from that directory. A nested root fails
+with `config-invalid` and names both paths. Serve without a comparison and
+`build` without Changes work without Git. An explicit comparison keeps the
+configuration error. Missing refs or history keep their command-specific
+errors. `publish` requires a clean checkout under the
+[upload contract](./mokly-upload.md).
 
 ## Layout
 
@@ -183,11 +178,10 @@ globs select; the file kinds are those of the
 
 ## Roots
 
-The [root field contract](./mokly-root-discovery.md#root-fields) defines the
-strict `dir`, `files`, `path`, `transparent`, and `storybook` fields and their
-defaults. A root needs `dir` unless it names a Storybook folder. A root
-without `dir` takes its directories from `main.*` under the
-[roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
+The [root field contract](./mokly-root-discovery.md#root-fields) defines
+`dir`, `files`, `path`, `transparent`, `storybook`, and their defaults.
+A root needs `dir` unless it names a Storybook folder and takes its
+[directories from `main.*`](./mokly-root-discovery.md#roots-from-main).
 The [root discovery contract](./mokly-root-discovery.md#traversal-and-ownership)
 defines traversal, folder-record ownership, filesystem races, and the source
 inventory.
@@ -228,8 +222,28 @@ An unmappable lookup or a used directory missing from the base installation prod
 
 Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-automatically after module lookup. For JavaScript targets, the rule keeps
-the `resolveExtensions` order and tries only extensions with a script suffix.
+automatically after module lookup, on both compile paths. On the esbuild
+path, for JavaScript targets, the rule keeps the `resolveExtensions` order
+and tries only extensions with a script suffix.
 
 The [Vite adapter](./mokly-vite-adapter.md#replaced-settings) names the
 settings of this section that the project's Vite setup replaces.
+
+### Source Packages
+
+`sourcePackages` adds layouts to the
+[layout order](./mokly-comparison-packages.md#layout-order) of the workspace
+package source rule.
+Each key is a bare package name, such as `@acme/ui`. Each entry is `false`,
+which ends the layout order with the original target, or a map from build
+folder to source folder, such as `{ "esm": "source", "cjs": "source" }`.
+Folders are POSIX paths relative to the package root, such as `esm` or
+`dist/esm`. Mokly reads `./esm` and `esm/` as `esm`. A source folder can be
+`.`, for sources at the package root. Validation rejects a key that is not a
+bare package name, an empty map, and a build folder `.`, which would hold
+every file of the package. It also rejects a folder that is empty or
+absolute, or that has a `..` or `node_modules` segment. It also rejects an
+entry that names one build folder twice after normalization, such as `esm`
+and `./esm`. One pair with role names, such as
+`{ "dist": "esm", "src": "source" }`, was rejected, because it cannot state a
+second build folder.

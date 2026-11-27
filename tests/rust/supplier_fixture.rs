@@ -1,42 +1,18 @@
-//! Supplier, child-element, and self-copy fixtures shared by both acceptance layers.
+//! Supplier fixtures shared by both acceptance layers: the Layout/Title case and a repeated
+//! supplier path.
 
-pub fn sources(case: &str, color: &str) -> Vec<(String, String)> {
+/// A card that styles the `Title` it passes into its child's slot.
+pub fn sources(color: &str) -> Vec<(String, String)> {
     let child = "import {defineComponent} from '@mokly/mokly'; export const child=defineComponent({title:'Layout',description:'',relatedDocs:[],element:'ui-layout',propSchema:{type:'object',properties:{},additionalProperties:false},props:{},slots:['children'],render:props=><section className='child'>{props.children}</section>});";
-    let (selector, body) = match case {
-        "title" => (
-            ".unused",
-            "<child.Component><Title>Title</Title></child.Component>",
-        ),
-        "slot" => (
-            ".slot",
-            "<child.Component><h1 className='slot'>Supplied</h1></child.Component>",
-        ),
-        "element" => (".child", "<child.Component/>"),
-        "self" => (".leaf", "<card.Component outer={false}/>"),
-        _ => unreachable!(),
-    };
-    let render = if case == "self" {
-        format!(
-            "props=>props.outer ? <main>{body}</main> : <><Styles/><p className='leaf'>Leaf</p></>"
-        )
-    } else {
-        format!("()=> <><Styles/>{body}</>")
-    };
-    let schema = if case == "self" {
-        "propSchema:{type:'object',properties:{outer:{type:'boolean'}},required:['outer'],additionalProperties:false},props:{outer:true},"
-    } else {
-        "propSchema:{type:'object',properties:{},additionalProperties:false},props:{},"
-    };
     let card = format!(
-        "import {{defineComponent}} from '@mokly/mokly'; import styled,{{createGlobalStyle}} from 'styled-components'; import {{child}} from './child.mockup'; const Styles=createGlobalStyle`{selector}{{color:{color}}}`; const Title=styled.h1`color:{color}`; export const card=defineComponent({{title:'Card',description:'',relatedDocs:[],element:'ui-card',{schema}render:{render}}});"
+        "import {{defineComponent}} from '@mokly/mokly'; import styled,{{createGlobalStyle}} from 'styled-components'; import {{child}} from './child.mockup'; const Styles=createGlobalStyle`.unused{{color:{color}}}`; const Title=styled.h1`color:{color}`; export const card=defineComponent({{title:'Card',description:'',relatedDocs:[],element:'ui-card',propSchema:{{type:'object',properties:{{}},additionalProperties:false}},props:{{}},render:()=> <><Styles/><child.Component><Title>Title</Title></child.Component></>}});"
     );
-    let props = if case == "self" { " outer='true'" } else { "" };
     vec![
         ("child.mockup.tsx".into(), child.into()),
         ("card.mockup.tsx".into(), card),
         (
             "home.screen.html".into(),
-            format!("---\ntitle: Home\n---\n<ui-card{props}></ui-card>"),
+            "---\ntitle: Home\n---\n<ui-card></ui-card>".into(),
         ),
     ]
 }

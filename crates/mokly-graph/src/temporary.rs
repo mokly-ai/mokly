@@ -2,11 +2,13 @@
 
 use std::sync::Arc;
 
+use mokly_html::composition::Composed;
 use mokly_html::error::{self, HtmlError};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::controls;
 use mokly_model::data::Props;
 use mokly_model::diagnostic::{AuthoringKind, Context};
+use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::validation::PropValidator;
 
 use crate::cache::Artifact;
@@ -21,10 +23,24 @@ use crate::workers::ArtifactWorker;
 
 /// Render one view with validated transient props through the catalogue's document
 /// pipeline. Its fragments use the shared memo cache under the normal fragment key, and
-/// saved props reuse the cached saved document, so a repeat render costs a cache hit.
+/// saved props can reuse a successful cached saved document.
 pub(crate) fn render(session: &Session, route: &str, props: &Props) -> Result<TemporaryDocument> {
     let job = PropsJob { session, props };
     let artifact = session.state.workers.document(route, &job)?;
+    if let Some(warning) = artifact
+        .document
+        .as_ref()
+        .and_then(Composed::story_render_failure)
+    {
+        return Err(GraphError::Html {
+            source: HtmlError::Runtime {
+                source: RuntimeDiagnostic {
+                    code: RuntimeCode::Render,
+                    message: warning.message.clone(),
+                },
+            },
+        });
+    }
     let rendered = Rendered {
         session,
         artifact: artifact.clone(),
@@ -107,6 +123,11 @@ impl ArtifactWorker for PropsJob<'_> {
         }
         if &visual.props == self.props
             && let Some(artifact) = self.session.state.cache.get(&plan.key)
+            && artifact
+                .document
+                .as_ref()
+                .and_then(Composed::story_render_failure)
+                .is_none()
         {
             return Ok(artifact);
         }

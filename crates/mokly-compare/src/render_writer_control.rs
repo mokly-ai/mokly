@@ -1,6 +1,7 @@
 //! Command-owned writer startup, identity preparation, bootstrap, and join.
 
 use std::sync::atomic::Ordering;
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -10,7 +11,7 @@ use mokly_graph::write_activity::{WriteActivity, WriteReadiness};
 use mokly_model::material::digest;
 
 use crate::render_identity::NativeIdentity;
-use crate::render_pending::{Shared, StoreObserver, StoreWarning, TraceStoreObserver};
+use crate::render_pending::{Shared, StoreObserver, StoreWarning};
 use crate::render_store::DocumentBackend;
 use crate::render_writer::{self, DocumentWriter, WriterLimits};
 
@@ -42,14 +43,6 @@ impl DocumentWriter {
     pub fn bind_readiness(&self, readiness: Arc<dyn WriteReadiness>) {
         self.shared.admission.bind(readiness);
     }
-    /// Start one writer without using a render worker or a sidecar.
-    pub fn new(
-        backend: Arc<dyn DocumentBackend>,
-        cache: Arc<dyn RenderCache>,
-        limits: WriterLimits,
-    ) -> Self {
-        Self::observed(backend, cache, limits, Arc::new(TraceStoreObserver))
-    }
 
     /// Compose terminal diagnostics at the command boundary before starting the writer.
     pub fn observed(
@@ -58,7 +51,7 @@ impl DocumentWriter {
         limits: WriterLimits,
         observer: Arc<dyn StoreObserver>,
     ) -> Self {
-        Self::start(backend, cache, limits, observer, None)
+        Self::start(backend, cache, limits, observer, None, None)
     }
 
     /// Start identity and index preparation early, with document writes paused.
@@ -69,15 +62,19 @@ impl DocumentWriter {
         observer: Arc<dyn StoreObserver>,
         startup: Startup,
     ) -> Self {
-        Self::start(backend, cache, limits, observer, Some(startup))
+        Self::start(backend, cache, limits, observer, Some(startup), None)
     }
 
-    fn start(
+    /// Start the writer. The writer thread owns `idle` and sends on it each
+    /// time that it waits for new work, so that it holds no pending lock.
+    /// The sender drops when the thread cannot start or ends.
+    pub(crate) fn start(
         backend: Arc<dyn DocumentBackend>,
         cache: Arc<dyn RenderCache>,
         limits: WriterLimits,
         observer: Arc<dyn StoreObserver>,
         startup: Option<Startup>,
+        idle: Option<Sender<()>>,
     ) -> Self {
         let shared = Arc::new(Shared::new(
             limits.keys,
@@ -98,7 +95,7 @@ impl DocumentWriter {
                     storage.as_ref(),
                     sink.as_ref(),
                 );
-                render_writer::run(pending, cache, storage, limits, sink);
+                render_writer::run(pending, cache, storage, limits, sink, idle);
             });
         let (worker, unavailable) = match worker {
             Ok(worker) => (Some(worker), false),

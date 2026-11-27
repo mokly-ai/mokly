@@ -7,6 +7,7 @@ import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResul
 import type { Definitions } from "../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
+import type { RenderStoryResult } from "../packages/mokly/src/generated/sidecar/RenderStoryResult.js";
 
 import {
   bundleParams,
@@ -211,25 +212,18 @@ test("portable stories and parent views receive viewport and color globals", asy
     classMaps: {},
   });
   await installBindings(sidecar, bundled.generation);
-  for (const [method, target] of [
-    ["renderStory", { storyId: "globals.stories.tsx#Primary" }],
-    [
-      "renderComponent",
-      {
-        handle: "globals.stories.tsx#default",
-        entry: { path: "globals", title: "Globals" },
-        slots: {},
-        ignoreScope: "enabled",
-      },
-    ],
-  ] as const) {
-    const rendered = await sidecar.call<RenderResult>(method, {
+  for (const storyId of [
+    "globals.stories.tsx#Primary",
+    "globals.stories.tsx#default",
+  ]) {
+    const rendered = await sidecar.call<RenderStoryResult>("renderStory", {
       generation: bundled.generation,
       props: { label: "Overlay" },
       viewport: "mobile",
       colorScheme: "dark",
-      ...target,
+      storyId,
     });
+    assert.ok("html" in rendered);
     assert.equal(
       rendered.html,
       '<section data-viewport="mobile" data-scheme="dark"><button>Overlay</button></section>',
@@ -268,26 +262,16 @@ test("preview decorators apply once and stay isolated between interleaved genera
       viewport: "mobile",
       colorScheme: "light",
     };
-    assert.equal(
-      (
-        await sidecar.call<RenderResult>("renderStory", {
-          ...axes,
-          storyId: "entry.stories.tsx#Primary",
-        })
-      ).html,
-      expected,
-    );
-    assert.equal(
-      (
-        await sidecar.call<RenderResult>("renderComponent", {
-          ...axes,
-          entry: { path: "entry", title: "Preview" },
-          handle: "entry.stories.tsx#default",
-          slots: {},
-          ignoreScope: "enabled",
-        })
-      ).html,
-      expected,
-    );
+    for (const storyId of [
+      "entry.stories.tsx#Primary",
+      "entry.stories.tsx#default",
+    ]) {
+      const result = await sidecar.call<RenderStoryResult>("renderStory", {
+        ...axes,
+        storyId,
+      });
+      assert.ok("html" in result);
+      assert.equal(result.html, expected);
+    }
   }
 });

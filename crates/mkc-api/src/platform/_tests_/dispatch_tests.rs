@@ -95,6 +95,7 @@ fn every_implemented_platform_operation_executes_a_handler() {
                 assert_eq!(operation, Operation::GetHealth);
                 auth_operations.insert("health");
             }
+            Endpoint::GetConfiguration => assert_eq!(operation, Operation::GetConfiguration),
         }
     }
     assert_eq!(

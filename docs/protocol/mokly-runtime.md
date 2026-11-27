@@ -9,15 +9,12 @@ crates; the pages linked below own the exact rules of each subsystem.
 
 ## Source Of Truth
 
-Authored sources define the catalogue: HTML screens, components, and pages,
-use case files, Markdown documents, folder records, entry modules, and
-stories files under the configured roots, plus the configuration file, the
-[configuration inputs](./mokly-root-discovery.md#roots-from-main) of a root
-without `dir`, the renderer module, and the configured stylesheets. The
-catalogue model is built from them in memory on every start and after every
-watched change. The [catalogue index v9](./mokly-shell-delivery.md#catalogue-index)
-and the [entry detail v4](./mokly-shell-delivery.md#entry-detail) are the
-public form of the model.
+The catalogue reads HTML screens, components, pages, use cases, Markdown, folder records,
+entry modules, and stories from its roots. It also reads the configuration file,
+[configuration inputs](./mokly-root-discovery.md#roots-from-main) of roots without
+`dir`, the renderer, and configured stylesheets. Mokly rebuilds the model in memory
+at startup and after each watched change. The public model consists of the
+[catalogue index v9](./mokly-shell-delivery.md#catalogue-index) and [entry detail v4](./mokly-shell-delivery.md#entry-detail).
 
 ## Discovery And Validation
 
@@ -230,6 +227,12 @@ interruption, except for the [base install limits](./mokly-base-install-processe
 and a step that fails does not skip the steps after it. `build`
 and `publish` check cancellation before and after the output transaction's
 commit point and never leave a partial output directory in place.
+
+A stop never signals a process outside the command that it stops. The direct
+child of the command stays unreaped until its last stop signal, so no other
+process can take its process ID or process group number. Decision: reap after
+cleanup. Rejected: skip the group signal of a gone child, because an orphan
+that the search did not find would then survive.
 
 ## No Writes
 

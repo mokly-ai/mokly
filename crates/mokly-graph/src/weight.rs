@@ -57,6 +57,12 @@ pub(crate) fn fragment(fragment: &Fragment) -> usize {
         .saturating_mul(RECORD_FACTOR);
     mem::size_of::<Fragment>()
         + fragment.html.capacity()
+        + fragment.story_failure.as_deref().map_or(0, |failure| {
+            mem::size_of_val(failure)
+                + failure.story_id.capacity()
+                + failure.name.capacity()
+                + failure.reason.capacity()
+        })
         + fragment
             .markers
             .iter()

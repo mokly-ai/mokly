@@ -32,6 +32,7 @@ import { PlannedRelative } from "./planned-relative.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
 import { PlanLookup } from "./resolution-plan.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
+import type { StoredStory } from "./story-reader.js";
 
 export interface Generation {
   modules: Module[];
@@ -43,6 +44,7 @@ export interface Generation {
   runtimeKey: string;
   bindings?: Record<string, EntryBinding>;
   maps?: Record<string, Record<string, string>>;
+  viteNamedExports?: Generation["maps"];
   cssModules: Set<string>;
   runtime: AuthoringRuntime;
   exports?: BundleExports;
@@ -51,7 +53,7 @@ export interface Generation {
   registrations: Map<object, { handle: string; path?: string }>;
   savedSlots: Map<string, unknown>;
   sources: Map<string, string>;
-  stories: Map<string, unknown>;
+  stories: Map<string, StoredStory>;
   require: NodeJS.Require;
 }
 export interface BundleExports {

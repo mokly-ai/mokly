@@ -7,6 +7,7 @@ import type { Plugin, ResolvedConfig } from "vite";
 import { viteCssModule } from "./vite-css-paths.js";
 import type { ViteCssTransform } from "./vite-css-transform.js";
 import type { ViteLookup } from "./vite-resolution.js";
+import { resolveViteStylesheet } from "./vite-stylesheet-lookup.js";
 import { viteFile } from "./vite-urls.js";
 
 type Transform = Exclude<
@@ -54,12 +55,17 @@ export function configureViteCss(
           ? Promise.resolve(css.active.urls.resolve(source, importer))
           : original(source, importer, aliasOnly, ssr);
     if (!options.mainFields?.includes("style")) return original;
+    const packages = createResolver({ ...options, preferRelative: false });
     return async (source, importer, aliasOnly, ssr) => {
       if (!css.active || aliasOnly)
         return original(source, importer, aliasOnly, ssr);
       const file = source.startsWith("file:") ? fileURLToPath(source) : source;
-      const resolved = await lookup.stylesheet(file, importer, (target, from) =>
-        original(target, from, aliasOnly, ssr),
+      const resolved = await resolveViteStylesheet(
+        lookup,
+        file,
+        importer,
+        (target, from) => original(target, from, aliasOnly, ssr),
+        (target, from) => packages(target, from, aliasOnly, ssr),
       );
       if (resolved) await css.active.read(resolved, importer);
       return resolved;
@@ -118,7 +124,7 @@ export function hookViteCss(plugins: Plugin[], css: ViteCssTransform): void {
           const result = await transform.call(this, code, active.file, options);
           const exports = typeof result === "string" ? result : result?.code;
           if (exports)
-            active.classMap = await nativeClassMap(exports.toString());
+            active.bindings = await nativeBindings(exports.toString());
         }
         return transform.call(this, code, id, options);
       },
@@ -150,16 +156,21 @@ function hook(
       : { ...transform, handler: wrap(transform.handler) };
 }
 
-async function nativeClassMap(code: string): Promise<Record<string, string>> {
-  const module: { default?: unknown } = await import(
+async function nativeBindings(code: string) {
+  const module: Record<string, unknown> = await import(
     `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
   );
-  const map = module.default;
-  return map && typeof map === "object"
-    ? Object.fromEntries(
-        Object.entries(map).filter(
-          (entry): entry is [string, string] => typeof entry[1] === "string",
-        ),
-      )
-    : {};
+  const { default: map, ...named } = module;
+  return {
+    classMap: map && typeof map === "object" ? stringBindings(map) : {},
+    namedExports: stringBindings(named),
+  };
+}
+
+function stringBindings(bindings: object): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(bindings).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
 }

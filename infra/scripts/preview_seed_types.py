@@ -5,14 +5,12 @@ import json
 import os
 from pathlib import Path
 import re
-import stat
 import tempfile
 from typing import Optional
 import uuid
 
 
 REVISION = re.compile(r"[a-f0-9]{40}")
-SECRET = re.compile(r"[a-f0-9]{64}")
 
 
 class SeedError(ValueError):
@@ -53,24 +51,6 @@ def read_json(path):
         raise SeedError(f"{Path(path).name} is not a readable JSON object") from error
     if not isinstance(value, dict):
         raise SeedError(f"{Path(path).name} is not a JSON object")
-    return value
-
-
-def read_private_secret(path):
-    """Read a regular mode-0600 file containing the preview credential."""
-    path = Path(path)
-    try:
-        metadata = path.lstat()
-    except OSError as error:
-        raise SeedError("preview sign-in secret file is unavailable") from error
-    if not stat.S_ISREG(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) != 0o600:
-        raise SeedError("preview sign-in secret file must be a regular mode-0600 file")
-    try:
-        value = path.read_text(encoding="ascii")
-    except (OSError, UnicodeDecodeError) as error:
-        raise SeedError("preview sign-in secret file is unreadable") from error
-    if not SECRET.fullmatch(value):
-        raise SeedError("preview sign-in secret must be 64 lowercase hex characters")
     return value
 
 

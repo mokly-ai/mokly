@@ -6,6 +6,7 @@ mod config_inputs;
 mod config_links;
 mod config_paths;
 mod config_postcss;
+mod config_source_packages;
 pub mod config_types;
 pub mod config_validation;
 mod config_warnings;

@@ -8,12 +8,17 @@ use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+pub use crate::bundle_params::Bundle;
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
 use crate::storybook::ReadStorybookParams;
 use crate::vite_css::TransformViteCss;
+
+pub mod source_packages;
+
+use self::source_packages::SourcePackages;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -54,39 +59,10 @@ pub struct ModuleResolution {
     /// Ordered extension candidates.
     #[serde(default)]
     pub resolve_extensions: Vec<String>,
-}
-
-/// Inputs compiled into one unevaluated bundle.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(rename = "BundleParams")]
-pub struct Bundle {
-    /// Opt-in project Vite compilation; omission preserves esbuild settings bytes.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[ts(optional, as = "Option<bool>")]
-    pub vite: bool,
-    /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub evaluation: Option<String>,
-    /// Entry module files.
-    pub entry_files: Vec<String>,
-    /// Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
-    pub renderer: Option<String>,
-    /// Repository-relative stories files in compile order.
-    pub stories_files: Vec<String>,
-    /// Stories file to the repository-relative POSIX folder on this side. Missing entries use `.storybook`.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[ts(optional, as = "Option<BTreeMap<String, String>>")]
-    pub storybook_folders: BTreeMap<String, String>,
-    /// Consumer resolution policy.
-    pub module_resolution: ModuleResolution,
-    /// Source checkout or extracted base root.
-    pub source_root: String,
-    /// Configuration directory relative to the side source root.
-    pub configuration_directory: String,
-    /// Physical repository roots whose local packages map into this side.
-    pub repository_roots: Vec<String>,
+    /// Workspace source overrides in layout order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(optional, as = "Option<_>")]
+    pub source_packages: Vec<SourcePackages>,
 }
 
 /// Request-local evidence capture policy, absent from persisted bundle settings.
@@ -230,6 +206,10 @@ pub struct CssModules {
     pub generation: String,
     /// Logical stylesheet path to original-name/scoped-name map.
     pub class_maps: BTreeMap<String, BTreeMap<String, String>>,
+    /// Vite's named CSS Module bindings, grouped by logical stylesheet path.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub named_exports: Option<BTreeMap<String, BTreeMap<String, String>>>,
 }
 
 /// Optional process diagnostics selected by the core during hello.
@@ -244,6 +224,10 @@ pub struct Hello {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[ts(optional, as = "Option<bool>")]
     pub timings: bool,
+}
+
+pub(crate) fn disabled(value: &bool) -> bool {
+    !value
 }
 
 /// Every protocol method, encoded as method and params.

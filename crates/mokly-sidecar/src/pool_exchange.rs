@@ -69,7 +69,7 @@ impl Pool {
             self.release(index, slot, start);
             return Err(error);
         }
-        let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
+        let deadline = self.deadline(&call);
         let mut outcome = Err(Error::Crashed);
         let mut bundle_attempt = BundleAttempt::default();
         for attempt in 0..2 {
@@ -99,7 +99,10 @@ impl Pool {
             if let Ok(result) = &outcome {
                 self.record_head(index, &current, &call, result);
             }
-            let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
+            let retryable = outcome.as_ref().is_err_and(|error| {
+                matches!(error, Error::Crashed | Error::Timeout { .. })
+                    || error.fresh_worker_required()
+            });
             if outcome.as_ref().is_err_and(|error| !reusable(error)) {
                 if let Err(error) = self.replace(index, current.control.as_ref()) {
                     outcome = Err(error);
@@ -116,7 +119,10 @@ impl Pool {
         self.recycle(index, &mut slot);
         let cancelled = self.lock().stopped;
         self.release(index, slot, start);
-        if matches!(outcome, Err(Error::Crashed)) {
+        if outcome
+            .as_ref()
+            .is_err_and(|error| matches!(error, Error::Crashed) || error.fresh_worker_required())
+        {
             let kind = FailureKind::for_call(&call);
             outcome = Err(Error::RequestCrashed {
                 kind,
@@ -138,7 +144,7 @@ impl Pool {
     }
 }
 
-/// A valid remote error reply or a PostCSS failure leaves the process usable.
+/// Whether the response lets the worker stay in the pool.
 pub(super) fn reusable(error: &Error) -> bool {
     matches!(error, Error::Remote { code, .. } if code.reusable())
         || matches!(error, Error::Postcss { .. })

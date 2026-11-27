@@ -7,6 +7,7 @@ use std::time::Duration;
 use chrono::Utc;
 use mkc_api::application::{ApplicationFactory, ConfiguredApplicationFactory};
 use mkc_api::github_providers::SystemGitHubProviderFactory;
+use mkc_api::worker_intervals::WorkerIntervals;
 use mkc_auth::runtime::Runtime as AuthRuntime;
 use mkc_billing::prices::VerifiedPriceIds;
 use mkc_billing::seats::worker::{DatabaseSeatReconciler, SeatReconciler};
@@ -34,6 +35,10 @@ use super::test_runtime::TestRuntime;
 
 pub(super) const APP: &str = "https://app.example.com";
 static DATABASE_SCENARIO: Mutex<()> = Mutex::new(());
+
+/// The billing delivery pause of the test API: a webhook delivery starts within
+/// a few milliseconds of its write, not after the production second.
+const QUICK_WORKER_PAUSE: Duration = Duration::from_millis(20);
 
 pub(super) struct Harness {
     /// Stop workers before the Stripe double, store, schema and database lock drop.
@@ -71,6 +76,10 @@ impl Harness {
                 origin: stripe.origin.clone(),
             }),
             runtime: runtime.clone(),
+            intervals: WorkerIntervals {
+                billing_delivery: QUICK_WORKER_PAUSE,
+                ..WorkerIntervals::default()
+            },
         };
         let app = factory
             .create(settings(

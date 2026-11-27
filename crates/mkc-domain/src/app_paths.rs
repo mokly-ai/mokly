@@ -15,9 +15,6 @@ pub const DASHBOARD: &str = "/dashboard";
 /// Email magic-link landing path.
 pub const EMAIL_CALLBACK: &str = "/auth/email/callback";
 
-/// Preview sign-in landing path.
-pub const PREVIEW_CALLBACK: &str = "/auth/preview/callback";
-
 /// GitHub user-authorization landing path.
 pub const GITHUB_CALLBACK: &str = "/auth/github/callback";
 

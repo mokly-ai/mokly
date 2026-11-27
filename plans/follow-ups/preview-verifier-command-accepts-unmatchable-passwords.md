@@ -1,0 +1,40 @@
+# The verifier command accepts unmatchable passwords
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 6, "Password trimming differs between command and browser", with the options and the two problems that its check added.
+- **Location:** `infra/scripts/preview-lifecycle.py:82-93` (`preview_verifier`), `packages/app/src/screens/account/preview-password.tsx:35-39`, `packages/app/src/components/field.tsx:143-167`, `crates/mkc-api/src/dispatch.rs` (the `VerifyPreviewSignIn` arm, which refuses a password outside 1 to 1024 bytes), `crates/mkc-auth/tests/preview_verifier_tests.rs:30`, `docs/protocol/cloud/preview-sign-in.md:69-76`, section "Password And Rotation", and `docs/ops/preview.md:96-128`, section "Preview Password".
+- **Reason:** The recommended option makes the operator command refuse passwords that it accepts today, and the always-on rules leave a new refusal to the user.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Preview password:** the one shared password that signs in the shared account `preview@mokly.ai` on Sign in of every PR preview.
+  - **`preview-verifier`:** the operator command `python3 infra/scripts/preview-lifecycle.py preview-verifier`. It reads the password from standard input and writes its scrypt verifier, which the deploy copies into each preview.
+  - **Byte-order mark:** the character U+FEFF, which some editors write at the start of a UTF-8 file.
+- **Background:**
+  - `docs/protocol/cloud/preview-sign-in.md:71-76` requires the command to remove leading and trailing white space "as Sign in does". The plan of the branch `calummoore/preview-password-sign-in-jofl` recorded this as a docs design call on 2026-11-25.
+  - The command reads all of standard input, decodes it as UTF-8 and calls Python's `str.strip()`, in `preview-lifecycle.py:84`. It warns below 20 characters and writes a verifier for any other result, the empty string included.
+  - Sign in calls JavaScript's `trim()` on the field's value and sends the result, in `preview-password.tsx:38`. The API checks the bytes as sent. It refuses a password outside 1 to 1024 UTF-8 bytes with `validation-failed`, before any check.
+  - The two white-space sets differ. A check on 2026-11-25 with Python 3.12.3 and Node 24.22.1 gave these results:
+    - JavaScript trims U+FEFF, the byte-order mark. Python keeps it.
+    - Python strips U+001C to U+001F and U+0085. JavaScript keeps them.
+  - The Password field is an HTML password input, through `secureTextEntry` in `field.tsx:143-167`. An HTML password field strips line breaks from its value, so Sign in never sends a line break.
+  - The runbook makes the password with `python3 -c 'import secrets; print(secrets.token_urlsafe(24))'`, in `docs/ops/preview.md:108`. That gives 32 URL-safe ASCII characters, which meet none of these cases.
+  - The only command test puts ASCII white space around the fixture password, in `preview_verifier_tests.rs:30`.
+  - The deploy accepts any well-formed verifier. So a preview with such a verifier shows the password section.
+- **Problem:** The command can write a verifier for a password that Sign in can never send. This happens for a password file that starts with a byte-order mark, and for a password with a line break inside it. It also happens for an empty password and for one over 1024 bytes.
+- **Impact if no action:** An operator can publish a verifier that looks valid, while Sign in answers every reviewer's right password with "This password isn’t valid."
+- **Root question:** How can each verifier that the command makes accept its password when a reader enters it in Sign in?
+- **Options:**
+  - **A.** Make the command strip the same white space as JavaScript's `trim()`. Add a test case with a byte-order mark. It leaves line breaks inside the password, an empty password and an oversized one. Effort: Small.
+  - **B.** Put the password white-space set in one data file that the command and Sign in both read. Check the boundary cases through verifier creation. It leaves the same three cases as A. Effort: Medium.
+  - **C.** Make the command strip only outer ASCII white space. Then refuse a password that has an unprintable character, such as a byte-order mark, a line break or a non-ASCII space. Also refuse an empty password and one over 1024 UTF-8 bytes. Write no verifier, and say why on standard error. Update the section "Password And Rotation" of `docs/protocol/cloud/preview-sign-in.md`. It adds a refusal. Effort: Small.
+  - **D.** Move the command to TypeScript, and share one prepare function with Sign in. That function must also refuse line breaks and passwords outside the byte bounds to cover every case. The runbook then needs Node in place of Python. Effort: Medium.
+- **Left out:**
+  - Strip only the byte-order mark. It leaves the other differences.
+  - Trim in the API. It changes the exchange, which checks the password as sent.
+  - Use Python's rule in Sign in. Sign in would then trim the password differently from the email address.
+- **Wider fix:** C. Every password that the command accepts is then one that Sign in sends unchanged, whatever the input file holds.
+- **Previous examples:** The approval reason policy and its contract count white space differently, as `plans/follow-ups/foundation-approval-reason-rule-differs-from-policy.md` records.
+- **Recommendation:** C. It covers every case with a small change in one script, and the runbook's passwords pass unchanged.
+- **Action:** ask the user, because option C makes the operator command refuse passwords that it accepts today, a new refusal that only the user can approve.

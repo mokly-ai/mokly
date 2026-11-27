@@ -74,6 +74,7 @@ pub(super) fn bundle(root: &StylesheetRoot) -> Bundle {
         assets: BTreeMap::new(),
         resolution_files: Default::default(),
         resolution_roots: Default::default(),
+        css_module_named_exports: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::from([(root.path.clone(), vec![b'a'; 160_000])]),
         imported_by: BTreeMap::new(),

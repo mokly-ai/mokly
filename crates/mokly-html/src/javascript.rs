@@ -11,26 +11,53 @@ use mokly_catalogue::html_tokens::ignore_warning_message;
 use mokly_catalogue::numeric_warnings;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::EntryContent;
+use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::wire_decode;
 
 use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
-use crate::error::{Result, invalid};
+use crate::error::{HtmlError, Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{Fragment, FragmentRequest, RenderKind};
 use crate::javascript_request::{self, Invocation};
-use crate::tree::Node;
 use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
 impl Engine<'_> {
+    pub(crate) fn javascript_fragment(
+        &self,
+        path: &str,
+        kind: RenderKind,
+        context: &Context,
+    ) -> Result<(FragmentRequest, Fragment)> {
+        let request = javascript_request::request(
+            self.request,
+            Invocation {
+                path,
+                kind,
+                props: &context.props,
+                ignore_enabled: context.ignore,
+                slots: context.slots.keys().map(String::as_str).collect(),
+            },
+        )?;
+        let result = self.fragments.render(&request)?;
+        Ok((request, result))
+    }
+
     pub(crate) fn javascript_expansion(
         &mut self,
         path: &str,
-        kind: RenderKind,
         context: Arc<Context>,
-        prepared: Option<(FragmentRequest, Result<Fragment>)>,
+        (request, mut result): (FragmentRequest, Fragment),
     ) -> Result<Expansion> {
+        if let Some(failure) = result.story_failure {
+            return Err(HtmlError::Runtime {
+                source: RuntimeDiagnostic {
+                    code: RuntimeCode::Render,
+                    message: format!("{}: {}", failure.story_id, failure.reason),
+                },
+            });
+        }
         let entry = self
             .request
             .catalogue
@@ -44,23 +71,6 @@ impl Engine<'_> {
                     format!("unknown JavaScript definition {path}"),
                 )
             })?;
-        let (request, mut result) = match prepared {
-            Some((request, result)) => (request, result?),
-            None => {
-                let request = javascript_request::request(
-                    self.request,
-                    Invocation {
-                        path,
-                        kind,
-                        props: &context.props,
-                        ignore_enabled: context.ignore,
-                        slots: context.slots.keys().map(String::as_str).collect(),
-                    },
-                )?;
-                let result = self.fragments.render(&request)?;
-                (request, result)
-            }
-        };
         let tokens = request.slots;
         self.styles.extend(result.styles.clone());
         self.resources.extend(result.resources.clone());
@@ -148,17 +158,5 @@ impl Engine<'_> {
             page,
         });
         Ok(expansion)
-    }
-
-    pub(crate) fn javascript(
-        &mut self,
-        path: &str,
-        kind: RenderKind,
-        context: &Context,
-        prepared: Option<(FragmentRequest, Result<Fragment>)>,
-    ) -> Result<Vec<Node>> {
-        let expansion =
-            self.javascript_expansion(path, kind, Arc::new(context.clone()), prepared)?;
-        self.expand(expansion)
     }
 }

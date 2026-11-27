@@ -109,8 +109,7 @@
     caller. Delete it as dead code, and record the search that shows it dead
     in the commit message.
   - Keep `token_grammar::custom_property` in
-    `crates/mokly-css/src/token_grammar.rs`. `token_sections::next` and the
-    old reader in `crates/mokly-css/src/_tests_/token_differential.rs` call
+    `crates/mokly-css/src/token_grammar.rs`. `token_sections::next` calls
     it.
   - The deep scanner test
     `module_checks_find_a_deep_value_rule_after_custom_property_blocks`, at

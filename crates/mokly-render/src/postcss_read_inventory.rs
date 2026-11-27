@@ -140,6 +140,15 @@ pub(crate) fn collect(
         .iter()
         .filter_map(|file| logical(file, side))
         .collect();
+    let unknown: Vec<_> = {
+        let known = digests.known();
+        modules
+            .iter()
+            .filter(|name| !known.contains_key(name.as_str()))
+            .map(|name| root.join(name))
+            .collect()
+    };
+    tree.hint_projections(&unknown);
     for name in &modules {
         if let Some(digest) = digests.late(tree, root, name) {
             result.insert(name.clone(), ReadBaseline::Late(digest));
@@ -281,3 +290,7 @@ mod postcss_module_flight_tests;
 #[cfg(test)]
 #[path = "_tests_/postcss_private_read_tests.rs"]
 mod postcss_private_read_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_module_hint_tests.rs"]
+mod postcss_module_hint_tests;

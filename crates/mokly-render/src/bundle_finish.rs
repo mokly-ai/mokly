@@ -20,6 +20,9 @@ pub(crate) fn finish(
     context: Option<Arc<ContextLease>>,
     bundle: Arc<BundleState>,
 ) -> Result<(JavaScriptGeneration, Definitions)> {
+    if let Some(env) = &runtime.vite_base_env {
+        env.record(&bundle.stamp.vite_env);
+    }
     let lease = Arc::new(PreparedLease {
         bundle: bundle.clone(),
         side,
@@ -36,6 +39,7 @@ pub(crate) fn finish(
             class_maps_digest: bundle.class_maps_digest.clone(),
             css_context: lease.side.context.clone(),
             modules: bundle.modules.clone(),
+            package_imports: bundle.package_imports.clone(),
             module_digests: bundle.module_digests.clone(),
             imported_assets: bundle.imported_assets.clone(),
             environment: bundle.render.environment.clone(),
@@ -52,6 +56,14 @@ pub(crate) fn finish(
                         .ok()
                         .map(|path| path.to_string_lossy().replace('\\', "/"))
                 })
+                .chain(
+                    bundle
+                        .stamp
+                        .vite_env
+                        .iter()
+                        .filter(|input| input.render)
+                        .map(|input| input.name.clone()),
+                )
                 .collect(),
             resolution_directories: bundle
                 .stamp

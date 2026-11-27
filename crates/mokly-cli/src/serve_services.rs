@@ -1,5 +1,6 @@
 //! Serve shares one JavaScript pool and cache across preparation and live views.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -19,6 +20,7 @@ use mokly_cli::serve_settings::ServeSettings;
 use mokly_compare::render_writer::DocumentWriter;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
+use mokly_graph::watch_rules;
 use mokly_graph::write_activity::WriteActivity;
 use mokly_render::runtime::Runtime;
 use mokly_server::publication::Publications;
@@ -232,16 +234,30 @@ impl ServePreparation for AttemptPreparation {
             eager.start(&config);
         }
         let runtime = Arc::new(runtime);
+        let previous = runtime.vite_inventory(&config);
         let preparation: &dyn ServePreparation = &CatalogueServe {
             config: Arc::new(PreparedConfig(config)),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),
-                discovery: Arc::new(Discoverer { tree }),
+                discovery: Arc::new(Discoverer { tree: tree.clone() }),
                 definitions: runtime.clone(),
             }),
             graphs: runtime,
         };
-        let result = preparation.prepare(cwd, options);
+        let mut result = preparation.prepare(cwd, options);
+        if let (Ok(prepared), Some(previous)) = (&mut result, previous) {
+            let old = &previous.catalogue().model.sources;
+            let current = &prepared.generation.catalogue().model.sources;
+            let current_names: BTreeSet<_> = current.iter().collect();
+            let former: BTreeSet<_> = old
+                .iter()
+                .filter(|name| !current_names.contains(name))
+                .collect();
+            prepared.recheck_vite_setup = !former.is_empty()
+                && watch_rules::rebuild_files(&prepared.config, tree.as_ref(), current)
+                    .iter()
+                    .any(|name| former.contains(name));
+        }
         if result.is_err() {
             self.discard();
         }

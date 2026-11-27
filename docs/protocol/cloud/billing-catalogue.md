@@ -29,9 +29,8 @@ lookup key, so product identity is `metadata[mokly_lookup_key]`; price identity
 is Stripe's `lookup_key`.
 
 The typed catalogue, these tables and Billing's tables are the one source of
-the catalogue, and tests parse the tables against the typed catalogue. A
-separate JSON catalogue file was rejected, because it would be a second
-source.
+the catalogue. A separate JSON catalogue file was rejected, because it would be
+a second source.
 
 ## Owned Objects And Written Fields
 

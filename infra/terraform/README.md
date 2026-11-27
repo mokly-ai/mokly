@@ -285,13 +285,14 @@ bucket `mokly-508518-preview-blobs` (uniform access, public-access prevention,
 no versioning or live-object age rule, seven-day soft deletion), A wildcards
 `*.preview.D` and `*.preview.api.D`, and Secret Manager IDs
 `mkc-preview-origin-tls-key`, `mkc-preview-origin-tls-cert`,
-`mkc-catalogue-dns-token`. Outputs `preview_ingress_ip` / `preview_blobs_bucket`
+`mkc-catalogue-dns-token` and `mkc-preview-sign-in-password`, which holds the
+preview password's verifier. Outputs `preview_ingress_ip` / `preview_blobs_bucket`
 supply the matching repository variables. Secret values never enter Terraform state.
-The Foundation workflow applies these resources. An operator supplies the
-secret versions before the platform and PR lifecycle scripts run; local
-mock-provider checks do not provision resources.
+The Foundation workflow applies these resources. An operator supplies the TLS
+and DNS values before platform setup. To enable password sign-in, the operator
+adds a verifier version. [Preview Password](../../docs/ops/preview.md#preview-password)
 
-Deploy gets `roles/secretmanager.secretAccessor` on those three IDs and the
+Deploy gets `roles/secretmanager.secretAccessor` on those four IDs and the
 dedicated `mkc-cloudflare-worker-token`, plus `roles/storage.admin` on that one
 bucket. PR `api`/`catalogue` direct Kubernetes
 principals receive conditional objectUser/objectViewer from the workflow,
@@ -372,7 +373,8 @@ CLI output; credential-free recordings and their provenance live in
 `infra/tests/fixtures/README.md`.
 
 For shared preview IDs, substitute exactly `mkc-preview-origin-tls-key`,
-`mkc-preview-origin-tls-cert` or `mkc-catalogue-dns-token` for `SECRET_ID`.
+`mkc-preview-origin-tls-cert`, `mkc-catalogue-dns-token` or
+`mkc-preview-sign-in-password` for `SECRET_ID`.
 
 The retired Origin CA Key ID above is unused but exists in the applied
 foundation state with `deletion_protection = true`; preserve that resource and
@@ -437,7 +439,7 @@ other deploy bucket grant; its inventory audits every bucket binding.
 
 - `bootstrap/` — the state bucket root with its own backend prefix.
 - `foundation/main.tf` — the Cloudflare token secret IDs (`google_secret_manager_secret.cloudflare`, `cloudflare_plan`, `cloudflare_apply`, `cloudflare_worker`), the retired `origin_ca` ID and the optional zone-setting adoption.
-- `foundation/preview.tf` — the shared preview resources: `google_compute_address.preview_ingress`, `google_storage_bucket.preview_blobs`, the three `google_secret_manager_secret.preview["SECRET_ID"]` IDs, the wildcard records `cloudflare_dns_record.preview_placeholder` and `cloudflare_dns_record.preview_api`, and the `preview_ingress_ip` and `preview_blobs_bucket` outputs.
+- `foundation/preview.tf` — the shared preview address, blob bucket, four Secret Manager IDs and their deploy grants, the wildcard DNS records, and the `preview_ingress_ip` and `preview_blobs_bucket` outputs.
 - `foundation/permissions.tf` — the CI identity grants and the custom roles `environment_apply`, `preview_platform_deploy` (`mkcPreviewPlatformDeploy`) and `stable_database_reset`.
 - `foundation/foundation-roles.tf` — the custom roles `foundation_apply` (`mkcFoundationApply`) and `foundation_plan` (`mkcFoundationPlan`), their bindings, and the `cloudflare_foundation` token ID and its grant.
 - `foundation/environments.tf` — the per-environment identity, storage and secrets module instances, the SQL and reset IAM members and the deploy secret-access bindings.

@@ -341,14 +341,15 @@ run "shared_preview_resources" {
   assert {
     condition = (
       toset(keys(google_secret_manager_secret.preview)) == toset([
-        "mkc-preview-origin-tls-key", "mkc-preview-origin-tls-cert", "mkc-catalogue-dns-token"
+        "mkc-preview-origin-tls-key", "mkc-preview-origin-tls-cert", "mkc-catalogue-dns-token",
+        "mkc-preview-sign-in-password",
       ]) &&
       alltrue([for id, secret in google_secret_manager_secret.preview :
         secret.project == var.project && secret.secret_id == id && secret.deletion_protection &&
         one(one(secret.replication).user_managed).replicas[0].location == var.region
       ])
     )
-    error_message = "Foundation must own exactly the three protected regional shared secret IDs."
+    error_message = "Foundation must own exactly the four protected regional shared secret IDs."
   }
   assert {
     condition = length(flatten([
@@ -392,7 +393,7 @@ run "shared_preview_deploy_grants" {
         grant.member == "serviceAccount:${module.github.emails["deploy"]}"
       ])
     )
-    error_message = "Deploy reads exactly the three shared preview IDs."
+    error_message = "Deploy reads exactly the four shared preview IDs."
   }
 }
 run "desktop_release_backups" {

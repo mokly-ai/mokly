@@ -13,6 +13,8 @@ import {
 import { Action } from "../page-parts";
 
 import type { EntryMode, EntrySituation } from "./entry-layout";
+import { PasswordSection } from "./preview-password";
+import type { PasswordSituation } from "./preview-password";
 
 /** What the email control reads in each situation these two screens draw. */
 const submitLabel: Record<EntrySituation, string> = {
@@ -37,13 +39,18 @@ function address(situation: EntrySituation): string {
     : onboarding.email;
 }
 
-/** Shared entry controls; static mockups intentionally end before submission. */
+/**
+ * Shared entry controls; static mockups intentionally end before submission.
+ * `password` adds sign in's password section under the email form.
+ */
 export function AccountEntry({
   mode,
   situation,
+  password,
 }: {
   mode: EntryMode;
   situation: EntrySituation;
+  password?: PasswordSituation;
 }) {
   const pending = situation === "loading";
   const connecting = situation === "github-connecting";
@@ -144,6 +151,7 @@ export function AccountEntry({
       ) : (
         submit
       )}
+      {password !== undefined && <PasswordSection situation={password} />}
     </div>
   );
 }

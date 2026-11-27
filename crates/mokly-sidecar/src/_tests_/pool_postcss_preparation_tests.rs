@@ -44,6 +44,7 @@ fn prepared(context: &str) -> Call {
             repository_roots: vec![],
             module_resolution: Default::default(),
             vite: false,
+            vite_inputs: None,
         },
         capture: None,
         plan: None,

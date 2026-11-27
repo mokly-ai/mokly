@@ -69,6 +69,7 @@ fn prepare(root: &Path, versions: &Arc<AtomicUsize>) -> Arc<dyn RenderGeneration
             inner: Arc::new(Compiler {
                 tree: tree.clone(),
                 repo_root: config.repo_root.clone(),
+                resolution: Default::default(),
                 resolver: Arc::new(SourceResolver {
                     settings: Default::default(),
                     tree,

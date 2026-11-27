@@ -11,6 +11,32 @@ import {
 } from "./fixtures/vite_stylesheets.js";
 import { consumer } from "./helpers/mokly_serve.js";
 
+test("a CSS import attribute gives an empty object and a document stylesheet", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([], { vite: false }),
+    "src/card.mockup.tsx": component(
+      'import sheet from "./attribute.css" with { type: "css" };',
+      `<p className="attributed">{Object.getPrototypeOf(sheet) === Object.prototype &&
+        Reflect.ownKeys(sheet).length === 0 ? "Empty object" : "Unexpected value"}</p>`,
+    ),
+    "src/attribute.css": ".attributed { color: teal }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.equal(built.code, 0, built.stderr);
+  const html = await generated(root, "card/index.mobile.html");
+  assert.match(html, /<p class="attributed">Empty object<\/p>/u);
+  const head = /<head>[\s\S]*?<\/head>/u.exec(html)?.[0] ?? "";
+  const stylesheet =
+    /<link rel="stylesheet" href="(\.\.\/styles\/[^"\s]+\.css)">/u.exec(
+      head,
+    )?.[1];
+  assert.ok(stylesheet, head);
+  assert.match(
+    await generated(root, `card/${stylesheet}`),
+    /\.attributed\s*\{[^}]*color:\s*teal/u,
+  );
+});
+
 test("Vite transforms a component's Sass imports and declared stylesheet", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": stylesheetConfig([], { postcss: "mokly-postcss.cjs" }),
@@ -46,6 +72,31 @@ test("Vite transforms a component's Sass imports and declared stylesheet", async
   assert.match(
     await generated(root, "styles/declared.scss.css"),
     /\.declared\s*\{[^}]*color:\s*teal/,
+  );
+});
+
+test("Vite renders its own CSS Module named bindings", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([]),
+    "src/card.mockup.tsx": component(
+      'import styles, { class as className, __esModule as esmClass } from "./card.module.css"; import * as bindings from "./card.module.css";',
+      '<p className={className} data-esm={esmClass} data-default={styles["btn-primary"]} data-named={"btn-primary" in bindings}>Card</p>',
+    ),
+    "src/card.module.css":
+      ".class { color: teal } .btn-primary { display: block } .__esModule { display: inline }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.equal(built.code, 0, built.stderr);
+  const html = await generated(root, "card/index.mobile.html");
+  const scoped = /<p class="(mokly_[a-f0-9]{12}_class)"/.exec(html)?.[1];
+  assert.ok(scoped, html);
+  assert.match(
+    html,
+    /data-esm="mokly_[a-f0-9]{12}___esModule" data-default="mokly_[a-f0-9]{12}_btn-primary" data-named="false"/,
+  );
+  assert.match(
+    await generated(root, "styles/src/card.mockup.tsx.css"),
+    new RegExp("\\." + scoped + "\\s*\\{[^}]*color:\\s*teal"),
   );
 });
 

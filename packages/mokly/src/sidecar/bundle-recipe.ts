@@ -11,6 +11,7 @@ import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { importedAssetPaths } from "./asset-imports.js";
 import { moduleGraph } from "./bundle-graph.js";
+import { hasUnresolvedRequire } from "./bundle-runtime-requires.js";
 import type { Bundled } from "./bundle.js";
 import { capturedPlan } from "./captured-plan.js";
 import { bundleResult, generationId, restore } from "./compiled.js";
@@ -32,7 +33,7 @@ export interface CompiledBundle {
   paths: ModulePaths;
   require: ConsumerRequire;
   inputs: { files: Map<string, Uint8Array>; cssModules: Set<string> };
-  compiled: Pick<BuildResult, "metafile" | "outputFiles">;
+  compiled: Pick<BuildResult, "metafile" | "outputFiles" | "warnings">;
   inputPaths: Map<string, string>;
   previews: ReadonlyMap<string, string>;
   runtimeKey: string;
@@ -58,12 +59,16 @@ export async function bundleRecipe(
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
+  const peers = require.snapshot();
   const folderEvidence = editImports
-    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
-        paths.workspaceLookups.marked(
-          editImports.record(compiled.metafile!, paths),
-        ),
-      )
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () => {
+        const evidence = editImports.record(compiled.metafile!, paths);
+        if (!evidence) return undefined;
+        paths.workspaceLookups.runtimeFiles(Object.values(peers));
+        if (hasUnresolvedRequire(compiled, peers, runtimeKey))
+          paths.workspaceLookups.runtimeBuilds();
+        return paths.workspaceLookups.marked(evidence);
+      })
     : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
@@ -142,7 +147,6 @@ export async function bundleRecipe(
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
-  const peers = require.snapshot();
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence
     ? await evidence.finish(compiled.metafile!)

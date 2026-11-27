@@ -46,7 +46,11 @@ it carries only the identity and the two legal links.
   decision.
 - **Body**. One column, 20px between fields, every action full width. Entry
   stacks the GitHub action in the `secondary` tone with its mark, the `or`
-  rule, the email field, then the one `primary` submit. In the desktop app's
+  rule, the email field, then the one `primary` submit. Where the
+  configuration answer names a shared account, sign in adds a second `or`
+  rule, the **Password** field and a `secondary` action named for that
+  account, as [Preview sign-in](./preview-sign-in.md#sign-in-section)
+  defines, so the submit stays the one `primary`. In the desktop app's
   window, entry draws only its one `primary` action, which opens the browser,
   as [Desktop sign-in](./desktop-sign-in.md#entry-screen) defines. A step
   pairs its `primary` with at most one `secondary` alternative when there is a

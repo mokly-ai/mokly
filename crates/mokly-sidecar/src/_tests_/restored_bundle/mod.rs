@@ -78,6 +78,7 @@ fn params() -> Bundle {
         repository_roots: vec![],
         module_resolution: Default::default(),
         vite: false,
+        vite_inputs: None,
     }
 }
 
@@ -141,12 +142,14 @@ fn restore(id: u64, generation: &str, identity: &str) -> Request {
             compiled: Arc::new(recipe),
             modules: vec![
                 results::Module {
+                    package_import: None,
                     digest: Some(format!("digest:{identity}")),
                     path: "entry.ts".into(),
                     imports: vec!["theme.module.css".into(), "shared.ts".into()],
                     imported_asset: None,
                 },
                 results::Module {
+                    package_import: None,
                     digest: Some("shared-digest".into()),
                     path: "shared.ts".into(),
                     imports: vec![],

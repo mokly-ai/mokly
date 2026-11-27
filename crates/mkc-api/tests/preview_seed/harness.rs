@@ -101,7 +101,6 @@ impl Harness {
             .env("MKC_CATALOGUE_SIGNING_KEY", "a".repeat(64))
             .env("MKC_FILE_STORE", "local")
             .env("MKC_FILE_STORE_ROOT", self.root.path())
-            .env("MKC_PREVIEW_SIGN_IN_SECRET", "c".repeat(64))
             .env("MKC_PREVIEW_SIGN_IN_EMAIL", "preview@mokly.ai")
             .env("MKC_PREVIEW_SIGN_IN_PLAN", "team");
         for (key, value) in overrides {
@@ -116,10 +115,6 @@ impl Harness {
             "{}{}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr)
-        );
-        assert!(
-            !log.contains(&"c".repeat(64)),
-            "sign-in secret reached logs"
         );
         assert!(
             !regex::Regex::new(r"mkc_[a-f0-9]{64}")

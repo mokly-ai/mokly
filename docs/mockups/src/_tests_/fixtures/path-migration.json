@@ -640,20 +640,6 @@
     "slug": "failure"
   },
   {
-    "oldId": "account-callback-preview-invalid",
-    "path": "product/account/callback/preview-invalid",
-    "kind": "screen",
-    "module": "docs/mockups/src/entries/product/account/callback/preview-invalid.mockup.tsx"
-  },
-  {
-    "oldId": "account-callback-preview-failure",
-    "path": "product/account/callback/preview-invalid/failure",
-    "kind": "screen",
-    "module": "docs/mockups/src/entries/product/account/callback/preview-invalid.mockup.tsx",
-    "parent": "product/account/callback/preview-invalid",
-    "slug": "failure"
-  },
-  {
     "oldId": "account-choose-repository",
     "path": "product/account/choose-repository",
     "kind": "screen",

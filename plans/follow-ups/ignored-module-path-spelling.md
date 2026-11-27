@@ -1,0 +1,67 @@
+# Path spelling differences hide ignored-module warnings
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from finding 191 of round 3 of the review of branch `calummoore/mokly-source-package-override-jkum`, with the case problem that the finding check of 191 found.
+- **Location:** `GitRepository::classify_working_paths`, `IndexPaths`, and `OtherPaths` in `crates/mokly-git/src/working_path_status.rs`, with the exact comparisons at lines 62, 63, 114, 126, and 155. `SystemDisk::working_path` at `crates/mokly-git/src/disk.rs:75`. The two `Untracked` checks of `warnings` in `crates/mokly-compare/src/ignored_modules.rs`, at lines 87 to 93 and at line 112.
+- **Reason:** Only a decomposed or case-different file name on macOS or Windows meets the mismatch, and the fix changes the shared status reader.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Head and base:** The head is the render of the working tree. A base is the render of the files of a Git commit, which Changes compares with the head.
+  - **`ignored-module` warning:** The configuration warning that Mokly gives, when Changes runs, for each repository file outside `node_modules` that the head loads and a later base cannot load.
+  - **Decomposed name:** A file name that stores an accented letter as a base letter and a combining mark, such as `e` and U+0301.
+  - **`core.precomposeUnicode`:** A Git setting that only macOS Git reads. When it is on, Git changes decomposed names to composed names in its arguments and in its folder reads. `git init` on macOS turns it on.
+  - **Case-insensitive volume:** A file system on which `Skin.css` and `skin.css` name one file. The default volumes of macOS and Windows are case-insensitive.
+- **Background:**
+  - On 2026-11-27 Cal chose one shared API in `crates/mokly-git` that gives the exact Git status of each loaded path. The `ignored-module` warning uses it. The statuses are tracked, untracked and not ignored, ignored, inside a nested repository, and inside a submodule.
+  - The "Ignored Modules" section of `docs/protocol/mokly-comparison-packages.md` gives the warning of each status. A tracked file and an untracked file that Git does not ignore get no warning. `--strict` counts the warning.
+  - `GitRepository::classify_working_paths` implements the API. First, the disk walk `SystemDisk::working_path` checks each folder of the requested path on disk, in the spelling of the request. It finds the path up to its first symbolic link and the first folder with a `.git` entry.
+  - Then the reader runs three `git ls-files` listings. It matches each record to a request by exact string comparison:
+    - The whole index, with `--cached --format=%(objectmode)%x09%(path)`. `IndexPaths` keeps each record that equals a request, at line 114. It also keeps each gitlink, which is the index record of a submodule. Line 126 matches a gitlink to a folder of the request.
+    - The nested checkout folders, with `--others --killed --exclude-standard`. Line 155 matches a folder record to a folder of the request.
+    - The other paths, with the same flags and `--ignored`. Line 62 looks the request up in the ignored file records, and line 63 in the ignored folder records.
+  - A path that no record names gets `Untracked`. The `warnings` function in `crates/mokly-compare/src/ignored_modules.rs` treats `Untracked` as safe in two places. Line 112 gives no warning for the loaded file. Lines 87 to 93 skip a file that Mokly's PostCSS require loads by package name when its mapped source is `Tracked` or `Untracked`.
+  - Each Git command of the reader has `--literal-pathspecs`, from `crates/mokly-git/src/repository_command.rs:57`. Git matches a pathspec with the exact case of the stored name.
+  - The reader does not read `core.precomposeUnicode` or `core.ignoreCase` today. `crates/mokly-git/src/conversion_paths.rs:20` shows the pattern for one setting: `git config --get core.autocrlf`.
+  - `mokly-git` has no Unicode normalization library. The workspace already builds `icu_normalizer` 2.3.0, which `icu_collator` of `crates/mokly-model` pulls in, so `mokly-git` can add it.
+  - Git 2.43.0 changes its arguments under `core.precomposeUnicode` in `compat/precompose_utf8.c` at line 67, and its folder reads at line 130. Git's test `t/t3910-mac-os-precompose.sh` runs `ls-files` with both spellings of one name.
+- **Problem:**
+  - Mokly can ask for an ignored file as `Cafe\u{0301}/skin.css`, and Git can report it as `Café/skin.css`. The exact comparison misses that record, so the status is `Untracked`. A decomposed folder name of a submodule or a nested repository misses its record in the same way.
+  - On a case-insensitive volume, `./generated/Skin.css` loads the ignored file `generated/skin.css`. The head reports `generated/Skin.css`. No Git record names that spelling, so the status is again `Untracked`.
+  - A wrong `Untracked` on the mapped source of a PostCSS load by package name also skips the warning for the loaded file.
+  - Nobody ran these cases, because no macOS or Windows host was available. A read of the Git 2.43.0 source supports the first case, and a read of the reader supports the others.
+- **Impact if no action:** The author gets no warning for a file that a later base cannot load, and a strict build passes. After the merge, the base cannot load the file, and Changes becomes unavailable.
+- **Root question:** How does Mokly find the Git status of each loaded file when the loaded path and Git spell that file differently?
+- **Options:**
+  - **A.** Apply the normalization rules of the active Git settings in the status reader. Keep the original path for the warning. The rule stays local to this reader, so another reader that matches Git records must copy it. It adds a normalization dependency to `mokly-git`. Effort: Medium.
+  - **B.** Use one Git path key for requests, index records, and checkout folders. Give the key the spelling rules of the active Git settings. Keep the original paths for file access and messages. Mokly then models each spelling rule of Git itself, so a wrong model gives a wrong match. It adds the same dependency. Effort: Medium.
+  - **C.** Use Git queries that tie each result to its original request, for the index, ignore, and checkout results. This adds Git processes and changes how the reader asks Git. Effort: Large.
+  - **D.** Ask Git in Git's own spelling. Effort: Medium.
+    - In the disk walk, read the stored name of each path part from its folder. Compose the name when `core.precomposeUnicode` is on. The result is the Git spelling of the request, the path key that every match uses.
+    - Read `core.precomposeUnicode` and `core.ignoreCase` with `git config --get`, as `conversion_paths.rs` reads `core.autocrlf`.
+    - Send the path key to Git, and match the records against it. Keep the loaded path for the message.
+    - The stored name also gives the case of the file on disk, so D covers case differences too.
+    - Cost: the walk reads each folder on the path, and D adds `icu_normalizer` to `mokly-git`.
+    - Test it with `DiskMock` of `crates/mokly-git/src/disk.rs`. Linux Git does not read `core.precomposeUnicode`, and Linux volumes are case-sensitive.
+  - **E.** Give a request that no Git record names its own status, unresolved, not `Untracked`. Effort: Medium.
+    - The reader then also lists the untracked files that Git does not ignore, so that each status needs a record. This adds a Git listing.
+    - The warning gives an unresolved file its own message, and `--strict` counts it. An unresolved mapped source does not skip the warning of its load.
+    - Only Cal can approve E, because it adds a warning that can fail a strict build.
+- **Left out:**
+  - Normalize every path on every platform. A checkout on a case-sensitive volume can hold both spellings as two files.
+  - Ask Git with case-insensitive pathspecs, such as `--icase-pathspecs`. It covers case only, and it can match a second file that differs only in case. D covers both spellings.
+- **Wider fix:** E. It removes the default that reads a missing record as `Untracked`, so a spelling rule that D does not model also gives a visible result. It is blocked, because it adds a warning that `--strict` counts. D is the structural fix for the two spelling rules that Git applies.
+- **Previous examples:**
+  - Git's test `t/t3910-mac-os-precompose.sh` checks `ls-files` queries with both spellings of one name.
+  - [windows-canonical-paths.md](./windows-canonical-paths.md) records two spellings of one Windows path, the verbatim form and the plain form. npm and Node did not treat them as one root.
+- **Related:**
+  - [ignored-module-large-index.md](./ignored-module-large-index.md): same code, and work that waits. Its streamed index filter must compare records with the path key of D. Apply D first, or both in one branch.
+  - [ignored-module-large-index.md](./ignored-module-large-index.md) also has a shared wider fix. Its option E, a warning for a failed status read, is the same kind of detection as E here. Cal can answer both together.
+  - [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md): same fixtures. The tests of D must set `core.precomposeUnicode` and `core.ignoreCase` in the fixture repository, so that the Git settings of the developer cannot change the result.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. Its record gives the warning the written path of each load, and D turns that path into the path key.
+  - [case-collision-unlisted-directory.md](./case-collision-unlisted-directory.md): same cause in the reuse checks. Two spellings of one name on a volume that folds case escape a check there too. Its option B reads the folder entries that share the folded name, as D reads the stored name.
+  - [windows-canonical-paths.md](./windows-canonical-paths.md): same class and same file, `crates/mokly-git/src/disk.rs`. Two spellings of one path compare unequal.
+- **Recommendation:** D. It asks Git in Git's own spelling, so one rule covers decomposed names and case differences, and the warning keeps the loaded path. E best protects the codebase, but only Cal can approve it.
+- **Action:** fix after merge, apply D, because only a decomposed or case-different name on macOS or Windows meets the mismatch, and D changes the shared reader.

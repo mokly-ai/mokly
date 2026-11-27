@@ -1,8 +1,9 @@
-"""Real catalogue server CORS and frame admission in both desktop flag states."""
+"""Real catalogue server and rollout admission in both desktop flag states."""
 
 import json
 from pathlib import Path
 import sys
+from unittest import TestCase
 import urllib.error
 import urllib.request
 import uuid
@@ -10,7 +11,38 @@ import uuid
 from smoke_support import Api
 
 
-DESKTOP = json.loads((Path(__file__).resolve().parents[2] / "fixtures/desktop-origin.json").read_text())["origin"]
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "infra/scripts"))
+
+import smoke_admission as admission
+from smoke import HttpClient
+
+
+DESKTOP = json.loads((ROOT / "fixtures/desktop-origin.json").read_text())["origin"]
+
+
+def read_frame_ancestors(csp):
+    return [part.strip().split()[1:] for part in csp.split(";")
+            if part.strip().startswith("frame-ancestors ")]
+
+
+def check_rollout_admission(server, enabled):
+    client = HttpClient()
+    url = server.url + "/"
+    app = server.origin
+    response = client.get(url, app)
+    assert response.status == 404, response.status
+    actual = read_frame_ancestors(response.headers["content-security-policy"])
+    expected = [admission.frame_ancestors(app, enabled)]
+    assert actual == expected, (enabled, actual, expected)
+    admission.catalogue_headers(response.headers, app, enabled)
+    admission.cors(client, url, app, enabled, "Catalogue", 404)
+
+    assertions = TestCase()
+    with assertions.assertRaisesRegex(ValueError, "frame-ancestors mismatch.*MKC_DESKTOP_CLIENT"):
+        admission.catalogue_headers(response.headers, app, not enabled)
+    with assertions.assertRaisesRegex(ValueError, "CORS mismatch.*MKC_DESKTOP_CLIENT"):
+        admission.cors(client, url, app, not enabled, "Catalogue", 404)
 
 
 def smoke(executable, enabled):
@@ -18,6 +50,7 @@ def smoke(executable, enabled):
                                      "MKC_CATALOGUE_BIND": "127.0.0.1:0"},
               isolated_database=True)
     try:
+        expected = ["'self'", app.origin] + ([DESKTOP] if enabled else [])
         for origin in [app.origin, DESKTOP, "https://third.example.com", "null", None]:
             admitted = origin == app.origin or enabled and origin == DESKTOP
             for method, path, status in [("GET", "/_health", 200), ("HEAD", "/_health", 200),
@@ -42,13 +75,12 @@ def smoke(executable, enabled):
                     if admitted:
                         assert headers["Access-Control-Allow-Credentials"] == "true"
                     assert headers["Vary"] == "Origin, Cookie, Accept-Encoding"
-                    csp = headers["Content-Security-Policy"]
-                    ancestors = [part.strip().split()[1:] for part in csp.split(";")
-                                 if part.strip().startswith("frame-ancestors ")]
-                    expected = ["'self'", app.origin] + ([DESKTOP] if enabled else [])
+                    ancestors = read_frame_ancestors(headers["Content-Security-Policy"])
                     assert ancestors == [expected], ancestors
                     assert headers.get("Set-Cookie") is None
-        print(f"PASS desktop catalogue flag={enabled}: CORS echo, refused origins, exact frame ancestors, health, errors, HEAD, preflight and grant Origin")
+        check_rollout_admission(app, enabled)
+        print(f"PASS desktop catalogue flag={enabled}: CORS echo, refused origins, exact frame ancestors, "
+              "health, errors, HEAD, preflight, grant Origin and rollout admission")
     finally:
         app.close()
 

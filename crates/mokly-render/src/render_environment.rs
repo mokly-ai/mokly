@@ -23,7 +23,7 @@ pub(crate) struct RenderEnvironment {
     pub(crate) environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub(crate) resolution_digests: BTreeMap<String, String>,
-    /// Stylesheet path to the digest of its class map.
+    /// Stylesheet path to the digest of its CSS Module bindings.
     pub(crate) class_map_digests: BTreeMap<String, String>,
     /// Package names of the resolved runtime packages.
     pub(crate) runtime_packages: BTreeSet<String>,
@@ -99,6 +99,7 @@ pub(crate) fn derive(
     params: &Bundle,
     result: &results::Bundle,
     maps: &ClassMaps,
+    named_exports: &ClassMaps,
     working_root: &Path,
     cache_namespace: Option<&Path>,
 ) -> RenderEnvironment {
@@ -116,15 +117,38 @@ pub(crate) fn derive(
                 .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str)
         })
         .collect();
-    let resolution_digests = resolution(&compiled.metadata_inputs, folders, &result.modules);
+    let mut resolution_digests = resolution(&compiled.metadata_inputs, folders, &result.modules);
+    if let Some(env) = compiled
+        .vite
+        .as_ref()
+        .and_then(|vite| vite.env_inputs.as_ref())
+    {
+        resolution_digests.extend(env.iter().filter(|input| input.render).filter_map(|input| {
+            let name = input.name.strip_prefix(INSTALLED).unwrap_or(&input.name);
+            input
+                .digest
+                .as_ref()
+                .map(|digest| (name.into(), digest.clone()))
+        }));
+    }
     let mut class_map_digests = BTreeMap::new();
     for (path, map) in maps {
-        let bytes = serde_json::to_vec(map)
-            .expect("a CSS Modules class map contains only strings and string keys");
+        let bytes = match named_exports.get(path) {
+            Some(named) => serde_json::to_vec(&(map, named)),
+            None => serde_json::to_vec(map),
+        }
+        .expect("CSS Module bindings contain only strings and string keys");
         class_map_digests.insert(path.clone(), digest(&bytes));
     }
-    let settings = serde_json::to_vec(&settings)
-        .expect("render environment settings contain only strings and string-keyed maps");
+    let setup_digest = compiled
+        .vite
+        .as_ref()
+        .and_then(|vite| vite.setup_digest.as_deref());
+    let settings = match setup_digest {
+        Some(digest) => serde_json::to_vec(&(&settings, digest)),
+        None => serde_json::to_vec(&settings),
+    }
+    .expect("render environment settings contain only strings and string-keyed maps");
     RenderEnvironment {
         environment: digest(&settings),
         resolution_digests,

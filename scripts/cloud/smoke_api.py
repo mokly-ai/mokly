@@ -1,7 +1,7 @@
 """Platform lifecycle smoke, invoked by the Rust integration test."""
 
+import base64
 import hashlib
-import secrets
 import sys
 import uuid
 
@@ -11,26 +11,49 @@ from smoke_permissions import permissions
 from smoke_cli_project import cli_project
 
 
-def preview_sign_in(api, secret, email, previous):
-    key = hashlib.sha256(b"preview:127.0.0.1").hexdigest()
+PREVIEW_PASSWORD = "Mokly smoke test password"
+PREVIEW_ADMISSION_KEY = hashlib.sha256(b"preview:127.0.0.1").hexdigest()
+
+
+def preview_settings(email):
+    """A test verifier with a small work factor for the fixed admission window."""
+    salt = bytes(range(16))
+    digest = hashlib.scrypt(PREVIEW_PASSWORD.encode("utf-8"), salt=salt, n=16, r=8, p=1, dklen=32)
+    salt64 = base64.b64encode(salt).decode("ascii").rstrip("=")
+    hash64 = base64.b64encode(digest).decode("ascii").rstrip("=")
+    return {"MKC_PREVIEW_SIGN_IN_EMAIL": email,
+            "MKC_PREVIEW_SIGN_IN_VERIFIER": f"$scrypt$ln=4,r=8,p=1${salt64}${hash64}"}
+
+
+def preview_sign_in(api, email, previous):
+    key = PREVIEW_ADMISSION_KEY
     api.sql("DELETE FROM auth_rate_limits WHERE key='" + key + "'")
-    wrong = ("0" if secret[0] != "0" else "1") + secret[1:]
+    wrong = " " + PREVIEW_PASSWORD
     for refused in ["bad", wrong]:
-        error, _ = api.call("POST", "/v1/auth/preview", {"secret": refused}, expected=400)
+        error, _ = api.call("POST", "/v1/auth/preview", {"password": refused}, expected=400)
         assert error["error"]["reason"] == "magic-link-invalid"
     for body, origin, expected in [
         (b"{", api.origin, 400),
-        ({"secret": secret}, None, 403),
-        ({"secret": secret}, "https://wrong.example.com", 403),
-        ({"secret": secret, "unexpected": True}, api.origin, 400),
+        ({"password": PREVIEW_PASSWORD}, None, 403),
+        ({"password": PREVIEW_PASSWORD}, "https://wrong.example.com", 403),
+        ({"password": PREVIEW_PASSWORD, "unexpected": True}, api.origin, 400),
+        ({}, api.origin, 400),
+        ({"secret": "old preview link"}, api.origin, 400),
+        ({"password": PREVIEW_PASSWORD, "secret": "old preview link"}, api.origin, 400),
+        ([PREVIEW_PASSWORD, "/dashboard"], api.origin, 400),
+        ({"password": ""}, api.origin, 400),
+        ({"password": "é" * 512 + "!"}, api.origin, 400),
     ]:
         error, _ = api.call("POST", "/v1/auth/preview", body, expected=expected,
                             extra={"Origin": origin})
         expected_reason = "validation-failed" if expected == 400 else "csrf-rejected"
         assert error["error"]["reason"] == expected_reason
         assert api.sql("SELECT count FROM auth_rate_limits WHERE key='" + key + "'") == "2"
-    issued, headers = api.call("POST", "/v1/auth/preview", {"secret": secret}, session=previous)
-    assert issued["returnTo"] == "/dashboard"
+    destination = "/mokly/cloud?selection=one%26two"
+    issued, headers = api.call("POST", "/v1/auth/preview",
+                               {"password": PREVIEW_PASSWORD, "returnTo": destination + "#fragment"},
+                               session=previous)
+    assert issued["returnTo"] == destination
     assert issued["session"]["user"]["email"] == email
     cookie = headers["Set-Cookie"]
     for attribute in ["Secure", "HttpOnly", "SameSite=Lax", "Path=/", "Max-Age=2592000"]:
@@ -42,16 +65,26 @@ def preview_sign_in(api, secret, email, previous):
     api.call("GET", "/v1/session", session=session)
     assert api.sql("SELECT count FROM auth_rate_limits WHERE key='" + key + "'") == "3"
     for _ in range(17):
-        api.call("POST", "/v1/auth/preview", {"secret": wrong}, expected=400)
-    error, limited_headers = api.call("POST", "/v1/auth/preview", {"secret": secret}, expected=429)
+        error, _ = api.call("POST", "/v1/auth/preview", {"password": wrong}, expected=400)
+        assert error["error"]["reason"] == "magic-link-invalid"
+    error, limited_headers = api.call("POST", "/v1/auth/preview", {"password": PREVIEW_PASSWORD}, expected=429)
     assert error["error"]["reason"] == "rate-limited"
     assert int(limited_headers["Retry-After"]) > 0
     return session
 
 
+def preview_without_verifier(api):
+    key = PREVIEW_ADMISSION_KEY
+    api.sql("DELETE FROM auth_rate_limits WHERE key='" + key + "'")
+    refused, headers = api.call("POST", "/v1/auth/preview", {"password": PREVIEW_PASSWORD}, expected=400)
+    assert refused["error"]["reason"] == "magic-link-invalid"
+    assert headers.get("Set-Cookie") is None
+    assert api.sql("SELECT count FROM auth_rate_limits WHERE key='" + key + "'") == "1"
+
+
 def unconfigured_optional_operations(api):
     for path, valid_body in [
-        ("/v1/auth/preview", {"secret": "a" * 64}),
+        ("/v1/auth/preview", {"password": PREVIEW_PASSWORD}),
         ("/v1/auth/github", {}),
     ]:
         for body, origin in [
@@ -71,8 +104,7 @@ def smoke(api):
     assert headers.get("Set-Cookie") is None
     owner = api.signup()
     stranger = api.signup()
-    stranger = preview_sign_in(api, api.environment["MKC_PREVIEW_SIGN_IN_SECRET"],
-                               api.environment["MKC_PREVIEW_SIGN_IN_EMAIL"], stranger)
+    stranger = preview_sign_in(api, api.environment["MKC_PREVIEW_SIGN_IN_EMAIL"], stranger)
     session, _ = api.call("GET", "/v1/session", session=owner)
     assert session["user"]["email"] == owner["email"]
     assert session["workspaceIds"] == []
@@ -243,14 +275,19 @@ def smoke(api):
 
 
 if __name__ == "__main__":
-    preview_secret = secrets.token_hex(32)
     preview_email = "preview-" + str(uuid.uuid4()) + "@example.com"
-    api = Api(sys.argv[1], overrides={"MKC_PREVIEW_SIGN_IN_SECRET": preview_secret,
-                                     "MKC_PREVIEW_SIGN_IN_EMAIL": preview_email})
+    api = Api(sys.argv[1], overrides=preview_settings(preview_email))
     try:
         smoke(api)
     finally:
         api.close()
+    assert all(PREVIEW_PASSWORD not in line for line in api.lines)
+    api = Api(sys.argv[1], overrides={"MKC_PREVIEW_SIGN_IN_EMAIL": preview_email})
+    try:
+        preview_without_verifier(api)
+    finally:
+        api.close()
+    assert all(PREVIEW_PASSWORD not in line for line in api.lines)
     api = Api(sys.argv[1])
     try:
         unconfigured_optional_operations(api)

@@ -36,7 +36,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Validate deployment configuration
@@ -100,7 +100,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Validate deployment configuration
@@ -148,6 +148,8 @@ jobs:
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
           PREVIEW_URL: ${{ env.SITE_ORIGIN }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -183,6 +185,20 @@ jobs:
                 issue_number: context.payload.pull_request.number,
                 body,
               });
+              // A retried create can save the comment twice when GitHub
+              // loses its reply. Keep the oldest copy and delete the others.
+              const saved = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              for (const extra of saved.filter((comment) => comment.user?.type === "Bot" && comment.body?.includes(marker)).slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
             }
 
   close-pr:
@@ -219,6 +235,8 @@ jobs:
           CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         with:
+          # Retry failed GitHub API calls; 400, 401, 403, 404, and 422 fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [

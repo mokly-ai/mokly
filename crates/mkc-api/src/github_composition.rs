@@ -99,7 +99,7 @@ impl GitHubComposer for GitHubComposition {
             }));
             result.reconciler = Some(Arc::new(SandboxBuildReconciler {
                 transactions: publishing.transactions.clone(),
-                backend: build_providers.backend,
+                lifecycle: build_providers.sandbox.lifecycle,
                 deployment_id: builds.deployment_id.clone(),
             }));
         }

@@ -41,6 +41,9 @@ pub(crate) fn validate(
     if !confined_to_repository(&config.repo_root, &[&path]) {
         return Err(path_error(value));
     }
+    if config.vite() {
+        return Ok(None);
+    }
     if !matches!(
         path.extension().and_then(|extension| extension.to_str()),
         Some("ts" | "mts" | "js" | "mjs" | "cjs")

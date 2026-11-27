@@ -8,6 +8,8 @@ import unittest
 from support import load
 
 smoke = load("smoke")
+# How often a double checks for shutdown; the 0.5 s default slows each test.
+SHUTDOWN_POLL_SECONDS = 0.05
 REVISION = "a" * 40
 APP = "https://br-main.preview.example.invalid"
 API = "https://br-main.preview.api.example.invalid"
@@ -96,7 +98,11 @@ class SmokeTransport(unittest.TestCase):
                 pass
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread = threading.Thread(
+            target=self.server.serve_forever,
+            kwargs={"poll_interval": SHUTDOWN_POLL_SECONDS},
+            daemon=True,
+        )
         self.thread.start()
         port = self.server.server_address[1]
 

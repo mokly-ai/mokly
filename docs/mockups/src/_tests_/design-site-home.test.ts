@@ -79,17 +79,17 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.equal(label(only(hero, "site-hero-lead")), LEAD);
     assert.deepEqual(links(only(hero, "site-actions")), [
-      ["Get started →", "design/site/docs"],
+      ["Get started →", "product/account/sign-up"],
       ["Download for Mac", openSource.desktopReleases],
     ]);
   });
 
-  test(`${viewport}: the open foundation closes with Get started, View on GitHub and the steps`, () => {
+  test(`${viewport}: the open foundation closes with Docs, View on GitHub and the steps`, () => {
     const { document } = siteDocument("design/site/home", viewport);
     const closing = only(document, "site-closing");
     assert.equal(attribute(closing, "id"), "foundation");
     assert.deepEqual(links(only(closing, "site-actions")), [
-      ["Get started →", "design/site/docs"],
+      ["Docs →", "design/site/docs"],
       ["View on GitHub", openSource.github],
     ]);
     assert.deepEqual(

@@ -1,0 +1,31 @@
+# A new entry file keeps a stale Vite import
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from the re-check of item 11 of the review of branch `calummoore/storybook-d6-b-vite-workspace-sources-isfc`, item 13.
+- **Location:** `invalidateViteModules` in `packages/mokly/src/sidecar/vite-invalidation.ts:154`, the Vite setup key in `ViteContext.open` in `packages/mokly/src/sidecar/vite-context.ts:89`, and `ModulePaths.workspaceSource` in `packages/mokly/src/sidecar/module-paths.ts`.
+- **Reason:** The branch used its two review fix rounds, and the case needs a Serve edit that adds a workspace build file to the entry list.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Vite adapter:** the compile path that uses the project's own Vite setup, turned on by the `vite` configuration field.
+  - **Workspace source step:** the rule of `docs/protocol/mokly-comparison-packages.md`, section "Workspace Package Sources", that loads the matching source file in place of a workspace build file.
+  - **Configured file:** an entry module, a stories file, the renderer, or the Storybook preview. It keeps its exact path, also when a package import reaches it.
+  - **Setup reuse:** a sidecar process keeps one Vite server for its source root and reuses it while the setup key and the setup evidence stay equal.
+- **Background:** Under the Vite adapter, a catalogue import of a workspace package gets the workspace source step after the setup selects a build file. A configured file is exempt, so an import that reaches a configured build file keeps that file. The Vite setup key holds every bundle setting except the entry list, the stories list, the evaluation digest, and the rebuild list. Serve reuses the Vite server and its module graph between requests.
+- **Problem:** When a later bundle request adds a workspace build file to its entry list, the reused setup keeps an unchanged catalogue import of that package on its source. A probe at commit `731a8b51c` rendered `teal` in the reused process, and a fresh process rendered `red`. The module graph keeps the old resolution, because no input of the importer changed.
+- **Impact if no action:** A Serve rebuild after such an edit can load both the build file and its source in one bundle, and it differs from a fresh build until the process restarts.
+- **Root question:** How does a reused Vite server resolve each catalogue import as a fresh process would, after a change of the configured files?
+- **Options:**
+  - **A.** Invalidate the importers whose workspace source decision depends on a configured file when the configured files of the request change. Record that dependency at resolution. Test: a first bundle, then a bundle whose entry list adds the build file. Effort: Medium.
+  - **B.** Put the configured files in the setup key, so that a change of the lists starts a fresh worker. Cost: each new mockup file then restarts the worker in Serve, and stylesheet requests, which list no entries, get another key than bundle requests. Effort: Small.
+  - **C.** Carry the exact-path decision of each workspace import in the shared record of [workspace-import-resolution-record.md](./workspace-import-resolution-record.md), and invalidate the catalogue modules whose recorded decision changes. Effort: Large.
+- **Left out:** Invalidating the whole module graph on each request: it fails the goal of incremental Serve rebuilds, and A gives the same result.
+- **Wider fix:** C. One record of each import's exact-path decision lets every consumer see when it changes.
+- **Previous examples:** Findings 2 and 9 of the same review: the setup key missed `moduleResolution` and the renderer, and reused setups kept stale imports.
+- **Related:**
+  - [vite-config-request-kind.md](./vite-config-request-kind.md): same code. It covers the Vite config's values. This item covers catalogue imports. Its options do not fix this item.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): shared wider fix. Its record must carry the exact-path decision of each import.
+- **Recommendation:** A. It keeps warm reuse and fixes the reproduced case at the module graph. C best protects the codebase.
+- **Action:** fix after merge, apply A, because the branch used its two fix rounds and the case is rare.

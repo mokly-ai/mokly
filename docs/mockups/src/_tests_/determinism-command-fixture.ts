@@ -1,18 +1,15 @@
 /** Run the shipped determinism command over a real build of a fixture with the pinned Mokly CLI. */
 
 import { execFile } from "node:child_process";
-import { cp, readFile } from "node:fs/promises";
+import { readFile, symlink } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
 
 import { indexPath, screenView } from "./catalogue-paths";
-import {
-  outputDirectory,
-  outputFixture,
-  repository,
-} from "./generated-output-fixture";
+import { outputDirectory, repository } from "./generated-output-fixture";
+import { policyFixture } from "./policy-fixture";
 
 /** The fixture document that the stand-in build marks. */
 export const markedDocument = screenView("screen", "desktop");
@@ -23,11 +20,13 @@ export const markedDocument = screenView("screen", "desktop");
  * document, with the build process id when `drift` is set, and records each
  * call in `build-calls`. The policy and browser scripts throw when they load.
  */
-export async function determinismCommandFixture(drift = false) {
-  const fixture = await outputFixture();
-  await fixture.cli("build", "--strict", "--no-changes");
-  const seed = path.join(fixture.root, ".context/seed");
-  await cp(fixture.output, seed, { recursive: true });
+export async function determinismCommandFixture(seed: string, drift = false) {
+  const fixture = await policyFixture();
+  await symlink(
+    path.join(repository, "node_modules"),
+    path.join(fixture.root, "node_modules"),
+    "dir",
+  );
   const index: Record<string, unknown> = JSON.parse(
     await readFile(path.join(seed, indexPath), "utf8"),
   );
@@ -58,7 +57,7 @@ import path from 'node:path';
 const root=import.meta.dirname;
 const output=path.join(root,${JSON.stringify(outputDirectory)});
 await rm(output,{force:true,recursive:true});
-await cp(path.join(root,'.context/seed'),output,{recursive:true});
+await cp(${JSON.stringify(seed)},output,{recursive:true});
 const document=path.join(output,${JSON.stringify(markedDocument)});
 await writeFile(document,(await readFile(document,'utf8'))+'<!--build '+${drift ? "process.pid" : "'stable'"}+'-->');
 await appendFile(path.join(root,'build-calls'),'build\\n');
@@ -70,5 +69,10 @@ await appendFile(path.join(root,'build-calls'),'build\\n');
       ["run", script, "--workspace", "@mokly-cloud/mockups"],
       { cwd: fixture.root, env: fixtureGitEnvironment() },
     );
-  return { ...fixture, index, run };
+  return {
+    ...fixture,
+    output: path.join(fixture.root, outputDirectory),
+    index,
+    run,
+  };
 }

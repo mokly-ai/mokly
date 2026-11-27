@@ -113,6 +113,10 @@
     source of the stylesheet bytes and digest for Serve, build, and comparison
     reads, and it can reach `crates/mokly-render/src/stylesheet_store.rs`.
     That is the store of this item, so design the two changes together.
+  - [vite-tailwind-scan-scopes.md](./vite-tailwind-scan-scopes.md): under the
+    Vite adapter, a stored stylesheet record also needs the scan scopes of
+    its stylesheet in its stamp, or a new file that joins a Tailwind scope
+    keeps the old CSS across a restart.
 - **Recommendation:** B, before any store code. Only a proven boundary can
   admit a PostCSS record, and the study is the smallest step that shows
   whether one exists.

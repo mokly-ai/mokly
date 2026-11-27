@@ -108,11 +108,17 @@ export default async function setup(
           : ready.map((host) => host.url);
       }),
     );
-    const copy = own("Copied static host", async () => {
-      const host = await dependencies.staticHost(signal);
-      hosts.push({ name: "Copied static host", host });
-      return host;
-    });
+    // A strict shard or a selected developer run whose specs never import
+    // `static_test.ts` skips the copied example build; `copiedStaticUrl()`
+    // then fails loudly.
+    const copy =
+      process.env["MOKLY_PLAYWRIGHT_COPIED_HOST"] === "skip"
+        ? Promise.resolve(undefined)
+        : own("Copied static host", async () => {
+            const host = await dependencies.staticHost(signal);
+            hosts.push({ name: "Copied static host", host });
+            return host;
+          });
     const comparison = own("Comparison static host", async () => {
       const host = await dependencies.comparisonHost(signal);
       hosts.push({ name: "Comparison static host", host });
@@ -131,8 +137,10 @@ export default async function setup(
       copy,
       comparison,
     ]);
-    process.env["MOKLY_PLAYWRIGHT_COPIED_URL"] = copied.url;
-    process.env["MOKLY_PLAYWRIGHT_COPIED_DIR"] = copied.directory;
+    if (copied) {
+      process.env["MOKLY_PLAYWRIGHT_COPIED_URL"] = copied.url;
+      process.env["MOKLY_PLAYWRIGHT_COPIED_DIR"] = copied.directory;
+    }
     process.env["MOKLY_PLAYWRIGHT_COMPARISON_URL"] = compared.url;
     process.env["MOKLY_PLAYWRIGHT_COMPARISON_DIR"] = compared.directory;
     process.env["MOKLY_PLAYWRIGHT_URLS"] = JSON.stringify(urls);

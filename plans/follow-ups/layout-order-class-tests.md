@@ -1,0 +1,41 @@
+# Layout order tests cover only chosen cases
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the wider fix, option C, of finding 43 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `tests/fixtures/workspace-sources.json`, its JavaScript harness `tests/workspace_sources.test.ts`, and its Rust harness `crates/mokly-css/src/_tests_/workspace_sources_tests.rs`.
+- **Reason:** Each option adds a test for a whole class of defect, and option C also adds two development dependencies.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Layout order:** The folder layouts that a side tries, in order, to map a built file of a workspace package to its source file. The "Layout Order" section of `docs/protocol/mokly-comparison-packages.md` defines it.
+  - **Shared case table:** `tests/fixtures/workspace-sources.json`, a list of targets and their expected source files, which both copies of the workspace source rule must pass.
+  - **Property test:** A test that generates many inputs and checks one rule for each of them.
+- **Background:**
+  - Mokly has two copies of the workspace source rule. The sidecar copy in `packages/mokly/src/sidecar/workspace-sources.ts` serves JavaScript imports. The Rust copy in `crates/mokly-css/src/workspace_sources.rs` serves CSS `@import`.
+  - Both copies run each case of the shared case table. The table has 36 cases on 2026-11-26.
+  - A side tries at most two `moduleResolution.sourcePackages` entries for a package, the base entry and then the working entry. Then it tries the detected layout.
+  - Each entry is absent, `false`, a folder map that finds a source, or a folder map that misses. The detected layout finds a source or not. This gives 26 distinct combinations, because one entry alone gives the same order in either position.
+  - The table covers about half of these combinations.
+  - The review found no case with a working `false` after a base layout that misses. A copy that honoured `false` only in the first layout passed every case. On 2026-11-26 the branch added the case "a working entry of false stops detection after the base layout misses".
+- **Problem:** The table checks chosen combinations of the layout order, not all of them. A copy can mishandle a combination that no case covers, and both harnesses still pass.
+- **Impact if no action:** A later change can break an untested combination in one copy. For example, after two layouts that miss, the detected layout must still run. JavaScript and CSS can then select different files for one export.
+- **Root question:** How do the checks cover every combination of the layout order in both copies of the rule?
+- **Options:**
+  - **A.** Keep the state that option A left on 2026-11-26: the one added case. Effort: Small.
+  - **D.** Add the complete order matrix to the shared case table. Effort: Small.
+    - Give each of the 26 combinations a case. Use a target whose detected source exists and a target whose detected source is missing.
+    - Write each expected file by hand from the layout order rule.
+    - Both harnesses run the new cases with no code change and no new dependency.
+  - **C.** Add a property test of the layout order to each harness. Effort: Medium.
+    - Generate entry lists, folder maps, and file trees from a fixed seed.
+    - Compare each result with a small model of the layout order.
+    - Add `fast-check` to the npm workspace and `proptest` to the Cargo workspace as development dependencies. Neither is in the repository on 2026-11-26.
+- **Left out:**
+  - Option B of the review, a scenario in the integration tests of each resolver. It adds one more chosen case, not every combination, and it needs two fixtures.
+  - One copy of the rule for both languages, such as a WebAssembly build of the Rust copy for the sidecar. It removes the drift between the copies, but not the missing cases, and it changes the architecture.
+- **Wider fix:** D. It checks every combination of the order. C also checks the folder matching, at the cost of two new dependencies.
+- **Previous examples:** Commit `89760791f` of #501, on 2026-11-24, added the shared case table, so that the two copies cannot drift.
+- **Recommendation:** D. It checks every combination of the order with the existing harnesses and no new dependency. C best protects the folder matching rules beyond the order.
+- **Action:** ask the user, because D and C each add a test for a whole class of defect, and C also adds two development dependencies.

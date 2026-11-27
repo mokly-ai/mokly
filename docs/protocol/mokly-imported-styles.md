@@ -23,6 +23,14 @@ extends [imported CSS configuration](./mokly-configuration-imported-styles.md),
 [PostCSS](./mokly-imported-styles-postcss.md), and
 [assets](./mokly-imported-styles-assets.md) pages continue it.
 
+An import of a plain `.css` file with the import attribute `{ type: "css" }`,
+a CSS module script, is a stylesheet import like the same import without the
+attribute. Its CSS reaches the document as a document stylesheet, and the
+imported value is an empty object, not a `CSSStyleSheet`. Decision: Mokly
+accepts such an import. Rejected: a failure, as in esbuild, because the styles
+still reach the document. Rejected: a `CSSStyleSheet` value, because Mokly
+renders in Node, which has no CSS object model.
+
 ## Routes And Ownership
 
 The routes are relative to the `static/mokly-generated/` namespace of the

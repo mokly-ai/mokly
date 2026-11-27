@@ -16,8 +16,6 @@ export interface MovedHost extends EntryHost {
    * host opens it in Current, where the band offers the same comparison.
    */
   affectedLinks: "current" | "side by side";
-  /** The window widths of the Moved-row case. */
-  widths: readonly number[];
 }
 
 /** The private Serve fixture. */
@@ -25,7 +23,6 @@ export const serveMovedHost: MovedHost = {
   ...routedHost,
   comparisons: "on demand",
   affectedLinks: "side by side",
-  widths: [390, 1280],
 };
 
 /** The branch copy. */
@@ -33,21 +30,18 @@ export const copyMovedHost: MovedHost = {
   ...routedHost,
   comparisons: "published",
   affectedLinks: "side by side",
-  widths: [390, 1280],
 };
 
 /**
  * An embedded viewer over the branch copy through one frame adapter. Its
  * host page opens an entry by query, keeps its own address, and gives the
- * viewer the window width. The Moved-row case runs this host at one width,
- * as the old suite did.
+ * viewer the window width.
  */
 export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
   return {
     ...embeddedHost(adapter),
     comparisons: "published",
     affectedLinks: "current",
-    widths: [1280],
   };
 }
 
@@ -76,19 +70,6 @@ export async function showDetails(page: Page): Promise<void> {
   const details = page.locator('[data-inspect-section="details"]');
   await revealInPanel(page, details);
   await expect(details).toBeVisible();
-}
-
-/** Open the narrow layout's drawer when the catalogue is behind it. */
-export async function showCatalogue(page: Page): Promise<void> {
-  // Wait for the mounted shell: either the dock or the catalogue shows.
-  await expect(
-    page.locator("[data-canvas-dock]:visible, nav.mbk-nav:visible").first(),
-  ).toBeVisible();
-  const catalogue = page
-    .getByRole("group", { name: "Canvas controls" })
-    .getByRole("button", { name: "Catalogue" });
-  if (await catalogue.isVisible()) await catalogue.click();
-  await expect(page.locator('button[data-filter="all"]')).toBeVisible();
 }
 
 /** Expect each row's label and whether All draws its changed mark. */

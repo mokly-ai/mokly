@@ -3,13 +3,13 @@
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
-validated or rendered. It reports an ignored input or a structure that
-builds and works but degrades accessibility or conformance, so the author
-can decide whether to change it. A warning never alters document bytes, the
-catalogue index, an entry detail, an HTTP response, or a timing record. This
-contract defines the record, who produces it, which command reports it, and
-the `--strict` option, including the exact warning lines. The broader
-terminal rules are in the
+validated or rendered. It reports an ignored input, a story that could not
+render, or a structure that builds and works but degrades accessibility or
+conformance, so the author can decide whether to change it. A warning never
+alters document bytes, the catalogue index, an entry detail, an HTTP
+response, or a timing record. This contract defines the record, who produces
+it, which command reports it, and the `--strict` option, including the exact
+warning lines. The broader terminal rules are in the
 [terminal output contract](./mokly-terminal-output.md).
 
 ## Record
@@ -54,28 +54,32 @@ order, the operating system, or the absolute checkout path.
 | `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                               |
 | `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                                                  |
 | `html-ignore-attribute`          | An unknown attribute on an ignore wrapper in an authored body, a saved variant slot, or a page callback document ([HTML screens](./mokly-html-screens.md#links-and-markers))                                                                        |
+| `ignored-module`                 | A file that the head loads, when Changes runs, which Git ignores or which lies in a nested checkout or tracked submodule ([package selection](./mokly-comparison-packages.md#ignored-modules))                                                      |
 | `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                                                                                                                                                    |
 | `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                                                                                                                                              |
 | `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                                                                                                                                                        |
 | `props-not-data`                 | A non-data prop value excluded from an inferred schema ([entry props](./mokly-entry-props.md#schema-inference))                                                                                                                                     |
 | `props-unsafe-integer`           | An unsafe integer in props, schema keywords, or authored control metadata ([entry props](./mokly-entry-props.md#schema-inference))                                                                                                                  |
 | `props-control-bounds`           | A saved prop or story arg outside its editing bounds ([component controls](./mokly-component-controls.md))                                                                                                                                          |
+| `story-render-failed`            | A saved view whose story could not render ([Storybook story failures](./mokly-storybook-failures.md#the-warning))                                                                                                                                   |
 | `storybook-parameter-ignored`    | A malformed value of a story's `mokly` parameter that Mokly ignores ([Storybook stories](./mokly-storybook-setup.md#globals-for-views))                                                                                                             |
 | `stylesheet-extglob`             | A configuration stylesheet matcher with unsupported extglob syntax ([configuration](./mokly-configuration.md#shape))                                                                                                                                |
 | `stylesheet-owner`               | A renderer `resources` seed that names a stylesheet ([rendering](./mokly-rendering.md#renderer-module))                                                                                                                                             |
+| `vite-replaced-setting`          | A configuration setting that the Vite setup replaces ([Vite adapter](./mokly-vite-adapter.md#replaced-settings))                                                                                                                                    |
 
 Each producing contract defines its own message. A new producer adds a row
 here and defines its message in its own contract.
 
 ## Producers And Transport
 
-Warnings arise at three points: catalogue validation, which parses front
+Warnings arise at four points: catalogue validation, which parses front
 matter, infers schemas, and registers definitions; composition, which
 adapts link controls, resolves component elements, and grafts sidecar
-fragments; and the base side's preparation for Changes. Warnings that the
-sidecar raises during a bundle or a render use this record too. A document's
-warnings belong to the generation that rendered it. A document reused from
-an earlier render keeps the warnings of that render. A referenced
+fragments; the base side's preparation for Changes; and the check of the
+files that the head loads, which also runs only for Changes. Warnings that
+the sidecar raises during a bundle or a render use this record too. A
+document's warnings belong to the generation that rendered it. A document
+reused from an earlier render keeps the warnings of that render. A referenced
 document keeps its own diagnostics; they do not become the requesting
 document's. A later validation or link failure keeps the warnings already
 produced without inventing a result. Warnings are never written into a
@@ -144,8 +148,8 @@ view that first renders on demand after readiness prints its warnings once
 when they appear, while its attempt is current; a request for an already
 reported document repeats nothing. Reconfiguration follows the same rules.
 Snapshot Serve (`--no-watch`) has one lifetime scope, and a one-shot command
-has one invocation scope. The base side's preparation follows the same
-attempt rules.
+has one invocation scope. The base side's preparation and the check of the
+files that the head loads follow the same attempt rules.
 
 On-demand, background, and temporary renders report their warnings in the
 attempt that published their document, also when the render fails. The

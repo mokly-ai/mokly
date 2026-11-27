@@ -11,6 +11,7 @@ use crate::pool_preparation::{Preparation, Prerequisites};
 use crate::pool_recycle::RENDER_LIMIT;
 use crate::pool_requests::generation;
 use crate::pool_state::{Slot, State};
+use crate::wire::MethodResult;
 
 /// The next action of a warm-up step.
 enum Step {
@@ -42,7 +43,10 @@ impl Pool {
                 Step::Replay(call) => {
                     slot.renders += 1;
                     let outcome = self.prerequisite(&mut slot, (*call).clone(), true);
-                    if outcome.is_ok() {
+                    if outcome
+                        .as_ref()
+                        .is_ok_and(MethodResult::is_successful_render)
+                    {
                         let mut state = self.lock();
                         if let Some(epoch) = state
                             .head
@@ -63,12 +67,14 @@ impl Pool {
                             );
                         }
                     }
-                    outcome
+                    outcome.map(|_| ())
                 }
             };
             sent = true;
             if let Err(error) = outcome {
-                tracing::warn!(%error, slot = index, "sidecar warm-up failed");
+                if !error.fresh_worker_required() {
+                    tracing::warn!(%error, slot = index, "sidecar warm-up failed");
+                }
                 if reusable(&error) {
                     break (true, true);
                 }

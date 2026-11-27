@@ -1,0 +1,36 @@
+# No template release step proves a comparison
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-give-the-template-a-git-that-9abx`, review finding 3 of round 1, option D of its check.
+- **Location:** `docs/ops/build-template.md`, sections "Verify The Streaming Boundary", "Provision And Enable One Environment" (the first-enablement proof), and "Rotate, Roll Back And Disable" (a rotation runs only the probe).
+- **Reason:** The fix adds a release step, which works like a new gate, so the user decides.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Build template:** the E2B sandbox image, `mokly-build-v<N>`, in which Mokly Cloud runs each build.
+  - **Template probe:** the live check of `docs/ops/build-template.md` that runs `infra/e2b/tests/assert_build_template.py` in a fresh candidate sandbox before an operator enables a release.
+  - **Comparison:** the Changes result of a pull request build. `mokly publish --base origin/{base}` reads the merge base from Git and publishes an index with `changesStatus: "ready"`. The Mokly check then says "Catalogue ready to review.".
+- **Background:**
+  - A template that cannot compare still gives successful builds. The CLI publishes without a comparison, `changesStatus` is `"unavailable"`, and the check says "Catalogue published.". `docs/protocol/cloud/cloud-build-runner.md`, section "Comparison", requires this, so a failed base never blocks a catalogue.
+  - This happened with `mokly-build-v3` on main-preview on 2026-11-26. Its Debian Git 2.39.5 rejects `git cat-file --batch --filters -Z`. The CLI printed `base {sha}: [mokly/config-invalid] mokly.config.json: unknown`, and no release step noticed.
+  - Since 2026-11-26 the probe requires that `git` reports 2.43 or newer and accepts `git cat-file --batch --filters -Z` on empty input in a new repository. It reads no file and runs no comparison. The runbook says so.
+  - The first-enablement proof in "Provision And Enable One Environment" asks for a published build, its publication, "a completed GitHub check", and a same-repository pull request build and Re-run. The neutral "Catalogue published." check of v3 met that text.
+  - A rotation, in "Rotate, Roll Back And Disable", runs only the probe.
+- **Problem:** No release step requires a pull request build with a comparison, so a template that cannot compare passes first enablement and rotation.
+- **Impact if no action:** The next template fault of this kind again reaches users as catalogues without Changes, until someone reads a check title closely.
+- **Root question:** How does each template release prove that a pull request build gets a comparison?
+- **Options:**
+  - **A.** Keep the runbook as it is. It already says that a probe pass does not prove a comparison. Effort: Small, already applied.
+  - **B.** Extend the probe with a real file read: commit a known file in its new repository and require the exact bytes of a NUL-terminated `cat-file --batch --filters -Z` read with `--attr-source`. It needs a new probe run against the newest release whose record passes the current probe, recorded with its full build reference (`TEMPLATE_ID:BUILD_ID`). Effort: Medium.
+  - **C.** On first enablement and after each rotation, push a new commit to a same-repository pull request after the rollout completes, and take the build that this push started. Require that the publication of its `publicationId` has a `buildId` equal to the build ID, that the build log's result line starts with "Published Mokly catalogue.", and that the build's own check says "Catalogue ready to review." with `success`. A cloud build can name a ready publication of another producer for the same project, head, and configuration, such as a CI upload, and its check then shows that publication's comparison (`docs/protocol/cloud/publication-upload-exchange.md`, `docs/protocol/cloud/cloud-builds.md`). On such a mismatch the run proves nothing, so push another commit. Re-run proves only the re-delivery of the stored result. When the proof fails, roll back only as the runbook's rollback rule says, or disable builds. Record the build ID, the publication ID, and the result with the release. Effort: Small.
+  - **E.** Before enablement, in a sandbox of the candidate, repeat the runner's checkout of a pinned pull request and `mokly build --config mokly.config.json --base origin/{base}`, and require `changesStatus: "ready"`. Operators ran this check for v3, v5, and v6. A sandbox has no publication, so no reuse or Re-run can stand in, and a broken template does not reach users. It does not cover the worker, upload, and check path, so C still applies. Effort: Small for each release by hand.
+  - **D.** Run Mokly's actual comparison on a known fixture inside the candidate sandbox during the probe. Effort: Large.
+- **Left out:**
+  - A version check alone. A Git that reports a supported version can still reject the command.
+- **Wider fix:** C, with its check of the build's own publication. It proves the product result that users see, whatever part of the template breaks it. An automated run of C, option D, must keep that check.
+- **Previous examples:** The v2 probe accepted a broken npm through `npm --version`. The v3 fix added a real `npm ci` to the probe.
+- **Related:** `plans/follow-ups/template-probe-pass-not-tied-to-assertion.md` covers the record of which probe revision passed. `plans/follow-ups/cloud-builds-never-ran-live.md` holds the first live proof, which C makes stricter.
+- **Recommendation:** C. It costs one pull request build for each release and proves the comparison that the new template produced. E is a cheap addition that stops a broken candidate before users see it.
+- **Action:** ask the user, because C adds a release step that can stop a rotation, and only the user approves a new gate.

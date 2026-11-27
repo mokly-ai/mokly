@@ -1,10 +1,10 @@
 # Example Serve fails to stop after browser shards
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from PR #341, branch `calummoore/mokly-stamp-early-exit`, at the request of the follow-up orchestrator, which owns the flaky-test items.
 - **Location:** `tests/browser/hosts.ts:45-50`, `tests/browser/setup.ts:63` and `:141`, `tests/browser/example_setup.ts:32`, `tests/helpers/example_base.ts:1-8`, and `scripts/verification/serve-process.mjs:137-159`.
-- **Reason:** On 2026-11-19, 21 repetitions under option A did not show the failure, so its source is unknown and the next step needs a user decision.
+- **Reason:** On 2026-11-26 the user chose option B, and the branch `calummoore/ci-speed-flaky-decisions-a` applied it. The fix waits for the next CI failure, which now names the exit code and the signal.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -87,4 +87,5 @@
 - **Previous examples:** The deleted item `browser-host-cleanup-failure.md`, at the permalink above, recorded the same cleanup failure before PR #322 kept its inner errors.
 - **Related:** None.
 - **Recommendation:** B. The first recommendation was A, before the repetitions of 2026-11-19. All 21 clean runs gave no failure to study. B makes the next CI failure show the exit code and signal of `server.stop()`. A stays the only option that fixes the failure. It still needs a reproducible failure or a named source.
-- **Action:** ask the user, because option A named no source, and the user asked to choose the next step, including B, for that result.
+- **Action:** fix after merge, apply A when a CI failure gives the exit code and the signal, because the user chose B on 2026-11-26 to get that evidence first.
+- **Applied:** On 2026-11-26, `tests/browser/hosts.ts` started to name the exit code and the signal in the error, for example `Example Serve did not stop cleanly, exit code 1, signal null:`. `tests/browser_host_parent_death.test.ts` checks that text. A SIGKILL from the 10-second stop guard of `scripts/verification/serve-process.mjs` shows as `signal SIGKILL`.

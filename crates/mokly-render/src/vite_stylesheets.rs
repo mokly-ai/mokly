@@ -1,15 +1,17 @@
 //! Run native stylesheet transforms with the render side's selected installation.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::error::{CssError, InternalError, Result};
+use mokly_css::types::StylesheetRoot;
 use mokly_css::vite::{Stylesheet, Transform};
 use mokly_sidecar::methods::{Bundle, Call};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::vite_css::TransformViteCss;
+use mokly_sidecar::vite_env::ViteEnvInput;
 use mokly_sidecar::wire::MethodResult;
 use mokly_source_interface::tree::SourceTree;
 
@@ -26,7 +28,12 @@ pub(crate) struct ViteStylesheets {
     tree: Arc<dyn SourceTree>,
     side: SideInputs,
     setup: Bundle,
-    transformed: Mutex<BTreeMap<String, Arc<Stylesheet>>>,
+    transformed: Mutex<BTreeMap<String, Transformed>>,
+}
+
+struct Transformed {
+    stylesheet: Arc<Stylesheet>,
+    env: Vec<ViteEnvInput>,
 }
 
 impl ViteStylesheets {
@@ -41,6 +48,19 @@ impl ViteStylesheets {
             transformed: Mutex::default(),
         }
     }
+
+    pub(crate) fn env_inputs(&self, root: &StylesheetRoot) -> BTreeSet<ViteEnvInput> {
+        let transformed = self
+            .transformed
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        root.stylesheets
+            .iter()
+            .filter(|path| !root.excluded.contains(*path))
+            .filter_map(|path| transformed.get(path))
+            .flat_map(|result| result.env.iter().cloned())
+            .collect()
+    }
 }
 
 impl Transform for ViteStylesheets {
@@ -50,7 +70,7 @@ impl Transform for ViteStylesheets {
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         if let Some(result) = transformed.get(path) {
-            return Ok(result.clone());
+            return Ok(result.stylesheet.clone());
         }
         let file = match self
             .side
@@ -86,16 +106,23 @@ impl Transform for ViteStylesheets {
         for path in result.dependencies.keys() {
             self.usage.record(&self.side.dependency_aliases, path);
         }
-        let result = Arc::new(Stylesheet {
+        let stylesheet = Arc::new(Stylesheet {
             text: result.text,
             class_map: result.class_map,
+            named_exports: result.named_exports,
             source_digest: result.source_digest,
             dependencies: result.dependencies,
             imported_by: result.imported_by,
             metadata: result.metadata_inputs,
         });
-        transformed.insert(path.into(), result.clone());
-        Ok(result)
+        transformed.insert(
+            path.into(),
+            Transformed {
+                stylesheet: stylesheet.clone(),
+                env: result.env_inputs.unwrap_or_default(),
+            },
+        );
+        Ok(stylesheet)
     }
 }
 

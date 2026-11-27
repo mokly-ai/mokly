@@ -37,6 +37,8 @@ export function describeStoryFile(
           .map(([key, value]) => [key, storyHints(value)]),
       );
       const stored: StoredStory = {
+        id,
+        name: title,
         folder: read.folder,
         compose,
         beforeAll: read.beforeAll,

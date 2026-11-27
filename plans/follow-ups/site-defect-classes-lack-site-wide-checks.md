@@ -10,7 +10,7 @@
 
 - **Terms:**
   - **Class-wide check:** a check that fails on every case of one defect class, not only on the case that a review found.
-  - **Page walk:** the Playwright spec `apps/site/tests/browser/pages.spec.ts`. It opens every site route and runs the shared checks of `apps/site/tests/browser/accessibility.ts`.
+  - **Page walk:** `apps/site/tests/browser/pages.spec.ts` visits every route at 320px in light. It checks the response, overflow and names of exposed buttons and links. Separate cases check focus by page template.
   - **Parity test:** `docs/mockups/src/_tests_/design-site-parity.test.ts`. It fails when a rule that the site sheets and the site mockup sheets both declare has other values.
   - **Unused-export ratchet:** `scripts/verification/ratchets/internal-exports.mjs`. This repository check fails on an export that no other module imports.
 - **Background:**
@@ -36,10 +36,10 @@
   - **Contrast of every site page.**
     - Today: `apps/site/tests/contrast.test.ts` checks 23 documented token pairs and the 3:1 of the focus glow in both schemes. The mockup test "a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes" checks the dimmed line in the mockup sheets. The parity test keeps the dimmed-line rules of the site equal to those of the mockups. `apps/site/tests/browser/docs-sample.spec.ts` checks which lines dim, not their contrast.
     - Gap: text in a pair outside the documented pairs, or text with opacity, can fall below 4.5:1 on a route that Lighthouse does not audit.
-    - Check: in the page walk, measure the text contrast of every route in both schemes, for example with the color-contrast rule of axe-core.
+    - Check: measure the text contrast of every route in both schemes with a browser check such as the color-contrast rule of axe-core. Use the existing 320px visits for light and add a visit to every route for dark.
   - **Tool bar widths.**
-    - Today: the page walk checks that no route scrolls sideways at 320px, 390px and 1440px. `apps/site/tests/browser/chrome.spec.ts` checks the header composition at 390px and 1440px.
-    - Gap: the header changes its layout below 1400px, 960px and 830px, and a comment in `apps/site/src/styles/chrome.css` sets a 12px clear gap between its items at each step. No test opens a width from 768px to 1439px.
+    - Today: the page walk checks that no route scrolls sideways at 320px in light. `apps/site/tests/browser/chrome.spec.ts` checks the header composition at 390px and 1440px.
+    - Gap: the header changes its layout below 1400px, 960px and 830px. A comment in `apps/site/src/styles/chrome.css` sets a 12px clear gap between items at each step. No test measures that gap at those steps.
     - Check: open the header at every width from 768px to 1440px, or at both sides of each step. Fail when two of its items overlap or come closer than 12px.
   - **Unused modules under `docs/mockups/src/`.**
     - Today: the unused-export ratchet reads `src`, `packages/ui/src`, `packages/viewer/src` and `scripts`, with an empty baseline in `xtask/unused-internal-exports.txt`.
@@ -55,7 +55,7 @@
 - **Options:**
   - **A.** Add no check. Each later site change tests the part that it changes, as the Canvas redesign did. Effort: Small.
   - **B.** Add the two Node checks: hosted first families and tracked Edit on GitHub targets. They read files only. The three browser classes and the dead modules stay unchecked. Effort: Small.
-  - **C.** Add all six checks: B, the contrast walk, the tool bar walk, the ratchet over `docs/mockups/src/` and the 200% text walk. The three walks add run time to `npm run site:browser`. Effort: Medium.
+  - **C.** Add the two checks in B, the contrast and tool bar walks, the ratchet over `docs/mockups/src/` and the 200% text walk. The contrast walk adds one dark browser visit per route. The tool bar and 200% text walks add their own visits to `npm run site:browser`. Effort: Medium.
   - **D.** Remove the wrong case at its source for three classes. The palette module ships each font stack with its hosted faces, the guide build records the tracked source path for Edit on GitHub, and muted code text becomes a named colour with a checked contrast pair. Add the other three checks of C. It changes the palette and guide contracts. Effort: Large.
 - **Left out:** Making the report-only Lighthouse run required, because its performance score flakes, as `plans/follow-ups/flaky-site-lighthouse-performance.md` records, and it audits seven routes only. Checks of the mockups alone, because the parity test lets the site differ wherever it lists an intentional difference.
 - **Wider fix:** D for the faces, the edit targets and the dimmed text, because a structural source removes the wrong case. C for the widths, the 200% text and the dead modules, which have no structural fix.

@@ -1,7 +1,5 @@
 # Component Controls Design
 
-Status: Before an edit has rendered, the viewer's alerts still name the last valid props, not the saved props. The [Props sentence milestone](../../plans/storybook-support.md#milestone-24a-the-props-sentence-after-a-failed-edit) changes them.
-
 ## Controls Panel
 
 The Props and controls artboards, except the one of a screen without props,
@@ -52,11 +50,13 @@ In the compact layout that status is a pill at the top of the shown frame,
 above the open panel sheet.
 Rendering failure also retains that preview, with Try again and Reset actions.
 The alert of a failed render or an invalid value names the props that the
-preview shows. Until an edit has rendered, it names the saved props, and after
-that, the last valid props. `design/canvas/props/states/error` depicts a
-failed first render. `design/canvas/props/states/later-edit` depicts a later
-edit that failed after an earlier edit rendered. Its fields keep the later
-edit, and its frames keep the earlier one.
+preview shows. It names the last valid props while at least one shown frame
+of the edited entry shows an
+[accepted render](./mokly-component-controls.md#rendering-boundary) of an
+edit. Otherwise, it names the saved props. `design/canvas/props/states/error`
+depicts a failed first render. `design/canvas/props/states/later-edit`
+depicts a later edit that failed after an earlier edit rendered. Its fields
+keep the later edit, and its frames keep the earlier one.
 Retry leads back through the pending design state of the same edit:
 `design/canvas/props/states/later-pending` keeps the later edit in the fields
 and the earlier edit in the frames. A comparison shows the

@@ -36,7 +36,8 @@ MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser
 ```
 
 `npm run test:delivery:prepared` builds a fresh example after `npm run build`
-and checks both delivery modes. The design journeys and the private component
+and checks both delivery modes. `-- --mode static-http` or `-- --mode file`
+checks one mode. The design journeys and the private component
 fixture run through static HTTP and file delivery. File mode opens exact output
 bytes without an HTTP fallback. The
 [browser fixture guide](../../tests/browser/README.md#delivery-spec-inventory)

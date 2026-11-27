@@ -4,6 +4,7 @@ import type { BundleCapture } from "./BundleCapture.js";
 import type { ModuleResolution } from "./ModuleResolution.js";
 import type { PostcssPreparation } from "./PostcssPreparation.js";
 import type { ResolutionPlan } from "./ResolutionPlan.js";
+import type { ViteSetupInputs } from "./ViteSetupInputs.js";
 
 // prettier-ignore
 export type BundleRequest = {
@@ -23,6 +24,10 @@ preparation?: PostcssPreparation,
  * Opt-in project Vite compilation; omission preserves esbuild settings bytes.
  */
 vite?: boolean,
+/**
+ * Extra setup inputs for an enabled Vite adapter.
+ */
+viteInputs?: ViteSetupInputs,
 /**
  * Core input digest that isolates resolved bindings and CSS Modules lifetimes.
  */

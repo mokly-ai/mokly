@@ -2,15 +2,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { metadataDigest } from "./file-digests.js";
-import { resolutionInputs } from "./resolution-inputs.js";
+import { metadataPath, resolutionInputs } from "./resolution-inputs.js";
 import { previewCandidates } from "./storybook-folders.js";
 import { recordStorybookInputs } from "./storybook-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
+import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 
 /** Keep live reuse and core watch inputs alongside the Vite recipe. */
 export async function viteMetadata(
   input: ViteInputs,
-  setupFiles: string[],
+  setup: SetupSnapshot,
   graphFiles: ReadonlySet<string>,
   storybookInputs?: ReadonlyMap<string, string | null>,
 ) {
@@ -26,12 +27,9 @@ export async function viteMetadata(
     if (!graphFiles.has(file))
       metadataInputs[paths.metadataName(file)] = inputs[file];
   }
-  for (const file of setupFiles) await record(await paths.metadata(file));
-  for (const file of input.pluginInputs)
-    await record(file, input.files.get(file));
   for (const file of previewCandidates(params)) {
     const absolute = path.resolve(params.sourceRoot, file);
-    const physical = await paths.metadata(absolute);
+    const physical = await metadataPath(paths, absolute);
     metadataInputs[file] = inputs[absolute] =
       inputs[physical] ?? (await metadataDigest(absolute, inputs));
   }
@@ -42,9 +40,20 @@ export async function viteMetadata(
   }
   const directories = await resolutionInputs(
     paths,
-    [...input.files.keys(), ...setupFiles],
+    [
+      ...input.files.keys(),
+      ...[...setup.configuration.values()].flatMap(({ file }) =>
+        file ? [file] : [],
+      ),
+    ],
     inputs,
     metadataInputs,
   );
+  for (const [file, digest] of input.pluginInputs)
+    metadataInputs[paths.metadataName(file)] = inputs[file] = digest;
+  for (const { name, file, digest } of setup.inputs) {
+    metadataInputs[name] = digest;
+    if (file) inputs[file] = digest;
+  }
   return { inputs, metadataInputs, ...directories };
 }

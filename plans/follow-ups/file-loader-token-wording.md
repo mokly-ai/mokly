@@ -34,9 +34,8 @@
   - The flag comment in `crates/mokly-sidecar/src/results.rs`, the generated
     `Module.ts`, three more Rust doc comments, and the sidecar README call
     the flag "asset-default" only.
-  - [data-url-loader-hint.md](data-url-loader-hint.md) and
-    [attributed-import-module-names.md](attributed-import-module-names.md)
-    define an asset import as one that gives the component a URL.
+  - [attributed-import-module-names.md](attributed-import-module-names.md)
+    defines an asset import as one that gives the component a URL.
 - **Impact if no action:** Authors can take the token for a URL that they
   can fetch during a render, and maintainers can miss that `file` loads set
   the flag too.

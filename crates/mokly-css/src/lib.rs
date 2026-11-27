@@ -4,7 +4,6 @@
 pub mod compiler;
 pub mod dependencies;
 pub mod error;
-pub mod imported_assets;
 pub mod modules;
 pub mod names;
 pub mod paths;
@@ -27,6 +26,8 @@ mod rename_selectors;
 mod source_position;
 mod workspace_sources;
 mod workspace_tsconfig;
+
+pub use workspace_sources::workspace_package_name;
 
 #[cfg(test)]
 #[path = "_tests_/compiler_tests.rs"]
@@ -102,11 +103,6 @@ mod token_grammar;
 mod token_sections;
 mod token_statement;
 mod token_tree;
-
-/// Both statement readers, for the differential tests of the section reader.
-#[cfg(any(test, feature = "test-support"))]
-#[path = "_tests_/token_differential.rs"]
-pub mod token_differential;
 
 #[cfg(test)]
 #[path = "_tests_/deep_scanner_tests.rs"]

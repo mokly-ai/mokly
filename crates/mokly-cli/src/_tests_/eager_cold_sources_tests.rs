@@ -77,6 +77,7 @@ fn eager_complete_source_lease_reaches_admission_before_discovery() {
             modules: ResolvedModules {
                 renderer: Some("renderer.tsx".into()),
                 postcss: None,
+                ..ResolvedModules::default()
             },
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),

@@ -6,7 +6,6 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use crate::client::{Events, SidecarClient};
 use crate::error::Result;
 use crate::methods::Call;
-use crate::operations::Operation;
 use crate::postcss_phase::PhaseState;
 use crate::process_clock::Wait;
 use crate::process_memory::ResidentMemory;
@@ -88,7 +87,7 @@ impl Events for ForwardEvents {
                 }
             }
             Event::Operation { operation, pid } => {
-                if operation == Operation::Esbuild {
+                if operation.is_compile() {
                     self.compile_count.fetch_add(1, Ordering::Relaxed);
                 }
                 self.diagnostics.operation(operation, pid);

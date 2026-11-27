@@ -27,7 +27,7 @@ async fn live_template() -> Result<(), ProbeError> {
         return Err(ProbeError::Configuration);
     };
     let probe: &dyn TemplateProbe = &StreamTemplateProbe {
-        backend: providers.backend,
+        sandbox: providers.sandbox,
     };
     probe.run(request()).await?;
     println!("PASS live build template: assertion completed and candidate destroyed");

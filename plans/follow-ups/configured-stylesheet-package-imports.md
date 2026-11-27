@@ -22,6 +22,9 @@
 - **Left out:** Deduplicating the outputs would still allow a substituted file with different declarations. A warning would also fail strict builds.
 - **Wider fix:** D. The shared case table checks the exact-path rule in both languages.
 - **Previous examples:** Commit `e53d75db7` protects configured module identities, including package imports of those modules.
+- **Related:**
+  - `plans/follow-ups/vite-config-request-kind.md`: same rule. Its answer decides which configured files keep their exact path for an import of the Vite config. Under its option B, a configured stylesheet counts for the config only after it enters the Vite setup key. Under its options C and D, both kinds of Vite sidecar call carry the configured set of D here.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: shared fix. Its option C holds the exact-path decision of each workspace import on every compile path. D here gives that decision its canonical configured set.
 - **Recommendation:** D. It covers CSS and JavaScript with the same canonical configured set.
 - **Action:** fix after merge, apply D. The source-path workaround lets the wire change wait for its own review.
 - **Done when:** CSS `@import` and JavaScript package imports load the configured build stylesheet at its exact path. Cover both imports and both sides, regenerate the bundle request types, and remove the status line in `docs/protocol/mokly-comparison-packages.md`.

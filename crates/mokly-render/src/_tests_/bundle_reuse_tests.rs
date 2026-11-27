@@ -247,6 +247,7 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
                 class_maps_digest: digest(b"{}"),
                 definitions: definitions(),
                 modules: BTreeMap::from([("entry.ts".into(), vec![])]),
+                package_imports: Default::default(),
                 module_digests: BTreeMap::new(),
                 imported_assets: Default::default(),
                 render: render_environment::RenderEnvironment::default(),

@@ -28,6 +28,7 @@ fn state(epoch: Option<u64>, bundle: bool) -> State {
                 module_resolution: Default::default(),
                 repository_roots: vec![],
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
             },
         );

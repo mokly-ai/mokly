@@ -1,0 +1,36 @@
+# Alias names reject valid npm package names
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the check of finding 100 in round 2 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `$defs/barePackageSpecifier` at `packages/mokly/config.schema.json:8`, which the keys and the targets of `moduleResolution.aliases` use at lines 106 and 111, the schema check in `parse` at `crates/mokly-catalogue/src/config_validation.rs:31`, and the parser tests in `crates/mokly-catalogue/src/_tests_/config_tests.rs`.
+- **Reason:** The narrow alias rule is on `origin/main`, so it does not come from the source package override.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **`moduleResolution.aliases`:** The configuration map from a bare import specifier to the bare specifier that Mokly's bundlers load in its place.
+  - **Scoped package name:** A package name with an owner prefix, such as `@acme/ui`.
+  - **npm name rule:** The key pattern of `moduleResolution.sourcePackages` since 2026-11-26: `^(?:@[A-Za-z0-9._~!*'()-]+/)?(?!\.)[A-Za-z0-9._~!*'()-]+$`.
+- **Background:**
+  - The shipped schema `packages/mokly/config.schema.json` checks the configuration in the editor and in the CLI. `parse` embeds the schema, and a failed check gives `config-invalid`.
+  - The keys and the targets of `moduleResolution.aliases` use the pattern `^(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_.-]+)*$`. The name after the scope must start with a letter, a digit, or `_`, and it can hold only letters, digits, `_`, `.`, and `-`. Subpath segments can follow the name.
+  - On 2026-11-26 the review of the source package override found that `sourcePackages` keys rejected valid names through the same pattern. The fix gave those keys the npm name rule and kept the rejection of `./ui` and `@acme/ui/button`. A check of 300,000 random names against npm's `validate-npm-package-name` 7.0.2 found no valid name that the npm name rule rejects. The rule also accepts a few names that npm rejects, such as `-theme`.
+  - The alias pattern stayed as it was. `origin/main` has it inline in the `aliases` schema.
+  - A run on 2026-11-26 with `validate-npm-package-name` 7.0.2: npm accepts `@acme/-theme` and `@acme~/ui` for new packages, and `theme(` for old packages. The alias pattern rejects all three, and the npm name rule accepts all three.
+- **Problem:** An alias key or target that names such a package fails with `config-invalid`, though npm accepts the name.
+- **Impact if no action:** An author cannot alias a package with such a name, or alias another name to it. A configuration with such an alias does not load in the editor or in the CLI.
+- **Root question:** How can an author write an alias for any package name that npm accepts, and still keep relative and absolute paths out?
+- **Options:**
+  - **A.** Use the npm name rule for the package name part of `barePackageSpecifier`, and keep the subpath segments after it. Effort: Small.
+    - Add schema and parser cases for `@acme/-theme`, `@acme~/ui`, and `theme(` as alias keys and targets, with and without a subpath.
+    - Keep the rejection of `./ui`, `/ui`, and `.ui`.
+  - **B.** Generate the authoring patterns from one package name grammar, with separate productions for package names and for alias specifiers. This adds a generation step for the schema. Effort: Large.
+- **Left out:**
+  - An exception for a leading hyphen in a scoped name. It leaves other valid names rejected, such as `@acme~/ui`.
+  - No name pattern for aliases. An invalid alias then fails only when a bundle runs, not when the configuration loads.
+  - Only two options remain, because the patterns either take the npm name rule by hand or come from one grammar.
+- **Wider fix:** B. One grammar keeps the name rule of `sourcePackages` keys and of alias specifiers equal.
+- **Previous examples:** The `sourcePackages` key fix of 2026-11-26, which gave those keys the npm name rule in place of the alias pattern.
+- **Recommendation:** A. It accepts each name that npm accepts, with the rule that `sourcePackages` keys already use. B best protects the codebase.
+- **Action:** fix after merge, apply A, because the narrow rule is on `origin/main` and needs its own change of the shipped schema.

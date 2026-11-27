@@ -86,6 +86,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
 fn bundle() -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["entry".into()],
         renderer: None,
@@ -101,6 +102,7 @@ fn bundle() -> Bundle {
 fn maps(value: &str) -> CssModules {
     CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::from([(
             "card.module.css".into(),
             BTreeMap::from([("card".into(), value.into())]),

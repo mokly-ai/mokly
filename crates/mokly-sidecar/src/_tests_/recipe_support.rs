@@ -26,6 +26,7 @@ type Inputs = BTreeMap<String, Option<String>>;
 pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: Some(evaluation.into()),
         entry_files: vec![entry.into()],
         stories_files: Vec::new(),

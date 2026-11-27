@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -9,11 +10,15 @@ import { moduleContext } from "./postcss-context.js";
 
 export async function viteConfigSource(
   file: string,
-): Promise<OnLoadResult | undefined> {
+  record: (file: string, digest: string) => void,
+  format: "esm" | "cjs",
+): Promise<OnLoadResult> {
+  const bytes = await fs.readFile(file);
+  record(file, createHash("sha256").update(bytes).digest("hex"));
   const extension = path.extname(file);
-  if (!/\.[cm]?[jt]sx?$/.test(extension)) return;
-  const source = await fs.readFile(file, "utf8");
-  const output = await transform(source, {
+  if (!/\.[cm]?[jt]sx?$/.test(extension))
+    return { contents: bytes, loader: "default" };
+  const output = await transform(bytes.toString("utf8"), {
     sourcefile: file,
     sourcemap: "inline",
     loader: extension.endsWith("x")
@@ -31,5 +36,8 @@ export async function viteConfigSource(
       "import.meta.url": JSON.stringify(pathToFileURL(file).href),
     },
   });
-  return { contents: moduleContext(output.code, file), loader: "js" };
+  return {
+    contents: moduleContext(output.code, file, { vite: format }),
+    loader: "js",
+  };
 }

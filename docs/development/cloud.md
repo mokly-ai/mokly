@@ -171,8 +171,8 @@ directory and signing key under `.context/`. Both scripts default
 the public app origin. Reset `.context/blobs` and the development database
 together; keeping one alone leaves the storage durability markers out of step
 with their bytes. `scripts/cloud/dev-api.sh` also
-creates the persistent mode-0600 `.context/preview-sign-in` credential that
-the local preview stack signs in with. The
+creates the persistent mode-0600 `.context/preview-password`, the local
+preview password, and runs the API with its verifier. The
 [API guide](../../crates/mkc-api/README.md) documents the commands and the
 configuration; the [publish smoke guide](../ops/publish-smoke.md)
 exercises the published CLI with real project tokens.
@@ -199,9 +199,9 @@ npm run start --workspace @mokly-cloud/app
 ```
 
 Add `--debug-timings` to the capture command to print Mokly's timing events
-and the capture summary. Sign in by opening
-`http://localhost:8081/auth/preview/callback#secret=<secret>` with the secret
-from `.context/preview-sign-in`. The project is private, and the viewer
+and the capture summary. Sign in on `http://localhost:8081/sign-in`: type the
+password from `.context/preview-password` in **Password** and select
+**Continue as preview@mokly.ai**. The project is private, and the viewer
 cannot load its private comparison, so Changes show an overlay without an
 action.
 

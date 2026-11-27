@@ -44,13 +44,17 @@
     },
     "preview": {
       "type": "object",
-      "required": ["blobsBucket", "signInEmail"],
+      "required": ["blobsBucket", "signInEmail", "signInRolloutMarker"],
       "properties": {
         "blobsBucket": {
           "const": "mokly-508518-preview-blobs"
         },
         "signInEmail": {
           "enum": ["", "preview@mokly.ai"]
+        },
+        "signInRolloutMarker": {
+          "type": "string",
+          "pattern": "^(none|[a-f0-9]{64})$"
         }
       }
     },

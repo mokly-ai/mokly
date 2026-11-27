@@ -110,6 +110,8 @@ pub enum MethodResult {
     Definitions(Definitions),
     /// Fragment render.
     Render(results::Render),
+    /// Story fragment or failure in the story's own work.
+    StoryRender(results::StoryRender),
     /// Complete page render.
     Page(results::Page),
     /// Consumer stylesheet transformation.
@@ -118,6 +120,25 @@ pub enum MethodResult {
     ViteCss(results::ViteCss),
     /// No return value.
     Empty,
+}
+
+impl MethodResult {
+    /// Whether the reply contains rendered markup.
+    pub(crate) fn is_successful_render(&self) -> bool {
+        match self {
+            Self::Render(_)
+            | Self::StoryRender(results::StoryRender::Rendered(_))
+            | Self::Page(_) => true,
+            Self::Hello(_)
+            | Self::Storybook(_)
+            | Self::Bundle(_)
+            | Self::Definitions(_)
+            | Self::StoryRender(results::StoryRender::Failed { .. })
+            | Self::Css(_)
+            | Self::ViteCss(_)
+            | Self::Empty => false,
+        }
+    }
 }
 
 impl Response {
@@ -158,9 +179,10 @@ impl Response {
                 &result
             )?)?)),
             Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
-            Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
+            Call::RenderScreen(_) | Call::RenderComponent(_) => {
                 Ok(MethodResult::Render(decode(&result)?))
             }
+            Call::RenderStory(_) => Ok(MethodResult::StoryRender(decode(&result)?)),
             Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
             Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
             Call::TransformViteCss(_) => Ok(MethodResult::ViteCss(decode(&result)?)),

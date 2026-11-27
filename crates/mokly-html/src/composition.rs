@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 use std::sync::Arc;
 
-use mokly_catalogue::diagnostic::Warning;
+use mokly_catalogue::diagnostic::{STORY_RENDER_FAILED, Warning};
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
@@ -20,6 +20,7 @@ use crate::prepared_root::PreparedRoot;
 use crate::tree::Node;
 use crate::{
     assembly, component_root, error, links, raw_markers, regions, root_inputs, source_locations,
+    story_failure,
 };
 
 /// One effective document view. Pages ignore the axes.
@@ -51,6 +52,15 @@ pub struct Composed {
     pub components: Vec<String>,
     /// Logical references retained for final cross-view anchor checks.
     pub links: Vec<links::Reference>,
+}
+
+impl Composed {
+    /// The warning that identifies a saved story error document, including after reuse.
+    pub fn story_render_failure(&self) -> Option<&Warning> {
+        self.warnings
+            .iter()
+            .find(|warning| warning.code == STORY_RENDER_FAILED)
+    }
 }
 
 /// Non-pure composition boundary: JavaScript fragments are injected.
@@ -163,7 +173,16 @@ impl HtmlComposer {
                 let nodes = source_locations::template(template)?;
                 engine.nodes(nodes, &context)?
             } else {
-                engine.javascript(&parent, kind, &context, fragment)?
+                let fragment = match fragment {
+                    Some((request, result)) => (request, result?),
+                    None => engine.javascript_fragment(&parent, kind, &context)?,
+                };
+                if let Some(failure) = fragment.1.story_failure.as_deref() {
+                    return story_failure::compose(request, &parent, failure);
+                }
+                let expansion =
+                    engine.javascript_expansion(&parent, Arc::new(context), fragment)?;
+                engine.expand(expansion)?
             };
             if matches!(entry.content, EntryContent::Component { .. }) {
                 engine.components.insert(0, parent.clone());

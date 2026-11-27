@@ -70,6 +70,7 @@ pub(super) fn catalogue() -> PreparedCatalogue {
 }
 pub(super) fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
     PreparedServe {
+        recheck_vite_setup: false,
         config: config(dir),
         generation: Arc::new(generation),
         summary: BuildSummary {

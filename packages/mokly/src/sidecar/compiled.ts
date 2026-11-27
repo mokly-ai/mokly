@@ -16,12 +16,14 @@ import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import {
   currentEvidence,
+  markedEvidence,
   PhysicalInputReader,
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { selectPreviews } from "./storybook-folders.js";
 import { toolchainIdentity } from "./toolchain.js";
+import { setupCandidate } from "./vite-setup-input.js";
 import { currentViteToolchain } from "./vite-toolchain.js";
 
 /**
@@ -147,14 +149,8 @@ export async function reuse(
   );
   const uncaptured =
     capture === "serveEdit"
-      ? candidates.filter(
-          ({ compiled: { reuseEvidence } }) =>
-            !reuseEvidence.complete &&
-            !reuseEvidence.durable &&
-            reuseEvidence.uncaptured === "serveEdit" &&
-            Object.values(reuseEvidence.inputs).every((value) =>
-              ["file", "absent", "link"].includes(value.kind),
-            ),
+      ? candidates.filter(({ compiled: { reuseEvidence } }) =>
+          markedEvidence(reuseEvidence),
         )
       : [];
   const peers = candidates.filter(
@@ -174,6 +170,11 @@ export async function reuse(
         generation.compiled.inputs,
         likelyChanged(generation, peers),
         (file) => (lastFailedInput = file),
+      )) &&
+      (await everyInput(
+        generation.compiled.vite?.envInputs ?? [],
+        async ({ file, name, digest }) =>
+          file === null || (await setupCandidate(name, file)).digest === digest,
       )) &&
       (await everyInput(
         Object.entries(generation.compiled.inputDirectories),

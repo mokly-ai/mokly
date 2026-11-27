@@ -9,8 +9,10 @@ import {
   type SearchKeyEvent,
 } from "../src/shell/search_keys.js";
 
+import { unregisterDom } from "./dom_teardown.js";
+
 before(() => GlobalRegistrator.register());
-after(() => GlobalRegistrator.unregister());
+after(unregisterDom);
 
 /** A key pressed on the page with no modifier, unless the case sets one. */
 function key(fields: Partial<SearchKeyEvent>): SearchKeyEvent {

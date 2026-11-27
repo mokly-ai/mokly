@@ -3,6 +3,9 @@
 use mokly_model::catalogue::SourceLocation;
 use serde_json::Value;
 
+/// A saved Storybook view displays its render failure.
+pub const STORY_RENDER_FAILED: &str = "story-render-failed";
+
 /// Quote a string with the JSON escapes used by build warning messages.
 pub fn json_quoted(value: &str) -> String {
     let mut output = String::from("\"");

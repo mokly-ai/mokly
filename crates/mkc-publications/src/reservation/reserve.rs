@@ -11,6 +11,7 @@ use mkc_store_interface::blob::{Blob, PublicationFile};
 use mkc_store_interface::publication::{Publication, PublicationFailure};
 use mkc_store_interface::publication_event::{EventKind, PublicationEvent};
 use mkc_store_interface::store::Queries;
+use mokly_content_types::delivered_content_type;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::ingest::{PublicationIngest, UploadAuthorization};
@@ -201,10 +202,7 @@ impl Candidates for PublicationIngest {
                     hash,
                     incarnation: self.runtime.id(),
                 },
-                content_type: mime_guess::from_path(&path)
-                    .first_or_octet_stream()
-                    .essence_str()
-                    .to_owned(),
+                content_type: delivered_content_type(&path),
                 path,
                 size,
             })

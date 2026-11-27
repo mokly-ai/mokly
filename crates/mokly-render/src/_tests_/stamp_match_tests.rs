@@ -167,6 +167,7 @@ fn tree(states: [State; ENTRIES]) -> MemoryTree {
 /// The stamp of `tree`, which `current` builds from a stamp that holds only the keys.
 fn stamp_of(tree: &MemoryTree) -> InputStamp {
     InputStamp {
+        vite_env: BTreeSet::new(),
         memberships: BTreeMap::from([("/repo/src".into(), None)]),
         unretained: BTreeMap::new(),
         projections: BTreeMap::new(),

@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::remote::error::{Error, Result, TreeCheck};
 use crate::remote::identity::RunIdentity;
-use crate::remote::plan::{COMMAND_COUNT, REPORT_COUNT};
+use crate::remote::plan::RunCommand;
 use crate::remote::runner::DefaultRemoteRunner;
 use crate::remote::suites::Completion;
 
@@ -51,6 +51,7 @@ impl DefaultRemoteRunner {
     /// Validate reports, compare the tree and print summaries with no early return.
     pub(super) fn evidence(
         &self,
+        plan: &[RunCommand],
         completed: &[Completion],
         reports: &Path,
         identity: &RunIdentity,
@@ -58,7 +59,9 @@ impl DefaultRemoteRunner {
     ) -> Evidence {
         let dependencies = &self.dependencies;
         let run = identity.run().as_str();
-        let downloads = REPORT_COUNT
+        let required = plan.len();
+        let expected = plan.iter().filter(|command| command.report).count();
+        let downloads = expected
             - completed
                 .iter()
                 .filter(|completion| completion.report_downloaded)
@@ -84,7 +87,7 @@ impl DefaultRemoteRunner {
                 TreeCheck::Unreadable
             }
         };
-        let commands = COMMAND_COUNT - completed.len()
+        let commands = required - completed.len()
             + completed
                 .iter()
                 .filter(|completion| !completion.passed)
@@ -103,9 +106,9 @@ impl DefaultRemoteRunner {
             ));
         }
         dependencies.reporter.progress(&format!(
-            "summary: commands={}/{COMMAND_COUNT} reports={}/{REPORT_COUNT} aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
-            COMMAND_COUNT - commands,
-            REPORT_COUNT - downloads,
+            "summary: commands={}/{required} reports={}/{expected} aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
+            required - commands,
+            expected - downloads,
             if aggregate_failed { "failed" } else { "passed" },
             tree.unchanged(),
             identity.base().sha

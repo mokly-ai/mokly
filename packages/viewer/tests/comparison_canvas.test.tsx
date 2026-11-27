@@ -30,6 +30,7 @@ import {
   ORIGIN,
   type HeldRequest,
 } from "./comparison_lifecycle_harness.js";
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 const ROOT = `${ORIGIN}/mokly-viewer/diffs/generations/one/`;
@@ -144,7 +145,7 @@ function compare(
 
 test("the shown gate keeps the loaded comparison and its presentations while the canvas shows its live frames", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const { environment: host, requests } = heldHost();
   const frames = homeFrames();
   const comparison = controller(true);
@@ -174,7 +175,7 @@ test("the shown gate keeps the loaded comparison and its presentations while the
 
 test("the canvas holds the loading line, then the line of an entry without a comparison", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const { environment: host, requests } = heldHost();
   const view = render(
     compare({ comparison: controller(false), frames: [] }, host),

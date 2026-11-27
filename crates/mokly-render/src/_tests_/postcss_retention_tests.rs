@@ -59,6 +59,7 @@ fn measure(size: usize, payload: usize) -> (usize, usize, usize, usize, usize) {
             Path::new("/repo"),
             &format!("sheet-{index}.css"),
             vec![Dependency {
+                source: None,
                 kind: DependencyKind::Directory,
                 path: "/repo/inputs".into(),
                 plugin: Some("fixture".into()),

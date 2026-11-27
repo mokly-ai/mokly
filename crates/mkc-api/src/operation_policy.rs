@@ -8,13 +8,7 @@ impl Operation {
     }
 
     pub(crate) fn billing(self) -> bool {
-        matches!(
-            self,
-            Self::GetBilling
-                | Self::StartCheckout
-                | Self::OpenBillingPortal
-                | Self::ReceiveBillingWebhook
-        )
+        self.optional_configuration() == Some(OptionalConfiguration::Billing)
     }
 
     pub(crate) fn github(self) -> bool {
@@ -34,6 +28,10 @@ impl Operation {
             | Self::ListInstallations
             | Self::InstallGitHubApp
             | Self::ListRepositories => Some(OptionalConfiguration::GitHub),
+            Self::GetBilling
+            | Self::StartCheckout
+            | Self::OpenBillingPortal
+            | Self::ReceiveBillingWebhook => Some(OptionalConfiguration::Billing),
             _ => None,
         }
     }
@@ -49,6 +47,7 @@ impl Operation {
         matches!(
             self,
             Self::GetHealth
+                | Self::GetConfiguration
                 | Self::GetProject
                 | Self::GetProjectBySlug
                 | Self::GetPublication
@@ -64,11 +63,11 @@ impl Operation {
     }
 
     pub(crate) fn implemented(self) -> bool {
-        self.github()
-            || self.billing()
+        self.optional_configuration().is_some()
             || matches!(
                 self,
                 Self::GetHealth
+                    | Self::GetConfiguration
                     | Self::UploadPublication
                     | Self::UploadPublicationBlob
                     | Self::CompletePublicationUpload
@@ -77,7 +76,6 @@ impl Operation {
                     | Self::SignOut
                     | Self::RotateSession
                     | Self::SendMagicLink
-                    | Self::VerifyPreviewSignIn
                     | Self::IssueDesktopGrant
                     | Self::ExchangeDesktopGrant
                     | Self::ListWorkspaces

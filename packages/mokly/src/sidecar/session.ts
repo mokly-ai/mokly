@@ -21,6 +21,7 @@ import { PostcssWorkers } from "./postcss.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
+import { renderStory } from "./story-render.js";
 import { readStorybook } from "./storybook-main.js";
 import { ViteCompiler } from "./vite-compiler.js";
 import { evaluateVite } from "./vite-evaluate.js";
@@ -169,6 +170,7 @@ export class Session {
             Object.fromEntries(Object.entries(map)),
           ]),
         );
+        generation.viteNamedExports = request.params.namedExports;
         return null;
       }
       case "bindings": {
@@ -197,9 +199,8 @@ export class Session {
         );
       case "renderStory":
         await evaluateVite(this.generation(request.params.generation));
-        return render(
+        return renderStory(
           this.generation(request.params.generation),
-          "story",
           request.params,
         );
       case "renderPage": {

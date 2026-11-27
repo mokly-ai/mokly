@@ -30,15 +30,12 @@ export class ViteStyles {
   async resolve(
     source: string,
     importer: string | undefined,
-    lookup: ViteLookup,
+    resolveModule: ViteLookup["resolve"],
     external: (
       source: string,
       importer?: string,
     ) => Promise<string | undefined>,
-  ): Promise<string | StyleModule | undefined> {
-    if (source.startsWith("mokly:style-source:")) {
-      return this.original(source, importer);
-    }
+  ): Promise<string | undefined> {
     const library =
       /^(styled-components|react-native-web|@emotion\/react)(?:\/|$)/.exec(
         source,
@@ -48,7 +45,7 @@ export class ViteStyles {
       const node = await external(source, importer);
       return node
         ? { id: node, external: true }
-        : (await lookup.resolve(source, importer))?.resolved;
+        : (await resolveModule(source, importer))?.resolved;
     };
     const resolved = await resolve(source, importer);
     if (!resolved) return;

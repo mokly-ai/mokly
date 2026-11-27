@@ -1,0 +1,49 @@
+# The CLI documents no minimum Git
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from the branch `calummoore/builds-give-the-template-a-git-that-9abx`, which gave the cloud build template Git 2.56.1.
+- **Location:** `crates/mokly-git/src/checkout_batch.rs:164`, which passes `-Z` to `git cat-file --batch --filters`; `crates/mokly-git/src/checkout_batch.rs:201`, which passes `--attr-source={commit}` to every `cat-file` request; `crates/mokly-source-interface/src/error.rs:97` to line 112, which gives the code "unknown"; `crates/mokly-cli/src/changes_policy.rs:12` to line 25, which makes Changes unavailable; `docs/guides/start/install.md:67`, which names Git without a version; `docs/protocol/mokly-git.md`, which states no Git version.
+- **Reason:** The fix changes what a user with an older Git sees, and a guide and a protocol page must state the new behaviour, so the user chooses it.
+
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Terms:**
+  - **Base read:** the CLI reads the files of the comparison base, the merge base of `--base {ref}`, from Git objects, not from the working tree.
+  - **Conversion batch:** one `git cat-file --batch --filters -Z` process that converts two or more base files within 48 MiB, with the checkout filters of the base's `.gitattributes`.
+  - **Changes status:** the `changesStatus` field of the published index. `ready` means the catalogue holds a comparison. `unavailable` means it holds none.
+- **Background:**
+  - The base reader of `crates/mokly-git` runs each `cat-file` request as `git --no-optional-locks --attr-source={commit} cat-file ...`. A conversion batch adds `--batch --filters -Z`.
+  - The Git release notes give the versions. Git 2.41.0 added `git --attr-source={tree}`. Git 2.42.0 added `-Z` to `git cat-file --batch`.
+  - Git 2.43.0 is the oldest Git with a recorded working comparison. It is the Git of Ubuntu 24.04, and it ran a comparison on a developer machine on 2026-11-26. `plans/follow-ups/older-git-compatibility-ci.md` records the earlier fix that made the missing-base-object tests pass on Git 2.43.0.
+  - On 2026-11-26, the cloud build template `mokly-build-v3` had Debian bookworm's Git 2.39.5. There, `git cat-file --batch --filters -Z` exits 129 with an unknown-option error.
+  - In a sandbox of that template, the build runner's checkout and `mokly build --config mokly.config.json --base origin/main` of a pull request printed `base {sha}: [mokly/config-invalid] mokly.config.json: unknown`. The build passed, and the published index had `changesStatus: "unavailable"`.
+  - So the Mokly Cloud check of that pull request said "Catalogue published." instead of "Catalogue ready to review.".
+  - The path of the failure: the batch failure becomes a source error. `SourceError::code` returns "unknown" for it. The config loader reports it as a `config-invalid` issue. `changes_policy::unavailable` turns that issue into the reason "base validation failed", and the CLI uploads the catalogue without a comparison.
+  - `docs/guides/start/install.md:67` lists "Git, once you want to compare a branch with its base." without a version. No guide, README, or protocol page of the CLI names a minimum Git.
+  - The same guide gives an example of a clear version message. On an excluded Node version, `mokly` stops at its first command with a message that names the Node version to install.
+  - The cloud build template now has Git 2.56.1 and a probe that requires Git 2.43 or newer, so cloud builds no longer show this problem. Users who run the CLI in their own CI or on their own machine still can.
+- **Problem:** With a Git older than 2.42, a comparison silently becomes unavailable. The only message is `[mokly/config-invalid] mokly.config.json: unknown`, which names neither Git nor its version.
+- **Impact if no action:** A user whose CI image has an older Git, such as Debian bookworm's 2.39.5 or Ubuntu 22.04's 2.34, gets catalogues without Changes. The message points at the configuration file, so the user looks for a configuration error that does not exist.
+- **Root question:** What should the CLI do when the local Git is too old to read a comparison base?
+- **Options:**
+  - **A.** Document the minimum, Git 2.43, in `docs/guides/start/install.md` and in `docs/protocol/mokly-git.md`. When a base `cat-file` request fails with an unknown option, report a clear reason that names Git and the minimum, for example "Git 2.39.5 cannot read the base; install Git 2.43 or newer". Keep the current outcome: the build continues without a comparison. Effort: Small.
+  - **B.** A, plus one `git --version` check before the first base read of a comparison. A Git below the minimum makes Changes unavailable with the same clear reason, before any base work. Effort: Small.
+    - One check covers every Git feature that the base reader needs, also `--attr-source` and the missing-object behaviour, not only `-Z`.
+    - A patched or backported Git can print an old version and still work. The check then rejects a Git that would work.
+  - **C.** Fall back to forms that older Git supports. Read a batch without `-Z`, with newline-terminated records, and read the attributes of the base without `--attr-source`. Effort: Large.
+    - Newline-terminated batch records cannot carry a path that holds a newline.
+    - Git before 2.41 has no other way to read attributes from a tree, so the fallback must apply the base's `.gitattributes` itself or check out a temporary worktree.
+    - Each fallback path needs CI with an old Git, which `plans/follow-ups/older-git-compatibility-ci.md` does not yet provide.
+- **Shared assumptions:**
+  - A comparison that cannot run does not fail the build or the publish. Source: `docs/protocol/cloud/cloud-build-runner.md`, section "Comparison", which says that the CLI uploads the current catalogue without a comparison when the base fails. Every option keeps it.
+- **Left out:**
+  - Fail the build when Git is too old. It turns a missing comparison into a missing catalogue, against the rule above.
+  - Bundle a Git with the CLI. It adds a large platform-specific dependency for an old-Git case.
+- **Wider fix:** B. One version check before the base read gives a clear reason for every Git feature that the reader needs, also features that a later change adds.
+- **Previous examples:** The Node version message of the CLI in `docs/guides/start/install.md`. The Git version table in `plans/follow-ups/development-guide-omits-git-tools.md`, which found that Git 2.44.4 and older failed the missing-object tests before the compatibility fix.
+- **Related:**
+  - `plans/follow-ups/base-read-cause-unknown.md` covers why every failed base read shows "unknown". Its option C keeps the typed cause, which A and B can use for their reason.
+  - `plans/follow-ups/older-git-compatibility-ci.md` covers CI with an older Git. C needs it.
+- **Recommendation:** B. It names the problem and the fix before any base work, for every Git feature, at the cost of A.
+- **Action:** ask the user, because the fix changes the message and the documented requirements that a CLI user sees.

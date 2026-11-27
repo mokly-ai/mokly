@@ -32,7 +32,6 @@ fn disabled_or_unconfigured_preview_fails_before_any_write() {
     let missing = harness.run(
         "disabled",
         &[
-            ("MKC_PREVIEW_SIGN_IN_SECRET", ""),
             ("MKC_PREVIEW_SIGN_IN_EMAIL", ""),
             ("MKC_PREVIEW_SIGN_IN_PLAN", ""),
         ],

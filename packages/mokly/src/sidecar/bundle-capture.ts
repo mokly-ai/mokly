@@ -9,6 +9,7 @@ import type { ResolutionEvidence } from "./resolution-evidence.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
 import type { StorybookMainCache } from "./storybook-main.js";
 
+/** The capture state that the compile attempts of one bundle share. */
 export interface BundleCaptureState {
   started: bigint;
   mode: BundleCapture;

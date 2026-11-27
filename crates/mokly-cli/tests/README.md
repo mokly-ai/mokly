@@ -56,9 +56,30 @@ writes no stdout, and the listening line is the first line that they parse.
 [`process_support/html.rs`](./process_support/html.rs) holds the shared HTML
 fixture writes and the complete native-process shutdown.
 
+A test that publishes only to reach the upload step uses
+`rejecting_endpoint()` in [`publish_support`](./publish_support/mod.rs). Its
+loopback receiver answers each request with 404, which is not retryable, so the
+publish fails at once with `upload-failed` and spends no retries or backoff.
+
+A test whose cases start independent `mokly` processes runs them through
+`each()` in [`process_support/parallel.rs`](./process_support/parallel.rs).
+It runs at most one case for each available core at a time, on a thread named
+after the case. A failed case does not stop the other cases, and the test then
+fails with the names of the failed cases. Each case builds its own fixture.
+Parallel cases never share a Git checkout, because Git can rewrite
+`.git/index` during a read such as `git status`.
+
 Some `mokly-cli` Rust tests use debug-only hooks, such as the allocator probe
 and `MOKLY_TEST_STATIC_COLUMNS`, so they need the dev profile and fail under
 `cargo test --release`.
+
+The hanging-render test of
+[`changes_javascript_tests.rs`](./changes_javascript_tests.rs) sets
+`MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS` to 1,000 ms. A debug binary passes it
+to `Pool::with_test_render_deadline`, which replaces the deadline of render
+calls only. The test also sets `MOKLY_SIDECAR_TIMEOUT_MS` to 10,000 ms, so the
+sidecar start and the bundle calls keep a 10-second deadline. Release builds
+compile no read of the variable.
 
 ```bash
 cargo test -p mokly-cli

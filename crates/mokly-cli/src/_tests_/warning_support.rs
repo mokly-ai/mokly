@@ -63,6 +63,7 @@ pub(crate) fn record() -> Arc<PlanRecord> {
             .returns(BTreeSet::new()),
     ));
     let prepared = PreparedServe {
+        recheck_vite_setup: false,
         config: config(),
         generation: Arc::new(generation),
         summary: BuildSummary {

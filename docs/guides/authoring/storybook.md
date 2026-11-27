@@ -125,8 +125,8 @@ Mokly adds its default tag, `mokly`, to Storybook's default `dev` and `test`
 tags. Tags combine from the preview, the meta, and the story, in that order.
 Mokly includes a story when its combined tags keep both `dev` and `mokly`.
 
-`!dev` hides a story from both Storybook's sidebar and Mokly. Use `!mokly` to
-leave it out of Mokly only:
+`!dev` hides a story from both Storybook's sidebar and Mokly. Add `!mokly`
+to leave a story out of the Mokly catalogue while keeping it in Storybook.
 
 ```tsx
 export const StorybookOnly: StoryObj<typeof meta> = {
@@ -194,8 +194,8 @@ the story. The configured Mokly renderer wraps React mockup screens and
 components. Stories use their Storybook providers.
 
 A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
-select a layout or product theme. Each story renders for the catalogue's
-viewports and enabled color schemes.
+select a layout or product theme. Mokly creates a view of each included story
+for every combination of viewport and enabled color scheme.
 
 Use the `mokly` parameter to set Storybook globals for each view. The
 `colorSchemes` field maps `light` or `dark` to an object of globals. The
@@ -268,9 +268,9 @@ export const Loaded: StoryObj<typeof meta> = {
 A `beforeEach` hook can return a cleanup function to undo its setup before
 another story or screen renders. Mokly runs the cleanups once each, in reverse
 order, at the end of the story render whose hooks returned them. It runs them
-even if a loader, a hook, or the render fails. A cleanup that throws fails
-only that story's render. Storybook's own preview runs a story's cleanups when
-the next story loads.
+even if a loader, a hook, or the render fails. If a `beforeEach` cleanup
+throws, it fails that render. Storybook's own preview runs a story's cleanups
+when the next story loads.
 
 Each render process keeps one active `beforeAll` setup at a time. The setup
 belongs to a Storybook folder and a bundle generation, which is a compiled
@@ -283,9 +283,45 @@ Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
 run. Loaders and `beforeEach` hooks can read them from `context.globals`.
 
 A loader, hook, `beforeAll` cleanup, or render that throws fails the current
-render. If `beforeAll` throws, later story renders fail with the same error
-only for that folder and generation. Mokly runs no `play` function or
-`afterEach` hook.
+render. If `beforeAll` throws, Mokly reuses that error for later story renders
+that need the same folder and generation's setup. Mokly runs no `play`
+function or `afterEach` hook.
 
-Loaders and hooks run in Node during the static render. A hook that needs a
-browser API, such as `window` or `document`, does not work.
+Loaders and hooks run in Node during the static render.
+
+## When a story cannot render
+
+If story composition, a loader, a hook, a cleanup, or the render throws, Mokly
+shows an error document in each affected view. The build continues with the
+other stories.
+
+The error document names the story. It shows the failure reason with absolute
+paths removed. It uses only its own styles. Its colors follow the view's light
+or dark scheme.
+
+The error document tells you to add `!mokly` to leave the story out of the
+catalogue. See [Tags and descriptions](/docs/authoring/storybook/#tags-and-descriptions).
+
+`mokly build` prints one `story-render-failed` warning for each failed view.
+For example, a story that renders a portal into `document.body` gives this
+warning:
+
+```text
+[mokly/warning] Portal/index.desktop.html: story "specs/Portal.stories.tsx#Portal" could not render; add the "!mokly" tag to leave it out: document is not defined
+```
+
+`mokly build --strict` and `mokly publish --strict` fail on this warning. A
+render timeout or crash stops the build. An error in Mokly's own components
+and helpers, such as invalid props for a registered component or a duplicate
+instance ID, still stops the build.
+
+Use code that can render on the server without browser APIs such as `window`
+or `document`.
+
+In `mokly serve`, the story's frames show the error document. If rendering
+edited props fails, the Props tab shows a failure alert.
+
+In Changes, a failed view counts as a change if it rendered on the other
+side. If the two error documents are equal, for example because the story
+keeps its name and fails again with the same reason, Changes shows the view
+as unchanged.

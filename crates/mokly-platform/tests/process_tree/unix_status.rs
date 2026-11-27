@@ -3,8 +3,9 @@
 #[cfg(target_os = "linux")]
 use std::fs;
 use std::io;
+use std::mem::MaybeUninit;
 #[cfg(target_os = "macos")]
-use std::mem::{MaybeUninit, size_of};
+use std::mem::size_of;
 use std::time::{Duration, Instant};
 
 /// Check that a helper is live, rather than merely awaiting its reaper.
@@ -52,6 +53,28 @@ pub(crate) fn wait_gone(pid: i32) {
         std::thread::sleep(Duration::from_millis(10));
     }
     assert!(!alive(pid), "process {pid} remains after the tree stop");
+}
+
+/// True when our child is gone from the wait queue. WNOHANG and WNOWAIT
+/// neither block nor reap, so the check leaves an unreaped child as it is.
+pub(crate) fn reaped(pid: u32) -> bool {
+    let mut info = MaybeUninit::<libc::siginfo_t>::zeroed();
+    // SAFETY: The buffer has the exact siginfo_t size and stays alive for
+    // the call. The PID is a child that this test started.
+    let result = unsafe {
+        libc::waitid(
+            libc::P_PID,
+            pid,
+            info.as_mut_ptr(),
+            libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+        )
+    };
+    let error = io::Error::last_os_error();
+    if result == -1 && error.raw_os_error() == Some(libc::ECHILD) {
+        return true;
+    }
+    assert_eq!(result, 0, "waitid failed: {error}");
+    false
 }
 
 /// Kill any surviving helper even when an assertion unwinds the test.

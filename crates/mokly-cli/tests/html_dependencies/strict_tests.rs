@@ -5,10 +5,12 @@ use std::process::{Command, Output};
 
 use tempfile::TempDir;
 
+use super::publish_support::rejecting_endpoint;
 use super::{WARNING_LINE, build, fixture, git, write};
 
-/// Publish to an unreachable endpoint, so a passed build step ends at the upload.
+/// Publish to a rejecting endpoint, so a passed build step ends at the upload.
 fn strict_publish(root: &Path) -> Output {
+    let endpoint = rejecting_endpoint();
     let temporary = TempDir::new().unwrap();
     let temporary_root = dunce::canonicalize(temporary.path()).unwrap();
     Command::new(env!("CARGO_BIN_EXE_mokly"))
@@ -20,7 +22,7 @@ fn strict_publish(root: &Path) -> Output {
             "--repository",
             "example.test/team/catalogue",
             "--endpoint",
-            "http://127.0.0.1:1/plan",
+            &endpoint,
             "--token",
             "fixture-token",
         ])

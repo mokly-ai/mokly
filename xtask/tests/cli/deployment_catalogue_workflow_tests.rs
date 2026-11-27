@@ -89,7 +89,7 @@ fn catalogue_jobs_use_reviewed_values_and_keep_the_key_step_scoped() {
         );
         assert_eq!(steps[0]["with"]["persist-credentials"], false);
         assert_eq!(steps[1]["with"]["toolchain"], "1.98.1");
-        assert_eq!(steps[3]["with"]["key"], job_id);
+        assert_eq!(steps[3]["with"]["shared-key"], "stripe-catalogue");
         assert_eq!(steps[6]["with"]["name"], artifact);
         assert_eq!(
             steps[6]["with"]["path"],

@@ -4,6 +4,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use crate::check::request::DependencyAudit;
 use crate::remote::error::{Error, Operation};
+use crate::remote::plan::plan_support::plan_counts;
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
 use self::snapshot_runner_support::{Case, fixture};
@@ -22,6 +23,7 @@ fn count(events: &[String], name: &str) -> usize {
 /// Compare captured phase positions, including both fingerprint directories.
 #[test]
 fn snapshot_runs_use_the_base_and_follow_the_preparation_and_execution_order() {
+    let counts = plan_counts();
     for case in [Case::SameHead, Case::BehindHead] {
         let fixture = fixture(case);
         DefaultRemoteRunner {
@@ -55,11 +57,11 @@ fn snapshot_runs_use_the_base_and_follow_the_preparation_and_execution_order() {
                 .take(position("suite"))
                 .filter(|event| event.as_str() == "probe")
                 .count()
-                == 14
+                == counts.commands
         );
-        assert_eq!(count(&events, "warmup"), 14);
-        assert_eq!(count(&events, "suite"), 14);
-        assert_eq!(count(&events, "download"), 5);
+        assert_eq!(count(&events, "warmup"), counts.commands);
+        assert_eq!(count(&events, "suite"), counts.commands);
+        assert_eq!(count(&events, "download"), counts.reports);
         assert_eq!(count(&events, "remove"), 1);
         let final_fingerprint = events
             .iter()
@@ -81,11 +83,15 @@ fn snapshot_runs_use_the_base_and_follow_the_preparation_and_execution_order() {
                 "b".repeat(40)
             )
         );
-        assert!(events.iter().any(|event| {
-            event.contains(
-                "summary: commands=14/14 reports=5/5 aggregate=passed unchanged-tree=true",
-            ) && event.contains(&format!("base={base}"))
-        }));
+        let summary = format!(
+            "summary: commands={0}/{0} reports={1}/{1} aggregate=passed unchanged-tree=true",
+            counts.commands, counts.reports
+        );
+        assert!(
+            events.iter().any(|event| {
+                event.contains(&summary) && event.contains(&format!("base={base}"))
+            })
+        );
     }
 }
 

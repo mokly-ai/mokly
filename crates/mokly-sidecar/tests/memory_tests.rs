@@ -6,7 +6,7 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
 use mokly_sidecar::process_memory::{MemoryFactory, SystemMemory};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 
@@ -48,23 +48,24 @@ if (process.argv[2] === 'child') {
         command.arg(&script).stdout(Stdio::piped());
         groups.configure(&mut command).unwrap();
         let mut child = command.spawn().unwrap();
-        let group = groups.attach(&child).unwrap();
+        let stdout = child.stdout.take().unwrap();
+        let tree = groups.attach(child).unwrap();
         let mut line = String::new();
-        BufReader::new(child.stdout.take().unwrap())
-            .read_line(&mut line)
-            .unwrap();
+        BufReader::new(stdout).read_line(&mut line).unwrap();
         let descendant: u32 = line.trim().parse().unwrap();
-        let monitor = SystemMemory.monitor(child.id());
+        let monitor = SystemMemory.monitor(tree.id());
         let mut table = System::new();
         table.refresh_processes_specifics(
-            ProcessesToUpdate::Some(&[Pid::from_u32(child.id())]),
+            ProcessesToUpdate::Some(&[Pid::from_u32(tree.id())]),
             true,
             ProcessRefreshKind::nothing().with_memory().without_tasks(),
         );
-        let root_bytes = table.process(Pid::from_u32(child.id())).unwrap().memory();
+        let root_bytes = table.process(Pid::from_u32(tree.id())).unwrap().memory();
         let sum = monitor.resident_bytes(true).unwrap();
-        group.kill().unwrap();
-        child.wait().unwrap();
+        tree.kill().unwrap();
+        tree.wait().unwrap();
+        // The drop reaps the exited root, as the test checks a gone tree.
+        drop(tree);
         let deadline = Instant::now() + Duration::from_secs(10);
         let descendant_memory = SystemMemory.monitor(descendant);
         while descendant_memory.resident_bytes(false).unwrap() != 0 && Instant::now() < deadline {

@@ -77,6 +77,7 @@ pub(super) fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
             plan: None,
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec!["entry.ts".into()],
                 renderer: None,
@@ -112,6 +113,7 @@ pub(super) fn edit(
             capture: Some(BundleCapture::ServeEdit),
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec!["entry.ts".into()],
                 renderer: None,

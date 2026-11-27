@@ -53,6 +53,7 @@ pub(super) fn compiled(root: &StylesheetRoot) -> Compilation {
             route: format!("styles/{}", root.path),
             css: "x".repeat(4096),
             assets: BTreeMap::new(),
+            css_module_named_exports: Default::default(),
             css_modules: BTreeMap::from([(
                 "shared.module.css".into(),
                 BTreeMap::from([("name".into(), root.path.clone())]),

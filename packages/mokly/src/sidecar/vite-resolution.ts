@@ -1,11 +1,13 @@
+import { realpathSync } from "node:fs";
 import fs from "node:fs/promises";
-import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import type { Alias, DevEnvironment, Rollup } from "vite";
+import type { DevEnvironment, Rollup } from "vite";
 
 import { missingFile } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
+import { canonicalCandidate } from "./resolution-inputs.js";
+import type { CanonicalCandidate } from "./resolution-inputs.js";
 import { bareSpecifier } from "./specifier.js";
 import {
   viteLookupImporters,
@@ -14,12 +16,10 @@ import {
   viteSourceResolution,
 } from "./vite-lookup-paths.js";
 import type { loadVite } from "./vite-peers.js";
+import { viteContainerResolver } from "./vite-resolve-dispatch.js";
+import type { ViteResolve } from "./vite-resolve-dispatch.js";
 import { viteFile } from "./vite-urls.js";
 
-type ViteResolve = (
-  source: string,
-  importer: string,
-) => Promise<Rollup.PartialResolvedId | null>;
 export interface ViteResolution {
   resolved: Rollup.PartialResolvedId;
   importer: string;
@@ -28,7 +28,6 @@ export interface ViteResolution {
 
 /** The setup, modules, peers, and native packages share one lookup policy. */
 export class ViteLookup {
-  aliases: Alias[] = [];
   private alias: (
     source: string,
     importer?: string,
@@ -56,36 +55,34 @@ export class ViteLookup {
       ...environment.getTopLevelConfig(),
       ...environment.config,
     };
-    const aliasEnvironment = {
-      name: environment.name,
-      logger: environment.logger,
-      getTopLevelConfig: () => environment.getTopLevelConfig(),
-      config: {
-        ...config,
-        resolve: { ...config.resolve, alias: this.aliases },
-      },
-    };
     const alias = vite.createIdResolver(config);
     this.alias = (source, importer) =>
-      alias(aliasEnvironment, source, importer, true);
-    const skip = new Set(
-      environment.plugins.filter((plugin) =>
-        ["mokly", "alias"].includes(plugin.name),
-      ),
-    );
-    this.module = (source, importer) =>
-      environment.pluginContainer.resolveId(source, importer, { skip });
+      alias(environment, source, importer, true);
+    this.module = viteContainerResolver(environment);
     this.fetch = environment.fetchModule.bind(environment);
   }
 
-  async resolve(
+  resolve(source: string, importer?: string): Promise<ViteResolution | null> {
+    return this.resolveWith(source, importer, this.module);
+  }
+
+  resolveFromHook(
     source: string,
-    importer?: string,
+    importer: string | undefined,
+    dispatch: ViteResolve,
   ): Promise<ViteResolution | null> {
-    const target = (await this.alias(source, importer)) ?? source;
+    return this.resolveWith(source, importer, dispatch);
+  }
+
+  private async resolveWith(
+    source: string,
+    importer: string | undefined,
+    dispatch: ViteResolve,
+  ): Promise<ViteResolution | null> {
+    const target = await this.aliased(source, importer);
     const candidates = this.importers(target, importer);
     for (const [index, candidate] of candidates.entries()) {
-      let resolved = await this.module(target, candidate);
+      let resolved = await dispatch({ source, target, candidate, importer });
       if (resolved?.external && !viteFile(resolved.id)) {
         const physical = await this.nodeEntry(source, importer);
         if (!physical) continue;
@@ -93,15 +90,24 @@ export class ViteLookup {
       }
       if (!resolved || resolved.meta?.["vite:alias"]?.noResolved) continue;
       const file = viteFile(resolved.id);
+      const selected = file && (await canonicalCandidate(file));
       if (
         index === 0 &&
         candidates.length > 1 &&
-        file &&
+        selected &&
         this.paths.dependencyRoot &&
         this.paths.dependencyRoot !== this.paths.sourceRoot &&
-        !viteSourceResolution(this.paths, file)
+        !viteSourceResolution(this.paths, selected.file)
       )
         continue;
+      if (file && selected) {
+        const confined = await this.resolveFile(file, target, selected);
+        if (confined !== file)
+          resolved = {
+            ...resolved,
+            id: confined + (resolved.id.match(/[?#].*$/)?.[0] ?? ""),
+          };
+      }
       return { resolved, importer: candidate, source: target };
     }
     return null;
@@ -111,41 +117,32 @@ export class ViteLookup {
     return viteLookupImporters(this.paths, this.directory, source, importer);
   }
 
-  async stylesheet(
-    source: string,
-    importer: string | undefined,
-    resolve: (source: string, importer: string) => Promise<string | undefined>,
-  ): Promise<string | undefined> {
-    const target = (await this.alias(source, importer)) ?? source;
-    const candidates = this.importers(target, importer);
-    for (const [index, candidate] of candidates.entries()) {
-      const resolved = await resolve(target, candidate);
-      if (!resolved) continue;
-      const file = viteFile(resolved);
-      if (!file) return resolved;
-      if (
-        index === 0 &&
-        candidates.length > 1 &&
-        this.paths.dependencyRoot &&
-        this.paths.dependencyRoot !== this.paths.sourceRoot &&
-        !viteSourceResolution(this.paths, file)
-      )
-        continue;
-      const confined = await this.paths.resolve(file);
-      await this.paths.dependencyUsage.resolved(
-        source,
-        path.dirname(candidates[0] ?? candidate),
-        confined,
-      );
-      return confined + resolved.slice(file.length);
-    }
+  async aliased(source: string, importer?: string): Promise<string> {
+    return (await this.alias(source, importer)) ?? source;
+  }
+
+  resolveFile(
+    file: string,
+    specifier: string,
+    selected?: CanonicalCandidate,
+  ): Promise<string> {
+    return this.paths.resolve(file, specifier, undefined, {
+      mappedTargetHint: true,
+      ...(selected && { selected }),
+    });
+  }
+
+  resolveFileSync(file: string, specifier: string): string {
+    return this.paths.resolveSync(file, specifier, undefined, {
+      mappedTargetHint: true,
+    });
   }
 
   async nodeEntry(
     source: string,
     importer?: string,
   ): Promise<ViteResolution | null> {
-    const target = (await this.alias(source, importer)) ?? source;
+    const target = await this.aliased(source, importer);
     const file = viteFile(target);
     if (file) {
       const info = await fs.stat(file).catch((error: unknown) => {
@@ -158,8 +155,13 @@ export class ViteLookup {
           source: target,
           importer: importer ?? file,
         };
-      const resolved = await this.module(target, importer ?? file);
-      return resolved
+      const resolved = await this.module({
+        source,
+        target,
+        candidate: importer ?? file,
+        importer,
+      });
+      return resolved && !resolved.meta?.["vite:alias"]?.noResolved
         ? {
             resolved: { ...resolved, external: true },
             source: target,
@@ -183,7 +185,7 @@ export class ViteLookup {
           candidates.length > 1 &&
           this.paths.dependencyRoot &&
           this.paths.dependencyRoot !== this.paths.sourceRoot &&
-          !viteSourceResolution(this.paths, file)
+          !viteSourceResolution(this.paths, realpathSync(file))
         )
           continue;
         return {
@@ -203,6 +205,22 @@ export class ViteLookup {
     importer: string,
     resolve: (specifier: string, parent: string) => string,
   ): string {
+    const url = this.syncTarget(source, importer, resolve);
+    if (!url.startsWith("file:")) return url;
+    const target = new URL(url);
+    const confined = pathToFileURL(
+      this.resolveFileSync(fileURLToPath(target), source),
+    );
+    confined.search = target.search;
+    confined.hash = target.hash;
+    return confined.href;
+  }
+
+  syncTarget(
+    source: string,
+    importer: string,
+    resolve: (specifier: string, parent: string) => string,
+  ): string {
     let failure: unknown;
     const candidates = this.importers(source, importer);
     for (const [index, candidate] of candidates.entries()) {
@@ -215,10 +233,10 @@ export class ViteLookup {
           candidates.length > 1 &&
           this.paths.dependencyRoot &&
           this.paths.dependencyRoot !== this.paths.sourceRoot &&
-          !viteSourceResolution(this.paths, file)
+          !viteSourceResolution(this.paths, realpathSync(file))
         )
           continue;
-        return pathToFileURL(this.paths.resolveSync(file)).href;
+        return url;
       } catch (error) {
         if (!viteMissingImport(error)) throw error;
         failure = error;

@@ -28,7 +28,7 @@ the shared platform and lifecycle scripts are in `infra/scripts/`.
 | Migration          | Ordered pre-install/pre-upgrade Job | API `wait-for-postgres`, then `migrate` init               |
 | Catalogue start    | After migration Job                 | `wait-for-api` init, exact revision and current migrations |
 | Signing key        | Managed CSI                         | Namespace Secret `catalogue-signing-key`, same-named key   |
-| Preview sign-in    | Not rendered                        | API-only Secret `preview-sign-in`, same-named key          |
+| Preview sign-in    | Not rendered                        | API-only optional Secret `preview-sign-in`, same-named key |
 | Service accounts   | Google-account annotations          | Direct Kubernetes identities; no annotations               |
 | Ingress            | GCE, global IP, Cloud Armor         | `ingressClassName: mkc-preview`, shared regional IP        |
 | Replicas           | Stable autoscaling/PDB values       | One each, no HPA or PDB                                    |
@@ -85,17 +85,21 @@ and `MKC_CATALOGUE_ORIGIN=https://pr-N.preview.C`. The API log mailer requires
 `MKC_ENV=preview`. The prefix and namespace database have one lifetime: preview
 cleanup removes both, while the shared bucket has no live-object age rule. The
 API's projected read-only secret volume combines the catalogue signing key with
-API-only `preview-sign-in`; the entrypoint exports the latter as
-`MKC_PREVIEW_SIGN_IN_SECRET`, while the chart sets
+the API-only optional `preview-sign-in`, which holds the preview password's
+verifier. The entrypoint exports it as `MKC_PREVIEW_SIGN_IN_VERIFIER` when
+it starts with `$scrypt$`. The chart sets
 `MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and `MKC_PREVIEW_SIGN_IN_PLAN=team`.
+The chart applies `preview.signInRolloutMarker` to the API pod template so the
+Helm upgrade replaces the pod when the verifier changes. The default `none`
+omits the annotation.
 Stable renders include none of these settings. The plan is fixed by namespace
 mode, not a configurable chart value. It makes new workspaces created by
 the configured account start on Team. Projects default to private and private
 uploads are allowed. It creates no subscription, leaves seat counting unchanged
 and leaves the unconfigured Billing pane at “Billing opens soon”. Existing
 workspaces keep their plan. Runtime validation accepts `free` (the absent
-default) or `team` only with the sign-in pair and capability; see
-[Preview sign-in](../../../docs/protocol/cloud/auth-sessions.md#preview-sign-in).
+default) or `team` only with the sign-in email and capability; see
+[Preview sign-in](../../../docs/protocol/cloud/preview-sign-in.md).
 The app image is baked with the exact public app and API origins; runtime
 settings assert them and cannot retarget it.
 
@@ -121,9 +125,9 @@ the [preview seed Job](../../../docs/protocol/cloud/preview-seed-job.md). It nev
 runs on its schedule. For each workflow run attempt, the trusted release script
 `preview-seed-job.py` creates one Job from it and adds `--run <run>` to the
 arguments. The template pod has one `api` container with the API image,
-`args: [preview-seed]`, and the API's environment and secret volume. The pod
-uses the `api` service account. Its `maintenance` label gives it the network
-access of the maintenance pods.
+`args: [preview-seed]`, the API's environment and a read-only catalogue signing
+key. The pod uses the `api` service account. Its `maintenance` label gives it
+the network access of the maintenance pods.
 
 ## Publication Runtime Tuning
 
@@ -201,7 +205,7 @@ template change, review every generated diff, then rerun the checks.
 - `templates/ingress.yaml` and `templates/certificate.yaml` — the GCE Ingress for stable environments, the ingress-nginx hosts for PRs and `Certificate/catalogue-tls`.
 - `templates/network-policy.yaml`, `templates/network-preview.yaml` and `templates/_network.tpl` — the default-deny policies and their preview egress rules.
 - `templates/services.yaml`, `templates/scaling.yaml` and `templates/maintenance.yaml` — the Services and BackendConfigs, the stable autoscalers and disruption budgets, and the maintenance CronJobs.
-- `templates/preview-seed.yaml` — the suspended PR-only CronJob `preview-seed`, which uses the API's image, environment and secret volume. `infra/scripts/preview-seed-job.py` creates each seed Job from it.
+- `templates/preview-seed.yaml` — the suspended PR-only CronJob `preview-seed`, which uses the API's image, environment and catalogue signing key. `infra/scripts/preview-seed-job.py` creates each seed Job from it.
 - `../tests/check.py` — the Helm lint, golden renders and rejected-input cases.
 - `../tests/build_contract.py` — the build settings, the API-only `e2b-api-key` entry and the rejected build configurations.
 

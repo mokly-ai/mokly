@@ -16,24 +16,17 @@ type CallbackFailure = {
   id: string;
   title: string;
   message?: string;
-  retry?: boolean;
   signIn?: SignIn;
 };
 
-function CallbackActions({
-  retry = false,
-  signIn,
-}: {
-  retry?: boolean;
-  signIn: SignIn;
-}) {
+/** A failed landing's one way on: back to the sign-in screen it came from. */
+function CallbackActions({ signIn }: { signIn: SignIn }) {
   return (
     <div className="fo-account-actions">
-      {retry && <Action label="Try again" tone="primary" icon="retry" block />}
       <Action
         label="Back to sign in"
-        tone={retry ? "secondary" : "primary"}
-        icon={retry ? undefined : "retry"}
+        tone="primary"
+        icon="retry"
         block
         to={signIn}
       />
@@ -45,7 +38,6 @@ function CallbackFailurePage({
   id,
   title,
   message,
-  retry,
   signIn = "product/account/sign-in",
 }: CallbackFailure) {
   return (
@@ -55,7 +47,7 @@ function CallbackFailurePage({
       ) : (
         <StateMessage announcement={title} error reference={failureReference} />
       )}
-      <CallbackActions retry={retry} signIn={signIn} />
+      <CallbackActions signIn={signIn} />
     </AccountShell>
   );
 }
@@ -120,27 +112,6 @@ export function EmailCallbackFailureScreen(_props: { viewport: Viewport }) {
       id="product/account/callback/email-invalid/failure"
       title="We couldn’t sign you in"
       message="Request another sign-in link"
-    />
-  );
-}
-
-/** The preview landing when its credential is absent or invalid. */
-export function PreviewCallbackInvalidScreen(_props: { viewport: Viewport }) {
-  return (
-    <CallbackFailurePage
-      id="product/account/callback/preview-invalid"
-      title="This link isn’t valid"
-    />
-  );
-}
-
-/** The preview landing when another attempt can recover the request. */
-export function PreviewCallbackFailureScreen(_props: { viewport: Viewport }) {
-  return (
-    <CallbackFailurePage
-      id="product/account/callback/preview-invalid/failure"
-      title="We couldn’t sign you in"
-      retry
     />
   );
 }

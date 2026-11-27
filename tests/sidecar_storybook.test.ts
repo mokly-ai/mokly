@@ -4,6 +4,7 @@ import test, { type TestContext } from "node:test";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { Definitions } from "../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
+import type { RenderStoryResult } from "../packages/mokly/src/generated/sidecar/RenderStoryResult.js";
 
 import {
   bundleParams,
@@ -83,17 +84,16 @@ test("CSF Factories render the first story as the parent with its decorators", a
     viewport: "mobile",
     colorScheme: "light",
   };
-  const story = await sidecar.call<RenderResult>("renderStory", {
+  const story = await sidecar.call<RenderStoryResult>("renderStory", {
     ...axes,
     storyId: "button.stories.tsx#Primary",
   });
-  const parent = await sidecar.call<RenderResult>("renderComponent", {
+  const parent = await sidecar.call<RenderStoryResult>("renderStory", {
     ...axes,
-    handle: "button.stories.tsx#default",
-    entry: { path: "button", title: "Factory Button" },
-    slots: {},
-    ignoreScope: "enabled",
+    storyId: "button.stories.tsx#default",
   });
+  assert.ok("html" in parent);
+  assert.ok("html" in story);
   assert.equal(
     parent.html,
     '<section data-preview="factory"><strong><button>Primary</button></strong></section>',

@@ -8,6 +8,7 @@ export const pluginInput = 'export const value = "before";';
 export async function pluginInputFixture(
   context: TestContext,
   method: "load" | "addWatchFile",
+  options: { ordered?: boolean; sameImporter?: boolean } = {},
 ): Promise<ReviewFixture> {
   const fixture = await reviewFixture(context);
   await fixture.write(".context/setups", "");
@@ -19,17 +20,25 @@ export async function pluginInputFixture(
     const root = import.meta.dirname;
     fs.appendFileSync(path.join(root, ".context/setups"), "setup\\n");
     export default { plugins: [{ name: "plugin-input",
-      async transform(code, id) {
+      transform: { ${options.ordered ? 'order: "pre",' : ""} async handler(code, id) {
         if (!id.endsWith("/review.mockup.ts")) return;
         const file = path.join(root, "src/plugin-input.ts");
         ${method === "load" ? "await this.load({ id: file });" : "this.addWatchFile(file);"}
         return code.replace("__PLUGIN__", JSON.stringify(fs.readFileSync(file, "utf8")));
-      },
+      } },
     }] };
   `,
   );
   await fixture.write("src/plugin-input.ts", pluginInput);
-  await fixture.write("src/review.mockup.ts", reviewPage("__PLUGIN__"));
+  await fixture.write(
+    "src/review.mockup.ts",
+    options.sameImporter
+      ? reviewPage(
+          'value + "|" + __PLUGIN__',
+          'import { value } from "./plugin-input.ts";',
+        )
+      : reviewPage("__PLUGIN__"),
+  );
   await fixture.write(
     "src/other.mockup.ts",
     reviewPage("value", 'import { value } from "./plugin-input.ts";'),

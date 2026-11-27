@@ -46,8 +46,8 @@ preview, and that setup becomes the active one. So a sidecar runs the hook of
 each folder once for each generation, and again only after the setup of
 another generation or folder replaced it. The release of a generation runs no
 cleanup. The last setup gets no cleanup when the sidecar exits. A loader, a
-hook, a cleanup, or a render that throws fails the render with
-[`render-failed`](./mokly-sidecar.md#fail-closed-rules). When a `beforeAll`
+hook, a cleanup, or a render that throws fails the render under the
+[story failure rules](./mokly-storybook-failures.md#failed-views). When a `beforeAll`
 hook throws, it does not run again for that generation and folder. Each later
 story render of that generation and folder fails with its error, and the
 active setup stays active. The stories of other folders still render. Mokly
@@ -120,6 +120,7 @@ time was rejected, because one typo then fails the whole build.
 ## Related Docs
 
 - [Storybook stories](./mokly-storybook.md)
+- [Storybook story failures](./mokly-storybook-failures.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Build warnings](./mokly-build-warnings.md)
 - [Sidecar definition transport](./mokly-sidecar-definitions.md)

@@ -141,5 +141,6 @@ fn preview(path: &str) -> Module {
         imports: Vec::new(),
         digest: None,
         imported_asset: None,
+        package_import: None,
     }
 }

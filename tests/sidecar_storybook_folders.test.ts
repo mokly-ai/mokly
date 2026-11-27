@@ -8,7 +8,7 @@ import { build } from "esbuild";
 
 import { currentDocumentPath } from "../packages/model/src/catalogue/delivery_paths.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
-import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
+import type { RenderStoryResult } from "../packages/mokly/src/generated/sidecar/RenderStoryResult.js";
 import { bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
@@ -23,6 +23,7 @@ import {
   startSidecar,
 } from "./helpers/sidecar.js";
 import { command } from "./helpers/static_publication.js";
+import { expectRenderedStory } from "./helpers/storybook_setup.js";
 
 const folder = "packages/ui/.storybook";
 const uiStory = "packages/ui/src/ui.stories.tsx";
@@ -101,18 +102,22 @@ async function bundleStories(
   return { sidecar, generation, params };
 }
 
-function renderStory(
+function callStory(
   sidecar: ReturnType<typeof startSidecar>,
   generation: string,
   file: string,
 ) {
-  return sidecar.call<RenderResult>("renderStory", {
+  return sidecar.call<RenderStoryResult>("renderStory", {
     generation,
     storyId: `${file}#Primary`,
     props: {},
     viewport: "mobile",
     colorScheme: "light",
   });
+}
+
+async function renderStory(...args: Parameters<typeof callStory>) {
+  return expectRenderedStory(await callStory(...args));
 }
 
 for (const extension of ["mts", "cts", "mtsx", "ctsx"]) {
@@ -212,17 +217,18 @@ export const beforeAll = () => {
     storybookFolders: { [uiStory]: folder },
   });
   const failure = {
-    code: "render-failed",
-    message: /package beforeAll failed on attempt 1$/,
+    storyId: `${uiStory}#Primary`,
+    name: "Primary",
+    reason: "package beforeAll failed on attempt 1",
   };
-  await assert.rejects(renderStory(sidecar, generation, uiStory), failure);
+  assert.deepEqual(await callStory(sidecar, generation, uiStory), failure);
   assert.equal(await fs.readFile(trace, "utf8"), "");
   for (let render = 0; render < 2; render++) {
     assert.equal(
       (await renderStory(sidecar, generation, defaultStory)).html,
       "<output>root</output>",
     );
-    await assert.rejects(renderStory(sidecar, generation, uiStory), failure);
+    assert.deepEqual(await callStory(sidecar, generation, uiStory), failure);
   }
   const closed = once(sidecar.child, "close");
   assert.equal(await sidecar.call("shutdown"), null);

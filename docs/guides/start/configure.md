@@ -16,7 +16,7 @@ uses `specs` as its source root.
 
 Mokly searches upward from the current directory for this file. Use
 `--config path/to/mokly.config.json` to select another JSON file.
-Filesystem paths in the configuration are relative to that file.
+Filesystem paths in the configuration are relative to that file by default.
 
 ## Add another root
 

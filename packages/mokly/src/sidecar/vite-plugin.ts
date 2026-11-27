@@ -21,9 +21,14 @@ import {
 import type { ViteCssTransform } from "./vite-css-transform.js";
 import { viteExternal } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
-import { trackVitePluginInputs } from "./vite-plugin-inputs.js";
+import type { VitePluginReports } from "./vite-plugin-inputs.js";
+import { viteReactImport } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
+import {
+  delegatedViteResolve,
+  viteHookResolver,
+} from "./vite-resolve-dispatch.js";
 import type { ViteStyles } from "./vite-styles.js";
 import { viteCss, viteEntry, viteFile, viteId, viteJsx } from "./vite-urls.js";
 
@@ -33,7 +38,7 @@ export interface ViteInputs {
   runtimeKey: string;
   entry: string;
   files: Map<string, Uint8Array>;
-  pluginInputs: Set<string>;
+  pluginInputs: Map<string, string | null>;
   diagnostic: (line: string) => void;
   cssModules: Set<string>;
   styles: ViteStyles;
@@ -45,7 +50,119 @@ export interface ViteInputs {
   ) => Promise<string | undefined>;
 }
 
-/** Keep authoring, peers, styles, and source confinement ahead of app transforms. */
+export function moklyViteFirstPlugin(
+  current: () => ViteInputs,
+  reports: VitePluginReports,
+  css: ViteCssTransform,
+): Plugin {
+  return {
+    name: "mokly-first",
+    enforce: "pre",
+    ...reports.hooks(current),
+    resolveId: {
+      order: "pre",
+      async handler(source, importer, options) {
+        if (delegatedViteResolve(source, importer, options.custom)) return;
+        const input = current();
+        source = viteId(source);
+        const inline = css.forId(source);
+        if (inline) return inline.id;
+        if (source === viteEntry || source === viteJsx) return source;
+        if (importer === viteEntry) {
+          const file = viteFile(source);
+          if (file && input.paths.configuredFile(file))
+            return input.paths.resolve(file);
+        }
+        if (
+          source.startsWith("mokly:runtime") ||
+          source.startsWith(cssModulePrefix)
+        ) {
+          const namespace = importer?.startsWith("\0mokly-authoring:")
+            ? "mokly-authoring"
+            : importer?.startsWith("\0mokly-style:")
+              ? "mokly-style"
+              : importer && viteStylesheet(viteFile(importer) ?? "")
+                ? "mokly-css"
+                : "";
+          if (!runtimeImportAllowed(source, namespace))
+            throw new Error("Mokly's generation runtime is reserved");
+          return {
+            id:
+              source === "mokly:runtime"
+                ? input.runtimeKey
+                : input.runtimeKey + source,
+            external: true,
+          };
+        }
+        const dispatch = viteHookResolver(this, options);
+        const resolve: ViteLookup["resolve"] = (id, from) =>
+          input.lookup.resolveFromHook(id, from, dispatch);
+        return (
+          input.styles.original(source, importer) ??
+          (await resolveViteLibrary(input, source, importer, resolve)) ??
+          resolveViteModule(input, source, importer, resolve)
+        );
+      },
+    },
+  };
+}
+
+/** Resolve protected library imports at both Vite's hook and the runner boundary. */
+export async function resolveViteLibrary(
+  input: ViteInputs,
+  source: string,
+  importer?: string,
+  resolve = input.lookup.resolve.bind(input.lookup),
+): Promise<string | undefined> {
+  if (source === "@mokly/mokly")
+    return (
+      "\0mokly-authoring:" +
+      (await authoringModulePath(
+        input.paths.sourceRoot,
+        viteFile(importer ?? "") ?? "",
+        input.paths,
+      ))
+    );
+  const react = viteReactImport(source, input.peers);
+  if (react) return react;
+  return input.styles.resolve(source, importer, resolve, input.external);
+}
+
+async function resolveViteModule(
+  { params, paths, external: native }: ViteInputs,
+  source: string,
+  importer: string | undefined,
+  resolve: ViteLookup["resolve"],
+) {
+  const resolution = await resolve(source, importer);
+  if (!resolution) return null;
+  const { resolved } = resolution;
+  const confined = viteFile(resolved.id);
+  if (!confined) return resolved;
+  await paths.dependencyUsage.resolved(
+    resolution.source,
+    importer
+      ? path.dirname(importer)
+      : path.resolve(params.sourceRoot, params.configurationDirectory),
+    confined,
+  );
+  if (viteStylesheet(confined))
+    return { ...resolved, external: false, id: viteCss(confined) };
+  const external =
+    !paths.repositoryOwned(confined) &&
+    (await native(resolution.source, importer));
+  return {
+    ...resolved,
+    external: false,
+    id: external
+      ? viteExternal(await paths.resolve(external))
+      : resolved.external && !paths.repositoryOwned(confined)
+        ? viteExternal(confined)
+        : resolved.id,
+  };
+}
+
+/** Provide Mokly's virtual source modules and record consumed files. */
 export function moklyVitePlugin(
   current: () => ViteInputs,
   css: ViteCssTransform,
@@ -53,83 +170,9 @@ export function moklyVitePlugin(
   return {
     name: "mokly",
     enforce: "pre",
-    async resolveId(source, importer) {
-      const { params, paths, runtimeKey, styles, lookup, peers } = current();
-      source = viteId(source);
-      const inline = css.forId(source);
-      if (inline) return inline.id;
-      if (source === viteEntry || source === viteJsx) return source;
-      if (source === "@mokly/mokly")
-        return (
-          "\0mokly-authoring:" +
-          (await authoringModulePath(
-            paths.sourceRoot,
-            viteFile(importer ?? "") ?? "",
-            paths,
-          ))
-        );
-      if (
-        source.startsWith("mokly:runtime") ||
-        source.startsWith(cssModulePrefix)
-      ) {
-        const namespace = importer?.startsWith("\0mokly-authoring:")
-          ? "mokly-authoring"
-          : importer?.startsWith("\0mokly-style:")
-            ? "mokly-style"
-            : importer && viteStylesheet(viteFile(importer) ?? "")
-              ? "mokly-css"
-              : "";
-        if (!runtimeImportAllowed(source, namespace))
-          throw new Error("Mokly's generation runtime is reserved");
-        return {
-          id: source === "mokly:runtime" ? runtimeKey : runtimeKey + source,
-          external: true,
-        };
-      }
-      if (source === "react/jsx-dev-runtime") return viteJsx;
-      if (/^(react|react-dom)(?:\/|$)/.test(source)) {
-        const peer = peers[source];
-        return typeof peer === "string" ? viteExternal(peer) : null;
-      }
-      const style = await styles.resolve(
-        source,
-        importer,
-        lookup,
-        current().external,
-      );
-      if (style) return style;
-      const resolution = await lookup.resolve(source, importer);
-      const resolved = resolution?.resolved;
-      if (!resolved) return null;
-      const file = viteFile(resolved.id);
-      if (!file) return resolved;
-      const confined = await paths.resolve(file);
-      await paths.dependencyUsage.resolved(
-        source,
-        importer
-          ? path.dirname(importer)
-          : path.resolve(params.sourceRoot, params.configurationDirectory),
-        confined,
-      );
-      if (viteStylesheet(confined))
-        return { ...resolved, external: false, id: viteCss(confined) };
-      const external =
-        !paths.repositoryOwned(confined) &&
-        (await current().external(source, importer));
-      return {
-        ...resolved,
-        external: false,
-        id: external
-          ? viteExternal(await paths.resolve(external))
-          : resolved.external && !paths.repositoryOwned(confined)
-            ? viteExternal(confined)
-            : confined + resolved.id.slice(file.length),
-      };
-    },
     async load(id) {
       const input = current();
       const inline = css.forId(id);
-      trackVitePluginInputs(this, input, inline?.report);
       const { params, paths } = input;
       if (id === viteEntry) return input.entry;
       if (id === viteJsx)
@@ -163,9 +206,6 @@ export function moklyVitePlugin(
         `import runtime from "mokly:runtime";\n` +
         cssModuleSource(name, "runtime")
       );
-    },
-    transform(_code, id) {
-      trackVitePluginInputs(this, current(), css.forId(id)?.report);
     },
   };
 }

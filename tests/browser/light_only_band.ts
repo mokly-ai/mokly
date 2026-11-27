@@ -1,7 +1,7 @@
 /**
  * The note that names a current light-only document's light page under
- * Dark: the reading frame's label, on the canvas and in the compact layout
- * alike. Any host whose shell still offers Dark can check it.
+ * Dark: the reading frame's label. Any host whose shell still offers Dark
+ * can check it.
  */
 
 import { expect, type Page } from "@playwright/test";

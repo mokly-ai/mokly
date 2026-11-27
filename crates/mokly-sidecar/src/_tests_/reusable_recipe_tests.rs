@@ -12,6 +12,7 @@ use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
 fn params() -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         renderer: None,
@@ -87,7 +88,13 @@ fn live_only_admission_requires_the_exact_marker_and_a_toolchain() {
             "fixture",
             Some("generation"),
         ),
-        (false, false, Some(PhysicalInput::FilePath), "fixture", None),
+        (
+            false,
+            false,
+            Some(PhysicalInput::FilePath),
+            "fixture",
+            Some("generation"),
+        ),
         (
             false,
             false,

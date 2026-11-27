@@ -47,6 +47,7 @@ pub(super) fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -
         root: "/repo".into(),
         side: SideInputs {
             dependency_aliases: Default::default(),
+            vite_inputs: None,
             source_root: "/repo".into(),
             repository_roots: vec!["/repo".into()],
             module_resolution: ModuleResolution::default(),

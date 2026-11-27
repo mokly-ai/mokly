@@ -1,0 +1,40 @@
+# An unusable preview verifier stops the API
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the branch `calummoore/preview-password-sign-in-jofl`, round 1 review, finding 2, "A legacy credential blocks preview startup": the blocked wider fix, option E of its check, which is option B here.
+- **Location:** `crates/mkc-config/src/preview.rs:50-56`, `crates/mkc-auth/src/preview_verifier.rs` (`PreviewVerifier::parse`), `crates/mkc-config/src/_tests_/preview_tests.rs`, `infra/docker/entrypoint.sh` (the `preview-sign-in` block), `docs/protocol/cloud/preview-sign-in.md`, section "Verifier", and `docs/protocol/cloud/preview-seed.md:46-51`, section "Contract With Main".
+- **Reason:** The recommended option reverses a startup rule of `docs/protocol/cloud/preview-sign-in.md`, and no user decision covers that change.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Verifier:** the scrypt string that lets a PR preview's API check the shared preview password without holding it. It starts like `$scrypt$ln=14,r=8,p=5$`, and a salt and a hash follow.
+  - **Startup rule:** the sentence of `docs/protocol/cloud/preview-sign-in.md`, section "Verifier", that a malformed verifier, or one outside the bounds, fails startup with a typed configuration error.
+  - **Seed:** the `mkc-api preview-seed` command that creates the shared account and the sample project of a preview. It loads the same settings as `serve`.
+- **Background:**
+  - A PR preview's API reads `MKC_PREVIEW_SIGN_IN_VERIFIER` at startup. The container entrypoint sets it from the file `/var/run/mokly-secrets/preview-sign-in`, which the namespace Secret `preview-sign-in` supplies.
+  - The release job of `main` writes that Secret, and the API image comes from the pull request. `docs/protocol/cloud/preview-seed.md:46-51` names the verifier format as part of the contract between the two.
+  - `crates/mkc-config/src/preview.rs:50-56` parses the value with `PreviewVerifier::parse`. The parser accepts only a well-formed string with r = 8, 1 ≤ p ≤ 8 and 1 ≤ ln ≤ 16. Any other value returns `PreviewSignInMalformed`. Startup then fails, and so does the seed.
+  - The startup rule states this behaviour. Its reason is that "a typing error in an operator's value must not take the API's memory". The plan of the branch `calummoore/preview-password-sign-in-jofl` recorded the bounds and the rule as its own design call, not as a user decision.
+  - On 2026-11-25 that branch fixed one case in `infra/docker/entrypoint.sh`. The old deploy wrote a 64-hex random value to the same key. The entrypoint now exports the mounted value only when it starts with `$scrypt$`. It ignores any other value with a warning that names the file, so the API starts and accepts no password.
+  - `docs/protocol/cloud/preview-seed.md:46-51` says that a PR that changes the contract "breaks its own seed or its own password sign-in until it merges".
+  - Without a verifier, the configuration answer reports `previewPassword: null`. Sign in then draws no password section, and the shared account signs in with an email link. The deploy already leaves this state when the store holds no valid verifier.
+  - On 2026-11-24 Cal accepted that a branch without the preview password change must merge `main` to deploy again. His words were "I don't care about backwards compat".
+- **Problem:** A value that starts with `$scrypt$` but that the pull request's parser refuses still stops the API and the seed. This happens when a pull request tightens the parser or its bounds, or when `main` starts to write a scrypt string that older parsers refuse. The whole preview then fails, not only its password sign-in.
+- **Impact if no action:** A verifier change in `main` stops the API of each labelled pull request that has not merged it, until that pull request merges `main`. The contract sentence of the seed page stays wrong.
+- **Root question:** What should a preview's API do when the value that reaches it is not a usable verifier, whichever deploy wrote it?
+- **Options:**
+  - **A.** Keep the startup rule and the entrypoint check. Correct `docs/protocol/cloud/preview-seed.md:46-51` to say that such a change stops the whole preview of an unmerged pull request. Effort: Small.
+  - **B.** In `crates/mkc-config/src/preview.rs`, treat a verifier that does not parse, or that is outside the bounds, as absent. Log a warning that names `MKC_PREVIEW_SIGN_IN_VERIFIER` and never the value. Keep the startup failure for a verifier without the email or without the `preview_sign_in` capability, so production still refuses every verifier. Change the startup rule and the startup tests in `crates/mkc-config/src/_tests_/preview_tests.rs`. A typing error in the local stack or a smoke script then warns instead of stopping the API. Effort: Small.
+- **Left out:**
+  - Fewer than three approaches are real, because the choice is only whether an unusable value stops the API or is ignored.
+  - A separate mount key for each verifier format. A scrypt value outside an older parser's bounds reaches the same key and still stops the API, so it fails the goal.
+  - Remove the legacy value during sync even when the store read fails. The entrypoint check already covers that value, and a value with the prefix gets no help from it.
+  - On a failed store read, validate the namespace copy and delete an invalid one. The deploy writes only values that its own check accepts, so this covers no remaining case.
+  - Reload the verifier while the API runs. It changes the rule that the API reads its settings at startup, and it does not decide what an unusable value means.
+- **Wider fix:** B. The API then handles every unusable value in one place, whichever deploy or format produced it.
+- **Previous examples:**
+  - The 64-hex value of the old deploy, which the entrypoint check of 2026-11-25 now ignores.
+  - On 2026-09-19 a stable API crash-looped after a mounted webhook secret reached it with 20 bytes. `plans/follow-ups/rollout-skips-secret-shape-checks.md` records that case.
+- **Recommendation:** B. A preview with an unusable verifier then stays usable with an email link, as with a missing verifier. The seed contract sentence also becomes true.
+- **Action:** ask the user, because option B reverses the startup rule of `docs/protocol/cloud/preview-sign-in.md`, and no user decision covers that change.

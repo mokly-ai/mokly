@@ -34,6 +34,7 @@ fn nested_exclusions_fail_before_a_missing_plugin_dependency() {
             .returns(Ok("renderer.css".into())),
     ));
     let dependencies = ["/repo/missing", "/repo/renderer.css"].map(|path| Dependency {
+        source: None,
         kind: DependencyKind::File,
         path: path.into(),
         plugin: Some("inliner".into()),
@@ -41,6 +42,7 @@ fn nested_exclusions_fail_before_a_missing_plugin_dependency() {
     });
     let side = SideInputs {
         dependency_aliases: Default::default(),
+        vite_inputs: None,
         source_root: "/repo".into(),
         repository_roots: vec!["/repo".into()],
         module_resolution: ModuleResolution::default(),
@@ -99,10 +101,12 @@ fn package_exclusions_use_selected_logical_names_before_repository_names() {
             configuration_directory: "app".into(),
             dependency_roots: vec!["/repo/app/node_modules".into(), "/repo/node_modules".into()],
             dependency_aliases: Default::default(),
+            vite_inputs: None,
             module_resolution: ModuleResolution::default(),
             context: "test".into(),
         };
         let dependencies = [Dependency {
+            source: None,
             kind: DependencyKind::File,
             path: physical.into(),
             plugin: Some("inliner".into()),

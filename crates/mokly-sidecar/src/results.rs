@@ -12,6 +12,7 @@ use crate::postcss_evidence::Evidence;
 use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::resolution_plan::ResolutionPlan;
 use crate::usage::{InstanceDraft, SlotDraft};
+use crate::vite_env::ViteEnvInput;
 
 /// Package version reported during hello.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -38,8 +39,18 @@ pub struct Module {
     pub imported_asset: Option<bool>,
     /// Repository-relative source path.
     pub path: String,
-    /// Resolved logical paths in source order.
+    /// Resolved logical paths in metafile record order on the esbuild path.
+    /// Vite lists static imports and re-exports first, then dynamic imports.
+    /// Vite keeps source order within each group.
     pub imports: Vec<String>,
+    /// A bundled import reached this module by package name.
+    #[serde(
+        default,
+        rename = "packageImport",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub package_import: Option<bool>,
 }
 
 /// An unevaluated bundle's module graph.
@@ -66,7 +77,7 @@ pub struct Bundle {
     #[serde(skip)]
     #[ts(skip)]
     pub cache: Option<CacheOutcome>,
-    /// Worker-observed esbuild operations for this request; never crosses the wire.
+    /// Compile events observed by the worker for this request. This count stays off the wire.
     #[serde(skip)]
     #[ts(skip)]
     pub compile_count: u64,
@@ -96,6 +107,25 @@ pub struct Render {
     pub slots: Vec<SlotDraft>,
 }
 
+/// A story fragment or a failure in the story's own work.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(untagged)]
+#[ts(rename = "RenderStoryResult")]
+pub enum StoryRender {
+    /// Successful markup and render evidence.
+    Rendered(Render),
+    /// A story failure that leaves the sidecar generation usable.
+    Failed {
+        /// Stories file and named export, including for a parent view.
+        #[serde(rename = "storyId")]
+        story_id: String,
+        /// The Storybook display name.
+        name: String,
+        /// The message with filesystem paths in logical source space.
+        reason: String,
+    },
+}
+
 /// Complete page document; the core applies the document safety rules.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[ts(rename = "PageResult")]
@@ -113,8 +143,10 @@ pub struct Page {
 pub struct ViteCss {
     /// Transformed CSS, before Mokly's asset rewriting and delivery.
     pub text: String,
-    /// Vite's original local-to-scoped exports.
+    /// Vite's default map from local class names to scoped names.
     pub class_map: BTreeMap<String, String>,
+    /// Named bindings in Vite's stylesheet module.
+    pub named_exports: BTreeMap<String, String>,
     /// Digest of the selected stylesheet bytes.
     pub source_digest: String,
     /// Files reached by this transform, including files read by `composes`.
@@ -123,6 +155,10 @@ pub struct ViteCss {
     pub imported_by: BTreeMap<String, String>,
     /// Setup and resolution inputs, including missing watch candidates.
     pub metadata_inputs: BTreeMap<String, Option<String>>,
+    /// Dotenv paths used for reuse validation, with their logical identity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub env_inputs: Option<Vec<ViteEnvInput>>,
 }
 
 /// PostCSS dependency kind used by the watcher.
@@ -135,6 +171,23 @@ pub enum DependencyKind {
     Directory,
 }
 
+/// How a file entered the PostCSS dependency inventory.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "kebab-case")]
+#[ts(rename = "PostcssDependencySource")]
+pub enum DependencySource {
+    /// A PostCSS bundle included this file through an import.
+    BundledImport,
+    /// A PostCSS bundle included this file through a package-name import.
+    BundledPackageImport,
+    /// The worker loaded this module outside the bundle.
+    Node,
+    /// Mokly's synchronous require loaded this module by package name.
+    NodePackageRequire,
+    /// A plugin reported this exact file.
+    Plugin,
+}
+
 /// A file or directory reported by consumer PostCSS.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct Dependency {
@@ -142,6 +195,10 @@ pub struct Dependency {
     pub kind: DependencyKind,
     /// Source path.
     pub path: String,
+    /// Load or report evidence for the warning check, when available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source: Option<DependencySource>,
     /// Plugin name used in dependency diagnostics.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

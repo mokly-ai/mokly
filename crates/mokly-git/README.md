@@ -15,7 +15,7 @@ the checkout with it.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
 - Validate the checkout root before resolving a merge base.
-- Read changed paths, tree metadata, and checkout-converted regular source files.
+- Read changed paths, tree metadata, raw link targets, and checkout-converted source files.
 - Extract exact commit sources with the pinned commit's checkout attributes.
 - Identify the effective checkout settings of a commit for source cache keys
   and base freshness checks.
@@ -36,13 +36,13 @@ keep their own category.
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
 `rev-list` with lazy fetch disabled, read-only `config`, `check-attr`,
-`ls-tree`, and the two `ls-files` listings. `ls-tree` and the listings select
-it only in a repository without a promisor remote.
+`ls-tree`, `cat-file blob` for link targets, and the `ls-files` listings. The
+tree, link, and file listings select it in repositories without promisor remotes.
 
-The two listings are the working-path candidates and the untracked changed
-paths. Both pass `-c core.fsmonitor=false`, so Git starts no file system
-monitor hook or daemon for them. One listing request builds both, so the
-override and the mode stay together. The
+The listings find working-path candidates, untracked changed paths, index
+membership, and working path statuses. They pass `-c core.fsmonitor=false`, so Git starts no
+file system monitor hook or daemon for them. They share a request builder
+that selects the override and process mode. The
 [file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
 reason and the Git source evidence.
 
@@ -50,7 +50,7 @@ The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
 first list metadata without blob sizes. They fetch missing requested blobs and
 attribute files before listing sizes. A Git build that ignores the lazy-fetch
 control can still fetch a missing tree during a tree query or sparse-index
-listing. So `ls-tree` and both listings keep `FullTree` when the repository has
+listing. So `ls-tree` and the listings keep `FullTree` when the repository has
 a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
 `extensions.partialClone` with one plain `config` command. The opened
 repository keeps the promisor remotes for its tree reads, its listings, and its
@@ -77,12 +77,23 @@ before `merge-base`. Changed paths include committed, staged, unstaged, and
 untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
 
+`Repository::working_path_statuses` classifies a batch of `RepoPath`s, with
+one `WorkingPathStatus` per input in order. It reports exact tracked files,
+untracked and unignored files, ignored files, the directory of an unignored
+nested checkout, or the directory of a tracked submodule. It checks the
+index for exact entries and gitlinks. It uses bounded `ls-files` queries to
+check Git's standard excludes and nested checkout boundaries. A written
+path through a symbolic link uses the first link's status. Pass the target
+as a separate path to check it. Empty input starts no Git command.
+
 Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
 disabled. One serialized `fetch --stdin` request retrieves each missing set
 before conversion. Failed fetches name the remote and a recovery command. Tree
 listings retain directory and link modes. Regular files and all metadata nodes
 have independent count bounds.
+`Repository::read_link` reads the raw target of a listed link entry within the
+requested byte bound.
 
 Byte reads, extraction, and digests share a commit-pinned `cat-file --filters`
 context in the real repository. `--attr-source` selects the base attributes,
@@ -216,8 +227,9 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/batches.rs`](./src/batches.rs) provides `split`, which splits path
   arguments into ordered, bounded batches.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
-  `GitRepositories`, and `Repository`, which validate a checkout and read merge
-  bases, changed paths, trees, blobs, and archives.
+  `GitRepositories`, `Repository`, and `WorkingPathStatus`. They validate a
+  checkout and read merge bases, changed paths, path statuses, trees, blobs,
+  and archives.
   [`src/repository_access.rs`](./src/repository_access.rs) implements
   `Repository` for the checkout that `GitRepositories::open` returns.
 - [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and

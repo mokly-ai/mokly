@@ -117,12 +117,7 @@ impl Pool {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        let restored = slot.worker.request(
-            &request,
-            self.options
-                .timeout_ms
-                .unwrap_or_else(|| request.call.timeout_ms()),
-        );
+        let restored = slot.worker.request(&request, self.deadline(&request.call));
         match restored {
             Ok(_) => {
                 slot.generations.insert(generation, 0);

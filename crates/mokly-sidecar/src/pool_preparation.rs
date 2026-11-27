@@ -13,7 +13,7 @@ use crate::pool_state::{Slot, State};
 use crate::results::Module;
 use crate::reusable_recipe::ReusableRecipe;
 use crate::source_digests::rules_out;
-use crate::wire::Request;
+use crate::wire::{MethodResult, Request};
 
 /// Inputs that must already be installed before a generation call runs.
 pub(super) struct Prerequisites {
@@ -218,15 +218,19 @@ impl Pool {
         Ok(())
     }
 
-    /// Send one call outside the request queue and discard its result; only a warm-up is quiet.
-    pub(super) fn prerequisite(&self, slot: &mut Slot, call: Call, quiet: bool) -> Result<()> {
+    /// Send one call outside the request queue. Only a warm-up is quiet.
+    pub(super) fn prerequisite(
+        &self,
+        slot: &mut Slot,
+        call: Call,
+        quiet: bool,
+    ) -> Result<MethodResult> {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
+        let deadline = self.deadline(&call);
         slot.worker
-            .request(&Request { id: 1, call, quiet }, deadline)?;
-        Ok(())
+            .request(&Request { id: 1, call, quiet }, deadline)
     }
 }
 

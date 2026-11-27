@@ -3,10 +3,12 @@ import path from "node:path";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { fileDigest } from "./file-digests.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteCssTransform } from "./vite-css-transform.js";
+import type { ViteStylesheetSnapshot } from "./vite-css-transform.js";
+import { FreshViteWorker } from "./vite-errors.js";
 import { viteExternalResolver } from "./vite-external.js";
 import {
   changedViteInputs,
@@ -14,22 +16,20 @@ import {
 } from "./vite-invalidation.js";
 import type { ViteSnapshot } from "./vite-invalidation.js";
 import type { loadVite } from "./vite-peers.js";
-import { moklyVitePlugin } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { captureReactPeers } from "./vite-react-peers.js";
 import { ViteLookup } from "./vite-resolution.js";
-import { setupStamp, viteSetup } from "./vite-setup.js";
+import { setupSnapshot } from "./vite-setup-snapshot.js";
+import { viteSetup } from "./vite-setup.js";
 import { ViteStyles } from "./vite-styles.js";
 
-interface Setup {
-  server: Awaited<ReturnType<typeof viteSetup>>["server"];
-  files: string[];
+interface Setup extends Awaited<ReturnType<typeof viteSetup>> {
   key: string;
-  stamp: string;
   snapshot?: ViteSnapshot;
   styles: ViteStyles;
   lookup: ViteLookup;
-  stylesheetReports: Map<string, ReadonlyMap<string, string | null>>;
+  stylesheets: Map<string, ViteStylesheetSnapshot>;
+  observed: Map<string, string | null>;
 }
 
 export function viteModulePaths(params: BundleParams): Promise<ModulePaths> {
@@ -48,6 +48,7 @@ export class ViteContext {
   readonly css = new ViteCssTransform();
   private setup: Setup | undefined;
   private input: ViteInputs | undefined;
+  private setupStarted = false;
 
   constructor(private readonly diagnostic: (line: string) => void) {}
 
@@ -68,7 +69,7 @@ export class ViteContext {
       runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
       entry: entry ?? "",
       files: new Map(),
-      pluginInputs: new Set(),
+      pluginInputs: new Map(),
       diagnostic: this.diagnostic,
       cssModules: new Set(),
       styles: new ViteStyles(),
@@ -77,41 +78,75 @@ export class ViteContext {
       peers: {},
     };
     this.input = input;
+    const {
+      entryFiles: _entryFiles,
+      storiesFiles: _storiesFiles,
+      evaluation: _evaluation,
+      viteInputs,
+      ...settings
+    } = params;
+    const { rebuildFiles: _rebuildFiles, ...setupInputs } = viteInputs ?? {};
     const key = JSON.stringify([
-      paths.sourceRoot,
-      directory,
+      {
+        ...settings,
+        sourceRoot: paths.sourceRoot,
+        configurationDirectory: directory,
+        repositoryRoots: paths.repositoryRoots,
+        viteInputs: setupInputs,
+      },
       paths.dependencyRoots,
       paths.dependencyRoot,
-      paths.repositoryRoots,
       Object.entries(require.snapshot()).sort(([left], [right]) =>
         left < right ? -1 : left > right ? 1 : 0,
       ),
     ]);
-    const changed = await changedViteInputs(this.setup?.snapshot);
-    if (
-      this.setup &&
-      (this.setup.key !== key ||
-        changed.metadata ||
-        this.setup.stamp !== (await setupStamp(this.setup.files, directory)) ||
-        (await changedStylesheets(this.setup.stylesheetReports)))
-    )
-      await this.dispose();
+    const previous = this.setup?.key === key ? this.setup : undefined;
+    if (entry !== undefined) previous?.ownedRebuildFiles.clear();
+    const requested = params.viteInputs?.rebuildFiles ?? [];
+    const requestedNames = new Set(requested);
+    const ownedRebuildFiles = previous?.ownedRebuildFiles ?? new Set<string>();
+    for (const name of ownedRebuildFiles)
+      if (!requestedNames.has(name)) ownedRebuildFiles.delete(name);
+    const rebuild = requested.filter((name) => !ownedRebuildFiles.has(name));
+    const changed = await changedViteInputs(
+      previous?.snapshot,
+      previous?.stylesheets.values() ?? [],
+      previous?.observed ?? new Map(),
+    );
+    const reloadSetup =
+      !previous ||
+      changed.metadata ||
+      previous.state.stamp !==
+        (await setupSnapshot({ ...previous.files, rebuild }, directory, paths))
+          .stamp;
+    if (this.setupStarted && reloadSetup) throw new FreshViteWorker();
+    if (previous) {
+      await withViteConfigResolution(previous.lookup, () =>
+        previous.watchEvents.dispatch(previous.server, changed.events),
+      );
+      if (changed.stylesheetDependenciesChanged) await this.dispose();
+    }
     if (!this.setup) {
+      this.setupStarted = true;
+      // Node can reuse config helpers without running either module hook.
       const setup = await viteSetup(
         vite,
         directory,
-        moklyVitePlugin(() => this.input!, this.css),
+        () => this.input!,
         input.lookup,
-        () => this.input!.peers,
         this.css,
+        { ...params.viteInputs, rebuildFiles: rebuild },
+        this.diagnostic,
+        previous?.files.configuration,
       );
       this.setup = {
         ...setup,
         key,
-        stamp: await setupStamp(setup.files, directory),
+        ownedRebuildFiles,
         styles: input.styles,
         lookup: input.lookup,
-        stylesheetReports: new Map(),
+        stylesheets: new Map(),
+        observed: new Map(),
       };
     }
     const setup = this.setup;
@@ -122,9 +157,23 @@ export class ViteContext {
     if (entry !== undefined) {
       input.external = viteExternalResolver(vite, setup.server, input.lookup);
       input.peers = await captureReactPeers(input.lookup);
-      invalidateViteModules(setup.server, setup.snapshot, changed);
+    }
+    if (setup === previous) {
+      for (const [file, digest] of changed.files)
+        setup.observed.set(file, digest);
+      if (entry !== undefined || changed.files.size || changed.directories.size)
+        invalidateViteModules(setup.server, setup.snapshot, changed);
+      for (const [directory, names] of changed.directories)
+        setup.snapshot?.directories.set(directory, names);
+    } else if (entry !== undefined) {
+      invalidateViteModules(setup.server, undefined, changed);
+    }
+    if (entry !== undefined) {
       for (const [file, bytes] of setup.snapshot?.files ?? [])
-        if (setup.snapshot?.metadata[file] !== undefined)
+        if (
+          setup.snapshot?.metadata[file] !== undefined &&
+          !setup.snapshot.reports.has(file)
+        )
           input.files.set(file, bytes);
     }
     return { setup, input, directory };
@@ -133,15 +182,7 @@ export class ViteContext {
   async dispose(): Promise<void> {
     const setup = this.setup;
     this.setup = undefined;
-    await setup?.server.close();
+    if (setup)
+      await withViteConfigResolution(setup.lookup, () => setup.server.close());
   }
-}
-
-async function changedStylesheets(
-  reports: Setup["stylesheetReports"],
-): Promise<boolean> {
-  const files = new Map([...reports.values()].flatMap((report) => [...report]));
-  for (const [file, digest] of files)
-    if ((await fileDigest(file)) !== digest) return true;
-  return false;
 }

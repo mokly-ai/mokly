@@ -4,7 +4,7 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 
 import type { BundleParams } from "../../../packages/mokly/src/generated/sidecar/BundleParams.js";
-import { bundleParams } from "../../helpers/sidecar.js";
+import { bundleParams, startSidecar } from "../../helpers/sidecar.js";
 
 interface ViteFixture {
   root: string;
@@ -34,6 +34,30 @@ export async function viteFixture(context: TestContext): Promise<ViteFixture> {
     storiesFiles: [],
   });
   return { root, parent, params, output: path.join(root, ".context/output") };
+}
+
+export async function viteFixtureWorker(
+  context: TestContext,
+  root: string,
+): Promise<{
+  readonly sidecar: ReturnType<typeof startSidecar>;
+  replaceWorker(): Promise<void>;
+}> {
+  const start = async () => {
+    const worker = startSidecar(context, root);
+    await worker.call("hello");
+    return worker;
+  };
+  let worker = await start();
+  return {
+    get sidecar() {
+      return worker;
+    },
+    async replaceWorker() {
+      await worker.call("shutdown");
+      worker = await start();
+    },
+  };
 }
 
 export async function noViteProject(

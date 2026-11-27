@@ -105,12 +105,27 @@ same logical name.
 The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 applies to bundled imports of bare package specifiers, including JavaScript
 imports of CSS. It also covers missing build targets for requires that Node
-loads. Both bundle capture modes keep workspace
-layout probes in private reuse evidence, including when no source matches.
+loads. Both bundle capture modes keep the workspace layout probes of every
+layout that the rule tries in private reuse evidence, including when no
+source matches. Each `package.json` that the rule reads to find a package
+root and its `name` enters the same evidence, because an entry of
+`moduleResolution.sourcePackages` applies by that `name`. In marked edit
+evidence, build files, export targets, and source files that a lookup checks
+for presence use path-only entries. Manifests and layout files carry digests.
+A build file known to be a target of the restored Node `require` when the
+bundle records the lookup also carries a digest. Build files read by a
+synchronous PostCSS `require` carry digests in the stylesheet input evidence.
 Layout files and package manifests used for build targets also enter the
-bundle metadata. The bundle keeps absent build and source candidates as
-watch inputs. Selected source contents enter through the module graph and
-stylesheet inputs.
+bundle metadata. The bundle keeps the absent build and source candidates of
+every tried layout as watch inputs. Selected source contents enter through
+the module graph and stylesheet inputs.
+
+Under the [Vite adapter](./mokly-vite-adapter.md#replaced-settings), the rule
+applies to the file that the project's Vite setup selects, on the head and the
+base. It covers a catalogue import, an import in the Vite config file, a
+JavaScript import of a package CSS file, and a stylesheet `@import` of a
+package CSS file. It also covers missing build targets for modules that Node
+loads for the Vite config.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected preview

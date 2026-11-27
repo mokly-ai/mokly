@@ -21,10 +21,10 @@ pub(super) fn start(app: &Harness, workspace: &Value, id: i64, candidate: bool) 
     );
     app.queries(&mut |queries| {
         let stored = queries
-            .github_oauth_flow(&hash(flow["state"].as_str().unwrap()))
-            .unwrap()
+            .github_oauth_flow(&hash(flow["state"].as_str().unwrap()))?
             .unwrap();
         assert_eq!(stored.installation_id, candidate.then_some(id));
+        Ok(())
     });
     if candidate {
         assert!(

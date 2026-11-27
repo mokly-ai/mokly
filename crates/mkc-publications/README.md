@@ -150,6 +150,9 @@ the organization lock is the only way to make a lease live. The store enforces
 two live
 attempts per organization and one MiB of retained output. Infrastructure
 failures retry four times; a committed publication always wins over failure.
+Every committed infrastructure retry or exhaustion, including lease recovery,
+logs one safe warning, as the
+[lifecycle](../../docs/protocol/cloud/cloud-build-lifecycle.md#claims-leases-and-retries) says.
 Publish failures follow the [lifecycle mapping](../../docs/protocol/cloud/cloud-builds.md#claims-leases-and-retries),
 including the Mokly 0.18.0 failure codes.
 The worker matches typed `MoklyCliCode` values from `mkc-build-interface`.
@@ -272,6 +275,7 @@ preview-seed exchanges.
 - [check_rerequests.rs](./src/check_rerequests.rs) — `CheckRerequests` and `PublicationCheckRerequests`, the atomic consumption of verified rerequest marks into fresh due check events.
 - [check_recovery.rs](./src/check_recovery.rs) — `CheckRecovery`, the dead-letter requeue and count.
 - [build_scheduler.rs](./src/build_scheduler.rs) and [build_worker/service.rs](./src/build_worker/service.rs) — `BuildScheduler`, the query-only scheduling callback that rechecks eligibility and supersedes older builds, and `BuildWorker`, which claims, runs, renews and finalizes one durable build attempt.
+- [build_worker/outcome.rs](./src/build_worker/outcome.rs) and [build_worker/reason.rs](./src/build_worker/reason.rs) — `finish`, which maps a runner and upload outcome to an `Ending`, whose infrastructure variant must carry the safe reason that `reason::log` writes after the commit.
 - [build_check_worker.rs](./src/build_check_worker.rs), [build_reconciliation.rs](./src/build_reconciliation.rs) and [build_maintenance.rs](./src/build_maintenance.rs) — `BuildChecksWorker`, the build check outbox delivery; `BuildReconciler`, the cleanup of orphaned managed sandboxes; and `BuildMaintenance`, the terminal-build pruning and build check dead-letter requeue.
 - [retention.rs](./src/retention.rs) and [garbage_collection.rs](./src/garbage_collection.rs) — `RetentionWorker` and `GarbageCollector`: the abandoned-attempt recovery, failed-attempt pruning and expired-grant removal, each candidate rechecked in its own transaction, and the fenced blob collection that claims a tombstone, deletes the exact incarnation outside the transaction, removes the row, then sweeps aged objects with no matching `BlobKey` row.
 - [maintenance.rs](./src/maintenance.rs) — `PublicationMaintenance` and `Maintenance`: the complete cycle that exhausts both workers, rejects stalled cursors and returns the `MaintenanceReport` counts.

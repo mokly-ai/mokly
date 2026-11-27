@@ -4,6 +4,7 @@ use mokly_model::axes::ColorScheme;
 use serde_json::{Value, json};
 
 use crate::config_validation::{CONFIG_SCHEMA, parse};
+use crate::diagnostic::Code;
 use crate::error::CatalogueError;
 
 #[test]
@@ -111,4 +112,128 @@ fn unknown_nested_fields_keep_their_exact_key_location() {
     };
     assert_eq!(issue.message, "unknown configuration field: extra");
     assert_eq!(issue.location.unwrap().line, 2);
+}
+
+#[test]
+fn source_packages_normalize_build_and_source_folders_and_keep_false() {
+    let value = json!({"moduleResolution":{"sourcePackages":{
+        "@acme/ui":{"esm/":"./source/","./cjs":".","dist/esm":"code//ui/."},
+        "legacy":false
+    }}});
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    assert!(jsonschema::validator_for(&schema).unwrap().is_valid(&value));
+    let config = parse(&value.to_string(), "mokly.config.json").unwrap();
+    assert_eq!(
+        serde_json::to_value(config.module_resolution.unwrap()).unwrap()["sourcePackages"],
+        json!({"@acme/ui":{"esm":"source","cjs":".","dist/esm":"code/ui"},"legacy":false})
+    );
+}
+
+#[test]
+fn source_packages_accept_names_with_npm_punctuation() {
+    let packages = json!({
+        "@acme/-theme": false,
+        "@acme~/ui": {"esm": "source"},
+        "theme(": false,
+    });
+    let value = json!({"moduleResolution":{"sourcePackages":packages}});
+    let parsed = parse(&value.to_string(), "mokly.config.json")
+        .map(|config| {
+            serde_json::to_value(config.module_resolution).unwrap()["sourcePackages"].clone()
+        })
+        .map_err(|error| error.to_string());
+    assert_eq!(parsed, Ok(packages));
+}
+
+#[test]
+fn source_packages_reject_invalid_entries_with_the_setting_and_config_path() {
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    let validator = jsonschema::validator_for(&schema).unwrap();
+    for packages in [
+        json!({"./ui":false}),
+        json!({"@acme/ui/button":false}),
+        json!({"ui":true}),
+        json!({"ui":{}}),
+        json!({"ui":{"././":"source"}}),
+        json!({"ui":{"":"source"}}),
+        json!({"ui":{"/esm":"source"}}),
+        json!({"ui":{"dist/../esm":"source"}}),
+        json!({"ui":{"dist/node_modules/esm":"source"}}),
+        json!({"ui":{"esm":""}}),
+        json!({"ui":{"esm":"/source"}}),
+        json!({"ui":{"esm":"C:/source"}}),
+        json!({"ui":{"esm":"src\\ui"}}),
+        json!({"ui":{"esm":"src/../ui"}}),
+        json!({"ui":{"esm":"src/node_modules"}}),
+    ] {
+        let value = json!({"moduleResolution":{"sourcePackages":packages}});
+        assert!(!validator.is_valid(&value), "schema accepted {value}");
+        let issue = source_packages_issue(&value.to_string());
+        assert!(
+            issue.message.starts_with("moduleResolution.sourcePackages"),
+            "{value}: {}",
+            issue.message
+        );
+    }
+}
+
+#[test]
+fn source_packages_reject_build_folders_with_two_spellings() {
+    let text =
+        r#"{"moduleResolution":{"sourcePackages":{"@acme/ui":{"esm":"source","./esm":"other"}}}}"#;
+    let issue = source_packages_issue(text);
+    assert!(
+        issue.message.starts_with("moduleResolution.sourcePackages")
+            && issue.message.contains("duplicate build folder \"esm\""),
+        "{text}: {}",
+        issue.message
+    );
+}
+
+#[test]
+fn source_packages_keep_the_last_value_of_a_repeated_build_folder() {
+    let text =
+        r#"{"moduleResolution":{"sourcePackages":{"@acme/ui":{"esm":"source","esm":"other"}}}}"#;
+    let packages = parse(text, "mokly.config.json")
+        .map(|config| {
+            serde_json::to_value(config.module_resolution).unwrap()["sourcePackages"].clone()
+        })
+        .map_err(|error| error.to_string());
+    assert_eq!(packages, Ok(json!({"@acme/ui":{"esm":"other"}})));
+}
+
+#[test]
+fn repeated_color_schemes_keep_the_last_value_with_source_packages() {
+    let text = r#"{"colorSchemes":["light"],"colorSchemes":["light","dark"],"moduleResolution":{"sourcePackages":{}}}"#;
+    let schemes = parse(text, "mokly.config.json")
+        .map(|config| config.color_schemes)
+        .map_err(|error| error.to_string());
+    assert_eq!(
+        schemes,
+        Ok(Some(vec![ColorScheme::Light, ColorScheme::Dark]))
+    );
+}
+
+#[test]
+fn shipped_schema_describes_source_packages_at_the_field() {
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA).unwrap();
+    let description = schema
+        .pointer("/properties/moduleResolution/properties/sourcePackages/description")
+        .and_then(Value::as_str);
+    assert!(
+        description.is_some_and(|text| !text.trim().is_empty()),
+        "the shipped schema must expose editor help for moduleResolution.sourcePackages"
+    );
+}
+
+fn source_packages_issue(text: &str) -> crate::diagnostic::Issue {
+    let CatalogueError::Config(issue) = parse(text, "config/mokly.config.json").unwrap_err() else {
+        panic!("expected a configuration error for {text}")
+    };
+    assert_eq!(issue.code, Code::ConfigInvalid, "{text}");
+    assert_eq!(
+        issue.location.as_ref().unwrap().path,
+        "config/mokly.config.json"
+    );
+    issue
 }

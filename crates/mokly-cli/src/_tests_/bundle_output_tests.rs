@@ -16,6 +16,7 @@ use super::{Reported, Unavailable};
 fn params() -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec![],
         renderer: None,

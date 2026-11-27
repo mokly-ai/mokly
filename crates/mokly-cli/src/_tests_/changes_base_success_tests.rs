@@ -120,6 +120,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                 }),
                 generation: "base-bundle".into(),
                 modules: vec![Module {
+                    package_import: None,
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),

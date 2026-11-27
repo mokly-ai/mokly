@@ -44,6 +44,7 @@ use crate::preview_seed::factory::{SeedComposer, SystemSeedComposer};
 use crate::preview_seed::service::PreviewSeeder;
 use crate::publishing::{PublishingFactory, SystemPublishingFactory};
 use crate::upload::UploadHandler;
+use crate::worker_intervals::WorkerIntervals;
 
 /// Running API behavior, independent of concrete wiring.
 pub trait Application: Send + Sync {
@@ -76,6 +77,8 @@ pub struct ConfiguredApplicationFactory {
     pub runtime: Arc<dyn Runtime>,
     /// Build provider factory; tests inject a runner without E2B access.
     pub builds: Arc<dyn BuildProviderFactory>,
+    /// Worker loop pauses; production uses the defaults.
+    pub intervals: WorkerIntervals,
 }
 
 pub(crate) struct ApiApplication {
@@ -90,6 +93,7 @@ pub(crate) struct ApiApplication {
     pub(crate) billing_worker: Option<Arc<dyn BillingDeliveryWorker>>,
     pub(crate) seat_worker: Option<Arc<dyn SeatReconciler>>,
     pub(crate) upload: Arc<dyn UploadHandler>,
+    pub(crate) intervals: WorkerIntervals,
 }
 
 impl ApplicationFactory for SystemApplicationFactory {
@@ -105,6 +109,7 @@ impl Default for ConfiguredApplicationFactory {
             billing: Arc::new(SystemBillingProviderFactory),
             runtime: Arc::new(SystemRuntime),
             builds: Arc::new(SystemBuildProviderFactory),
+            intervals: WorkerIntervals::default(),
         }
     }
 }
@@ -152,7 +157,7 @@ impl ConfiguredApplicationFactory {
             preview_sign_in: settings
                 .preview_sign_in
                 .as_ref()
-                .map(|config| PreviewSignIn::new(&config.secret, config.email.clone())),
+                .map(|config| PreviewSignIn::new(config.email.clone(), config.verifier.clone())),
         });
         let publishing = SystemPublishingFactory.create(
             &settings.publications,
@@ -262,6 +267,7 @@ impl ConfiguredApplicationFactory {
                 billing,
                 access: publishing.access,
                 viewer: publishing.viewer,
+                preview_hash_slots: Default::default(),
             }),
             github_worker: integration.worker,
             check_worker: integration.checks,
@@ -270,6 +276,7 @@ impl ConfiguredApplicationFactory {
             billing_worker,
             seat_worker,
             upload: publishing.upload,
+            intervals: self.intervals,
         })
     }
 }

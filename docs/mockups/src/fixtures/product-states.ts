@@ -124,6 +124,22 @@ export const fieldRefusals = {
    * the field the form named for the refusal.
    */
   tokenName: "Check the values and try again.",
+  /**
+   * What sign in's Password field says when the API refused the password: the
+   * shared sentence of that refusal, on the field the section names for it.
+   */
+  password: "This password isn’t valid.",
+} as const;
+
+/**
+ * Sign in's password section, which a deployment draws when its configuration
+ * answer names a shared account: that account, and the password the reader
+ * typed, which is visibly not a credential. What the Password field says when
+ * the API refused it is `fieldRefusals.password`.
+ */
+export const previewPassword = {
+  account: "preview@mokly.ai",
+  typed: "mockup-password-not-a-credential",
 } as const;
 
 /** Address-field recoveries that land with the readable-address UI milestone. */

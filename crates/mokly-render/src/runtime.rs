@@ -16,6 +16,7 @@ use mokly_graph::document_store::DocumentStore;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use mokly_graph::render_inputs::RenderKeys;
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
+use mokly_graph::types::RenderGeneration;
 use mokly_graph::workers::RenderWorkers;
 use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
@@ -30,8 +31,11 @@ use crate::postcss_cache::CssCache;
 use crate::side;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
+use crate::vite_base_env::WorkingEnvInputs;
 
 static CONTEXT_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
+type ViteInventory = Option<(PathBuf, Weak<dyn RenderGeneration>)>;
 
 /// Definition and graph factories share one sidecar pool and one fragment cache.
 #[derive(Clone)]
@@ -80,6 +84,8 @@ pub struct Runtime {
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
     pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
     pub(crate) render_keys: Option<Arc<Mutex<Weak<RenderKeys>>>>,
+    pub(crate) vite_base_env: Option<Arc<WorkingEnvInputs>>,
+    pub(crate) vite_inventory: Arc<Mutex<ViteInventory>>,
 }
 
 impl Runtime {
@@ -228,6 +234,8 @@ impl Runtime {
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
             edit_plans: None,
             render_keys: None,
+            vite_base_env: None,
+            vite_inventory: Arc::default(),
         }
     }
 
@@ -237,6 +245,7 @@ impl Runtime {
             self.base.as_ref(),
             CONTEXT_SEQUENCE.fetch_add(1, Ordering::Relaxed),
         );
+        side.vite_inputs = crate::bundle_inputs::vite_setup(self, config);
         let mut roots = Vec::new();
         let ancestors = ancestor_roots::directories(&side.configuration_directory);
         for (original, root) in side.dependency_roots.into_iter().enumerate() {

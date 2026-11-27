@@ -1,11 +1,11 @@
 //! Confined CSS assets and physical alias inventory.
 
+use mokly_content_types::{stylesheet_content_type, stylesheet_extensions};
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, Node};
 
 use crate::compiler::Preparation;
 use crate::error::{AssetFailure, CssError, Result};
-use crate::imported_assets::{stylesheet_content_type, stylesheet_extensions};
 use crate::paths;
 use crate::types::OpaqueAsset;
 
@@ -56,7 +56,32 @@ impl Preparation<'_> {
                     self.result.repository_aliases.insert(identity.clone());
                 }
                 self.result.inputs.insert(identity.clone(), bytes.to_vec());
-                self.result.imported_by.insert(identity, importer.into());
+                self.result
+                    .imported_by
+                    .entry(identity)
+                    .and_modify(|origin| origin.stylesheet = importer.into())
+                    .or_insert_with(|| importer.into());
+            }
+        }
+    }
+
+    pub(crate) fn record_package_import(&mut self, path: &str) {
+        let root = &self.compiler.repo_root;
+        let identity = self
+            .compiler
+            .tree
+            .project(&root.join(path))
+            .ok()
+            .flatten()
+            .and_then(|node| {
+                node.identity
+                    .strip_prefix(root)
+                    .ok()
+                    .map(|name| name.to_string_lossy().replace('\\', "/"))
+            });
+        for name in [Some(path), identity.as_deref()].into_iter().flatten() {
+            if let Some(origin) = self.result.imported_by.get_mut(name) {
+                origin.package_import = true;
             }
         }
     }

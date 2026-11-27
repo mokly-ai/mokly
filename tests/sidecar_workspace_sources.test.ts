@@ -7,8 +7,10 @@ import type { TestContext } from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
+import { restore } from "../packages/mokly/src/sidecar/compiled.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
 
+import { link } from "./helpers/native_resolution.js";
 import {
   bundleParams,
   installBindings,
@@ -119,14 +121,14 @@ export const page = definePage({title:"Local",description:"",relatedDocs:[],rend
   }
 });
 
-test("a package without source uses its built file or reports its absence", async (context) => {
+test("a package without source uses its build or names its override", async (context) => {
   const { head, base, params } = await workspace(context);
   for (const side of [head, base]) {
     await write(side, "entry.mjs", 'export {value} from "local";');
     await write(
       side,
       "packages/local/package.json",
-      '{"name":"local","exports":"./dist/value.js"}',
+      '{"name":"workspace-local","exports":"./dist/value.js"}',
     );
   }
   await write(
@@ -147,30 +149,56 @@ test("a package without source uses its built file or reports its absence", asyn
   await assert.rejects(historical.call("bundle", params(base)), {
     code: "bundle-failed",
     message:
-      /module packages\/local\/dist\/value\.js has no source in this side/,
+      "entry.mjs:1:21: module packages/local/dist/value.js has no source in this side; set moduleResolution.sourcePackages for workspace-local",
   });
   await historical.call("shutdown");
 });
 
+test("Node-loaded requires suggest a source override for missing base builds", async (context) => {
+  const { head, base, params } = await workspace(context);
+  const manifest = '{"name":"workspace-local","exports":"./dist/value.cjs"}';
+  for (const side of [head, base])
+    await write(side, "packages/local/package.json", manifest);
+  await write(base, "entry.mjs", 'export const value = "Entry";');
+  await write(
+    head,
+    "packages/local/dist/value.cjs",
+    'module.exports = "Built";',
+  );
+
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const inputs = params(base);
+  inputs.moduleResolution.dependencyRoot = head;
+  const result = await sidecar.call<BundleResult>("bundle", inputs);
+  const runtime = restore(inputs, result.compiled, result.modules).require;
+  assert.throws(() => runtime("local"), {
+    message:
+      "module packages/local/dist/value.cjs has no source in this side; set moduleResolution.sourcePackages for workspace-local",
+  });
+  await sidecar.call("shutdown");
+});
+
 test("workspace imports preserve configured files and relative build paths", async (context) => {
   const { head, params } = await workspace(context);
+  const pkg = path.join(head, "packages/local");
   await write(
     head,
     "entry.mjs",
-    'export {value} from "local"; export {other} from "./packages/local/dist/relative.mjs";',
+    'export {value} from "local"; export {other} from "./packages/local/lib/relative.mjs";',
   );
   await write(
     head,
     "packages/local/package.json",
     '{"name":"local","exports":"./dist/configured.mjs"}',
   );
-  for (const [file, name] of [
-    ["configured", "value"],
-    ["relative", "other"],
+  for (const [folder, file, name] of [
+    ["release", "configured", "value"],
+    ["lib", "relative", "other"],
   ]) {
     await write(
       head,
-      `packages/local/dist/${file}.mjs`,
+      `packages/local/${folder}/${file}.mjs`,
       `export const ${name} = "Built";`,
     );
     await write(
@@ -179,16 +207,17 @@ test("workspace imports preserve configured files and relative build paths", asy
       `export const ${name} = "Source";`,
     );
   }
+  await link(path.join(pkg, "release"), path.join(pkg, "dist"));
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const result = await sidecar.call<BundleResult>("bundle", {
     ...params(head),
-    entryFiles: ["entry.mjs", "packages/local/dist/configured.mjs"],
+    entryFiles: ["entry.mjs", "packages/local/release/configured.mjs"],
   });
   assert.deepEqual(result.modules.map((module) => module.path).sort(), [
     "entry.mjs",
-    "packages/local/dist/configured.mjs",
-    "packages/local/dist/relative.mjs",
+    "packages/local/lib/relative.mjs",
+    "packages/local/release/configured.mjs",
   ]);
   await sidecar.call("shutdown");
 });

@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::imported_assets;
+use mokly_content_types::imported_content_type;
 use mokly_css::paths;
 use mokly_css::types::{OpaqueAsset, StylesheetRoot};
 
@@ -98,7 +98,7 @@ pub(crate) fn register(
         .or_insert_with(|| ResourcePlan {
             document_key: asset_key.clone(),
             key: asset_key,
-            content_type: imported_assets::content_type(&route)
+            content_type: imported_content_type(&route)
                 .unwrap_or("application/octet-stream")
                 .into(),
             root: root.clone(),

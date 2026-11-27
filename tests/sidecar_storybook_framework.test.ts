@@ -14,6 +14,7 @@ import {
   module,
   selection,
 } from "./fixtures/storybook_framework.js";
+import { viteFixtureWorker } from "./fixtures/vite/support.js";
 import { installBindings, startSidecar } from "./helpers/sidecar.js";
 
 for (const adapter of ["esbuild", "Vite"]) {
@@ -22,9 +23,16 @@ for (const adapter of ["esbuild", "Vite"]) {
       context,
       adapter === "Vite",
     );
-    const sidecar = startSidecar(context, root);
-    await sidecar.call("hello");
-    const first = await sidecar.call<BundleResult>("bundle", params);
+    const worker = await viteFixtureWorker(context, root);
+    const compile = () => worker.sidecar.call<BundleResult>("bundle", params);
+    const recompile = params.vite
+      ? async () => {
+          await assert.rejects(compile(), { code: "fresh-worker-required" });
+          await worker.replaceWorker();
+          return compile();
+        }
+      : compile;
+    const first = await compile();
     assert.equal(first.compiled.peers["@storybook/react"], null);
     assert.match(
       first.compiled.storybookReact?.[folder] ?? "",
@@ -39,12 +47,12 @@ for (const adapter of ["esbuild", "Vite"]) {
     const laterCandidate = `${folder}/main.tsx`;
     assert.equal(first.compiled.metadataInputs[`${folder}/main.js`], null);
     assert.equal(first.compiled.metadataInputs[laterCandidate], null);
-    await sidecar.call("cssModules", {
+    await worker.sidecar.call("cssModules", {
       generation: first.generation,
       classMaps: {},
     });
-    await installBindings(sidecar, first.generation);
-    const rendered = await sidecar.call<RenderResult>("renderStory", {
+    await installBindings(worker.sidecar, first.generation);
+    const rendered = await worker.sidecar.call<RenderResult>("renderStory", {
       generation: first.generation,
       storyId: `${file}#Primary`,
       props: {},
@@ -53,7 +61,7 @@ for (const adapter of ["esbuild", "Vite"]) {
     });
     assert.equal(rendered.html, "<output>framework preview</output>");
     await fs.writeFile(path.join(root, selection), "other-framework");
-    const edited = await sidecar.call<BundleResult>("bundle", params);
+    const edited = await recompile();
     assert.notEqual(edited.generation, first.generation);
     assert.match(
       edited.compiled.storybookReact?.[folder] ?? "",
@@ -61,7 +69,7 @@ for (const adapter of ["esbuild", "Vite"]) {
     );
     const laterSource = 'throw new Error("main.ts still takes precedence");';
     await fs.writeFile(path.join(root, laterCandidate), laterSource);
-    const added = await sidecar.call<BundleResult>("bundle", params);
+    const added = await recompile();
     assert.notEqual(added.generation, edited.generation);
     assert.equal(
       added.compiled.metadataInputs[laterCandidate],

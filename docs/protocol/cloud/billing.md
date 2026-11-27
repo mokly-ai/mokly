@@ -31,11 +31,11 @@ trial. Prose never repeats a value the table carries.
 | Stripe API version | `2026-08-26.dahlia` |
 
 New workspaces start on `free`, except for the configured preview account
-when `MKC_PREVIEW_SIGN_IN_PLAN=team`. This optional setting accepts `free` and
-`team`, defaults to `free`, and requires the preview sign-in secret, email and
-capability. [Preview sign-in](./auth-sessions.md#preview-sign-in) defines its
-validation. The API compares the creator's normalized email from the creation
-transaction with `MKC_PREVIEW_SIGN_IN_EMAIL`. Only a match uses this initial
+when `MKC_PREVIEW_SIGN_IN_PLAN=team`.
+[Preview sign-in](./preview-sign-in.md#account-and-capability) defines this
+optional setting and its validation. The API compares the creator's
+normalized email from the creation transaction with
+`MKC_PREVIEW_SIGN_IN_EMAIL`. Only a match uses this initial
 plan. Existing workspaces keep their plan; only billing changes it after
 creation. The preview Team workspace has no subscription. Its new projects
 default to private and private uploads are allowed by the existing entitlement

@@ -19,8 +19,12 @@ impl InputStamp {
             assets,
             identities,
             directories,
+            vite_env,
         } = self;
-        let mut result = Self::default();
+        let mut result = Self {
+            vite_env: vite_env.clone(),
+            ..Self::default()
+        };
         for path in memberships.keys() {
             result
                 .memberships

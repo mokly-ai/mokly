@@ -30,7 +30,8 @@ fails its check, and the `config-invalid` message names the symlink.
 Config-relative parent segments are accepted when their normalized lexical
 paths and physical targets stay inside the resolved `repoRoot`. PostCSS path,
 suffix, and regular-file checks use the catalogued `config-invalid` diagnostics
-before a sidecar starts. Git root validation belongs to the Git boundary.
+before a sidecar starts. Under the Vite adapter, only the lexical `postcss`
+checks run, and the field resolves no module. Git root validation belongs to the Git boundary.
 The [configuration contract](../../docs/protocol/mokly-configuration.md)
 owns the accepted fields, the path rules, and the stylesheet matcher warnings.
 
@@ -59,6 +60,19 @@ module. Bundle requests, render input keys, the renderer's stylesheet root
 and link, and the module that each PostCSS request names use that form.
 Configured and declared stylesheets keep the form of `repository_path`. Their
 stylesheet roots and links and the declared stylesheet check use it.
+
+`config_validation::parse` checks `moduleResolution.sourcePackages` with the
+shipped schema. It then normalizes the folders of each entry and rejects an
+entry that names one build folder twice, with `config-invalid` at the
+position of that folder. `SourcePackage` holds one entry: `Disabled` for
+`false`, or `Folders`, a map from build folder to source folder.
+`ResolvedConfig::source_packages` returns the entries of one configuration.
+When `mokly-cli` loads the base configuration of a comparison, it keeps the
+working entries beside it in `ResolvedModules.working_source_packages`.
+`mokly-render` then passes the entries of each render in the
+[layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order).
+The [source package rules](../../docs/protocol/mokly-configuration.md#source-packages)
+own the accepted values.
 
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
@@ -246,11 +260,15 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/config.rs`](./src/config.rs) defines `ConfigLoader` and `Loader`,
   which find and load the configuration into a `ResolvedConfig`.
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
-  shape and the `ResolvedConfig` that later stages read. `ResolvedModules`
-  holds the resolved renderer and PostCSS module paths. `ViteConfig` is the
-  `vite` switch: `true`, `false`, or `ViteOptions`, an object without fields.
-  `ResolvedConfig::vite` tells whether a side compiles JavaScript through its
-  project's Vite setup.
+  shape, the `ResolvedConfig` that later stages read, and `ResolvedModules`,
+  which holds the resolved renderer and PostCSS module paths and, beside a
+  base configuration, the working `sourcePackages` entries.
+  `ViteConfig` is the `vite` switch. It accepts `true`, `false`, or
+  `ViteOptions`, an object without fields. `ResolvedConfig::vite` tells whether
+  a side compiles JavaScript through its project's Vite setup.
+- [`src/config_validation.rs`](./src/config_validation.rs) provides `parse`,
+  which validates the configuration text against the shipped schema and the
+  semantic rules, and normalizes the folders of each `sourcePackages` entry.
 - [`src/config_inputs.rs`](./src/config_inputs.rs) confines local inputs at
   load and resolves the renderer and the PostCSS module.
 - [`src/config_paths.rs`](./src/config_paths.rs) gives
@@ -307,7 +325,7 @@ The property test of the source maps over the vendored HTML corpus lives in
   [`src/error.rs`](./src/error.rs) define the `Code`, `Issue`, and `Warning`
   records and `CatalogueError`. `diagnostic::json_quoted` is the one JSON
   quoting helper for catalogue warning messages, with the escapes of the build
-  warnings contract.
+  warnings contract. `STORY_RENDER_FAILED` identifies a saved story error document.
 
 ### Related Docs
 
