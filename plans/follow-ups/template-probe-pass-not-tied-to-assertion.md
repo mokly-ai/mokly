@@ -19,7 +19,7 @@
     - `mokly-build-v3`: its recorded pass came before the probe's `npm ci` check.
     - `mokly-build-v5`: its recorded pass, from `main` on 2026-11-26, came before the probe's Git check. Main-preview ran v5 until it moved to `mokly-build-v6` later that day. The v6 pass ran the probe from `main` at `1ce3ed0be`, which has the Git check.
     - `mokly-build-v6`: its recorded pass came before the probe's check that `node`, `npm`, `npx`, `corepack`, `python3`, and `git` each have one real file on `PATH`. On 2026-11-26 the current assertion script, run by hand, printed `FAIL build template: python3 has multiple copies on PATH` against v5, and at 15:27 UTC against v6. Main-preview still runs v6.
-  - `plans/follow-ups/cloud-builds-never-ran-live.md` now says to probe the newest release whose record passes the current probe. It records each pass with the full build reference, the assertion commit, and the UTC time.
+  - The main-preview build proof probed `mokly-build-v8`, the newest release whose record passes the current probe. Production then took that build reference, as the runbook says for a promotion. "Live Evidence" of `docs/ops/build-template.md` records the pass with the full build reference, the assertion commit, and the UTC time.
 - **Problem:** Nothing ties an enabled build reference to a pass of the current assertion, so a release can stay in use without one after the assertion changes.
 - **Impact if no action:** An operator can read an old pass as proof that the release meets the current contract, and a release that fails a new check stays enabled until someone runs the probe again.
 - **Root question:** How do operators know that each enabled build reference passes the current assertion?

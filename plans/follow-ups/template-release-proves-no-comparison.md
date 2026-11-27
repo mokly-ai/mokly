@@ -31,6 +31,6 @@
   - A version check alone. A Git that reports a supported version can still reject the command.
 - **Wider fix:** C, with its check of the build's own publication. It proves the product result that users see, whatever part of the template breaks it. An automated run of C, option D, must keep that check.
 - **Previous examples:** The v2 probe accepted a broken npm through `npm --version`. The v3 fix added a real `npm ci` to the probe.
-- **Related:** `plans/follow-ups/template-probe-pass-not-tied-to-assertion.md` covers the record of which probe revision passed. `plans/follow-ups/cloud-builds-never-ran-live.md` holds the first live proof, which C makes stricter.
+- **Related:** `plans/follow-ups/template-probe-pass-not-tied-to-assertion.md` covers the record of which probe revision passed. "Live Evidence" of `docs/ops/build-template.md` holds the live build proofs, which C makes stricter.
 - **Recommendation:** C. It costs one pull request build for each release and proves the comparison that the new template produced. E is a cheap addition that stops a broken candidate before users see it.
 - **Action:** ask the user, because C adds a release step that can stop a rotation, and only the user approves a new gate.
