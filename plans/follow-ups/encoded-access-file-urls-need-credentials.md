@@ -1,0 +1,35 @@
+# Encoded access-file URLs need a credential
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from the re-review of the branch `calummoore/embedded-access-catalogue-server-bearer-9fes`, finding 9.
+- **Location:** `crates/mkc-catalogue-server/src/catalogue.rs:102`, `crates/mkc-catalogue-server/src/embedded_access.rs:46-54`, `crates/mkc-catalogue-server/src/http.rs:99`, and the test `crates/mkc-catalogue-server/src/_tests_/http/frame_access_tests.rs:193-231`.
+- **Reason:** Every planned client requests the two public files at their plain paths, and no browser percent-encodes those characters on its own, so no reader meets the defect before a later fix.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Public access files:** `mokly-viewer/client/access-start.html` and `mokly-viewer/client/access-worker.js`, at the constants of `crates/mkc-catalogue-server/src/routes.rs:12` and `:14`. The catalogue server serves these two indexed files of a private publication without a credential. A Mokly start page and service worker then give a frame a bearer token in browsers that refuse the catalogue cookie.
+  - **Blob URL:** a content-addressed `__blobs/` URL of a publication file, which always needs a credential for a private publication.
+- **Background:**
+  - `docs/protocol/cloud/catalogue-hosting.md` maps a request to its indexed file by decoding each path segment once. The file rules of the server read the decoded path, for example the refusal of `__mokly` paths. The `/_access` match at `http.rs:63` and the `/_health` route at `crates/mkc-catalogue-server/src/router.rs:43` read the raw path, before `Request` exists.
+  - `docs/protocol/cloud/catalogue-private-access.md`, section "Embedded Access Route", names the two indexed files that open without a credential. The user chose these public files on 2026-11-27 (the publication's own CLI-written files).
+  - The server validates and decodes the path in `routes::path` at `catalogue.rs:102`, before authorization. But `serve_access_file` in `embedded_access.rs` compares the raw `request.path` with the two canonical paths. So `/mokly-viewer/client/%61ccess-start.html`, which decodes to the start page, answers 401 without a credential. With a credential, the server serves it. `Request.path` comes from the raw URI at `http.rs:99`.
+  - The test `every_other_private_file_and_each_bootstrap_alias_still_requires_a_credential` (`frame_access_tests.rs:193`) expects that 401 for a direct read, at line 202, and also checks a frame navigation for each path, at lines 220-231. The branch that added it recorded the literal match as a call, with no reason, only in its commit `0aab3599e`.
+  - The literal match limits the URL spellings, not the public bytes: the arm looks up only the matched constant, so a decoded match cannot open another file.
+  - The Mokly start page and worker, which the Mokly frame package builds, register and fetch the canonical paths. The planned app check reads the canonical start page path, as `docs/protocol/cloud/viewer.md` says. A browser never percent-encodes ASCII letters, `-`, `.`, or `/` on its own.
+- **Problem:** Two spellings of one public file get different access answers, against the single-decoding rule of the hosting contract.
+- **Impact if no action:** A client that percent-encodes a character of the path cannot read a file that is public at its decoded path.
+- **Root question:** Which request URLs does the public exception for the two files cover: every spelling that decodes once to one of the two indexed paths, or only the literal canonical URL?
+- **Options:**
+  - **A.** Compare the validated, decoded path in the direct-request arm of `serve_access_file`. Move the direct read of the encoded start-page case into `exact_mokly_files_allow_anonymous_private_get_and_head` in `crates/mkc-catalogue-server/src/_tests_/http/access_file_tests.rs:23`, and keep its frame navigation assertion in the test at line 193. Add an encoded worker spelling that must carry `Service-Worker-Allowed: /`, which follows `file.path` at `crates/mkc-catalogue-server/src/file_response.rs:20`. Effort: Small.
+  - **B.** Make `Request` carry the validated, decoded path for every decision, built at `http.rs:99`, and keep the raw spelling only for the `Location` values of the redirects in `catalogue.rs`. Then no later file rule can read the raw spelling. The `/_access` and `/_health` matches stay on the raw path, because they run before `Request` exists. Update the same tests as A. Effort: Medium.
+  - **C.** Keep the literal match. State in `catalogue-private-access.md` and in `crates/mkc-catalogue-server/README.md` that the exception covers only the two canonical URLs, and that encoded spellings need a credential, as blob URLs do. This changes a requirement, so it needs the user. Effort: Small.
+- **Left out:**
+  - A second decoder, because A reuses the path that `catalogue.rs` already decodes.
+  - A redirect to the canonical spelling, because a service worker script fetch refuses redirects.
+  - A lookup of the decoded request path by `file.path`, because it adds a read transaction to each uncredentialed request and still needs an exception for blob URLs.
+- **Wider fix:** B, because a validated path type keeps every future path rule on the decoded path.
+- **Previous examples:** None found. The route tests at `crates/mkc-catalogue-server/src/_tests_/routes_tests.rs:72` cover valid percent-encoded paths of other files, which shows the decoding rule but not this defect.
+- **Recommendation:** B. It is the structural fix and stays in the files of the catalogue server.
+- **Action:** fix after merge, apply B, because it is a rare product bug of low severity that no planned client meets.

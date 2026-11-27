@@ -16,5 +16,6 @@
 - **Left out:** A third approach adds nothing that A and B do not cover.
 - **Wider fix:** None.
 - **Previous examples:** The Rust and mockup shards keep their extra work on dedicated shards, as `xtask/src/check/rust_commands.rs` and `cloud_shards.rs` show.
+- **Related:** `plans/follow-ups/image-smoke-runs-in-no-gate.md`, whose option D also changes `xtask/src/check/cloud_shards.rs`.
 - **Recommendation:** A. It keeps the job count and uses the existing weights.
 - **Action:** fix after merge, apply A, because it is outside the scope of the branch that found it.

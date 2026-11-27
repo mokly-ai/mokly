@@ -1,0 +1,45 @@
+# The image smoke runs in no gate
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the review of the branch `calummoore/embedded-access-catalogue-server-bearer-9fes`, check of its first finding.
+- **Location:** `infra/scripts/smoke-images.py`, `xtask/src/check/cloud_shards.rs:82-121`, `.github/workflows/deploy.yml:38-83`, `.github/workflows/ci.yml:810-894`, and `infra/README.md:150-162`.
+- **Reason:** Each option that runs the smoke automatically adds a check that can stop a merge or a deploy, and a new gate or rejection needs the user's approval.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Image smoke:** `infra/scripts/smoke-images.py`. It flattens the built API, catalogue server, and app image archives with `crane export`, and runs them in a chroot as UID and GID 65532. It uses real migrations, a random signing key file, a least-privilege database reader role, a private catalogue grant exchange, and app page and asset requests.
+  - **Image archives:** the Docker image archives `.context/images/mkc-api.tar`, `.context/images/mkc-catalogue-server.tar`, and `.context/images/app.tar`. The scripts `infra/scripts/build-api.sh`, `build-catalogue.sh`, and `build-app.sh` write them. `infra/scripts/check-image.sh` builds them in the gate.
+  - **`cloud-infrastructure` suite:** the gate suite that runs the infrastructure tests and `check-image.sh`. In CI it has three shards: shard 1 runs the tests, shard 2 builds the API and catalogue images, and shard 3 builds the app image.
+  - **Grant exchange:** the app's `POST /_access` to a publication host. It trades a one-use grant for the catalogue cookie and a bearer token in a JSON body, as `docs/protocol/cloud/catalogue-private-access.md` defines.
+  - **Publication smokes:** the Python scripts `scripts/cloud/publication_smoke_*.py`. The gate runs them through `crates/mkc-catalogue-server/tests/publish_tests.rs`, against the server built from source.
+- **Background:**
+  - The image smoke came into this repository with the squash commit `5cba4dc4b`, "feat: combine Mokly Cloud into the Mokly repository (#350)". No CI job or gate suite has run it since.
+  - `infrastructure_commands` in `xtask/src/check/cloud_shards.rs` runs only the infrastructure tests and `check-image.sh`. `check-image.sh` builds the archives and does not start them.
+  - `infra/tests/test_smoke_image_publication.py` loads the smoke's module, but calls only `publication_fixture()` and `fixture_mokly_version()`.
+  - No file under `.github/workflows` runs the smoke. `infra/README.md` gives it as a manual command with Linux and passwordless sudo: `MKC_TEST_DATABASE_URL=postgres://postgres:postgres@localhost/mkc_test python3 infra/scripts/smoke-images.py`.
+  - The smoke needs the three archives, sudo, chroot, crane, Postgres, and `psql`. Its `main()` takes no arguments and always runs the API, catalogue, and app parts. It reads the app archive only as `.context/images/app.tar`.
+  - Since 2026-11-27 the smoke checks the grant exchange with the shared function `exchange_catalogue_grant` of `scripts/cloud/publication_smoke_support.py`. The gate runs the same function through the publication smokes, which `scripts/cloud/smoke_publications.py` starts from the test `published_package_and_fixture_reach_isolated_catalogue_hosts` in `crates/mkc-catalogue-server/tests/publish_tests.rs`.
+  - So only the image-only steps of the smoke can drift unseen: the signing key file, the least-privilege reader role, `/_health`, the unknown host, the prune and check-status log events, and the app's CSP and routes.
+  - The publication smokes cover the same server code, but not the image filesystems, the signing key file, or the reader role.
+  - The deploy's own smoke, `infra/scripts/smoke.py`, runs after each rollout from `infra/scripts/rollout.sh`. It checks health, migrations, app assets, catalogue isolation, headers, and CORS. It does not exchange a grant or use the reader role.
+  - Two static tests in the gate cover parts of the images: `infra/tests/test_release.py` checks `USER 65532:65532` and `STOPSIGNAL SIGINT` in the Dockerfiles, and `infra/tests/test_preview_runtime.py` runs `infra/docker/entrypoint.sh` with a mounted signing key file.
+  - In the gate, a skipped check fails its suite. `xtask/scripts/strict-command.mjs` fails on a `SKIP` line, and `docs/protocol/cloud/repository-verification.md` says that a missing BuildKit or crane fails the suite.
+- **Problem:** The image smoke is the only check of the built images at run time, and nothing runs it. On 2026-11-27 a change of the grant exchange answer from 204 to 200 made the smoke's own exchange assertion stale, and no check failed. The branch of that change fixed the smoke by reading the code, because its machine could not run the smoke.
+- **Impact if no action:** A defect that only the built images show, such as a missing file, a permission of UID 65532, or a reader role grant, passes the gate and the deploy smoke, and reaches production.
+- **Root question:** How does the team learn that a change breaks private catalogue access in the built images, before those images serve readers?
+- **Options:**
+  - **A.** Change nothing. The author of an image or access change runs the smoke by hand. The next drift of an image-only step can go unseen, as the grant exchange drift did. Effort: Small.
+  - **B.** Run the smoke in the `build` job of the Deploy workflow (`.github/workflows/deploy.yml:38-83`), after it builds the archives, and stop the deploy when it fails. The job builds under `source/`, and `infra/scripts/build-release.sh` renames the app archive to `app-main-preview.tar` and `app-production.tar`, so the smoke needs a path option for the app archive. It blocks no merge, but a failure stops the deploy of `main` until a fix lands. The job needs Postgres, `psql`, and passwordless sudo. Effort: Medium.
+  - **C.** Run the smoke in a scheduled CI job that blocks no merge and no deploy, with a notice on failure. Someone must watch it, and a defect can deploy before the schedule runs. Effort: Medium.
+  - **D.** Run the smoke in the `cloud-infrastructure` suite after `check-image.sh`. Shard 2 runs the API and catalogue parts, and shard 3 runs the app part. It needs a part selector in `main()` of `smoke-images.py`, and Postgres on shard 2, which today only the shard of job index 0 installs (`.github/workflows/ci.yml:858-875`). Missing tools fail the suite, because the gate rejects skips. It adds CI minutes inside the 30-minute job limit (`.github/workflows/ci.yml:814`), and a privileged chroot run on the runner. It changes the requirements in `docs/protocol/ci-workflow-cloud.md:46-53`, `docs/protocol/cloud/repository-verification.md:23-29` and `:133-145`, `docs/protocol/ci-verification.md:118`, and `infra/README.md:144-162`. Effort: Large.
+- **Left out:**
+  - Deleting the smoke, because it is the only check of the image filesystems and the reader role, and the deletion removes functionality.
+  - Letting the smoke run the shared `private_access` scenario of `scripts/cloud/publication_smoke_catalogue.py`. The shared exchange function already keeps the exchange in step, and the scenario would add only its bearer, HEAD, fragment, 404, and identity checks. It runs nothing automatically, so it does not answer the root question.
+  - Running the smoke in the Preview job "Build unprivileged PR images" (`.github/workflows/preview.yml:344-385`), which builds the same archives for labelled pull requests. The comment at `infra/scripts/smoke-images.py:4-5` forbids running the smoke on archives from an untrusted source, and a pull request is one.
+- **Wider fix:** D, because only a merge gate stops each future drift before it reaches `main`.
+- **Previous examples:** The stale grant exchange assertion of 2026-11-27, described above.
+- **Related:** `plans/follow-ups/app-shard-one-logic-tests-unweighted.md` changes `xtask/src/check/cloud_shards.rs`, which D also changes.
+- **Recommendation:** B. It stops a broken image before it serves readers, and adds no CI time to each pull request. D protects `main` best.
+- **Action:** ask the user, because B adds a check that can stop the deploy, and a new rejection needs the user's approval.
