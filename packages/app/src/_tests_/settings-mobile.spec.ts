@@ -164,6 +164,9 @@ test("a press anywhere on a compact index row opens its pane", async ({
   const tokens = page
     .getByRole("listitem")
     .filter({ has: page.getByText("Publishing tokens", { exact: true }) });
+  // A waiting row keeps the pane's name but is no link, so the row is
+  // measured once its link is drawn.
+  await expect(tokens.getByRole("link")).toBeVisible();
   const box = await tokens.boundingBox();
   expect(box).not.toBeNull();
   await tokens.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });

@@ -283,6 +283,9 @@ test("Share's screen list survives a failed read and clears the screen the reade
     const whole = panel
       .getByRole("listitem")
       .filter({ hasText: "Whole catalogue" });
+    // A waiting row keeps the name but is no button, so the row is measured
+    // once its button is drawn.
+    await expect(whole.getByRole("button")).toBeVisible();
     const box = await whole.boundingBox();
     expect(box).not.toBeNull();
     await whole.click({ position: { x: 4, y: (box?.height ?? 0) / 2 } });
