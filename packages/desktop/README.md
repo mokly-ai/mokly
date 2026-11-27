@@ -24,9 +24,10 @@ preload, renderer bridge or viewer implementation. Electron is pinned to
 [`package.json`](./package.json). The builder and the updater use the public
 `mokly-ai/mokly-desktop` GitHub feed. The updater follows its latest release
 and takes no pre-release or draft.
-Only release builds turn the updater on. Development, local builds and
-pull-request packages keep it off, and their **Check for updates** item is
-disabled. On macOS the ready dialog waits until the macOS update framework
+The **Check for updates** item is in the Help menu. Electron's default menu
+has no Help menu, so the shell adds one. Only release builds turn the updater
+on. Development, local builds and pull-request packages keep it off, and their
+**Check for updates** item is disabled. On macOS the ready dialog waits until the macOS update framework
 accepts the download. A manual check always answers with a dialog. A macOS
 copy that runs from a read-only place, such as its mounted DMG, offers to move
 into Applications. A packaged Linux app without `APPIMAGE` offers the release
@@ -268,6 +269,9 @@ The fallback needs the deployed app's public metadata, but no API or secret.
   `createWindow` hides the Mac title bar and lets the overlay follow the native
   button position. Linux keeps its native frame and default zoom roles.
   `startDesktop` owns startup, Dock activation and second-instance delivery.
+  `installMenu` builds the menu again with the update item in Help and sets
+  it on both platforms, because Electron ignores items added to a menu after
+  it is set.
 - [Mac window buttons](./src/window-buttons.ts): `windowButtonPosition` owns
   the initial and zoomed positions for the app's 48px top bar.
   `installWindowButtons` follows zoom, navigation and full-screen exit.
