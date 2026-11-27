@@ -117,5 +117,10 @@ export function timeline(releases: readonly PublishedRelease[]): Timeline {
 
 /** A position along the track, as a CSS length. */
 export function at(x: number): string {
-  return `${x.toFixed(3)}%`;
+  return `${place(x)}%`;
+}
+
+/** A position along the track, as a number from 0 to 100. */
+export function place(x: number): string {
+  return x.toFixed(3);
 }
