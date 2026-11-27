@@ -29,10 +29,14 @@ export async function captureReactPeers(
   for (const name of ["react", "react-dom"]) {
     const root = await lookup.nodeEntry(name);
     const file = root && viteFile(root.resolved.id);
-    peers[name] = file ? await lookup.paths.resolve(file) : null;
-    if (!file) continue;
-    const manifestFile = await packageManifest(file);
-    if (!manifestFile) continue;
+    if (!root || !file) {
+      peers[name] = null;
+      continue;
+    }
+    peers[name] = lookup.resolveFileSync(file, root.source);
+    const selectedManifest = await packageManifest(file);
+    if (!selectedManifest) continue;
+    const manifestFile = await lookup.paths.resolve(selectedManifest);
     peers[`${name}/package.json`] = manifestFile;
     const manifest: unknown = JSON.parse(
       await fs.readFile(manifestFile, "utf8"),
@@ -54,7 +58,8 @@ export async function captureReactPeers(
       if (specifier.endsWith("/package.json")) continue;
       const result = await lookup.nodeEntry(specifier, manifestFile);
       const file = result && viteFile(result.resolved.id);
-      peers[specifier] = file ? await lookup.paths.resolve(file) : null;
+      peers[specifier] =
+        result && file ? lookup.resolveFileSync(file, result.source) : null;
     }
   }
   return peers;

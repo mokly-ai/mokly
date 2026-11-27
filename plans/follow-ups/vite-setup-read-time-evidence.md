@@ -173,6 +173,13 @@
     input. Deliver them from the read record of C.
   - `plans/follow-ups/vite-setup-config-directory-listing.md`: C here also
     lets the setup check drop its listing of the configuration directory.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: shared fix. Its
+    Vite part keeps read-time evidence and an owner for each workspace lookup
+    of the Vite config. Keep that evidence in the read record of C, so that
+    the setup has one record of its reads.
+  - `plans/follow-ups/vite-config-request-kind.md`: same code. Its options A
+    and B give the Vite config its own module paths. The lookup evidence of
+    those module paths belongs in the read record of C.
 - **Recommendation:** C. It makes read-time evidence a part of each setup
   input, so a new loader cannot bring the race back.
 - **Action:** fix after merge, apply C, because C reaches every setup loader

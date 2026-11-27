@@ -360,6 +360,10 @@
     physical route that the mapping of E carries.
   - `plans/follow-ups/worker-native-load-versions.md`: a child that only
     Node loads gets no record and no watch until that item lands.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. Its
+    option C derives the watch inputs of the Vite lookups from its records,
+    and `ViteLookup.updatePaths` copies those lookups today. Build both
+    changes on the watch-input type of E.
 - **Recommendation:** E. It gives JavaScript inputs the alias-aware mapping,
   the advisory rule, the Serve-only rule, and the per-path admitting
   directory of stylesheet inputs. So one rule covers both kinds. It replaces

@@ -284,5 +284,31 @@
       "sourcePackages": [{ "installed": { "dist": "src" } }],
       "expected": null
     }
+  ],
+  "compilePaths": [
+    {
+      "name": "detection maps dist to src",
+      "specifier": "@example/ui",
+      "build": "dist/value.js",
+      "source": "src/value.ts",
+      "expected": "packages/local/src/value.ts"
+    },
+    {
+      "name": "an override maps esm to source",
+      "specifier": "@example/ui",
+      "build": "esm/value.js",
+      "source": "source/value.ts",
+      "sourcePackages": [{ "@example/ui": { "esm": "source" } }],
+      "expected": "packages/local/source/value.ts"
+    },
+    {
+      "name": "false keeps each side's build",
+      "specifier": "@example/ui",
+      "build": "dist/value.js",
+      "source": "src/value.ts",
+      "sourcePackages": [{ "@example/ui": false }],
+      "keepBaseBuild": true,
+      "expected": "packages/local/dist/value.js"
+    }
   ]
 }

@@ -126,6 +126,10 @@
     failure for an `envDir` outside the roots. The env snapshot runs after
     the setup loads, so D here does not reach that failure, and A must name
     the config file itself.
+  - `plans/follow-ups/vite-config-request-kind.md`: same code. A
+    `transformViteCss` request can open the setup first, as here. Its options
+    C and D change the settings of that request, and its options A and B
+    change the module paths with which the config loads.
 - **Recommendation:** D, not the review's B. D is B at the one step that both
   requests share. It reuses the locator that the loader already builds, for
   the same Medium effort.

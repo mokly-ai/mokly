@@ -400,7 +400,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `resolveSync` add the `moduleResolution.sourcePackages` hint when lookup
   by package name reaches a missing target below a subfolder of the package
   root. An entry of `false` suppresses the hint when lookup reaches it.
-  `resolveSync` serves the requires that Node loads.
+  [`src/sidecar/module-path-errors.ts`](./module-path-errors.ts) builds that
+  failure. A Vite call passes `mappedTargetHint`, so its hint takes the
+  package from the mapped build target. `resolveSync` serves the requires
+  that Node loads.
   `ConfiguredModuleFiles` in
   [`src/sidecar/module-configured-files.ts`](./module-configured-files.ts)
   holds the configured entry, stories, renderer, and PostCSS files and each
@@ -642,12 +645,19 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-graph.ts`](./vite-graph.ts) records every fetch from the virtual entry
   before evaluation and builds the module graph. [`vite-fetch.ts`](./vite-fetch.ts)
   confines files and records their bytes and imports at the fetch boundary.
-  [`vite-plugin.ts`](./vite-plugin.ts) resolves protected imports before
-  aliases and setup hooks. It serves the virtual modules and stylesheet stubs
-  and confines the remaining project resolutions.
+  [`vite-plugin.ts`](./vite-plugin.ts) resolves every import in its first
+  ordered hook, before aliases and setup hooks. It resolves protected imports
+  itself, and sends each other import through `ViteLookup`, which runs the
+  setup's hooks, confines the selected file, and applies the workspace source
+  step with the import name.
+  [`vite-resolve-dispatch.ts`](./vite-resolve-dispatch.ts) runs that lookup
+  with the active hook's `this.resolve` and its request options, or with
+  Vite's own skip history when no hook is active. It also serves the virtual modules and
+  stylesheet stubs.
 - [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) captures `this.load` and
   `this.addWatchFile` in the contexts of load, transform, and resolve hooks.
-  Resolve reports belong to the importer. It retains each module's reports and
+  Its own first plugin tracks the resolve calls, also those that `ViteLookup`
+  delegates. Resolve reports belong to the original importer. It retains each module's reports and
   load edges while Vite reuses its transform. JavaScript fetches and inline
   stylesheet transforms collect reports from the module and its nested loads.
   They keep reports for files that the module also imports. Reports outside
@@ -693,7 +703,11 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   direct importer.
 - [`vite-css-hooks.ts`](./vite-css-hooks.ts) holds the hooks that `viteSetup`
   installs. They set Mokly's scoped names on both CSS transformers. They route
-  Vite's stylesheet resolver through `ViteLookup.stylesheet` during a transform.
+  Vite's stylesheet resolver through `resolveViteStylesheet` of
+  [`vite-stylesheet-lookup.ts`](./vite-stylesheet-lookup.ts) during a
+  transform. It resolves the authored import with Vite's resolver, and again
+  without the relative preference. When the two files differ, it keeps the
+  relative file. Only a package import gets the workspace source step.
   For each file that this resolver resolves, they record the direct importer.
   They wrap `vite:css` and `vite:css-post`, so one native transform gives the
   class map and the inline CSS. A late `@import` that Vite drops is a failure.

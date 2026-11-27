@@ -1,4 +1,3 @@
-import { realpathSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -16,7 +15,7 @@ export function viteLookupImporters(
   source: string,
   importer?: string,
 ): string[] {
-  const file = viteFile(importer ?? "") ?? path.join(directory, "package.json");
+  const file = viteLookupImporter(directory, importer);
   if (!bareSpecifier(source) || source.includes("\0")) return [file];
   const selected = importerDirectory(paths, source, path.dirname(file));
   const candidates = [file, path.join(selected, path.basename(file))];
@@ -30,11 +29,18 @@ export function viteLookupImporters(
   return [...new Set(candidates)];
 }
 
+export function viteLookupImporter(
+  directory: string,
+  importer?: string,
+): string {
+  return viteFile(importer ?? "") ?? path.join(directory, "package.json");
+}
+
 export function viteSourceResolution(
   paths: ModulePaths,
   file: string,
 ): boolean {
-  return inside(paths.sourceRoot, realpathSync(file));
+  return inside(paths.sourceRoot, file);
 }
 
 export function viteMissingImport(error: unknown): boolean {

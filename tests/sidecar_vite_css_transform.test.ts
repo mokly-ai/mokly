@@ -128,7 +128,11 @@ test("Vite delivers file changes to an installed stylesheet plugin before reload
   await fixture.compile();
   const transform = () =>
     fixture.sidecar.call<ViteCssResult>("transformViteCss", {
-      setup: { ...fixture.params, entryFiles: [] },
+      setup: {
+        ...fixture.params,
+        entryFiles: [],
+        viteInputs: { rebuildFiles: [] },
+      },
       stylesheet,
       file: path.join(fixture.root, stylesheet),
     });

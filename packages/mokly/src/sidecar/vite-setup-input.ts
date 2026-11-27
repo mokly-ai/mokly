@@ -10,11 +10,11 @@ export interface SetupInput {
 }
 
 export class ConfigReads {
-  readonly files = new Map<string, Set<string>>();
+  readonly files = new Map<string, Set<string | null>>();
   readonly probes = new Map<string, boolean>();
 
-  record(file: string, digest?: string): void {
-    const digests = this.files.get(file) ?? new Set<string>();
+  record(file: string, digest?: string | null): void {
+    const digests = this.files.get(file) ?? new Set<string | null>();
     if (digest !== undefined) digests.add(digest);
     this.files.set(file, digests);
   }

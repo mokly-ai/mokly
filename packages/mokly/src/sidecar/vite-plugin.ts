@@ -25,6 +25,10 @@ import type { VitePluginReports } from "./vite-plugin-inputs.js";
 import { viteReactImport } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
+import {
+  delegatedViteResolve,
+  viteHookResolver,
+} from "./vite-resolve-dispatch.js";
 import type { ViteStyles } from "./vite-styles.js";
 import { viteCss, viteEntry, viteFile, viteId, viteJsx } from "./vite-urls.js";
 
@@ -57,9 +61,9 @@ export function moklyViteFirstPlugin(
     ...reports.hooks(current),
     resolveId: {
       order: "pre",
-      async handler(source, importer) {
+      async handler(source, importer, options) {
+        if (delegatedViteResolve(source, importer, options.custom)) return;
         const input = current();
-        if (importer) reports.trackResolve(this, input, importer);
         source = viteId(source);
         const inline = css.forId(source);
         if (inline) return inline.id;
@@ -90,9 +94,13 @@ export function moklyViteFirstPlugin(
             external: true,
           };
         }
+        const dispatch = viteHookResolver(this, options);
+        const resolve: ViteLookup["resolve"] = (id, from) =>
+          input.lookup.resolveFromHook(id, from, dispatch);
         return (
           input.styles.original(source, importer) ??
-          resolveViteLibrary(input, source, importer)
+          (await resolveViteLibrary(input, source, importer, resolve)) ??
+          resolveViteModule(input, source, importer, resolve)
         );
       },
     },
@@ -104,6 +112,7 @@ export async function resolveViteLibrary(
   input: ViteInputs,
   source: string,
   importer?: string,
+  resolve = input.lookup.resolve.bind(input.lookup),
 ): Promise<string | undefined> {
   if (source === "@mokly/mokly")
     return (
@@ -116,10 +125,44 @@ export async function resolveViteLibrary(
     );
   const react = viteReactImport(source, input.peers);
   if (react) return react;
-  return input.styles.resolve(source, importer, input.lookup, input.external);
+  return input.styles.resolve(source, importer, resolve, input.external);
 }
 
-/** Confine project resolutions and provide Mokly's virtual source modules. */
+async function resolveViteModule(
+  { params, paths, external: native }: ViteInputs,
+  source: string,
+  importer: string | undefined,
+  resolve: ViteLookup["resolve"],
+) {
+  const resolution = await resolve(source, importer);
+  if (!resolution) return null;
+  const { resolved } = resolution;
+  const confined = viteFile(resolved.id);
+  if (!confined) return resolved;
+  await paths.dependencyUsage.resolved(
+    resolution.source,
+    importer
+      ? path.dirname(importer)
+      : path.resolve(params.sourceRoot, params.configurationDirectory),
+    confined,
+  );
+  if (viteStylesheet(confined))
+    return { ...resolved, external: false, id: viteCss(confined) };
+  const external =
+    !paths.repositoryOwned(confined) &&
+    (await native(resolution.source, importer));
+  return {
+    ...resolved,
+    external: false,
+    id: external
+      ? viteExternal(await paths.resolve(external))
+      : resolved.external && !paths.repositoryOwned(confined)
+        ? viteExternal(confined)
+        : resolved.id,
+  };
+}
+
+/** Provide Mokly's virtual source modules and record consumed files. */
 export function moklyVitePlugin(
   current: () => ViteInputs,
   css: ViteCssTransform,
@@ -127,37 +170,6 @@ export function moklyVitePlugin(
   return {
     name: "mokly",
     enforce: "pre",
-    async resolveId(source, importer) {
-      const { params, paths, lookup } = current();
-      source = viteId(source);
-      const resolution = await lookup.resolve(source, importer);
-      const resolved = resolution?.resolved;
-      if (!resolved) return null;
-      const file = viteFile(resolved.id);
-      if (!file) return resolved;
-      const confined = await paths.resolve(file);
-      await paths.dependencyUsage.resolved(
-        source,
-        importer
-          ? path.dirname(importer)
-          : path.resolve(params.sourceRoot, params.configurationDirectory),
-        confined,
-      );
-      if (viteStylesheet(confined))
-        return { ...resolved, external: false, id: viteCss(confined) };
-      const external =
-        !paths.repositoryOwned(confined) &&
-        (await current().external(source, importer));
-      return {
-        ...resolved,
-        external: false,
-        id: external
-          ? viteExternal(await paths.resolve(external))
-          : resolved.external && !paths.repositoryOwned(confined)
-            ? viteExternal(confined)
-            : confined + resolved.id.slice(file.length),
-      };
-    },
     async load(id) {
       const input = current();
       const inline = css.forId(id);
