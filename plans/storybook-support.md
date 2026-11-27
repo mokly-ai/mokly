@@ -96,7 +96,10 @@ this branch merged `main`, with the Canvas redesign of pull request #488.
 Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
 merged Milestone 1a, pull request #508 finished track B, pull request #509
 applied the asset follow-up answers, pull request #511 finished track D, and
-pull request #524 finished track F. Tracks E and I run on their own branches. This section
+pull request #524 finished track F. On 2026-11-27 pull request #596, the
+source package override, merged into `main`, and this branch merged `main`
+again. Tracks E and I and answer B of track D decision 6 run on their own
+branches. This section
 tells the next agent what is done, what waits for the user, and how to
 continue.
 
@@ -105,7 +108,7 @@ continue.
 | A. Mockups               | #339 and #506, merged | Milestones 1 and 1a | None                                                                                  |
 | B. Story reading         | #492 and #508, merged | Milestones 2 to 8   | None                                                                                  |
 | C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
-| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Answer B of track D decision 6, after the source package override merges into `main`  |
+| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Answer B of track D decision 6, in progress on its own branch                         |
 | J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
 | E. Storybook folders     | Not yet               | In progress         | Milestones 18 to 22                                                                   |
 | F. Failed stories        | #524, merged          | Milestones 23 to 25 | Two follow-up items that wait for the user                                            |
