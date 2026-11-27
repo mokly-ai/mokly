@@ -8,7 +8,15 @@ release procedure and the live probe, and it records each release.
 
 ## Base Image
 
-The template, `mokly-build-v<N>`, has 2 vCPU and 4 GiB of memory.
+The template, `mokly-build-v<N>`, has 8 vCPU and 16 GiB of memory.
+
+Decision: this size lets a large catalogue build inside the
+[attempt deadline](./cloud-build-lifecycle.md#claims-leases-and-retries)
+(decided 2026-11-27). Rejected: 2 vCPU and 4 GiB, because the out-of-memory
+killer stopped the build of a large catalogue when its native process held
+3.4 GB. Rejected: 8 GiB, because that build used 7.2 GiB of memory at its peak
+on 8 vCPU and 8 GiB, which leaves little room for a larger catalogue.
+
 `infra/e2b/build/e2b.Dockerfile` pins its base image as
 `debian:<tag>@sha256:<64 lowercase hex>`. The digest fixes the image, so a new
 tag cannot change the base of a template release. The tag records the source of

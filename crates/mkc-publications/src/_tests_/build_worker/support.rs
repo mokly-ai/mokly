@@ -80,7 +80,7 @@ pub(super) fn start_queries_at(number: i32) -> impl Clause {
                     attempt.lease_expires_at,
                     now() + chrono::Duration::minutes(2)
                 );
-                assert_eq!(attempt.deadline_at, now() + chrono::Duration::minutes(15));
+                assert_eq!(attempt.deadline_at, now() + chrono::Duration::minutes(30));
                 let mut running = build(BuildState::Running);
                 running.attempt = number;
                 running.attempt_operation_id = Some(attempt.operation_id);
@@ -91,7 +91,7 @@ pub(super) fn start_queries_at(number: i32) -> impl Clause {
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, grant| {
                 assert_eq!(grant.attempt, number);
-                assert_eq!(grant.expires_at, now() + chrono::Duration::minutes(15));
+                assert_eq!(grant.expires_at, now() + chrono::Duration::minutes(30));
                 assert_eq!(grant.token_digest.len(), 32);
                 assert!(grant.consumed_at.is_none());
                 Ok(true)

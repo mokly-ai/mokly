@@ -48,7 +48,7 @@ fn attempt_times_follow_claim_locks_and_refresh_on_retry_without_new_secrets() {
                 assert_eq!(id, BUILD);
                 assert_eq!(attempt.now, at);
                 assert_eq!(attempt.lease_expires_at, at + Duration::minutes(2));
-                assert_eq!(attempt.deadline_at, at + Duration::minutes(15));
+                assert_eq!(attempt.deadline_at, at + Duration::minutes(30));
                 assert_eq!(attempt.operation_id, OPERATION);
                 assert_eq!(attempt.lease_token, LEASE);
                 let mut running = build(BuildState::Running);
@@ -64,7 +64,7 @@ fn attempt_times_follow_claim_locks_and_refresh_on_retry_without_new_secrets() {
                 let at = *grant_time.lock().unwrap();
                 assert_eq!(grant.id, grant_id);
                 assert_eq!(grant.created_at, at);
-                assert_eq!(grant.expires_at, at + Duration::minutes(15));
+                assert_eq!(grant.expires_at, at + Duration::minutes(30));
                 Ok(true)
             }))
             .n_times(2),

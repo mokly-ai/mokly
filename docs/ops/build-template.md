@@ -25,7 +25,7 @@ Keep the team key in a mode-0600 file outside the checkout, such as
 Helm values, logs or a release report. Disable shell tracing.
 
 `infra/e2b/build/e2b.toml` is the release definition. It declares
-`mokly-build-v<N>`, 2 vCPU and 4096 MiB. It has no provider ID. The first build
+`mokly-build-v<N>`, 8 vCPU and 16384 MiB. It has no provider ID. The first build
 writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
 definition as a provider configuration.
 

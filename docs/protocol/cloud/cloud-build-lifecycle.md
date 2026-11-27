@@ -93,10 +93,14 @@ attempt first rechecks that the project can build, otherwise the build ends
 `failed` with `repository-unavailable`, and then `publishingAllowed`,
 otherwise it ends `failed` with `plan-required`. It then increments `attempt`, sets a
 fresh `attempt_operation_id`, a unique lease token, `lease_expires_at` two
-minutes ahead, `deadline_at` fifteen minutes ahead and `started_at`, deletes
+minutes ahead, `deadline_at` thirty minutes ahead and `started_at`, deletes
 earlier attempts' log chunks and resets the attempt log counters and `log_complete` (never `log_sequence`),
 inserts the attempt's upload grant, and bumps the check outbox. The upload
 token is generated before the transaction; only its digest is stored.
+
+A large catalogue needs about eleven minutes for checkout, install and render
+on 4 vCPU and on 8 vCPU. Thirty minutes leaves room for the base install of a comparison and
+for the upload.
 
 After the claim commits, the worker mints the attempt's Contents-read
 installation token. A GitHub 403 or 404 there means the installation no
