@@ -77,7 +77,8 @@ three GitHub credentials are API-only Secret Manager mounts.
 The recorded release used callback `https://app.mokly.ai/auth/github/callback`
 and setup URL `https://app.mokly.ai/auth/github/install`. At the shared-origin
 rollout, change them to `https://mokly.ai/auth/github/callback` and
-`https://mokly.ai/auth/github/install`. App authentication and
+`https://mokly.ai/auth/github/install`. The production App had Redirect on
+update disabled until the operator enabled it on 2026-11-27. App authentication and
 deployment smoke do not substitute for the interactive OAuth/installation
 walkthrough in [GitHub smoke](./github-app-smoke.md).
 

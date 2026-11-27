@@ -259,7 +259,10 @@ main-preview and production.
    separate [GitHub smoke](./github-app-smoke.md) after rollout. GitHub App
    registration must set the callback URL to
    `<app-origin>/auth/github/callback` and the setup URL to
-   `<app-origin>/auth/github/install`. GitHub App credentials and the
+   `<app-origin>/auth/github/install`, and it must enable Redirect on update.
+   Without that setting, Configure on GitHub never returns to the setup URL,
+   so a workspace cannot link an account where the App is already installed.
+   GitHub App credentials and the
    credentialed viewer/publication proof require operator inputs; the smoke and
    publish proof below remain separate integration checks.
    To enable billing in a stable environment, add versions to its
@@ -271,8 +274,9 @@ main-preview and production.
    Follow [Billing smoke](./billing-smoke.md) for mode selection, price and
    webhook setup, rollout checks and delivery recovery.
 
-   Register each stable environment with these exact public URLs, then re-point every
-   existing App registration before the first rollout carrying this layout:
+   Register each stable environment with these exact public URLs and with
+   Redirect on update enabled, then re-point every existing App registration
+   before the first rollout carrying this layout:
 
    | Environment  | User callback                                    | Setup URL                                       | Webhook URL                                        |
    | ------------ | ------------------------------------------------ | ----------------------------------------------- | -------------------------------------------------- |
