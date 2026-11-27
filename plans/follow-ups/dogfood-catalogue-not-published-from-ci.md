@@ -32,7 +32,7 @@
 - **Needs:** Production access, a project token, and the GitHub App on this repository, `mokly-ai/mokly`.
 - **Done when:** Each pull request of this repository gets a live `Mokly` check, the runbook records the observations, and the places that the task lists name `mokly-ai/mokly`.
 - **Related:** The list below gives the links.
-  - `plans/follow-ups/cloud-builds-never-ran-live.md` can publish the catalogue without a CI token.
+  - Cloud builds run on both environments since 2026-11-27, as "Live Evidence" of `docs/ops/build-template.md` records. They could publish the catalogue without a CI token. They cannot build this repository today, because its `node_modules/.bin/mokly` is the unbuilt workspace package.
   - `plans/follow-ups/github-app-live-smoke-not-recorded.md`, same live proof. That walk leaves the live Changes check to this task.
 
 Source: [the post-merge tasks](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-cloud-initial-scope.md?plain=1#L2824-L2856) of the deleted plan.

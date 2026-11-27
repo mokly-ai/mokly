@@ -24,6 +24,6 @@
 - **Recommendation:** B, only if the measurement shows API pressure or harmful build restarts. Decide after that measurement. Until then, the build worker stays in the API process. A shared process restarts the running builds on every API rollout.
 - **Action:** ask the user, because condition 3 holds: B is a Large infrastructure change.
 
-The repository holds no record of a live cloud build. `plans/follow-ups/cloud-builds-never-ran-live.md` tracks that proof. Measure only after builds run under real traffic.
+Live cloud builds run on main-preview and production since 2026-11-27, as "Live Evidence" of `docs/ops/build-template.md` records. They do not run under real traffic yet. Measure only after builds run under real traffic.
 
 Source: [the post-merge notes](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/cloud-builds.md?plain=1#L2245-L2275) of the deleted plan.
