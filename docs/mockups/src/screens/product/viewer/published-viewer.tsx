@@ -80,8 +80,7 @@ const ids = {
  * A private comparison's message goes in the `stageOverlay` slot, as the app
  * places it. The package reveals that slot by a browser measurement, which a
  * static document never runs, so the workspace also draws the message over
- * the preview pane that the slot would cover. Each placement draws its own
- * message, so that its action keeps its own instance key.
+ * the preview pane that the slot would cover.
  */
 export function PublishedViewer({
   viewport,
@@ -128,11 +127,7 @@ export function PublishedViewer({
             <PublishedWorkspace
               viewport={viewport}
               colorScheme={colorScheme}
-              overlay={
-                comparisonBlocked ? (
-                  <ComparisonOverlay instance="viewer-comparison-open-catalogue-preview" />
-                ) : undefined
-              }
+              overlay={comparisonBlocked ? <ComparisonOverlay /> : undefined}
               tab={tab}
               {...(subject.check
                 ? { changesStart: <ChangesCheck pull={subject.check} /> }
@@ -177,9 +172,7 @@ export function PublishedViewer({
           ...(comparisonBlocked
             ? {
                 stageOverlay: {
-                  content: (
-                    <ComparisonOverlay instance="viewer-comparison-open-catalogue" />
-                  ),
+                  content: <ComparisonOverlay />,
                   pointerEvents: "auto",
                 },
               }

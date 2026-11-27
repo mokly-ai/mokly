@@ -309,13 +309,13 @@ Depends on: none
 
 D7 B gives the blocked stage new words and removes its new-tab action.
 
-- [ ] Change the blocked-cookie card in
+- [x] Change the blocked-cookie card in
       `docs/mockups/src/screens/product/viewer/stage-access.tsx`: the title
       **This publication can’t open in this browser**, the text "Open it in
       Chrome, Edge or Firefox on a computer.", and no action **Open
       catalogue in a new tab**. Check the words against
       `docs/protocol/cloud/product-copy.md`.
-- [ ] Run the cloud mockup check that `docs/mockups/README.md` gives, and
+- [x] Run the cloud mockup check that `docs/mockups/README.md` gives, and
       look at the changed screen at desktop and mobile widths.
 - [ ] Update the design and the TODOs of this plan for each problem that the
       mockup shows.
@@ -393,6 +393,8 @@ Depends on: 4, 8
 
 - [ ] Give `AccessBlocked` in `packages/app/src/viewer/stage.tsx` the words
       of Milestone 4, and remove its action **Open catalogue in a new tab**.
+- [ ] Remove the allowances that Milestone 4 added to
+      `docs/mockups/src/_tests_/app-parity-allowances.ts` for the new words.
 - [ ] Update the app tests of the stage, and check the stage in a browser
       at desktop and mobile widths.
 

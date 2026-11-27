@@ -48,8 +48,8 @@ for (const viewport of ["desktop", "mobile"] as const)
       );
     });
 
-    // The overlay's words wait for plan Decisions 11 and 12, so this checks
-    // only where the drawing shows it: over the whole shown preview.
+    // The overlay's own words wait for a user decision, so this checks only
+    // where the drawing shows it: over the whole shown preview.
     test(
       "private comparison recovery covers the preview: " + label,
       async ({ page }) => {

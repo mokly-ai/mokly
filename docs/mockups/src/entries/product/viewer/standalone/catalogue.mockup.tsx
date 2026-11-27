@@ -18,7 +18,7 @@ const screens = {
 export default defineScreen({
   title: "Standalone · Catalogue",
   description:
-    "Standalone — the browser keeps the publication host\u2019s cookie out of this page, so the catalogue is offered in its own tab, where the same credential works.",
+    "Standalone — the browser keeps every credential of the publication\u2019s host out of this page, so the stage\u2019s final card offers no action and names the browsers that open the publication on a computer.",
 
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",
@@ -59,7 +59,7 @@ export default defineScreen({
       slug: "comparison",
       title: "Standalone · Catalogue · Comparison",
       description:
-        "Standalone — a private comparison the published viewer cannot authenticate in-page offers the server-rendered catalogue in its own tab.",
+        "Standalone — a private comparison the published viewer cannot authenticate in-page covers the shown preview with the stage\u2019s blocked-access card, which offers no action.",
       tags: ["product", "canvas", "viewer", "error"],
       props: { state: "comparison" },
     },

@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { failureReference } from "../../../fixtures/product-states";
 import { Action, StateMessage } from "../page-parts";
 
@@ -44,28 +42,17 @@ export function StageAccessRefused() {
 }
 
 /**
- * The browser keeps the publication host's cookie out of this page, so asking
- * again cannot work. The server-rendered catalogue is offered where document
- * navigation can use that credential: its own first-party tab.
+ * The browser keeps every credential of the publication's host out of this
+ * page, so asking again cannot work, and the catalogue's own tab would hold
+ * none either. The card is final: it offers no action, and its line sends the
+ * reader to a browser on a computer that opens the publication.
  */
-export function StageAccessBlocked({ action }: { action?: ReactNode } = {}) {
+export function StageAccessBlocked() {
   return (
     <StageCard>
-      <StateMessage
-        title="Open the catalogue in its own tab"
-        error
-        action={
-          action ?? (
-            <Action
-              instance="stage-open-catalogue"
-              label="Open catalogue in a new tab"
-              tone="primary"
-              size="md"
-              icon="external"
-            />
-          )
-        }
-      />
+      <StateMessage title="This publication can’t open in this browser" error>
+        Open it in Chrome, Edge or Firefox on a computer.
+      </StateMessage>
     </StageCard>
   );
 }

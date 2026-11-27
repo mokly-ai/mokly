@@ -49,13 +49,29 @@ export const allowed: readonly Allowance[] = [
     label: "Request another link",
     todo: "magic-link-mockups-miss-write-states.md redraws the refused resend beside Resend link",
   },
+  {
+    screen: "product/viewer/standalone/catalogue",
+    label: "This publication can’t open in this browser",
+    todo: "blocked-cookie-message-has-no-words.md gives the app’s blocked-access card the drawn words",
+  },
+  {
+    screen: "product/viewer/standalone/catalogue/comparison",
+    label: "This publication can’t open in this browser",
+    todo: "blocked-cookie-message-has-no-words.md gives the app’s blocked-access card, which its comparison overlay draws, the drawn words",
+  },
 ];
 
 /** Owner declarations whose screen is still waiting on a follow-up item. */
 export const allowedOwnerViolations: readonly {
   violation: string;
   todo: string;
-}[] = [];
+}[] = [
+  {
+    violation:
+      "owner writes nothing this screen draws, for product/viewer/standalone/catalogue/comparison: viewer/stage.tsx",
+    todo: "blocked-cookie-message-has-no-words.md gives the app’s blocked-access card, which its comparison overlay draws, the drawn words",
+  },
+];
 
 /** A pending-label presentation difference waiting on its application work. */
 export interface PendingModeAllowance {
@@ -76,10 +92,11 @@ interface StateAllowance {
 }
 
 /**
- * States the running product has that the catalogue has never drawn, with the
- * item that draws each one. The same rule as above applies in reverse: nothing
- * may be added without an item that removes it, because a product state no
- * screen shows is a decision nobody reviewed.
+ * States the running product has that the catalogue does not draw, with the
+ * item that draws each one or brings the product to the drawn words. The same
+ * rule as above applies in reverse: nothing may be added without an item that
+ * removes it, because a product state no screen shows is a decision nobody
+ * reviewed.
  */
 export const allowedStates: readonly StateAllowance[] = [
   {
@@ -101,6 +118,11 @@ export const allowedStates: readonly StateAllowance[] = [
     file: "viewer/panels/switcher.tsx",
     title: "More branches and pull requests",
     todo: "switcher-truncated-list-lacks-mockup.md draws the switcher's list stopping at its cap",
+  },
+  {
+    file: "viewer/stage.tsx",
+    title: "Open the catalogue in its own tab",
+    todo: "blocked-cookie-message-has-no-words.md replaces the app’s blocked-access title with the drawn one",
   },
 ];
 

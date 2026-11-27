@@ -200,21 +200,13 @@ export function PublishedSlotEnd({
 
 /**
  * The `stageOverlay` content of a private comparison the published viewer
- * cannot authenticate in-page: the blocked-access card with its action. A
- * drawing places the message twice, so each placement names its action.
+ * cannot authenticate in-page: the stage's blocked-access card, which offers
+ * no action.
  */
-export function ComparisonOverlay({ instance }: { instance: string }) {
+export function ComparisonOverlay() {
   return (
     <div className="fo-viewer-overlay fo-stage-canvas">
-      <StageAccessBlocked
-        action={
-          <SlotButton
-            instance={instance}
-            label="Open catalogue in a new tab"
-            tone="secondary"
-          />
-        }
-      />
+      <StageAccessBlocked />
     </div>
   );
 }

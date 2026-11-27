@@ -203,13 +203,22 @@ test("private comparison recovery is drawn in the package stage overlay", () => 
         ),
         "utf8",
       );
-      assert.ok(drawsViewerShell(html));
-      assert.ok(html.includes('data-mokly-slot="stageOverlay"'));
-      assert.ok(html.includes("Open catalogue in a new tab"));
+      const label = viewport + " " + scheme;
+      assert.ok(drawsViewerShell(html), label);
+      const [slot, ...others] = elements(
+        parse(html),
+        (element) => attribute(element, "data-mokly-slot") === "stageOverlay",
+      );
+      assert.ok(slot, label);
+      assert.equal(others.length, 0, label);
+      // The slot holds the message alone: its title, and no action.
+      assert.equal(byClass(slot, "fo-state-title").length, 1, label);
+      assert.equal(byClass(slot, "fo-state-action").length, 0, label);
       assert.ok(
         html.includes(
           'data-mkc-screen="product/viewer/standalone/catalogue/comparison"',
         ),
+        label,
       );
     }
 });
