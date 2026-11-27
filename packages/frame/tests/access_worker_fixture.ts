@@ -1,79 +1,65 @@
 import assert from "node:assert/strict";
 import vm from "node:vm";
 
+import { IDBFactory } from "fake-indexeddb";
+
 export const frameOrigin = "https://frames.test";
 
-type Command = () => void;
+type AbortPoint = "before-request" | "after-put";
 
 export function tokenDatabase() {
-  const values = new Map<string, unknown>();
+  const indexedDB = new IDBFactory();
   const writes: unknown[] = [];
-  let storeName: string | undefined;
-  let tail = Promise.resolve();
-  let abort = false;
-  const database = {
-    createObjectStore(name: string) {
-      assert.equal(storeName, undefined);
-      storeName = name;
-    },
-    transaction(name: string, mode: IDBTransactionMode) {
-      assert.equal(name, storeName);
-      const changes = new Map<string, unknown>();
-      const transaction = {
-        oncomplete: undefined as Command | undefined,
-        onabort: undefined as Command | undefined,
-        objectStore(store: string) {
-          assert.equal(store, storeName);
-          return {
-            get(key: string) {
-              const request = {
-                result: undefined as unknown,
-                onsuccess: undefined as Command | undefined,
-              };
-              tail = tail.then(() => {
-                if (abort) {
-                  abort = false;
-                  transaction.onabort?.();
-                  return;
-                }
-                request.result = structuredClone(values.get(key));
-                request.onsuccess?.();
-                for (const [key, value] of changes) {
-                  values.set(key, value);
-                  writes.push(value);
-                }
-                transaction.oncomplete?.();
-              });
-              return request;
-            },
-            put(value: unknown, key: string) {
-              assert.equal(mode, "readwrite");
-              changes.set(key, structuredClone(value));
-            },
-          };
-        },
-      };
-      return transaction;
-    },
-  };
-  return {
-    indexedDB: {
-      open() {
-        const request = {
-          result: database,
-          onupgradeneeded: undefined as Command | undefined,
-          onsuccess: undefined as Command | undefined,
-        };
-        queueMicrotask(() => {
-          if (!storeName) request.onupgradeneeded?.();
-          request.onsuccess?.();
+  let nextAbort: AbortPoint | undefined;
+  let abortedPuts = 0;
+
+  function observeWrites(transaction: IDBTransaction) {
+    const abortAt = nextAbort;
+    nextAbort = undefined;
+    const pendingWrites: unknown[] = [];
+    transaction.addEventListener("complete", () => {
+      writes.push(...pendingWrites);
+    });
+    if (abortAt === "before-request") queueMicrotask(() => transaction.abort());
+
+    const store = transaction.objectStore("tokens");
+    const put = store.put.bind(store);
+    store.put = (value: unknown, key) => {
+      const request = put(value, key);
+      pendingWrites.push(structuredClone(value));
+      if (abortAt === "after-put") {
+        request.addEventListener("success", () => {
+          transaction.abort();
+          abortedPuts++;
         });
-        return request;
-      },
-    },
+      }
+      return request;
+    };
+  }
+
+  const open = indexedDB.open.bind(indexedDB);
+  indexedDB.open = (name, version) => {
+    const request = open(name, version);
+    request.addEventListener("success", () => {
+      const database = request.result;
+      const transact = database.transaction.bind(database);
+      database.transaction = (storeNames, mode, options) => {
+        const transaction = transact(storeNames, mode, options);
+        if (mode === "readwrite") observeWrites(transaction);
+        return transaction;
+      };
+    });
+    return request;
+  };
+
+  return {
+    indexedDB,
     writes,
-    abortNextTransaction() {
-      abort = true;
+    abortNextTransaction(point: AbortPoint = "before-request") {
+      nextAbort = point;
+    },
+    get abortedPuts() {
+      return abortedPuts;
     },
   };
 }

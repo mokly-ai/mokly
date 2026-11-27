@@ -65,6 +65,17 @@ test("the worker confirms committed storage and keeps the newest own-window toke
   ]);
 });
 
+test("the worker reports storage failure when a successful put is rolled back", async () => {
+  const storage = tokenDatabase();
+  const worker = accessWorker(code, storage);
+  storage.abortNextTransaction("after-put");
+  await worker.send(token("uncommitted", 10));
+  assert.equal(storage.abortedPuts, 1);
+  assert.deepEqual(worker.acknowledgements, [
+    { data: tokenStorageFailed, writes: 0 },
+  ]);
+});
+
 test("the worker adds the header only for its exact origin and preserves credentials and existing authorization", async () => {
   const worker = accessWorker(code);
   await worker.send(token("secret", 10));

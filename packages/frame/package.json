@@ -39,5 +39,8 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test",
     "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.8"
   }
 }
