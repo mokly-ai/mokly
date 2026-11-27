@@ -17,6 +17,7 @@ import { sameJsonValue } from "../catalogue/json_values.js";
 
 import { isCanvasInput, type CanvasInputListener } from "./canvas_input.js";
 import { runCleanup } from "./cleanup.js";
+import { isFrameFailure, rejectedVersion } from "./frame_failure.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
@@ -24,7 +25,6 @@ import {
   type ShellFrameRegistry,
   useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
-import { isFrameFailure, rejectedVersion } from "./frame_failure.js";
 import {
   adoptUsage,
   finishMountedUsage,
