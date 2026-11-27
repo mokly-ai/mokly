@@ -1,3 +1,5 @@
+import { realpathSync } from "node:fs";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
@@ -6,6 +8,7 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
+import { inside } from "./path-scope.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
   beginReadEvidenceGeneration,
@@ -30,6 +33,34 @@ type WorkerData = Pick<
   ProcessCssParams,
   "context" | "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
+
+/** Rebase a report through an alternate checkout name and keep links below it. */
+function dependencyPath(
+  root: string,
+  reported: string,
+  rootAliases: Map<string, boolean>,
+): string {
+  if (!path.isAbsolute(reported)) return reported;
+  if (inside(root, reported))
+    return path.join(root, path.relative(root, reported));
+
+  const absolute = path.resolve(reported);
+  for (let candidate = absolute; ;) {
+    let matches = rootAliases.get(candidate);
+    if (matches === undefined) {
+      try {
+        matches = realpathSync.native(candidate) === root;
+      } catch {
+        matches = false;
+      }
+      rootAliases.set(candidate, matches);
+    }
+    if (matches) return path.join(root, path.relative(candidate, absolute));
+    const parent = path.dirname(candidate);
+    if (parent === candidate) return reported;
+    candidate = parent;
+  }
+}
 
 guardParentOutput();
 const parent = parentInput();
@@ -100,17 +131,18 @@ process.once("message", (workerData: WorkerData) => {
             return { kind: "file", path, ...(source ? { source } : {}) };
           },
         );
+        const rootAliases = new Map<string, boolean>();
         for (const message of result.messages) {
           if (
             message.type !== "dependency" &&
             message.type !== "dir-dependency"
           )
             continue;
-          const path =
+          const reported =
             message.type === "dependency" ? message.file : message.dir;
           if (
-            typeof path !== "string" ||
-            !path ||
+            typeof reported !== "string" ||
+            !reported ||
             (message.glob !== undefined && typeof message.glob !== "string")
           )
             throw new PostcssError({
@@ -121,7 +153,7 @@ process.once("message", (workerData: WorkerData) => {
             });
           dependencies.push({
             kind: message.type === "dependency" ? "file" : "directory",
-            path,
+            path: dependencyPath(paths.sourceRoot, reported, rootAliases),
             ...(message.type === "dependency" ? { source: "plugin" } : {}),
             ...(typeof message.plugin === "string"
               ? { plugin: message.plugin }

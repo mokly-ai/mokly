@@ -87,6 +87,39 @@ fn postcss_computed_require_warns_for_an_ignored_link_to_a_tracked_file() {
 }
 
 #[test]
+fn postcss_warns_for_a_stylesheet_reported_through_an_alternate_checkout_path() {
+    let root = postcss_fixture(
+        DETECTED_CONFIG,
+        "",
+        &[("tracked/skin.css", ".skin { color: blue }")],
+    );
+    let path = root.path();
+    let aliases = TempDir::new().unwrap();
+    let checkout = aliases.path().join("checkout");
+    link_directory(path, &checkout);
+    fs::create_dir(path.join("generated")).unwrap();
+    link_directory(&path.join("tracked"), &path.join("generated/linked"));
+    write(path, "packages/theme/esm/other.css", ".other {}");
+    let outside = aliases.path().join("outside");
+    link_directory(&path.join("packages/theme/esm"), &outside);
+    let reports = serde_json::to_string(&[
+        checkout.join("generated/linked/skin.css"),
+        outside.join("other.css"),
+    ])
+    .unwrap();
+    write(
+        path,
+        "postcss.mjs",
+        &format!(
+            r#"export default {{ plugins: [{{ postcssPlugin: 'alias', Once(_root, {{ result }}) {{
+              for (const file of {reports}) result.messages.push({{ type: 'dependency', plugin: 'alias', file }});
+            }} }}] }};"#
+        ),
+    );
+    assert_strict_warning(path, "generated/linked/skin.css");
+}
+
+#[test]
 fn postcss_linked_package_build_has_no_warning_when_the_declared_target_can_recover() {
     let root = linked_build(THEME_CONFIG, "", &[]);
     write(root.path(), "postcss.mjs", &postcss(PACKAGE_LOAD));
