@@ -2354,8 +2354,8 @@ own lines of this plan.
   [workspace package source rule](../docs/protocol/mokly-comparison-packages.md#workspace-package-sources)
   then applies to a bundled build target that the setup or its config
   loader selects for a bare package specifier, as on the esbuild path. A
-  build target that the setup cannot select, such as one missing from the
-  working tree, still fails.
+  build target that Vite's own package lookup cannot select, such as one
+  missing from the working tree, still fails.
 - D10. Under the adapter, Mokly scopes each `.module.` stylesheet with its
   own names, and the setup's `css.modules` options do not apply. Reason:
   both sides and both compile paths then give equal names.

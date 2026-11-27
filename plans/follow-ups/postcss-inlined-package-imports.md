@@ -33,7 +33,9 @@
 - **Left out:** Mokly could put the text of the selected source into the stylesheet before PostCSS. That breaks the relative URLs and `@source` paths of the inlined file, and B gives the plugin the same file at its own path.
 - **Wider fix:** B. Mokly's resolver then chooses the file of every workspace package import, whichever tool inlines it.
 - **Previous examples:** The renderer exclusion check, `validate` at `crates/mokly-render/src/postcss_nested.rs:27`, already handles a plugin that inlines nested imports and so bypasses pruning.
-- **Related:** [ignored-plugin-file-reports.md](./ignored-plugin-file-reports.md): same cause. Both come from a plugin that reads files without Mokly's resolver.
+- **Related:**
+  - [ignored-plugin-file-reports.md](./ignored-plugin-file-reports.md): same cause. Both come from a plugin that reads files without Mokly's resolver.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same consumer. Its option C gives each workspace import that Mokly resolves one record. B here sends each import that a plugin inlines through Mokly's resolver, so that import then gets the record too.
 - **Recommendation:** B. It makes every plugin that inlines imports meet the existing rule, with no new failure.
 - **Action:** fix after merge, apply B, because the gap predates this branch for detected layouts, and the rewrite needs its own review and a Tailwind fixture.
 - **Done when:**

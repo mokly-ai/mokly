@@ -30,7 +30,7 @@ export class ViteStyles {
   async resolve(
     source: string,
     importer: string | undefined,
-    lookup: ViteLookup,
+    resolveModule: ViteLookup["resolve"],
     external: (
       source: string,
       importer?: string,
@@ -45,7 +45,7 @@ export class ViteStyles {
       const node = await external(source, importer);
       return node
         ? { id: node, external: true }
-        : (await lookup.resolve(source, importer))?.resolved;
+        : (await resolveModule(source, importer))?.resolved;
     };
     const resolved = await resolve(source, importer);
     if (!resolved) return;

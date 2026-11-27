@@ -64,3 +64,51 @@ test("Vite base reports missing relative CSS imports without a sourcePackages hi
     await sidecar.call("shutdown");
   }
 });
+
+for (const [source, expected] of [
+  ["theme.css", ".sibling { color: blue }"],
+  ["local/theme.css", ".source-head { color: teal }"],
+  ["theme/colors.css", ".aliased-once { color: purple }"],
+] as const) {
+  test(`Vite applies stylesheet aliases once to the authored import ${source}`, async (context) => {
+    const fixture = await workspace(context, probe);
+    const setup = { ...fixture.params("head"), entryFiles: [] };
+    await fixture.write("head", "src/theme.css", ".sibling { color: blue }");
+    await fixture.write("head", "src/aliased.css", ".alias { color: green }");
+    await fixture.write(
+      "head",
+      "src/vendor/theme.css",
+      ".vendor { color: green }",
+    );
+    await fixture.write(
+      "head",
+      "vite.config.mjs",
+      `import { resolve } from "node:path";
+       export default { resolve: { alias: {
+         "./theme.css": resolve(import.meta.dirname, "src/aliased.css"),
+         "./local": resolve(import.meta.dirname, "src/vendor"),
+         theme: "theme/src",
+       } } };`,
+    );
+    await fixture.write(
+      "head",
+      "node_modules/theme/package.json",
+      '{"name":"theme"}',
+    );
+    await fixture.write(
+      "head",
+      "node_modules/theme/src/colors.css",
+      ".aliased-once { color: purple }",
+    );
+    const stylesheet = "src/site.css";
+    await fixture.write("head", stylesheet, `@import "${source}";`);
+    const { sidecar } = await viteFixtureWorker(context, setup.sourceRoot);
+    const result = await sidecar.call<ViteCssResult>("transformViteCss", {
+      setup,
+      stylesheet,
+      file: path.join(setup.sourceRoot, stylesheet),
+    });
+    await sidecar.call("shutdown");
+    assert.equal(result.text, expected);
+  });
+}

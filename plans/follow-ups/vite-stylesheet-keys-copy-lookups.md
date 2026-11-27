@@ -87,6 +87,10 @@
   - `plans/follow-ups/workspace-import-resolution-record.md`: same code. The
     lookup record of A is reuse evidence, which that shared import record can
     hold.
+  - `plans/follow-ups/vite-config-request-kind.md`: same code. Its option A
+    keeps the module paths of the Vite config apart from the swap in
+    `ViteLookup.updatePaths`. A here removes the copy of lookups in that
+    function, so the lookups of the config must then stay with the setup.
 - **Recommendation:** A. It keeps the cover for Vite's package cache, and it
   makes each key depend only on its own resolutions.
 - **Action:** fix after merge, apply A, because the cost is extra transforms,

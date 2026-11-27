@@ -139,8 +139,13 @@ async function loadSetup(
     return vite.createServer(resolved);
   });
   lookup.bind(vite, server.environments.ssr!);
+  const paths = lookup.paths;
+  for (const file of paths.lookupFiles) configuration.record(file);
+  for (const [file, digest] of paths.workspaceLookups.fileObservations())
+    configuration.record(file, digest);
   const files: SetupFiles = {
     configuration,
+    lookupDirectories: new Set(paths.lookupDirectories),
     envFiles: envFiles(server.config.mode, server.config.envDir),
     env,
     rebuild,
@@ -201,5 +206,6 @@ export function excludeRebuildFiles(
     state.postcss,
     state.rebuild.filter(({ name }) => !sources.has(name)),
     state.entries,
+    state.lookupDirectories,
   );
 }

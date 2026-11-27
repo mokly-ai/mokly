@@ -25,6 +25,10 @@ import type { VitePluginReports } from "./vite-plugin-inputs.js";
 import { viteReactImport } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
+import {
+  delegatedViteResolve,
+  viteHookResolver,
+} from "./vite-resolve-dispatch.js";
 import type { ViteStyles } from "./vite-styles.js";
 import { viteCss, viteEntry, viteFile, viteId, viteJsx } from "./vite-urls.js";
 
@@ -57,7 +61,8 @@ export function moklyViteFirstPlugin(
     ...reports.hooks(current),
     resolveId: {
       order: "pre",
-      async handler(source, importer) {
+      async handler(source, importer, options) {
+        if (delegatedViteResolve(source, importer, options.custom)) return;
         const input = current();
         source = viteId(source);
         const inline = css.forId(source);
@@ -89,10 +94,13 @@ export function moklyViteFirstPlugin(
             external: true,
           };
         }
+        const dispatch = viteHookResolver(this, options);
+        const resolve: ViteLookup["resolve"] = (id, from) =>
+          input.lookup.resolveFromHook(id, from, dispatch);
         return (
           input.styles.original(source, importer) ??
-          (await resolveViteLibrary(input, source, importer)) ??
-          resolveViteModule(input, source, importer)
+          (await resolveViteLibrary(input, source, importer, resolve)) ??
+          resolveViteModule(input, source, importer, resolve)
         );
       },
     },
@@ -104,6 +112,7 @@ export async function resolveViteLibrary(
   input: ViteInputs,
   source: string,
   importer?: string,
+  resolve = input.lookup.resolve.bind(input.lookup),
 ): Promise<string | undefined> {
   if (source === "@mokly/mokly")
     return (
@@ -116,15 +125,16 @@ export async function resolveViteLibrary(
     );
   const react = viteReactImport(source, input.peers);
   if (react) return react;
-  return input.styles.resolve(source, importer, input.lookup, input.external);
+  return input.styles.resolve(source, importer, resolve, input.external);
 }
 
 async function resolveViteModule(
-  { params, paths, lookup, external: native }: ViteInputs,
+  { params, paths, external: native }: ViteInputs,
   source: string,
   importer: string | undefined,
+  resolve: ViteLookup["resolve"],
 ) {
-  const resolution = await lookup.resolve(source, importer);
+  const resolution = await resolve(source, importer);
   if (!resolution) return null;
   const { resolved } = resolution;
   const confined = viteFile(resolved.id);

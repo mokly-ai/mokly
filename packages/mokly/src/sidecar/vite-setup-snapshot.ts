@@ -3,7 +3,11 @@ import path from "node:path";
 
 import type { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
-import { directoryFiles, metadataPath } from "./resolution-inputs.js";
+import {
+  directoryFiles,
+  directorySnapshots,
+  metadataPath,
+} from "./resolution-inputs.js";
 import { INSTALLED_INPUT_PREFIX } from "./source-dependencies.js";
 import { configPresent, viteConfigFiles } from "./vite-config.js";
 import type { VitePostcssLookup } from "./vite-postcss-lookup.js";
@@ -14,6 +18,7 @@ import type { ViteEnv } from "./vite-working-env.js";
 
 export interface SetupFiles {
   configuration: ConfigReads;
+  lookupDirectories: ReadonlySet<string>;
   envFiles: string[];
   env: ViteEnv;
   rebuild: string[];
@@ -40,6 +45,13 @@ export async function setupSnapshot(
       ),
     ),
   );
+  const lookupDirectories = await directorySnapshots(
+    new Set(
+      await Promise.all(
+        [...files.lookupDirectories].map((file) => metadataPath(paths, file)),
+      ),
+    ),
+  );
   return setupEvidence(
     configuration,
     probes,
@@ -47,6 +59,7 @@ export async function setupSnapshot(
     await files.postcss.snapshot(),
     await rebuildInputs(files.rebuild, paths),
     await directoryFiles(directory),
+    lookupDirectories,
   );
 }
 
@@ -57,10 +70,17 @@ export function setupEvidence(
   postcss: SetupInput[],
   rebuild: SetupInput[],
   entries: string[],
+  lookupDirectories: Map<string, string[]>,
 ) {
   const inputs = [...configuration.values(), ...postcss, ...rebuild];
   const envInputs = [...env.values()];
-  const stamp = JSON.stringify([inputs, envInputs, entries, [...probes]]);
+  const stamp = JSON.stringify([
+    inputs,
+    envInputs,
+    entries,
+    [...probes],
+    [...lookupDirectories],
+  ]);
   const canonical = new Map<string, Set<string | null>>();
   for (const { name, digest } of [
     ...inputs,
@@ -93,6 +113,7 @@ export function setupEvidence(
     postcss,
     rebuild,
     entries,
+    lookupDirectories,
     digest,
   };
 }
@@ -177,6 +198,12 @@ export async function verifySetup(
   }
   verifyInputs(prior.postcss, current.postcss);
   verifyInputs(prior.rebuild, current.rebuild);
+  for (const [file, names] of prior.lookupDirectories)
+    if (
+      JSON.stringify(names) !==
+      JSON.stringify(current.lookupDirectories.get(file))
+    )
+      setupChanged(paths.metadataName(file));
   const changed =
     prior.entries.find((entry) => !current.entries.includes(entry)) ??
     current.entries.find((entry) => !prior.entries.includes(entry));

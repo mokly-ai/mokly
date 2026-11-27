@@ -80,12 +80,14 @@ Mokly keeps an existing build file on the selected side, as in step 4.
 `.ts`, `.jsx`, and `.js`, in this order.
 
 The lookup recovery above does not apply under the adapter. When the working
-tree has no build file, the setup selects no file, and Vite fails with its own
-error, such as `Failed to resolve entry for package`. A base with its own
-installed dependencies fails in the same way for a Git-ignored build file,
-because its installation copies only tracked files. Both sides compile the
-source when an export condition, such as `development`, or an alias in the
-Vite setup points to the source.
+tree has no build file, Vite's own package lookup selects no file, and Vite
+fails with its own error, such as `Failed to resolve entry for package`. A
+base with its own installed dependencies fails in the same way for a
+Git-ignored build file, because its installation copies only tracked files. A
+plugin of the setup that returns the path of a missing build file selects that
+file, so the rule applies to it on both sides. Both sides compile the source
+when an export condition, such as `development`, or an alias in the Vite setup
+points to the source.
 
 Decision: under the adapter, the rule applies to the file that the setup
 selects, so both compile paths load the same source file. Rejected: the build

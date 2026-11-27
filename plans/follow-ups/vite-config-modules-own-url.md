@@ -141,6 +141,9 @@
     and `ViteLookup.sync`, so the Node form of that fix covers it.
   - `plans/follow-ups/workspace-import-resolution-record.md`: same code. The
     Vite part of that record must reach the resolve hook of D.
+  - `plans/follow-ups/vite-config-request-kind.md`: same code. Its options A
+    and B give the config bundle and its run-time loads their own module
+    paths. After D here, the resolve hook of D must use those module paths.
 - **Recommendation:** D. Node then binds every `import.meta` value and every
   import of a config module to its own file, so no value needs a hand copy.
 - **Action:** fix after merge, apply D, because D replaces the config loader

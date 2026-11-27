@@ -30,6 +30,19 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
     this.capture = capture;
   }
 
+  *fileObservations(): Iterable<[string, string | null | undefined]> {
+    for (const file of this.observed) {
+      const probe = this.probed.get(file);
+      if (probe?.kind === "absent") yield [file, null];
+      if (probe?.kind === "file")
+        yield [
+          file,
+          this.digests.get(probe.real) ??
+            this.capture.identityInputs.get(probe.real),
+        ];
+    }
+  }
+
   regular(file: string): string | undefined {
     const result = this.observeFile(file);
     return result.kind === "file" ? result.real : undefined;

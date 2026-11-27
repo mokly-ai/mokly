@@ -41,7 +41,7 @@
     file first and then a package.
   - Mokly overrides `config.createResolver` in `configureViteCss`, at
     `packages/mokly/src/sidecar/vite-css-hooks.ts:47`. The `@import` branch,
-    at line 56, sends each stylesheet import through `ViteLookup.stylesheet`
+    at line 56, sends each stylesheet import through `resolveViteStylesheet`
     with Vite's resolver. The URL branch, at line 51, calls only
     `css.active.urls.resolve`, at
     `packages/mokly/src/sidecar/vite-css-paths.ts:56`. That function rebases
@@ -112,7 +112,7 @@
     resolver. Effort: Medium.
   - **C.** Let Vite's full URL resolver select each target:
     - In the URL branch, resolve each local URL through
-      `ViteLookup.stylesheet` with Vite's resolver, as the `@import` branch
+      `resolveViteStylesheet` with Vite's resolver, as the `@import` branch
       does.
     - When Vite selects the real path of the authored relative target, keep
       the authored path. The core then applies its link rule as now. Vite
@@ -193,10 +193,10 @@
     override. The authored-path rule of C can also serve the rebase of a
     partial's `url()`.
   - `plans/follow-ups/workspace-import-resolution-record.md`: same code. C
-    sends each URL through `ViteLookup.stylesheet`, so the Vite part of that
+    sends each URL through `resolveViteStylesheet`, so the Vite part of that
     record must also describe the URL lookups.
   - `plans/follow-ups/vite-base-workspace-export.md`: same code. C sends a
-    bare package URL through the package lookup of `ViteLookup.stylesheet`,
+    bare package URL through the package lookup of `resolveViteStylesheet`,
     so the fix of that item must also cover it.
 - **Recommendation:** C. It has the same Medium effort as B, and it reuses
   the lookup that the `@import` branch already uses. It also covers tsconfig

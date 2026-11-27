@@ -254,10 +254,15 @@
   fix.
 - **Previous examples:** Commit `4614c4a90` moved the check of the configured
   PostCSS file into configuration resolution.
-- **Related:** `plans/follow-ups/esbuild-omitted-conditions.md` changes the
-  same `ModuleResolution` value, so that an omitted `conditions` field stays
-  absent. E keeps the replaced fields out of the Vite inputs. Give the two
-  changes one design.
+- **Related:**
+  - `plans/follow-ups/esbuild-omitted-conditions.md` changes the same
+    `ModuleResolution` value, so that an omitted `conditions` field stays
+    absent. E keeps the replaced fields out of the Vite inputs. Give the two
+    changes one design.
+  - `plans/follow-ups/vite-config-request-kind.md`: same code. Its options C
+    and D fill the entry and stories lists of the `transformViteCss` call,
+    which carries the bundle settings that I here changes. Give the two
+    changes one design.
 - **Recommendation:** E, with the two conditions of the wider fix. It keeps
   every replaced setting out of the compiler inputs at one place, and it
   keeps the warning on the authored field. Choose F, the typed form, when

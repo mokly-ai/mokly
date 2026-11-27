@@ -48,6 +48,44 @@ test("Vite replaces the worker when sourcePackages changes for config and catalo
   await worker.sidecar.call("shutdown");
 });
 
+test("Vite recompiles config and catalogue imports when a build becomes the renderer", async (context) => {
+  const fixture = await workspace(context, probe);
+  const params = fixture.params("head");
+  const build = `${pkg}/${probe.build}`;
+  await fixture.write(
+    "head",
+    build,
+    'export const value = "built head"; export default ({ node }) => node;',
+  );
+  await fixture.write(
+    "head",
+    "vite.config.mjs",
+    `import { value } from "local";
+     export default { define: { __VALUE__: JSON.stringify(value) } };`,
+  );
+  await fixture.write(
+    "head",
+    entry,
+    reviewPage('__VALUE__ + " / " + value', 'import { value } from "local";'),
+  );
+  const worker = await viteFixtureWorker(context, params.sourceRoot);
+  assert.equal(
+    await renderWorkspacePage(worker.sidecar, params),
+    "<html><head></head><body>source head / source head</body></html>",
+  );
+
+  params.renderer = build;
+  await assert.rejects(worker.sidecar.call("bundle", params), {
+    code: "fresh-worker-required",
+  });
+  await worker.replaceWorker();
+  assert.equal(
+    await renderWorkspacePage(worker.sidecar, params),
+    "<html><head></head><body>built head / built head</body></html>",
+  );
+  await worker.sidecar.call("shutdown");
+});
+
 test("computed CommonJS loads JavaScript with native priority", async (context) => {
   const fixture = await workspace(context, {
     ...probe,

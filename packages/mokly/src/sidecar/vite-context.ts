@@ -81,7 +81,6 @@ export class ViteContext {
     const {
       entryFiles: _entryFiles,
       storiesFiles: _storiesFiles,
-      renderer: _renderer,
       evaluation: _evaluation,
       viteInputs,
       ...settings

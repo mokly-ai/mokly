@@ -7,9 +7,11 @@ import { DependencyUsage } from "./dependency-usage.js";
 import { missingFile } from "./file-digests.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { ConfiguredModuleFiles } from "./module-configured-files.js";
+import { missingModulePath } from "./module-path-errors.js";
 import { moduleRoots, moduleRootsSync } from "./module-roots.js";
 import type { ModuleRoots } from "./module-roots.js";
 import { inside, logical, repositoryOwned } from "./path-scope.js";
+import type { CanonicalCandidate } from "./resolution-inputs.js";
 import type { SourceDependencyRoot } from "./source-dependencies.js";
 import {
   INSTALLED_INPUT_PREFIX,
@@ -22,7 +24,10 @@ import { bareSpecifier } from "./specifier.js";
 import { WorkspaceLookups } from "./workspace-lookups.js";
 import { WorkspaceSources } from "./workspace-sources.js";
 
-type ModulePathOptions = { mappedTargetHint: true };
+type ModulePathOptions = {
+  mappedTargetHint: true;
+  selected?: CanonicalCandidate;
+};
 
 export interface ModuleSources {
   sourceRoot: string;
@@ -212,25 +217,6 @@ export class ModulePaths {
     return file;
   }
 
-  private missing(
-    target: { file: string; name: string },
-    specifier: string | undefined,
-    packageTarget: string | undefined,
-  ): Error {
-    const hintTarget =
-      packageTarget ??
-      (specifier && bareSpecifier(specifier) && !path.isAbsolute(specifier)
-        ? target.file
-        : undefined);
-    const pkg = hintTarget && this.workspace.overrideHint(hintTarget);
-    const message = `module ${target.name} has no source in this side`;
-    return new Error(
-      pkg === undefined
-        ? message
-        : `${message}; set moduleResolution.sourcePackages for ${pkg}`,
-    );
-  }
-
   async resolve(
     file: string,
     specifier?: string,
@@ -238,7 +224,7 @@ export class ModulePaths {
     options?: ModulePathOptions,
   ): Promise<string> {
     if (!path.isAbsolute(file)) return file;
-    const real = await fs.promises.realpath(file);
+    const real = options?.selected?.file ?? (await fs.promises.realpath(file));
     const target = this.location(
       (await sourceDependency(this, real)) ?? real,
       packageTarget,
@@ -249,7 +235,11 @@ export class ModulePaths {
     );
     const candidate =
       source === undefined ? target : { ...target, file: source };
-    if (!candidate.mapped) return this.observe(candidate.file);
+    if (
+      !candidate.mapped &&
+      (!options?.selected?.missing || source !== undefined)
+    )
+      return this.observe(candidate.file);
     try {
       if (source === undefined && packageTarget !== undefined)
         this.workspaceLookups.nativeTarget(packageTarget);
@@ -260,7 +250,12 @@ export class ModulePaths {
       );
     } catch {
       const hintSpecifier = options?.mappedTargetHint ? specifier : undefined;
-      throw this.missing(target, hintSpecifier, packageTarget);
+      throw missingModulePath(
+        target,
+        hintSpecifier,
+        packageTarget,
+        this.workspace,
+      );
     }
   }
 
@@ -293,7 +288,12 @@ export class ModulePaths {
           return this.observe(source);
       }
       const hintSpecifier = options?.mappedTargetHint ? specifier : undefined;
-      throw this.missing(target, hintSpecifier, packageTarget);
+      throw missingModulePath(
+        target,
+        hintSpecifier,
+        packageTarget,
+        this.workspace,
+      );
     }
   }
 }
