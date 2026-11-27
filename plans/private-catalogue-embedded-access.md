@@ -293,6 +293,17 @@ My call, 2026-11-27, under D3 B:
   passing network error into a final stage; a user-agent check, which breaks
   easily; a server that refuses the bearer for old publications, which gives
   the retryable card.
+- **Start page check credential.** 2026-11-27, my call, from the re-review of
+  the catalogue server branch. The check runs only after the cookie
+  confirmation fails, and it carries `Authorization: Bearer` with the token of
+  the exchange. Reason: without a credential the host answers 401 for a
+  missing start page and an existing one alike, as the private access rules
+  require, and with access it answers 404 for a missing file. The bearer read
+  sends a CORS preflight, as every bearer read in that branch does. Not
+  chosen: a 404 for a direct uncredentialed read of a missing public file,
+  which changes the documented 401 rule; a read with no credential that
+  treats 401 as missing, which gives 401 a second meaning; a start page flag
+  in the grant answer or the API, which changes the documented answer shapes.
 
 ## Contract owners
 
@@ -439,9 +450,10 @@ Depends on: 6, 7
 - [ ] Keep the token from `/_access` in `access.ts`, share it, and renew it
       before expiry.
 - [ ] Send the bearer on the app's private reads and the reachability check.
-- [ ] Before the bearer confirmation, read `mokly-viewer/client/access-start.html`
-      once, and show the blocked access state on a 404, as the start page
-      check design call says.
+- [ ] When the cookie confirmation fails, and before the bearer confirmation,
+      read `mokly-viewer/client/access-start.html` once with the bearer, and
+      show the blocked access state on a 404, as the start page check design
+      calls say.
 - [ ] Pass the `access` callback and the failure callback to
       `postMessageAdapter` in `published.web.tsx`, and set the blocked access
       state when the failure callback fires.

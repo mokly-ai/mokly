@@ -175,13 +175,16 @@ confirmed, and it renews the exchange as the
 A refused or expired grant exchange stays in the retryable access state, and so
 does a bearer confirmation that fails.
 
-Before the bearer confirmation, the app reads the publication's
-`mokly-viewer/client/access-start.html` once. When the host answers 404, the
-app shows the blocked stage below and does not mount the viewer. Decision: the
+When the cookie confirmation fails, and before the bearer confirmation, the
+app reads the publication's `mokly-viewer/client/access-start.html` once with
+`Authorization: Bearer` and the token of the exchange. When the host answers
+404, the app shows the blocked stage below and does not mount the viewer. Decision: the
 app checks for the start page, because the frames of a publication without it
 can never reach the embedded route, and the frame adapter then reports no
-failure. Safari before 16.4 sends no `Sec-Fetch-Dest`, so its frames show the
-frame error of the viewer.
+failure. Decision: the check carries the bearer, because without a credential
+the host answers 401 for a missing file and an existing one alike. Safari
+before 16.4 sends no `Sec-Fetch-Dest`, so its frames show the frame error of
+the viewer.
 
 When the frame adapter reports through `onAccessFailure` that a frame can open
 no access route, the app replaces the catalogue with the blocked stage. The
