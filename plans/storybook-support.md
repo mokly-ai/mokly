@@ -3076,7 +3076,7 @@ merges. The review TODO below reviews the merged code.
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
       of the review are follow-up items under `plans/follow-ups/`.
-- [ ] Apply answer B to track D decision 6: the Vite calls of the workspace
+- [x] Apply answer B to track D decision 6: the Vite calls of the workspace
       source step pass the import name, as the esbuild call does. Add the
       Vite rows for `sourcePackages` to
       `tests/fixtures/workspace-sources.json`, test the head and the base
