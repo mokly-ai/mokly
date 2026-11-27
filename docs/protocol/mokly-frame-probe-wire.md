@@ -126,10 +126,11 @@ box model of an instance and the content box of a document. Its envelope
 carries `version: 4`. Each peer accepts only its own version. A version 3 probe
 and a version 4 viewer reject each other's handshake.
 
-After each load, a version 4 adapter also sends the version 3 `hello` with the
-same nonce. A version 4 probe ignores it. A version 3 `ready` with that nonce,
-from the exact frame and origin, rejects the pending mount with `version`. The
-adapter never runs a version 3 session. Decision (2026-11-27): the viewer names
+After each load, a version 4 adapter also sends the version 3 `hello` and then
+the version 3 `dispose`, both with the same nonce. A version 4 probe ignores
+them. A version 3 probe answers `ready` and then stops its work. A version 3
+`ready` with that nonce, from the exact frame and origin, rejects the pending
+mount with `version`. The adapter never runs a version 3 session. Decision (2026-11-27): the viewer names
 a page that an earlier Mokly built, so the reader knows to build it again.
 Support for the version 3 session was rejected, because the viewer would lose
 measurement and canvas input on those pages.

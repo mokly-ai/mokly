@@ -76,7 +76,7 @@ test("a frame that an earlier Mokly built names the way on, without Try again", 
   );
   assert.equal(
     screen.getByRole("status").textContent,
-    "This preview was built with an older version of Mokly. Update Mokly and build it again.",
+    "This preview was built with an older version of Mokly. Update Mokly in the project, then publish it again.",
   );
   assert.equal(screen.queryAllByRole("button").length, 0);
 });

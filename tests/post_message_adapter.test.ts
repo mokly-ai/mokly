@@ -165,13 +165,13 @@ test("subscriptions share one replaceable event installation with idempotent cle
   const events: FrameEvent[] = [];
   const off1 = fake.mounted.subscribe((event) => events.push(event));
   const off2 = fake.mounted.subscribe((event) => events.push(event));
-  assert.equal(fake.posts.length, 3);
+  assert.equal(fake.posts.length, 4);
   fake.send({ type: "ack", requestId: 1 }, fake.sessionNonce);
   fake.send({ type: "geometry" }, fake.sessionNonce);
   assert.equal(events.length, 2);
   off1();
   off1();
-  assert.equal(fake.posts.length, 3);
+  assert.equal(fake.posts.length, 4);
   off2();
   off2();
   assert.deepEqual(JSON.parse(fake.posts.at(-1)!.data).events, []);
@@ -191,7 +191,7 @@ test("requests are monotonic and limited to 16; timeout disposes all pending wor
     code: "limit",
   });
   assert.deepEqual(
-    fake.posts.slice(2).map((post) => JSON.parse(post.data).requestId),
+    fake.posts.slice(3).map((post) => JSON.parse(post.data).requestId),
     Array.from({ length: 16 }, (_, index) => index + 1),
   );
   fake.expire();

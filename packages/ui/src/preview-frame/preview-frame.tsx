@@ -57,8 +57,8 @@ export function FrameFailure({
 export function FrameOutdated() {
   return (
     <p className="mbk-frame-error mbk-reset" role="status">
-      This preview was built with an older version of Mokly. Update Mokly and
-      build it again.
+      This preview was built with an older version of Mokly. Update Mokly in the
+      project, then publish it again.
     </p>
   );
 }

@@ -200,7 +200,7 @@ Published pages use `mokly-viewer/client/frame-probe.js`, channel
 `mokly-frame-probe` and frame wire version 4. A viewer and a page with
 different frame wire versions reject each other's frame protocol, so pages
 from a Mokly release with an earlier wire version do not work in the viewer.
-For wire version 3, the viewer asks the reader to update Mokly and build again.
+For wire version 3, the viewer asks the reader to update Mokly and publish again.
 Republish such catalogues after the matching app deploys. Stored publications are not converted.
 
 The public index and detail readers gate versions and return copies.

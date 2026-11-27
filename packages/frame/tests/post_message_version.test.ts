@@ -30,6 +30,10 @@ test("a page whose probe answers only the version 3 handshake rejects the mount 
         { channel: "mokly-frame-probe", version: 3, nonce, type: "hello" },
         "https://frames.test",
       ],
+      [
+        { channel: "mokly-frame-probe", version: 3, nonce, type: "dispose" },
+        "https://frames.test",
+      ],
     ],
   );
   fake.raw(earlier(nonce, "ready"));

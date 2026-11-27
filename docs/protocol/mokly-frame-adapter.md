@@ -104,9 +104,8 @@ A mount has no time limit while the frame's document loads. Until it settles,
 each load gives it 5,000 ms to accept a document or get a reply, or it rejects
 with `timeout`. A request without a reply in 5,000 ms rejects with `timeout`
 and disposes the mount, so every later request rejects with `disposed`.
-A mount whose document holds a frame probe of an earlier wire version rejects
-with `version`, as the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v4)
-says.
+A mount rejects with `version` when an earlier Mokly built its document, so no
+mount of that document can succeed.
 Decision: Serve renders pages on demand, so no fixed load limit fits.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
@@ -233,7 +232,8 @@ documents bypass it.
 
 `postMessageAdapter` mounts a frame on a separate origin. The
 [frame probe handshake and wire protocol](./mokly-frame-probe-wire.md) define
-its mount, its handshake with the frame probe, and its wire protocol. The
+its mount, its handshake with the frame probe, its wire protocol, and its
+[`version` rejection](./mokly-frame-probe-wire.md#wire-protocol-v4). The
 [frame probe contract](./mokly-frame-probe.md) defines the frame probe script
 that the static build injects.
 

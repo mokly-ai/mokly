@@ -9,14 +9,16 @@ const EARLIER_VERSION = 3;
 
 const CHANNEL = "mokly-frame-probe";
 
-/** The handshake of the earlier probe, which a current probe ignores. */
-export const earlierHello = (nonce: string): string =>
-  JSON.stringify({
-    channel: CHANNEL,
-    version: EARLIER_VERSION,
-    nonce,
-    type: "hello",
-  });
+/**
+ * The handshake of the earlier probe and, right after it, its disposal. A
+ * current probe ignores both. An earlier probe answers the handshake with
+ * `ready` and then stops the work that the handshake started, because the
+ * mount never runs its session.
+ */
+export const earlierHandshake = (nonce: string): readonly string[] =>
+  (["hello", "dispose"] as const).map((type) =>
+    JSON.stringify({ channel: CHANNEL, version: EARLIER_VERSION, nonce, type }),
+  );
 
 /** Whether a message is the earlier probe's answer to this mount's handshake. */
 export const earlierReady = (data: unknown, nonce: string): boolean => {

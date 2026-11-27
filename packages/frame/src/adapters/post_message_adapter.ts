@@ -5,7 +5,7 @@ import type {
 } from "../frame_adapter.js";
 import { origin } from "../probe/values.js";
 
-import { earlierHello, earlierReady } from "./earlier_probe.js";
+import { earlierHandshake, earlierReady } from "./earlier_probe.js";
 import { FrameError } from "./frame_error.js";
 import { notifyFrameListeners } from "./frame_event_listeners.js";
 import { frameUrl, ownFrame } from "./frame_mount.js";
@@ -253,7 +253,7 @@ export function postMessageAdapter(options: {
         try {
           transport.send({ type: "hello" });
           // A page that an earlier Mokly built answers only its own version.
-          post(earlierHello(nonce));
+          for (const message of earlierHandshake(nonce)) post(message);
         } catch {
           dispose();
         }
