@@ -62,6 +62,12 @@
 - **Previous examples:** The Serve process fixtures now use the shared owner.
   The existing `changes_support/mod.rs` and `diagnostic_support/fixture.rs`
   already supply child HOME and OS-cache variables with owned temporary data.
+- **Related:**
+  [isolated-git-in-every-test-helper.md](./isolated-git-in-every-test-helper.md):
+  the same kind of cause. A CLI child in a test keeps part of the
+  environment of the developer: the cache home here, and the Git settings
+  there. Its option B adds the Git variables to `Cache::environment`, the
+  owner that option A here uses.
 - **Recommendation:** A. It reuses the existing ownership and environment
   boundary, with fewer repeated platform rules.
 - **Action:** fix after merge, apply A. The two non-Serve launchers predate the

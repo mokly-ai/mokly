@@ -74,7 +74,8 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
             &config,
             Some("changed-ref"),
             Arc::new(Unimock::new(())),
-            None
+            None,
+            &mut Vec::new()
         ),
         Err(Error::UnsupportedManager)
     ));
@@ -137,7 +138,13 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
         modules: Default::default(),
         authored_inputs: vec![],
     };
-    let result: Result<_> = service.classify(&config, None, Arc::new(Unimock::new(())), None);
+    let result: Result<_> = service.classify(
+        &config,
+        None,
+        Arc::new(Unimock::new(())),
+        None,
+        &mut Vec::new(),
+    );
     assert!(matches!(
         result,
         Err(Error::Base {
@@ -213,6 +220,7 @@ fn install_scripts_override_takes_precedence_over_the_working_setting() {
                 None,
                 Arc::new(Unimock::new(())),
                 install_scripts_override,
+                &mut Vec::new(),
             ),
             Err(Error::Base { source, .. }) if matches!(*source, Error::UnsupportedManager)
         ));

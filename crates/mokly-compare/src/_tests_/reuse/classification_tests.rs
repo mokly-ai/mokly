@@ -173,6 +173,7 @@ fn failed_kept_base_retry_clears_its_candidate_before_the_fresh_comparison_fails
             None,
             edited.generation(true, true),
             None,
+            &mut Vec::new(),
         )
         .unwrap_err();
     assert!(

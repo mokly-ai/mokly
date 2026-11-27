@@ -17,7 +17,10 @@ command.
 
 Mokly renders the base side from the base commit's sources with the installed
 release, through the base commit's own `mokly.config.json`, renderer and
-module resolution. The configuration names no rebuild recipe,
+module resolution. For a workspace package, the base also tries the working
+tree's `moduleResolution.sourcePackages` entry after its own entry, under the
+[layout order](../mokly-comparison-packages.md#layout-order). The
+configuration names no rebuild recipe,
 no command installs or runs an earlier Mokly release, and no comparison reads
 a committed generated tree. A Mokly upgrade alone therefore
 lists no change.

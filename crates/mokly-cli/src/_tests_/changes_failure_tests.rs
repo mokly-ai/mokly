@@ -53,7 +53,7 @@ fn strict_reports_head_and_base_preparation_warnings_after_classification() {
         changes: Arc::new(Unimock::new((
             capture_head(),
             ChangesServiceMock::classify
-                .next_call(matching!(_, _, _, _))
+                .next_call(matching!(_, _, _, _, _))
                 .returns(Err(Error::Base {
                     commit: "a".repeat(40),
                     scripts_off: false,

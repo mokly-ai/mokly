@@ -101,7 +101,7 @@ pub(super) fn classify(
             StepsMock::step.each_call(matching!(_)).returns(()),
         )),
     };
-    changes.classify(config, None, head, None)
+    changes.classify(config, None, head, None, &mut Vec::new())
 }
 
 /// Retain public reader handles in an otherwise empty classification result.

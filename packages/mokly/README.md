@@ -115,6 +115,13 @@ sidecar.
 When module lookup selects a built file from a workspace package, Mokly
 looks for the matching source in each render's own tree.
 See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+For one package, `moduleResolution.sourcePackages` overrides the folders that
+Mokly detects: an entry maps its build folders to its source folders, or
+keeps its built files with `false`. The
+[layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order)
+says how each render applies the entries, and the
+[configuration guide](../../docs/guides/authoring/config.md#workspace-packages)
+gives examples.
 
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and

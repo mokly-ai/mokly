@@ -143,3 +143,54 @@ test("a computed PostCSS require keeps an existing workspace build", async (cont
   assert.match(result.text, /selected:\s*built/);
   await sidecar.call("shutdown");
 });
+
+test("a computed PostCSS require can use an export that exists only in the base manifest", async (context) => {
+  const root = await nativeRoot(context);
+  const head = path.join(root, "head");
+  const base = path.join(root, "base");
+  const pkg = "packages/local";
+  const name = "workspace-local";
+  await write(
+    path.join(head, pkg, "package.json"),
+    JSON.stringify({ name, exports: "./index.cjs" }),
+  );
+  await write(
+    path.join(base, pkg, "package.json"),
+    JSON.stringify({
+      name,
+      exports: { "./plugin": { require: "./dist/plugin.cjs" } },
+    }),
+  );
+  await write(
+    path.join(base, pkg, "dist/plugin.cjs"),
+    'module.exports = "base-build";',
+  );
+  await link(path.join(head, pkg), path.join(head, "node_modules", name));
+  await write(
+    path.join(base, "postcss.mjs"),
+    `
+    const value = require(["workspace-local", "plugin"].join("/"));
+    export default {plugins: [{postcssPlugin:"selected", Once(root) {
+      root.append({prop:"selected", value});
+    }}]};
+  `,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({
+      sourceRoot: base,
+      repositoryRoots: [head],
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        dependencyRoot: head,
+        packageRoots: [head],
+        sourcePackages: [{ [name]: false }],
+      },
+      text: "a{}",
+    }),
+  );
+  assert.match(result.text, /selected:\s*base-build/);
+  await sidecar.call("shutdown");
+});

@@ -128,6 +128,7 @@ fn directory_recipes_keep_empty_roots_and_accept_later_subdirectories() {
         path: "content".into(),
         glob: "**/*.txt".into(),
         origin: PluginInput {
+            import: None,
             plugin: "fixture".into(),
             stylesheet: "theme.css".into(),
         },
@@ -200,6 +201,7 @@ fn larger_reported_inventories_keep_the_same_effective_target_count() {
             path: "content".into(),
             glob: "**/*.txt".into(),
             origin: PluginInput {
+                import: None,
                 plugin: "scan".into(),
                 stylesheet: "theme.css".into(),
             },

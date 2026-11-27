@@ -13,6 +13,10 @@ use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
 
+pub mod source_packages;
+
+use self::source_packages::SourcePackages;
+
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[ts(rename = "EmptyParams")]
@@ -52,6 +56,10 @@ pub struct ModuleResolution {
     /// Ordered extension candidates.
     #[serde(default)]
     pub resolve_extensions: Vec<String>,
+    /// Workspace source overrides in layout order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(optional, as = "Option<_>")]
+    pub source_packages: Vec<SourcePackages>,
 }
 
 /// Inputs compiled into one unevaluated bundle.

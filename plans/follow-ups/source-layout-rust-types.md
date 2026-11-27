@@ -1,0 +1,40 @@
+# Three Rust types represent one layout
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from finding 104 of round 2 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `SourcePackage` at `crates/mokly-catalogue/src/config_types.rs:78`, `SourcePackage` at `crates/mokly-sidecar/src/methods/source_packages.rs:15`, `SourcePackages` at `crates/mokly-css/src/resolution.rs:11`, `source_package_maps` at `crates/mokly-render/src/side.rs:59`, `resolution` at `crates/mokly-render/src/stylesheets.rs:40`, `working_layout` at `crates/mokly-compare/src/ignored_modules.rs:161`, `resolution` at `crates/mokly-cli/src/base_dependency_selection.rs:16`, and `loaders` at `crates/mokly-render/src/transport_values.rs:16`.
+- **Reason:** The recommended option moves the layout types across five crates, and the current conversions keep the layout values, so the defect costs only upkeep.
+
+- **Source:** Review.
+- **Category:** Code structure.
+- **Terms:**
+  - **Source layout:** One `moduleResolution.sourcePackages` entry: a map from the build folders of a workspace package to its source folders, or `false` to stop source lookup.
+  - **Layout order:** The ordered list of layout maps that a side tries. The "Layout Order" section of `docs/protocol/mokly-comparison-packages.md` defines it.
+  - **Sidecar:** Mokly's Node process for JavaScript and PostCSS.
+- **Background:**
+  - Mokly parses each source layout once. JavaScript and CSS then get the same ordered entries. The stylesheet setup reads the list from the sidecar settings, also for an HTML-only render that starts no sidecar.
+  - Three Rust types hold a source layout:
+    - `mokly_catalogue::config_types::SourcePackage`, an enum with `Disabled` and `Folders`, with its own `Serialize` and `Deserialize` code.
+    - `mokly_sidecar::methods::source_packages::SourcePackage`, the same enum with its own serde attributes. The TypeScript type of the sidecar comes from it.
+    - `mokly_css::resolution::SourcePackages`, a map from a package name to an `Option` of a folder map. `None` ends layout lookup.
+  - `source_package_maps` builds the layout order of a side from the catalogue type into the sidecar type. The authored entries come first, then the distinct working entries. `resolution` in `stylesheets.rs` converts the sidecar type into the CSS type. `working_layout` builds the CSS type from the catalogue type again, from the authored map only.
+  - `resolution` in `base_dependency_selection.rs` builds a second sidecar `ModuleResolution` from the configuration. Its loader mapping repeats `loaders` in `transport_values.rs`, which is private to `mokly-render`. That copy is on `origin/main`. On 2026-11-26 the source package override added the layout list to it.
+  - `mokly-sidecar` depends on no other Mokly crate. `mokly-catalogue` and `mokly-css` depend on `mokly-model`.
+  - The test at `crates/mokly-render/src/_tests_/stylesheet_resolution_tests.rs:59` checks the layout list of a CSS-only base through the current types. It guards this change, and it needs a rewrite for the new type.
+- **Problem:** The catalogue and the sidecar crates define the same enum and serialize it apart. The stylesheet setup converts the catalogue value through that enum into a third form. The warning check builds the same CSS form from the catalogue on its own.
+- **Impact if no action:** A change to a source layout must update three types and both CSS conversions. The CSS-only setup also clones the maps through the sidecar type.
+- **Root question:** How does every consumer of a source layout get one definition of an entry and one ordered list for each side?
+- **Options:**
+  - **A.** Build both consumer settings from one ordered list in the catalogue type. Convert directly to the type of each consumer. The separate types and serializers stay. Effort: Medium.
+  - **B.** Put one Rust entry type in `mokly-model`, and use it in the configuration, the sidecar settings, and the CSS settings. Generate the TypeScript type with the sidecar declarations. `mokly-sidecar` then depends on `mokly-model`. Effort: Medium.
+  - **C.** Share one domain type for the configuration and CSS. Keep one conversion at the sidecar transport boundary, so that the wire format can change apart. Effort: Medium.
+  - **D.** B, and move the order rule of `source_package_maps` onto `ResolvedConfig` in `mokly-catalogue`, so that the warning check reads the same list as the renders. Effort: Medium.
+  - **E.** Give all module resolution values of a side one owner: the aliases, conditions, loaders, main fields, extensions, package roots, and layouts. The sidecar request, the CSS settings, the base dependency selection, and the warning check read that one value. This also removes the loader copy in `base_dependency_selection.rs`. Effort: Large.
+- **Left out:** A dependency from the CSS compiler to the sidecar crate. It couples the compiler to the transport for this one value.
+- **Wider fix:** E. One owner gives every consumer the same module resolution values, so no consumer builds them again.
+- **Previous examples:** Commit `4614c4a90` made the configured renderer and PostCSS module paths resolve once for their consumers.
+- **Related:**
+  - [stylesheet-key-unread-settings.md](./stylesheet-key-unread-settings.md): same code. Its typed stylesheet key derives the layout identity from the ordered layouts. Do this item first, or do both together.
+- **Recommendation:** D, changed from B by the finding check. It removes the conversions, keeps the JSON shape in one place, and gives the warning check the same ordered list. E best protects the codebase, at a Large cost.
+- **Action:** fix after merge, apply D, because it moves types across five crates and the defect costs only upkeep.

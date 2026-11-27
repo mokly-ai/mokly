@@ -16,6 +16,13 @@ import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionOptions } from "./resolution.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
 
+/** Warnings that can leave the require target unknown until evaluation. */
+export const runtimeRequireWarnings = {
+  "unsupported-require-call": "warning",
+  "indirect-require": "warning",
+  "direct-eval": "warning",
+} as const;
+
 interface BundleBuild {
   params: BundleParams;
   paths: ModulePaths;
@@ -79,7 +86,10 @@ export function bundleOptions({
     keepNames: true,
     metafile: true,
     logLevel: "silent",
-    ...(resolution.mode === "native" ? { logOverride: nativeLogOverride } : {}),
+    logOverride: {
+      ...(resolution.mode === "native" && nativeLogOverride),
+      ...(editImports && runtimeRequireWarnings),
+    },
     plugins: [
       configuredFiles(paths, resolution),
       ...(evidence ? [evidence.plugin] : []),

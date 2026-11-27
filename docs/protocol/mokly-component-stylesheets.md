@@ -179,6 +179,8 @@ outside the public boundary is an error, not an omission.
 `duplicate component stylesheet <path> is ignored; it is linked once.`
 `<path>` is the first authored public path for that real file, JSON-quoted.
 The [warning channel](./mokly-build-warnings.md) counts it in strict mode. A
-configured and declared overlap needs no warning. No other warning exists for
-component stylesheets: the core places every link itself, so no anchor can be
-missing.
+configured and declared overlap needs no warning. Component stylesheet linking
+gives only the duplicate warning because Mokly places every link itself.
+
+Changes can report a Git-ignored stylesheet with
+[`ignored-module`](./mokly-comparison-packages.md#ignored-modules).

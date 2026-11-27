@@ -90,12 +90,13 @@ Create `mokly.config.json` in your repository root:
 { "$schema": "./node_modules/@mokly/mokly/config.schema.json" }
 ```
 
-Paths are relative to the configuration file. Mokly reads the `specs`
-directory beside it by default: every `.screen.html`, `.component.html`,
-`.page.html`, `.use-case.yaml`, `.mockup.tsx`, and `.stories.tsx` file is an
-entry, and every `.md` file is a document. A file's place in that tree is its
-place in the catalogue. List `roots` to read other directories, such as a
-component library with `{ dir: "packages/ui/src", path: "components" }`.
+Paths are relative to the configuration file by default. Without `roots`,
+Mokly reads the `specs` directory beside it. Every `.screen.html`,
+`.component.html`, `.page.html`, `.use-case.yaml`, `.mockup.tsx`, and
+`.stories.tsx` file is an entry, and every `.md` file is a document. A file's
+place in that tree is its place in the catalogue. List `roots` to read other
+directories, such as a component library with
+`{ dir: "packages/ui/src", path: "components" }`.
 Point `renderer` at your own module when React screens need product theme
 providers or React Native Web style collection. See the
 [configuration guide](./docs/guides/start/configure.md).

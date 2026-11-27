@@ -58,6 +58,19 @@ and link, and the module that each PostCSS request names use that form.
 Configured and declared stylesheets keep the form of `repository_path`. Their
 stylesheet roots and links and the declared stylesheet check use it.
 
+`config_validation::parse` checks `moduleResolution.sourcePackages` with the
+shipped schema. It then normalizes the folders of each entry and rejects an
+entry that names one build folder twice, with `config-invalid` at the
+position of that folder. `SourcePackage` holds one entry: `Disabled` for
+`false`, or `Folders`, a map from build folder to source folder.
+`ResolvedConfig::source_packages` returns the entries of one configuration.
+When `mokly-cli` loads the base configuration of a comparison, it keeps the
+working entries beside it in `ResolvedModules.working_source_packages`.
+`mokly-render` then passes the entries of each render in the
+[layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order).
+The [source package rules](../../docs/protocol/mokly-configuration.md#source-packages)
+own the accepted values.
+
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
 paths on Windows too. Its file-object metadata lets static builds detect
@@ -223,7 +236,11 @@ The property test of the source maps over the vendored HTML corpus lives in
   which find and load the configuration into a `ResolvedConfig`.
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
   shape, the `ResolvedConfig` that later stages read, and `ResolvedModules`,
-  which holds the resolved renderer and PostCSS module paths.
+  which holds the resolved renderer and PostCSS module paths and, beside a
+  base configuration, the working `sourcePackages` entries.
+- [`src/config_validation.rs`](./src/config_validation.rs) provides `parse`,
+  which validates the configuration text against the shipped schema and the
+  semantic rules, and normalizes the folders of each `sourcePackages` entry.
 - [`src/config_inputs.rs`](./src/config_inputs.rs) confines local inputs at
   load and resolves the renderer and the PostCSS module.
 - [`src/config_paths.rs`](./src/config_paths.rs) gives

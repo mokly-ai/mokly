@@ -106,6 +106,7 @@ fn a_short_reply_keeps_the_shared_disk_recipe_graph_and_pool_metadata() {
             "seed".into(),
             params(),
             vec![Module {
+                package_import: None,
                 path: "entry.ts".into(),
                 digest: Some("entry-digest".into()),
                 imports: vec!["shared.ts".into()],

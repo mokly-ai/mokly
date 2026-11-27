@@ -1,0 +1,38 @@
+# Strict output tests rebuild from identical inputs
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the check of finding 84 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `crates/mokly-cli/tests/ignore_warning_tests.rs:41`, `crates/mokly-cli/tests/build_tests.rs:107`, `crates/mokly-cli/tests/stylesheet_warning_tests.rs:74`, and `crates/mokly-cli/tests/callback_diagnostics_tests.rs:40`.
+- **Reason:** The four tests are on `origin/main`, outside the files of the branch that found the gap.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Strict build:** A `mokly build --strict` run. It fails when it counts a warning, before it writes the output directory.
+  - **Export marker:** The file `.mokly-export-artifact` in the output directory, which holds the inventory of the output files.
+- **Background:**
+  - The "Strict Mode" section of `docs/protocol/mokly-build-warnings.md` says that a strict build fails before it writes its output directory, so the existing output stays unchanged.
+  - Four CLI tests check this rule. Each runs a normal build and keeps the bytes of the output index or the export marker. Then it runs a strict build with the same inputs and compares the bytes.
+  - The four tests and the files that they compare:
+    - `unknown_ignore_attributes_warn_once_and_strict_preserves_output` compares `site/mokly-viewer/index.json`.
+    - `warnings_print_once_and_strict_fails_before_any_write` compares `.context/site/.mokly-export-artifact`.
+    - `extglob_warns_once_across_all_views_and_strict_preserves_existing_output` compares the index and the export marker.
+    - `page_callback_warnings_print_and_strict_keeps_existing_output` compares the index and the export marker.
+  - `finalize` in `crates/mokly-static/src/identity.rs` stamps a deterministic deployment identity, which is a digest of the bytes of each output file. So two builds from the same inputs write the same index and marker bytes.
+  - On 2026-11-26 the review branch fixed the same gap in its own strict test of the `ignored-module` warning. That test changes `specs/home.screen.html` before the strict run, so an install changes the deployment identity.
+- **Problem:** A strict build that installed a fresh copy of the same site would write the same bytes, so each comparison still passes. The tests do not prove that a strict build keeps the installed output.
+- **Impact if no action:** A change that lets a strict build replace the output can pass these four tests. New strict tests can copy the same pattern, as the review branch did first.
+- **Root question:** Which test fails when a strict build writes its output after it counts a warning?
+- **Options:**
+  - **A.** In each of the four tests, change an input that loads no module before the strict run, such as the text of a page. Keep the exit, warning, index, and marker checks. Effort: Small.
+  - **B.** Add one shared helper to the CLI test support code, and move the four tests and the strict test of the `ignored-module` warning to it. Effort: Small.
+    - The helper runs the normal build, changes an input, runs the strict build, and checks that the output did not change.
+    - Each test gives its own fixture, warning lines, and strict count.
+  - **C.** Compare the identity of the output directory before and after the strict run, through `mokly_static::filesystem::SystemFiles`. The install moves a staged directory into place, so each install changes the identity. The check depends on that install method. Effort: Small.
+  - **D.** Test the install boundary in `crates/mokly-static/tests/transaction_tests.rs`, where a strict refusal must make no install call. Keep the CLI checks as they are. Effort: Medium.
+- **Left out:** A check that the standard output is empty. Three of the tests check it already, and a run can install the output and still fail before it prints.
+- **Wider fix:** B. Each strict output test then uses the helper, so a new test cannot compare two builds from identical inputs.
+- **Previous examples:** The strict test of the `ignored-module` warning on the review branch copied this pattern, and the branch fixed it on 2026-11-26.
+- **Recommendation:** B. It fixes the four tests and stops new copies of the pattern, at the cost of A.
+- **Action:** fix after merge, apply B, because the four tests are on `origin/main` and outside the files of this branch.

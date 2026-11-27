@@ -24,11 +24,15 @@ impl GitRepository {
             .stdout)
     }
 
-    /// Disable monitor helpers while retaining promisor object-fetch ownership.
     pub(crate) fn file_listing(&self, flags: &[&str]) -> Result<Vec<u8>> {
+        Ok(self.runner.run(&self.file_listing_request(flags))?.stdout)
+    }
+
+    /// Disable monitor helpers while retaining promisor object-fetch ownership.
+    pub(crate) fn file_listing_request(&self, flags: &[&str]) -> Request {
         let mut args = vec!["-c", "core.fsmonitor=false", "ls-files"];
         args.extend_from_slice(flags);
-        Ok(self.runner.run(&self.tree_request(&args))?.stdout)
+        self.tree_request(&args)
     }
 
     /// Own lazy-fetch helpers whenever this repository has a promisor remote.

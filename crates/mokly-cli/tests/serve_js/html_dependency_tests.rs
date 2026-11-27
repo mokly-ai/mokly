@@ -73,3 +73,68 @@ async fn html_dependency_warnings_follow_removed_and_reused_package_stylesheets(
     }
     serve.stop().await;
 }
+
+const WARNING: &str =
+    "  ! configuration \"mokly.config.json\": module generated/theme.css is ignored by…";
+
+#[tokio::test]
+async fn serve_reports_each_ignored_file_once_per_attempt() {
+    let mut serve = Serve::configured("", &|root, _| {
+        fs::remove_file(root.join("specs/home.mockup.tsx")).unwrap();
+        write(
+            &root.join("specs/home.screen.html"),
+            "---\ntitle: Home\n---\n<p>Home</p>",
+        );
+        write(
+            &root.join("mokly.config.json"),
+            r#"{"review":{"base":"HEAD"},"stylesheets":[{"match":"**","stylesheets":["style.css","extra.css"]}]}"#,
+        );
+        for file in ["style.css", "extra.css"] {
+            write(&root.join(file), "p { color: blue }");
+        }
+        write(
+            &root.join(".gitignore"),
+            "node_modules/\n.fixture-sidecar/\ngenerated/\n",
+        );
+        git(root, &["init", "-q"]);
+        git(root, &["add", "-A"]);
+        git(
+            root,
+            &[
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.test",
+                "commit",
+                "-qm",
+                "base",
+            ],
+        );
+        fs::create_dir(root.join("generated")).unwrap();
+        write(&root.join("generated/theme.css"), "p { color: red }");
+        for file in ["style.css", "extra.css"] {
+            write(&root.join(file), "@import './generated/theme.css';");
+        }
+    })
+    .await;
+    serve.listening().await;
+    let first = serve.wait_line(0, "Changes ready").await;
+    assert!(serve.html().await.contains("Home"));
+    assert!(serve.html().await.contains("Home"));
+
+    let marker = serve.log_count();
+    serve.key(b"r");
+    serve.wait_line(marker, "manual rebuild").await;
+    serve.wait_line(marker, "Changes ready").await;
+    serve.stop().await;
+
+    let lines = serve.lines.lock().unwrap();
+    for attempt in [&lines[..marker], &lines[marker..]] {
+        let warnings: Vec<_> = attempt
+            .iter()
+            .filter(|line| line.contains("module generated/theme.css is ignored by"))
+            .map(|line| line.trim_end_matches('\r'))
+            .collect();
+        assert_eq!(warnings, [WARNING], "{first}\n{attempt:?}");
+    }
+}

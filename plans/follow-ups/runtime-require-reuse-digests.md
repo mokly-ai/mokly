@@ -1,0 +1,59 @@
+# Runtime requires keep digests for every workspace build
+
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from finding 133 of the review of branch `calummoore/mokly-source-package-override-jkum`. Corrected on 2026-11-27, from finding 190 of round 3 of the same review.
+- **Location:** `WorkspaceLookups.runtimeBuilds` at `packages/mokly/src/sidecar/workspace-lookups.ts:206`, `hasUnresolvedRequire` at `packages/mokly/src/sidecar/bundle-recipe.ts:71`, `METADATA_FILE_LIMIT` at `packages/mokly/src/sidecar/physical-input-reader.ts:15`, `ReuseEvidence::serve_edit` at `crates/mokly-sidecar/src/compiled.rs:92`, the "Private Folder Files" section of `docs/protocol/mokly-sidecar-folder-reuse.md`, and the "Source And Dependency Files" section of `docs/protocol/mokly-sidecar-modules.md`.
+- **Reason:** The fix changes both reuse readers, and it needs the fresh loads of `restored-require-module-cache.md` to be correct.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Serve:** Mokly's development server. It shows the catalogue in a browser and builds the changed parts again after each file change.
+  - **Marked edit evidence:** The files that Serve checks before it reuses a bundle after an edit. A present file carries a digest of its content or, for a file whose content cannot change the result, only its path.
+  - **Serve edit marker:** The value `uncaptured: "serveEdit"` in the reuse evidence of a bundle, which lets Serve reuse the bundle under the marked edit evidence.
+  - **Restored require:** The `require` function that the sidecar gives to the code of a bundle. It loads each module that the bundle keeps for run time through Node.
+  - **Unresolved require:** A use of `require` in the emitted bundle whose target the sidecar cannot know at compile time. `hasUnresolvedRequire` decides it.
+- **Background:**
+  - On 2026-11-27 Cal chose path-only entries in the marked edit evidence for build files that a lookup records only for their presence. So a large unused build keeps edit reuse. Manifests, layout files, and a build that a `require` loaded by Node keeps carry digests, because their content reaches the render.
+  - An unresolved require can load a recorded build at run time, after the evidence goes to the Rust side of Mokly. So when a bundle has an unresolved require, `runtimeBuilds` keeps a digest for each workspace build that a lookup recorded.
+  - `hasUnresolvedRequire` counts these cases:
+    - an esbuild warning `unsupported-require-call`, `indirect-require`, or `direct-eval`
+    - an external `require` call whose target is not a builtin, a resolved peer, or a runtime key of Mokly
+    - since 2026-11-27, a use of the free `require` that is not a direct call
+    - since 2026-11-27, an import of the Node `module` builtin
+    - since 2026-11-27, a reference to `getBuiltinModule`
+  - A false match only keeps digests, so the count errs toward correct output.
+  - The capture reads a digest only for a file within the 1 MiB bound of `METADATA_FILE_LIMIT`. A larger file makes the capture incomplete, so the bundle gets no Serve edit marker and no edit reuse.
+  - The "Private Folder Files" section of `docs/protocol/mokly-sidecar-folder-reuse.md` states this rule. The "Source And Dependency Files" section of `docs/protocol/mokly-sidecar-modules.md` states the digest of a build that the restored require loads.
+  - Before the correction of 2026-11-27, this item said that the direct rule keeps the output correct. The review of 2026-11-27 showed a gap. `require.call(undefined, specifier)` gave no esbuild warning and no import, so the build kept a path-only entry, and Serve reused the old bundle after an edit. The widened count above closes that form.
+  - The direct rule still does not make the output correct alone:
+    - A run-time load of a repository file that no lookup recorded has no entry. [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md) records it.
+    - A module that Node loads at run time can load more repository files outside the emitted bundle. The emitted code shows none of them.
+    - After an edit ends the reuse, a new compile in the same sidecar process gets the old build from Node's module cache. [restored-require-module-cache.md](./restored-require-module-cache.md) records it.
+- **Problem:** A bundle with an unresolved require loses edit reuse when a recorded workspace build passes the 1 MiB bound. This also happens when no run-time load reads that build. A probe on 2026-11-27 showed it with a computed require of `node:path` and an unused build of 1.1 MB. The widened count of 2026-11-27 reaches more bundles, because each false match keeps digests too.
+- **Impact if no action:** Serve compiles such a bundle again after each edit. The other gaps of run-time loads above stay open until the shared record of run-time loads lands.
+- **Root question:** How does Serve check a build file that a run-time require may load, without a digest for each build file that no load reads?
+- **Options:**
+  - **A.** Keep the current rule. A large recorded build then keeps ending edit reuse for each bundle with an unresolved require. Effort: Small.
+  - **B.** Record each repository file that a run-time require loads, with its digest, and pass the record to both reuse readers. Then only a loaded file needs a digest. Effort: Large.
+    - The record needs the fresh loads for each compiled bundle of `restored-require-module-cache.md`, because Node runs no load for a cached module.
+    - B changes the two protocol sentences above. Cal's choice of 2026-11-27 covers the change, because B keeps a digest for each build whose content reaches the render.
+    - Two earlier decisions rejected a new result field for reuse data. The performance orchestrator rejected one for folder files on 2026-11-19, because it changes the wire format. Cal rejected one for path-only entries on 2026-11-27. Carry the record in an existing result where possible, and bring a new field to Cal.
+  - **C.** Build B into the shared resolution record of `workspace-import-resolution-record.md`. It waits for that record, which changes each workspace lookup path in JavaScript and in CSS. Effort: Large.
+  - **D.** Move both capture modes to one typed observation model, in which each observation carries its kind, such as presence, content, or run-time load. Effort: Large.
+    - On 2026-11-27 Cal rejected this model for the fix of unused build files, and named it the wider fix of that problem.
+    - The record of B would become one kind of observation in it.
+- **Left out:** A higher metadata bound, because the read cost stays and the problem returns above the new bound.
+- **Wider fix:** B. Run-time loads then become the source of the digests, so no load form and no unused build can turn the rule wrong. C adds the merge with the shared resolution record, which prevents the class of `workspace-import-resolution-record.md`, not this class. D is the wider fix that Cal named for the related problem of unused build files, and it can hold the record of B later.
+- **Previous examples:** Before Cal's choice of 2026-11-27, every present file in the marked edit evidence carried a digest. So a large unused build turned off Serve edit reuse in each bundle that recorded it.
+- **Related:**
+  - [restored-require-module-cache.md](./restored-require-module-cache.md): shared wider fix, and work that waits. B is correct only with its fresh loads for each compiled bundle.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md): shared wider fix. B here is its option C, which also gives an entry to a run-time load that no lookup recorded.
+  - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md): shared fix. Its option A records the files that a page render loads, which is the same record as B here.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): shared fix. C builds B into its record.
+  - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): shared fix. Its option E keeps the input observations of each restored require that recovers a source, which is part of the record of B here.
+  - [postcss-probes-external-reads-environment.md](./postcss-probes-external-reads-environment.md): same file and same kind of fix. It shares `workspace-lookups.ts`, and its fix sends the lookup observations of the PostCSS child with the PostCSS result.
+- **Recommendation:** B. It keeps reuse for each build file that no run-time load reads, and the same record closes the run-time gaps of the related items.
+- **Action:** fix after merge, apply B, because it changes both reuse readers and needs the fresh loads of `restored-require-module-cache.md`.
+- **Done when:** A bundle with a computed require and an unused build file above 1 MiB keeps Serve edit reuse. An edit of a build file that the computed require loads ends the reuse, and the next compile evaluates the edited file.
