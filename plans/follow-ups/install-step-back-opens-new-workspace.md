@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from an outside-the-scope note of the Milestone 5 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `packages/app/src/screens/account/install-screen.tsx:72`, `:277` and `:289`, and `docs/protocol/cloud/product-navigation.md:134-152`.
+- **Location:** `packages/app/src/screens/account/install-screen.tsx:70`, `:271` and `:283`, and `docs/protocol/cloud/product-navigation.md:134-152`.
 - **Reason:** The protocol doc is silent on the Back of the install step, so the destination is a decision.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The owner, member and reviewer pages still link Back to `createWorkspacePath`, and the resolution table still gives no install-step Back.
 - **Category:** Product bug.
@@ -20,6 +20,7 @@
 - **Left out:** Remove Back. The design call of 2026-10-29 keeps the strip and Back, so a page with no action is not a dead end.
 - **Wider fix:** None found.
 - **Previous examples:** The CLI form's Back depends on the workspace state, as the table states.
+- **Related:** `plans/follow-ups/create-workspace-from-viewer-has-no-way-back.md`: the same area. Its option B also sends Back to `/dashboard`, so one answer can settle both.
 - **Recommendation:** B. `/dashboard` returns a reader with a last opened project to it, so Back needs no new rule. A reader whose only workspace is empty then stays on the install step, and the user must accept that.
 - **Action:** ask the user, because condition 2 holds: the requirements are silent on this Back.
 

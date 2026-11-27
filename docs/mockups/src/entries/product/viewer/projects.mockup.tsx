@@ -18,7 +18,7 @@ const screens = {
 export default defineScreen({
   title: "Projects",
   description:
-    "Projects — workspaces, their projects and Create project. The project the reader is in says Current.",
+    "Projects — workspaces, their projects, Create project and Create workspace. The project the reader is in says Current.",
 
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",
@@ -48,7 +48,7 @@ export default defineScreen({
       slug: "loading",
       title: "Projects · Loading",
       description:
-        "Projects — the panel loads over the viewer: one workspace group with its name and accounts as bars, one placeholder row and its settings control as a placeholder, and Create project disabled.",
+        "Projects — the panel loads over the viewer: one workspace group with its name and accounts as bars, one placeholder row and its settings control as a placeholder, and Create project and Create workspace disabled.",
       tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },

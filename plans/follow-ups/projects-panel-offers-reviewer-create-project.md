@@ -1,0 +1,31 @@
+# Projects panel offers a reviewer Create project
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from an outside-the-scope note of the review of the branch `calummoore/adding-new-workspace-not-possible-8n58`.
+- **Location:** `packages/app/src/viewer/panels/projects.tsx` (the Create project action in the panel footer), `packages/app/src/settings/panes/workspace-projects.tsx:105-112`, `crates/mkc-api/src/platform/project_creation.rs:28`, `docs/protocol/cloud/platform-model.md:132`, `docs/mockups/src/entries/product/viewer/projects.mockup.tsx`.
+- **Reason:** The problem is on `origin/main` before that branch, so it needs its own branch.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Reviewer:** a workspace role that can read the workspace and its projects but cannot create a project or request a build.
+  - **Project-only guest:** a reader with project grants and no workspace role.
+- **Background:** The viewer's Projects panel footer offers Create project to every reader. It opens the repository step of the viewer's own workspace. The roles table lets owners, admins and members create a project, and the API refuses roles below member. The panel's own `listWorkspaces()` read gives each workspace's `role`. The project read gives only `canAdmin` and `canRequestBuilds`, and the session gives only `workspaceIds`.
+- **Problem:** A workspace reviewer and a project-only guest both see Create project, but neither may create a project in the viewer's workspace. The settings Workspace pane also offers Create project with no role check.
+- **Screenshot:** None, because the missing role check is in the code named above.
+- **Impact if no action:** A reviewer or a guest opens a step whose write the API refuses.
+- **Root question:** Which readers does the viewer offer Create project to?
+- **Options:**
+  - **A.** In the panel, find the viewer's workspace in the panel's workspaces read by its id, and offer Create project only when that role is owner, admin or member. A reader with no role there gets no action. Draw a reviewer state as the fourth variant of `product/viewer/projects`. Effort: Small.
+  - **B.** Add one shared `canCreateProject(role)` helper next to `administers` in the app, and use it in the panel and in the settings Workspace pane. Effort: Small.
+  - **C.** Keep the action for everyone, and let the repository step explain the refusal. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** B, because two actions already skip the role check, and one helper keeps them in step.
+- **Previous examples:** `packages/app/src/settings/panes/workspace-projects.tsx:105-112` offers Create project with no role check.
+- **Related:**
+  - `plans/follow-ups/create-workspace-from-viewer-has-no-way-back.md`: the same footer and `panel-host.tsx:89-92`.
+  - `plans/follow-ups/viewer-projects-without-workspaces-lacks-mockup.md`: both add a state to `product/viewer/projects`, which has room for one more variant. The reader there also sees Create project.
+  - `plans/follow-ups/project-read-hides-role-from-grant-readers.md`: the same cause. The app cannot read the role of a reader who has only a project grant. Its option B would give A a direct source for the role.
+  - `plans/follow-ups/projects-panel-unused-workspace-id.md`: the same component. A uses the `workspaceId` value, so do that item first or together.
+- **Recommendation:** B. It fixes both actions with one rule from the roles table, and it best protects the codebase.
+- **Action:** fix after merge, apply B, because the defect predates that branch and needs its own change.

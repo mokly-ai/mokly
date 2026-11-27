@@ -134,6 +134,35 @@ function WaitingWorkspace() {
   );
 }
 
+/**
+ * The panel's footer: Create project and Create workspace. A failed read
+ * removes it, so it is in the read's region, and the wait draws both actions
+ * disabled.
+ */
+function ProjectsFoot({ waiting = false }: { waiting?: boolean }) {
+  return (
+    <div className="fo-panel-foot">
+      <Action
+        instance="projects-create"
+        label="Create project"
+        to="product/account/choose-repository"
+        tone="primary"
+        size="md"
+        icon="start"
+        disabled={waiting}
+      />
+      <Action
+        instance="projects-create-workspace"
+        label="Create workspace"
+        to="product/account/create-workspace"
+        size="md"
+        icon="start"
+        disabled={waiting}
+      />
+    </div>
+  );
+}
+
 function ProjectsPage({
   state,
   viewport,
@@ -153,8 +182,10 @@ function ProjectsPage({
         {state === "loading" ? (
           // The workspaces are a list too, so one group stands for them. No
           // text place here is the read's, so it is named for screen readers.
+          // A failed read removes the footer, so the wait draws it too.
           <Pending label="Loading projects" labelMode="screen-reader-only">
             <WaitingWorkspace />
+            <ProjectsFoot waiting />
           </Pending>
         ) : state === "error" ? (
           <StateMessage
@@ -173,27 +204,10 @@ function ProjectsPage({
             }
           />
         ) : (
-          <Workspaces state={state} />
-        )}
-        {state !== "error" && (
-          <div className="fo-panel-foot">
-            <Action
-              instance="projects-create"
-              label="Create project"
-              to="product/account/choose-repository"
-              tone="primary"
-              size="md"
-              icon="start"
-              disabled={state === "loading"}
-            />
-            <Action
-              instance="projects-create-workspace"
-              label="Create workspace"
-              to="product/account/create-workspace"
-              size="md"
-              icon="start"
-            />
-          </div>
+          <>
+            <Workspaces state={state} />
+            <ProjectsFoot />
+          </>
         )}
       </div>
     </ViewerPanelScreen>

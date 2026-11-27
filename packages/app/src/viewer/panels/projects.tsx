@@ -199,6 +199,30 @@ export function ProjectsPanel({
   onCreateWorkspace: () => void;
 }) {
   const groups = useResource(readWorkspaceProjects, "viewer-projects");
+  // A failed read removes the footer, so the footer is in the read's region:
+  // the wait draws it with both actions disabled, and the loaded panel draws
+  // it live.
+  const foot = (waiting: boolean) => (
+    <div className="fo-panel-foot">
+      <Action
+        label="Create project"
+        tone="primary"
+        size="md"
+        icon="start"
+        disabled={waiting}
+        onPress={() => onCreateProject(workspaceId)}
+        testID="projects-create"
+      />
+      <Action
+        label="Create workspace"
+        size="md"
+        icon="start"
+        disabled={waiting}
+        onPress={onCreateWorkspace}
+        testID="projects-create-workspace"
+      />
+    </div>
+  );
   return (
     <div className="fo-panel-stack">
       <PaneResource
@@ -208,46 +232,28 @@ export function ProjectsPanel({
           // text place here is the read's, so it is named for screen readers.
           <Pending label="Loading projects" labelMode="screen-reader-only">
             <WaitingWorkspace />
+            {foot(true)}
           </Pending>
         }
         failure="Projects couldn’t load"
         onRetry={groups.reload}
       >
-        {(items) =>
-          items.length === 0 ? (
-            <StateMessage title="No workspaces yet" icon="workspace" />
-          ) : (
-            <Workspaces
-              groups={items}
-              currentProjectId={currentProjectId}
-              onOpenProject={onOpenProject}
-              onWorkspaceSettings={onWorkspaceSettings}
-            />
-          )
-        }
+        {(items) => (
+          <>
+            {items.length === 0 ? (
+              <StateMessage title="No workspaces yet" icon="workspace" />
+            ) : (
+              <Workspaces
+                groups={items}
+                currentProjectId={currentProjectId}
+                onOpenProject={onOpenProject}
+                onWorkspaceSettings={onWorkspaceSettings}
+              />
+            )}
+            {foot(false)}
+          </>
+        )}
       </PaneResource>
-      {groups.state.status !== "error" && (
-        <div className="fo-panel-foot">
-          <Action
-            label="Create project"
-            tone="primary"
-            size="md"
-            icon="start"
-            disabled={groups.state.status === "loading"}
-            onPress={() => onCreateProject(workspaceId)}
-            testID="projects-create"
-          />
-          {/* Create workspace sits outside the read's region and opens
-              no workspace of the read, so it never waits for it. */}
-          <Action
-            label="Create workspace"
-            size="md"
-            icon="start"
-            onPress={onCreateWorkspace}
-            testID="projects-create-workspace"
-          />
-        </div>
-      )}
     </div>
   );
 }

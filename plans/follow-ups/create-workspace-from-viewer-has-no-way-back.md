@@ -1,0 +1,39 @@
+# Create workspace from the viewer has no way back
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from review finding 1 of the branch `calummoore/adding-new-workspace-not-possible-8n58`, which added Create workspace to the viewer's Projects panel.
+- **Location:** `packages/app/src/viewer/panels/projects.tsx` (the Create workspace action), `packages/app/src/screens/viewer/panel-host.tsx:92`, `packages/app/src/screens/account/create-workspace-screen.tsx:42-69`, `docs/protocol/cloud/product-accounts-and-roles.md:18-20`, `packages/desktop/src/menu.ts`.
+- **Reason:** Every option changes a requirement in force, and no user decision covers that change.
+- **Category:** Docs or spec.
+
+- **Terms:**
+  - **Workspace step:** the first onboarding page, at `/new`, titled "Create a workspace", over a progress strip with three steps.
+  - **Account shell:** the full-page frame of every sign-in and onboarding page, in `packages/app/src/screens/account/account-shell.tsx`. Its signed-in mark is inert, and its header holds only the reader's identity.
+  - **Desktop window:** the Electron app under `packages/desktop`. It loads the same app with no browser controls. Its menu is the platform default plus Check for updates, with no Back command and no Back shortcut.
+- **Background:** The viewer's Projects panel offers Create workspace, which pushes `/new` in the same tab or window. The accounts protocol says: "There is no earlier step, so the workspace step has no back link." The install step also draws Back to `/new` for a reader who already belongs to its workspace (`packages/app/src/screens/account/install-screen.tsx:70`, `:271`, `:283`). Every other link into `/new` serves a reader with no workspace, or with none that they administer.
+- **Problem:** A reader who opens Create workspace from the viewer and changes their mind finds no control on the page that returns to the viewer. On the web, only the browser's Back returns. In the desktop window, nothing returns.
+- **Screenshot:** None, because the problem is an absent control, and the code and the protocol quote above show it.
+- **Impact if no action:** A desktop reader who presses the action by mistake must finish the setup, or close and reopen the app.
+- **Root question:** How does a signed-in reader who leaves the viewer for a setup step get back to the viewer when they change their mind?
+- **Options:**
+  - **A.** Keep the behaviour. Record in `product-accounts-and-roles.md` that a reader who comes from the viewer returns with the browser's Back. Desktop readers must reopen the window. Effort: Small.
+  - **B.** Draw a Back link under Create workspace when the device remembers a last opened project (`packages/app/src/navigation/last-opened.ts`). Back opens `/dashboard`, which reopens that project. Update the accounts protocol, and draw the state as a sibling screen in the `product/account/create-workspace` folder, because that entry already has the four variants that `docs/protocol/cloud/mockups.md` allows. The record is per device and sign-out keeps it. For a new account on a shared device, the API refuses the remembered project, and `/dashboard` sends the reader back to `/new` (`packages/app/src/navigation/destinations.ts`), so Back loops. Effort: Medium.
+  - **C.** Add Back and Forward to the desktop menu, with ⌘[ and ⌘]. Clear the `about:blank` entry that each sign-in handoff loads (`packages/desktop/src/handoff.ts`) first. Update the menu rule in `docs/protocol/cloud/desktop-bundle.md`. Effort: Medium.
+  - **D.** Make the account shell's signed-in mark a link to `/dashboard`. Update the inert-mark rule in `docs/protocol/cloud/folio-chrome-account.md` and every signed-in account drawing. Effort: Medium.
+  - **E.** Open `/new?returnTo={viewer address}`. The step draws Back only when `returnTo` is present, and checks the value with `validateReturnTo` (`packages/app/src/navigation/return-to.ts`), which gives `/dashboard` for a missing value. Back then returns to the exact branch and screen, and never shows on a first onboarding. Update `docs/protocol/cloud/product-navigation.md`. Effort: Medium.
+  - **F.** When the viewer pushed `/new` in this tab, draw Back and run `history.back()`. The `pushed` count in `packages/app/src/navigation/address.ts` counts only `writeAddress` pushes, and the viewer's `follow` calls `router.push`, so the count must also note that push. A reload removes the Back. Effort: Medium.
+  - **G.** Give the account shell header one link back to the app when the device remembers a project. Every setup step then has it. Update the header rule in `folio-chrome-account.md`. Effort: Medium.
+  - **H.** Create the workspace in a dialog over the viewer. Close returns to the viewer. This adds a second form for one operation and new mockups. Effort: Large.
+- **Left out:** Hide the action in the desktop window, because it defeats the purpose there. Open the step in a second window, because the shell owns one main window.
+- **Wider fix:** C. It removes the dead end from every page that the desktop window opens.
+- **Previous examples:** The Projects panel's Create project opens the repository step, which has no back link (`projects.tsx`). The Settings index sends a project-only guest from the viewer to `/new` (`packages/app/src/settings/panes/sections-pane.tsx:49-65`). The install step's Back links above.
+- **Related:**
+  - `plans/follow-ups/install-step-back-opens-new-workspace.md`: the same area. Its option B also sends Back to `/dashboard`, so one answer can settle both.
+  - `plans/follow-ups/guest-settings-index-offers-first-workspace.md`: the same dead end. Its action also opens `/new` with no way back.
+  - `plans/follow-ups/overlay-push-count-survives-route-change.md`: options that conflict. Option F here counts the viewer's routed push in `pushed`, and that item's option A resets `pushed` on each router push.
+  - `plans/follow-ups/write-done-runs-after-unmount.md`: work that waits. With a Back link from B, E or F, a reader can leave while the create write runs, and that defect then moves the reader to the install step.
+  - `plans/follow-ups/viewer-projects-without-workspaces-lacks-mockup.md`: the same files. It changes the Projects panel, and its option A sends a reader with no workspace to `/new`.
+  - `plans/follow-ups/projects-panel-offers-reviewer-create-project.md`: the same code. Both change the Projects panel footer and `panel-host.tsx:89-92`.
+- **Recommendation:** B. It gives the step a visible way back on both platforms; choose E if Back must reach the exact branch and screen, and C best protects the codebase.
+- **Action:** ask the user, because the recommended Back link changes the rule in `product-accounts-and-roles.md` that the workspace step has no back link, and no user decision covers that change.

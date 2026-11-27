@@ -72,8 +72,7 @@ const panelWaits = [
     controls: [
       ["Close", false],
       ["Create project", true],
-      // Create workspace sits outside the read's region, so it never waits.
-      ["Create workspace", false],
+      ["Create workspace", true],
     ],
     placeholders: 1,
     hidden: projects,
@@ -178,5 +177,20 @@ test("the switcher keeps its search, disabled, and the share link names its read
     const access = only(panel, "review-inline");
     assert.equal(label(access), sample.visibility, viewport);
     assert.equal(byClass(access, "fo-wait-text").length, 1, viewport);
+  }
+});
+
+test("the projects panel's wait holds its footer, both actions disabled", () => {
+  for (const viewport of viewports) {
+    const page = drawnPage("product/viewer/projects/loading", viewport);
+    const region = only(page.main, "fo-wait");
+    assert.deepEqual(
+      controlStates(region).filter(([name]) => name.startsWith("Create")),
+      [
+        ["Create project", true],
+        ["Create workspace", true],
+      ],
+      viewport,
+    );
   }
 });

@@ -203,10 +203,11 @@ test("a pull request alias names its pull request while it waits, and each panel
     await expect(heardIn(panel)).toHaveText("Loading projects…");
     await expect(panel.getByRole("list", { name: "Projects" })).toBeVisible();
     await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
-    // Create workspace sits outside the read's region, so it never waits.
-    await expect(
-      panel.getByRole("button", { name: "Create workspace" }),
-    ).toBeEnabled();
+    // A failed read removes the footer, so the wait holds it and both of
+    // its actions wait.
+    const busy = panel.locator("[aria-busy=true]");
+    for (const name of ["Create project", "Create workspace"])
+      await expect(busy.getByRole("button", { name })).toBeDisabled();
     read.release();
     await expect(panel.getByText(made.workspaceName)).toBeVisible();
     await page.getByTestId("close-projects").click();
