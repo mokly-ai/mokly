@@ -220,10 +220,11 @@ matching directory, including outside-configuration and nested workspace imports
 Configuration ancestors and explicit package roots provide fallback lookup.
 An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.
 
-With the default compiler, Mokly applies the
+Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-automatically after module lookup. For JavaScript targets, the rule keeps
-the `resolveExtensions` order and tries only extensions with a script suffix.
+automatically after module lookup, on both compile paths. On the esbuild
+path, for JavaScript targets, the rule keeps the `resolveExtensions` order
+and tries only extensions with a script suffix.
 
 The [Vite adapter](./mokly-vite-adapter.md#replaced-settings) names the
 settings of this section that the project's Vite setup replaces.

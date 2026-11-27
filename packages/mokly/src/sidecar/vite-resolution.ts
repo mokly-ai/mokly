@@ -92,6 +92,14 @@ export class ViteLookup {
         !viteSourceResolution(this.paths, file)
       )
         continue;
+      if (file) {
+        const confined = await this.resolveFile(file, target);
+        if (confined !== file)
+          resolved = {
+            ...resolved,
+            id: confined + (resolved.id.match(/[?#].*$/)?.[0] ?? ""),
+          };
+      }
       return { resolved, importer: candidate, source: target };
     }
     return null;
@@ -99,6 +107,18 @@ export class ViteLookup {
 
   importers(source: string, importer?: string): string[] {
     return viteLookupImporters(this.paths, this.directory, source, importer);
+  }
+
+  resolveFile(file: string, specifier: string): Promise<string> {
+    return this.paths.resolve(file, specifier, undefined, {
+      mappedTargetHint: true,
+    });
+  }
+
+  resolveFileSync(file: string, specifier: string): string {
+    return this.paths.resolveSync(file, specifier, undefined, {
+      mappedTargetHint: true,
+    });
   }
 
   async stylesheet(
@@ -121,7 +141,7 @@ export class ViteLookup {
         !viteSourceResolution(this.paths, file)
       )
         continue;
-      const confined = await this.paths.resolve(file);
+      const confined = await this.resolveFile(file, target);
       await this.paths.dependencyUsage.resolved(
         source,
         path.dirname(candidates[0] ?? candidate),
@@ -193,14 +213,29 @@ export class ViteLookup {
     importer: string,
     resolve: (specifier: string, parent: string) => string,
   ): string {
+    const url = this.syncTarget(source, importer, resolve);
+    if (!url.startsWith("file:")) return url;
+    const target = new URL(url);
+    const confined = pathToFileURL(
+      this.resolveFileSync(fileURLToPath(target), source),
+    );
+    confined.search = target.search;
+    confined.hash = target.hash;
+    return confined.href;
+  }
+
+  syncTarget(
+    source: string,
+    importer: string,
+    resolve: (specifier: string, parent: string) => string,
+  ): string {
     let failure: unknown;
     const candidates = this.importers(source, importer);
     for (const [index, candidate] of candidates.entries()) {
       try {
         const url = resolve(source, pathToFileURL(candidate).href);
         if (!url.startsWith("file:")) return url;
-        const target = new URL(url);
-        const file = fileURLToPath(target);
+        const file = fileURLToPath(url);
         if (
           index === 0 &&
           candidates.length > 1 &&
@@ -209,10 +244,7 @@ export class ViteLookup {
           !viteSourceResolution(this.paths, file)
         )
           continue;
-        const confined = pathToFileURL(this.paths.resolveSync(file));
-        confined.search = target.search;
-        confined.hash = target.hash;
-        return confined.href;
+        return url;
       } catch (error) {
         if (!viteMissingImport(error)) throw error;
         failure = error;

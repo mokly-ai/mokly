@@ -2348,7 +2348,14 @@ own lines of this plan.
   opt-outs still apply and cover every stylesheet language: `.css` skips
   every plain and module stylesheet, and `.module.css` skips every module
   stylesheet. Reason: decision 16 removes Mokly's copies of the project's
-  setup.
+  setup. Changed on 2026-11-27 by answer B to
+  [track D decision 6](#track-d-decision-6-workspace-package-sources-under-vite):
+  the setup still selects each file, and the
+  [workspace package source rule](../docs/protocol/mokly-comparison-packages.md#workspace-package-sources)
+  then applies to a bundled build target that the setup or its config
+  loader selects for a bare package specifier, as on the esbuild path. A
+  build target that the setup cannot select, such as one missing from the
+  working tree, still fails.
 - D10. Under the adapter, Mokly scopes each `.module.` stylesheet with its
   own names, and the setup's `css.modules` options do not apply. Reason:
   both sides and both compile paths then give equal names.
@@ -2474,6 +2481,33 @@ own lines of this plan.
   Mokly already classifies as sources, modules, or stylesheet inputs. Reason:
   the watch rule that package-owned classifications take precedence over
   rules then holds on both compile paths.
+- D34. Made on 2026-11-27 by the orchestrator of
+  `calummoore/storybook-d6-b-vite-workspace-sources-isfc`, for answer B to
+  track D decision 6. The Vite rows of `tests/fixtures/workspace-sources.json`
+  are a new top-level `compilePaths` section. A test compiles each row with
+  the esbuild path and with the Vite adapter, on the head and the base side.
+  Reason: the `cases` rows test the source step alone, which the Rust CSS
+  resolver also reads, and only a compile shows that both paths reach it.
+- D35. Made on 2026-11-27 by the same orchestrator. Each Vite call of the
+  source step passes the specifier after the setup's aliases. An alias of
+  the setup that gives a path keeps its target, as a relative import does.
+  Reason: Vite's alias plugin runs before Mokly's hook, and the probe of
+  decision 6 shows a setup alias as a route that the author chooses.
+- D36. Made on 2026-11-27 by the same orchestrator. A file that Node loads
+  under the adapter keeps the Node rule of the
+  [workspace package source rule](../docs/protocol/mokly-comparison-packages.md#workspace-package-sources):
+  the run-time loader of the Vite config and the React peers keep an
+  existing build file and use the source only when the side lacks it. Reason: the esbuild path uses
+  the same rule for requires that Node loads, and Node 22.15.0 cannot load a
+  TypeScript source. Mokly never externalizes a repository file, so a
+  workspace package that the setup's external list names compiles through
+  the setup and gets its source as any other import does.
+- D37. Made on 2026-11-27 by the same orchestrator. When a Vite call of the
+  source step fails for a bare import, the `sourcePackages` hint takes its
+  package from the mapped build target, because the Vite calls pass no
+  declared package target. The esbuild messages keep the hint rule of #596.
+  Reason: the Vite failure then tells the author how to fix it, and the
+  esbuild path does not change.
 
 Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
 wait for the user.
@@ -3036,6 +3070,14 @@ merges. The review TODO below reviews the merged code.
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
       of the review are follow-up items under `plans/follow-ups/`.
+- [ ] Apply answer B to track D decision 6: the Vite calls of the workspace
+      source step pass the import name, as the esbuild call does. Add the
+      Vite rows for `sourcePackages` to
+      `tests/fixtures/workspace-sources.json`, test the head and the base
+      probe, update design call D9 and the pages that the decision names,
+      run the targeted tests on Node 22.15.0 and 24.21.0 and the complete
+      gate, review against this branch, and open a pull request into this
+      branch. Branch: `calummoore/storybook-d6-b-vite-workspace-sources-isfc`.
 
 ## Milestone 18: Storybook folders documentation
 

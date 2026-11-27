@@ -133,9 +133,8 @@ export function moklyVitePlugin(
       const resolution = await lookup.resolve(source, importer);
       const resolved = resolution?.resolved;
       if (!resolved) return null;
-      const file = viteFile(resolved.id);
-      if (!file) return resolved;
-      const confined = await paths.resolve(file);
+      const confined = viteFile(resolved.id);
+      if (!confined) return resolved;
       await paths.dependencyUsage.resolved(
         source,
         importer
@@ -155,7 +154,7 @@ export function moklyVitePlugin(
           ? viteExternal(await paths.resolve(external))
           : resolved.external && !paths.repositoryOwned(confined)
             ? viteExternal(confined)
-            : confined + resolved.id.slice(file.length),
+            : resolved.id,
       };
     },
     async load(id) {

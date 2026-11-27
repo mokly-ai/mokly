@@ -88,12 +88,22 @@ setup. See [Vite](/docs/authoring/vite/) for installation and module settings.
 
 ### Workspace packages
 
-With the default compiler, Mokly looks for source files that match the build
-targets of workspace package imports in the working tree and the Git base.
-If package lookup fails, every declared target for the import must map to
-the same source file. TypeScript declaration files do not count.
+Mokly looks for source files that match the build targets of workspace
+package imports in the working tree and the Git base. Automatic detection
+and `moduleResolution.sourcePackages` work with the default compiler and
+the Vite adapter.
 Configured entry and stories files, the renderer, and the PostCSS module
 keep their exact paths.
+
+If package lookup fails with the default compiler, every declared target
+for the import must map to the same source file. TypeScript declaration
+files do not count.
+
+After the Vite setup selects the package file, Mokly uses a matching
+source file on each side of the comparison when one exists. Vite fails to
+resolve the import if it needs an exported build file that is missing from
+the working tree. To skip the package build, point a Vite alias or an export
+condition such as `development` to source.
 
 To detect the layout, Mokly reads `outDir` and `rootDir` from the package's
 `tsconfig.json` and relative `extends` files in the repository outside

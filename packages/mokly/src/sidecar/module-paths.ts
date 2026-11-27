@@ -22,6 +22,8 @@ import { bareSpecifier } from "./specifier.js";
 import { WorkspaceLookups } from "./workspace-lookups.js";
 import { WorkspaceSources } from "./workspace-sources.js";
 
+type ModulePathOptions = { mappedTargetHint: true };
+
 export interface ModuleSources {
   sourceRoot: string;
   repositoryRoots: string[];
@@ -193,14 +195,9 @@ export class ModulePaths {
       return this.workspace.source(file);
   }
 
-  private checked(
-    candidate: { file: string; mapped: boolean; name: string },
-    real: string,
-    regular: boolean,
-    packageTarget?: string,
-  ): string {
-    if (candidate.mapped && (!inside(this.sourceRoot, real) || !regular))
-      throw this.missing(candidate.name, packageTarget);
+  private checkedMappedFile(real: string, regular: boolean): string {
+    if (!inside(this.sourceRoot, real) || !regular)
+      throw new Error("mapped module must be a regular file within sourceRoot");
     this.name(real);
     return this.observe(real);
   }
@@ -215,9 +212,18 @@ export class ModulePaths {
     return file;
   }
 
-  private missing(name: string, packageTarget?: string): Error {
-    const pkg = packageTarget && this.workspace.overrideHint(packageTarget);
-    const message = `module ${name} has no source in this side`;
+  private missing(
+    target: { file: string; name: string },
+    specifier: string | undefined,
+    packageTarget: string | undefined,
+  ): Error {
+    const hintTarget =
+      packageTarget ??
+      (specifier && bareSpecifier(specifier) && !path.isAbsolute(specifier)
+        ? target.file
+        : undefined);
+    const pkg = hintTarget && this.workspace.overrideHint(hintTarget);
+    const message = `module ${target.name} has no source in this side`;
     return new Error(
       pkg === undefined
         ? message
@@ -229,6 +235,7 @@ export class ModulePaths {
     file: string,
     specifier?: string,
     packageTarget?: string,
+    options?: ModulePathOptions,
   ): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const real = await fs.promises.realpath(file);
@@ -247,14 +254,13 @@ export class ModulePaths {
       if (source === undefined && packageTarget !== undefined)
         this.workspaceLookups.nativeTarget(packageTarget);
       const real = await fs.promises.realpath(candidate.file);
-      return this.checked(
-        candidate,
+      return this.checkedMappedFile(
         real,
         (await fs.promises.stat(real)).isFile(),
-        packageTarget,
       );
     } catch {
-      throw this.missing(candidate.name, packageTarget);
+      const hintSpecifier = options?.mappedTargetHint ? specifier : undefined;
+      throw this.missing(target, hintSpecifier, packageTarget);
     }
   }
 
@@ -263,6 +269,7 @@ export class ModulePaths {
     file: string,
     specifier?: string,
     packageTarget?: string,
+    options?: ModulePathOptions,
   ): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync.native(file);
@@ -275,12 +282,7 @@ export class ModulePaths {
       if (packageTarget !== undefined)
         this.workspaceLookups.nativeTarget(packageTarget);
       const real = fs.realpathSync.native(target.file);
-      return this.checked(
-        target,
-        real,
-        fs.statSync(real).isFile(),
-        packageTarget,
-      );
+      return this.checkedMappedFile(real, fs.statSync(real).isFile());
     } catch (error) {
       if (missingFile(error)) {
         const source = this.workspaceSource(target.file, specifier);
@@ -290,7 +292,8 @@ export class ModulePaths {
         )
           return this.observe(source);
       }
-      throw this.missing(target.name, packageTarget);
+      const hintSpecifier = options?.mappedTargetHint ? specifier : undefined;
+      throw this.missing(target, hintSpecifier, packageTarget);
     }
   }
 }
