@@ -371,7 +371,7 @@ files that a commit holds.
 - [x] Keep `ModulePaths.workspaceSource` and `WorkspaceSources.source` usable
       from another caller that passes a bare import name. The Storybook
       branch calls them from its Vite adapter after this branch merges.
-- [ ] Run the complete gate, commit, push, and review the change with the
+- [x] Run the complete gate, commit, push, and review the change with the
       `implementation-review` skill. Cal approved this fix round.
 
 ## Milestone 10: Path-only entries in the marked edit evidence
