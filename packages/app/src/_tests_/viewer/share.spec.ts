@@ -278,13 +278,11 @@ test("Share's screen list survives a failed read and clears the screen the reade
       new RegExp(`${path}\\?catalogueScreen=start$`),
     );
 
-    // The whole row is the button: a press in the row's own padding, outside
-    // the button's content, still selects it.
+    // The whole row is the button, so a press in its own padding selects it.
+    // A waiting row is no button, so the row is measured once it is one.
     const whole = panel
       .getByRole("listitem")
       .filter({ hasText: "Whole catalogue" });
-    // A waiting row keeps the name but is no button, so the row is measured
-    // once its button is drawn.
     await expect(whole.getByRole("button")).toBeVisible();
     const box = await whole.boundingBox();
     expect(box).not.toBeNull();
