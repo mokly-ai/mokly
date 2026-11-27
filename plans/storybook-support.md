@@ -153,18 +153,14 @@ A branch from this branch applies each answer and deletes the file.
 
 ### Decisions that wait for the user
 
-Each decision is in full in this plan, with its options and a recommended
-option. None has an answer yet, so no option applies.
-
-- [Decision 18e-4](#18e-4-entries-of-roots-that-name-no-storybook-folder):
-  the graph of the screens of a root that names no Storybook folder.
-- [Decision 18e-5](#18e-5-workspace-package-sources-under-folder-graphs):
-  the setup that compiles a workspace package's source under folder graphs.
-
-Both block Milestones 30 and 32. On 2026-11-27 the user chose B of
+No decision of this branch's plan waits for the user. The open decisions of
+tracks E and I are in the plans of their branches: track E decision 1 and
+track I decisions 3 to 9. On
+2026-11-27 the user chose B of
 [decision 18e](#18e-several-folders-one-graph-for-each-folder), a folder
-graph for each Storybook folder, E of 18e-1, D of 18e-2, and D of 18e-3.
-Decision 18b closed with that answer.
+graph for each Storybook folder, with E of 18e-1, D of 18e-2, D of 18e-3, A of
+18e-4, and B of 18e-5. Decision 18b closed with that answer. Track H applies
+"What B changes" of 18e when it starts.
 
 ### Follow-up items that wait for the user
 
@@ -1205,6 +1201,10 @@ the milestones do not change before the answer.
 - **Action:** ask the user, because under a folder graph answer B of 18a
   decides the whole import tree of these entries, and the user chose it for
   shared files only.
+- **Answer:** A, chosen by the user on 2026-11-27. Such an entry runs in the
+  graph of the first root, in configuration order, that names a Storybook
+  folder, with that folder's preview mocks. Option E, A with a guide sentence
+  on the root `storybook` field, was offered the same day and not chosen.
 
 #### 18e-5. Workspace package sources under folder graphs
 
@@ -1260,6 +1260,12 @@ the milestones do not change before the answer.
 - **Action:** ask the user, because the spike did not test this layout, so
   no option is clearly best, and C changes the user's answer to track D
   decision 6.
+- **Answer:** B, chosen by the user on 2026-11-27. For an importer inside a
+  workspace package, the importing graph first applies the `resolve.alias`
+  entries of the Storybook folder that owns the package. The importing
+  folder's aliases stay for its own files. The owner's plugins stay out.
+  Reason: a package's source that shares an alias key, such as `@/`, with the
+  importing folder must not resolve to the importing folder's file.
 
 ### 19. Ids of story component uses
 
@@ -1996,7 +2002,7 @@ track.
 | E. Storybook folders       | 18 to 22   | Track B                                         |
 | F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26                 |
 | G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27         |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18e |
 | I. Story component usage   | 34 to 36   | Tracks B and D                                  |
 | J. Spike for decision 18   | 37         | Nothing                                         |
 
