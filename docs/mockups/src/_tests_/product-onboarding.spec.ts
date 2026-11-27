@@ -106,8 +106,8 @@ for (const viewport of productViewports)
         await expect(field).toContainText(sample.repository);
         // The closed field is what the reader opens; nothing is drawn open.
         await expect(page.getByTestId("firna-options-list")).toHaveCount(0);
-        // Two connected accounts have two pages on GitHub, so the line opens
-        // the pane that holds both rather than leaving for either.
+        // The line opens the pane that adds an account and holds each
+        // account's page on GitHub, rather than leaving for one of them.
         const manage = page.getByRole("link", {
           name: "Manage repository access",
         });

@@ -162,7 +162,7 @@ The repository step draws one field for the repository: the registered
 canonical page draws a workspace with two connected GitHub accounts, so the
 select takes one section for each account, titled with the account name.
 Under the field one sentence says "Don’t see it? Manage repository access".
-With several accounts, its link opens the GitHub accounts pane. Config path,
+Its link opens the GitHub accounts pane for any number of accounts. Config path,
 the project slug with its address preview and **Create project** follow. The
 empty page draws the select disabled over "No repositories yet", with the same
 sentence. A list that fails says "Repositories couldn’t load" and offers **Try
@@ -171,7 +171,7 @@ again**. Screens beside the step draw its other situations:
 | Path                                            | What it draws                                                                                                                        |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `product/account/choose-repository/open`        | The select open: the registered `design/options-list` under the field, with the search field and one titled section for each account |
-| `product/account/choose-repository/one-account` | A workspace with one account: a flat select, and a sentence whose link opens that installation's page on GitHub in a new tab         |
+| `product/account/choose-repository/one-account` | A workspace with one account: a flat select, and the same sentence, whose link opens the GitHub accounts pane                        |
 | `product/account/choose-repository/slug-taken`  | The taken-address refusal, and as its Empty variant an address suggestion that could not load                                        |
 | `product/account/choose-repository/creating`    | The step while its write runs: the form, with **Create project** busy with "Creating…"                                               |
 | `product/account/choose-repository/cli`         | The CLI form with its empty, loading and error states, and its wait for the workspace as the `workspace-loading` variant             |

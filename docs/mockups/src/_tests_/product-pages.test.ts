@@ -94,22 +94,17 @@ test("recovery has one dashboard action and no route, framework or product data"
 });
 
 test("the account family leaves for the public site only where the contract allows", () => {
-  // The two setup steps that depend on the App also leave for GitHub's own page
-  // for this installation, which is the only place what the App can read is
-  // changed and a suspension is cleared. It is named here so the destination
+  // The install step that depends on the App also leaves for GitHub's own page
+  // for this installation, which is the only place a suspension is cleared. It is named here so the destination
   // stays one address the fixtures own rather than a link any screen may invent.
   const owned: readonly string[] = [
     ...Object.values(site),
     workspace.manageUrl,
   ];
-  // The install step names the suspension only GitHub clears, and the
-  // repository step of a workspace with one account sends the line beneath
-  // its field there. With several accounts the line opens the GitHub accounts
-  // pane instead, which holds one such page per account.
-  const managed = new Set([
-    "product/account/install-app/error",
-    "product/account/choose-repository/one-account",
-  ]);
+  // The install step names the suspension only GitHub clears. The repository
+  // step's line opens the GitHub accounts pane instead, for any number of
+  // accounts, because that pane also adds another account.
+  const managed = new Set(["product/account/install-app/error"]);
   const loggedOut = new Set(["sign-in", "sign-up", "magic-link", "callback"]);
   // A variant is a situation of the screen it hangs under, so whether the
   // wordmark leaves for the site is the owning screen's answer and not the

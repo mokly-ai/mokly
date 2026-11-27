@@ -5,8 +5,8 @@ import { createWorkspacePath, installPath } from "../navigation/paths";
 import { workspaceAddress } from "./addresses";
 import {
   bindAnotherInstallation,
+  installedAccount,
   installedRepository,
-  manageUrl,
   releaseSecondInstallation,
   secondInstallation,
 } from "./database-fixture";
@@ -19,7 +19,11 @@ import {
   test,
 } from "./harness";
 import { walkToProject, repositoryField } from "./project-setup";
-import { atRepositoryStep, installSecondAccount } from "./setup-walks";
+import {
+  atRepositoryStep,
+  githubAccountRow,
+  installSecondAccount,
+} from "./setup-walks";
 
 /**
  * The repository step of a reader in two workspaces that both installed the
@@ -28,19 +32,24 @@ import { atRepositoryStep, installSecondAccount } from "./setup-walks";
  * The installation list answers for every workspace the reader belongs to,
  * but a project is created from its own workspace's installation, and the
  * API refuses a repository from another one. So the step lists only the open
- * workspace's repositories and links to that workspace's installation.
+ * workspace's repositories, and its manage link opens a GitHub accounts pane
+ * that lists only that workspace's account.
  */
 
 // The first walk binds the second recorded installation; it is handed back
 // after each walk, so the next one can bind it again.
 test.afterEach(() => releaseSecondInstallation());
 
-/** Open one workspace's repository step and check what its select offers. */
+/**
+ * Open one workspace's repository step and check what its select offers and
+ * which account its manage link shows.
+ */
 async function expectOffered(
   page: Page,
   workspacePath: string,
   repository: string,
-  installation: string,
+  account: string,
+  otherAccount: string,
 ): Promise<void> {
   await open(page, `${workspacePath}/-/new`);
   await repositoryField(page).click();
@@ -48,9 +57,12 @@ async function expectOffered(
   await expect(options).toHaveCount(1);
   await expect(options.first()).toContainText(repository);
   await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Manage repository access" }).click();
   await expect(
-    page.getByRole("link", { name: "Manage repository access" }),
-  ).toHaveAttribute("href", installation);
+    page.getByRole("dialog").getByRole("heading", { level: 1 }),
+  ).toHaveText("GitHub accounts");
+  await expect(githubAccountRow(page, account)).toBeVisible();
+  await expect(githubAccountRow(page, otherAccount)).toHaveCount(0);
 }
 
 /** Create another workspace through the workspace step; answer its ID. */
@@ -80,9 +92,16 @@ test("the repository step lists only its own workspace's installation", async ({
     page,
     secondAddress.path,
     secondInstallation.repository,
-    secondInstallation.manageUrl,
+    secondInstallation.account,
+    installedAccount,
   );
-  await expectOffered(page, first.path, installedRepository, manageUrl);
+  await expectOffered(
+    page,
+    first.path,
+    installedRepository,
+    installedAccount,
+    secondInstallation.account,
+  );
 });
 
 test("the repository step lists every page of the installation's repositories", async ({

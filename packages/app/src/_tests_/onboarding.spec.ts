@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { workspaceAddress, projectPathFor } from "./addresses";
-import { installedRepository, manageUrl } from "./database-fixture";
+import { installedAccount, installedRepository } from "./database-fixture";
 import { installApp } from "./github-installation";
 import {
   currentWorkspaceId,
@@ -17,6 +17,7 @@ import {
   walkToProject,
   repositoryField,
 } from "./project-setup";
+import { githubAccountRow } from "./setup-walks";
 
 test("onboarding creates a workspace and a project from a repository", async ({
   page,
@@ -70,13 +71,20 @@ test("the repository step lists what the App reads and where to change it", asyn
   page,
 }) => {
   await atRepositoryStep(page, "listed");
+  const step = new URL(page.url()).pathname;
 
-  // Somebody else's page, so it opens beside this one rather than taking the
-  // reader out of the step they are on.
-  const manage = page.getByRole("link", { name: "Manage repository access" });
-  await expect(manage).toHaveAttribute("href", manageUrl);
-  await expect(manage).toHaveAttribute("target", "_blank");
-  await expect(manage).toHaveAttribute("rel", "noopener noreferrer");
+  // One account's own page on GitHub cannot add a second account, so even one
+  // account opens the GitHub accounts pane over the step, which can.
+  await page.getByRole("link", { name: "Manage repository access" }).click();
+  const pane = page.getByRole("dialog");
+  await expect(pane.getByRole("heading", { level: 1 })).toHaveText(
+    "GitHub accounts",
+  );
+  expect(new URL(page.url()).pathname).toBe(step);
+  await expect(githubAccountRow(page, installedAccount)).toBeVisible();
+  await expect(page.getByTestId("add-github-account")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(pane).toHaveCount(0);
 
   await expect(page.getByTestId("create-project")).toBeDisabled();
   await chooseRepository(page);
@@ -250,7 +258,7 @@ test("a repository list that comes back empty offers the manage link", async ({
   await expect(repositoryField(page)).toContainText("No repositories yet");
   await expect(
     page.getByRole("link", { name: "Manage repository access" }),
-  ).toHaveAttribute("href", manageUrl);
+  ).toBeVisible();
   await expect(page.getByTestId("create-project")).toBeDisabled();
   await page.unrouteAll();
 });

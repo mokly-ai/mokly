@@ -47,8 +47,9 @@ select. Reviewers cannot create projects.
 
 Pick a repository that the App can read. With one connected installation, the
 list is flat. With several, it groups repositories under their GitHub account
-names. **Manage repository access** opens GitHub when the workspace has one
-account. With several accounts, it opens the GitHub accounts settings pane.
+names. **Manage repository access** opens the GitHub accounts settings pane.
+There you add another GitHub account, or open an account on GitHub to change
+which repositories the App can read.
 
 The config path defaults to `mokly.config.json`. It can be any repository-relative
 `.json` path without absolute paths or `..` segments.

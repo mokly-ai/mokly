@@ -4,7 +4,6 @@ import { test } from "node:test";
 import type { Installation, Repository } from "../../../api/types";
 import {
   chosenRepository,
-  manageDestination,
   repositoryOptions,
 } from "../../../screens/account/repository-choices";
 
@@ -96,20 +95,4 @@ test("the chosen repository is found in whichever account holds it", () => {
   );
   assert.equal(chosenRepository(accounts, ""), undefined);
   assert.equal(chosenRepository(accounts, "gone"), undefined);
-});
-
-test("one account manages access on GitHub and several in the pane", () => {
-  assert.deepEqual(manageDestination([installation("mokly-ai")]), {
-    kind: "github",
-    url: "https://github.com/settings/installations/mokly-ai",
-  });
-  // A suspended account is still one the reader manages, so it counts.
-  assert.deepEqual(
-    manageDestination([
-      installation("mokly-ai"),
-      installation("cal", "suspended"),
-    ]),
-    { kind: "pane" },
-  );
-  assert.equal(manageDestination([]), undefined);
 });

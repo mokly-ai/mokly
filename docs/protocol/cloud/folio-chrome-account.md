@@ -67,7 +67,7 @@ it carries only the identity and the two legal links.
   is chosen by a press and nothing highlights on hover. One 13px muted line
   sits under it when the list may be short of what the reader wants, carrying
   an ink link to where the list is changed — on the repository step, the
-  installation's page on GitHub, in a new tab.
+  GitHub accounts settings pane.
 - **States**. Empty, loading and error bodies render flush inside the panel,
   dropping the card the **State** composition draws elsewhere: the panel is
   already that card, and a second border around one sentence is two frames for

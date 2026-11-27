@@ -14,11 +14,6 @@ export interface AccountRepositories {
 
 /** What the repository step offers for one workspace. */
 export interface RepositoryChoices {
-  /**
-   * Every account the workspace binds, suspended ones included, in the
-   * list's order: the manage sentence points at them.
-   */
-  installations: readonly Installation[];
   /** The connected accounts, whose repositories the select offers. */
   accounts: readonly AccountRepositories[];
 }
@@ -41,7 +36,7 @@ export async function loadRepositoryChoices(
         repositories: await listRepositories(installation.id),
       })),
   );
-  return { installations, accounts };
+  return { accounts };
 }
 
 function option(repository: Repository): DropdownSelectorOption {
@@ -88,23 +83,4 @@ export function chosenRepository(
     if (found) return found;
   }
   return undefined;
-}
-
-/**
- * Where "Manage repository access" leads. What the App reads is decided on
- * GitHub, so with one account the link is that installation's own page
- * there. Several accounts have no single page, so the link opens the GitHub
- * accounts pane, which holds one manage link for each.
- */
-export type ManageDestination =
-  { kind: "github"; url: string } | { kind: "pane" };
-
-export function manageDestination(
-  installations: readonly Installation[],
-): ManageDestination | undefined {
-  if (installations.length > 1) return { kind: "pane" };
-  const [only] = installations;
-  return only === undefined
-    ? undefined
-    : { kind: "github", url: only.manageUrl };
 }

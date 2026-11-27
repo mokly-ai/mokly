@@ -84,7 +84,7 @@ test("two connected accounts group the repository select and share the GitHub ac
   );
   await page.keyboard.press("Escape");
 
-  // Two accounts have no one page on GitHub, so the link opens the pane.
+  // The link opens the pane, which holds one manage link for each account.
   const manage = page.getByRole("link", { name: "Manage repository access" });
   await expect(manage).not.toHaveAttribute("target", "_blank");
   await manage.click();

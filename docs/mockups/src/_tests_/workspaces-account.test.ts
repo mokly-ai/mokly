@@ -187,6 +187,7 @@ test("the repository step sends its manage line to where the accounts are kept",
       "product/account/choose-repository/suggestion-loading",
       "product/account/choose-repository/open",
       "product/account/choose-repository/slug-taken",
+      "product/account/choose-repository/one-account",
     ]) {
       const [manage, ...more] = links(
         drawnPage(id, viewport),
@@ -198,13 +199,6 @@ test("the repository step sends its manage line to where the accounts are kept",
     const one = drawnPage(
       "product/account/choose-repository/one-account",
       viewport,
-    );
-    const [manage] = links(one, "Manage repository access");
-    assert.equal(destination(manage), undefined);
-    assert.ok(
-      one.html.includes(
-        'href="' + githubAccounts[0].manageUrl + '" target="_blank"',
-      ),
     );
     assert.ok(!one.html.includes(githubAccounts[1].name + "/"));
   }

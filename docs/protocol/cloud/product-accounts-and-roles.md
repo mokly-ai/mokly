@@ -81,9 +81,11 @@ select. It reads the workspace-filtered installation list and the repositories
 of each connected installation. With several connected installations, it
 groups the options into one section per GitHub account, titled with its name.
 With one connected installation, the select stays flat. The sentence beneath
-it is "Don’t see it? Manage repository access". With one bound account, the
-link opens that installation's manage page on GitHub in a new tab. With several
-bound accounts, it opens the `github` settings pane.
+it is "Don’t see it? Manage repository access". Its link opens the `github`
+settings pane for any number of bound accounts. That pane adds another GitHub
+account and opens each account's manage page on GitHub. A direct link to the
+manage page of a single account was rejected, because that page cannot add a
+second account.
 
 Config path and the project slug with its address preview follow the select.
 **Create project** submits the selected repository's API identifier. Below the

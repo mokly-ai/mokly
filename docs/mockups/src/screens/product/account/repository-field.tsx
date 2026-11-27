@@ -6,7 +6,6 @@ import { OptionsList } from "../../../entries/design/options-list.mockup";
 import { Selector } from "../../../entries/design/selector.mockup";
 import { githubAccounts, sample } from "../../../fixtures/product";
 import type { GitHubAccount } from "../../../fixtures/product";
-import { ExternalLink } from "../page-parts";
 
 /** How many GitHub accounts the workspace connects: the select's one question. */
 export type Accounts = "several" | "one";
@@ -26,30 +25,20 @@ const sections = githubAccounts.map((account) => ({
   options: choices(account),
 }));
 
-/** The words of the manage line's link, which a wait draws too. */
-const manage = "Manage repository access";
-
 /**
  * The line beneath the field, which is where the list is changed: what the App
- * reads is decided on GitHub. With one account the link opens that
- * installation's own page there, in a tab of its own. With several, no single
- * page holds them all, so it opens the GitHub accounts pane, where each
- * account keeps its own way to GitHub. While the accounts are read, where the
- * link leads is not known, so it draws its words as text in the link's box.
+ * reads is decided on GitHub, one account at a time. However many accounts the
+ * workspace connects, the link opens the GitHub accounts pane, which both adds
+ * another account and keeps each account's own way to GitHub. The link needs
+ * nothing from the read, so a wait draws it too.
  */
-function ManageAccess({ accounts }: { accounts: Accounts | "waiting" }) {
+function ManageAccess() {
   return (
     <p className="fo-copy fo-selector-note">
       Don’t see it?{" "}
-      {accounts === "waiting" ? (
-        <span className="fo-site-link">{manage}</span>
-      ) : accounts === "one" ? (
-        <ExternalLink to={githubAccounts[0].manageUrl} label={manage} newTab />
-      ) : (
-        <MockLink to="product/settings/github" className="fo-site-link">
-          <span>{manage}</span>
-        </MockLink>
-      )}
+      <MockLink to="product/settings/github" className="fo-site-link">
+        <span>Manage repository access</span>
+      </MockLink>
     </p>
   );
 }
@@ -103,7 +92,7 @@ export function RepositoryField(
           options={[]}
           hold={props.waiting}
         />
-        <ManageAccess accounts="waiting" />
+        <ManageAccess />
       </div>
     );
   const { accounts, empty, open = false, readOnly = false } = props;
@@ -125,7 +114,7 @@ export function RepositoryField(
         />
         {open && <OpenList />}
       </div>
-      <ManageAccess accounts={accounts} />
+      <ManageAccess />
     </div>
   );
 }
