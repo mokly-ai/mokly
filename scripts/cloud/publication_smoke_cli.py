@@ -12,7 +12,7 @@ from publication_smoke_fixture import (
 )
 from publication_smoke_consumer import install_published_cli
 from publication_exchange import INDEX
-from publication_smoke_support import project_and_token
+from publication_smoke_support import exchange_catalogue_grant, project_and_token
 
 
 CAPTURE_FIXTURES = Path("infra/tests/fixtures/catalogue-capture")
@@ -90,9 +90,7 @@ def _stored_envelope(api, project, publication_id):
 
 def _served_build(api, catalogue, owner, project, publication, destination):
     grant, _ = api.call("POST", "/v1/projects/" + project["id"] + "/publications/" + publication["id"] + "/access-grants", {}, owner, 201)
-    exchange, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=200)
-    cookie = headers["set-cookie"].split(";")[0]
-    assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
+    cookie, _ = exchange_catalogue_grant(catalogue, publication, grant["grant"], api.origin)
     marker = json.loads((destination / ".mokly-export-artifact").read_bytes())
     assert marker["schemaVersion"] == 3
     for entry in marker["files"]:

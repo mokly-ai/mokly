@@ -56,6 +56,28 @@ class Catalogue(Api):
             connection.close()
 
 
+def exchange_catalogue_grant(server, publication, grant, origin):
+    """Exchange a grant and check the capability in both response channels."""
+    body, headers = Catalogue.fetch(
+        server, publication, "/_access", "POST", {"grant": grant}, origin=origin, expected=200,
+    )
+    try:
+        exchange = json.loads(body)
+    except ValueError as error:
+        raise AssertionError(f"Invalid grant exchange JSON: {body!r}") from error
+    assert isinstance(exchange, dict) and exchange.keys() == {"token", "expiresIn"}, body
+    assert exchange["expiresIn"] == 300, body
+    set_cookie = headers.get("set-cookie", "")
+    cookie = set_cookie.split(";", 1)[0]
+    name, _, cookie_value = cookie.partition("=")
+    token = exchange["token"]
+    assert name == "__Host-mkc_catalogue" and cookie_value, (body, set_cookie)
+    assert token == cookie_value, (body, set_cookie)
+    assert "Domain=" not in set_cookie, (body, set_cookie)
+    assert headers.get("access-control-allow-origin") == origin, (body, headers)
+    return cookie, token
+
+
 def files_from_tar(body):
     with tarfile.open(fileobj=io.BytesIO(body), mode="r:gz") as archive:
         return {item.name: archive.extractfile(item).read() for item in archive if item.isfile()}

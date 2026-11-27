@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from publication_smoke_support import Catalogue
+from publication_smoke_support import Catalogue, exchange_catalogue_grant
 
 
 DESKTOP = json.loads((Path(__file__).resolve().parents[2] / "fixtures/desktop-origin.json").read_text())["origin"]
@@ -17,14 +17,13 @@ def desktop_admission(api, catalogue, owner, project, publication, executable):
                 grant, _ = api.call("POST", f'/v1/projects/{project["id"]}/publications/{publication["id"]}/access-grants', {},
                                     session=owner, expected=201, extra={"Origin": origin})
                 admitted = enabled or origin == api.origin
-                exchange, headers = host.fetch(publication, "/_access", "POST", {"grant": grant["grant"]},
-                                               origin=origin, expected=200 if admitted else 403)
-                assert headers.get("access-control-allow-origin") == (origin if admitted else None)
                 if not admitted:
+                    _, headers = host.fetch(publication, "/_access", "POST", {"grant": grant["grant"]},
+                                            origin=origin, expected=403)
+                    assert headers.get("access-control-allow-origin") is None
                     assert "set-cookie" not in headers
                     continue
-                cookie = headers["set-cookie"].split(";")[0]
-                assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
+                cookie, _ = exchange_catalogue_grant(host, publication, grant["grant"], origin)
                 for path in ["/", "/mokly-viewer/index.json"]:
                     body, headers = host.fetch(publication, path, cookie=cookie, origin=origin)
                     assert body
