@@ -75,9 +75,9 @@ shared signing key to revoke all outstanding capabilities. Credentials, the
 `Authorization` header included, and request bodies are never logged. An
 existing private catalogue returns 401 without access except when it serves
 one of the two public Mokly files. A nonexistent publication returns 404.
-The existence oracle is deliberate because the viewer uses 401 to start the
-grant exchange. The start page answer to a frame navigation also carries
-status 401, so it discloses nothing new.
+Decision: the existence oracle is deliberate, because the viewer uses 401 to
+start the grant exchange. The start page answer to a frame navigation also
+carries status 401, so it discloses nothing new.
 
 ## Embedded Access Route
 
