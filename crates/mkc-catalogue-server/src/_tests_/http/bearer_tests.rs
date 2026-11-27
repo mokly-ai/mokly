@@ -30,7 +30,7 @@ fn credential_router(access: Unimock, status: StatusCode) -> Router {
 }
 
 #[tokio::test]
-async fn verified_bearer_takes_precedence_even_when_membership_denies_access() {
+async fn bearer_request_makes_one_access_call_and_sets_no_cookie() {
     for status in [StatusCode::OK, StatusCode::NOT_FOUND] {
         let access = Unimock::new(
             CatalogueAccessMock::authorize

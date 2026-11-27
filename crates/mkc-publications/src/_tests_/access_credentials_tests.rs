@@ -55,25 +55,41 @@ fn member_policy() -> Unimock {
 }
 
 #[test]
-fn valid_bearer_authorizes_without_reading_the_cookie() {
-    let service = service(
-        Unimock::new(
-            CapabilitiesMock::verify
-                .some_call(matching!("bearer"))
-                .returns(Ok(valid_capability())),
-        ),
-        member_policy(),
-    );
-    let mut clear = true;
-    service
-        .authorize(
+fn verified_bearer_decides_access_without_reading_or_clearing_the_cookie() {
+    for denied in [false, true] {
+        let policy = Unimock::new(
+            AccessPolicyMock::read
+                .some_call(matching!(_, &PROJECT, Some(USER)))
+                .returns(if denied {
+                    Err(Error::NotFound)
+                } else {
+                    Ok(project())
+                }),
+        );
+        let service = service(
+            Unimock::new(
+                CapabilitiesMock::verify
+                    .some_call(matching!("bearer"))
+                    .returns(Ok(valid_capability())),
+            ),
+            policy,
+        );
+        let mut clear = true;
+        let result = service.authorize(
             PUBLICATION,
             Some("bearer"),
-            &mut || panic!("a valid bearer must leave the cookie unread"),
+            &mut || panic!("a verified bearer must leave the cookie unread"),
             &mut clear,
-        )
-        .unwrap();
-    assert!(!clear);
+        );
+        if denied {
+            assert!(matches!(result, Err(Error::NotFound)), "denied: {result:?}");
+        } else {
+            let context = result.unwrap();
+            assert_eq!(context.publication.id, PUBLICATION);
+            assert_eq!(context.project.id, PROJECT);
+        }
+        assert!(!clear, "denied: {denied}");
+    }
 }
 
 #[test]
