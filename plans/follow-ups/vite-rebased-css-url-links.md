@@ -68,9 +68,13 @@
   keeps the link rule on every path.
 - **Previous examples:** `plans/follow-ups/vite-sass-outside-root-reads.md`
   records another Sass read that the adapter does not confine.
-- **Related:** `plans/follow-ups/vite-css-url-resolution.md`: the same
-  resolver override and a shared wider fix. B waits for its answer. A agrees
-  with each of its answers.
+- **Related:**
+  - `plans/follow-ups/vite-css-url-resolution.md`: the same resolver override
+    and a shared wider fix. B waits for its answer. A agrees with each of its
+    answers.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. That
+    record holds the written path of each import, which is the authored path
+    that A returns.
 - **Recommendation:** A. It restores the stated link rule at Small effort,
   and it agrees with each answer of the CSS URL item. Choose C only together
   with a decision to keep committed links in the base extraction.

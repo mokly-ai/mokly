@@ -76,10 +76,17 @@
   request, gives each request the same lookups for the same resolutions,
   whatever the worker served before.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/installed-module-watch-paths.md`: work that
-  depends on the order. The copy gives Serve a watch of the manifest of an
-  installed JavaScript package today. A removes that watch, so land A with
-  or after the JavaScript watch mapping of that item.
+- **Related:**
+  - `plans/follow-ups/installed-module-watch-paths.md`: work that depends on
+    the order. The copy gives Serve a watch of the manifest of an installed
+    JavaScript package today. A removes that watch, so land A with or after
+    the JavaScript watch mapping of that item.
+  - `plans/follow-ups/vite-base-workspace-export.md`: same code. Its fix
+    records each `package.json` that it reads as a lookup input. When A lands
+    first, that fix adds those files to the lookup record of the package.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. The
+    lookup record of A is reuse evidence, which that shared import record can
+    hold.
 - **Recommendation:** A. It keeps the cover for Vite's package cache, and it
   makes each key depend only on its own resolutions.
 - **Action:** fix after merge, apply A, because the cost is extra transforms,

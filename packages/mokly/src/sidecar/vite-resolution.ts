@@ -19,7 +19,14 @@ import { viteFile } from "./vite-urls.js";
 type ViteResolve = (
   source: string,
   importer: string,
+  originalImporter?: string,
 ) => Promise<Rollup.PartialResolvedId | null>;
+
+type StylesheetResolve = (
+  source: string,
+  importer: string,
+) => Promise<string | undefined>;
+
 export interface ViteResolution {
   resolved: Rollup.PartialResolvedId;
   importer: string;
@@ -59,12 +66,15 @@ export class ViteLookup {
     this.alias = (source, importer) =>
       alias(environment, source, importer, true);
     const skip = new Set(
-      environment.plugins.filter((plugin) =>
-        ["mokly-first", "mokly", "alias"].includes(plugin.name),
+      environment.plugins.filter(
+        (plugin) => plugin.name === "mokly-first" || plugin.name === "alias",
       ),
     );
-    this.module = (source, importer) =>
-      environment.pluginContainer.resolveId(source, importer, { skip });
+    this.module = (source, importer, originalImporter) =>
+      environment.pluginContainer.resolveId(source, importer, {
+        skip,
+        custom: { mokly: { importer: originalImporter } },
+      });
     this.fetch = environment.fetchModule.bind(environment);
   }
 
@@ -75,7 +85,7 @@ export class ViteLookup {
     const target = (await this.alias(source, importer)) ?? source;
     const candidates = this.importers(target, importer);
     for (const [index, candidate] of candidates.entries()) {
-      let resolved = await this.module(target, candidate);
+      let resolved = await this.module(target, candidate, importer);
       if (resolved?.external && !viteFile(resolved.id)) {
         const physical = await this.nodeEntry(source, importer);
         if (!physical) continue;
@@ -124,12 +134,23 @@ export class ViteLookup {
   async stylesheet(
     source: string,
     importer: string | undefined,
-    resolve: (source: string, importer: string) => Promise<string | undefined>,
+    resolveRelative: StylesheetResolve,
+    resolvePackage: StylesheetResolve,
   ): Promise<string | undefined> {
     const target = (await this.alias(source, importer)) ?? source;
+    if (bareSpecifier(target) && !target.includes("\0")) {
+      const from =
+        viteFile(importer ?? "") ?? path.join(this.directory, "package.json");
+      const relative = await resolveRelative(`./${target}`, from);
+      if (relative) {
+        const file = viteFile(relative);
+        if (file)
+          return (await this.paths.resolve(file)) + relative.slice(file.length);
+      }
+    }
     const candidates = this.importers(target, importer);
     for (const [index, candidate] of candidates.entries()) {
-      const resolved = await resolve(target, candidate);
+      const resolved = await resolvePackage(target, candidate);
       if (!resolved) continue;
       const file = viteFile(resolved);
       if (!file) return resolved;
@@ -168,7 +189,7 @@ export class ViteLookup {
           source: target,
           importer: importer ?? file,
         };
-      const resolved = await this.module(target, importer ?? file);
+      const resolved = await this.module(target, importer ?? file, importer);
       return resolved
         ? {
             resolved: { ...resolved, external: true },

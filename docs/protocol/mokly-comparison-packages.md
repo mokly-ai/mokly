@@ -81,7 +81,9 @@ Mokly keeps an existing build file on the selected side, as in step 4.
 
 The lookup recovery above does not apply under the adapter. When the working
 tree has no build file, the setup selects no file, and Vite fails with its own
-error, such as `Failed to resolve entry for package`. Both sides compile the
+error, such as `Failed to resolve entry for package`. A base with its own
+installed dependencies fails in the same way for a Git-ignored build file,
+because its installation copies only tracked files. Both sides compile the
 source when an export condition, such as `development`, or an alias in the
 Vite setup points to the source.
 

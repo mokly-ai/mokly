@@ -102,7 +102,8 @@ files do not count.
 After the Vite setup selects the package file, Mokly uses a matching
 source file on each side of the comparison when one exists. Vite fails to
 resolve the import if it needs an exported build file that is missing from
-the working tree. To skip the package build, point a Vite alias or an export
+the working tree. The base render fails in the same way when the base installs
+its own dependencies, because that installation has no untracked build files. To skip the package build, point a Vite alias or an export
 condition such as `development` to source.
 
 To detect the layout, Mokly reads `outDir` and `rootDir` from the package's

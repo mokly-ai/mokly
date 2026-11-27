@@ -135,6 +135,12 @@
   - The branch that found this item records each repository file that Node
     resolves while the config loads. The resolve hook of D can hold that
     record too.
+  - `plans/follow-ups/vite-base-workspace-export.md`: same code. Its fix goes
+    inside `ViteLookup`, which the config bundle and the resolve hook of D
+    both call. After D, each import of the Vite config resolves through Node
+    and `ViteLookup.sync`, so the Node form of that fix covers it.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. The
+    Vite part of that record must reach the resolve hook of D.
 - **Recommendation:** D. Node then binds every `import.meta` value and every
   import of a config module to its own file, so no value needs a hand copy.
 - **Action:** fix after merge, apply D, because D replaces the config loader

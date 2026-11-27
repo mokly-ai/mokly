@@ -78,13 +78,25 @@ export class ViteContext {
       peers: {},
     };
     this.input = input;
+    const {
+      entryFiles: _entryFiles,
+      storiesFiles: _storiesFiles,
+      renderer: _renderer,
+      evaluation: _evaluation,
+      viteInputs,
+      ...settings
+    } = params;
+    const { rebuildFiles: _rebuildFiles, ...setupInputs } = viteInputs ?? {};
     const key = JSON.stringify([
-      paths.sourceRoot,
-      directory,
+      {
+        ...settings,
+        sourceRoot: paths.sourceRoot,
+        configurationDirectory: directory,
+        repositoryRoots: paths.repositoryRoots,
+        viteInputs: setupInputs,
+      },
       paths.dependencyRoots,
       paths.dependencyRoot,
-      paths.repositoryRoots,
-      params.viteInputs?.baseEnv,
       Object.entries(require.snapshot()).sort(([left], [right]) =>
         left < right ? -1 : left > right ? 1 : 0,
       ),

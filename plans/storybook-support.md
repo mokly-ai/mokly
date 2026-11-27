@@ -2491,8 +2491,11 @@ own lines of this plan.
 - D35. Made on 2026-11-27 by the same orchestrator. Each Vite call of the
   source step passes the specifier after the setup's aliases. An alias of
   the setup that gives a path keeps its target, as a relative import does.
-  Reason: Vite's alias plugin runs before Mokly's hook, and the probe of
-  decision 6 shows a setup alias as a route that the author chooses.
+  Reason: `ViteLookup` applies the setup's aliases before the setup's hooks
+  select a file, and the probe of decision 6 shows a setup alias as a route
+  that the author chooses. Mokly's first ordered hook resolves every import,
+  after finding 3 of this branch's review, so a setup hook with
+  `order: "pre"` cannot skip the source step.
 - D36. Made on 2026-11-27 by the same orchestrator. A file that Node loads
   under the adapter keeps the Node rule of the
   [workspace package source rule](../docs/protocol/mokly-comparison-packages.md#workspace-package-sources):

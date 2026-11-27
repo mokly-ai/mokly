@@ -3,117 +3,26 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import type { TestContext } from "node:test";
 
-import type { BundleParams } from "../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
-import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 import type { SourcePackage } from "../packages/mokly/src/generated/sidecar/SourcePackage.js";
 import type { ViteCssResult } from "../packages/mokly/src/generated/sidecar/ViteCssResult.js";
 import { jsonObject } from "../packages/mokly/src/sidecar/config-json.js";
 
-import { viteFixture, viteFixtureWorker } from "./fixtures/vite/support.js";
+import { viteFixtureWorker } from "./fixtures/vite/support.js";
 import { reviewPage } from "./fixtures/vite_review.js";
 import {
-  link,
-  moduleNames,
-  nativeParams,
-  write,
-} from "./helpers/native_resolution.js";
-import { installBindings } from "./helpers/sidecar.js";
-
-const sides = ["head", "base"] as const;
-type Side = (typeof sides)[number];
-
-const pkg = "packages/local";
-const entry = "src/workspace.mockup.ts";
-const stylesheet = "src/workspace.css";
-const buildValue = (side: Side) => `export const value = "built ${side}";`;
-const sourceValue = (side: Side) =>
-  `export const value: string = "source ${side}";`;
-
-interface Layout {
-  specifier: string;
-  build: string;
-  source: string;
-  sourcePackages?: Record<string, SourcePackage>[];
-  keepBaseBuild?: boolean;
-}
-
-async function workspace(context: TestContext, layout: Layout) {
-  const fixture = await viteFixture(context);
-  const head = fixture.root;
-  const roots = { head, base: path.join(fixture.parent, "extraction") };
-  await fs.rm(path.join(head, "node_modules"), { recursive: true });
-  await link(
-    path.join(head, pkg),
-    path.join(head, "node_modules", layout.specifier),
-  );
-  const writeSide = (side: Side, file: string, contents: string) =>
-    write(path.join(roots[side], file), contents);
-
-  for (const side of sides) {
-    await writeSide(side, "vite.config.mjs", "export default {};");
-    await writeSide(
-      side,
-      `${pkg}/package.json`,
-      JSON.stringify({
-        name: layout.specifier,
-        type: "module",
-        exports: {
-          ".": `./${layout.build}`,
-          "./theme.css": "./dist/theme.css",
-        },
-      }),
-    );
-    await writeSide(side, `${pkg}/${layout.source}`, sourceValue(side));
-    await writeSide(
-      side,
-      `${pkg}/src/theme.css`,
-      `.source-${side} { color: teal }`,
-    );
-  }
-  await writeSide("head", `${pkg}/${layout.build}`, buildValue("head"));
-  await writeSide(
-    "head",
-    `${pkg}/dist/theme.css`,
-    ".built-head { color: red }",
-  );
-  if (layout.keepBaseBuild)
-    await writeSide("base", `${pkg}/${layout.build}`, buildValue("base"));
-
-  return {
-    write: writeSide,
-    params: (side: Side, vite = true) =>
-      nativeParams(
-        roots[side],
-        { vite, repositoryRoots: [head], entryFiles: [entry] },
-        {
-          ...(side === "base" ? { dependencyRoot: head } : {}),
-          packageRoots: [head, ...fixture.params.moduleResolution.packageRoots],
-          sourcePackages: layout.sourcePackages ?? [],
-        },
-      ),
-  };
-}
-
-const probe = {
-  specifier: "local",
-  build: "dist/value.js",
-  source: "src/value.ts",
-};
-
-async function renderWorkspacePage(context: TestContext, params: BundleParams) {
-  const { sidecar } = await viteFixtureWorker(context, params.sourceRoot);
-  const { generation } = await sidecar.call<BundleResult>("bundle", params);
-  await installBindings(sidecar, generation);
-  const result = await sidecar.call<PageResult>("renderPage", {
-    generation,
-    handle: `${entry}#page`,
-  });
-  await sidecar.call("shutdown");
-  return result.html;
-}
+  buildValue,
+  entry,
+  pkg,
+  probe,
+  renderWorkspacePage,
+  sides,
+  sourceValue,
+  stylesheet,
+  workspace,
+} from "./fixtures/vite_workspace.js";
+import { moduleNames } from "./helpers/native_resolution.js";
 
 for (const side of sides) {
   test(`Vite ${side} compiles a catalogue workspace import from source`, async (context) => {
@@ -140,10 +49,11 @@ for (const side of sides) {
     `,
     );
     await fixture.write(side, entry, reviewPage("__VALUE__"));
-    assert.equal(
-      await renderWorkspacePage(context, fixture.params(side)),
-      `<html><head></head><body>source ${side}</body></html>`,
-    );
+    const params = fixture.params(side);
+    const { sidecar } = await viteFixtureWorker(context, params.sourceRoot);
+    const html = await renderWorkspacePage(sidecar, params);
+    await sidecar.call("shutdown");
+    assert.equal(html, `<html><head></head><body>source ${side}</body></html>`);
   });
 
   test(`Vite ${side} compiles a JavaScript import of workspace CSS from source`, async (context) => {
@@ -157,6 +67,53 @@ for (const side of sides) {
       `${pkg}/src/theme.css`,
       entry,
     ]);
+  });
+
+  test(`Vite ${side} compiles workspace files selected by an ordered setup resolver`, async (context) => {
+    const fixture = await workspace(context, probe);
+    const params = fixture.params(side);
+    const head = await fs.realpath(fixture.roots.head);
+    const builds = {
+      local: path.join(head, pkg, probe.build),
+      "local/theme.css": path.join(head, pkg, "dist/theme.css"),
+    };
+    const token = "data/resolve.txt";
+    await fixture.write(side, token, "resolved");
+    await fixture.write(
+      side,
+      "vite.config.mjs",
+      `
+      import { normalize, resolve } from "node:path";
+      const builds = ${JSON.stringify(builds)};
+      const headImporter = ${JSON.stringify(path.join(head, entry))};
+      export default { plugins: [{ name: "workspace-build", resolveId: {
+        order: "pre",
+        handler(source, importer) {
+          if (!Object.hasOwn(builds, source)) return;
+          if (importer && normalize(importer) === headImporter)
+            this.addWatchFile(resolve(import.meta.dirname, ${JSON.stringify(token)}));
+          return builds[source];
+        },
+      } }] };
+    `,
+    );
+    await fixture.write(
+      side,
+      entry,
+      'export { value } from "local"; import "local/theme.css";',
+    );
+    const { sidecar } = await viteFixtureWorker(context, params.sourceRoot);
+    const result = await sidecar.call<BundleResult>("bundle", params);
+    await sidecar.call("shutdown");
+    assert.deepEqual(moduleNames(result).sort(), [
+      `${pkg}/src/theme.css`,
+      `${pkg}/src/value.ts`,
+      entry,
+    ]);
+    assert.equal(
+      result.compiled.metadataInputs[token],
+      createHash("sha256").update("resolved").digest("hex"),
+    );
   });
 
   test(`Vite ${side} transforms a workspace stylesheet @import from source`, async (context) => {
@@ -193,10 +150,10 @@ test("Vite base applies one workspace mapping in a bundled CommonJS config", asy
   );
   await fixture.write("base", entry, reviewPage("__VALUE__"));
 
-  assert.equal(
-    await renderWorkspacePage(context, params),
-    "<html><head></head><body>library base</body></html>",
-  );
+  const { sidecar } = await viteFixtureWorker(context, params.sourceRoot);
+  const html = await renderWorkspacePage(sidecar, params);
+  await sidecar.call("shutdown");
+  assert.equal(html, "<html><head></head><body>library base</body></html>");
 });
 
 const fixtureData: unknown = JSON.parse(

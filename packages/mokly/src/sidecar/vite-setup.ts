@@ -55,7 +55,11 @@ export async function viteSetup(
       loadSetup(
         vite,
         directory,
-        [first, moklyVitePlugin(current, css)],
+        [
+          pluginReports.resolvePlugin(current),
+          first,
+          moklyVitePlugin(current, css),
+        ],
         lookup,
         css,
         postcss,

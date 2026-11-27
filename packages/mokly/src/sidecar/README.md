@@ -642,12 +642,16 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-graph.ts`](./vite-graph.ts) records every fetch from the virtual entry
   before evaluation and builds the module graph. [`vite-fetch.ts`](./vite-fetch.ts)
   confines files and records their bytes and imports at the fetch boundary.
-  [`vite-plugin.ts`](./vite-plugin.ts) resolves protected imports before
-  aliases and setup hooks. It serves the virtual modules and stylesheet stubs
-  and confines the remaining project resolutions.
+  [`vite-plugin.ts`](./vite-plugin.ts) resolves every import in its first
+  ordered hook, before aliases and setup hooks. It resolves protected imports
+  itself, and sends each other import through `ViteLookup`, which runs the
+  setup's hooks, confines the selected file, and applies the workspace source
+  step with the import name. It also serves the virtual modules and
+  stylesheet stubs.
 - [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) captures `this.load` and
   `this.addWatchFile` in the contexts of load, transform, and resolve hooks.
-  Resolve reports belong to the importer. It retains each module's reports and
+  Its own first plugin tracks the resolve calls, also those that `ViteLookup`
+  delegates. Resolve reports belong to the original importer. It retains each module's reports and
   load edges while Vite reuses its transform. JavaScript fetches and inline
   stylesheet transforms collect reports from the module and its nested loads.
   They keep reports for files that the module also imports. Reports outside

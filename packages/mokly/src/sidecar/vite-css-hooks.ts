@@ -54,12 +54,16 @@ export function configureViteCss(
           ? Promise.resolve(css.active.urls.resolve(source, importer))
           : original(source, importer, aliasOnly, ssr);
     if (!options.mainFields?.includes("style")) return original;
+    const packages = createResolver({ ...options, preferRelative: false });
     return async (source, importer, aliasOnly, ssr) => {
       if (!css.active || aliasOnly)
         return original(source, importer, aliasOnly, ssr);
       const file = source.startsWith("file:") ? fileURLToPath(source) : source;
-      const resolved = await lookup.stylesheet(file, importer, (target, from) =>
-        original(target, from, aliasOnly, ssr),
+      const resolved = await lookup.stylesheet(
+        file,
+        importer,
+        (target, from) => original(target, from, aliasOnly, ssr),
+        (target, from) => packages(target, from, aliasOnly, ssr),
       );
       if (resolved) await css.active.read(resolved, importer);
       return resolved;

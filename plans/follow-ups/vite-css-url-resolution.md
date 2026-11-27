@@ -192,6 +192,12 @@
   - `plans/follow-ups/vite-rebased-css-url-links.md`: the same resolver
     override. The authored-path rule of C can also serve the rebase of a
     partial's `url()`.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. C
+    sends each URL through `ViteLookup.stylesheet`, so the Vite part of that
+    record must also describe the URL lookups.
+  - `plans/follow-ups/vite-base-workspace-export.md`: same code. C sends a
+    bare package URL through the package lookup of `ViteLookup.stylesheet`,
+    so the fix of that item must also cover it.
 - **Recommendation:** C. It has the same Medium effort as B, and it reuses
   the lookup that the `@import` branch already uses. It also covers tsconfig
   paths and the package lookup, which the alias step of B misses. If the user
