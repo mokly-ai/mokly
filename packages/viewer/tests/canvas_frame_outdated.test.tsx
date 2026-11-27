@@ -25,10 +25,17 @@ import {
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
 import { flush } from "./data_fakes.js";
 
-/** An adapter whose every mount finds a page that an earlier Mokly built. */
-const outdatedAdapter: FrameAdapter = {
-  mount: () => Promise.reject(new FrameError("version")),
-};
+/**
+ * Adapters whose every mount finds a page that an earlier Mokly built: a
+ * built-in frame error, and a custom adapter's own error with the same code.
+ */
+const OUTDATED_ADAPTERS: readonly FrameAdapter[] = [
+  { mount: () => Promise.reject(new FrameError("version")) },
+  {
+    mount: () =>
+      Promise.reject(Object.assign(new Error("old page"), { code: "version" })),
+  },
+];
 
 /** One live frame of each kind, with the path of the canvas that holds it. */
 function liveFrames(): { kind: string; path: string; node: ReactNode }[] {
@@ -73,19 +80,22 @@ function liveFrames(): { kind: string; path: string; node: ReactNode }[] {
 
 test("each live frame whose page an earlier Mokly built names the way on, without Try again", async (t) => {
   registerDom(t);
-  for (const { kind, path, node } of liveFrames()) {
-    const frame = renderInShell(outdatedAdapter, path, node);
-    try {
-      await act(flush);
-      const status = frame.container.querySelector('[role="status"]');
-      assert.equal(
-        status?.textContent,
-        "This preview was built with an older version of Mokly. Update Mokly in the project, then publish it again.",
-        kind,
-      );
-      assert.equal(status?.querySelector("button, a"), null, kind);
-    } finally {
-      frame.unmount();
+  for (const [index, adapter] of OUTDATED_ADAPTERS.entries()) {
+    for (const { kind: frameKind, path, node } of liveFrames()) {
+      const kind = `${frameKind}, adapter ${index}`;
+      const frame = renderInShell(adapter, path, node);
+      try {
+        await act(flush);
+        const status = frame.container.querySelector('[role="status"]');
+        assert.equal(
+          status?.textContent,
+          "This preview was built with an older version of Mokly. Update Mokly in the project, then publish it again.",
+          kind,
+        );
+        assert.equal(status?.querySelector("button, a"), null, kind);
+      } finally {
+        frame.unmount();
+      }
     }
   }
 });

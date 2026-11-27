@@ -41,11 +41,14 @@ test("a page whose probe answers only the version 3 handshake rejects the mount 
   assert.equal(fake.timers.size, 0);
 });
 
-test("a version 3 reply from another origin or for another mount leaves the mount waiting", async () => {
+test("a version 3 reply from another origin, for another mount, or of another shape leaves the mount waiting", async () => {
   const { fake, promise, nonce } = mount();
+  const ready = JSON.parse(earlier(nonce, "ready")) as Record<string, unknown>;
   fake.raw(earlier(nonce, "ready"), "https://other.test");
   fake.raw(earlier("0".repeat(32), "ready"));
   fake.raw(earlier(nonce, "geometry"));
+  fake.raw(JSON.stringify({ ...ready, extra: 1 }));
+  fake.raw(JSON.stringify({ ...ready, channel: "mokly-inspector" }));
   fake.send({ type: "ready" }, nonce);
   const mounted = await promise;
   fake.raw(earlier(nonce, "ready"));

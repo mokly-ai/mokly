@@ -180,9 +180,7 @@ These changes move its wire version from 3 to 4. Version 4 adds the
 replies, and the `canvas-wheel`, `canvas-pinch`, `canvas-key`, `canvas-focus`
 and `canvas-blur` events. Through `postMessageAdapter`, which Mokly Cloud
 uses, pages that an earlier release built and the viewer of this release
-reject one another. The adapter rejects the mount of such a page with
-`version`, and the viewer shows `This preview was built with an older version
-of Mokly. Update Mokly in the project, then publish it again.`
+reject one another.
 
 - Rebuild and republish every hosted catalogue with this release. Upgrade
   `@mokly/viewer` in each embedding application to the same release at the

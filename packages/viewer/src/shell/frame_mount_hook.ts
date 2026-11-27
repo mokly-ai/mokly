@@ -9,12 +9,7 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type {
-  FrameAdapter,
-  FrameErrorCode,
-  FrameEvent,
-  MountedFrame,
-} from "@mokly/frame";
+import type { FrameAdapter, FrameEvent, MountedFrame } from "@mokly/frame";
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
@@ -29,6 +24,7 @@ import {
   type ShellFrameRegistry,
   useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
+import { isFrameFailure, rejectedVersion } from "./frame_failure.js";
 import {
   adoptUsage,
   finishMountedUsage,
@@ -198,11 +194,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         readiness.reject(error);
         if (!controller.signal.aborted && active.current === session) {
           session.status = "error";
-          setStatus(
-            error instanceof FrameError && error.code === "version"
-              ? "outdated"
-              : "error",
-          );
+          setStatus(rejectedVersion(error) ? "outdated" : "error");
           registry.changed();
         }
       });
@@ -238,28 +230,6 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   }, [input.identity, input.layout, input.sources, input.usage, registry]);
 
   return { frameRef, retry: replace, status };
-}
-
-/**
- * Whether an error event means that the frame failed to load or mount. An
- * inspection error, such as `limit`, leaves the loaded preview usable, so the
- * frame keeps its status. Every error event still reaches the listeners.
- */
-function isFrameFailure(code: FrameErrorCode, loading: boolean): boolean {
-  switch (code) {
-    case "disposed":
-    case "origin":
-    case "timeout":
-    case "version":
-      return true;
-    case "unavailable":
-      return loading;
-    case "invalid-boundary":
-    case "invalid-message":
-    case "limit":
-    case "missing-instance":
-      return false;
-  }
 }
 
 function sameFrameIdentity(

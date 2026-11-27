@@ -104,8 +104,8 @@ A mount has no time limit while the frame's document loads. Until it settles,
 each load gives it 5,000 ms to accept a document or get a reply, or it rejects
 with `timeout`. A request without a reply in 5,000 ms rejects with `timeout`
 and disposes the mount, so every later request rejects with `disposed`.
-A mount rejects with `version` when an earlier Mokly built its document, so no
-mount of that document can succeed.
+A mount rejects with `version` when its document's frame probe speaks an
+earlier wire version that the adapter recognises, so no mount of it can succeed.
 Decision: Serve renders pages on demand, so no fixed load limit fits.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
