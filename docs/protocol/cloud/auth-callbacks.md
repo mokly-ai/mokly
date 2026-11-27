@@ -62,12 +62,12 @@ Each landing requires exactly one non-empty value for every required query or
 fragment field. It compares query `state` with the relevant stored state before
 calling the API. Missing, malformed, duplicate or mismatched values are a local
 invalid-flow recovery: no request is sent. The one exception is an installation
-return with a valid `installation_id`, which is the connect arrival below.
-Initializing a landing consumes its matching record; an invalid GitHub callback
-clears all callback-purpose records in that tab, while an invalid installation
-return clears the setup record.
-Reload therefore cannot replay browser-held flow material. API state,
-verifier, expiry, session binding and CSRF checks are authoritative.
+return with a valid `installation_id` and no `setup_action=request`, which is
+the connect arrival below. Initializing a landing consumes its matching record;
+an invalid GitHub callback clears all callback-purpose records in that tab,
+while an invalid installation return clears the setup record. Reload therefore
+cannot replay browser-held flow material. API state, verifier, expiry, session
+binding and CSRF checks are authoritative.
 
 A GitHub identity return with matching stored state and either provider
 `error` or no `code` is a local provider refusal. It never reaches the API and

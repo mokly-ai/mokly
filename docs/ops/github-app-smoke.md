@@ -136,10 +136,14 @@ binding.
    and `mokly-ai/mokly` stay under their account headings.
 5. Open the App's Configure page on GitHub for `mokly-ai` and change its
    repository selection. GitHub must return to `/auth/github/install` with
-   `installation_id` and no `state`. Confirm that the app replaces the address
-   with `/install?installationId=<id>` without adding history. Choose the
-   workspace and **Continue on GitHub**. Confirm that the repository snapshot
-   refreshes and the app returns to the stored destination.
+   `installation_id`, and with no `state` or a `state` this tab no longer holds.
+   Confirm that the app replaces the address with
+   `/install?installationId=<id>` without adding history. Choose the workspace
+   and **Continue on GitHub**. Confirm that the repository snapshot refreshes
+   and the app returns to the stored destination. Repeat from the GitHub
+   accounts pane: choose **Add GitHub account**, pick `mokly-ai`, wait more
+   than ten minutes on its Configure page, then save a change there. Confirm
+   that the app opens the same connect screen, not **Installation expired**.
 6. Start an installation from GitHub's App page without first opening Mokly.
    GitHub must return to `/auth/github/install` without `state`. Confirm that
    the app reaches `/install?installationId=<id>`. Choose the workspace that
