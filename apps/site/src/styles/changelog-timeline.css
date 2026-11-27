@@ -183,8 +183,7 @@
    stands at --x, its place along the track from 0 to 100. The tag centres
    on the playhead, but it stops at each end of the track, so the tag of a
    release near either end of the ruler stays inside the timeline at any
-   text size. The stops read the width of the track, the timeline area. The
-   mockup's playhead stands inside the track, so its tag only centres. */
+   text size. */
 
 .site-changelog-playhead {
   background: var(--mk-color-signal);

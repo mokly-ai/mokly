@@ -55,9 +55,11 @@
   margin-left: 0;
 }
 
-/* The ruler: a tick and a name for each month, a tick for each week */
+/* The ruler: a tick and a name for each month, a tick for each week. The
+   timeline area is the track, and the playhead's tag reads its width. */
 
 .site-changelog-timeline-area {
+  container-type: inline-size;
   position: relative;
 }
 
@@ -163,11 +165,16 @@
   scale: 1.2;
 }
 
-/* The playhead on the release in view, with its version tag */
+/* The playhead on the release in view, with its version tag. The playhead
+   stands at --x, its place along the track from 0 to 100. The tag centres
+   on the playhead, but it stops at each end of the track, so the tag of a
+   release near either end of the ruler stays inside the timeline at any
+   text size. */
 
 .site-changelog-playhead {
   background: var(--mk-color-signal);
   bottom: 0;
+  left: calc(var(--x) * 1%);
   margin-left: -0.75px;
   position: absolute;
   top: 10px;
@@ -188,7 +195,12 @@
   padding: 0 6px;
   position: absolute;
   top: 0;
-  translate: -50% 0;
+  translate: clamp(
+      calc(var(--x) * -1cqi),
+      -50%,
+      calc((100 - var(--x)) * 1cqi - 100%)
+    )
+    0;
   white-space: nowrap;
 }
 
