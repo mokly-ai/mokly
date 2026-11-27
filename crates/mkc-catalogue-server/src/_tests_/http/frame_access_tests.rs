@@ -128,6 +128,39 @@ async fn private_iframe_navigation_without_an_indexed_start_page_keeps_the_ordin
 }
 
 #[tokio::test]
+async fn direct_reads_of_missing_public_access_files_keep_the_ordinary_denial() {
+    for path in [START_PATH, WORKER_PATH] {
+        let index = transactions(Unimock::new(
+            BlobsMock::publication_file
+                .next_call(matching!(&ID, path))
+                .returns(Ok(None)),
+        ));
+        let router = router(mocked_catalogue(
+            anonymous_private(),
+            index,
+            Unimock::new(()),
+        ));
+        let response = send(&router, file_request(&format!("/{path}"))).await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED, "{path}");
+        assert_eq!(
+            response.headers()[header::CONTENT_TYPE],
+            "application/json",
+            "{path}"
+        );
+        assert_eq!(
+            response.headers()[header::CACHE_CONTROL],
+            "no-store",
+            "{path}"
+        );
+        assert_eq!(
+            response.headers().get("service-worker-allowed"),
+            None,
+            "{path}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn public_iframe_navigation_still_serves_the_requested_file() {
     let access = Unimock::new(
         CatalogueAccessMock::authorize
