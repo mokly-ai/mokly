@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.0](https://github.com/mokly-ai/mokly/compare/desktop-v0.1.0...desktop-v0.2.0) (2026-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* redesign the site, the viewer and the cloud chrome in Canvas ([#488](https://github.com/mokly-ai/mokly/issues/488))
+
+### Features
+
+* **app:** draw the publication pill as one Button with a content node ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+* **desktop:** publish each release as the latest full release ([#496](https://github.com/mokly-ai/mokly/issues/496)) ([10a30af](https://github.com/mokly-ai/mokly/commit/10a30afe44f064aef406526c5a5f11640ee367b5))
+* **mockups:** name the Desktop viewport in the drawn Share link ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+* redesign the site, the viewer and the cloud chrome in Canvas ([#488](https://github.com/mokly-ai/mokly/issues/488)) ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+* **ui:** add the Swipe mode, the Swipe divider and the side tag of a frame ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+* **viewer:** add the data and keys of the Changes tab ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+
+
+### Bug Fixes
+
+* **viewer:** hold each version of Side by side in its version's layer ([6d4f4f6](https://github.com/mokly-ai/mokly/commit/6d4f4f6cf5e2ed8c54fdf5aa9637f1abddad0e1f))
+
+
+### Performance Improvements
+
+* **viewer:** reuse unchanged data across Serve publications ([#483](https://github.com/mokly-ai/mokly/issues/483)) ([10800ce](https://github.com/mokly-ai/mokly/commit/10800cee95451b4da6a584dbef7756cd3cbbfd31))
+
 ## 0.1.0 (2026-11-21)
 
 

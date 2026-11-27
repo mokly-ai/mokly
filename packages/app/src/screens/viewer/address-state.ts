@@ -1,11 +1,8 @@
 import { useMemo } from "react";
 
 import type { Publication } from "../../api/types";
-import {
-  readQuery,
-  useAddressPathname,
-  useAddressSearch,
-} from "../../navigation/address";
+import { useAddressPathname, useAddressSearch } from "../../navigation/address";
+import { readQuery } from "../../navigation/query";
 import { usePreviewScheme } from "../../theme/scheme";
 import { readBuildAddressState } from "../../viewer/build-address";
 import type { ViewerEntry } from "../../viewer/entry";

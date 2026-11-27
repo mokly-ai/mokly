@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use mkc_domain::ids::BuildId;
-use sandbox_interface::SandboxBackend;
+use sandbox_interface::SandboxLifecycle;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::transaction::Transactions;
@@ -27,7 +27,7 @@ pub trait BuildReconciler: Send + Sync {
 /// Provider identifiers remain ephemeral and never enter persistence or logs.
 pub struct SandboxBuildReconciler {
     /// Provider-neutral deployment inventory and destruction.
-    pub backend: Arc<dyn SandboxBackend>,
+    pub lifecycle: Arc<dyn SandboxLifecycle>,
     /// Current running operation lookup.
     pub transactions: Arc<dyn Transactions>,
     /// Inventory namespace exclusive to cloud builds.
@@ -39,7 +39,7 @@ impl BuildReconciler for SandboxBuildReconciler {
     async fn reconcile(&self) -> Result<usize> {
         let inventory = match tokio::time::timeout(
             Duration::from_secs(120),
-            self.backend
+            self.lifecycle
                 .list_managed_sandboxes(self.deployment_id.clone()),
         )
         .await
@@ -70,7 +70,7 @@ impl BuildReconciler for SandboxBuildReconciler {
             if !owned {
                 match tokio::time::timeout(
                     Duration::from_secs(120),
-                    self.backend.destroy_sandbox(sandbox.provider_ref),
+                    self.lifecycle.destroy_sandbox(sandbox.provider_ref),
                 )
                 .await
                 {

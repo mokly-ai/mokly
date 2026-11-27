@@ -4,15 +4,56 @@
 #[path = "_tests_/plan_tests.rs"]
 mod plan_tests;
 
-use crate::check::request::{DependencyAudit, VerificationSuite};
+#[cfg(test)]
+#[path = "_tests_/plan_support.rs"]
+pub(super) mod plan_support;
 
-/// Number of Testboxes in the complete minimum-runtime profile.
-pub(super) const COMMAND_COUNT: usize = 14;
-/// Viewer plus four browser shard reports.
-pub(super) const REPORT_COUNT: usize = 5;
+use std::num::NonZeroU8;
+
+use serde::Deserialize;
+
+use crate::check::request::{DependencyAudit, VerificationSuite};
+use crate::remote::error::Result;
+
+/// The CI viewer and browser shard totals, shared with the hosted CI workflow.
+const CI_SHARDS: &str = include_str!("../../../scripts/verification/ci-shards.json");
+
+/// The cloud app keeps its own shard count, independent of the CI shard file.
+const CLOUD_APP_SHARDS: u8 = 4;
+
+/// Shard totals of the two Mokly suites that produce evidence reports.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct ShardTotals {
+    /// Number of viewer shards, each on its own box.
+    pub(super) viewer: NonZeroU8,
+    /// Number of browser shards, each on its own box.
+    pub(super) browser: NonZeroU8,
+}
+
+impl ShardTotals {
+    /// Parse shard totals from the JSON text of the CI shard file.
+    fn parse(text: &str) -> Result<Self> {
+        Ok(serde_json::from_str(text)?)
+    }
+
+    /// Parse the CI shard file that the build embedded.
+    pub(super) fn embedded() -> Result<Self> {
+        Self::parse(CI_SHARDS)
+    }
+}
+
+/// One one-based shard of a sharded suite.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct Shard {
+    /// One-based shard index, at most `total`.
+    pub(super) index: u8,
+    /// Number of shards of the suite.
+    pub(super) total: u8,
+}
 
 /// A standard verification suite or the independent portable-delivery check.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 enum RemoteSuite {
     Check(VerificationSuite),
     StaticDelivery,
@@ -69,7 +110,7 @@ impl CloudGroup {
 }
 
 impl RemoteSuite {
-    fn as_str(&self) -> &'static str {
+    fn as_str(self) -> &'static str {
         match self {
             Self::Check(suite) => suite.as_str(),
             Self::StaticDelivery => "static-delivery",
@@ -87,8 +128,8 @@ pub(super) struct RunCommand {
     suite: RemoteSuite,
     /// Whether this command must produce a report.
     pub(super) report: bool,
-    /// Optional browser shard index; every remote browser group has four shards.
-    pub(super) shard: Option<u8>,
+    /// Shard of a viewer, browser or cloud app command.
+    pub(super) shard: Option<Shard>,
     /// Workspace audit mode, set only for the repository command.
     pub(super) dependency_audit: Option<DependencyAudit>,
 }
@@ -112,8 +153,8 @@ impl RunCommand {
                 self.suite.as_str()
             )
         };
-        if let Some(shard) = self.shard {
-            command.push_str(&format!(" --shard {shard}/4"));
+        if let Some(Shard { index, total }) = self.shard {
+            command.push_str(&format!(" --shard {index}/{total}"));
         }
         if let Some(mode) = self.dependency_audit {
             command.push_str(&format!(" --dependency-audit {mode}"));
@@ -122,59 +163,63 @@ impl RunCommand {
     }
 }
 
-/// Assign seven Mokly workers and seven cloud workers, including four app shards.
-pub(super) fn commands(dependency_audit: DependencyAudit) -> Vec<RunCommand> {
-    let mut commands = vec![
-        RunCommand {
-            name: "repository".into(),
-            suite: RemoteSuite::Check(VerificationSuite::Repository),
-            report: false,
-            shard: None,
-            dependency_audit: Some(dependency_audit),
-        },
-        RunCommand {
-            name: "viewer".into(),
-            suite: RemoteSuite::Check(VerificationSuite::Viewer),
-            report: true,
-            shard: None,
-            dependency_audit: None,
-        },
-    ];
-    for index in 1..=4 {
-        commands.push(RunCommand {
-            name: format!("browser-{index}-of-4"),
-            suite: RemoteSuite::Check(VerificationSuite::Browser),
-            report: true,
-            shard: Some(index),
-            dependency_audit: None,
-        });
-    }
-    commands.push(RunCommand {
-        name: "static-delivery".into(),
-        suite: RemoteSuite::StaticDelivery,
+/// Parse the embedded CI shard totals and assign one command to each box.
+pub(super) fn commands(dependency_audit: DependencyAudit) -> Result<Vec<RunCommand>> {
+    Ok(commands_for(ShardTotals::embedded()?, dependency_audit))
+}
+
+/// Assign the repository, viewer, browser, delivery and cloud commands in box order.
+pub(super) fn commands_for(
+    totals: ShardTotals,
+    dependency_audit: DependencyAudit,
+) -> Vec<RunCommand> {
+    let mut commands = vec![RunCommand {
+        name: "repository".into(),
+        suite: RemoteSuite::Check(VerificationSuite::Repository),
         report: false,
         shard: None,
-        dependency_audit: None,
-    });
+        dependency_audit: Some(dependency_audit),
+    }];
+    commands.extend(sharded(
+        RemoteSuite::Check(VerificationSuite::Viewer),
+        totals.viewer.get(),
+        true,
+    ));
+    commands.extend(sharded(
+        RemoteSuite::Check(VerificationSuite::Browser),
+        totals.browser.get(),
+        true,
+    ));
+    commands.push(single(RemoteSuite::StaticDelivery));
     for group in CloudGroup::ALL {
-        let count = if matches!(group, CloudGroup::App) {
-            4
+        let suite = RemoteSuite::Cloud(group);
+        if matches!(group, CloudGroup::App) {
+            commands.extend(sharded(suite, CLOUD_APP_SHARDS, false));
         } else {
-            1
-        };
-        for index in 1..=count {
-            commands.push(RunCommand {
-                name: if count == 4 {
-                    format!("{}-{index}-of-4", group.name())
-                } else {
-                    group.name().into()
-                },
-                suite: RemoteSuite::Cloud(group),
-                report: false,
-                shard: (count == 4).then_some(index),
-                dependency_audit: None,
-            });
+            commands.push(single(suite));
         }
     }
     commands
+}
+
+/// One unsharded command without a report.
+fn single(suite: RemoteSuite) -> RunCommand {
+    RunCommand {
+        name: suite.as_str().into(),
+        suite,
+        report: false,
+        shard: None,
+        dependency_audit: None,
+    }
+}
+
+/// One command per shard, named `{suite}-{index}-of-{total}`.
+fn sharded(suite: RemoteSuite, total: u8, report: bool) -> impl Iterator<Item = RunCommand> {
+    (1..=total).map(move |index| RunCommand {
+        name: format!("{}-{index}-of-{total}", suite.as_str()),
+        suite,
+        report,
+        shard: Some(Shard { index, total }),
+        dependency_audit: None,
+    })
 }

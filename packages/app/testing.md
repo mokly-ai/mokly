@@ -14,7 +14,10 @@ This is the testing guide for the [App package](./README.md).
   check, one import group per module, the no-shared-selector rule between
   `public/app.css` and the catalogue stylesheets, and every `symbol()` a
   listed protocol doc names. The screens that only the desktop shell draws are
-  rendered in Node, because no browser test can load the shell's origin.
+  rendered in Node, because no browser test can load the shell's origin, and
+  so is each place that draws the write-failure fragment, with its writes
+  refused. The desktop connect screen is also mounted in a DOM, where a press
+  refuses only the request of the control that sent it.
 - The browser suite is `src/_tests_/**/*.spec.ts`: Playwright in real Chromium
   against the exported build, the real API with `MKC_MAILER=log`, the real
   catalogue server, one fresh blob directory and one isolated Postgres schema
@@ -25,8 +28,11 @@ This is the testing guide for the [App package](./README.md).
   the tab themselves, request the grant on the connect page and exchange it on
   the landing from the app origin. Only an unconfigured, unreachable
   local Postgres may skip, and it says so; a port already held by another
-  server fails the run. Every test signs in for itself and waits out the API's
-  own `Retry-After` when the magic-link admission window closes. Playwright
+  server fails the run. Every test signs in for itself, through the real
+  magic link: `signIn` requests and exchanges it through the API, and
+  `walkSignIn`, which the account entry specs use, walks the sign-up page, the
+  sent screen and the callback screen. Both wait out the API's own
+  `Retry-After` when the magic-link admission window closes. Playwright
   runs one test at a time against that API. For speed, CI splits the suite
   into [shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
   and never adds workers. `test` rebuilds the baked origins; Playwright run
@@ -36,9 +42,11 @@ This is the testing guide for the [App package](./README.md).
   configured as both `MKC_GITHUB_API_ORIGIN` and `MKC_GITHUB_WEB_ORIGIN` for the
   fixture App the recordings were captured for. It makes the installation real:
   a project linked to GitHub is a repository the App can read, so
-  `createProject` presses Install on GitHub, and the API mints an installation
+  `walkToProject` presses Install on GitHub, and the API mints an installation
   token, reads the installation and its one repository, exchanges the
-  authorization code and binds them. The connect situation, the Add GitHub
+  authorization code and binds them. `createProject`, which every test whose
+  subject comes after onboarding uses, sends the same requests through the
+  API without the four screens. The connect situation, the Add GitHub
   account action and the conflict recovery run the same exchange through the
   candidate flow. The suite answers only the two pages GitHub itself would
   draw — the setup page and the authorization page — with the returns GitHub

@@ -10,12 +10,14 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Module } from "../generated/sidecar/Module.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
+import { previewCandidates } from "./bundle-entry.js";
 import type { Generation } from "./bundle.js";
 import { currentFileInputs, everyInput } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import {
   currentEvidence,
+  markedEvidence,
   PhysicalInputReader,
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
@@ -65,7 +67,14 @@ export function restore(
       );
     if (compiled.peers[name] !== undefined) return compiled.peers[name]!;
     if (isBuiltin(name)) return native.resolve(name, options);
-    fallback ??= sideRequire(ModulePaths.createSync(params), file);
+    if (!fallback) {
+      const paths = ModulePaths.createSync(params);
+      const preview = previewCandidates.find(
+        (file) => compiled.metadataInputs[file],
+      );
+      if (preview) paths.addConfigured(preview);
+      fallback = sideRequire(paths, file);
+    }
     return fallback.resolve(name, options);
   };
   const require = ((name: string) => native(resolve(name))) as NodeJS.Require;
@@ -134,14 +143,8 @@ export async function reuse(
   );
   const uncaptured =
     capture === "serveEdit"
-      ? candidates.filter(
-          ({ compiled: { reuseEvidence } }) =>
-            !reuseEvidence.complete &&
-            !reuseEvidence.durable &&
-            reuseEvidence.uncaptured === "serveEdit" &&
-            Object.values(reuseEvidence.inputs).every((value) =>
-              ["file", "absent", "link"].includes(value.kind),
-            ),
+      ? candidates.filter(({ compiled: { reuseEvidence } }) =>
+          markedEvidence(reuseEvidence),
         )
       : [];
   const peers = candidates.filter(

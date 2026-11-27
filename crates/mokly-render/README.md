@@ -54,7 +54,11 @@ rest of its context. A timeout or a crash after its retry also fails every
 request of the context that already waits for its turn. The cache keeps a running byte charge, so
 an insert charges one record instead of recounting the cache. A context
 projects and hashes each of its private PostCSS inputs once, and its later
-results reuse those late digests.
+results reuse those late digests. Before it projects them, it hints the
+projections of its modules without a digest at once. The base side passes on
+the private repository names and the first repository candidate of each
+dependency name, so a base tree that has no listing yet looks those up in one
+batch; an ordinary repository module keeps its own lookup.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
@@ -213,16 +217,17 @@ Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
 A stylesheet record key holds the stylesheet root, the configuration input,
-the resolved modules, and the module resolution settings. It holds the
+the resolved module paths, and the module resolution settings. It holds the
 physical paths of the selected dependency roots and of the repository roots
-of its side. It also holds the effective CSS resolver settings, which the
-resolver of the side uses: the configuration directory, aliases, dependency
-aliases, conditions, main fields, logical dependency roots, and extensions. A
-PostCSS record comes from a configuration with a PostCSS module. Its key also
-holds the physical source root of its side, so only a preparation on that
-root can reuse it. A plain CSS record comes from a configuration without a
-PostCSS module. Its key omits that root. Its stamp names each read, candidate
-probe, and absence that selected its inputs by logical path.
+of its side. It also holds the effective CSS resolver settings. These include
+the configuration directory, aliases, dependency aliases, conditions, main
+fields, logical dependency roots, extensions, and ordered source package
+layouts. A PostCSS record comes from a configuration with a PostCSS module.
+Its key also holds the physical source root of its side, so only a
+preparation on that root can reuse it. A plain CSS record comes from a
+configuration without a PostCSS module. Its key omits that root. Its stamp
+names each read, candidate probe, and absence that selected its inputs by
+logical path.
 
 `Runtime::for_base` gives each base runtime its own stylesheet store and a
 weak read-only reference to the stylesheet store of the original head
@@ -409,7 +414,10 @@ view after the edit and counts real process starts and hello calls.
   each current entry and link before filtering unrelated ASCII names. It
   compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
-  extraction and dependency selection of a historical render.
+  extraction and dependency selection of a historical render. Its
+  `source_package_maps` returns the authored layouts followed by the working
+  layouts. It omits empty maps. It also omits a working entry when the base has
+  the same entry or sets `false` for that package.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
   `DependencyUsage`, which records the dependency directories that renders
   read.

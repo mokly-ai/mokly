@@ -1,9 +1,27 @@
+import { createHash } from "node:crypto";
+
 import { expect } from "@playwright/test";
 import type { Page, Route } from "@playwright/test";
 
-import { releaseRecordedGitHub } from "./database-fixture";
+import { releaseRecordedGitHub, sql } from "./database-fixture";
 import { ready } from "./harness";
-import { apiOrigin, appOrigin, githubOrigin } from "./origins";
+import { apiBind, apiOrigin, appOrigin, githubOrigin } from "./origins";
+
+/**
+ * Reopen the GitHub flow admission window of the suite's own peer address.
+ * The API admits twenty GitHub flow starts per peer address per minute, and
+ * every test that creates a project starts one from the one loopback address
+ * the API binds, so a fast run of such tests would make the next one wait out
+ * the window. Each start begins from an empty window instead, as each sign-in
+ * does. This clears the row the limit keeps, keyed as the API keys it: the
+ * SHA-256 of `github:` and the client address. The start still goes through
+ * the real admission.
+ */
+function reopenFlowWindow(): void {
+  const peer = apiBind.slice(0, apiBind.lastIndexOf(":"));
+  const key = createHash("sha256").update(`github:${peer}`).digest("hex");
+  sql(`DELETE FROM auth_rate_limits WHERE key = '${key}'`);
+}
 
 /**
  * Answer the two pages GitHub itself would show with the returns it sends.
@@ -45,18 +63,18 @@ export async function answerGitHubPages(
 }
 
 /**
- * Press the control that starts an installation flow, and press it again once
- * if the API turned the start away. The API admits twenty GitHub flow starts
- * per peer address per minute, and a suite that installs for every test
- * reaches that, so a refused start waits out the server's own Retry-After,
- * exactly as signing in does. The control is the same control after a
- * refusal: it reads the way back.
+ * Press the control that starts an installation flow from a reopened
+ * admission window, and press it again once if the API still turned the start
+ * away. A refused start waits out the server's own Retry-After, exactly as
+ * signing in does. The control is the same control after a refusal: it reads
+ * the way back.
  */
 export async function startGitHubFlow(
   page: Page,
   control: string,
 ): Promise<void> {
   for (let attempt = 0; ; attempt += 1) {
+    reopenFlowWindow();
     const started = page.waitForResponse(
       (answer) =>
         answer.url().endsWith("/v1/github/installations") &&
@@ -104,6 +122,7 @@ export async function installThroughApi(
   workspaceId: string,
 ): Promise<void> {
   releaseRecordedGitHub();
+  reopenFlowWindow();
   await page.evaluate(
     async ([origin, workspace]) => {
       const post = async (path: string, body: object) => {

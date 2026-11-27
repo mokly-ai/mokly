@@ -1,0 +1,39 @@
+# Retry message says "1 seconds"
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the branch `calummoore/preview-password-sign-in-jofl`, round 2 review: a new problem outside the scope. The finding check of finding 9, "Preview password wait has no capacity limit", found it.
+- **Location:**
+  - `packages/app/src/api/form-error.ts:75-79`: `retryCopy`.
+  - `packages/app/src/api/form-error.ts:139-140`: its use for `rate-limited`.
+  - `packages/app/src/_tests_/form-error.test.ts:39-48`: the test "a rate limit reports the server's own delay".
+  - `crates/mkc-auth/src/links.rs:117-119`: the delay of a full admission window.
+- **Reason:** The sentence is unchanged by the branch that found it, and readers meet it only near the end of an admission window.
+
+- **Source:** Review.
+- **Category:** UX wording.
+- **Terms:**
+  - **Admission window:** the API's persistent 60-second count of attempts per key. A full window answers 429 `rate-limited` with a `Retry-After` header.
+- **Background:**
+  - `admit` in `crates/mkc-auth/src/links.rs:106-141` refuses an attempt in a full window with the seconds until the window resets. Lines 117-119 compute `(record.resets_at - now).num_seconds().max(1)`.
+  - `num_seconds` drops the fraction, so the API sends 1 whenever less than two seconds of the window remain.
+  - `crates/mkc-api/src/response.rs:30` writes that value to `Retry-After`. GitHub and Stripe rate limits pass their own delays through the same header, from `crates/mkc-api/src/github/mapping.rs:15-17` and `crates/mkc-api/src/billing/error.rs:53-55`.
+  - The app keeps a positive integer header as `retryAfterSeconds`, in `packages/app/src/api/errors.ts:110-115`.
+  - `retryCopy` returns `Try again in ${error.retryAfterSeconds} seconds.` for every delay. `formError` uses it for `rate-limited`.
+  - Every form that reports `rate-limited` through `formError` shows the sentence, such as the email and password actions of Sign in.
+  - The tests at `packages/app/src/_tests_/form-error.test.ts:39-48` and `:124-134` check delays of 42 and 30 seconds and a missing header. No test checks a delay of one.
+  - No protocol page states the sentence.
+- **Problem:** A delay of one second reads "Try again in 1 seconds." That is a grammar error in an error message.
+- **Impact if no action:** A reader who meets the limit near the end of a window sees broken English in an error message.
+- **Root question:** How does the retry sentence read correctly for every delay that the API sends?
+- **Options:**
+  - **A.** Write "1 second" for a delay of one, and "N seconds" otherwise, in `retryCopy`. Add a delay of one to the test "a rate limit reports the server's own delay". Effort: Small.
+- **Left out:**
+  - Drop the number and always say "Try again shortly." It removes the server's delay, a fact that the reader can act on, so it changes the meaning.
+  - Make the API send at least 2. Provider delays can still be one, so it fails the goal.
+  - A count helper in the app for every counted noun. The app has no other counted noun in its copy today, so A is better on every point.
+  - One real approach remains, because the defect is the form of one word.
+- **Wider fix:** None. The app has no other counted noun in its copy. The viewer and the UI package already choose the singular for one, for example `count` in `packages/ui/src/count/count.ts:7-9`.
+- **Previous examples:** None found.
+- **Recommendation:** A. It fixes the grammar and keeps the server's delay.
+- **Action:** fix after merge, apply A, because the sentence is unchanged by the branch that found it, and the case is rare and costs little.

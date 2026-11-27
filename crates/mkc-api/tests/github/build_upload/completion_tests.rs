@@ -36,13 +36,14 @@ fn a_ready_completion_consumes_the_grant_and_only_its_201_can_repeat() {
     assert_eq!(receipt["buildId"], attempt.id.to_string());
     assert_eq!(outcome(&app, &attempt), Some(UploadOutcome::Accepted));
     app.queries(&mut |queries| {
-        let grant = queries.build_attempt_grant(attempt.id, 1).unwrap().unwrap();
+        let grant = queries.build_attempt_grant(attempt.id, 1)?.unwrap();
         assert_eq!(grant.id, attempt.grant);
         assert!(grant.consumed_at.is_some());
-        let build = queries.build(project.id, attempt.id).unwrap().unwrap();
+        let build = queries.build(project.id, attempt.id)?.unwrap();
         assert_eq!(build.publication_id, Some(id));
-        let publication = queries.publication(id).unwrap().unwrap();
+        let publication = queries.publication(id)?.unwrap();
         assert_eq!(publication.metadata.unwrap().pull_request, Some(42));
+        Ok(())
     });
     assert_eq!(json(complete(&app, &attempt, id), 201), receipt);
     refusal(
@@ -64,22 +65,19 @@ fn a_ready_completion_consumes_the_grant_and_only_its_201_can_repeat() {
         &attempt.bearer,
     );
     app.queries(&mut |queries| {
-        let build = queries.build(project.id, attempt.id).unwrap().unwrap();
-        assert!(
-            queries
-                .finish_build(
-                    attempt.id,
-                    build.lease_token,
-                    &mkc_store_interface::build_attempt::BuildFinish {
-                        state: mkc_store_interface::build_state::BuildState::Published,
-                        failure_cause: None,
-                        exit_code: None,
-                        at: Utc::now(),
-                        next_attempt_at: Utc::now(),
-                    }
-                )
-                .unwrap()
-        );
+        let build = queries.build(project.id, attempt.id)?.unwrap();
+        assert!(queries.finish_build(
+            attempt.id,
+            build.lease_token,
+            &mkc_store_interface::build_attempt::BuildFinish {
+                state: mkc_store_interface::build_state::BuildState::Published,
+                failure_cause: None,
+                exit_code: None,
+                at: Utc::now(),
+                next_attempt_at: Utc::now(),
+            }
+        )?);
+        Ok(())
     });
     assert_eq!(json(complete(&app, &attempt, id), 201), receipt);
     let viewer = json(
@@ -106,7 +104,8 @@ fn a_ready_completion_consumes_the_grant_and_only_its_201_can_repeat() {
         attempt.id.to_string()
     );
     app.queries(&mut |queries| {
-        assert!(queries.expire_publication(id, Utc::now()).unwrap());
+        assert!(queries.expire_publication(id, Utc::now())?);
+        Ok(())
     });
     let expired = json(complete(&app, &attempt, id), 201);
     assert_eq!(expired["state"], "expired");
@@ -128,12 +127,12 @@ fn a_plan_replay_consumes_its_grant_only_when_its_completion_answers_200() {
     app.queries(&mut |queries| {
         assert!(
             queries
-                .build_attempt_grant(attempt.id, 1)
-                .unwrap()
+                .build_attempt_grant(attempt.id, 1)?
                 .unwrap()
                 .consumed_at
                 .is_none()
         );
+        Ok(())
     });
     let id = upload_id(&planned);
     let receipt = json(complete(&app, &attempt, id), 200);
@@ -142,20 +141,19 @@ fn a_plan_replay_consumes_its_grant_only_when_its_completion_answers_200() {
     app.queries(&mut |queries| {
         assert_eq!(
             queries
-                .build(project.id, attempt.id)
-                .unwrap()
+                .build(project.id, attempt.id)?
                 .unwrap()
                 .publication_id,
             Some(winner)
         );
         assert!(
             queries
-                .build_attempt_grant(attempt.id, 1)
-                .unwrap()
+                .build_attempt_grant(attempt.id, 1)?
                 .unwrap()
                 .consumed_at
                 .is_some()
         );
+        Ok(())
     });
     refusal(
         complete(&app, &attempt, id),
@@ -185,15 +183,12 @@ fn parallel_blob_answers_keep_a_refusal_until_a_completion_accepts_the_upload() 
     let sibling = json(plan(&app, &attempt, catalogue.plan.clone()), 200);
     let sibling_id = upload_id(&sibling);
     app.queries(&mut |queries| {
-        assert!(
-            queries
-                .fail_publication(
-                    sibling_id,
-                    mkc_store_interface::publication::PublicationFailure::Expired
-                )
-                .unwrap()
-        );
-        queries.delete_publication_files(sibling_id).unwrap();
+        assert!(queries.fail_publication(
+            sibling_id,
+            mkc_store_interface::publication::PublicationFailure::Expired
+        )?);
+        queries.delete_publication_files(sibling_id)?;
+        Ok(())
     });
     thread::scope(|scope| {
         for hash in planned["missing"].as_array().unwrap() {

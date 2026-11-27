@@ -5,11 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
-use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::config_types::{
+    ResolvedConfig, SourcePackage as ConfigSourcePackage, SourcePackages as ConfigSourcePackages,
+};
 use mokly_compare::ancestor_roots;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::Resolved;
 use mokly_sidecar::methods::ModuleResolution;
+use mokly_sidecar::methods::source_packages::{SourcePackage, SourcePackages};
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::SourceTree;
 
@@ -51,6 +54,36 @@ pub struct SideInputs {
     pub(crate) dependency_roots: Vec<PathBuf>,
 }
 
+/// Return the authored layouts first, followed by distinct, reachable working entries.
+/// The list omits empty maps.
+pub fn source_package_maps(config: &ResolvedConfig) -> Vec<SourcePackages> {
+    let authored = source_package_map(config.source_packages());
+    let mut working = source_package_map(config.modules.working_source_packages.as_ref());
+    working.retain(|name, entry| match authored.get(name) {
+        Some(SourcePackage::Disabled) => false,
+        Some(authored_entry) => authored_entry != entry,
+        None => true,
+    });
+    [authored, working]
+        .into_iter()
+        .filter(|map| !map.is_empty())
+        .collect()
+}
+
+fn source_package_map(packages: Option<&ConfigSourcePackages>) -> SourcePackages {
+    packages
+        .into_iter()
+        .flatten()
+        .map(|(name, entry)| {
+            let entry = match entry {
+                ConfigSourcePackage::Disabled => SourcePackage::Disabled,
+                ConfigSourcePackage::Folders(folders) => SourcePackage::Folders(folders.clone()),
+            };
+            (name.clone(), entry)
+        })
+        .collect()
+}
+
 pub(crate) fn inputs(
     config: &ResolvedConfig,
     base: Option<&Arc<BaseSide>>,
@@ -61,7 +94,8 @@ pub(crate) fn inputs(
         .parent()
         .expect("resolved configuration files have an absolute parent directory");
     let configuration_directory = relative(directory, &config.repo_root);
-    let authored = config.input.module_resolution.clone().unwrap_or_default();
+    let defaults = Default::default();
+    let authored = config.input.module_resolution.as_ref().unwrap_or(&defaults);
     let mut resolution = ModuleResolution {
         dependency_root: Some(config.repo_root.to_string_lossy().into_owned()),
         aliases: authored.aliases.clone().unwrap_or_default(),
@@ -70,6 +104,7 @@ pub(crate) fn inputs(
         main_fields: authored.main_fields.clone().unwrap_or_default(),
         package_roots: Vec::new(),
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
+        source_packages: source_package_maps(config),
     };
     resolution.package_roots =
         ancestor_roots::package_roots(&configuration_directory, config.package_roots())

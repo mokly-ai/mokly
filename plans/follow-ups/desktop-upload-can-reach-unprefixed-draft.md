@@ -1,0 +1,31 @@
+# Desktop upload can reach an unprefixed draft
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from review finding 8 of the branch `calummoore/desktop-releases-become-latest-releases-clkn`, which its check moved outside the scope.
+- **Location:** `packages/desktop/scripts/release-assets.mjs`, the function `publishRelease`. `packages/desktop/scripts/release-publisher.mjs`, the class `AppendOnlyPublisher`.
+- **Reason:** `main` already has the same draft selection and the same order of uploads and tag check, so a separate branch fixes it.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Draft:** A GitHub release that only collaborators can see and that is never GitHub's latest release.
+  - **Pinned publisher:** electron-publish 26.18.0, whose `GitHubPublisher.getOrCreateRelease` finds or creates the release of a platform job.
+- **Background:**
+  - The pinned publisher lists the releases and takes the first one whose tag is `v{version}` or `{version}`. It returns a draft at once.
+  - `publishRelease` first reads the asset list of the release that the pinned publisher chose. When that release holds no file of its platform, it checks that no built file name exists there, then uploads every file.
+  - On 2026-11-24 the owner chose that a rerun can reuse a complete upload. A rerun that finds the complete fixed set of its platform on the release uploads nothing. It goes on only when the GitHub `digest` and size of each asset match the build record of an earlier attempt. This path adds no upload before the tag check.
+  - After the uploads, or after that reuse, `publishRelease` reads the release by id and requires a draft with the tag `v{version}`.
+  - A review probe with a stray draft tagged `1.2.3` sent every upload to that draft. The job then failed. On `main` it failed with HTTP 404 on `/releases/tags/v1.2.3`. On the branch it fails with "Release 5 is not a draft with tag v1.2.3".
+  - `mokly-ai/mokly-desktop` has only `v`-prefixed tags. A stray unprefixed draft needs a manual mistake.
+  - Assets are never replaced or deleted, so the files stay on the stray draft.
+- **Problem:** A platform job uploads before it checks the tag of the release that the publisher chose.
+- **Impact if no action:** A stray unprefixed draft receives the files, and the release needs a new version.
+- **Root question:** How does each platform job upload only to the draft with its exact tag?
+- **Options:**
+  - **A.** Read the release by id before the first upload, and require a draft with the tag `v{version}`. Keep the check after the last upload. Effort: Small.
+  - **B.** Find or create the draft by its exact tag in the GitHub client, and give the uploader only that checked id. This replaces the selection of the pinned publisher. Effort: Medium.
+- **Left out:** Rely on the check after the uploads. It runs after the wrong draft got the files.
+- **Wider fix:** B. One exact-tag selector serves both platform jobs.
+- **Previous examples:** The collision check already runs before the uploads, for the same reason.
+- **Recommendation:** A. It stops the upload with the smallest change.
+- **Action:** fix after merge, apply A, because the defect is on `main` and needs a manual mistake.

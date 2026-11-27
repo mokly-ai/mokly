@@ -1,29 +1,35 @@
 """Local regression checks for the candidate assertion; no provider access."""
 
-import importlib.util
+from functools import partial
 import os
 import re
 from pathlib import Path
+import shlex
+import shutil
 from types import SimpleNamespace
 import subprocess
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from support import ROOT
+from test_build_template_tools import ASSERTION, VERSION, BuildTemplateProbeFixture
 
 
-SCRIPT = ROOT / "infra/e2b/tests/assert_build_template.py"
-SPEC = importlib.util.spec_from_file_location("assert_build_template", SCRIPT)
-ASSERTION = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(ASSERTION)
-VERSION = (ROOT / ".nvmrc").read_text().strip()
+# Captured before the tests patch the environment, subprocess.run and shutil.which.
+HOST_PATH = os.environ.get("PATH", "")
+HOST_NPM = shutil.which("npm")
+HOST_RUN = subprocess.run
+HOST_GIT = shutil.which("git")
+HOST_AR = shutil.which("ar")
+# Debian bookworm's Git: it predates `cat-file -Z`, which Mokly's base reader needs.
+OLD_GIT_VERSION = "git version 2.39.5"
 
 
 def pinned_base_images(dockerfile):
     bases = re.findall(r"^\s*FROM\s+(?:--platform=\S+\s+)?(\S+)", dockerfile,
                        re.MULTILINE | re.IGNORECASE)
     return bool(bases) and all(re.fullmatch(
-        r"e2bdev/base:[A-Za-z0-9_.-]+@sha256:[0-9a-f]{64}", base) for base in bases)
+        r"debian:[A-Za-z0-9_.-]+@sha256:[0-9a-f]{64}", base) for base in bases)
 
 
 class BuildTemplatePinTests(unittest.TestCase):
@@ -31,54 +37,117 @@ class BuildTemplatePinTests(unittest.TestCase):
         self.assertTrue(pinned_base_images(
             (ROOT / "infra/e2b/build/e2b.Dockerfile").read_text()))
 
-    def test_unpinned_and_malformed_base_fixtures_fail(self):
-        valid = "FROM e2bdev/base:latest@sha256:" + "a" * 64 + "\n"
-        self.assertTrue(pinned_base_images(valid))
-        for fixture in ("FROM e2bdev/base\n", "FROM e2bdev/base:latest\n",
-                        valid.replace(":latest", ""), valid.replace("a" * 64, "short"),
-                        valid.replace("a" * 64, "g" * 64),
-                        valid + "FROM e2bdev/base:latest\n", "FROM $BASE\n", ""):
-            with self.subTest(fixture=fixture):
-                self.assertFalse(pinned_base_images(fixture))
 
+class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
+    def fake_git(self, version, cat_file_status):
+        """Answer the probe's Git calls like a Git that prints `version`."""
+        def run(argv, **kwargs):
+            if argv == ["git", "--version"]:
+                self.check_probe_call(kwargs)
+                return SimpleNamespace(returncode=0, stdout=version)
+            if argv[:2] == ["git", "cat-file"]:
+                self.check_probe_call(kwargs)
+                return SimpleNamespace(returncode=cat_file_status, stdout="",
+                                       stderr="error: unknown switch `Z'")
+            return self.run_command(argv, **kwargs)
+        return run
 
-class BuildTemplateTests(unittest.TestCase):
-    def setUp(self):
-        self.environment = {
-            "PATH": ASSERTION.TEMPLATE_PATH, "HOME": ASSERTION.TEMPLATE_HOME,
-            ASSERTION.PROBE_KEY: ASSERTION.PROBE_VALUE,
-        }
-        self.account = SimpleNamespace(pw_name="user", pw_dir="/home/user")
-        patches = (
-            patch.dict(os.environ, self.environment, clear=True),
-            patch.object(ASSERTION.os, "getuid", return_value=1000),
-            patch.object(ASSERTION.os, "geteuid", return_value=1000),
-            patch.object(ASSERTION.pwd, "getpwuid", return_value=self.account),
-            patch.object(ASSERTION.os, "access", return_value=True),
-            patch.object(ASSERTION.os, "confstr", return_value="glibc 2.28"),
-            patch.object(Path, "is_dir", return_value=True),
-            patch.object(Path, "is_file", return_value=True),
-            patch.object(Path, "stat", return_value=SimpleNamespace(st_uid=1000)),
-            patch.object(Path, "exists", return_value=False),
-            patch.object(Path, "is_symlink", return_value=False),
-            patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
-            patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
-            patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
-        )
-        self.mocks = [item.start() for item in patches]
-        for item in patches:
-            self.addCleanup(item.stop)
+    def run_on_host(self, argv, environment, kwargs):
+        """Run one probe command with a host tool, after checking the probe's call options.
 
-    def run_command(self, argv, **kwargs):
-        self.assertNotIn("env", kwargs)
-        self.assertNotIn("shell", kwargs)
-        self.assertEqual(kwargs["timeout"], 10)
-        output = "v" + VERSION if argv[0] == "node" else "shell-ok"
-        return SimpleNamespace(returncode=0, stdout=output)
+        `check_probe_call` requires the probe's 10-second limit. That limit is for the
+        template's sandbox, so the host tool runs without it: the speed of the test host
+        must not decide the result. The CI job's time limit stops a hung tool.
+        """
+        self.check_probe_call(kwargs)
+        options = {key: value for key, value in kwargs.items() if key != "timeout"}
+        options["cwd"] = options.get("cwd") or self.workspace
+        return HOST_RUN(argv, env=environment, **options)
+
+    def run_with_host_tools(self, argv, *, make_path, **kwargs):
+        """Run the probe's Git, npm ci, and native build commands with host tools."""
+        if argv[0] == "git":
+            return self.run_with_host_git(argv, **kwargs)
+        if argv[0] in ("make", "./probe"):
+            path = make_path if argv[0] == "make" else HOST_PATH
+            return self.run_on_host(argv, {"PATH": path, "HOME": str(self.scratch)}, kwargs)
+        if argv[:2] != ["npm", "ci"]:
+            return self.run_command(argv, **kwargs)
+        self.assertIsNotNone(HOST_NPM, "this test needs npm on PATH")
+        npm_home = self.scratch / "npm-home"
+        environment = {"PATH": HOST_PATH, "HOME": str(npm_home),
+                       "npm_config_cache": str(npm_home / "cache"),
+                       "npm_config_userconfig": str(npm_home / "npmrc"),
+                       "npm_config_globalconfig": str(npm_home / "global-npmrc")}
+        return self.run_on_host([HOST_NPM, *argv[1:]], environment, kwargs)
+
+    def run_with_host_git(self, argv, **kwargs):
+        self.assertIsNotNone(HOST_GIT, "this test needs git on PATH")
+        # The probe starts in /workspace, so a Git call without its own directory runs there,
+        # and the search stops at the scratch folder instead of finding the Mokly checkout.
+        environment = {"PATH": HOST_PATH, "HOME": str(self.scratch),
+                       "GIT_CEILING_DIRECTORIES": str(self.scratch),
+                       "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull}
+        return self.run_on_host([HOST_GIT, *argv[1:]], environment, kwargs)
 
     def test_complete_template_passes_with_one_added_entry(self):
-        ASSERTION.verify(VERSION)
-        self.assertEqual(self.mocks[-1].call_count, 8)
+        self.assertIsNotNone(HOST_AR, "this test needs ar on PATH")
+        host_bin = self.scratch / "host-bin"
+        host_bin.mkdir()
+        marker = self.scratch / "ar-succeeded"
+        wrapper = host_bin / "ar"
+        real_ar = shlex.quote(os.path.abspath(HOST_AR))
+        wrapper.write_text(f'#!/bin/sh\n{real_ar} "$@" && : > {shlex.quote(str(marker))}\n')
+        wrapper.chmod(0o755)
+        make_path = f"{host_bin}{os.pathsep}{HOST_PATH}"
+        with patch.object(
+            ASSERTION.subprocess, "run",
+            side_effect=partial(self.run_with_host_tools, make_path=make_path),
+        ) as run:
+            try:
+                ASSERTION.verify(VERSION)
+            except ASSERTION.TemplateAssertionError as error:
+                self.fail(str(error))
+        self.assertEqual(run.call_count, 18)
+        self.assertTrue(os.path.isfile(marker), "host ar did not write its success marker")
+
+    def test_git_without_cat_file_nul_batches_fails(self):
+        # Bookworm's Git 2.39.5 exits 129 on `cat-file -Z`, so Mokly cannot read a base.
+        cases = [(OLD_GIT_VERSION, 129, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.42.4", 0, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.39.5 (Apple Git-154)", 0, "^Mokly base reads require Git 2.43"),
+                 ("not a version", 0, "^Mokly base reads require Git 2.43 or newer$"),
+                 ("git version 2.43.0", 129, "^git cat-file --batch --filters -Z failed$"),
+                 ("git version 2.56.1", 128, "^git cat-file --batch --filters -Z failed$")]
+        for version, status, message in cases:
+            with self.subTest(version=version, status=status), patch.object(
+                ASSERTION.subprocess, "run", side_effect=self.fake_git(version, status)
+            ):
+                with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, message):
+                    ASSERTION.verify(VERSION)
+
+    def test_git_2_43_or_newer_with_cat_file_nul_batches_passes(self):
+        for version in ("git version 2.43.0", "git version 2.56.1",
+                        "git version 2.45.0.windows.1", "git version 3.0.0"):
+            with self.subTest(version=version), patch.object(
+                ASSERTION.subprocess, "run", side_effect=self.fake_git(version, 0)
+            ) as run:
+                ASSERTION.verify(VERSION)
+                self.assertIn(["git", "cat-file", "--batch", "--filters", "-Z"],
+                              [call.args[0] for call in run.call_args_list])
+
+    def test_npm_with_files_of_two_releases_fails(self):
+        # A Node tarball unpacked over an older npm prints its version but cannot run npm ci.
+        def mixed_npm(argv, **kwargs):
+            if argv[:2] == ["npm", "ci"]:
+                return SimpleNamespace(returncode=1, stdout="", stderr=(
+                    "npm error Class extends value undefined is not a constructor or null"))
+            return self.run_command(argv, **kwargs)
+
+        with patch.object(ASSERTION.subprocess, "run", side_effect=mixed_npm):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError,
+                                        "^npm ci of an empty project failed$"):
+                ASSERTION.verify(VERSION)
 
     def test_native_cli_requires_glibc_2_28_or_newer(self):
         cases = [("glibc 2.27", False), ("glibc 2.28", True),
@@ -95,8 +164,7 @@ class BuildTemplateTests(unittest.TestCase):
                         ASSERTION.verify(VERSION)
 
     def test_replaced_or_changed_process_environment_fails(self):
-        for key, value in (("PATH", None), ("HOME", None), ("PATH", "/bin"),
-                           ("HOME", "/root"), (ASSERTION.PROBE_KEY, None),
+        for key, value in (("HOME", None), ("HOME", "/root"), (ASSERTION.PROBE_KEY, None),
                            (ASSERTION.PROBE_KEY, "wrong")):
             with self.subTest(key=key, value=value), patch.dict(os.environ, clear=False):
                 if value is None:
@@ -171,7 +239,6 @@ class BuildTemplateTests(unittest.TestCase):
         self.assertRegex(definition, r'template_name = "mokly-build-v[1-9][0-9]*"')
         self.assertNotIn("template_id", definition)
         self.assertIn("ENV HOME=" + ASSERTION.TEMPLATE_HOME, docker)
-        self.assertIn("ENV PATH=" + ASSERTION.TEMPLATE_PATH, docker)
         self.assertIn("sha256sum --check --strict", docker)
         self.assertEqual((ROOT / "infra/e2b/build/.dockerignore").read_text().splitlines(),
                          ["*", "!e2b.Dockerfile"])

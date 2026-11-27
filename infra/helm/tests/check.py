@@ -10,13 +10,18 @@ import tempfile
 import chart_support
 from build_contract import ENABLED, check_builds
 from maintenance_contract import check_maintenance
-from namespace_contract import check_namespace, check_preview_seed
+from namespace_contract import (
+    check_namespace,
+    check_preview_seed,
+    check_preview_sign_in_rollout_marker,
+)
 from runtime_settings import check_runtime_settings
 
 ROOT = Path(__file__).resolve().parents[3]
 CHART = ROOT / "infra/helm/mokly-cloud"
 GOLDEN = Path(__file__).parent / "golden"
 DIGEST = "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:" + "a" * 64
+ROLLOUT_MARKER = "e" * 64
 
 
 def run(arguments, accepted=True):
@@ -61,11 +66,20 @@ def check(update=False):
                 ])
             else:
                 options.extend(["--set-json", "builds=" + json.dumps(ENABLED)])
+            if environment == "preview-pr":
+                unmarked = run([
+                    "helm", "template", "mokly-cloud", *options,
+                    "--show-only", "templates/workloads.yaml",
+                ])
+                check_preview_sign_in_rollout_marker(chart_support.parse_yaml(unmarked), None)
+            options.extend(["--set-string", f"preview.signInRolloutMarker={ROLLOUT_MARKER}"])
             print(run(["helm", "lint", "--strict", *options]), end="")
             rendered = run(["helm", "template", "mokly-cloud", *options]).rstrip() + "\n"
             renders[environment] = rendered
             documents = chart_support.parse_yaml(rendered)
             check_preview_seed(documents, environment)
+            marker = ROLLOUT_MARKER if environment == "preview-pr" else None
+            check_preview_sign_in_rollout_marker(documents, marker)
             check_builds(rendered, options, run, GOLDEN, environment, update)
             api = chart_support.resource(documents, "Deployment", "api")
             catalogue = chart_support.resource(documents, "Deployment", "catalogue")

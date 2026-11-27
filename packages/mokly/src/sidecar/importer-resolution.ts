@@ -6,32 +6,36 @@ import path from "node:path";
 import type { PluginBuild, ResolveOptions, ResolveResult } from "esbuild";
 
 import type { ModulePaths } from "./module-paths.js";
-import { packageDirectory } from "./package-directory.js";
+import {
+  importerDirectory,
+  packageDirectory,
+  resolveInPackage,
+} from "./package-directory.js";
+import { PackageScope } from "./package-scope.js";
 import { inside, logical } from "./path-scope.js";
 import { bareSpecifier } from "./specifier.js";
+import {
+  workspaceImport,
+  workspaceImportRequest,
+  workspacePackage,
+  workspaceRequest,
+  workspaceTarget,
+} from "./workspace-imports.js";
+import type { WorkspacePackage } from "./workspace-imports.js";
 
-/** Map a bare importer's position into the selected installation repository. */
-export function importerDirectory(
-  paths: ModulePaths,
-  name: string,
-  directory: string,
-): string {
-  if (
-    !paths.dependencyRoot ||
-    !bareSpecifier(name) ||
-    !paths.repositoryOwned(directory)
-  )
-    return directory;
-  if (
-    Object.keys(paths.settings.aliases).some(
-      (key) => name === key || name.startsWith(key + "/"),
-    )
-  )
-    return directory;
-  return path.resolve(
-    paths.dependencyRoot,
-    logical(paths.sourceRoot, directory),
-  );
+interface ImportResult extends ResolveResult {
+  workspaceSource?: true;
+  workspaceTarget?: string;
+}
+
+interface RequireResult {
+  file: string;
+  declaredTarget?: string;
+}
+
+interface RequireLookup {
+  options?: Parameters<NodeJS.RequireResolve>[1];
+  reportTarget?: boolean;
 }
 
 /** Keep source-side tsconfig paths, then resolve packages at the matching tier position. */
@@ -40,24 +44,215 @@ export async function resolveImport(
   build: PluginBuild,
   name: string,
   options: ResolveOptions,
-): Promise<ResolveResult> {
-  const directory = options.resolveDir ?? "";
+): Promise<ImportResult> {
+  let directory = options.resolveDir ?? "";
   const selected = importerDirectory(paths, name, directory);
-  const original = await build.resolve(name, options);
-  if (selected === directory || original.external) return original;
-  if (!original.errors.length && path.isAbsolute(original.path)) {
-    const real = await fs.realpath(original.path);
-    if (inside(paths.sourceRoot, real)) return original;
+  let resolved = await build.resolve(name, options);
+  if (selected !== directory && !resolved.external) {
+    const local =
+      !resolved.errors.length &&
+      path.isAbsolute(resolved.path) &&
+      inside(paths.sourceRoot, await fs.realpath(resolved.path));
+    if (!local) {
+      directory = await packageDirectory(paths, selected, name);
+      resolved = await build.resolve(name, {
+        ...options,
+        resolveDir: directory,
+      });
+    }
   }
-  return build.resolve(name, {
-    ...options,
-    resolveDir: await packageDirectory(paths, selected, name),
-  });
+  if (
+    resolved.external ||
+    !bareSpecifier(name) ||
+    (!resolved.errors.length &&
+      (resolved.namespace !== "file" || !path.isAbsolute(resolved.path)))
+  )
+    return resolved;
+
+  const request = workspaceImportRequest(
+    paths,
+    name,
+    directory,
+    build.initialOptions,
+    resolved.errors.length ? undefined : resolved.path,
+  );
+  if (!request) return resolved;
+  const { pkg } = request;
+  let nativeRoot = pkg.installation;
+  const original = resolved;
+  if (pkg.retry) {
+    nativeRoot = pkg.root;
+    resolved = await resolveInPackage(
+      build,
+      workspaceRequest(pkg),
+      pkg.root,
+      options,
+    );
+    if (!resolved.errors.length && path.isAbsolute(resolved.path))
+      paths.workspaceLookups.nativeTarget(resolved.path);
+  }
+  if (!resolved.errors.length) {
+    if (!path.isAbsolute(resolved.path) || resolved.external) return resolved;
+    return {
+      ...resolved,
+      workspaceTarget: workspaceTarget(paths, pkg, resolved.path, nativeRoot),
+    };
+  }
+
+  const source = workspaceImport(
+    paths,
+    pkg,
+    request.name,
+    build.initialOptions.mainFields ?? ["main", "module"],
+  );
+  if (original.errors.length) resolved = original;
+  if (source === undefined) return resolved;
+  const scope = new PackageScope();
+  const effects = await Promise.all(
+    source.targets.map((target) => scope.sideEffects(target).catch(() => true)),
+  );
+  return {
+    ...resolved,
+    errors: [],
+    path: source.file,
+    namespace: "file",
+    sideEffects: effects.some(Boolean),
+    workspaceSource: true,
+  };
+}
+
+export async function importPath(
+  paths: ModulePaths,
+  name: string,
+  resolved: ImportResult,
+): Promise<string> {
+  return resolved.workspaceSource
+    ? resolved.path
+    : paths.resolve(resolved.path, name, resolved.workspaceTarget);
+}
+
+function errorCode(error: unknown): unknown {
+  return error && typeof error === "object" && "code" in error
+    ? error.code
+    : undefined;
+}
+
+function requireSource(
+  paths: ModulePaths,
+  name: string,
+  directory: string,
+  resolvers: NodeJS.Require[],
+  error: unknown,
+  { options, reportTarget }: RequireLookup,
+): RequireResult {
+  const pkg = workspacePackage(
+    paths,
+    name,
+    directory,
+    requireRoots(name, resolvers, options),
+  );
+  if (!pkg || (!pkg.retry && errorCode(error) !== "MODULE_NOT_FOUND"))
+    throw error;
+  return retryRequire(paths, pkg, name, error, reportTarget);
+}
+
+/** Keep Node's native build when it exists in the selected workspace package. */
+export function resolveRequire(
+  paths: ModulePaths,
+  name: string,
+  directory: string,
+  resolvers: NodeJS.Require[],
+  lookup: RequireLookup = {},
+): RequireResult {
+  const { options, reportTarget } = lookup;
+  let missing: unknown;
+  for (const resolver of resolvers) {
+    let selected: string;
+    try {
+      selected = resolver.resolve(name, options);
+    } catch (error) {
+      if (errorCode(error) === "ERR_PACKAGE_PATH_NOT_EXPORTED")
+        return requireSource(paths, name, directory, [resolver], error, lookup);
+      if (errorCode(error) !== "MODULE_NOT_FOUND") throw error;
+      missing ??= error;
+      continue;
+    }
+    if (
+      !path.isAbsolute(selected) ||
+      (!reportTarget && inside(paths.sourceRoot, selected))
+    )
+      return { file: paths.resolveSync(selected, name) };
+    const pkg = workspacePackage(
+      paths,
+      name,
+      directory,
+      requireRoots(name, [resolver], options),
+      selected,
+    );
+    if (!pkg) return { file: paths.resolveSync(selected, name) };
+    if (pkg.retry)
+      return retryRequire(paths, pkg, name, undefined, reportTarget);
+    const declaredTarget = workspaceTarget(
+      paths,
+      pkg,
+      selected,
+      pkg.installation,
+    );
+    return {
+      file: paths.resolveSync(selected, name, declaredTarget),
+      declaredTarget,
+    };
+  }
+  return requireSource(paths, name, directory, resolvers, missing, lookup);
+}
+
+function retryRequire(
+  paths: ModulePaths,
+  pkg: WorkspacePackage,
+  name: string,
+  original?: unknown,
+  reportTarget = false,
+): RequireResult {
+  const request = pkg.retry ? workspaceRequest(pkg) : undefined;
+  let error = original;
+  if (request !== undefined) {
+    try {
+      const resolver = createRequire(path.join(pkg.root, "package.json"));
+      const selected = resolver.resolve(request);
+      paths.workspaceLookups.nativeTarget(selected);
+      const file = paths.resolveSync(selected, name);
+      return reportTarget
+        ? {
+            file,
+            declaredTarget: workspaceTarget(paths, pkg, selected, pkg.root),
+          }
+        : { file };
+    } catch (failure) {
+      if (errorCode(failure) !== "MODULE_NOT_FOUND") throw failure;
+      error = failure;
+    }
+  }
+  const source = workspaceImport(paths, pkg, name, ["main"]);
+  if (source !== undefined) return { file: source.file };
+  throw error;
+}
+
+function requireRoots(
+  name: string,
+  resolvers: NodeJS.Require[],
+  options?: Parameters<NodeJS.RequireResolve>[1],
+): string[] {
+  const search =
+    options?.paths?.map((root) =>
+      createRequire(path.resolve(root, "package.json")),
+    ) ?? resolvers;
+  return search.flatMap((resolver) => resolver.resolve.paths(name) ?? []);
 }
 
 /** Synchronous runtime requires keep source reads local and map bare package lookups. */
 export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
   file = path.join(realpathSync(path.dirname(file)), path.basename(file));
+  const local = path.dirname(file);
   const native = createRequire(file);
   const resolve = (
     name: string,
@@ -69,19 +264,16 @@ export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
         !path.isAbsolute(original) ||
         inside(paths.sourceRoot, realpathSync(original))
       )
-        return paths.resolveSync(original);
+        return paths.resolveSync(original, name);
     } catch (error) {
-      if (
-        !error ||
-        typeof error !== "object" ||
-        !("code" in error) ||
-        error.code !== "MODULE_NOT_FOUND"
-      )
-        throw error;
+      if (errorCode(error) === "ERR_PACKAGE_PATH_NOT_EXPORTED")
+        return requireSource(paths, name, local, [native], error, { options })
+          .file;
+      if (errorCode(error) !== "MODULE_NOT_FOUND") throw error;
     }
-    const directory = importerDirectory(paths, name, path.dirname(file));
+    const directory = importerDirectory(paths, name, local);
     const resolver = createRequire(path.join(directory, path.basename(file)));
-    return paths.resolveSync(resolver.resolve(name, options));
+    return resolveRequire(paths, name, directory, [resolver], { options }).file;
   };
   const require = Object.assign(
     (name: string) => native(resolve(name)),

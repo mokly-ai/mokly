@@ -5,10 +5,12 @@ preview account and the local capture and seed commands.
 
 ## Local Stack
 
-On every run, `scripts/cloud/dev-api.sh` creates `.context/preview-sign-in`
-(mode 0600) when absent and always runs the API with it as
-`MKC_PREVIEW_SIGN_IN_SECRET`, `MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and
-`MKC_PREVIEW_SIGN_IN_PLAN=team`.
+On every run, `scripts/cloud/dev-api.sh` creates `.context/preview-password`
+(mode 0600) with a random local preview password when absent. It always runs
+the API with that password's verifier as `MKC_PREVIEW_SIGN_IN_VERIFIER`, with
+`MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and
+`MKC_PREVIEW_SIGN_IN_PLAN=team`, so the local stack draws the same password
+section as a preview.
 This is not an opt-in. The script passes its arguments to the API binary and
 runs `serve` when it gets none.
 
@@ -36,9 +38,10 @@ runs `serve` when it gets none.
   before any upload; capture it again.
 
 The [workspace README](../../development/cloud.md#local-preview-stack) gives the commands.
-Sign in by opening `<app origin>/auth/preview/callback#secret=<secret>` with
-the local secret. The project remains private. The viewer reads
-comparison documents without credentials, so its private comparison stops at
+Sign in on `<app origin>/sign-in` with the password from
+`.context/preview-password` in **Password**. The project remains private. The
+viewer reads comparison documents without credentials, so its private
+comparison stops at
 the documented
 [private artifact limit](./viewer.md#private-artifact-limit).
 The viewer then shows an overlay without an action for

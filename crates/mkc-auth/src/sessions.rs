@@ -1,5 +1,7 @@
 //! Expiry, revocation, rotation and browser request binding.
 
+use std::sync::Arc;
+
 use chrono::{DateTime, Duration, Utc};
 use mkc_domain::client_origins::ClientOrigin;
 use mkc_domain::ids::UserId;
@@ -12,7 +14,7 @@ use crate::error::{Error, ErrorResultExt, Result};
 use crate::runtime::hash;
 use crate::service::{
     AuthService, Authenticator, DesktopGrantIssued, Identity, LinkIssued, LinkVerified,
-    SessionIssued,
+    PreviewPasswordCheck, SessionIssued,
 };
 use crate::session_policy;
 
@@ -35,12 +37,22 @@ impl Authenticator for AuthService {
         self.preview_sign_in.is_some()
     }
 
+    fn preview_password_account(&self) -> Option<&str> {
+        let configured = self.preview_sign_in.as_ref()?;
+        configured.verifier.as_ref()?;
+        Some(&configured.email)
+    }
+
     fn preview_account(&self) -> Result<User> {
         self.configured_preview_account()
     }
 
-    fn preview(&self, secret: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued> {
-        self.preview_sign_in(secret, previous, peer)
+    fn preview(
+        self: Arc<Self>,
+        previous: Option<String>,
+        peer: &str,
+    ) -> Result<PreviewPasswordCheck> {
+        self.preview_sign_in(previous, peer)
     }
 
     fn issue_desktop_grant(

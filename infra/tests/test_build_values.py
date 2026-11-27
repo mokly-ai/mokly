@@ -89,7 +89,6 @@ class BuildValuesTests(unittest.TestCase):
                 RENDER.values("production", self.inputs(dict(BUILDS, deniedDestinations=entries)))
 
     def test_entrypoint_exports_the_api_key_without_printing_it(self):
-        source = (ROOT / "infra/docker/entrypoint.sh").read_text()
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             secrets = root / "secrets"
@@ -100,10 +99,10 @@ class BuildValuesTests(unittest.TestCase):
             binary = root / "mkc-api"
             binary.write_text("#!/bin/sh\nprintf '%s' \"${MKC_E2B_API_KEY-unset}\" > \"$BUILD_TEST_OBSERVED\"\n")
             binary.chmod(0o755)
-            entrypoint = root / "entrypoint.sh"
-            entrypoint.write_text(source.replace("/var/run/mokly-secrets", str(secrets))
-                                  .replace("/usr/local/bin/mkc-api", str(binary)))
+            entrypoint = ROOT / "infra/docker/entrypoint.sh"
             variables = {key: value for key, value in os.environ.items() if key != "MKC_E2B_API_KEY"}
+            variables["MKC_SECRETS_DIR"] = str(secrets)
+            variables["MKC_API_BIN"] = str(binary)
             variables["BUILD_TEST_OBSERVED"] = str(observed)
             for mounted, expected in ((True, secret), (False, "unset")):
                 if not mounted:

@@ -2,20 +2,19 @@
 
 use std::env;
 use std::io::{BufRead, BufReader};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::time::Duration;
 
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{ProcessGroup, ProcessGroups, ProcessTree, SystemProcessGroups};
 
 use super::unix_status;
 
 /// Owned manager and every helper PID reported before readiness.
 pub(crate) struct Tree {
-    /// Package-manager root that the test must reap.
-    pub(crate) child: Child,
-    /// Public ownership boundary exercised by the tests.
-    pub(crate) group: Box<dyn ProcessGroup>,
+    /// Package-manager root and the public ownership boundary exercised by
+    /// the tests. It reaps the root when the fixture drops.
+    pub(crate) root: ProcessTree,
     /// New-session parent and its child, in that order.
     pub(crate) pids: Vec<i32>,
 }
@@ -27,18 +26,18 @@ impl Tree {
         command.stdout(Stdio::piped());
         SystemProcessGroups.configure(&mut command).unwrap();
         let mut child = command.spawn().unwrap();
-        let group = match SystemProcessGroups.attach(&child) {
-            Ok(group) => group,
-            Err(error) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                panic!("attach failed: {error}");
+        let reader = BufReader::new(child.stdout.take().unwrap());
+        let root = match SystemProcessGroups.attach(child) {
+            Ok(root) => root,
+            Err(failure) => {
+                let mut unattached = failure.stop(&SystemProcessGroups);
+                let _ = unattached.child.kill();
+                let _ = unattached.child.wait();
+                panic!("attach failed: {}", unattached.source);
             }
         };
-        let reader = BufReader::new(child.stdout.take().unwrap());
         let mut tree = Self {
-            child,
-            group,
+            root,
             pids: Vec::new(),
         };
         let (sender, receiver) = mpsc::channel();
@@ -54,9 +53,8 @@ impl Drop for Tree {
         for &pid in self.pids.iter().rev() {
             unix_status::kill(pid);
         }
-        let _ = self.group.kill();
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        let _ = self.root.kill();
+        let _ = self.root.kill_root();
     }
 }
 

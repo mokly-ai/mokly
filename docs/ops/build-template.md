@@ -7,30 +7,64 @@ PR previews always keep builds disabled. The contract is
 
 ## Release Prerequisites
 
-Use an authorized operator shell with Docker running and Linux amd64 builds
-available. Install the repository's Node and npm pins. This procedure uses
-`@e2b/cli@2.7.0`, whose Dockerfile build command publishes the candidate to E2B.
+Use an authorized operator shell. Install the repository's Node and npm pins.
+Also install the libpq development files, such as Debian's `libpq-dev`,
+because the live probe's `cargo test` links libpq. Without them, the probe's
+build fails with `unable to find library -lpq`.
+This procedure uses the `e2b@2.64.0` SDK through
+`infra/e2b/build/build-template.mjs`. E2B builds the Dockerfile remotely, so
+the shell needs no Docker. The SDK build needs only the team key. The script
+sends that key only to `https://api.e2b.dev`, the API base of the runtime. It
+ignores the SDK's `E2B_API_URL`, `E2B_SANDBOX_URL`, `E2B_DOMAIN` and
+`E2B_DEBUG` settings, so a shell set up for another E2B host cannot redirect
+the key. The
+`@e2b/cli` Dockerfile build uses E2B's deprecated build system and also needs
+a personal access token, so this procedure does not use it.
 Keep the team key in a mode-0600 file outside the checkout, such as
 `/secure/e2b-api-key`. Never put it in build arguments, a Dockerfile, TOML,
 Helm values, logs or a release report. Disable shell tracing.
 
 `infra/e2b/build/e2b.toml` is the release definition. It declares
 `mokly-build-v<N>`, 2 vCPU and 4096 MiB. It has no provider ID. The first build
-creates an operator-local `e2b.toml` with the real ID. Do not pass the checked-in
-definition to the CLI as an existing provider configuration.
+writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
+definition as a provider configuration.
 
-The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template).
-The pin was resolved from Docker Hub's `e2bdev/base:latest` tag on 2026-10-10:
-`sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
-The registry confirms an OCI index with Linux amd64 and arm64 images.
-The tag's [Docker Hub record](https://hub.docker.com/v2/repositories/e2bdev/base/tags/latest)
-provides its release source; the Dockerfile digest fixes the image. It installs the exact `.nvmrc` Node
-tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
-It enables corepack and supplies npm, git, curl, coreutils, Python 3 and CA
-certificates. The image must keep glibc 2.28 or newer, because the pinned
-CLI's native binary has no musl build and no JavaScript fallback.
-Workload `user` owns `/workspace`. Its `HOME` is `/home/user`;
-its `PATH` is `/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin`.
+The Dockerfile uses the [template's base-image pin](../protocol/cloud/cloud-build-template.md#base-image),
+`debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+The digest was resolved on 2026-11-26 from the tag's
+[Docker Hub record](https://hub.docker.com/v2/repositories/library/debian/tags/trixie-20261123-slim).
+The registry confirms the digest, an OCI index that includes Linux amd64 and
+arm64 images. The dated tag names the one image that the digest fixes.
+
+The Dockerfile upgrades the installed Debian packages. Then it installs
+`build-essential`, CA certificates, coreutils, curl, Git, `libtool`,
+`libtool-bin`, `pkgconf`, Python 3 and `xz-utils` from Debian. The installed
+packages stay in the image. `build-essential` brings in `gcc`, `g++`, `make`,
+`ar`, `ld` and the C library development headers through its dependencies.
+`pkgconf` supplies the `pkg-config` command. Debian trixie ships the `libtool`
+command in `libtool-bin`.
+
+The Dockerfile installs the exact `.nvmrc` Node tarball with its
+checked-in SHA-256 from Node's release `SHASUMS256.txt`. The tarball supplies
+npm and corepack, and the Dockerfile enables corepack. The base has no Node,
+npm, Python or Git of its own, so the image holds one copy of each. E2B's
+build adds systemd, sudo, openssh-server, chrony and its other agent packages
+to any Debian image, so the base needs nothing else.
+
+The image must keep glibc 2.28 or newer, because the pinned CLI's native
+binary has no musl build and no JavaScript fallback.
+The image must also keep Git 2.43 or newer. The CLI reads a comparison base
+with `git cat-file --batch --filters -Z`, which Git 2.42 added, and 2.43.0 is
+the oldest Git with a recorded working comparison. Debian trixie's Git 2.47.3
+meets that floor, and Debian's security updates cover it. The package installs
+`/usr/bin/git`, which supports Perl-compatible patterns in `git grep -P`.
+The image must keep a C compiler, a C++ compiler, `ar`, `ld`, `make`,
+`pkg-config` and `libtool`, so that a dependency can compile a native addon
+during `npm ci`. For example, an install script can call `node-gyp`, which
+builds with `cc`, `g++`, `ar` and `ld`.
+
+Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
+The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
 is baked into the image.
 
@@ -40,11 +74,20 @@ An E2B base or tool change also requires a new template release and assertion.
 The [build toolchain checks](../protocol/cloud/repository-layout.md#build-toolchain-checks)
 reject an unpinned base before release.
 
+The release script builds without E2B's step cache, so each release installs
+the Debian packages that are current at its build time. E2B shares its step
+cache across template names. With the cache, a release of an unchanged
+Dockerfile can reuse the packages of an earlier build under another name. So a
+Debian security fix reaches the template only with a new release.
+
 ## Build And Publish A Candidate
 
 For a new release, increment `template_name` in the checked-in definition.
-Use a new candidate directory. Never rebuild a template ID that a deployed
-environment uses; a rebuild would change what that ID starts.
+Use a new candidate directory. A build of an existing name keeps its
+template ID, and a bare template ID starts the newest ready build of that
+name. So a release is always deployed, verified and rolled back by its build
+reference, `TEMPLATE_ID:BUILD_ID`, which starts only the build that passed
+verification.
 
 Run from the repository root:
 
@@ -55,27 +98,29 @@ TEMPLATE_RELEASE=$(sed -n 's/^template_name = "\(.*\)"$/\1/p' infra/e2b/build/e2
 TEMPLATE_DIRECTORY=".context/e2b/$TEMPLATE_RELEASE"
 test ! -e "$TEMPLATE_DIRECTORY/e2b.toml"
 install -d -m 0700 "$TEMPLATE_DIRECTORY"
-cp infra/e2b/build/e2b.Dockerfile infra/e2b/build/.dockerignore "$TEMPLATE_DIRECTORY/"
+cp infra/e2b/build/e2b.Dockerfile "$TEMPLATE_DIRECTORY/"
+npm install --prefix "$TEMPLATE_DIRECTORY/sdk" --no-save --ignore-scripts e2b@2.64.0
 export E2B_API_KEY="$(cat /secure/e2b-api-key)"
-npm exec --yes --package=@e2b/cli@2.7.0 -- e2b template build \
-  --path "$TEMPLATE_DIRECTORY" --dockerfile e2b.Dockerfile \
-  --name "$TEMPLATE_RELEASE" \
-  --cpu-count "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
-  --memory-mb "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
+node infra/e2b/build/build-template.mjs "$TEMPLATE_DIRECTORY/sdk" \
+  "$TEMPLATE_DIRECTORY" "$TEMPLATE_RELEASE" \
+  "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
+  "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
 unset E2B_API_KEY
 ```
 
-The command must exit zero and report the candidate ready. Read `template_id`
-from the generated `$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name,
-template ID, E2B team, source commit, Node version, checksum, CPU, memory and
-UTC time in the deployment change. Keep the generated provider configuration
-under `.context/`; put only the verified template ID in environment app-config.
+The command must exit zero and report the candidate ready with its build
+reference. Read `build_reference` from the generated
+`$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name, build reference,
+template ID, build ID, E2B team, source commit, Node version, checksum, CPU,
+memory and UTC time in the deployment change. Keep the generated provider
+configuration under `.context/`; put only the verified build reference in
+environment app-config.
 Include the base-image digest in that release record.
 
 ## Verify The Streaming Boundary
 
 Verify a fresh candidate before enabling it. The API integration probe uses
-the same pinned `SandboxBackend` adapter and public-egress build profile as
+the same pinned adapter capabilities and public-egress build profile as
 the runner. Its deployment ID is `mokly-build-template-probe`, separate from
 all environment build inventories. It creates a one-shot sandbox, writes
 `infra/e2b/tests/assert_build_template.py` below `/workspace` and calls
@@ -87,21 +132,52 @@ python3 /workspace/assert_build_template.py --node-version <.nvmrc release>
 
 The process has exactly one added environment entry:
 `MKC_TEMPLATE_PROBE=stream-process-added-env`. The caller does not supply
-`PATH` or `HOME`. The script requires the added entry and the exact template
-values, so an environment replacement fails. It also checks the tools,
+`PATH` or `HOME`. The script requires the added entry, `HOME=/home/user` and
+each tool on the process `PATH`. It does not compare the exact `PATH` value.
+E2B's process service supplies `HOME` and `PATH` itself, so a pass does not
+prove that a value set only by the template reaches the process. It also checks the tools,
 `/bin/sh`, user identity, `/workspace` ownership and writes, known credential
 environment names and credential files, and absence of cloud secret mounts.
-It also requires glibc 2.28 or newer.
+It also requires glibc 2.28 or newer. It runs an offline `npm ci` of an empty
+project, so an npm install that mixes files of two releases fails the probe.
+It requires that the `git` on the process `PATH` reports 2.43 or newer and
+accepts `git cat-file --batch --filters -Z` on empty input in a new
+repository. It reads no file and runs no comparison, so a pass does not prove
+that a comparison works. It requires `cc`, `c++`, `g++`, `ar`, `ld`, `make`,
+`pkg-config` and `libtool` on `PATH`, and it runs `pkg-config --version` and
+`libtool --version`. It builds a small C and C++ program offline through
+`make`'s default rules, with `cc`, `g++`, `ar` and `ld`, and then runs it. It
+requires that `node`, `npm`, `npx`, `corepack`, `python3` and `git` each
+resolve to one real file on `PATH`.
 The E2B team key stays in the operator process.
 
-Set the candidate ID from the generated configuration:
+Choose the build reference to probe, and set `CANDIDATE_REFERENCE` to it:
+
+- A new candidate reads the `build_reference` of its generated
+  `$TEMPLATE_DIRECTORY/e2b.toml`:
+
+  ```sh
+  CANDIDATE_REFERENCE=$(sed -n 's/^build_reference = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
+  ```
+
+- A recheck of a release in use takes the environment's `builds.template`
+  value and changes no configuration.
+- A production promotion takes the reference that passed the main-preview proof.
+- A published release that the target environment does not run yet takes the
+  build reference from its record in [Live Evidence](#live-evidence).
+- A rollback also takes the build reference from its record. It uses only a
+  previous reference whose release meets the current
+  [template contract](../protocol/cloud/cloud-build-template.md). When
+  no recorded release meets it, disable builds as the last section says,
+  then publish and verify a new release.
+
+Then probe that reference:
 
 ```sh
 set -eu
-CANDIDATE_TEMPLATE_ID=$(sed -n 's/^template_id = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
-test -n "$CANDIDATE_TEMPLATE_ID"
+test -n "$CANDIDATE_REFERENCE"
 export MKC_E2B_API_KEY="$(cat /secure/e2b-api-key)"
-export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_TEMPLATE_ID"
+export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_REFERENCE"
 cargo test -p mkc-api --features live-build-template \
   --test build_template_tests live_template -- --nocapture
 unset MKC_E2B_API_KEY MKC_E2B_BUILD_TEMPLATE
@@ -149,13 +225,14 @@ gcloud secrets versions add "mkc-$ENVIRONMENT-e2b-api-key" \
 ```
 
 Update `MKC_MAIN_PREVIEW_APP_CONFIG` or `MKC_PRODUCTION_APP_CONFIG` beside its
-complete `github` object. Use the verified ID, not a mutable template alias:
+complete `github` object. Use the verified build reference, not a bare
+template ID or a mutable template alias:
 
 ```json
 {
   "builds": {
     "enabled": true,
-    "template": "RELEASED_TEMPLATE_ID",
+    "template": "RELEASED_TEMPLATE_ID:RELEASED_BUILD_ID",
     "deploymentId": "main-preview-builds",
     "perProcess": 4,
     "deniedDestinations": ["203.0.113.0/24"]
@@ -174,8 +251,14 @@ without GitHub and PR enablement. Keep `scaling.minReplicas` at least two.
 Tune retention through the checked-in `maintenance.buildRetentionSeconds`
 chart value, default thirty days. Only prune receives that setting.
 
-The test repository must use Mokly 0.18.0 or later with a `mokly.config.json`
-configuration, and the project's config path must name that file.
+The test repository is the private
+[`mokly-ai/mokly-build-smoke`](https://github.com/mokly-ai/mokly-build-smoke).
+It holds one HTML screen with one variant, the published `@mokly/mokly` and a
+tracked `package-lock.json`, so a build runs `npm ci` and the repository's own
+`mokly` binary. Install each environment's GitHub App on it, and create the
+environment's project from it. Any test repository must use Mokly 0.18.0 or
+later with a `mokly.config.json` configuration, and the project's config path
+must name that file.
 Its install must keep optional dependencies, which hold the
 CLI's native binary. It publishes from a clean checkout. Ignore
 install files and every build output directory. A dirty checkout fails before
@@ -199,10 +282,12 @@ migration and maintenance must have no E2B key mount.
 The public API health route checks process, revision, database and migrations.
 It does not check E2B, the template or worker progress. Build availability
 means configuration and repository access are present, not provider readiness.
-On first enablement, request a build against a real installed test repository.
+On first enablement, request a build against the test repository with the
+environment's App installed.
 Require a published build, its ready publication on the catalogue origin,
 a completed GitHub check and removal of the attempt sandbox. Record the
-revision, build and publication IDs, check result, timings and UTC time.
+revision, the template build reference `TEMPLATE_ID:BUILD_ID`, the build and
+publication IDs, the check result, the timings and the UTC time.
 Also prove a same-repository pull request build and Re-run. Time one pull
 request build whose base lockfile differs from its head, because the CLI then
 installs the base's dependencies inside the publish step's deadline.
@@ -212,8 +297,9 @@ proof is separate from the repository's local checks.
 ## Rotate, Roll Back And Disable
 
 For a template rotation, publish and verify `mokly-build-v<N+1>`, change only
-the reviewed template ID, and roll the API. Keep the previous release ready
-for rollback. Do not change the environment deployment ID during rotation;
+the reviewed build reference, and roll the API. Keep the previous release ready
+for rollback when it meets the current template contract. A contract change,
+such as the Git floor, can retire it. Do not change the environment deployment ID during rotation;
 the new worker must reconcile sandboxes made by the previous worker.
 
 For key rotation, create a replacement key in the same E2B team. Verify the
@@ -228,8 +314,11 @@ template or add a key version through Terraform.
 A provider failure retries under the build lifecycle. It does not make API
 health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
-Restore the previous verified template ID or key version and restart the API
-if verification fails. Keep keys needed by old pods until recovery completes.
+If verification fails, restore the previous key version, or a previous build
+reference chosen as "Verify The Streaming Boundary" says, and restart the API.
+When no build reference qualifies, disable builds. No verified fallback
+release is kept for the release in use, so disabling builds is the accepted
+fallback (decided 2026-11-26). Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
 [live-lease renewal rule](../protocol/cloud/cloud-builds.md#claims-leases-and-retries).
@@ -246,8 +335,214 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 
 ## Live Evidence
 
-No E2B candidate has been published or verified by
-[Milestone 9](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/cloud-builds.md#milestone-9-infrastructure-and-operations--complete)
-of the archived cloud builds plan. No cloud resource or key has been
-provisioned. Record the first main-preview and production proofs here after
-the authorized operator run.
+### Template Releases
+
+- `mokly-build-v1`, template ID `agmlidt65d7s6oo23rkb`, E2B team `firna`,
+  built 2026-11-06T11:01:33Z with the deprecated `@e2b/cli@2.7.0` build
+  system. It failed the probe on 2026-11-24 on the exact `PATH` check, which
+  the contract no longer has: the process had `/usr/local/sbin` before
+  `/usr/local/bin`, unlike the template's `ENV PATH`. The cause is unknown. It
+  is not a release.
+- `mokly-build-v2`, build reference
+  `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` (template ID
+  `f1x5cj2fgwv20p42qxnn`, build ID `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`),
+  E2B team `firna`. It was built
+  2026-11-24T13:44:01Z with `e2b@2.64.0` from the Dockerfile of the change that
+  removed `ENV PATH`, on base commit `c0328d917`. Node 24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  The probe printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  2026-11-24T13:46Z with the bare template ID, and again on 2026-11-25 with
+  the build reference through the adapter pinned at `5d856db`. It is not a
+  release, because its npm is broken. The Dockerfile unpacked the Node tarball
+  over `/usr/local` of `e2bdev/base`, which already held an older Node and npm.
+  So `/usr/local/lib/node_modules/npm/lib` held files of npm 11 and of the
+  older npm. `npm --version` printed 11.19.0, but `npm config list` failed,
+  and `npm ci` failed with
+  `npm error Class extends value undefined is not a constructor or null`. The
+  probe of that time checked npm only with `npm --version`, which passes on
+  such a mixed install, so it passed. Do not deploy it or roll back to it.
+- `mokly-build-v3`, build reference
+  `1zj5lunxulyowh6ewmy3:9dffde05-0e34-4afd-91f3-ac771fd52705` (template ID
+  `1zj5lunxulyowh6ewmy3`, build ID `9dffde05-0e34-4afd-91f3-ac771fd52705`),
+  E2B team `firna`. It was built 2026-11-26T00:40:38Z with `e2b@2.64.0`
+  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `e1b372b7d`, which matches `main`, plus the removal of the base image's
+  Node, npm and corepack files before the Node tarball is unpacked. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, npm's `lib` held only npm 11 files, `npm config list`
+  worked, `npm ci` of a lockfile with `@mokly/mokly` 0.21.0 succeeded, and
+  `mokly build --strict --no-changes` built the catalogue. The probe printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  2026-11-26 with the build reference. That run came before the probe's
+  `npm ci` check. It is a working release for builds without a comparison,
+  but it cannot compare. Its Git is Debian bookworm's 2.39.5, and
+  `git cat-file --batch --filters -Z` exits 129 there with unknown option
+  `-Z`. In a sandbox of it, the runner's checkout and
+  `mokly build --config mokly.config.json --base origin/main` of a pull
+  request printed `base <sha>: [mokly/config-invalid] mokly.config.json: unknown`,
+  and the published index had `changesStatus: "unavailable"`. The probe's Git
+  check rejects this Git, and no probe with that check has run against v3. It
+  does not meet the current template contract, so do not roll back to it.
+- `mokly-build-v4` was a candidate that installed Git from bookworm-backports.
+  It still had Git 2.39.5, so it was deleted. It is not a release.
+- `mokly-build-v5`, build reference
+  `tpjwc7qiz8bp7bvnpzp7:433b3d4d-1e81-4d54-8963-d62eceb3ecc8` (template ID
+  `tpjwc7qiz8bp7bvnpzp7`, build ID `433b3d4d-1e81-4d54-8963-d62eceb3ecc8`),
+  E2B team `firna`. It was built 2026-11-26T10:00:53Z with `e2b@2.64.0`
+  through `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `1578b776f` plus the Git source build: Git 2.56.1, checksum
+  `f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f`. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, `git` was `/usr/local/bin/git` 2.56.1, an HTTPS
+  `git ls-remote` worked, `git cat-file --batch --filters -Z` exited 0,
+  `npm ci` worked, and the `--base origin/main` build of the same pull request
+  gave `changesStatus: "ready"`. A container check of the pinned base on
+  2026-11-26 found that the Dockerfile's purge leaves no `gcc`, `g++`, `make`
+  or `ld`, which v3 still had. The live probe from `main`, with its `npm ci`
+  check, passed on 2026-11-26 with the build reference. That run came before
+  the probe's Git check, and its UTC time and assertion commit are not
+  recorded. It is superseded by `mokly-build-v6`, because it has no C
+  and C++ toolchain and its Git has no PCRE2: `git grep -P` with a real Perl pattern
+  exits 128. A rollback to it breaks each install that compiles a native addon.
+
+  The live probe from commit `0ad58e724` failed against v5 on
+  2026-11-26. Its script, run by hand on v5, printed
+  `FAIL build template: python3 has multiple copies on PATH`. Beside Debian's
+  Python and Git, v5 also holds the base's own Python and the Git source build.
+
+- `mokly-build-v6`, build reference
+  `mm5vcm4xv7inkey7ad9p:e58c1440-c5e2-406d-97a3-8d312416c61c` (template ID
+  `mm5vcm4xv7inkey7ad9p`, build ID `e58c1440-c5e2-406d-97a3-8d312416c61c`),
+  E2B team `firna`. It was built 2026-11-26T12:15Z with `e2b@2.64.0` through
+  `infra/e2b/build/build-template.mjs`. Its Dockerfile is the one at
+  `1ce3ed0be` with three changes: `libpcre2-dev` and `libpcre2-8-0` in the
+  Git build packages, `USE_LIBPCRE2=1` in the Git build, and no
+  `apt-get purge -y --auto-remove` step. Git 2.56.1, checksum
+  `f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f`. Node
+  24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  In a sandbox of it, `gcc`, `g++`, `make` and `pkg-config` were on `PATH`, a
+  C file compiled, and
+  `npm install --build-from-source bufferutil@4.0.9` built its `.node` file.
+  `git grep -P` with a Perl lookahead worked,
+  `git cat-file --batch --filters -Z` exited 0, `npm ci` worked, and the
+  `--base origin/main` build of the smoke pull request gave
+  `changesStatus: "ready"`. The live probe from `main` at `1ce3ed0be`, with
+  its `npm ci` and Git checks, passed on 2026-11-26 with the build reference.
+  Its UTC time is not recorded.
+
+  On 2026-11-26 at 15:27 UTC, the current assertion script run by hand in a
+  sandbox of this v6 build printed `FAIL build template: python3 has multiple copies on PATH`.
+
+- `mm5vcm4xv7inkey7ad9p:b63ce806-b4a9-4567-a406-89300f259d8b` is a Debian
+  candidate built under the reused name `mokly-build-v6`. It is not a release.
+  `mokly-build-v7` supersedes it. It shares v6's template ID, so the bare ID
+  `mm5vcm4xv7inkey7ad9p` starts it. Only v6's full build reference starts v6.
+  It was built 2026-11-26T12:43:06Z from the Dockerfile at `0ad58e724`. The
+  probe from that commit passed at 12:43:32Z. The v7 record gives the checks of
+  the same image.
+- `mokly-build-v7`, build reference
+  `ez8gf58grc5zofiqv7ql:548d54fd-072d-47eb-b484-e90e23471ecb` (template ID
+  `ez8gf58grc5zofiqv7ql`, build ID `548d54fd-072d-47eb-b484-e90e23471ecb`),
+  E2B team `firna`. It was built 2026-11-26T15:41:31Z in 17 s with
+  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`. Its Dockerfile is
+  the one at `cc1be056f`, which is the same as at `0ad58e724`. Node 24.21.0,
+  checksum `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base
+  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+  On 2026-11-26 at 15:40Z, Docker Hub's tag record and the registry gave the
+  same digest again. The build log marks every Dockerfile step `CACHED`. Only
+  E2B's finalize and optimize steps ran. E2B reused the steps that it built at
+  12:42Z for the candidate `b63ce806` above, under the name `mokly-build-v6`.
+  So v7 holds the Debian packages that were installed at 12:42Z. E2B's step
+  cache is shared across template names.
+  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
+  gcc 14.2.0 and GNU Make 4.4.1, and `git` was `/usr/bin/git` 2.47.3. Each of
+  `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
+  `PATH`. The root filesystem used 746 MiB. The image had 228 installed
+  packages and no `gh`. An HTTPS `git ls-remote` worked. In the smoke
+  repository `mokly-ai/mokly-build-smoke` at its `main` commit `d5fe94d`, with
+  `@mokly/mokly` 0.21.0, `npm ci` succeeded. `mokly build --strict` built the
+  catalogue. After a one-commit change,
+  `mokly build --config mokly.config.json --strict --base origin/main` gave
+  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
+  source, `npm_config_build_from_source=true npm install utf-8-validate@6.0.5`,
+  compiled `validation.node`. `git grep -P` with a lookahead pattern matched.
+  `git cat-file --batch --filters -Z` exited 0 in the repository. These checks
+  ran from 2026-11-26T15:42:12Z to 15:42:29Z. The live probe from commit
+  `cc1be056f`, with its Git, compiler and one-copy checks, printed
+  `PASS live build template: assertion completed and candidate destroyed` at
+  2026-11-26T15:41:58Z with the build reference. It is superseded by
+  `mokly-build-v8`, because a v7 sandbox on 2026-11-26 had no `pkg-config` or
+  `libtool` command. Its probe pass came before the probe's native build check.
+- `mokly-build-v8`, build reference
+  `gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291` (template ID
+  `gwdwriayx6ky1a5n5lfc`, build ID `635dd814-a8b5-41aa-87be-05ea3d74a291`),
+  E2B team `firna`. It was built 2026-11-26T17:48:28Z in 57 s with
+  `e2b@2.64.0` through `infra/e2b/build/build-template.mjs`, which passes
+  `skipCache: true`. Its Dockerfile is the one at `6706d6178`, which adds
+  `pkgconf`, `libtool` and `libtool-bin` to the Dockerfile of v7. Node 24.21.0,
+  checksum `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base
+  `debian:trixie-20261123-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+  On 2026-11-26 at 17:47Z, Docker Hub's tag record gave the same digest again.
+  The name was free in E2B's template list before the build. The build log
+  marks no step `CACHED`, and E2B's provisioning ran.
+  In a sandbox of it, the system was Debian 13 with glibc 2.41, Python 3.13.5,
+  gcc 14.2.0, GNU Make 4.4.1, `pkg-config` 1.8.1 and GNU libtool 2.5.4. `g++`,
+  `ar` and `ld` were in `/usr/bin`, and `git` was `/usr/bin/git` 2.47.3. Each
+  of `node`, `npm`, `npx`, `corepack`, `python3` and `git` had one real file on
+  `PATH`. The root filesystem used 758 MiB. The image had 237 installed
+  packages and no `gh`. An HTTPS `git ls-remote` worked. In the smoke
+  repository `mokly-ai/mokly-build-smoke` at `d5fe94d`, with `@mokly/mokly`
+  0.21.0, `npm ci` succeeded. `mokly build --strict` built the catalogue. After
+  a one-commit change,
+  `mokly build --config mokly.config.json --strict --base origin/main` gave
+  `changesStatus: "ready"` with base commit `d5fe94d`. A forced build from
+  source of `utf-8-validate@6.0.5` compiled `validation.node`. `git grep -P`
+  with a lookahead pattern matched. `git cat-file --batch --filters -Z` exited
+  0 in the repository. These checks ran from 2026-11-26T17:49:11Z to
+  17:49:31Z. The live probe from commit `6706d6178`, with its Git, one-copy,
+  compiler, `pkg-config`, `libtool` and native build checks, printed
+  `PASS live build template: assertion completed and candidate destroyed` at
+  2026-11-26T17:49:11Z with the full build reference.
+
+### Environments
+
+On 2026-11-24, main-preview had one enabled `mkc-main-preview-e2b-api-key`
+version, and production had no version. On 2026-11-26, main-preview cloud
+builds passed checkout and failed at Install: `npm ci --no-audit --no-fund`
+exited 1 with the broken-npm error of `mokly-build-v2`. Later that day, on
+`mokly-build-v3`, main-preview pull request builds published, but their check
+said "Catalogue published." instead of "Catalogue ready to review.", because
+the published index had `changesStatus: "unavailable"`. On 2026-11-26,
+main-preview builds moved to the `mokly-build-v5` build reference. Later that
+day they moved to the `mokly-build-v6` build reference, through the Deploy
+run with ID 45818241716. On `mokly-build-v6`, the test repository's pull request build at
+`c11aa3fe8` published at 2026-11-26T12:46:31Z with the check "Catalogue ready
+to review." (2 changed).
+
+Main-preview build proof, 2026-11-26: main-preview builds moved to the
+`mokly-build-v8` build reference
+`gwdwriayx6ky1a5n5lfc:635dd814-a8b5-41aa-87be-05ea3d74a291`, source revision
+`215f094f9`, through Deploy run 45895225148. Before the switch, the probe from
+`main` at `215f094f9` passed on that reference at 20:58:39Z, and failed on
+v6 as expected. The test repository's pull request
+[mokly-build-smoke#2](https://github.com/mokly-ai/mokly-build-smoke/pull/2)
+at `cb6cf71a0` started build `01a219ca-02ca-7668-bf90-31b7ee9c1c8a`. Its check ran from
+21:36:41Z to 21:36:52Z, checkout, cold install in a fresh sandbox and publish
+included. The build published `01a219ca-2d77-768d-a44f-6949a6ffb980`. The test repository has
+no other producer. Its GitHub check `140180940938` said "Catalogue ready to
+review." (1 changed) with its Changes link. A Re-run at 21:43:21Z delivered
+the same result to the same check. Record the production build proof here.

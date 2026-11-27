@@ -71,6 +71,7 @@ and remains reusable.
 | `mkc-preview-origin-tls-key`            | Deploy reads shared Origin CA private key; platform copies to `preview-origin-tls` key `tls.key`                                                                         |
 | `mkc-preview-origin-tls-cert`           | Deploy reads certificate for exactly `*.preview.D`, `*.preview.api.D`; copy key `tls.crt`                                                                                |
 | `mkc-catalogue-dns-token`               | Deploy and cert-manager; Zone DNS Edit + Zone Read on only catalogue zone `C`; copy to `catalogue-dns-token` key `api-token`                                             |
+| `mkc-preview-sign-in-password`          | Deploy reads the preview password's verifier, never the password; copy to each PR's `preview-sign-in` key `preview-sign-in`                                              |
 | `mkc-desktop-developer-id-p12`          | Operator only; backup of `CSC_LINK` as the raw `.p12` file; see [Desktop release secrets](#desktop-release-secrets)                                                      |
 | `mkc-desktop-developer-id-p12-password` | Operator only; backup of `CSC_KEY_PASSWORD`                                                                                                                              |
 | `mkc-desktop-notary-api-key`            | Operator only; backup of `APPLE_API_KEY` as the `.p8` file                                                                                                               |
@@ -183,21 +184,20 @@ mock-provider tests cannot prove provider authentication.
 
 ### Desktop release secrets
 
-The desktop release job of
+The release job and the promotion job of the desktop release workflow use the
+`desktop-release` GitHub environment.
 [Desktop distribution](../protocol/cloud/desktop-distribution.md#release-secrets)
-reads six secrets of the `desktop-release` GitHub environment. The environment
-admits only the `main` branch and has no required reviewer, because the merge
-of the desktop release pull request approves the release. The job reads none
-of the secrets from Secret Manager, none enters a workload or a Terraform job,
-and pull requests, branch dispatches and fork builds receive none of them.
+says which step receives each secret. The environment admits only the `main`
+branch and has no required reviewer, because the merge of the desktop release
+pull request approves the release. The jobs read none of the secrets from
+Secret Manager, and none enters a workload or a Terraform job.
+
 The workflow writes the certificate and the API key to mode-0600 temporary
-files for electron-builder and never places a value on a command line.
-Only the release job's publishing steps receive these values. The packaging
-script replaces `CSC_LINK` and `APPLE_API_KEY` with their temporary file paths
-in the builder environment and removes both files after success or failure.
-It passes `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`. The release helper reads it
-for the pinned publisher, append-only uploads and the final asset inventory
-check.
+files for electron-builder and never places a value on a command line. The
+packaging script replaces `CSC_LINK` and `APPLE_API_KEY` with their temporary
+file paths in the builder environment and removes both files after success or
+failure. The Contents write scope of `DESKTOP_RELEASES_TOKEN` covers every
+request of both jobs, so the token needs no other scope.
 
 A repository administrator creates the environment once and limits it to
 `main`:
@@ -313,7 +313,7 @@ deploy identity. Create an RBAC or dedicated-project boundary before adding
 a second cluster. Deploy gains `roles/storage.admin` on only
 `mokly-508518-preview-blobs`, including IAM updates for the two conditional PR
 object grants and prefix cleanup. It also gains `roles/secretmanager.secretAccessor`
-on the dedicated Worker token and the three shared preview IDs above. It gains
+on the dedicated Worker token and the four shared preview IDs above. It gains
 the same role on each stable environment's `stripe-catalogue-key` and no other
 API credential. It has no Terraform state access; only plan/apply access the
 state bucket. Deploy cannot administer project IAM,
@@ -391,11 +391,11 @@ initial provisioning, imports, overlap, rollout and the real build proof.
 
 ## Preview Secrets
 
-Foundation implements the three shared IDs and deploy grants; an operator
+Foundation implements the four shared IDs and deploy grants; an operator
 supplies their values. Import any pre-created ID at
 `google_secret_manager_secret.preview["SECRET_ID"]` using
 `projects/mokly-508518/secrets/SECRET_ID` before the first apply, substituting
-one of the three full IDs in the inventory above. Secret versions stay outside
+one of the four full IDs in the inventory above. Secret versions stay outside
 Terraform. The platform and namespace lifecycle scripts passed the September 23
 credentialed proof recorded in [Previews](./preview.md).
 The platform script reads shared TLS and catalogue DNS values into private
@@ -420,13 +420,22 @@ and cleanup read the latest version. PR certificates renew through
 Secret Manager or workflow artifacts. The shared ACME account remains in
 `mkc-preview-system` across PR deletions.
 
+Create and rotate the preview password and its verifier in
+`mkc-preview-sign-in-password` as [Preview Password](./preview.md#preview-password)
+says. The store holds only the verifier, so no machine store holds the
+password. Each preview reads the latest version at its next deploy.
+
 The deploy script creates these PR namespace Secrets once:
 
 | Secret                  | Keys                                                               | Lifetime                                                             |
 | ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | `postgres-credentials`  | `password` (32 random bytes as hex), `url` (complete Postgres URL) | Namespace; never regenerate against an existing PVC                  |
 | `catalogue-signing-key` | `catalogue-signing-key` (32 random bytes as lowercase hex)         | Namespace; mounted at `/var/run/mokly-secrets/catalogue-signing-key` |
-| `preview-sign-in`       | `preview-sign-in` (32 random bytes as lowercase hex)               | Namespace; API mount; may be created beside an existing PVC          |
+
+Each deploy also copies the verifier into the PR namespace Secret
+`preview-sign-in`, key `preview-sign-in`, which the API mounts as optional.
+A missing or malformed verifier deletes that copy, as
+[Preview sign-in](../protocol/cloud/preview-sign-in.md#deploy) defines.
 
 The exact URL is
 `postgres://mokly:<password>@postgres:5432/mokly?sslmode=disable&connect_timeout=5`.

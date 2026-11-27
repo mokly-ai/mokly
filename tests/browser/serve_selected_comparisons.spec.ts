@@ -9,7 +9,10 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
-import { test } from "./serve_comparison_test.js";
+import {
+  closeReadOnlyCatalogue,
+  test,
+} from "./serve_comparison_read_only_test.js";
 import {
   expectPresentedPane,
   loadComparison,
@@ -22,6 +25,8 @@ import {
   openPanelTab,
   setFrames,
 } from "./workspace_actions.js";
+
+test.afterAll(closeReadOnlyCatalogue);
 
 /** A frame of the canvas, named `name`, that holds a compared document. */
 function comparedFrame(page: Page, name: RegExp): Locator {

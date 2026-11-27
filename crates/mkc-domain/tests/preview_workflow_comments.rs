@@ -1,4 +1,4 @@
-//! Final comment execution and canonical landing-path tests.
+//! Execute the preview workflow's final comment step with seed and cleanup outcomes.
 
 #![expect(
     clippy::unwrap_used,
@@ -6,12 +6,9 @@
 )]
 
 use std::fs;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use mkc_domain::app_paths::PREVIEW_CALLBACK;
 use tempfile::TempDir;
 
 fn repository() -> PathBuf {
@@ -46,12 +43,6 @@ fn final_comment(action: &str, deploy: &str, evidence: &str, cleanup: &str) -> S
         )
         .unwrap();
     }
-    let secret = checkout.path().join("preview-sign-in");
-    fs::write(&secret, "a".repeat(64)).unwrap();
-    #[cfg(unix)]
-    {
-        fs::set_permissions(&secret, fs::Permissions::from_mode(0o600)).unwrap();
-    }
     if action == "deploy" && deploy == "success" && evidence == "success" {
         fs::create_dir_all(checkout.path().join(".context")).unwrap();
         fs::write(
@@ -75,8 +66,6 @@ fn final_comment(action: &str, deploy: &str, evidence: &str, cleanup: &str) -> S
             ("SEED_RESULT", "success"),
             ("SEED_EVIDENCE_RESULT", "success"),
             ("CLEANUP_RESULT", cleanup),
-            ("REPOSITORY_PRIVATE", "true"),
-            ("PREVIEW_SECRET_FILE", secret.to_str().unwrap()),
             ("ENVIRONMENT", "preview-pr-42"),
             ("MKC_REVISION", &"a".repeat(40)),
             ("MKC_DOMAIN", "example.com"),
@@ -93,13 +82,14 @@ fn final_comment(action: &str, deploy: &str, evidence: &str, cleanup: &str) -> S
 }
 
 #[test]
-fn comment_sign_in_link_uses_the_domain_preview_landing() {
+fn successful_comment_links_to_sign_in_and_sample_project_without_a_credential() {
     let comment = final_comment("deploy", "success", "success", "skipped");
-    let expected = format!(
-        "https://pr-42.preview.example.com{PREVIEW_CALLBACK}#secret={}",
-        "a".repeat(64)
-    );
-    assert!(comment.contains(&expected));
+    assert!(comment.contains("- App: https://pr-42.preview.example.com/sign-in"));
+    assert!(comment.contains(
+        "- Sample project: https://pr-42.preview.example.com/mokly-ai/mokly/pull-requests/42"
+    ));
+    assert!(!comment.contains("- Open preview:"), "{comment}");
+    assert!(!comment.contains("#secret="), "{comment}");
 }
 
 #[test]

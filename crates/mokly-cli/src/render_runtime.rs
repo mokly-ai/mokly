@@ -112,6 +112,8 @@ impl Services {
             },
         )
         .with_bundle_store(bundles);
+        #[cfg(debug_assertions)]
+        let pool = test_render_deadline(pool);
         let pool: Arc<dyn CommandPool> = Arc::new(match common.sidecar_source {
             SidecarSource::Default => pool.with_memory_admission(memory()),
             SidecarSource::Explicit => pool,
@@ -130,6 +132,21 @@ impl Services {
             pool,
             reporter,
         })
+    }
+}
+
+/// Debug builds only: `MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS` replaces the
+/// deadline of every render call, so the process test of a hanging render
+/// does not wait two real deadlines. Release builds compile no read of this
+/// variable, so they always keep the production deadlines.
+#[cfg(debug_assertions)]
+fn test_render_deadline(pool: Pool) -> Pool {
+    match env::var("MOKLY_TEST_SIDECAR_RENDER_TIMEOUT_MS")
+        .ok()
+        .and_then(|value| value.parse().ok())
+    {
+        Some(deadline_ms) => pool.with_test_render_deadline(deadline_ms),
+        None => pool,
     }
 }
 

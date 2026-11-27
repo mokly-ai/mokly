@@ -28,12 +28,18 @@ three times the test's typical duration. CI job timeouts follow the same rule
 for the whole job, including setup and builds. The
 [CI workflow graph](./ci-workflow.md#job-execution) sets them.
 
-The combined React large-fixture watch journey is the one accepted exception
-to the three-times rule. It keeps a 300,000 ms runner timeout. On a small
-runner, CPU contention can push the journey past that guard, so its rare
-timeouts are accepted. One test per edit kind was rejected, because the
+The React large-fixture watch journey stays one combined test with a
+300,000 ms runner timeout. One test per edit kind was rejected, because the
 combined journey proves that one Serve process handles the three React edits
 in order.
+
+The two journeys of `tests/browser/serve_removed_evidence.spec.ts` use
+`test.slow()`, a 180,000 ms runner timeout. On a loaded 4-CPU machine the
+longer one takes about 23 seconds, and one Serve process carries each journey
+through its base moves and edits. Shorter tests were rejected, because each
+one would start its own Serve and repeat the base moves. Optimised
+dependencies in the dev profile were rejected, because they slow every clean
+debug build for a gain that no measurement showed.
 
 Full catalogue setup uses a 600,000 ms budget. Isolated catalogue setup uses a
 180,000 ms budget. Their test bodies keep the normal 60,000 ms timeout.

@@ -9,9 +9,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 /** The control that opens the menu, read from one header. */
 function menuControl(id: string, viewport: "mobile" | "desktop") {
@@ -71,7 +71,7 @@ test("the open menu lists the destinations over the mobile home", () => {
       "design/site/changelog",
       "design/site/pricing",
       undefined,
-      "design/site/docs",
+      "product/account/sign-up",
     ],
   );
   assert.equal(attribute(links[3]!, "href"), openSource.github);
@@ -114,7 +114,7 @@ test("Get started stays in the tool bar beside the menu control", () => {
     assert.deepEqual(actions.map(label), ["Get started →"], viewport);
     assert.equal(
       attribute(actions[0]!, "data-mokly-link"),
-      "design/site/docs",
+      "product/account/sign-up",
       viewport,
     );
     assert.equal(
@@ -125,15 +125,16 @@ test("Get started stays in the tool bar beside the menu control", () => {
   }
 });
 
-test("only the mobile composition draws the menu control", () => {
-  const css = siteStyles();
-  assert.match(css, /\.site-menu-button \{\s*display: none;\s*\}/);
-  assert.match(
-    css,
-    /\[data-site-viewport="mobile"\] \.site-menu-button \{\s*display: inline-flex;\s*\}/,
-  );
-  assert.match(
-    css,
-    /\[data-site-viewport="mobile"\] \.site-nav \{\s*display: none;\s*\}/,
-  );
-});
+for (const id of siteScreens)
+  test(`${id}: only the mobile composition draws the menu control`, () => {
+    const css = siteStyles(id);
+    assert.match(css, /\.site-menu-button \{\s*display: none;\s*\}/);
+    assert.match(
+      css,
+      /\[data-site-viewport="mobile"\] \.site-menu-button \{\s*display: inline-flex;\s*\}/,
+    );
+    assert.match(
+      css,
+      /\[data-site-viewport="mobile"\] \.site-nav \{\s*display: none;\s*\}/,
+    );
+  });

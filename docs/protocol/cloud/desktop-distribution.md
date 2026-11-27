@@ -24,9 +24,35 @@ rejected because it disappears on a dark Dock.
 Releases are GitHub releases of the public repository
 `mokly-ai/mokly-desktop`, which holds releases and nothing else, because the
 updater needs an unauthenticated feed. A feed in this repository was
-rejected: the updater reads the newest release of its feed, and the npm
-releases here hold no desktop files. Every release is a pre-release until
-local mode lands, as [Desktop application](./desktop-app.md) requires.
+rejected: the updater reads the latest release of its feed, and the latest
+release here is the npm release, which holds no desktop files.
+
+### Latest Release
+
+A desktop release becomes a full GitHub release marked latest, but only after
+the check of the complete assets of both platforms. A release stays a draft
+when a platform job or asset check fails, or when a higher version is already
+latest, as [Drafts And Promotion](#drafts-and-promotion) says. The latest
+download address of each asset therefore never breaks:
+`https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`.
+
+These fixed addresses give download links a stable target. A version record
+in the site source was rejected, because a person must update it after each
+release. A GitHub API lookup at site build time with a site redeploy was
+rejected, because it adds network access to the site build and links two
+workflows. A Mokly-hosted bucket was rejected, because it adds infrastructure
+and credentials.
+
+Each release holds exactly these assets. Their names are a contract, because
+a download link names the asset. The names hold no version. Only the release
+tag, `v<version>`, holds the version.
+
+- macOS installers: `Mokly-mac-arm64.dmg`, `Mokly-mac-x64.dmg`,
+  `Mokly-mac-arm64.zip` and `Mokly-mac-x64.zip`.
+- macOS blockmaps: each installer name plus `.blockmap`.
+- macOS update file: `latest-mac.yml`.
+- Linux: `Mokly-linux-x86_64.AppImage`, `Mokly-linux-amd64.deb` and the update
+  file `latest-linux.yml`.
 
 ### Release Pull Requests
 
@@ -52,25 +78,12 @@ version, writes the changelog and starts the release.
   signing when the check fails. The workflow never moves a tag. A person
   moves it to the merge commit and reruns the failed jobs.
 - It checks that the tag equals `desktop-v` plus the package version. It then
-  builds on a macOS runner and a Linux runner and publishes with
-  electron-builder's GitHub publisher. The publisher creates `v<version>` in
-  the feed, which is also the release-page address the `deb` updater opens.
-  The two platform publishers run in sequence to create and fill one
-  pre-release.
+  builds on a macOS runner and a Linux runner and uploads to the draft release
+  `v<version>` of the feed. The `deb` updater opens the release page of that
+  tag. A final [promotion](#drafts-and-promotion) makes the draft the latest
+  release, unless a higher version is already latest.
 - Pull requests run the same packaging without release signing or
   publishing, so the build is proven before any secret is used.
-
-Release packaging first builds with publishing disabled in a fresh output
-directory. The pinned GitHub publisher keeps its two-hour upload limit, but
-an append-only upload hook prevents its asset replacement path. An existing
-asset name or a racing upload collision fails the job. Published assets are
-never replaced or deleted, and `EP_GH_IGNORE_TIME` is never enabled. After
-uploading, the job reads the release asset list with the release token and
-checks every built package, blockmap and update file by name, size and
-`uploaded` state. A skipped upload or partial inventory fails, even if the
-publisher returns success. A rerun of the failed jobs repairs a run that
-uploaded nothing. A partly published release needs a new version from the
-next release pull request; rerunning a release never repairs published assets.
 
 `.github/workflows/desktop-release.yml` runs on package-affecting pull
 requests and manual dispatch, and the release workflow calls it for a desktop
@@ -90,19 +103,55 @@ packages start without an Apple credential. Release macOS builds keep hardened
 runtime and require the Developer ID signature and notarization. Linux builds
 use the `mokly` executable name in both modes.
 
+### Drafts And Promotion
+
+One draft `v<version>` holds the files of both platforms. A platform job fails
+when a published release already has that tag. Before any upload, each
+platform attempt records the name, size and SHA-256 hash of each built file.
+The jobs only add assets: an uploaded asset is never replaced or deleted. An
+existing asset name or an upload collision fails the job, unless the draft
+already holds the complete fixed set of its platform, and the GitHub digest
+and size of each file match one record of an earlier attempt. In that case the
+job uploads nothing. A partial set, an extra file, a mismatch or no matching
+record still fails. Each job then requires a draft with that tag. A skipped
+upload, or a file without its size and `uploaded` state, fails the job. A
+rerun that replaces draft assets was rejected, because it reverses the
+never-delete rule, and so was the draft as the only record, because it drops
+the recorded sizes.
+
+A final promotion runs only after both platform jobs pass. It requires exactly
+the assets that [Latest Release](#latest-release) lists, each with the size
+that its platform job recorded and the `uploaded` state, and the tag
+`v<version>` of the shell's version. When GitHub's latest release has a higher
+version, the promotion does not publish: the release stays a draft, and the
+job passes with a warning that names both versions. With no latest release,
+or one with an equal or lower version, one publication request makes the
+draft a full release marked latest, and the promotion then checks that mark.
+The latest mark never moves backward, because a newer version holds every
+change of the older one. Publishing the older release without the latest
+mark, and moving the mark back after each promotion, were rejected.
+
+Only the publication request makes a release public. A failure before it
+keeps the release a draft, and a failure of the request or after it can leave
+a full release. A rerun of the promotion leaves a full release unchanged and
+checks the latest mark again, or it passes with a warning when a higher
+version is latest. A rerun of the failed jobs repairs a run whose failed
+platform uploaded nothing or its complete set, and it runs the skipped
+promotion. A release with a partly uploaded platform stays a draft and needs a
+new version. The build records, and the records that the promotion reads, are
+kept for 35 days, which covers GitHub's 30-day rerun window.
+
 ### Release Secrets
 
-The release job reads `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`,
-`CSC_LINK`, `CSC_KEY_PASSWORD` and `DESKTOP_RELEASES_TOKEN` from the
-`desktop-release` GitHub environment, which admits only `main`.
-[Secrets](../../ops/secrets.md) records their owners and rotation. Repository
-secrets were rejected, because a workflow on any branch can read them, and the
-signing credentials decide which builds install as an update. Fork builds and
-pull requests receive none of them. Only the publishing steps receive
-secrets. The macOS packaging script writes the certificate and API key to
-private temporary files, passes their paths to electron-builder through its
-environment, and removes the files after success or failure. The publisher
-reads `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`.
+The platform jobs and the promotion read the signing credentials and the
+release token from the `desktop-release` GitHub environment, which admits only
+`main`. [Secrets](../../ops/secrets.md) records their names, owners and
+rotation. Repository secrets were rejected, because a workflow on any branch
+can read them, and the signing credentials decide which builds install as an
+update. Pull requests, manual dispatches and fork builds receive none of them.
+Only the macOS signing step receives the signing credentials, and no release
+token. The publishing steps and the promotion step receive only the release
+token. The promotion job runs no third-party package code.
 
 ### Updates In The App
 
@@ -111,9 +160,11 @@ reads `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`.
   **Check for updates** item is disabled. Reason: a preview build with the
   updater on could install a production release over itself. The updater
   never runs in an unpackaged app.
-- The updater uses the GitHub provider for `mokly-ai/mokly-desktop` and
-  accepts pre-releases. It checks the feed at launch and every four hours and
-  downloads in the background.
+- The updater reads the public release feed of `mokly-ai/mokly-desktop`. It
+  follows GitHub's latest release of that repository and never takes a
+  pre-release or a draft. Reason: the app then installs the same release that
+  the latest download addresses serve. It checks the feed at launch and every
+  four hours and downloads in the background.
 - It then shows one native dialog, "Mokly <version> is ready", with
   **Restart now** and **Later**. **Later** installs on the next quit. On macOS
   the dialog comes only after the macOS update framework accepts the

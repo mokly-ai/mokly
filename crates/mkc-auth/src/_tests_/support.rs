@@ -88,3 +88,8 @@ pub(super) fn pure() -> AuthService {
         preview_sign_in: None,
     }
 }
+
+pub(super) fn preview_fixture() -> (&'static str, &'static str) {
+    let mut lines = include_str!("../../../../infra/tests/fixtures/preview-verifier.txt").lines();
+    (lines.next().unwrap(), lines.next().unwrap())
+}

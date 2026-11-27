@@ -153,7 +153,7 @@ fn control(group: &Unimock, clock: &Unimock, startup: &Arc<StartupTiming>) -> Pr
     ProcessControl {
         memory: Arc::new(Unimock::new(())),
         discover_memory: Arc::new(AtomicBool::new(false)),
-        group: Box::new(group.clone()),
+        group: Arc::new(group.clone()),
         outgoing,
         exited: Mutex::new(exited),
         drained: Mutex::new(drained),

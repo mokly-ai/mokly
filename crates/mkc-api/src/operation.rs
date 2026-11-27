@@ -3,16 +3,38 @@
 use serde::Deserialize;
 use serde::de::value::{Error, StrDeserializer};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum OptionalConfiguration {
-    PreviewSignIn,
-    GitHub,
+/// Declare the gate and its complete inventory from one list.
+macro_rules! optional_configurations {
+    ($($(#[$doc:meta])* $kind:ident),+ $(,)?) => {
+        /// Runtime configuration required by groups of optional operations.
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        pub(crate) enum OptionalConfiguration {
+            $($(#[$doc])* $kind),+
+        }
+
+        impl OptionalConfiguration {
+            /// Every configuration that the public answer must cover.
+            pub(crate) const ALL: &[Self] = &[$(Self::$kind),+];
+        }
+    };
 }
+
+optional_configurations!(
+    /// Configured shared preview account.
+    PreviewSignIn,
+    /// Configured GitHub integration.
+    GitHub,
+    /// Configured billing service.
+    Billing,
+);
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 pub(crate) enum Operation {
     #[serde(rename = "getHealth")]
     GetHealth,
+    /// Read the public API configuration.
+    #[serde(rename = "getConfiguration")]
+    GetConfiguration,
     #[serde(rename = "uploadPublication")]
     UploadPublication,
     #[serde(rename = "uploadPublicationBlob")]

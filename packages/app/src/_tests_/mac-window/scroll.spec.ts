@@ -19,7 +19,10 @@ test("the account header scrolls away in a browser, and in the Mac window it sta
   page,
 }) => {
   await page.setViewportSize(smallestWindow);
-  await open(page, "/sign-in");
+  // Sign up draws the account entry without sign in's password section, which
+  // the suite's API configures. Its page ends under the email form, so the
+  // Email field stays in view when the page is scrolled to its end.
+  await open(page, "/sign-up");
   const header = page.getByRole("banner");
   const main = page.getByRole("main");
   const github = page.getByRole("button", { name: "Continue with GitHub" });

@@ -1,0 +1,31 @@
+# Build config accepts a bare template ID
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, the wider fix of review finding 6 of branch `calummoore/e2b-build-enabling-vbbo`.
+- **Location:** `infra/scripts/build_values.py:44-46`, `crates/mkc-config/src/builds.rs:56`, `docs/ops/environment.md` section on `builds`.
+- **Reason:** The fix adds stricter validation of the `builds.template` setting, which the always-on rules reserve for the user.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Build reference:** `TEMPLATE_ID:BUILD_ID`, the E2B template reference that starts one exact build. E2B resolves it in `sandbox_create.go:170` (`ParseName`) of `e2b-dev/infra` at `30723eda`.
+  - **Bare template ID:** a template ID without a build ID. E2B starts the newest ready build of that template's `default` tag.
+- **Background:**
+  - Finding 6 showed that a build of an existing name keeps its template ID, so a bare ID can start an image that nobody verified.
+  - The branch fixed the release side: `infra/e2b/build/build-template.mjs` writes `build_reference`, and the runbook, `docs/ops/environment.md` and the protocol now deploy, verify and roll back by that reference. A live probe passed on 2026-11-25 with the `mokly-build-v2` reference.
+  - The renderer and `mkc-config` still accept any nonempty trimmed string, so an operator can still deploy a bare ID.
+  - On 2026-11-26 two builds ran under the name `mokly-build-v6`. The released build `e58c1440`, which main-preview runs, ran at 12:15Z. The unreleased Debian build `b63ce806` ran at 12:43Z. Since then, the bare ID `mm5vcm4xv7inkey7ad9p` starts `b63ce806`, not main-preview's v6. The template cannot be deleted, because that also deletes main-preview's v6 build.
+- **Problem:** The build reference rule depends on the operator copying the right string.
+- **Impact if no action:** A bare ID in app-config would start the newest build of the name, verified or not.
+- **Root question:** How does every deployed template setting name one exact verified build?
+- **Options:**
+  - **A.** Keep the runbook rule only. Effort: Small.
+  - **B.** Accept `builds.template` only in the form `TEMPLATE_ID:BUILD_ID` with a UUID build ID, in the renderer and in `mkc-config`, with a regression that a bare ID fails. Effort: Medium.
+  - **C.** Split the setting into `templateId` and `buildId` fields that the API joins. This changes the app-config shape of each environment. Effort: Medium.
+- **Left out:** Pinning by a tag, because E2B tags can move.
+- **Wider fix:** B.
+- **Previous examples:** Mokly Cloud deploys workload images by immutable digest (`docs/ops/deploy.md:28`).
+- **Related:** `build-deny-rules-e2b-rejects.md` also adds a validation of the builds group; decide them together.
+- **Recommendation:** B. It blocks a bare ID wherever it comes from.
+- **Action:** ask the user, because B adds a new configuration rejection.

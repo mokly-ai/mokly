@@ -92,7 +92,13 @@
 - **Related:** [verbatim-prefix-helpers.md](./verbatim-prefix-helpers.md)
   concerns two helpers that remove the verbatim prefix before a comparison.
   Both items have the same cause, the verbatim form, so one branch can
-  settle both.
+  settle both. `plans/follow-ups/rust-tests-have-no-hang-guard.md` adds
+  entries for `tokio::runtime::Handle::block_on` and
+  `tokio::task::block_in_place` to the same new `clippy.toml`. The branch
+  that comes first creates the file, and the other adds its entries.
+  [ignored-module-path-spelling.md](./ignored-module-path-spelling.md) has
+  the same class in the same file, `crates/mokly-git/src/disk.rs`: two
+  spellings of one path compare unequal, there for Unicode and case.
 - **Recommendation:** B. It keeps all canonicalization on `dunce`, gives a
   reason text for each new call, and stops a repeat of the npm failure.
 - **Action:** ask the user, because B adds a lint, and the 2026-10-28 answer

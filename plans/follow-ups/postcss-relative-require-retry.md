@@ -1,0 +1,40 @@
+# Missed relative PostCSS require loads another file
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from the check of finding 2 of round 1 of the review of branch `calummoore/mokly-source-package-override-jkum`.
+- **Location:** `requireTarget` in `packages/mokly/src/sidecar/postcss-resolution.ts`, at line 110 at commit `7da557d5d`, and `resolveRequire` at `packages/mokly/src/sidecar/importer-resolution.ts:150`.
+- **Reason:** The retry predates the branch, and the branch did not change its rule.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Synchronous PostCSS require:** A `require` call in a repository-owned PostCSS module whose name the module computes at run time. The sidecar resolves it through `context(file).require` in `postcss-resolution.ts`.
+  - **Dependency root:** A `node_modules` folder that a side selected for third-party packages, such as the `node_modules` folder of the working tree.
+- **Background:**
+  - The sidecar bundles a repository-owned PostCSS module with esbuild. A `require` whose name esbuild cannot read stays a call at run time.
+  - `requireTarget` makes one resolver at the folder of the requiring module. It adds one resolver at the parent folder of each dependency root.
+  - `resolveRequire` tries the resolvers in order. After `MODULE_NOT_FOUND` it tries the next one.
+  - The extra resolvers let a module find a package that its own folder cannot reach. An example is a package of the working installation, while the module runs from a base copy.
+  - #199 added the retry on 2026-10-25, and #501 kept it on 2026-11-24.
+  - Node resolves a relative name, such as `./helper.cjs`, only from the folder of the requiring file.
+  - On a base, a dependency root can be in the working tree. The sidecar then maps a file that the retry finds there to the same path in the base files.
+  - A probe on 2026-11-26 used the sidecar build of commit `7da557d5d`:
+    - The repository root held `package.json`, a `node_modules` folder, and `helper.cjs`, which exports `"root-helper"`.
+    - `config/postcss.mjs` built the name `./helper.cjs` at run time, required it, and wrote the result into the CSS. `config/helper.cjs` did not exist.
+    - Node throws `MODULE_NOT_FOUND` for this require. The output CSS held `selected: root-helper`.
+- **Problem:** The retry applies to every name, also to a relative name. When `./helper.cjs` is missing beside the module, the resolver at the parent of a dependency root finds a file with the same name. The module then loads that unrelated file.
+- **Impact if no action:** A PostCSS module that guards an optional relative file with `try` and `catch` can load an unrelated file of the same name. The stylesheet then changes with no error.
+- **Root question:** Which folders may a synchronous PostCSS require search for a name that is not a package name?
+- **Options:**
+  - **A.** In `requireTarget`, add the resolvers of the dependency roots only for a bare package name. A relative name, an absolute path, and a `#` import keep only the resolver of the requiring module, so Node's `MODULE_NOT_FOUND` stays. Add a sidecar test like the probe. Effort: Small.
+  - **B.** Move the rule into `resolveRequire`. It takes the resolver of the requiring module apart from the fallback package roots, and it uses the roots only for a bare package name. Add the same test. Effort: Small.
+  - **C.** Replace the resolvers of the dependency roots with the package lookup of bundled imports, `packageDirectory` in `packages/mokly/src/sidecar/package-directory.ts`. Both paths then search the same folders and record the same lookups. It can change which copy a bare name loads. Effort: Medium.
+- **Left out:** A warning when the retry finds a relative name. The wrong file still loads.
+- **Wider fix:** B. The shared function then owns the rule, so a new caller that passes package roots cannot retry a relative name.
+- **Previous examples:** `importerDirectory` and `packageDirectory` in `packages/mokly/src/sidecar/package-directory.ts` already use package roots only for a bare name, through `bareSpecifier` in `packages/mokly/src/sidecar/specifier.ts`.
+- **Related:**
+  - [synchronous-workspace-source-loading.md](./synchronous-workspace-source-loading.md): same code. Its option C adds relative probes after Node misses a request from a repository source. Those probes must stay in the folder of the requiring file.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. The import form of its record also tells `resolveRequire` that a name is relative.
+- **Recommendation:** B. It fixes the retry in the one function that every synchronous require uses, at the cost of A.
+- **Action:** fix after merge, apply B, because the retry predates this branch, and its fix needs its own test in the PostCSS sidecar tests.

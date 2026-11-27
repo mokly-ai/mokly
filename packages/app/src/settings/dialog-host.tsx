@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PaneError } from "../components/resource-state";
 import { useCompact } from "../layout/viewport";
 import {
-  readQuery,
   replaceAddress,
   useAddressPathname,
   useAddressSearch,
@@ -12,6 +11,7 @@ import {
   writeAddress,
 } from "../navigation/address";
 import { settingsPath } from "../navigation/paths";
+import { readQuery } from "../navigation/query";
 import { useSession } from "../session/context";
 
 import { useBackGuard } from "./back-guard";

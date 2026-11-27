@@ -16,7 +16,7 @@ async function projectPane(page: Page, path: string): Promise<void> {
   await expect(page.getByRole("heading", { name: "Project" })).toBeVisible();
 }
 
-test("Automatic builds writes on its own and reports a refusal beside itself", async ({
+test("Automatic builds writes on its own, reports a refusal beside itself, and only an administrator changes it", async ({
   page,
 }) => {
   const scenario = await buildScenario(page, "build-switch");
@@ -77,39 +77,40 @@ test("Automatic builds writes on its own and reports a refusal beside itself", a
   expect(sent.automaticBuilds).toBe(true);
   expect(sent.slug).toBe(scenario.address.slug);
   expect(sent.visibility).toBe("public");
-});
 
-test("only an administrator changes Automatic builds", async ({ page }) => {
-  const scenario = await buildScenario(page, "build-switch-reader");
-  scenario.double.project = {
+  // Only an administrator changes it: anyone else reads it, disabled.
+  double.project = {
     buildsAvailable: true,
     canRequestBuilds: true,
     automaticBuilds: true,
     canAdmin: false,
   };
   await projectPane(page, scenario.address.path);
-  const toggle = page.getByTestId("automatic-builds");
   await expect(toggle).toHaveAttribute("aria-checked", "true");
   await expect(toggle).toHaveAttribute("aria-disabled", "true");
-});
 
-test("a project that cannot build says how it publishes instead", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-switch-none");
+  // A project that cannot build, as this run's real one, says how it
+  // publishes instead.
   await page.unrouteAll({ behavior: "wait" });
   await projectPane(page, scenario.address.path);
   await expect(page.getByTestId("automatic-builds")).toHaveCount(0);
   await expect(page.getByText("This project publishes from CI.")).toBeVisible();
 });
 
-test("the finished project says its default branch is publishing", async ({
+test("the finished project leads with the guide, or says its default branch is publishing", async ({
   page,
 }) => {
   await signIn(page, freshEmail("build-created"));
-  const id = buildId(300);
+  const projectId = await createProject(page, "Build Created Org");
+
+  // With nothing publishing, the guide leads.
+  const actions = page.locator(".fo-account-actions").getByRole("button");
+  await expect(actions).toHaveText(["Publish from CI", "Open project"]);
+  await expect(page.getByText(/Mokly is publishing/)).toHaveCount(0);
+
   // Creation scheduled the default branch's first build, which the branch
-  // list reports on its row before the project id is known to this test.
+  // list reports on its row.
+  const id = buildId(300);
   await page.route(
     (url) =>
       url.origin === apiOrigin &&
@@ -129,7 +130,7 @@ test("the finished project says its default branch is publishing", async ({
       });
     },
   );
-  const projectId = await createProject(page, "Build Created Org");
+  await page.reload();
   await expect(page.getByText("Mokly is publishing main.")).toBeVisible();
   const guide = page.getByRole("link", { name: "Publish from CI" });
   await expect(guide).toHaveAttribute("href", /\/docs\/ci\/publish-from-ci\/$/);
@@ -153,14 +154,4 @@ test("the finished project says its default branch is publishing", async ({
     page.getByRole("heading", { name: "Publishing this branch" }),
   ).toBeVisible();
   await expect(page.getByText("Waiting to start.")).toBeVisible();
-});
-
-test("with nothing publishing, the finished project leads with the guide", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("build-created-ci"));
-  await createProject(page, "Build CI Org");
-  const actions = page.locator(".fo-account-actions").getByRole("button");
-  await expect(actions).toHaveText(["Publish from CI", "Open project"]);
-  await expect(page.getByText(/Mokly is publishing/)).toHaveCount(0);
 });

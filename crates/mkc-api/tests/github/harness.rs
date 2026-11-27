@@ -8,8 +8,10 @@ use mkc_api::application::{ApplicationFactory, ConfiguredApplicationFactory};
 use mkc_api::billing_providers::SystemBillingProviderFactory;
 use mkc_api::build_providers::{BuildProviderFactory, SystemBuildProviderFactory};
 use mkc_api::github_providers::SystemGitHubProviderFactory;
+use mkc_api::worker_intervals::WorkerIntervals;
 use mkc_domain::ids::UserId;
 use mkc_github_double::server::RecordedGitHub;
+use mkc_store_interface::error::Result as StoreResult;
 use mkc_store_interface::store::{Callback, Queries, Store};
 use mkc_store_interface::user::User;
 use mkc_store_pg::connection::{PgStoreFactory, StoreFactory};
@@ -17,7 +19,7 @@ use mkc_store_pg::runtime::SystemRuntime;
 use mkc_test_pg::scratch_schema::ScratchSchema;
 use reqwest::Method;
 use reqwest::blocking::Client;
-use sandbox_interface::SandboxBackendMock;
+use sandbox_interface::SandboxLifecycleMock;
 use serde_json::Value;
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
@@ -33,6 +35,10 @@ pub(super) const SECRET: &str = "fixture-webhook-secret-with-32-bytes";
 
 /// Each scenario opens multiple real pools; keep the suite within default Postgres limits.
 static DATABASE_SCENARIO: Mutex<()> = Mutex::new(());
+
+/// The GitHub delivery pause of the test API: a webhook delivery starts within
+/// a few milliseconds of its write, not after the production second.
+const QUICK_WORKER_PAUSE: Duration = Duration::from_millis(20);
 
 pub(super) struct Harness {
     /// Stop workers before the double, mock, store, schema and database lock drop.
@@ -103,7 +109,7 @@ impl Harness {
         let build_requests = Arc::new(Mutex::new(Vec::new()));
         let build_backend = if configured {
             Unimock::new(
-                SandboxBackendMock::list_managed_sandboxes
+                SandboxLifecycleMock::list_managed_sandboxes
                     .each_call(matching!(_))
                     .answers(&|_, _| Ok(Vec::new())),
             )
@@ -125,6 +131,12 @@ impl Harness {
             github: Arc::new(SystemGitHubProviderFactory),
             billing: Arc::new(SystemBillingProviderFactory),
             runtime,
+            intervals: WorkerIntervals {
+                github_delivery: QUICK_WORKER_PAUSE,
+                check_delivery: QUICK_WORKER_PAUSE,
+                build_claim: QUICK_WORKER_PAUSE,
+                ..WorkerIntervals::default()
+            },
         };
         let mut settings = settings(&schema, listener.address, configured, &github.origin);
         settings.desktop_client = desktop_client;
@@ -179,13 +191,11 @@ impl Harness {
             .header("X-CSRF-Token", &self.csrf)
     }
 
-    pub(super) fn queries(&self, operation: &mut dyn FnMut(&mut dyn Queries)) {
-        self.store
-            .transaction(&mut Callback(&mut |queries| {
-                operation(queries);
-                Ok(())
-            }))
-            .unwrap();
+    /// Run one store transaction. The operation returns each store error, as
+    /// production callers do, so the store retries a serialization failure
+    /// against the API's own workers instead of the test failing on it.
+    pub(super) fn queries(&self, operation: &mut dyn FnMut(&mut dyn Queries) -> StoreResult<()>) {
+        self.store.transaction(&mut Callback(operation)).unwrap();
     }
 
     pub(super) fn replica_store(&self) -> Arc<dyn Store> {

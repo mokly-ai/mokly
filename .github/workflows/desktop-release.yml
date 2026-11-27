@@ -78,7 +78,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Install npm
         run: npm install --global npm@11.21.0
       - name: Resolve main-preview build inputs
@@ -139,7 +139,7 @@ jobs:
     permissions:
       contents: read
     strategy:
-      # Both publishers share one release. Serialize its creation and uploads.
+      # Run the publishers in sequence so both fill the same draft.
       max-parallel: 1
       fail-fast: false
       matrix:
@@ -166,7 +166,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
       - name: Install npm
         run: npm install --global npm@11.21.0
       - name: Install dependencies
@@ -179,7 +179,7 @@ jobs:
         env:
           MKC_DESKTOP_UPDATES: enabled
         run: npm run build --workspace @mokly-cloud/desktop
-      - name: Sign, notarize and publish macOS packages
+      - name: Sign and notarize macOS packages
         if: runner.os == 'macOS'
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -187,10 +187,71 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: node packages/desktop/scripts/package.mjs release-build
+      - name: Build Linux packages
+        if: runner.os == 'Linux'
+        run: node packages/desktop/scripts/package.mjs release-build
+      - name: Upload the build record
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: desktop-build-record-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: packages/desktop/release/desktop-build-record.json
+          if-no-files-found: error
+          retention-days: 35
+      - name: Download earlier build records
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: desktop-build-record-${{ matrix.platform }}-*
+          path: ${{ runner.temp }}/build-records
+      - name: Publish macOS packages
+        if: runner.os == 'macOS'
+        env:
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node packages/desktop/scripts/package.mjs release
+          RECORDS: ${{ runner.temp }}/build-records
+        run: node packages/desktop/scripts/package.mjs release-publish "$RECORDS"
       - name: Publish Linux packages
         if: runner.os == 'Linux'
         env:
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node packages/desktop/scripts/package.mjs release
+          RECORDS: ${{ runner.temp }}/build-records
+        run: node packages/desktop/scripts/package.mjs release-publish "$RECORDS"
+      - name: Upload the verified release manifest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: desktop-release-${{ matrix.platform }}
+          path: packages/desktop/release/desktop-release-manifest.json
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 35
+
+  promote:
+    name: Promote desktop release
+    # A failed platform job skips promotion and leaves the release in draft.
+    needs: [release]
+    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && github.event_name == 'push' && inputs.tag != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: desktop-release
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the release commit
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - name: Install Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Download the verified release manifests
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: desktop-release-*
+          path: ${{ runner.temp }}/desktop-release
+      - name: Promote the checked draft to the latest release
+        env:
+          GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
+          RELEASES: ${{ runner.temp }}/desktop-release
+        run: node packages/desktop/scripts/release-promote.mjs "$RELEASES"

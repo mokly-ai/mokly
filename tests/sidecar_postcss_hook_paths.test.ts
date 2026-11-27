@@ -24,8 +24,15 @@ for (const mode of [
       const { base } = await sidecarSources(context);
       const helper = path.join(base, "hidden-helper.mjs");
       const leaf = path.join(base, "hidden-leaf.mjs");
-      for (const file of [helper, leaf])
+      const probe = path.join(base, "resolution-probe.mjs");
+      const required = path.join(base, "required-entry.mjs");
+      const requiredHelper = path.join(base, "required-helper.mjs");
+      for (const file of [helper, leaf, probe, requiredHelper])
         await fs.writeFile(file, "export default 'raw';");
+      await fs.writeFile(
+        required,
+        'import "./required-helper.mjs"; import.meta.resolve("./resolution-probe.mjs");',
+      );
       const urls = [helper, leaf].map((file) => pathToFileURL(file).href);
       const sources = [
         "export { default } from 'hidden-leaf';",
@@ -60,7 +67,11 @@ function load(url,context,nextLoad){
       await dependency(
         base,
         "plugin",
-        `import value from 'hidden-helper'; export default ()=>({postcssPlugin:'loader',Once(root){root.walkDecls('color',decl=>decl.value=value)}});`,
+        `import { createRequire } from 'node:module';
+import value from 'hidden-helper';
+createRequire(import.meta.url)(${JSON.stringify(required)});
+import.meta.resolve(${JSON.stringify(pathToFileURL(probe).href)});
+export default ()=>({postcssPlugin:'loader',Once(root){root.walkDecls('color',decl=>decl.value=value)}});`,
       );
       await fs.writeFile(
         path.join(base, "postcss.mjs"),
@@ -96,6 +107,20 @@ function load(url,context,nextLoad){
             "synthetic module source must not become a raw witness",
           );
         }
+        assert.ok(result.readEvidence.modules.includes(probe));
+        assert.deepEqual(
+          result.dependencies
+            .filter(({ path }) =>
+              [helper, leaf, probe, required, requiredHelper].includes(path),
+            )
+            .sort((left, right) => left.path.localeCompare(right.path)),
+          [
+            { kind: "file", path: helper, source: "node" },
+            { kind: "file", path: leaf, source: "node" },
+            { kind: "file", path: required, source: "node" },
+            { kind: "file", path: requiredHelper, source: "node" },
+          ],
+        );
         assert.equal(result.readEvidence.coverage, "incomplete");
       }
       await sidecar.call("shutdown");

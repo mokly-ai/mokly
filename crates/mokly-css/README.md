@@ -36,6 +36,17 @@ core supplies configured package roots as ordered logical dependency
 directories. Imports inside a logical dependency root try package-local
 `node_modules`, then siblings at that root, then the mapped authored
 ancestors. This keeps package CSS and JavaScript on the same copy.
+Workspace package stylesheets can resolve to sources in the selected tree.
+See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+`Resolution.source_packages` carries the `sourcePackages` entries of each
+configuration in the
+[layout order](../../docs/protocol/mokly-comparison-packages.md#layout-order),
+with `None` for `false`. `SourceResolver` returns `CssError::WorkspaceImport`
+when lookup by package name reaches a missing target below a subfolder of
+the package root. An entry of `false` suppresses the hint when lookup
+reaches it. The public `workspace_package_name` finds the
+package `name` of a target on one side. `mokly-compare` uses it for the
+`ignored-module` warning.
 
 The same contract owns the `styles/` and `assets/` delivery routes. URLs keep
 query and fragment suffixes. Public resources never read private CSS inputs by
@@ -144,17 +155,9 @@ cargo clippy -p mokly-css --all-targets -- -D warnings
 Tests use unimock at source, resolver, and processor boundaries. Graph
 integration tests verify complete delivery with real authored fixtures.
 `tests/nesting_depth_tests.rs` re-runs its own test binary to find the deepest
-CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
-`--nocapture` to print the limits, and with `--release` for release builds.
-
-`tests/token_differential_tests.rs` compares the shared statement reader with
-the token walk that the scanners used before it. It runs `git` to list the
-repository's stylesheets: tracked files, and untracked files that Git does not
-ignore. It skips a listed file that the working tree deleted. The
-`test-support` feature exposes the module `token_differential` for this test.
-The crate's own dev-dependency turns the feature on. So
-`cargo test -p mokly-css` and `cargo test --workspace` run the test with no
-extra flag.
+CSS that each Mokly scanner and pipeline survives on a 2 MiB worker stack. Run
+it with `--nocapture` to print the limits, and with `--release` for release
+builds.
 
 `src/_tests_/token_grammar_tests.rs` checks that the shared statement reader
 reads the block of each block at-rule as `lightningcss` parses it. Its one
@@ -169,6 +172,13 @@ also fails when that exception no longer differs.
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
   `SourceResolver`, which resolve imports through the injected source tree.
+- [`src/resolution.rs`](./src/resolution.rs) defines `Resolution`, the
+  settings that CSS shares with the sidecar's module graph, with the
+  `sourcePackages` entries in layout order.
+- [`src/workspace_sources.rs`](./src/workspace_sources.rs) checks for a matching
+  source when a package target names a build file. It tries the
+  `sourcePackages` entries of the package, then the detected layout. It also
+  provides `workspace_package_name`.
 - [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the
   CSS Modules renamer.
 - [`src/rule_collection.rs`](./src/rule_collection.rs) and
@@ -193,6 +203,7 @@ also fails when that exception no longer differs.
 - [CSS Modules](../../docs/protocol/mokly-imported-styles-modules.md).
 - [CSS assets](../../docs/protocol/mokly-imported-styles-assets.md).
 - [PostCSS boundary](../../docs/protocol/mokly-imported-styles-postcss.md).
+- [Package selection](../../docs/protocol/mokly-comparison-packages.md).
 - [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 - [CSS attribution rules](../../docs/protocol/mokly-css-attribution-rules.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

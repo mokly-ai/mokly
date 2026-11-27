@@ -2,10 +2,10 @@
 
 import json
 from pathlib import Path
-import secrets
 import sys
 import uuid
 
+from smoke_api import PREVIEW_PASSWORD, preview_settings
 from smoke_support import Api
 
 
@@ -40,7 +40,7 @@ def session(result, headers, origin):
     return {"cookie": cookie(headers, origin), "csrf": result["csrfToken"]}
 
 
-def lifecycle(api, origin, preview_secret):
+def lifecycle(api, origin):
     email = str(uuid.uuid4()) + "@example.com"
     _, headers = api.call("POST", "/v1/auth/magic-links", {"email": email},
                           expected=202, extra={"Origin": origin})
@@ -74,8 +74,10 @@ def lifecycle(api, origin, preview_secret):
                           extra={"Origin": origin})
     cookie(headers, origin, clearing=True)
     api.call("GET", "/v1/session", session=active, expected=401)
-    result, headers = api.call("POST", "/v1/auth/preview", {"secret": preview_secret},
+    result, headers = api.call("POST", "/v1/auth/preview",
+                              {"password": PREVIEW_PASSWORD, "returnTo": THIRD},
                               extra={"Origin": origin})
+    assert result["returnTo"] == "/dashboard"
     active = session(result["session"], headers, origin)
     _, headers = api.call("DELETE", "/v1/session", session=active, expected=204,
                           extra={"Origin": origin})
@@ -83,10 +85,9 @@ def lifecycle(api, origin, preview_secret):
 
 
 def smoke(executable, enabled):
-    secret = secrets.token_hex(32)
-    api = Api(executable, overrides={"MKC_DESKTOP_CLIENT": str(enabled).lower(),
-                                     "MKC_PREVIEW_SIGN_IN_SECRET": secret,
-                                     "MKC_PREVIEW_SIGN_IN_EMAIL": "desktop-preview@example.com"})
+    settings = preview_settings("desktop-preview@example.com")
+    settings["MKC_DESKTOP_CLIENT"] = str(enabled).lower()
+    api = Api(executable, overrides=settings)
     try:
         if enabled:
             error, headers = api.call("POST", "/v1/auth/desktop/callback",
@@ -109,12 +110,12 @@ def smoke(executable, enabled):
                 for path, body in [("/v1/auth/magic-links", {"email": "refused@example.com"}),
                                    ("/v1/auth/callback", {"token": "a" * 64}),
                                    ("/v1/auth/desktop/callback", {"grant": "invalid", "verifier": "a" * 64}),
-                                   ("/v1/auth/preview", {"secret": secret})]:
+                                   ("/v1/auth/preview", {"password": PREVIEW_PASSWORD})]:
                     error, headers = api.call("POST", path, body, expected=403, extra={"Origin": origin})
                     assert error["error"]["reason"] == "csrf-rejected"
                     assert headers.get("Set-Cookie") is None
             else:
-                lifecycle(api, origin, secret)
+                lifecycle(api, origin)
         print(f"PASS desktop API flag={enabled}: exact CORS, refused origins, ordinary email link, invalid desktop grant, magic/preview cookies, cross-origin rotation and sign-out")
     finally:
         api.close()

@@ -34,8 +34,8 @@ mokly-watch = { path = "crates/mokly-watch" }
 utoipa = { version = "6.0.0", features = ["uuid", "chrono", "preserve_order", "preserve_path_order"] }
 rpc-error = { git = "https://github.com/futex-ai/rpc-error.git", rev = "ecf4e367342138911b9f45dbb97f73c9534c3136", version = "0.1.0", features = ["derive", "axum"] }
 internal-error = { git = "https://github.com/futex-ai/internal-error.git", rev = "6477922a1c4db8c3e35189af69f0147464004b99", package = "internal-error" }
-sandbox-interface = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
-sandbox-e2b = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
+sandbox-interface = { git = "https://github.com/futex-ai/sandbox.git", rev = "5d856dbc03956a622a04d43e83198e519b390c84" }
+sandbox-e2b = { git = "https://github.com/futex-ai/sandbox.git", rev = "5d856dbc03956a622a04d43e83198e519b390c84" }
 
 mkc-api = { path = "crates/mkc-api" }
 mkc-auth = { path = "crates/mkc-auth" }
@@ -74,3 +74,24 @@ unsafe_code = "forbid"
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+
+# Debug and test builds hash every source, dependency, and capture input. The
+# hash crates run about ten times slower without optimisation. These entries
+# compile only them optimised; the hashes and every other crate stay the same.
+# The preview password check also runs scrypt with production parameters in
+# the debug API that tests and the local stack use, so scrypt and the crates
+# it hashes with build optimised too.
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.xxhash-rust]
+opt-level = 3
+
+[profile.dev.package.scrypt]
+opt-level = 3
+
+[profile.dev.package.salsa20]
+opt-level = 3
+
+[profile.dev.package.pbkdf2]
+opt-level = 3

@@ -30,6 +30,9 @@ Stylesheet rules match the entry route `<path>/index.html`, not the generated
 view route. Use `design/site/**/index.html`, then
 `design/email/**/index.html`, then
 `product/{account,recovery,settings,viewer}/**/index.html`, then `**/*.html`.
+The site rule links only the Geist and Instrument Serif font sheets; each site
+screen imports its other sheets per
+[Imported site styles](#imported-site-styles).
 Email views link only the base and inbox-frame styles; their message body
 uses inline styles per [Email](./email.md).
 First match wins; an unmatched path receives Design styles. These rules
@@ -40,7 +43,11 @@ to the configuration file.
 
 Build and check pass `--strict`. Runtime and type mappings use documented
 public entrypoints from the single installation.
-The `cloud-mockups` suite runs build, check, test and typecheck in that order.
+The `cloud-mockups` suite runs build, then test. The `cloud-typecheck` suite
+type-checks the mockups.
+In CI the suite runs as parallel
+[mockup shards](./repository-verification.md#mockup-and-site-shards); each
+shard builds the catalogue first, and the shards do not wait for one another.
 
 ## Imported Viewer Styles
 
@@ -65,6 +72,24 @@ output. The receiver adopts these asset paths per
 [hosting policy](./publication-upload-validation.md#hosting-policy).
 [Repository generated files](./repository-generated-files.md) owns the ignore
 rules.
+
+## Imported Site Styles
+
+Each site screen imports the site sheets that it draws with. Mokly bundles
+them into the stylesheet of the screen's entry and links it after the font
+sheets of the site rule. A screen imports the sheets that every site page
+shares first, then the sheets of its own area: the home, the documentation,
+the changelog, pricing or the legal pages. No site document loads a sheet of
+another area. The Changes view names a changed site sheet by the bundle of
+each site entry that imports it, as
+[CSS evidence presentation](../mokly-css-evidence-presentation.md#page-evidence-copy-and-grouping)
+requires.
+
+Decision: the site screens import their sheets, the way that the pages of the
+site load their CSS. A site rule that lists the site sheets, for every site
+page or for each area, was rejected: it keeps the site's CSS routing in the
+configuration, and one list for every page loads the sheets of every other
+page.
 
 ## Output And Check Ownership
 
@@ -144,7 +169,6 @@ filename suffixes do not determine them.
 | `product/account/callback/email-invalid`     | `expired`        |
 | `product/account/callback/email-invalid`     | `used`           |
 | `product/account/callback/email-invalid`     | `failure`        |
-| `product/account/callback/preview-invalid`   | `failure`        |
 | `product/settings/project/visibility`        | `plan`           |
 | `product/settings/project/visibility`        | `plan-admin`     |
 | `product/settings/tokens/create`             | `reveal`         |

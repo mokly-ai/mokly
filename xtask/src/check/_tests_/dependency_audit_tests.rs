@@ -1,6 +1,7 @@
 //! Audit defaults, explicit mode commands, and suite compatibility.
 
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
@@ -8,12 +9,17 @@ use unimock::{MockFn, Unimock, matching};
 use crate::command::CommandRunnerRunMock;
 use crate::error::Error;
 
-use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
+use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
 fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
-    for suite in [None, Some(VerificationSuite::Repository)] {
+    let checks_shard = Some(Shard::from_str("1/5").expect("valid shard"));
+    for (suite, shard) in [
+        (None, None),
+        (Some(VerificationSuite::Repository), None),
+        (Some(VerificationSuite::Repository), checks_shard),
+    ] {
         for (mode, expected) in [
             (None, "npm run dependencies:check -- --baseline"),
             (
@@ -37,7 +43,7 @@ fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
                 Arc::new(Unimock::new(())),
                 PathBuf::from("/workspace"),
             );
-            let request = CheckRequest::new(suite, None, mode).expect("valid audit selection");
+            let request = CheckRequest::new(suite, shard, mode).expect("valid audit selection");
 
             assert!(matches!(
                 runner.run(request),

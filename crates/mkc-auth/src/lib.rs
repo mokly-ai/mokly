@@ -7,6 +7,7 @@ mod desktop_grant_policy;
 pub mod error;
 mod links;
 mod preview;
+pub mod preview_verifier;
 pub mod prune;
 pub mod runtime;
 pub mod service;

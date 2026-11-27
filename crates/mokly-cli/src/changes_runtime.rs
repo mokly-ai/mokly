@@ -4,6 +4,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Build;
@@ -137,11 +138,12 @@ impl ChangesService for PhasedChanges {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
         _: Option<bool>,
+        warnings: &mut Vec<Warning>,
     ) -> Result<ComparisonResult> {
         self.phases
             .start(Phase::Comparing(selected_base(config, base).into()));
         self.changes
-            .classify(config, base, head, self.install_scripts)
+            .classify(config, base, head, self.install_scripts, warnings)
     }
 }
 

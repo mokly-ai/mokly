@@ -8,13 +8,13 @@ use chrono::{DateTime, Utc};
 use mkc_build_interface::log::{BuildLogChunk, BuildLogSink, BuildStream};
 use mkc_build_interface::outcome::{BuildBudget, BuildOutcome, BuildStep};
 use mkc_build_interface::request::BuildRequest;
-use sandbox_interface::{BackendStreamProcessRequest, ProviderRef, SandboxBackend};
+use sandbox_interface::{BackendStreamProcessRequest, ProviderRef, SandboxProcesses};
 use tokio::sync::mpsc::{UnboundedReceiver, unbounded_channel};
 use tokio::task::JoinHandle;
 use tokio::time::{Instant, timeout_at};
 
 use crate::clock::BuildClock;
-use crate::command::{Command, OUTPUT_LIMIT};
+use crate::command::Command;
 use crate::failure::Failure;
 use crate::output::{OutputReader, ProcessResult, StreamReader};
 
@@ -25,10 +25,12 @@ pub(crate) trait ProcessDriver: Send + Sync {
 
 pub(crate) struct ProcessExecutor<'a> {
     pub(crate) request: &'a BuildRequest,
-    pub(crate) backend: Arc<dyn SandboxBackend>,
+    pub(crate) processes: Arc<dyn SandboxProcesses>,
     pub(crate) clock: Arc<dyn BuildClock>,
     pub(crate) sink: Arc<dyn BuildLogSink>,
     pub(crate) provider: ProviderRef,
+    /// Byte cap of each process stream.
+    pub(crate) output_limit: usize,
 }
 
 /// Aborts the detached sink writer when the owning process future is dropped.
@@ -104,12 +106,13 @@ impl ProcessDriver for ProcessExecutor<'_> {
                     args: command.args.clone(),
                     cwd: Some(command.cwd.clone()),
                     envs: command.environment(self.request),
-                    stdout_limit: OUTPUT_LIMIT,
-                    stderr_limit: OUTPUT_LIMIT,
+                    stdout_limit: self.output_limit,
+                    stderr_limit: self.output_limit,
                     deadline,
                     idle_timeout: idle,
                 };
-                let stream = match timeout_at(cutoff, self.backend.stream_process(request)).await {
+                let stream = match timeout_at(cutoff, self.processes.stream_process(request)).await
+                {
                     Ok(Ok(stream)) => stream,
                     Ok(Err(_)) => return Err(Failure::Transport.outcome()),
                     Err(_) => {
@@ -122,6 +125,7 @@ impl ProcessDriver for ProcessExecutor<'_> {
                 let reader: &dyn OutputReader = &StreamReader {
                     request: self.request,
                     step,
+                    output_limit: self.output_limit,
                 };
                 reader
                     .read(stream, &sender, cutoff, command.capture_stdout, idle)

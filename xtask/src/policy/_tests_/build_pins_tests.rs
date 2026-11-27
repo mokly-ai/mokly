@@ -1,25 +1,42 @@
 //! Floating images and drifted consumer version sentences must fail.
 
+use crate::policy::diagnostic::Violation;
+
 use super::{e2b_base, failure_sentence};
 
 #[test]
 fn template_bases_require_a_tag_and_a_complete_digest() {
     let digest = "a".repeat(64);
-    let valid = format!("FROM e2bdev/base:latest@sha256:{digest}\n");
-    assert!(e2b_base(&valid).is_empty());
+    let valid = format!("FROM debian:trixie-slim@sha256:{digest}\n");
+    assert_eq!(e2b_base(&valid), []);
     for invalid in [
-        "FROM e2bdev/base\n".to_owned(),
-        "FROM e2bdev/base:latest\n".to_owned(),
-        format!("FROM e2bdev/base@sha256:{digest}\n"),
+        "FROM debian\n".to_owned(),
+        "FROM debian:trixie-slim\n".to_owned(),
+        format!("FROM debian@sha256:{digest}\n"),
         valid.replace(&digest, "short"),
         valid.replace(&digest, &"g".repeat(64)),
+        valid.replace(&digest, &"A".repeat(64)),
         valid.replace("sha256", "sha512"),
-        "ARG BASE=e2bdev/base\nFROM $BASE\n".to_owned(),
-        format!("{valid}FROM e2bdev/base:latest\n"),
+        "ARG BASE=debian\nFROM $BASE\n".to_owned(),
+        format!("{valid}FROM debian:trixie-slim\n"),
         String::new(),
     ] {
         assert!(!e2b_base(&invalid).is_empty(), "{invalid}");
     }
+}
+
+#[test]
+fn template_rejects_the_previous_base_with_a_complete_digest() {
+    let image = format!("e2bdev/base:latest@sha256:{}", "a".repeat(64));
+    assert_eq!(
+        e2b_base(&format!("FROM {image}\n")),
+        [Violation::PinMismatch {
+            path: "infra/e2b/build/e2b.Dockerfile".into(),
+            field: "FROM".into(),
+            expected: "debian:<tag>@sha256:<64 lowercase hex>".into(),
+            actual: image,
+        }],
+    );
 }
 
 #[test]

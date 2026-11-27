@@ -5,12 +5,12 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::git_identity::{BaseCommit, CommitSha};
 use crate::remote::identity::{RunId, RunIdentity};
+use crate::remote::plan::plan_support::planned_commands;
 use crate::remote::runner::DefaultRemoteRunner;
 
 #[test]
@@ -89,25 +89,11 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             workspace: PathBuf::from("/workspace"),
         },
     };
-    let boxes: Vec<String> = [
-        "repository",
-        "viewer",
-        "browser-1-of-4",
-        "browser-2-of-4",
-        "browser-3-of-4",
-        "browser-4-of-4",
-        "static-delivery",
-        "cloud-rust",
-        "cloud-app-1-of-4",
-        "cloud-app-2-of-4",
-        "cloud-app-3-of-4",
-        "cloud-app-4-of-4",
-        "cloud-web",
-        "cloud-infrastructure",
-    ]
-    .into_iter()
-    .map(|name| format!("tbx_{name}"))
-    .collect();
+    let plan = planned_commands();
+    let boxes: Vec<String> = plan
+        .iter()
+        .map(|command| format!("tbx_{}", command.name))
+        .collect();
     let cleanup = CleanupGuard::new(&runner.dependencies);
     let head = CommitSha::read(&"b".repeat(40)).unwrap();
     let identity = RunIdentity::new(
@@ -126,18 +112,30 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
     assert_eq!(
         runner
             .execute(
+                &plan,
                 &boxes,
                 &identity,
                 &PathBuf::from("/snapshot"),
                 &cleanup,
-                DependencyAudit::Baseline,
             )
             .len(),
-        14
+        plan.len()
     );
     assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();
-    assert!(events.iter().any(|event| event == "download:tbx_viewer"));
+    let mut downloads: Vec<_> = events
+        .iter()
+        .filter(|event| event.starts_with("download:"))
+        .cloned()
+        .collect();
+    downloads.sort();
+    let mut reports: Vec<_> = plan
+        .iter()
+        .filter(|command| command.report)
+        .map(|command| format!("download:tbx_{}", command.name))
+        .collect();
+    reports.sort();
+    assert_eq!(downloads, reports);
     for id in boxes {
         let close = events
             .iter()

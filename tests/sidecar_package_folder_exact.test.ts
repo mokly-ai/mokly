@@ -61,11 +61,36 @@ test("an inactive unsupported non-folder target keeps ordinary marked reuse", as
     "serveEdit",
   );
   assert.equal(first.result.compiled.reuseEvidence.uncaptured, "serveEdit");
-  assert.deepEqual(first.result.compiled.reuseEvidence.inputs, {});
+  const inputs = Object.entries(first.result.compiled.reuseEvidence.inputs);
+  assert.deepEqual(
+    Object.fromEntries(
+      inputs.map(([file, input]) => [
+        path.relative(fixture.root, file).split(path.sep).join("/"),
+        input.kind,
+      ]),
+    ),
+    {
+      "lib/package.json": "absent",
+      "package.json": "file",
+      "src/value.js": "absent",
+      "src/value.jsx": "absent",
+      "src/value.ts": "absent",
+      "src/value.tsx": "absent",
+      "tsconfig.json": "absent",
+    },
+  );
   await fixture.unrelated();
   assert.equal(
     (await reuse([first.generation], fixture.params, "serveEdit"))?.runtimeKey,
     first.result.compiled.runtimeKey,
+  );
+  await write(
+    path.join(fixture.root, "src/value.ts"),
+    'export const value="workspace-source";',
+  );
+  assert.equal(
+    (await reuse([first.generation], fixture.params, "serveEdit"))?.runtimeKey,
+    undefined,
   );
 });
 

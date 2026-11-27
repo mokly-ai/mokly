@@ -58,7 +58,9 @@ test("a failed token revoke says so and offers one retry", async ({ page }) => {
   await expect(page.getByText("Reference")).toBeVisible();
 });
 
-test("a token is reported copied only when it was", async ({ page }) => {
+test("a token is reported copied only when it was, whatever the clipboard does", async ({
+  page,
+}) => {
   await signIn(page, freshEmail("clipboard"));
   const projectId = await createProject(page, "Clip Org");
   // A browser that will not copy: a page served over plain http, an older
@@ -74,34 +76,33 @@ test("a token is reported copied only when it was", async ({ page }) => {
     page,
     await projectQueryPathFor(page, projectId, "settings=tokens"),
   );
-  await makeToken(page, "Uncopyable token");
-  const copy = page.getByTestId("copy-token");
-  const secret = await page.locator(".fo-secret").textContent();
 
-  await copy.click();
-  await expect(copy).toHaveText("Copy token");
-  await expect(page.getByRole("alert")).toContainText("Copying didn’t work");
-  await expect(page.locator(".fo-secret")).toHaveText(secret ?? "");
-});
+  await test.step("a token is reported copied only when it was", async () => {
+    await makeToken(page, "Uncopyable token");
+    const copy = page.getByTestId("copy-token");
+    const secret = await page.locator(".fo-secret").textContent();
 
-test("a clipboard that refuses is not reported as a copy", async ({ page }) => {
-  await signIn(page, freshEmail("clipboard-refuses"));
-  const projectId = await createProject(page, "Deny Org");
-  await page.addInitScript(() => {
-    Object.defineProperty(window.navigator, "clipboard", {
-      configurable: true,
-      value: { writeText: () => Promise.reject(new Error("denied")) },
-    });
+    await copy.click();
+    await expect(copy).toHaveText("Copy token");
+    await expect(page.getByRole("alert")).toContainText("Copying didn’t work");
+    await expect(page.locator(".fo-secret")).toHaveText(secret ?? "");
+    await page.getByTestId("token-done").click();
   });
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=tokens"),
-  );
-  await makeToken(page, "Refused token");
-  const copy = page.getByTestId("copy-token");
-  await copy.click();
-  await expect(copy).toHaveText("Copy token");
-  await expect(page.getByRole("alert")).toContainText("Copying didn’t work");
+
+  await test.step("a clipboard that refuses is not reported as a copy", async () => {
+    // The clipboard is replaced in the running page, which no reader can do.
+    await page.evaluate(() => {
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: () => Promise.reject(new Error("denied")) },
+      });
+    });
+    await makeToken(page, "Refused token");
+    const copy = page.getByTestId("copy-token");
+    await copy.click();
+    await expect(copy).toHaveText("Copy token");
+    await expect(page.getByRole("alert")).toContainText("Copying didn’t work");
+  });
 });
 
 test("pressing a destructive control twice sends one write", async ({

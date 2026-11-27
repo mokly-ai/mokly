@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { tokens } from "@mokly-cloud/tokens/tokens";
@@ -9,20 +9,18 @@ import { currentDocumentPath } from "@mokly/viewer/data";
 
 import { currentScreen } from "../fixtures/viewer-catalogue";
 
-import { catalogueIndex } from "./catalogue-index";
-import {
-  catalogueRoot,
-  outputRoot,
-  repositoryFilePath,
-  screenView,
-} from "./catalogue-paths";
-import type { Scheme, Viewport } from "./catalogue-paths";
+import { catalogueRoot, outputRoot, screenView } from "./catalogue-paths";
 import {
   controlDocumentViolations,
   controlPolicyInput,
 } from "./controls-document-policy";
 import { checkDiskOverlay } from "./disk-overlay-policy";
 import { serveOutput } from "./disk-requests";
+import {
+  diskSweepViews,
+  generatedHtmlFiles,
+  generatedViews,
+} from "./disk-views";
 import { documentViolations } from "./document-policy";
 import { focusPolicyViolations } from "./focus-policy";
 import { inventoryPages } from "./product-inventory";
@@ -31,43 +29,10 @@ import { settingsDocumentViolations } from "./settings-document-policy";
 
 const screenshots = resolve(catalogueRoot, "../../.context/mockups-smoke");
 
-/** One generated document: its output-relative file and the view it draws. */
-interface GeneratedView {
-  file: string;
-  path: string;
-  viewport: Viewport;
-  scheme: Scheme;
-}
+/** A developer asks for the full-page captures; a CI run writes none. */
+const capturesRequested = process.env.MKC_MOCKUP_CAPTURES === "1";
 
-/**
- * Every document that the catalogue index lists: both viewports of each color
- * scheme of every screen and component, the components' own pages included.
- */
-const views: GeneratedView[] = [
-  ...catalogueIndex().screens,
-  ...catalogueIndex().components,
-].flatMap(({ path, colorSchemes }) =>
-  (["mobile", "desktop"] as const).flatMap((viewport) =>
-    colorSchemes.map((scheme) => ({
-      file: screenView(path, viewport, scheme),
-      path,
-      viewport,
-      scheme,
-    })),
-  ),
-);
-
-/**
- * Every HTML file in the output's public tree, `static/`, which holds the
- * documents and each authored file that they reference, in sorted order.
- */
-const files = readdirSync(resolve(outputRoot, repositoryFilePath("")), {
-  recursive: true,
-  encoding: "utf8",
-})
-  .filter((path) => path.endsWith(".html"))
-  .map((path) => repositoryFilePath(path.split(sep).join("/")))
-  .sort();
+const { views, missingIndexViews } = generatedViews();
 
 /** Product states whose controls are drawn disabled on purpose. */
 const disabledStates = new Set(
@@ -87,6 +52,10 @@ function disabledByDesign(path: string): boolean {
 }
 
 test("the complete generated catalogue is present", () => {
+  expect(missingIndexViews, "the catalogue index omits required views").toEqual(
+    [],
+  );
+  const files = generatedHtmlFiles();
   const expected = views.map(({ file }) => file);
   expect(files).toEqual([...expected].sort());
   expect(new Set(expected).size).toBe(expected.length);
@@ -133,16 +102,12 @@ test("the complete generated catalogue is present", () => {
     "user-flows/marketing/",
   ])
     expect(views.some(({ path }) => path.startsWith(retired))).toBe(false);
-
-  for (const { path } of views)
-    for (const viewport of ["mobile", "desktop"] as const)
-      for (const scheme of ["light", "dark"] as const)
-        expect(files, path).toContain(screenView(path, viewport, scheme));
 });
 
-for (const { file, path, viewport, scheme } of views) {
+for (const { file, path, viewport, scheme } of diskSweepViews(views)) {
   test("disk: " + file, async ({ page }) => {
     const mobile = viewport === "mobile";
+    await page.emulateMedia({ colorScheme: scheme });
     await page.setViewportSize({
       width: mobile ? 390 : 1440,
       height: mobile ? 844 : 900,
@@ -233,13 +198,15 @@ for (const { file, path, viewport, scheme } of views) {
         frames.and(page.locator('[data-canvas-frame="mobile"]')),
       ).toHaveCount(shown);
     expect(errors).toEqual([]);
-    const screenshot = resolve(screenshots, file + ".png");
-    mkdirSync(dirname(screenshot), { recursive: true });
-    await page.screenshot({
-      path: screenshot,
-      fullPage: true,
-      animations: "disabled",
-    });
+    if (capturesRequested) {
+      const screenshot = resolve(screenshots, file + ".png");
+      mkdirSync(dirname(screenshot), { recursive: true });
+      await page.screenshot({
+        path: screenshot,
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
     // Check focus outlines after the capture, so their focus rings stay out of it.
     expect(await focusPolicyViolations(page, scheme)).toEqual([]);
   });

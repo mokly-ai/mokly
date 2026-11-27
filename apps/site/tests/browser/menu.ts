@@ -26,14 +26,3 @@ export async function openMenu(page: Page): Promise<Locator> {
   await settle(menu);
   return menu;
 }
-
-/**
- * The header's visible destinations: the header row's navigation on a
- * desktop viewport, and the open menu on a mobile one.
- */
-export async function headerDestinations(page: Page): Promise<Locator> {
-  if (narrow(page)) return openMenu(page);
-  return page
-    .getByRole("banner")
-    .getByRole("navigation", { exact: true, name: "Main" });
-}

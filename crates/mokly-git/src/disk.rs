@@ -24,6 +24,8 @@ pub trait Archive: Send + Sync {
 pub trait Disk: Send + Sync {
     /// Resolve an existing directory's identity.
     fn canonicalize(&self, path: &Path) -> Result<PathBuf>;
+    /// Locate the entry and possible checkout boundary that Git can inspect.
+    fn working_path(&self, root: &Path, path: &RepoPath) -> Result<WorkingPath>;
     /// Read a confined regular working file; a vanished candidate returns none.
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
     /// Fingerprint a confined regular file; a vanished file returns none.
@@ -49,6 +51,14 @@ pub trait Disk: Send + Sync {
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>>;
 }
 
+/// A written path as seen from the outer working tree.
+pub struct WorkingPath {
+    /// The written path up to and including its first symbolic link, if any.
+    pub entry: RepoPath,
+    /// The first directory that has a `.git` entry for Git to check.
+    pub checkout_candidate: Option<RepoPath>,
+}
+
 /// Host source IO adapter.
 pub struct SystemDisk;
 
@@ -60,6 +70,35 @@ struct Extraction {
 impl Disk for SystemDisk {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
         dunce::canonicalize(path).git()
+    }
+
+    fn working_path(&self, root: &Path, path: &RepoPath) -> Result<WorkingPath> {
+        let mut working = WorkingPath {
+            entry: path.clone(),
+            checkout_candidate: None,
+        };
+        if !host_path(path) {
+            return Ok(working);
+        }
+        for prefix in path.prefixes() {
+            let file = root.join(prefix);
+            let Some(metadata) = working_metadata(&file)? else {
+                break;
+            };
+            if metadata.is_symlink() {
+                working.entry = RepoPath::parse(prefix)?;
+                break;
+            }
+            if !metadata.is_dir() {
+                break;
+            }
+            if working.checkout_candidate.is_none()
+                && working_metadata(&file.join(".git"))?.is_some()
+            {
+                working.checkout_candidate = Some(RepoPath::parse(prefix)?);
+            }
+        }
+        Ok(working)
     }
 
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
@@ -180,17 +219,8 @@ fn confined(root: &Path, path: &RepoPath) -> Result<Option<(PathBuf, fs::Metadat
     }
     let file = root.join(path.as_str());
     for ancestor in file.ancestors().take_while(|ancestor| *ancestor != root) {
-        let metadata = match fs::symlink_metadata(ancestor) {
-            Ok(metadata) => metadata,
-            Err(error)
-                if matches!(
-                    error.kind(),
-                    std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
-                ) =>
-            {
-                return Ok(None);
-            }
-            Err(source) => return Err(InternalError::Io { source }.into()),
+        let Some(metadata) = working_metadata(ancestor)? else {
+            return Ok(None);
         };
         if metadata.is_symlink() {
             return Err(Error::NotRegular {
@@ -205,6 +235,21 @@ fn confined(root: &Path, path: &RepoPath) -> Result<Option<(PathBuf, fs::Metadat
         });
     }
     Ok(Some((file, metadata)))
+}
+
+fn working_metadata(path: &Path) -> Result<Option<fs::Metadata>> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) => Ok(Some(metadata)),
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
+            ) =>
+        {
+            Ok(None)
+        }
+        Err(source) => Err(InternalError::Io { source }.into()),
+    }
 }
 
 fn host_path(path: &RepoPath) -> bool {

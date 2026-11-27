@@ -10,6 +10,7 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::comparison_input::ModuleImports;
 use mokly_graph::comparison_proof::{
     ComparisonRead, ContentIdentity, DocumentProof, ProofMode, content_identity,
 };
@@ -88,6 +89,10 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn module_imports(&self) -> Option<ModuleImports<'_>> {
+        self.inner.module_imports()
+    }
+
     fn validate_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
         self.head_summary(validation)
     }

@@ -14,10 +14,10 @@ import {
   repositoryRoot,
   siteDocument,
   siteStyles,
-  siteStylesheets,
   textContent,
   type Element,
 } from "./design-site-test-helpers";
+import { siteStylesheets } from "./site-stylesheets";
 
 /** Cal's hero heading, with the non-breaking space that keeps "in code." together. */
 const HEADING = "Design in\u00a0code.";
@@ -79,17 +79,17 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.equal(label(only(hero, "site-hero-lead")), LEAD);
     assert.deepEqual(links(only(hero, "site-actions")), [
-      ["Get started →", "design/site/docs"],
+      ["Get started →", "product/account/sign-up"],
       ["Download for Mac", openSource.desktopReleases],
     ]);
   });
 
-  test(`${viewport}: the open foundation closes with Get started, View on GitHub and the steps`, () => {
+  test(`${viewport}: the open foundation closes with Docs, View on GitHub and the steps`, () => {
     const { document } = siteDocument("design/site/home", viewport);
     const closing = only(document, "site-closing");
     assert.equal(attribute(closing, "id"), "foundation");
     assert.deepEqual(links(only(closing, "site-actions")), [
-      ["Get started →", "design/site/docs"],
+      ["Docs →", "design/site/docs"],
       ["View on GitHub", openSource.github],
     ]);
     assert.deepEqual(
@@ -224,7 +224,7 @@ test("the Specs panel lists the page sections on the desktop composition only", 
 });
 
 test("split site styles own the home compositions", () => {
-  const css = siteStyles();
+  const css = siteStyles("design/site/home");
   for (const selector of [
     ".site-hero",
     ".site-home-spread",
@@ -240,7 +240,7 @@ test("split site styles own the home compositions", () => {
 });
 
 test("the site styles host the Instrument Serif face that the demo app names", () => {
-  const serif = siteStylesheets()
+  const serif = siteStylesheets("design/site/home")
     .flatMap((path) =>
       cssRules(readFileSync(resolve(repositoryRoot, path), "utf8")).map(
         (rule) => ({ ...rule, path, selector: rule.selector.trim() }),

@@ -80,7 +80,9 @@ first in the Mokly protocol docs.
   `mokly` scheme. The
   [desktop release workflow](../../.github/workflows/desktop-release.yml)
   packages previews without release signing. A merged desktop release pull
-  request starts a pre-release that signs and notarizes the macOS packages. The Linux `AppImage` and `deb` are unsigned.
+  request starts a release that signs and notarizes the macOS packages. The
+  Linux `AppImage` and `deb` are unsigned. Both platforms fill one draft,
+  which becomes the latest release only after the check of all its assets.
   [Desktop application](../protocol/cloud/desktop-app.md) defines the shell and
   [Desktop distribution](../protocol/cloud/desktop-distribution.md) its releases.
 - **REST API.** The API serves `/v1` on the API origin for the app and for
@@ -169,8 +171,8 @@ directory and signing key under `.context/`. Both scripts default
 the public app origin. Reset `.context/blobs` and the development database
 together; keeping one alone leaves the storage durability markers out of step
 with their bytes. `scripts/cloud/dev-api.sh` also
-creates the persistent mode-0600 `.context/preview-sign-in` credential that
-the local preview stack signs in with. The
+creates the persistent mode-0600 `.context/preview-password`, the local
+preview password, and runs the API with its verifier. The
 [API guide](../../crates/mkc-api/README.md) documents the commands and the
 configuration; the [publish smoke guide](../ops/publish-smoke.md)
 exercises the published CLI with real project tokens.
@@ -197,9 +199,9 @@ npm run start --workspace @mokly-cloud/app
 ```
 
 Add `--debug-timings` to the capture command to print Mokly's timing events
-and the capture summary. Sign in by opening
-`http://localhost:8081/auth/preview/callback#secret=<secret>` with the secret
-from `.context/preview-sign-in`. The project is private, and the viewer
+and the capture summary. Sign in on `http://localhost:8081/sign-in`: type the
+password from `.context/preview-password` in **Password** and select
+**Continue as preview@mokly.ai**. The project is private, and the viewer
 cannot load its private comparison, so Changes show an overlay without an
 action.
 

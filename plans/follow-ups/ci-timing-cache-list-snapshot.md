@@ -1,0 +1,31 @@
+# Cache list pages may not form one snapshot
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/ci-speed-actions-cache-headroom-and-gi6l`, review findings 8 and 9.
+- **Location:** `scripts/verification/ci-timing-cache.mjs` (`fetchCaches`, `savedCaches`, `mergePages`, `evaluateCache`), `scripts/verification/ci-timing.mjs` (`readCache`), `tests/helpers/ci_timing_run.ts` (the fake cache API), `tests/verification_ci_timing_cache.test.ts`.
+- **Reason:** Both cases need more than 100 cache entries, and the repository held 16 when the report was added, so a rare case in a warning-only report waits for one rebuild of the reader.
+
+- **Terms:**
+  - **CI timing:** The report-only job of `.github/workflows/ci.yml` that runs `scripts/verification/ci-timing.mjs`. Its job summary has an "Actions cache" section with the total, the largest entries, and the entries from refs other than `main`.
+  - **Cache page:** One response of `GET /repos/{owner}/{repo}/actions/caches`, with up to 100 entries, a `total_count`, and an `id` for each entry. The reader requests pages sorted by size, largest first.
+  - **Complete list:** The report's state when it read every entry. Only then may it say "within budget" or "Every entry comes from refs/heads/main", as `docs/protocol/ci-duration-budgets.md#actions-cache` requires.
+- **Background:** The reader requests pages until a page holds fewer than 100 entries or the rows reach `total_count`. It joins the pages and keeps the first `total_count`. A list with fewer rows than `total_count`, a dropped entry, or the 10-page limit makes the list incomplete, and the report then gives lower bounds.
+- **Problem:** Two cases still break the rule:
+  - Other runs can save or evict entries between two page requests. In a test with 150 entries, a new largest entry saved before page 2 shifted one entry onto page 2 again. The reader got 151 rows with one repeated `id`, missed the new entry, treated the list as complete, and said "8.47 GB … within budget" for a list that held 8.58 GB. A save plus an eviction can also keep the count and repeat no `id`, and the report then counted an evicted entry and missed the new one.
+  - When a later page request fails, for example with HTTP 503, the reader throws away the pages that it read. In a test, page 1 held 9.00 GB and one entry from another ref. The report said "The Actions cache was not read" and gave neither warning. A saved array of pages with one bad page is rejected as a whole in the same way.
+  - The fake cache API of the tests gives every entry the `id` of its size and serves a fixed list, so no test can show either case.
+- **Impact if no action:** With more than 100 entries, the report can show "within budget" for a cache above its budget, or drop proven warnings, in a check that only warns.
+- **Root question:** When can the report trust that the pages it read are one snapshot of the cache, and what does it keep when the read stops early?
+- **Options:**
+  - **A.** In the live reader, mark the list incomplete when `total_count` changes between pages or an `id` repeats. Keep the pages read before a later failure, as an incomplete list with the failure as a note. Effort: Small.
+  - **B.** Do A, and restart the read once when the pages disagree. This can recover during a save but adds requests, which need the read deadline of `plans/follow-ups/ci-timing-cache-read-deadline.md`. Effort: Medium.
+  - **C.** Build one list reader for live and saved pages. It returns the valid pages, the listed count, and why the read stopped: a failed request, a bad page, overlapping pages, or the page limit. It reconciles `id`s and counts. Give each fixture entry its own `id`, and add per-page status to the fake API. Effort: Medium.
+  - **D.** Do C, and after the last page request one entry sorted by `created_at`, newest first. When it was created after the read began, or the count changed, mark the list incomplete. This also catches a save plus an eviction that keeps the count. Saved pages cannot get this probe. Effort: Medium.
+  - **E.** Use the total of `GET /repos/{owner}/{repo}/actions/cache/usage` for the budget check, and keep the list for the tables. GitHub refreshes the usage data about every 5 minutes, so it can disagree with the list right after the saves of a run. Effort: Medium.
+- **Left out:** Counting unique `id`s alone misses an entry that shifted to an earlier page. Requesting pages sorted by creation time alone still counts evicted entries.
+- **Wider fix:** D. It detects any change during the read, whatever its shape, and one reader result carries every reason that a read stopped, also the deadline of the related item.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/ci-timing-cache-read-deadline.md` changes the same reader. Do both in one branch, so that a cancelled read also keeps its pages.
+- **Recommendation:** D. It gives a trustworthy status for each way that the pages can disagree, and it rebuilds the reader once.
+- **Action:** fix after merge, apply D, because both cases need more than 100 cache entries and the report only warns.

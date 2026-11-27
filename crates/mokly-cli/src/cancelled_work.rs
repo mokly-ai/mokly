@@ -81,6 +81,11 @@ impl SourceTree for CancellableTree {
         }
         self.inner.prefetch(paths)
     }
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        if !self.cancellation.requested() {
+            self.inner.hint_projections(paths);
+        }
+    }
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.check(path)?;
         self.inner.read_public(path)

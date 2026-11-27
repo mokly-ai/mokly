@@ -5,8 +5,10 @@ For repository development, use the tested Node.js version in
 `package.json`), the Bun version in [`.bun-version`](../../.bun-version) for
 the required type check, the Rust toolchain in
 [`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.98.1 with rustfmt and
-Clippy), Git 2.45.0 or later and Git LFS for the Rust tests, and Chromium for
-the browser suite. With nvm, run `nvm install` in the repository before the npm
+Clippy), the cargo-nextest version that
+[`.config/nextest.toml`](../../.config/nextest.toml) requires for the Rust tests
+of `cargo xtask check`, Git 2.45.0 or later and Git LFS for the Rust tests, and
+Chromium for the browser suite. With nvm, run `nvm install` in the repository before the npm
 commands below. rustup reads the toolchain file and installs the pinned Rust
 the first time `cargo` runs in the repository. The Bun install command below
 reads `.bun-version`. Run it again when that file changes.
@@ -21,6 +23,7 @@ git clone https://github.com/mokly-ai/mokly.git
 cd mokly
 npm install --global npm@11.21.0
 npm install --global "bun@$(cat .bun-version)"
+cargo install cargo-nextest --locked --version 0.9.152
 npm ci
 npm run build
 cargo xtask check
@@ -45,7 +48,7 @@ Run the tests that cover a change while you develop:
 ```bash
 npm test -- tests/markdown_links.test.ts
 npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
-cargo test -p mokly-html
+cargo nextest run -p mokly-html
 ```
 
 Put every npm test argument after `--`. Selected runs are partial
@@ -55,7 +58,9 @@ dependency checks, and the length audits. See
 [developer test commands](../../docs/protocol/developer-test-commands.md) for the
 argument and report rules, the [xtask README](../../xtask/README.md) for focused
 suites, and [CI test timing](../../docs/protocol/ci-test-timing.md) for the rule
-that tests never assert elapsed time.
+that tests never assert elapsed time. The
+[shard weights guide](./shard-weights.md) says how CI balances its test shards
+and how to refresh their weights.
 
 `cargo xtask check` and `cargo xtask check --suite viewer` run the required
 type check, `npm run typecheck:ci`. It checks the five TypeScript projects of

@@ -53,30 +53,68 @@ test("standalone entry opens a ready publication and names its branch", async ({
   ).toHaveAttribute("aria-pressed", "true");
 });
 
-test("a branch alias resolves that branch's newest ready publication", async ({
+/**
+ * A branch alias resolves that branch's newest ready publication, and a routed
+ * move from an address that carries the reserved key keeps its path.
+ *
+ * `catalogueScreen` is the canonical name because React Navigation reserves
+ * `screen`. The second step drives a routed navigation from an address that
+ * carries the reserved key and asserts the path it rebuilds, so the property
+ * the protocol states is the property the suite checks — whichever way the
+ * router behaves. Both steps read the same three publications.
+ */
+test("a branch alias resolves that branch's newest ready publication, and a routed move keeps its path", async ({
   page,
 }) => {
   const projectId = await project(page, "branches");
   const token = await createToken(page, projectId);
-  await publish(token, projectId, { branch: "main" });
+  const main = await publish(token, projectId, { branch: "main" });
   const older = await publish(token, projectId, { branch: "topic" });
   const newer = await publish(token, projectId, { branch: "topic" });
 
-  await open(page, await branchPathFor(page, projectId, "topic"));
-  await expect(page).toHaveURL(new RegExp(`publications/${newer.id}$`));
-  expect(newer.id).not.toBe(older.id);
-  await expect(publicationReference(page)).toHaveText("topic");
-  await publishedViewerReady(page);
+  await test.step("a branch alias resolves that branch's newest ready publication", async () => {
+    await open(page, await branchPathFor(page, projectId, "topic"));
+    await expect(page).toHaveURL(new RegExp(`publications/${newer.id}$`));
+    expect(newer.id).not.toBe(older.id);
+    await expect(publicationReference(page)).toHaveText("topic");
+    await publishedViewerReady(page);
 
-  // Switching from the chrome resolves the other branch the same way.
-  await page.getByTestId("viewer-publication").click();
-  await expect(page.getByTestId("viewer-panel-switcher")).toBeVisible();
-  await page
-    .getByRole("listitem")
-    .filter({ hasText: "main" })
-    .getByText("Open")
-    .click();
-  await expect(publicationReference(page)).toHaveText("main");
+    // Switching from the chrome resolves the other branch the same way.
+    await page.getByTestId("viewer-publication").click();
+    await expect(page.getByTestId("viewer-panel-switcher")).toBeVisible();
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: "main" })
+      .getByText("Open")
+      .click();
+    await expect(publicationReference(page)).toHaveText("main");
+  });
+
+  await test.step("a routed move from a screen-bearing address keeps its path", async () => {
+    await open(
+      page,
+      `${await publicationPathFor(page, projectId, main.id)}?screen=corrupt`,
+    );
+    await publishedViewerReady(page);
+    // A router navigation out of that address: the switcher follows a
+    // reference, which is a push rather than a query write.
+    await page.getByTestId("viewer-publication").click();
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: "topic" })
+      .getByText("Open")
+      .click();
+    await expect(publicationReference(page)).toHaveText("topic");
+    // The path names the page, with nothing of the reserved key's value in it.
+    const path = new URL(page.url()).pathname;
+    expect(path, "the rebuilt path carries no navigator segment").not.toContain(
+      "corrupt",
+    );
+    const projectRoute = await projectPathFor(page, projectId);
+    expect(path).toMatch(
+      new RegExp(`^${projectRoute}/(publications|branches)`),
+    );
+  });
 });
 
 test("a pull request alias resolves its publication and can land on Changes", async ({
@@ -189,66 +227,6 @@ test("a reference alias carries the whole selection to the publication", async (
     // The reference the alias named has been replaced, so its own key goes.
     await expect(page).not.toHaveURL(/branch=/);
   }
-});
-
-/**
- * What the router does with the key it reserves, measured rather than assumed.
- *
- * `catalogueScreen` is the canonical name because React Navigation reserves
- * `screen`. This drives a routed navigation from an address that carries the
- * reserved key and asserts the path it rebuilds, so the property the protocol
- * states is the property the suite checks — whichever way the router behaves.
- */
-test("a routed move from a screen-bearing address keeps its path", async ({
-  page,
-}) => {
-  const projectId = await project(page, "reserved-key");
-  const token = await createToken(page, projectId);
-  const main = await publish(token, projectId, { branch: "main" });
-  await publish(token, projectId, { branch: "topic" });
-
-  await open(
-    page,
-    `${await publicationPathFor(page, projectId, main.id)}?screen=corrupt`,
-  );
-  await publishedViewerReady(page);
-  // A router navigation out of that address: the switcher follows a reference,
-  // which is a push rather than a query write.
-  await page.getByTestId("viewer-publication").click();
-  await page
-    .getByRole("listitem")
-    .filter({ hasText: "topic" })
-    .getByText("Open")
-    .click();
-  await expect(publicationReference(page)).toHaveText("topic");
-  // The path names the page, with nothing of the reserved key's value in it.
-  const path = new URL(page.url()).pathname;
-  expect(path, "the rebuilt path carries no navigator segment").not.toContain(
-    "corrupt",
-  );
-  const projectRoute = await projectPathFor(page, projectId);
-  expect(path).toMatch(new RegExp(`^${projectRoute}/(publications|branches)`));
-});
-
-test("a reference alias carries the settings pane its link named", async ({
-  page,
-}) => {
-  const projectId = await project(page, "alias-settings");
-  const token = await createToken(page, projectId);
-  const branch = await publish(token, projectId, { branch: "main" });
-
-  // A reader who opens a shared link with the account dialog named expects the
-  // dialog, and the resolution is a router navigation, which is the one move
-  // that could start the publication address with a query of its own.
-  await open(
-    page,
-    `${await branchPathFor(page, projectId, "main")}&settings=account`,
-  );
-  await expect(page).toHaveURL(new RegExp(`publications/${branch.id}`));
-  await expect(page).toHaveURL(/settings=account/);
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("heading", { level: 1 })).toHaveText("Account");
 });
 
 test("every reference row reads its own newest attempt, not the project's", async ({

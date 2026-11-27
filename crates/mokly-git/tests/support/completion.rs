@@ -1,7 +1,7 @@
 //! Explicit supervisor waits and process ownership for completion integration tests.
 
 #[cfg(target_os = "linux")]
-use std::path::Path;
+use std::fs;
 use std::process::{Child, Command};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender, sync_channel};
@@ -14,7 +14,9 @@ use std::time::Instant;
 use mokly_git::control::{Clock, SystemClock, Token};
 use mokly_git::system::SystemRunner;
 use mokly_platform::error::Result;
-use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
+use mokly_platform::processes::{
+    AttachFailure, ProcessGroup, ProcessGroups, ProcessTree, SystemProcessGroups,
+};
 
 const HANG_GUARD: Duration = Duration::from_secs(10);
 
@@ -74,13 +76,18 @@ impl Supervisor {
     }
 
     #[cfg(target_os = "linux")]
-    /// Wait until the runner has reaped its Linux child.
+    /// Wait until the Linux child has exited. The runner keeps it unreaped,
+    /// as a zombie, until its last tree signal.
     pub(super) fn wait_for_child_exit(&self) {
         let pid = self.groups.pid.load(Ordering::Acquire);
         assert_ne!(pid, 0);
-        let path = format!("/proc/{pid}");
+        let path = format!("/proc/{pid}/stat");
         let deadline = Instant::now() + HANG_GUARD;
-        while Path::new(&path).exists() {
+        while fs::read_to_string(&path).is_ok_and(|stat| {
+            stat.rsplit_once(')')
+                .and_then(|(_, fields)| fields.split_whitespace().next())
+                != Some("Z")
+        }) {
             assert!(Instant::now() < deadline, "Git child did not exit");
             thread::yield_now();
         }
@@ -152,11 +159,13 @@ impl ProcessGroups for TrackedGroups {
         SystemProcessGroups.configure_plain(command)
     }
 
-    fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
-        let group: Arc<dyn ProcessGroup> = Arc::from(SystemProcessGroups.attach(child)?);
+    fn attach(&self, child: Child) -> std::result::Result<ProcessTree, AttachFailure> {
+        let pid = child.id();
+        let (child, group) = SystemProcessGroups.attach(child)?.into_parts();
+        let group: Arc<dyn ProcessGroup> = Arc::from(group);
         *self.group.lock().unwrap() = Some(group.clone());
-        self.pid.store(child.id(), Ordering::Release);
-        Ok(Box::new(SharedGroup(group)))
+        self.pid.store(pid, Ordering::Release);
+        Ok(ProcessTree::new(child, Box::new(SharedGroup(group))))
     }
 
     fn kill_unattached(&self, child: &Child) -> Result<()> {

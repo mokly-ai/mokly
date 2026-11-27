@@ -1,0 +1,32 @@
+# Resolve imports inside synchronous workspace sources
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from finding 9 on branch `calummoore/mokly-website-redesign-plan-v2-xnnj`.
+- **Location:** `packages/mokly/src/sidecar/postcss-resolution.ts`, `packages/mokly/src/sidecar/postcss-module.ts`, `packages/mokly/src/sidecar/compiled.ts`, and `packages/mokly/src/sidecar/importer-resolution.ts`.
+- **Reason:** Both native require paths use the build when it exists. A full synchronous source loader needs relative lookup and evidence for the files it checks.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Computed require:** A synchronous module request whose name the code assembles at runtime.
+- **Background:** A computed PostCSS require can recover a workspace script after a missing build. Its local loader shares a script parser table with the static PostCSS compiler. The restored runtime require passes its selected file to native Node.
+- **Problem:** A selected TypeScript source can import its neighbor as `./label` or `./label.js` when the neighbor is `label.ts`. The synchronous PostCSS path then fails with `Cannot find module`. Its static compiler resolves both forms. A restored runtime require can also select `.tsx` or TypeScript syntax such as an `enum` that Node's strip-only loader rejects.
+- **Impact if no action:** A missing build can still prevent a stylesheet or runtime require from loading a valid multi-file source package.
+- **Root question:** How can synchronous requires load recovered sources with the parser and relative lookup they need?
+- **Options:**
+  - **C.** Add relative file and index probing when Node misses a request from a repository source. Apply the configured script extensions to extensionless paths and to `.js`, `.mjs`, and `.cjs` paths. Keep relative paths outside the build-to-source rule. Record the probes for stylesheet reuse. Effort: Medium.
+  - **D.** Run the existing PostCSS compiler in CommonJS format in a helper thread for synchronous repository requires. The caller waits for the result. One compiler then handles parsing and relative imports. Pass back errors and input evidence. Effort: Large.
+  - **E.** Also use the synchronous repository source loader for restored runtime requires that recover a source. Give each generation its own module cache and retain its input observations. Effort: Large.
+- **Left out:** Skipping JSX sources would leave a Git base unable to load the package when its build is absent.
+- **Wider fix:** D. The existing compiler handles both import forms with one resolver and parser. E extends that support to the restored runtime.
+- **Previous examples:** The synchronous PostCSS path already shares its script loader table with `postcss-source.ts`.
+- **Related:**
+  - The relative probes need the stylesheet evidence in [PostCSS input evidence](./postcss-probes-external-reads-environment.md).
+  - [postcss-relative-require-retry.md](./postcss-relative-require-retry.md): same code. A missed relative PostCSS require retries from the parent folder of each dependency root. The relative probes of option C must stay in the folder of the requiring file.
+  - [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): same code. Its shared record of each workspace import must describe the imports that the relative probes give.
+  - [restored-require-module-cache.md](./restored-require-module-cache.md): same code and same fix. Its option B loads each repository file fresh for each generation of the restored require, which option E here also needs.
+  - [runtime-only-workspace-loads.md](./runtime-only-workspace-loads.md) and [runtime-require-reuse-digests.md](./runtime-require-reuse-digests.md): shared fix. The input observations of option E here are part of the record of run-time loads of their recommended options.
+- **Recommendation:** C. It covers the confirmed two-file PostCSS source with a smaller change. D and E cover shared loading as separate design choices.
+- **Action:** fix after merge, apply C with the lookup evidence work. Review D and E if the implementation shares the full loader.
+- **Done when:** A computed PostCSS require of a missing workspace build loads a source that imports an extensionless or `.js`-suffixed TypeScript neighbor. A changed candidate ends stale reuse.

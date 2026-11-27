@@ -7,9 +7,6 @@ import sys
 
 def decision(event):
     pr = event["pull_request"]
-    repository_private = event["repository"].get("private")
-    if type(repository_private) is not bool:
-        raise ValueError("Invalid repository privacy flag")
     number = str(event["number"])
     revision = pr["head"]["sha"]
     if not re.fullmatch(r"[1-9][0-9]{0,8}", number) or not re.fullmatch(r"[a-f0-9]{40}", revision):
@@ -27,7 +24,6 @@ def decision(event):
         "action": action,
         "environment": "preview-pr-" + number,
         "revision": revision,
-        "repository_private": str(repository_private).lower(),
     }
 
 

@@ -70,9 +70,9 @@ A workspace or local `file:` package can resolve outside `node_modules`
 through a package-manager link. When its real path lies inside a supplied
 repository root, it uses the same relative path inside the side's source
 root. The mapped file must be regular and its real path must stay inside
-that source root. Missing files and escaping symlinks fail closed. npm and
-pnpm links follow the same rule. A file outside source, repository mapping,
-and selected dependencies fails closed for JavaScript and CSS alike.
+that source root. npm and pnpm links follow the same rule. A file outside
+source, repository mapping, and selected dependencies fails closed for
+JavaScript and CSS alike.
 
 The graph lists each module's imports in record order from the bundler's
 metafile. That order includes re-exports and dynamic imports. Stylesheets
@@ -99,6 +99,24 @@ tree. PostCSS static, dynamic, record-form, and synchronous requires use the
 same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
+
+The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+applies to bundled imports of bare package specifiers, including JavaScript
+imports of CSS. It also covers missing build targets for requires that Node
+loads. Both bundle capture modes keep the workspace layout probes of every
+layout that the rule tries in private reuse evidence, including when no
+source matches. Each `package.json` that the rule reads to find a package
+root and its `name` enters the same evidence, because an entry of
+`moduleResolution.sourcePackages` applies by that `name`. In marked edit
+evidence, build files, export targets, and source files that a lookup checks
+for presence use path-only entries. Manifests and layout files carry digests.
+A build file known to be a target of the restored Node `require` when the
+bundle records the lookup also carries a digest. Build files read by a
+synchronous PostCSS `require` carry digests in the stylesheet input evidence.
+Layout files and package manifests used for build targets also enter the
+bundle metadata. The bundle keeps the absent build and source candidates of
+every tried layout as watch inputs. Selected source contents enter through
+the module graph and stylesheet inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

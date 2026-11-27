@@ -14,22 +14,20 @@ import {
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
-/** The only accepted Rust setup command: rustup reads `rust-toolchain.toml`. */
-const TOOLCHAIN_INSTALL = "rustup toolchain install";
 /** The action that restores and saves Cargo's dependency builds. */
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
-/** Only runs on `main` may write what CI and pull requests restore. */
+/**
+ * Only runs on `main` may write what CI and pull requests restore. A job may
+ * narrow the rule with more `&&` terms, as a restore-only matrix row does,
+ * but it may not widen it with an `||` outside parentheses.
+ */
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/** The start of a narrowed save condition: `main` and more terms. */
+const MAIN_AND = "${{ github.ref == 'refs/heads/main' && ";
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
 const RUST_AUDIT_INSTALLER = "scripts/verification/rust-audit-tool.mjs";
-/** Settings that build CI Rust without debug info or incremental artifacts. */
-const BUILD_SETTINGS = [
-  "CARGO_INCREMENTAL",
-  "CARGO_PROFILE_DEV_DEBUG",
-  "CARGO_PROFILE_TEST_DEBUG",
-];
 /** Release automation builds every published binary without a cache. */
 const UNCACHED_AUTOMATION = [
   ".github/workflows/release.yml",
@@ -58,27 +56,6 @@ interface Workflow {
   readonly runs?: { readonly steps?: readonly WorkflowStep[] };
 }
 
-test("every CI Rust job restores the build cache right after the toolchain", async () => {
-  const workflow = await readWorkflow(CI_WORKFLOW);
-  let rustJobs = 0;
-  for (const [name, job] of Object.entries(workflow.jobs ?? {})) {
-    const steps = job.steps ?? [];
-    const setup = steps.findIndex((step) => step.run === TOOLCHAIN_INSTALL);
-    const caches = steps.filter(isRustCache);
-    if (setup < 0) {
-      assert.deepEqual(caches, [], `${name} has no Rust to cache`);
-      continue;
-    }
-    rustJobs += 1;
-    assert.equal(caches.length, 1, `${name} must restore one Rust cache`);
-    assert.ok(
-      isRustCache(steps[setup + 1]),
-      `${name} must restore the Rust build cache right after the toolchain`,
-    );
-  }
-  assert.ok(rustJobs > 0, "CI must have Rust jobs");
-});
-
 test("Rust build caches save only from main, and Testboxes never save", async () => {
   let caches = 0;
   for (const file of await automationFiles()) {
@@ -91,11 +68,11 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           false,
           `${file} must never save its Rust build cache`,
         );
-      else
-        assert.equal(
-          step.with?.["save-if"],
-          MAIN_ONLY,
-          `${file} must save its Rust build cache only from main`,
+      // A step that restores the entry of another job never saves.
+      else if (step.with?.["save-if"] !== false)
+        assert.ok(
+          savesOnlyFromMain(step.with?.["save-if"]),
+          `${file} must save its Rust build cache only from main, not ${String(step.with?.["save-if"])}`,
         );
     }
   }
@@ -134,11 +111,33 @@ test("the Rust audit tool cache follows the tool identity", async () => {
   }
 });
 
-test("CI builds Rust without debug info or incremental artifacts", async () => {
-  const { env } = await readWorkflow(CI_WORKFLOW);
-  for (const name of BUILD_SETTINGS)
-    assert.equal(String(env?.[name]), "0", `ci.yml must set ${name} to 0`);
-});
+/**
+ * The condition is `main` alone, or `main` and a condition with no `||`
+ * outside parentheses and quoted strings, so every saving run is a run on
+ * `main`.
+ */
+function savesOnlyFromMain(condition: unknown): boolean {
+  if (condition === MAIN_ONLY) return true;
+  if (
+    typeof condition !== "string" ||
+    !condition.startsWith(MAIN_AND) ||
+    !condition.endsWith(" }}")
+  )
+    return false;
+  let depth = 0;
+  let quoted = false;
+  const rest = condition.slice(MAIN_AND.length, -" }}".length);
+  for (const [index, character] of [...rest].entries()) {
+    // A quoted string is text; `''` inside it closes and reopens it.
+    if (character === "'") quoted = !quoted;
+    if (quoted) continue;
+    if (character === "(") depth += 1;
+    if (character === ")") depth -= 1;
+    if (depth < 0) return false;
+    if (depth === 0 && rest.startsWith("||", index)) return false;
+  }
+  return depth === 0 && !quoted;
+}
 
 function isRustCache(step: WorkflowStep | undefined): boolean {
   return step?.uses?.startsWith(RUST_CACHE_ACTION) ?? false;

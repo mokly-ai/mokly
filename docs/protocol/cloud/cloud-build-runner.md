@@ -3,8 +3,8 @@
 The runner executes one [cloud build](./cloud-builds.md) attempt in a one-shot
 E2B sandbox. `mkc-build-interface` owns the `BuildRunner` trait (one `run`
 operation returning a boxed, cancellable future), `BuildRequest`, `BuildLogSink`, `BuildStep` and `BuildOutcome`.
-`mkc-build-sandbox` implements the runner over `Arc<dyn SandboxBackend>` from
-`sandbox-interface`; `mkc-api` alone constructs the `sandbox-e2b` backend.
+`mkc-build-sandbox` implements the runner over `sandbox-interface` capabilities;
+`mkc-api` alone constructs the `sandbox-e2b` backend.
 The runner knows no database, HTTP route or schedule. It runs the published
 `@mokly/mokly` CLI exactly as CI does and imports nothing from Mokly. The
 runner is a library; `infra/e2b/build` owns the template.
@@ -73,25 +73,8 @@ a package upgrade can silently change the result.
 
 ## Template
 
-The template, `mokly-build-v<N>`, is 2 vCPU and 4 GiB with `/bin/sh`,
-coreutils, Python 3, git, curl, CA certificates, an exact Node release with
-npm and corepack on the template `PATH`, the non-root workload `user`, and
-`/workspace` owned by it. The template contains no file at C, so the credential
-write creates a new 0600 file rather than preserving a pre-existing mode.
-`infra/e2b/build/e2b.Dockerfile` pins its `e2bdev/base` image by a SHA-256
-digest, so a new tag cannot change a template release's base.
-Its Node release is the repository's pin in
-`.nvmrc`, which `toolchain-pins` compares with the template definition, so the
-template satisfies the CLI's engines. The CLI is a native binary
-with no musl build and no JavaScript fallback. The template
-therefore runs Linux x64 with glibc 2.28 or newer, and the candidate assertion
-checks that floor. `docs/ops/build-template.md`
-records its release procedure. The template sets `HOME=/home/user` and
-`PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin`.
-The candidate assertion runs as `user` through `stream_process` with only
-`MKC_TEMPLATE_PROBE=stream-process-added-env` added to its environment. It
-requires that entry and the exact template `PATH` and `HOME`. A replaced,
-rather than merged, process environment must fail verification.
+The [template contract](./cloud-build-template.md) defines the E2B template in
+which every attempt runs, and the candidate assertion that checks each release.
 
 ## Steps
 
@@ -215,7 +198,8 @@ retained output alone does not fail a build, including a successful one.
 ## Configuration
 
 The chart delivers an all-or-none builds group: `MKC_E2B_API_KEY` (secret,
-CSI-mounted), `MKC_E2B_BUILD_TEMPLATE` (the released template ID) and
+CSI-mounted), `MKC_E2B_BUILD_TEMPLATE` (the verified build reference,
+`TEMPLATE_ID:BUILD_ID`, which starts only that build) and
 `MKC_E2B_DEPLOYMENT_ID` (1–63 lowercase letters, digits and hyphens, unique
 per environment). With the group present, the GitHub App group is required;
 startup fails otherwise. The upload endpoint uses the API's existing
@@ -235,7 +219,7 @@ and release renderer enforce these runtime rules.
 
 ## Verification
 
-Unit tests drive `mkc-build-sandbox` through `SandboxBackendMock`, and no test
+Unit tests drive `mkc-build-sandbox` through the capability mocks, and no test
 contacts E2B without the credentialed live feature: credential write and argv,
 cwd and environment of every process; the fetch ladder; lockfile, Yarn
 generation, local CLI discovery and the version floor; every stream outcome;

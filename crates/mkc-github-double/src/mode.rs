@@ -90,6 +90,8 @@ pub struct Mode {
     pub branch_hook: Option<Hook>,
     /// Run once while the next pull request read is answered.
     pub pull_hook: Option<Hook>,
+    /// Run once while the next check run update is answered, before it applies.
+    pub check_update_hook: Option<Hook>,
 }
 
 impl Default for Mode {
@@ -133,6 +135,7 @@ impl Default for Mode {
             branch_paths: Vec::new(),
             branch_hook: None,
             pull_hook: None,
+            check_update_hook: None,
         }
     }
 }

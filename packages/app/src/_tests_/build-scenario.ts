@@ -22,8 +22,9 @@ export interface BuildScenario {
 }
 
 /**
- * Sign a new owner in, create their project through the real onboarding and
- * answer its build operations from a double, as a project that can build.
+ * Sign a new owner in, create their project through the API with
+ * `createProject`, and answer its build operations from a double, as a project
+ * that can build.
  */
 export async function buildScenario(
   page: Page,

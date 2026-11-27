@@ -25,7 +25,7 @@ clients. Timestamps are UTC RFC 3339. Mutable resources carry an integer
 | Desktop grant  | User, secret hash, challenge, return destination, expiry, inherited session deadline; consumed atomically once                                 |
 | Session        | User, credential hash, CSRF token, absolute/idle deadlines                                                                                     |
 
-The configured [preview account](./auth-sessions.md#preview-sign-in) is the
+The configured [preview account](./preview-sign-in.md#account-and-capability) is the
 one user created without email verification, and only where its capability
 allows it.
 

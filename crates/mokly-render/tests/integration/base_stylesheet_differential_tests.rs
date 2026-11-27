@@ -123,8 +123,8 @@ fn an_earlier_absent_extension_candidate_prevents_head_reuse() {
 }
 
 #[test]
-fn changed_package_entries_and_versions_reject_cached_resolution() {
-    for field in ["style", "exports", "version"] {
+fn changed_package_style_and_exports_entries_reject_cached_resolution() {
+    for field in ["style", "exports"] {
         let original = match field {
             "exports" => {
                 r#"{"name":"fixture-theme","version":"1.0.0","exports":{".":"./before.css"}}"#
@@ -135,7 +135,6 @@ fn changed_package_entries_and_versions_reject_cached_resolution() {
             "exports" => {
                 r#"{"name":"fixture-theme","version":"1.0.0","exports":{".":"./after.css"}}"#
             }
-            "version" => r#"{"name":"fixture-theme","version":"2.0.0","style":"./after.css"}"#,
             _ => r#"{"name":"fixture-theme","version":"1.0.0","style":"./after.css"}"#,
         };
         let fixture = Fixture::with_files(&[

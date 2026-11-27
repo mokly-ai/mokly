@@ -10,41 +10,115 @@ use unimock::{MockFn, Unimock, matching};
 use crate::resolution::Resolution;
 use crate::resolver::{ImportResolver, SourceResolver};
 
-fn resolver(files: &[&str]) -> SourceResolver {
-    let files: BTreeMap<_, _> = files
-        .iter()
-        .map(|file| (PathBuf::from("/repo").join(file), b"{}".to_vec()))
-        .collect();
-    let projection = files.clone();
-    let tree = Arc::new(Unimock::new((
-        SourceTreeMock::project
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(projection.contains_key(path).then(|| Node {
-                    identity: path.into(),
-                    lexical_kind: FileKind::File,
-                    kind: FileKind::File,
-                }))
-            })),
-        SourceTreeMock::read
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(files.get(path).cloned().unwrap_or_default())
-            })),
-    )));
-    SourceResolver {
-        tree,
-        repo_root: "/repo".into(),
-        settings: Resolution {
-            config_directory: "apps/web".into(),
-            aliases: BTreeMap::from([("theme-alias".into(), "theme".into())]),
-            dependency_roots: vec![
-                "node_modules/.mokly-roots/1".into(),
-                "node_modules/.mokly-roots/2".into(),
-            ],
-            ..Default::default()
-        },
-    }
+use self::resolver_support::{resolver, resolver_with_files};
+
+mod resolver_error_tests;
+mod resolver_support;
+
+#[test]
+fn workspace_style_exports_prefer_source_even_when_the_built_file_exists() {
+    let resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"theme","exports":{"./colors":"./dist/skin.css"}}"#,
+            ),
+            ("packages/theme/dist/skin.css", ".built {}"),
+            ("packages/theme/src/skin.css", ".source {}"),
+        ],
+        &[("node_modules/theme", "packages/theme")],
+    );
+    assert_eq!(
+        resolver
+            .resolve("styles/entry.css", "theme/colors")
+            .unwrap(),
+        "packages/theme/src/skin.css"
+    );
+}
+
+#[test]
+fn workspace_style_exports_match_the_declared_linked_build_folder() {
+    let mut resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"theme","exports":{"./colors":"./esm/skin.css"}}"#,
+            ),
+            ("packages/theme/release/skin.css", ".built {}"),
+            ("packages/theme/source/skin.css", ".source {}"),
+        ],
+        &[
+            ("node_modules/theme", "packages/theme"),
+            ("packages/theme/esm", "packages/theme/release"),
+        ],
+    );
+    resolver.settings.source_packages = vec![BTreeMap::from([(
+        "theme".into(),
+        Some(BTreeMap::from([("esm".into(), "source".into())])),
+    )])];
+    assert_eq!(
+        resolver
+            .resolve("styles/entry.css", "theme/colors")
+            .unwrap(),
+        "packages/theme/source/skin.css"
+    );
+}
+
+#[test]
+fn a_workspace_style_field_resolves_when_only_the_configured_sources_exist() {
+    let resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"theme","style":"./compiled/skin.css"}"#,
+            ),
+            (
+                "packages/theme/tsconfig.json",
+                r#"{"extends":"./layout.json"}"#,
+            ),
+            (
+                "packages/theme/layout.json",
+                r#"{"compilerOptions":{"outDir":"compiled","rootDir":"authored"}}"#,
+            ),
+            ("packages/theme/authored/skin.css", ".source {}"),
+        ],
+        &[("node_modules/theme", "packages/theme")],
+    );
+    assert_eq!(
+        resolver.resolve("styles/entry.css", "theme-alias").unwrap(),
+        "packages/theme/authored/skin.css"
+    );
+}
+
+#[test]
+fn workspace_style_exports_try_the_working_layout_until_the_base_disables_it() {
+    let mut resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"workspace-theme","exports":{"./colors":"./esm/skin.css"}}"#,
+            ),
+            ("packages/theme/esm/skin.css", ".built {}"),
+            ("packages/theme/source/skin.css", ".source {}"),
+        ],
+        &[("node_modules/theme", "packages/theme")],
+    );
+    let layout = |folder: &str| {
+        BTreeMap::from([(
+            "workspace-theme".into(),
+            Some(BTreeMap::from([("esm".into(), folder.into())])),
+        )])
+    };
+    resolver.settings.source_packages = vec![layout("missing"), layout("source")];
+    let resolve = |resolver: &SourceResolver| {
+        resolver
+            .resolve("styles/entry.css", "theme/colors")
+            .unwrap()
+    };
+    assert_eq!(resolve(&resolver), "packages/theme/source/skin.css");
+
+    resolver.settings.source_packages[0].insert("workspace-theme".into(), None);
+    assert_eq!(resolve(&resolver), "node_modules/theme/esm/skin.css");
 }
 
 #[test]

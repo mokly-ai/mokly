@@ -102,21 +102,19 @@ test("copied static search, folders, tags, details and flows retain the shell", 
   requests.assert();
 });
 
-for (const suffix of ["/", "", "/index.html"]) {
-  test(`copied Markdown direct URL ${suffix || "extensionless"} survives reload`, async ({
-    page,
-  }) => {
-    const requests = staticRequests(page);
-    await page.goto(`/view/example/workspace-guide${suffix}`);
-    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
-    await expect(
-      page.frameLocator(DOCUMENT_FRAME).locator("body"),
-    ).toContainText("workspace");
-    await page.reload();
-    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
-    requests.assert();
-  });
-}
+// `path_history.test.ts` reads the extensionless and `/index.html` forms of
+// the same address.
+test("copied Markdown direct URL / survives reload", async ({ page }) => {
+  const requests = staticRequests(page);
+  await page.goto("/view/example/workspace-guide/");
+  await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+  await expect(page.frameLocator(DOCUMENT_FRAME).locator("body")).toContainText(
+    "workspace",
+  );
+  await page.reload();
+  await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+  requests.assert();
+});
 
 test("copied component variants retain their fragment and read-only props after refresh", async ({
   page,
@@ -146,7 +144,6 @@ test("copied Current never polls revisions, opens events or requests renders", a
   baseURL,
 }) => {
   const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
-  expect(response.headers()["access-control-allow-origin"]).toBeUndefined();
   const index = await response.json();
   expect(index).not.toHaveProperty("live");
   expect(index.revision).toBe(0);

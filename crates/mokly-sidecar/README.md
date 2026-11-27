@@ -121,7 +121,7 @@ slot when it selects the slot, so a later request of that context waits for
 that slot, also while the slot still starts. A busy affine
 request does not block independent work on another available slot. Returning
 slots recheck pending releases before becoming idle. `cancel_requests` kills
-and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling,
+and waits for the exit of busy sidecars before `shutdown` drains idle sidecars. Scheduling,
 the generation rank, and cleanup use one staleness rule: a missing bundle or a
 missing or different epoch makes a loaded generation stale. The rank counts a
 missing record as not loaded. Cleanup stops when a pass changes no state.
@@ -129,13 +129,13 @@ missing record as not loaded. Cleanup stops when a pass changes no state.
 Serve, in `mokly-cli`, schedules one return pass after each Changes
 publication and drives the pass from its own background worker. The pool owns
 each step and the stop state. Each step takes one idle base worker while no
-base request waits. It kills and reaps that worker, then starts a head worker
+base request waits. It kills that worker, waits for its exit, then starts a head worker
 through hello. A waiting request takes the slot at a safe point. While the
 pass has candidates, a base request prefers an idle worker of its root that
 already left the pass. The generation rank orders workers only inside that
-group and the candidates. When a step cannot confirm a reap, only that slot
+group and the candidates. When a step cannot confirm an exit, only that slot
 retires: its control stays registered, and the pool never reuses the slot. The
-first failed reap also ends background return for the life of the pool. The
+first failed exit wait also ends background return for the life of the pool. The
 other slots keep serving requests and switch roots on demand. A call affine to
 a retired PostCSS slot fails as unavailable at once. When no usable slot
 remains, as in a one-slot pool, the pool stops. The
@@ -284,7 +284,11 @@ lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
 identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and retries once under the
-[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Other
+[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Debug
+builds also have `Pool::with_test_render_deadline`, which replaces the
+deadline of render calls for process tests of a hanging render. Release builds
+do not compile it, so only the protocol defaults and `PoolOptions::timeout_ms`
+apply there. Other
 transport failures replace the process without a fallback render. A process
 recycles under the render-count and resident-memory rules of the
 [memory sampling contract](../../docs/protocol/mokly-sidecar-memory.md).
@@ -484,7 +488,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
   runs one step in `Pool::maintain_return`. The start of a pass enrolls the
   existing head workers that need a warm-up. `Pool::retire_return` kills and
-  reaps a worker while its slot stays leased. When it cannot confirm the reap,
+  waits for the exit of a worker while its slot stays leased. When it cannot confirm the exit,
   it adds the slot to the retired set, sets `return_disabled`, and returns
   `Error::HeadReturnDisabled` with the original failure. Only the return pass
   caller receives that error.
@@ -598,7 +602,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   16 KiB of buffer capacity.
 - [`src/methods.rs`](./src/methods.rs), [`src/results.rs`](./src/results.rs),
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
-  payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
+  payloads, and the envelopes of the wire protocol.
+  `ModuleResolution.source_packages` carries the `sourcePackages` maps in
+  layout order, typed in
+  [`src/methods/source_packages.rs`](./src/methods/source_packages.rs).
+  `Dependency.source` records how a file entered the PostCSS dependency
+  inventory. `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only

@@ -11,9 +11,9 @@ use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::render_image::{ImageIdentity, ImageSourceMock};
-use crate::render_pending::TraceStoreObserver;
 use crate::render_store::{DocumentBackendMock, WriteOutcome};
-use crate::render_writer::{DocumentWriter, WriterLimits};
+use crate::render_writer::WriterLimits;
+use crate::render_writer::idle_writer::IdleWriter;
 use crate::render_writer_control::Startup;
 
 struct Release(Option<mpsc::Sender<()>>);
@@ -84,16 +84,16 @@ fn prepared_writer_reads_while_writes_wait_for_completed_changes() {
                 WriteOutcome::Written(documents.documents())
             })),
     )));
-    let store = DocumentWriter::prepared(
+    let writer = IdleWriter::start(
         backend,
         cache,
         WriterLimits::default(),
-        Arc::new(TraceStoreObserver),
-        Startup {
+        Some(Startup {
             identity: Arc::new(ImageIdentity::new(source)),
             context: "version:platform".into(),
-        },
+        }),
     );
+    let store = &writer.store;
     let mut release = Release(Some(release));
     hashing.recv().unwrap();
     assert_eq!(store.identity(), None);
@@ -105,7 +105,7 @@ fn prepared_writer_reads_while_writes_wait_for_completed_changes() {
     );
     let key = StoreKey::new(&NodeKey("document".into()), &store.identity().unwrap());
     assert_eq!(
-        store.offer(key.clone(), NodeKey("document".into())),
+        writer.offer_when_idle(key.clone(), NodeKey("document".into())),
         OfferOutcome::Queued
     );
     assert_eq!((store.stats().queued, store.stats().active), (1, 0));

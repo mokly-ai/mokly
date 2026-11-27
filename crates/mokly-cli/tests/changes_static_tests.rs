@@ -3,7 +3,10 @@
 use std::fs;
 use std::path::Path;
 
+use tempfile::TempDir;
+
 mod changes_support;
+mod publish_support;
 use changes_support::{base, git, run, write};
 
 fn commit(root: &Path) {
@@ -58,6 +61,16 @@ fn static_build_retains_changes_and_selects_the_explicit_base_once() {
 
 #[test]
 fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
+    let endpoint = publish_support::rejecting_endpoint();
+    // The strict build runs first, so the publish also shows that the earlier
+    // build output stays in place.
+    let root = fixture();
+    check(root.path(), &endpoint, "build");
+    check(root.path(), &endpoint, "publish");
+}
+
+/// A committed head whose base branch has a different package and page.
+fn fixture() -> TempDir {
     let root = base(&[
         (
             "mokly.config.json",
@@ -79,59 +92,46 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
         "---\ntitle: Home\n---\n<p>After</p>",
     );
     commit(root.path());
-    for (verb, strict) in [("build", true), ("publish", true), ("publish", false)] {
-        let mut args = vec![verb, "--base", "base-point"];
-        if strict {
-            args.push("--strict");
-        }
-        if verb == "build" {
-            args.extend(["--out", ".context/strict"]);
-        } else {
-            args.extend([
-                "--repository",
-                "example.test/team/catalogue",
-                "--endpoint",
-                "http://127.0.0.1:1/plan",
-                "--token",
-                "fixture-token",
-            ]);
-        }
-        let output = run(root.path(), &args);
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        assert_eq!(
-            output.status.code(),
-            Some(if verb == "build" { 0 } else { 1 }),
-            "{verb}: {stderr}"
-        );
-        assert_eq!(
-            stderr.matches("base dependencies").count(),
-            1,
-            "{verb}: {stderr}"
-        );
-        assert!(!stderr.contains("with --strict"), "{verb}: {stderr}");
-        assert_eq!(
-            stderr.contains("[mokly/upload-failed]"),
-            verb == "publish",
-            "{verb}: {stderr}"
-        );
-        assert!(!stderr.contains("upload-transport"), "{stderr}");
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("Comparing with base-point"), "{stdout}");
-        assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
-        assert!(root.path().join(".context/strict/index.html").is_file());
+    root
+}
+
+/// A strict build or a strict publish prints the base dependency fallback
+/// once and passes its build step.
+fn check(root: &Path, endpoint: &str, verb: &str) {
+    let mut args = vec![verb, "--base", "base-point", "--strict"];
+    if verb == "build" {
+        args.extend(["--out", ".context/strict"]);
+    } else {
+        args.extend([
+            "--repository",
+            "example.test/team/catalogue",
+            "--endpoint",
+            endpoint,
+            "--token",
+            "fixture-token",
+        ]);
     }
-    let output = run(root.path(), &["build", "--base", "base-point"]);
+    let output = run(root, &args);
+    let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(
         output.status.code(),
-        Some(0),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
+        Some(if verb == "build" { 0 } else { 1 }),
+        "{verb}: {stderr}"
     );
-    assert!(String::from_utf8_lossy(&output.stdout).contains("Changes ready · 1 change"));
     assert_eq!(
-        String::from_utf8_lossy(&output.stderr)
-            .matches("base dependencies")
-            .count(),
-        1
+        stderr.matches("base dependencies").count(),
+        1,
+        "{verb}: {stderr}"
     );
+    assert!(!stderr.contains("with --strict"), "{verb}: {stderr}");
+    assert_eq!(
+        stderr.contains("[mokly/upload-failed]"),
+        verb == "publish",
+        "{verb}: {stderr}"
+    );
+    assert!(!stderr.contains("upload-transport"), "{stderr}");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Comparing with base-point"), "{stdout}");
+    assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+    assert!(root.join(".context/strict/index.html").is_file());
 }

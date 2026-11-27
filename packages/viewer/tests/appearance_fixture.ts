@@ -15,6 +15,7 @@ import type { ViewerTheme } from "../src/host/types.js";
 import { NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 const HttpResponse = globalThis.Response;
 
@@ -58,7 +59,7 @@ export async function environment(
     try {
       await exit();
     } finally {
-      await GlobalRegistrator.unregister();
+      await unregisterDom();
     }
   };
   t.after(dispose);

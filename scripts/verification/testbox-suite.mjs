@@ -11,6 +11,7 @@ import { runCaptured, runInherited } from "./process.mjs";
 import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
 const SUITES = new Set(["repository", "viewer", "browser", "static-delivery"]);
+const SHARDED_SUITES = new Set(["viewer", "browser"]);
 const AUDIT_MODES = new Set(["baseline", "strict"]);
 const USAGE =
   "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
@@ -55,8 +56,8 @@ export function parseTestboxArguments(args) {
   } catch (error) {
     throw new Error(`${error.message}; ${USAGE}`, { cause: error });
   }
-  if (shard && suite !== "browser")
-    throw new Error("only browser supports --shard");
+  if (shard && !SHARDED_SUITES.has(suite))
+    throw new Error("only viewer and browser support --shard");
   return {
     expected,
     ...(shard ? { shard } : {}),

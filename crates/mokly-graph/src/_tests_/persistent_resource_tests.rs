@@ -115,6 +115,7 @@ fn side(allowed: bool) -> (Session, Arc<Artifact>) {
     let session = Session::new(
         &graph,
         SessionInput {
+            stylesheet_imports: original.stylesheet_imports.clone(),
             stylesheet_resolution_files: original.stylesheet_resolution_files.clone(),
             stylesheet_resolution_roots: original.stylesheet_resolution_roots.clone(),
             config: original.config.as_ref().clone(),

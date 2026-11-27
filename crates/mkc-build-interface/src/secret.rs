@@ -10,12 +10,16 @@ pub struct Secret(String);
 
 impl Secret {
     /// Wrap a nonempty credential safe for Git's URL credential-file grammar.
+    ///
+    /// The value holds only ASCII letters, digits, `.`, `_`, and `-`, which
+    /// are RFC 3986 unreserved characters and need no percent-encoding in URL
+    /// userinfo. GitHub installation tokens use `.` as a separator.
     pub fn new(value: impl Into<String>) -> Result<Self> {
         let value = value.into();
         if value.is_empty()
             || !value
                 .bytes()
-                .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
+                .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
         {
             return Err(Error::InvalidRequest {
                 field: RequestField::Credential,

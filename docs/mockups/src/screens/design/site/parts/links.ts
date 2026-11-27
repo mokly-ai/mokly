@@ -54,16 +54,14 @@ export const SITE_PAGE_NAMES: Readonly<Record<SiteScreen, string>> = {
 };
 
 /**
- * Where Get started goes. The site opens the first Getting started guide,
- * Install, which the documentation screen depicts.
- */
-export const GET_STARTED_SCREEN = SITE_SCREENS.docs;
-
-/**
- * Where Create an account and Start a 7-day trial go: the application's
- * `/sign-up`, which the sign-up screen of the product mockups owns.
+ * Where the main Get started, Create an account and Start a 7-day trial go:
+ * the application's `/sign-up`, which the sign-up screen of the product
+ * mockups owns.
  */
 export const SIGN_UP_SCREEN = "product/account/sign-up";
+
+/** Where Get started goes in the header, the menu and the home hero. */
+export const GET_STARTED_SCREEN = SIGN_UP_SCREEN;
 
 /** Public destinations outside the site and application origins. */
 export const EXTERNAL_LINKS = openSource;

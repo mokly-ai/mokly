@@ -89,8 +89,9 @@ impl Renders {
                         send.send(("start", index)).unwrap();
                         wait(&root[index]);
                         send.send(("root", index)).unwrap();
-                        completion.handoff(charge);
+                        // The handoff gives the sidecar place back, so stop counting first.
                         counts.sidecars.fetch_sub(1, Ordering::SeqCst);
+                        completion.handoff(charge);
                         counts.completion_peak.fetch_max(
                             counts.completions.fetch_add(1, Ordering::SeqCst) + 1,
                             Ordering::SeqCst,

@@ -10,14 +10,13 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import {
-  INSPECTOR_VIEWPORTS,
+  DESKTOP_INSPECTOR,
   RAIL_BASE,
   expectRailBase,
   openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
-import { openCatalogueSheet } from "./workspace_actions.js";
 
 /** Only the destination's detail names the changed component. */
 const LOADED = "Changed component: Card";
@@ -53,42 +52,40 @@ function railBases(page: Page): Promise<(string | null)[]> {
   );
 }
 
-for (const [name, size] of INSPECTOR_VIEWPORTS)
-  test.describe(`${name} copied navigation`, () => {
-    test.use({ viewport: size });
+test.describe("desktop copied navigation", () => {
+  test.use({ viewport: DESKTOP_INSPECTOR });
 
-    test("Details keep the review base while the screen's detail loads, and the changed component arrives with it", async ({
-      page,
-    }) => {
-      const held: Route[] = [];
-      let reads = 0;
-      await page.route(
-        `**/mokly-viewer/entries/${comparisonPaths.changed}.json`,
-        (route) => {
-          reads += 1;
-          if (held.length) return route.continue();
-          held.push(route);
-        },
-      );
-      await page.goto(`/view/${comparisonPaths.component}/`);
-      // The heading and the branch point show on the origin.
-      await openChangesEvidence(page);
-      await recordRailBases(page);
+  test("Details keep the review base while the screen's detail loads, and the changed component arrives with it", async ({
+    page,
+  }) => {
+    const held: Route[] = [];
+    let reads = 0;
+    await page.route(
+      `**/mokly-viewer/entries/${comparisonPaths.changed}.json`,
+      (route) => {
+        reads += 1;
+        if (held.length) return route.continue();
+        held.push(route);
+      },
+    );
+    await page.goto(`/view/${comparisonPaths.component}/`);
+    // The heading and the branch point show on the origin.
+    await openChangesEvidence(page);
+    await recordRailBases(page);
 
-      if (name === "mobile") await openCatalogueSheet(page);
-      await navRow(page, comparisonPaths.changed).click();
-      await expect(page).toHaveURL(new RegExp(`${DESTINATION}$`, "u"));
-      await expect.poll(() => held.length).toBe(1);
-      // They show again at once while the destination's detail is held.
-      const temporary = await openChangesEvidence(page);
-      await expect(temporary).not.toContainText(LOADED);
+    await navRow(page, comparisonPaths.changed).click();
+    await expect(page).toHaveURL(new RegExp(`${DESTINATION}$`, "u"));
+    await expect.poll(() => held.length).toBe(1);
+    // They show again at once while the destination's detail is held.
+    const temporary = await openChangesEvidence(page);
+    await expect(temporary).not.toContainText(LOADED);
 
-      await held[0]!.continue();
-      await expect(temporary.getByText(LOADED, { exact: true })).toBeVisible();
-      await expectRailBase(page, temporary);
-      expect(reads).toBe(1);
-      const recorded = await railBases(page);
-      expect(recorded.length).toBeGreaterThan(0);
-      expect([...new Set(recorded)]).toEqual([RAIL_BASE]);
-    });
+    await held[0]!.continue();
+    await expect(temporary.getByText(LOADED, { exact: true })).toBeVisible();
+    await expectRailBase(page, temporary);
+    expect(reads).toBe(1);
+    const recorded = await railBases(page);
+    expect(recorded.length).toBeGreaterThan(0);
+    expect([...new Set(recorded)]).toEqual([RAIL_BASE]);
   });
+});

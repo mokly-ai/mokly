@@ -151,6 +151,10 @@ impl SourceTree for RecordingTree {
         self.inner.prefetch(paths)
     }
 
+    fn hint_projections(&self, paths: &[PathBuf]) {
+        self.inner.hint_projections(paths);
+    }
+
     fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
         self.inner.observe_input(path, baseline)
     }

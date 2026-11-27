@@ -1,12 +1,13 @@
 //! Configuration schema and semantic validation shared with the editor schema.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use jsonschema::error::ValidationErrorKind;
 use mokly_model::axes::ColorScheme;
+use mokly_model::catalogue::SourceLocation;
 use serde_json::Value;
 
-use crate::config_types::Config;
+use crate::config_types::{Config, SourcePackage, SourcePackages};
 use crate::diagnostic::{Code, Issue};
 use crate::error::{CatalogueError, Result};
 use crate::locations::{at, json_positions};
@@ -19,18 +20,7 @@ pub const CONFIG_SCHEMA: &str = include_str!("../../../packages/mokly/config.sch
 pub fn parse(text: &str, path: &str) -> Result<Config> {
     let value: Value = match serde_json::from_str(text) {
         Ok(value) => value,
-        Err(error) => {
-            return Err(CatalogueError::Config(
-                Issue::new(Code::ConfigInvalid, format!("invalid JSON: {error}")).at(
-                    mokly_model::catalogue::SourceLocation {
-                        path: path.into(),
-                        line: error.line(),
-                        column: error.column(),
-                        export: None,
-                    },
-                ),
-            ));
-        }
+        Err(error) => return Err(json_error(path, &error, format!("invalid JSON: {error}"))),
     };
     config_postcss::shape(&value)?;
     let schema: Value = serde_json::from_str(CONFIG_SCHEMA)
@@ -110,6 +100,9 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
         .get_or_insert_with(|| vec![ColorScheme::Light]);
     schemes.sort();
     if let Some(module) = &mut config.module_resolution {
+        if let Some(packages) = &mut module.source_packages {
+            normalize_source_packages(packages, path, text)?;
+        }
         for values in [
             &mut module.conditions,
             &mut module.main_fields,
@@ -123,6 +116,54 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
         }
     }
     Ok(config)
+}
+
+fn normalize_source_packages(packages: &mut SourcePackages, path: &str, text: &str) -> Result<()> {
+    for (package, entry) in packages {
+        let SourcePackage::Folders(folders) = entry else {
+            continue;
+        };
+        let mut normalized = BTreeMap::new();
+        for (build, source) in &*folders {
+            let directory = source_folder(build);
+            if let Some((previous, _)) = normalized.insert(directory.clone(), (build, source)) {
+                let package_key = package.replace('~', "~0").replace('/', "~1");
+                let folder_key = build.replace('~', "~0").replace('/', "~1");
+                let pointer =
+                    format!("/moduleResolution/sourcePackages/{package_key}/{folder_key}");
+                let position = json_positions(text).get(&pointer).copied().unwrap_or(0);
+                let message = format!(
+                    "moduleResolution.sourcePackages[{package:?}]: duplicate build folder {directory:?} from {previous:?} and {build:?}"
+                );
+                return Err(CatalogueError::Config(
+                    Issue::new(Code::ConfigInvalid, message).at(at(path, text, position)),
+                ));
+            }
+        }
+        *folders = normalized
+            .into_iter()
+            .map(|(build, (_, source))| (build, source_folder(source)))
+            .collect();
+    }
+    Ok(())
+}
+
+fn source_folder(path: &str) -> String {
+    let path = path
+        .split('/')
+        .filter(|part| !matches!(*part, "" | "."))
+        .collect::<Vec<_>>()
+        .join("/");
+    if path.is_empty() { ".".into() } else { path }
+}
+
+fn json_error(path: &str, error: &serde_json::Error, message: String) -> CatalogueError {
+    CatalogueError::Config(Issue::new(Code::ConfigInvalid, message).at(SourceLocation {
+        path: path.into(),
+        line: error.line(),
+        column: error.column(),
+        export: None,
+    }))
 }
 
 pub(crate) fn invalid(message: impl Into<String>) -> CatalogueError {

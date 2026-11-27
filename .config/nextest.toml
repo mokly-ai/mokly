@@ -1,0 +1,36 @@
+# cargo-nextest runs every Rust test of the gate in its own process, with the
+# test binaries of all selected crates in parallel. The gate commands live in
+# `xtask/src/check/commands.rs` and `xtask/src/check/cloud_commands.rs`.
+# Doc tests do not run here; the gate runs them with `cargo test --doc`.
+# The native suite passes a filter that leaves out platform-neutral tests on
+# macOS and Windows. Its list lives in `xtask/src/check/native_scope.rs`, so
+# xtask can also skip the build of a test binary that the list leaves out.
+
+# The CI install steps install this exact version, and the cloud-toolchain-pins
+# suite rejects drift from the pin table of docs/protocol/cloud/repository-layout.md.
+nextest-version = { required = "0.9.152" }
+
+[profile.default]
+# Print each failure when it happens and again in the final summary, so a long
+# parallel log still ends with every failure.
+failure-output = "immediate-final"
+
+# Tests that share a fixed filesystem parent or a database budget stay serial
+# in a test group, because their in-process locks do not reach other processes.
+[test-groups]
+# The plan fixture of `crates/mokly-render/tests/integration/plan_support.rs`
+# holds one lock for all its users. Its owners are fixed durable-capture
+# parents under `target/durable-capture-fixtures`, which one test owns at a time.
+render-plan-fixture = { max-threads = 1 }
+# The billing and GitHub harnesses of `crates/mkc-api/tests` each hold a lock,
+# because each scenario opens several real database pools. `cargo test` also
+# never ran the two binaries at the same time, so they share one group.
+mkc-api-database-scenarios = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'package(mokly-render) & binary(integration_tests) & test(/^integration::plan_(candidate|invalidation)_tests::/)'
+test-group = 'render-plan-fixture'
+
+[[profile.default.overrides]]
+filter = 'package(mkc-api) & (binary(billing_tests) | binary(github_tests))'
+test-group = 'mkc-api-database-scenarios'

@@ -9,8 +9,9 @@ use std::time::Duration;
 use mkc_api::application::{ApplicationFactory, ConfiguredApplicationFactory};
 use mkc_api::billing_providers::SystemBillingProviderFactory;
 use mkc_api::github_providers::SystemGitHubProviderFactory;
+use mkc_api::worker_intervals::WorkerIntervals;
 use mkc_github_double::server::RecordedGitHub;
-use sandbox_interface::SandboxBackendMock;
+use sandbox_interface::SandboxLifecycleMock;
 use tokio::runtime::Runtime;
 use unimock::{MockFn, Unimock, matching};
 
@@ -35,7 +36,7 @@ fn serve_replica_process() {
         mode.head_sha = Some("f".repeat(40));
     }
     let backend = Unimock::new(
-        SandboxBackendMock::list_managed_sandboxes
+        SandboxLifecycleMock::list_managed_sandboxes
             .each_call(matching!(_))
             .answers(&|_, _| Ok(Vec::new())),
     );
@@ -49,6 +50,7 @@ fn serve_replica_process() {
         github: Arc::new(SystemGitHubProviderFactory),
         billing: Arc::new(SystemBillingProviderFactory),
         runtime: Arc::new(mkc_auth::runtime::SystemRuntime),
+        intervals: WorkerIntervals::default(),
     }
     .create(settings_url(
         &database,

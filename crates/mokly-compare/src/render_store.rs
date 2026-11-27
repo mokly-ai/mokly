@@ -157,6 +157,10 @@ mod render_store_boundary_tests;
 mod render_store_fault_tests;
 
 #[cfg(test)]
+#[path = "_tests_/render_store_cancellation_tests.rs"]
+mod render_store_cancellation_tests;
+
+#[cfg(test)]
 #[path = "_tests_/render_store_concurrency_tests.rs"]
 mod render_store_concurrency_tests;
 

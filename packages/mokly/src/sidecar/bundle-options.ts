@@ -4,6 +4,7 @@ import type { build, Loader } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import { virtualEntry } from "./bundle-entry.js";
 import { configuredFiles } from "./configured-files.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeLogOverride } from "./native-resolution.js";
@@ -14,6 +15,13 @@ import type { BundleInputs } from "./plugins.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionOptions } from "./resolution.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
+
+/** Warnings that can leave the require target unknown until evaluation. */
+export const runtimeRequireWarnings = {
+  "unsupported-require-call": "warning",
+  "indirect-require": "warning",
+  "direct-eval": "warning",
+} as const;
 
 interface BundleBuild {
   params: BundleParams;
@@ -48,6 +56,8 @@ export function bundleOptions({
   handledImports,
 }: BundleBuild) {
   const settings = params.moduleResolution;
+  if (preview) paths.addConfigured(preview);
+  if (evidence) paths.workspaceLookups.recordInto(evidence.physical);
   const loaders = Object.fromEntries(
     Object.entries(settings.loaders).filter(
       ([extension]) => extension !== ".css" && extension !== ".module.css",
@@ -62,7 +72,7 @@ export function bundleOptions({
     stdin: {
       contents,
       resolveDir: params.sourceRoot,
-      sourcefile: path.resolve(params.sourceRoot, "mokly-entry"),
+      sourcefile: path.resolve(params.sourceRoot, virtualEntry),
     },
     bundle: true,
     write: false,
@@ -76,9 +86,12 @@ export function bundleOptions({
     keepNames: true,
     metafile: true,
     logLevel: "silent",
-    ...(resolution.mode === "native" ? { logOverride: nativeLogOverride } : {}),
+    logOverride: {
+      ...(resolution.mode === "native" && nativeLogOverride),
+      ...(editImports && runtimeRequireWarnings),
+    },
     plugins: [
-      configuredFiles(params, paths, preview, resolution),
+      configuredFiles(paths, resolution),
       ...(evidence ? [evidence.plugin] : []),
       ...(editImports ? [editImports.plugin] : []),
       ...consumerPlugins(

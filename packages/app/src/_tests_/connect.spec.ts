@@ -4,7 +4,15 @@ import { workspaceAddress } from "./addresses";
 import { apiFailure } from "./api-responses";
 import { installedRepository, releaseRecordedGitHub } from "./database-fixture";
 import { answerGitHubPages, startGitHubFlow } from "./github-installation";
-import { expect, freshEmail, open, ready, signIn, test } from "./harness";
+import {
+  expect,
+  freshEmail,
+  open,
+  ready,
+  signIn,
+  walkSignIn,
+  test,
+} from "./harness";
 import {
   chooseRepository,
   createProject,
@@ -126,7 +134,7 @@ test("a signed-out return signs in and comes back to the connect situation", asy
   const returnTo = new URL(page.url()).searchParams.get("returnTo");
   expect(returnTo).toBe("/install?installationId=1");
 
-  await signIn(page, freshEmail("connect-signed-out"), returnTo ?? "");
+  await walkSignIn(page, freshEmail("connect-signed-out"), returnTo ?? "");
   await atConnectSituation(page, 1);
 });
 
@@ -153,8 +161,13 @@ test("an account another workspace holds is refused with the way back", async ({
   const refusal = page.getByRole("alert");
   await expect(refusal).toHaveText(/Remove it from that workspace first\./);
   await expect(refusal.locator("details")).toHaveCount(1);
+  // `/install` opens the first workspace, Holder Org, and its account is
+  // connected, so the install step hands the reader straight on to its
+  // repository step. The wait starts before the press, so it sees the
+  // address that the press opens however soon that hand-on follows.
+  const backToInstall = page.waitForURL((url) => url.pathname === "/install");
   await page.getByRole("button", { name: "Back to install" }).click();
-  await page.waitForURL((url) => url.pathname === "/install");
+  await backToInstall;
 });
 
 test("the connect situation says when the workspaces could not load", async ({

@@ -1,10 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import {
-  EXTERNAL_LINKS,
-  GET_STARTED_PATH,
-  SITE_PATHS,
-} from "../../src/navigation.js";
+import { GET_STARTED_PATH, SITE_PATHS } from "../../src/navigation.js";
 
 import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 
@@ -12,70 +8,60 @@ import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 const LEAD =
   "Generate an interactive mockup of your entire app using your existing React, HTML and CSS components.";
 
-test("the hero reads as its heading, its lead and its two actions", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  // `\\s` also matches the no-break space that keeps "in code." together.
-  await expect(page.locator("#hero")).toMatchAriaSnapshot(`
+test(
+  "the hero reads as its heading, its lead and its two actions",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    // `\\s` also matches the no-break space that keeps "in code." together.
+    await expect(page.locator("#hero")).toMatchAriaSnapshot(`
     - /children: equal
     - heading /^Design in\\scode\\.$/ [level=1]
     - paragraph: ${LEAD}
     - link "Get started"
     - link "Download for Mac"
   `);
-});
+  },
+);
 
-test("the home description and its social metadata repeat the hero lead", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  for (const selector of [
-    'meta[name="description"]',
-    'meta[property="og:description"]',
-    'meta[name="twitter:description"]',
-  ])
-    await expect(page.locator(selector)).toHaveAttribute("content", LEAD);
-});
+test(
+  "the hero's Get started opens the app's sign-up",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    // The app serves the sign-up route, so the site preview checks that the
+    // press reaches the address, not the app's page.
+    await page.goto(SITE_PATHS.home);
+    const action = page
+      .locator("#hero")
+      .getByRole("link", { name: "Get started" });
+    await action.click();
+    await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
+  },
+);
 
-test("both Get started actions open the Install guide", async ({ page }) => {
-  await page.goto(SITE_PATHS.home);
-  const actions = page
-    .getByRole("main")
-    .getByRole("link", { name: "Get started" });
-  await expect(actions).toHaveCount(2);
-  for (const action of await actions.all()) {
-    await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
-  }
-  await actions.first().click();
-  await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Install");
-});
+test(
+  "the open foundation's Docs opens the documentation landing",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    const action = page
+      .locator("#foundation")
+      .getByRole("link", { name: "Docs" });
+    await action.click();
+    await expect(page).toHaveURL(new RegExp(`${SITE_PATHS.docs}$`));
+    await expect(
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    ).toHaveText("Getting started");
+  },
+);
 
-test("Download for Mac opens the desktop releases", async ({ page }) => {
-  await page.goto(SITE_PATHS.home);
-  const action = page
-    .getByRole("main")
-    .getByRole("link", { name: "Download for Mac" });
-  await expect(action).toHaveAttribute("href", EXTERNAL_LINKS.desktopReleases);
-});
-
-test("View on GitHub opens the open-source repository", async ({ page }) => {
-  await page.goto(SITE_PATHS.home);
-  const action = page
-    .getByRole("main")
-    .getByRole("link", { name: "View on GitHub" });
-  await expect(action).toHaveAttribute("href", EXTERNAL_LINKS.github);
-});
-
-test("the features hold the Browse, Review and Edit modules in order", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.home);
-  await expect(page.getByRole("region", { name: /^Browse, review, edit\./ }))
-    .toMatchAriaSnapshot(`
+test(
+  "the features hold the Browse, Review and Edit modules in order",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    await expect(page.getByRole("region", { name: /^Browse, review, edit\./ }))
+      .toMatchAriaSnapshot(`
     - heading "Browse, review, edit. One place for all of it." [level=2]
     - paragraph: Every branch becomes a catalogue your whole team can open.
     - article "A visual diff for every branch.":
@@ -88,7 +74,8 @@ test("the features hold the Browse, Review and Edit modules in order", async ({
       - paragraph: 03 Edit
       - heading "Ask for the change beside the screen." [level=3]
   `);
-});
+  },
+);
 
 test("the Specs panel shows from 1200px only @desktop", async ({ page }) => {
   await page.goto(SITE_PATHS.home);

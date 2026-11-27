@@ -1,46 +1,49 @@
 import { expect, test } from "@playwright/test";
 
 import { PRICING_GROUPS } from "../../src/components/pricing/compare-rows.js";
-import {
-  APP_PATHS,
-  GET_STARTED_PATH,
-  SITE_PATHS,
-} from "../../src/navigation.js";
+import { APP_PATHS, SITE_PATHS } from "../../src/navigation.js";
 
 import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 
 /**
- * The pricing page: where its actions lead, the compare table's semantics,
- * the depictions that assistive technology does not read, the targets, the
- * sticky plan heads and the phone sizes of the group heads and the Mokly CLI
- * box. The page walk of pages.spec.ts checks its title, its heading and the
- * shared accessibility rules.
+ * The pricing page in a browser: navigation, the compare table's semantics,
+ * hidden depictions, target sizes and the responsive plan table.
  */
 
 /** The compare table, named by its caption. */
 const TABLE = "What each plan includes";
 
-test("the plan actions and the docs link open their targets", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.pricing);
-  const main = page.getByRole("main");
-  for (const [name, href] of [
-    ["Get started", GET_STARTED_PATH],
-    ["Create an account", APP_PATHS.signUp],
-    ["Start a 7-day trial", APP_PATHS.signUp],
-    ["Read Plans and billing", "/docs/cloud/plans-and-billing/"],
-  ] as const) {
+test(
+  "the billing link opens the plans documentation",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.pricing);
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: "Read Plans and billing" })
+      .click();
     await expect(
-      main.getByRole("link", { exact: true, name }),
-      name,
-    ).toHaveAttribute("href", href);
-  }
-  await main.getByRole("link", { name: "Read Plans and billing" }).click();
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Plans and billing");
-});
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    ).toHaveText("Plans and billing");
+  },
+);
+
+for (const name of ["Create an account", "Start a 7-day trial"]) {
+  test(
+    `${name} opens the app's sign-up`,
+    { tag: "@desktop" },
+    async ({ page }) => {
+      // The app serves the sign-up route, so the site preview checks that the
+      // press reaches the address, not the app's page.
+      await page.goto(SITE_PATHS.pricing);
+      await page
+        .getByRole("main")
+        .getByRole("link", { exact: true, name })
+        .click();
+      await expect(page).toHaveURL(new RegExp(`${APP_PATHS.signUp}$`));
+    },
+  );
+}
 
 test("the compare table keeps its table roles and reads each check and dash", async ({
   page,
@@ -78,14 +81,15 @@ test("the compare table keeps its table roles and reads each check and dash", as
   `);
 });
 
-test("the plan frames and the threads hide their depictions from assistive technology", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.pricing);
-  // The frame label, the selection with its size tag and Maya's cursor draw
-  // over the Team frame; the pin and the avatars draw in each thread.
-  await expect(page.getByRole("article", { exact: true, name: "Team" }))
-    .toMatchAriaSnapshot(`
+test(
+  "the plan frames and the threads hide their depictions from assistive technology",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.pricing);
+    // The frame label, the selection with its size tag and Maya's cursor draw
+    // over the Team frame; the pin and the avatars draw in each thread.
+    await expect(page.getByRole("article", { exact: true, name: "Team" }))
+      .toMatchAriaSnapshot(`
     - article "Team":
       - /children: equal
       - heading "Team" [level=3]
@@ -100,8 +104,9 @@ test("the plan frames and the threads hide their depictions from assistive techn
         - listitem: Publish and build private projects in the cloud.
         - listitem: One trial per workspace.
   `);
-  await expect(page.getByRole("article", { name: "How does the trial work?" }))
-    .toMatchAriaSnapshot(`
+    await expect(
+      page.getByRole("article", { name: "How does the trial work?" }),
+    ).toMatchAriaSnapshot(`
     - article "How does the trial work?":
       - /children: equal
       - paragraph: Trial Resolved
@@ -110,7 +115,8 @@ test("the plan frames and the threads hide their depictions from assistive techn
       - paragraph: Mokly
       - paragraph: Team begins with a 7-day trial, offered once per workspace. The billing pane shows the day it ends. After that, Team is billed monthly.
   `);
-});
+  },
+);
 
 test("every link and button on the pricing page is at least 44px tall", async ({
   page,

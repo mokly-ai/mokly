@@ -12,7 +12,9 @@ use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::collection_input::EncodedComparisonDocument;
-use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
+use mokly_graph::comparison_input::{
+    ModuleImports, RetainedComparisonInput, RetainedDocumentEvidence,
+};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode, content_identity};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
@@ -63,6 +65,10 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn module_imports(&self) -> Option<ModuleImports<'_>> {
+        self.source.module_imports()
+    }
+
     fn prepare_render_reuse(&self) {
         self.source.prepare_render_reuse();
     }

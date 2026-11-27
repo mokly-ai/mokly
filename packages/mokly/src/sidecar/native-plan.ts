@@ -12,6 +12,12 @@ import { nativeImport, nativeResolveFilter } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import type { PlanCandidates } from "./plan-candidates.js";
 import { PlanBuilder } from "./resolution-plan.js";
+import { resolutionOptions } from "./resolution.js";
+import { bareSpecifier } from "./specifier.js";
+import {
+  workspaceImportRequest,
+  workspaceTarget,
+} from "./workspace-imports.js";
 
 interface Target {
   path: string;
@@ -48,12 +54,17 @@ export async function planNative(
   candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
+  const options = {
+    ...resolutionOptions(paths.sourceRoot, paths.settings),
+    absWorkingDir: paths.configurationDirectory,
+  };
   const targets = new Map<string, Promise<Target | undefined>>();
-  const target = (file: string) => {
-    let found = targets.get(file);
+  const target = (file: string, specifier: string) => {
+    const key = bareSpecifier(specifier) ? `${specifier}\0${file}` : file;
+    let found = targets.get(key);
     if (!found) {
-      found = classifyNativeTarget(paths, scope, file);
-      targets.set(file, found);
+      found = classifyNativeTarget(paths, scope, file, specifier);
+      targets.set(key, found);
     }
     return found;
   };
@@ -78,15 +89,41 @@ export async function planNative(
         exact = false;
       if (edge.external || !path.isAbsolute(edge.path)) continue;
       if (edge.original === undefined) exact = false;
-      else if (nativeImport(paths, edge.original, directory))
+      else if (nativeImport(paths, edge.original, directory)) {
+        if (bareSpecifier(edge.original)) {
+          const location = paths.location(edge.path);
+          if (paths.repositoryOwned(location.file)) {
+            const request = workspaceImportRequest(
+              paths,
+              edge.original,
+              directory,
+              options,
+              edge.path,
+            );
+            if (
+              request &&
+              (request.pkg.retry ||
+                workspaceTarget(
+                  paths,
+                  request.pkg,
+                  edge.path,
+                  request.pkg.installation,
+                ) !== location.file)
+            ) {
+              exact = false;
+              continue;
+            }
+          }
+        }
         edges.push({
           importer: file,
           specifier: edge.original,
           directory,
           kind: edge.kind,
           file: edge.path,
-          target: target(edge.path),
+          target: target(edge.path, edge.original),
         });
+      }
     }
   }
   const builder = new PlanBuilder();
@@ -97,6 +134,7 @@ export async function planNative(
     if (!resolved || resolved.distinct) exact = false;
     if (
       !resolved ||
+      (resolved.path !== edge.file && paths.repositoryOwned(resolved.path)) ||
       (automaticMain &&
         edge.kind !== "require-call" &&
         (await scope.moduleFallback(edge.file)))
@@ -132,8 +170,9 @@ export async function plannedResult(
   planned: PlannedImport,
 ): Promise<OnResolveResult> {
   try {
-    const file = plan.paths[planned[3]];
-    if (file === undefined) protocol("invalid resolution plan reference");
+    const target = plan.paths[planned[3]];
+    if (target === undefined) protocol("invalid resolution plan reference");
+    const file = paths.workspaceSource(target, args.path) ?? target;
     paths.observe(file);
     await paths.dependencyUsage.resolved(args.path, args.resolveDir, file);
     return { path: file, sideEffects: planned[4] };
@@ -147,9 +186,10 @@ export async function classifyNativeTarget(
   paths: ModulePaths,
   scope: PackageScope,
   file: string,
+  specifier?: string,
 ): Promise<Target | undefined> {
   try {
-    const resolved = await paths.resolve(file);
+    const resolved = await paths.resolve(file, specifier);
     return {
       path: resolved,
       sideEffects: await scope.sideEffects(file),

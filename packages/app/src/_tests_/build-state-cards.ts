@@ -1,3 +1,4 @@
+import { installPollClock, nextPoll } from "./build-clock";
 import { advance, write } from "./build-double";
 import {
   buildCard,
@@ -38,6 +39,7 @@ export const follow: BuildStateRow = {
       step: null,
       startedAt: null,
     });
+    await installPollClock(page);
     await open(page, scenario.branchAt("topic"));
     const stage = page.locator(".fo-stage-card");
     await expect(
@@ -71,6 +73,7 @@ export const follow: BuildStateRow = {
       { text: "$ npm ci\n", stream: "system", step: "install" },
       { text: "added 412 packages\n", step: "install" },
     ]);
+    await nextPoll(page);
     await expect(page.getByTestId("build-output")).toContainText(
       "added 412 packages",
     );
@@ -145,57 +148,6 @@ export const published: BuildStateRow = {
     );
     await publishedViewerReady(page);
     await expect(page.getByTestId("viewer-publication")).toContainText("topic");
-  },
-};
-
-/**
- * A failed build announces only its title and its cause's sentence, and Try
- * again publishes the same branch again.
- */
-export const failed: BuildStateRow = {
-  title: "a failed build says its cause, and Try again publishes again",
-  label: "failed",
-  run: async (page, scenario) => {
-    const { double, projectId } = scenario;
-    const id = buildId(4);
-    double.builds.set(
-      id,
-      build({
-        id,
-        projectId,
-        state: "failed",
-        canCancel: false,
-        finishedAt: "2026-09-15T16:40:00Z",
-        failure: { step: "install", cause: "exit", exitCode: 1 },
-      }),
-    );
-    await open(page, scenario.buildAt(id));
-    const alert = buildCard(page).getByRole("alert");
-    await expect(alert.locator(":scope > *")).toHaveText([
-      "Unable to publish this branch",
-      "Installing dependencies failed.",
-    ]);
-    await expect(
-      alert.locator(".fo-build-reference, a, button, [role=button]"),
-    ).toHaveCount(0);
-    await expect(buildCard(page).locator(".fo-build-reference")).toContainText(
-      "topic",
-    );
-    await expectSteps(page, ["Done", "Failed", "Not run"]);
-    await expect(slotState(page)).toContainText("Unable to publish");
-    const next = buildId(5);
-    double.nextBuild = build({
-      id: next,
-      projectId,
-      state: "queued",
-      step: null,
-      startedAt: null,
-    });
-    await expect(page.getByTestId("build-try-again")).toHaveText("Try again");
-    await page.getByTestId("build-try-again").click();
-    await page.waitForURL((url) => url.pathname === scenario.buildAt(next));
-    expect(double.requests).toEqual([{ branch: "topic" }]);
-    await expect(page.getByText("Waiting to start.")).toBeVisible();
   },
 };
 

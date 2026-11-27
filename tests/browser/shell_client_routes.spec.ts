@@ -1,19 +1,21 @@
 /**
  * The client-rendered shell over Serve of the example, under the shell
- * delivery contract: the stub mount, in-shell history, search retention,
- * latest-wins navigation, the detail fences, and detail failure with retry.
- * `shell_client_route_layouts.spec.ts` covers each layout's stage history.
+ * delivery contract: the stub mount, in-shell history, and a failed detail
+ * with retry. `shell_client_route_layouts.spec.ts` covers each layout's stage
+ * history. Unit tests own the detail fences and the failure outcome of each
+ * fence; `browse_folder_rows.spec.ts` keeps the search on navigation, and
+ * `static_deployment_flow.spec.ts` loads the page again for another
+ * deployment.
  */
 
 import { expect, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { networkFailure, responseFailure } from "./shell_error_allowances.js";
+import { networkFailure } from "./shell_error_allowances.js";
 import {
   CANVAS_FRAMES,
   DETAILS,
   heading,
-  holdReads,
   loadsOf,
   MEMBERS,
   navLink,
@@ -77,80 +79,6 @@ test.describe("with a clean console", () => {
     );
     expect(loads.count).toBe(0);
   });
-
-  test("the search text stays while the shell navigates", async ({
-    page,
-    request,
-  }) => {
-    const names = await titles(request);
-    await page.goto(route(WELCOME));
-    const search = page.getByRole("searchbox", { name: "Search catalogue" });
-    await search.fill(names.get(MEMBERS)!);
-    await openFolder(page, "example/team");
-    await navLink(page, MEMBERS).click();
-    await expect(heading(page)).toHaveText(names.get(MEMBERS)!);
-    await expect(search).toHaveValue(names.get(MEMBERS)!);
-  });
-
-  test("overlapping navigations commit the latest route only", async ({
-    page,
-    request,
-  }) => {
-    const names = await titles(request);
-    await page.goto(route(WELCOME));
-    await expect(heading(page)).toHaveText(names.get(WELCOME)!);
-    const release = await holdReads(
-      page,
-      `/mokly-viewer/entries/${DETAILS}.json`,
-    );
-    await navLink(page, DETAILS).click();
-    await expect(heading(page)).toHaveText(names.get(DETAILS)!);
-    await expect(page.getByText("Loading preview…")).toBeVisible();
-    const aborted = page.waitForEvent(
-      "requestfailed",
-      (failed) =>
-        new URL(failed.url()).pathname ===
-        `/mokly-viewer/entries/${DETAILS}.json`,
-    );
-    await openFolder(page, "example/team");
-    await navLink(page, MEMBERS).click();
-    await expect(heading(page)).toHaveText(names.get(MEMBERS)!);
-    await aborted;
-    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
-    release();
-    await page.unrouteAll({ behavior: "wait" });
-    await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
-    await expect(heading(page)).toHaveText(names.get(MEMBERS)!);
-    for (const frame of await page.locator("#mb-main iframe").all())
-      await expect(frame).toHaveAttribute(
-        "title",
-        new RegExp(`^${names.get(MEMBERS)} — `),
-      );
-  });
-});
-
-test("a detail of another deployment loads the requested URL again", async ({
-  page,
-  request,
-}) => {
-  const names = await titles(request);
-  await page.goto(route(WELCOME));
-  await expect(heading(page)).toHaveText(names.get(WELCOME)!);
-  const loads = loadsOf(page);
-  const replaced = rewritten((body) => ({
-    ...body,
-    detailId: "f".repeat(64),
-  }));
-  let reads = 0;
-  await page.route(`**/mokly-viewer/entries/${DETAILS}.json`, (held) =>
-    reads++ === 0 ? replaced(held) : held.continue(),
-  );
-  await navLink(page, DETAILS).click();
-  await expect.poll(() => loads.count).toBe(1);
-  await expect(page).toHaveURL(new RegExp(`${route(DETAILS)}$`));
-  await expect(heading(page)).toHaveText(names.get(DETAILS)!);
-  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
-  expect(reads).toBe(2);
 });
 
 /**
@@ -159,20 +87,11 @@ test("a detail of another deployment loads the requested URL again", async ({
  * shell gives up.
  */
 const FAILURES: readonly [string, (held: Route) => Promise<void>, number][] = [
-  ["an error status", (held) => held.fulfill({ status: 500, body: "" }), 0],
   ["a network failure", (held) => held.abort("failed"), 0],
   [
     "a detail of another revision",
     rewritten((body) => ({ ...body, revision: Number(body.revision) + 1000 })),
     1,
-  ],
-  [
-    "a detail of another catalogue",
-    rewritten((body) => ({
-      ...body,
-      identity: { ...(body.identity as object), title: "Another catalogue" },
-    })),
-    0,
   ],
 ];
 
@@ -184,8 +103,6 @@ for (const [failure, answer, indexReads] of FAILURES)
     allowBrowserError,
   }) => {
     const detailPath = `/mokly-viewer/entries/${DETAILS}.json`;
-    if (failure === "an error status")
-      allowBrowserError(responseFailure(baseURL!, detailPath, 500));
     if (failure === "a network failure")
       allowBrowserError(networkFailure(baseURL!, detailPath));
     const names = await titles(request);

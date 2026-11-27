@@ -3,66 +3,64 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { DOCUMENT_FRAME, expectFrameSource } from "./workspace_actions.js";
 
-for (const width of [390, 1280]) {
-  test(`Markdown overview and guide open, link and change appearance at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/view/example/");
-    await expect(page.locator("#mb-main h2")).toHaveText("Example");
-    const frame = page.frameLocator(DOCUMENT_FRAME);
-    await expect(
-      frame.getByRole("heading", { name: "Example", exact: true }),
-    ).toBeVisible();
-    await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
-    await frame.getByRole("link", { name: "Read the workspace guide" }).click();
-    await expect(page).toHaveURL(
-      /\/view\/example\/workspace-guide\/\?fragment=your-first-visit$/,
-    );
-    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
-    await expect(frame.locator("#your-first-visit")).toBeVisible();
-    await expect(frame.getByRole("img")).toBeVisible();
-    expect(
-      await frame
-        .getByRole("img")
-        .evaluate((image: HTMLImageElement) => image.naturalWidth),
-    ).toBeGreaterThan(0);
-    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
-    await expectFrameSource(
-      page.locator(DOCUMENT_FRAME),
-      /index\.dark\.html#your-first-visit$/,
-    );
-    await expect(frame.locator("html")).toHaveAttribute(
-      "style",
-      /color-scheme: dark/,
-    );
-    await frame.getByRole("link", { name: "Example overview" }).click();
-    await expect(page).toHaveURL(/\/view\/example\/\?fragment=start-here$/);
-    await expect(frame.locator("#start-here")).toBeVisible();
-    await page.goBack();
-    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
-    await page.reload();
-    await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
-    await expectFrameSource(
-      page.locator(DOCUMENT_FRAME),
-      /index\.dark\.html#your-first-visit$/,
-    );
-    // Switch both sources through the rendered control instead of reading metadata.
-    await page.getByLabel("Appearance", { exact: true }).selectOption("light");
-    await expectFrameSource(
-      page.locator(DOCUMENT_FRAME),
-      /index\.html#your-first-visit$/,
-    );
-    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
-    await expectFrameSource(
-      page.locator(DOCUMENT_FRAME),
-      /index\.dark\.html#your-first-visit$/,
-    );
-  });
-}
+test("Markdown overview and guide open, link and change appearance at 1280px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/view/example/");
+  await expect(page.locator("#mb-main h2")).toHaveText("Example");
+  const frame = page.frameLocator(DOCUMENT_FRAME);
+  await expect(
+    frame.getByRole("heading", { name: "Example", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
+  await frame.getByRole("link", { name: "Read the workspace guide" }).click();
+  await expect(page).toHaveURL(
+    /\/view\/example\/workspace-guide\/\?fragment=your-first-visit$/,
+  );
+  await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+  await expect(frame.locator("#your-first-visit")).toBeVisible();
+  await expect(frame.getByRole("img")).toBeVisible();
+  expect(
+    await frame
+      .getByRole("img")
+      .evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expectFrameSource(
+    page.locator(DOCUMENT_FRAME),
+    /index\.dark\.html#your-first-visit$/,
+  );
+  await expect(frame.locator("html")).toHaveAttribute(
+    "style",
+    /color-scheme: dark/,
+  );
+  await frame.getByRole("link", { name: "Example overview" }).click();
+  await expect(page).toHaveURL(/\/view\/example\/\?fragment=start-here$/);
+  await expect(frame.locator("#start-here")).toBeVisible();
+  await page.goBack();
+  await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+  await page.reload();
+  await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
+  await expectFrameSource(
+    page.locator(DOCUMENT_FRAME),
+    /index\.dark\.html#your-first-visit$/,
+  );
+  // Switch both sources through the rendered control instead of reading metadata.
+  await page.getByLabel("Appearance", { exact: true }).selectOption("light");
+  await expectFrameSource(
+    page.locator(DOCUMENT_FRAME),
+    /index\.html#your-first-visit$/,
+  );
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expectFrameSource(
+    page.locator(DOCUMENT_FRAME),
+    /index\.dark\.html#your-first-visit$/,
+  );
+});

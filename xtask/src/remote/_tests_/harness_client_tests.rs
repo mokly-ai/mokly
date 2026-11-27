@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
+use crate::remote::plan::plan_support::plan_counts;
 
 use super::harness_tests::{Case, output};
 
@@ -18,6 +19,7 @@ pub(super) fn client(
 ) -> Unimock {
     let warmups = Arc::new(AtomicUsize::new(0));
     let probes = Arc::new(AtomicUsize::new(0));
+    let commands = plan_counts().commands;
     let stop_attempts = Arc::new(AtomicUsize::new(0));
     let completed_attempts = stop_attempts.clone();
     let warm_events = Arc::clone(&events);
@@ -116,7 +118,7 @@ pub(super) fn client(
                 }
                 return Ok(result);
             }
-            assert_eq!(probes.load(Ordering::SeqCst), 14);
+            assert_eq!(probes.load(Ordering::SeqCst), commands);
             assert!(
                 log.unwrap()
                     .to_string_lossy()
@@ -151,7 +153,7 @@ pub(super) fn client(
                 .unwrap()
                 .push(format!("download:{id}"));
             assert!(target.to_string_lossy().contains("20261006T120000Z-42"));
-            if case == Case::Download && source.ends_with("viewer.json") {
+            if case == Case::Download && source.contains("/viewer-") {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
