@@ -100,7 +100,8 @@ The access worker obeys these rules:
 - It keeps an `Authorization` header that a request already has, and the
   cookies that the browser sends with the request.
 - It answers a navigation whose answer is 401 with the start page, so that the
-  frame asks for a new token.
+  frame asks for a new token. It tries to remove the rejected token it added
+  if storage still holds that value, and waits for the result before answering.
 - It stores no response, and it sends the token to no other place.
 
 Decision: the header goes only to the exact origin of the worker, because the

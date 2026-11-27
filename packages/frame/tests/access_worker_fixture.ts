@@ -12,13 +12,20 @@ export function tokenDatabase() {
   const writes: unknown[] = [];
   let nextAbort: AbortPoint | undefined;
   let abortedPuts = 0;
+  let committedDeletes = 0;
+  let abortedTransactions = 0;
 
   function observeWrites(transaction: IDBTransaction) {
     const abortAt = nextAbort;
     nextAbort = undefined;
     const pendingWrites: unknown[] = [];
+    let pendingDeletes = 0;
     transaction.addEventListener("complete", () => {
       writes.push(...pendingWrites);
+      committedDeletes += pendingDeletes;
+    });
+    transaction.addEventListener("abort", () => {
+      abortedTransactions++;
     });
     if (abortAt === "before-request") queueMicrotask(() => transaction.abort());
 
@@ -33,6 +40,12 @@ export function tokenDatabase() {
           abortedPuts++;
         });
       }
+      return request;
+    };
+    const remove = store.delete.bind(store);
+    store.delete = (key) => {
+      const request = remove(key);
+      pendingDeletes++;
       return request;
     };
   }
@@ -61,13 +74,20 @@ export function tokenDatabase() {
     get abortedPuts() {
       return abortedPuts;
     },
+    get committedDeletes() {
+      return committedDeletes;
+    },
+    get abortedTransactions() {
+      return abortedTransactions;
+    },
   };
 }
 
 export function accessWorker(
   code: string,
   storage = tokenDatabase(),
-  answer: (request: Request) => Response = () => new Response("content"),
+  answer: (request: Request) => Response | Promise<Response> = () =>
+    new Response("content"),
 ) {
   const listeners = new Map<string, (event: object) => void>();
   const acknowledgements: { data: string; writes: number }[] = [];

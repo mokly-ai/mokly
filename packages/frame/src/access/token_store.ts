@@ -31,18 +31,35 @@ export async function readToken(): Promise<AccessToken | undefined> {
   });
 }
 
-export async function storeToken(value: AccessToken): Promise<void> {
+async function updateToken(
+  update: (current: unknown, store: IDBObjectStore) => void,
+): Promise<void> {
   const database = await openTokenDatabase();
   const transaction = database.transaction(STORE, "readwrite");
   const store = transaction.objectStore(STORE);
   return new Promise((resolve, reject) => {
     const request = store.get(KEY);
-    request.onsuccess = () => {
-      const current: unknown = request.result;
-      if (!validAccessToken(current) || value.expiresAt > current.expiresAt)
-        store.put({ token: value.token, expiresAt: value.expiresAt }, KEY);
-    };
+    request.onsuccess = () => update(request.result, store);
     transaction.oncomplete = () => resolve();
     transaction.onabort = () => reject(transaction.error);
+  });
+}
+
+export function storeToken(value: AccessToken): Promise<void> {
+  return updateToken((current, store) => {
+    if (!validAccessToken(current) || value.expiresAt > current.expiresAt)
+      store.put({ token: value.token, expiresAt: value.expiresAt }, KEY);
+  });
+}
+
+export function deleteTokenIfCurrent(token: string): Promise<void> {
+  return updateToken((current, store) => {
+    if (
+      typeof current === "object" &&
+      current !== null &&
+      "token" in current &&
+      current.token === token
+    )
+      store.delete(KEY);
   });
 }

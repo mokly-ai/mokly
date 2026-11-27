@@ -24,6 +24,13 @@ const token = (token: string, expiresAt: number) =>
     expiresAt,
   });
 const screen = `${frameOrigin}/static/screen.html`;
+const startUrl = frameOrigin + accessStartPath;
+
+function navigationRequest(init?: RequestInit) {
+  const request = new Request(screen, init);
+  Object.defineProperty(request, "mode", { value: "navigate" });
+  return request;
+}
 
 test("the worker confirms committed storage and keeps the newest own-window token across restarts", async () => {
   const storage = tokenDatabase();
@@ -112,19 +119,22 @@ test("the worker fetches a navigation with its body and redirect mode and replac
   const start = new Response("<script>start();</script>", {
     headers: { "Content-Type": "text/html" },
   });
-  const worker = accessWorker(code, tokenDatabase(), (request) =>
-    request.url === frameOrigin + accessStartPath
-      ? start
-      : new Response(null, { status: 401 }),
-  );
+  const storage = tokenDatabase();
+  let deletesAtFallback: number | undefined;
+  const worker = accessWorker(code, storage, (request) => {
+    if (request.url === startUrl) {
+      deletesAtFallback = storage.committedDeletes;
+      return start;
+    }
+    return new Response(null, { status: 401 });
+  });
   await worker.send(token("old", 10));
-  const navigation = new Request(screen, {
+  const navigation = navigationRequest({
     method: "POST",
     body: "value",
     credentials: "include",
     redirect: "manual",
   });
-  Object.defineProperty(navigation, "mode", { value: "navigate" });
   assert.equal(await worker.fetch(navigation), start);
   const [outgoing, fallback] = worker.requests;
   assert.equal(outgoing?.url, screen);
@@ -140,5 +150,73 @@ test("the worker fetches a navigation with its body and redirect mode and replac
   assert.deepEqual(
     worker.requests.map(({ url }) => url),
     [screen, frameOrigin + accessStartPath, screen, screen],
+  );
+  assert.equal(deletesAtFallback, 1);
+  assert.equal(worker.requests.at(-1)?.headers.get("Authorization"), null);
+
+  await worker.send(token("fresh", 9));
+  await worker.fetch(new Request(screen));
+  assert.equal(
+    worker.requests.at(-1)?.headers.get("Authorization"),
+    "Bearer fresh",
+  );
+});
+
+test("a rejected navigation keeps the newer token written after it was sent", async () => {
+  const storage = tokenDatabase();
+  const renewingWorker = accessWorker(code, storage);
+  const start = new Response("start");
+  const worker = accessWorker(code, storage, async (request) => {
+    if (request.url === startUrl) return start;
+    await renewingWorker.send(token("renewed", 11));
+    return new Response(null, { status: 401 });
+  });
+  await worker.send(token("old", 10));
+  assert.equal(await worker.fetch(navigationRequest()), start);
+  assert.equal(worker.requests[0]?.headers.get("Authorization"), "Bearer old");
+  await renewingWorker.fetch(new Request(screen));
+  assert.equal(
+    renewingWorker.requests[0]?.headers.get("Authorization"),
+    "Bearer renewed",
+  );
+});
+
+test("a rejected navigation with its own authorization keeps a matching stored token", async () => {
+  const start = new Response("start");
+  const worker = accessWorker(code, tokenDatabase(), (request) =>
+    request.url === startUrl ? start : new Response(null, { status: 401 }),
+  );
+  await worker.send(token("stored", 10));
+  const navigation = navigationRequest({
+    headers: { Authorization: "Bearer stored" },
+  });
+  assert.equal(await worker.fetch(navigation), start);
+  assert.equal(worker.requests[0], navigation);
+  await worker.fetch(new Request(screen));
+  assert.equal(
+    worker.requests.at(-1)?.headers.get("Authorization"),
+    "Bearer stored",
+  );
+});
+
+test("a rejected navigation returns the start page after token removal fails", async () => {
+  const storage = tokenDatabase();
+  const start = new Response("start");
+  let abortsAtFallback: number | undefined;
+  const worker = accessWorker(code, storage, (request) => {
+    if (request.url === startUrl) {
+      abortsAtFallback = storage.abortedTransactions;
+      return start;
+    }
+    return new Response(null, { status: 401 });
+  });
+  await worker.send(token("stored", 10));
+  storage.abortNextTransaction();
+  assert.equal(await worker.fetch(navigationRequest()), start);
+  assert.equal(abortsAtFallback, 1);
+  await worker.fetch(new Request(screen));
+  assert.equal(
+    worker.requests.at(-1)?.headers.get("Authorization"),
+    "Bearer stored",
   );
 });

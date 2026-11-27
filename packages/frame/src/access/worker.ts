@@ -2,7 +2,7 @@
 
 import { decodeAccessMessage } from "./channel.js";
 import { accessStartPath } from "./paths.js";
-import { readToken, storeToken } from "./token_store.js";
+import { deleteTokenIfCurrent, readToken, storeToken } from "./token_store.js";
 import { tokenStorageFailed, tokenStored } from "./worker_ack.js";
 
 declare const self: ServiceWorkerGlobalScope;
@@ -11,27 +11,27 @@ const origin = self.location.origin;
 
 async function fetchOwn(request: Request): Promise<Response> {
   let outgoing = request;
-  if (!request.headers.has("Authorization")) {
-    const token = await readToken().catch(() => undefined);
-    if (token) {
-      const headers = new Headers(request.headers);
-      headers.set("Authorization", `Bearer ${token.token}`);
-      // A no-cors header guard strips Authorization, and Request init cannot set navigate.
-      const mode =
-        request.mode === "no-cors" || request.mode === "navigate"
-          ? "same-origin"
-          : request.mode;
-      outgoing = new Request(request, { headers, mode });
-    }
+  const token = request.headers.has("Authorization")
+    ? undefined
+    : await readToken().catch(() => undefined);
+  if (token) {
+    const headers = new Headers(request.headers);
+    headers.set("Authorization", `Bearer ${token.token}`);
+    // A no-cors header guard strips Authorization, and Request init cannot set navigate.
+    const mode =
+      request.mode === "no-cors" || request.mode === "navigate"
+        ? "same-origin"
+        : request.mode;
+    outgoing = new Request(request, { headers, mode });
   }
   const response = await fetch(outgoing);
-  if (request.mode === "navigate" && response.status === 401)
-    return fetch(new URL(accessStartPath, origin), {
-      mode: "same-origin",
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-  return response;
+  if (request.mode !== "navigate" || response.status !== 401) return response;
+  if (token) await deleteTokenIfCurrent(token.token).catch(() => undefined);
+  return fetch(new URL(accessStartPath, origin), {
+    mode: "same-origin",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
 }
 
 self.addEventListener("install", (event) =>

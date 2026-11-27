@@ -212,7 +212,8 @@ of spelling them in source.
   worker hand-off before the start page reloads.
 - [`src/access/worker.ts`](./src/access/worker.ts) authenticates requests to its
   own origin and uses [`token_store.ts`](./src/access/token_store.ts) to keep
-  the latest token in IndexedDB.
+  the latest token in IndexedDB. The store compares the rejected and stored
+  token values and deletes a match in one write transaction.
 - [`src/adapters/message_transport.ts`](./src/adapters/message_transport.ts)
   — `messageTransport`, the bounded request and reply state of one
   cross-origin session
