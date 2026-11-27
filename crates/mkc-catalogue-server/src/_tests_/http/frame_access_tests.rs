@@ -130,11 +130,20 @@ async fn private_iframe_navigation_without_an_indexed_start_page_keeps_the_ordin
 #[tokio::test]
 async fn direct_reads_of_missing_public_access_files_keep_the_ordinary_denial() {
     for path in [START_PATH, WORKER_PATH] {
-        let index = transactions(Unimock::new(
-            BlobsMock::publication_file
-                .next_call(matching!(&ID, path))
-                .returns(Ok(None)),
-        ));
+        let missing = if path == START_PATH {
+            Unimock::new(
+                BlobsMock::publication_file
+                    .next_call(matching!(&ID, &START_PATH))
+                    .returns(Ok(None)),
+            )
+        } else {
+            Unimock::new(
+                BlobsMock::publication_file
+                    .next_call(matching!(&ID, &WORKER_PATH))
+                    .returns(Ok(None)),
+            )
+        };
+        let index = transactions(missing);
         let router = router(mocked_catalogue(
             anonymous_private(),
             index,
