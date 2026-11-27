@@ -64,7 +64,7 @@ async fn catalogue_grants_and_headers_share_the_exact_admitted_origins() {
                     .await
                     .unwrap();
                 if method == "POST" {
-                    assert_eq!(response.status(), if admitted { 204 } else { 403 });
+                    assert_eq!(response.status(), if admitted { 200 } else { 403 });
                     assert_eq!(
                         response.headers().contains_key(header::SET_COOKIE),
                         admitted
@@ -90,7 +90,7 @@ async fn catalogue_grants_and_headers_share_the_exact_admitted_origins() {
                 );
                 assert_eq!(
                     response.headers()[header::VARY],
-                    "Origin, Cookie, Accept-Encoding"
+                    "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
                 );
                 if admitted {
                     assert_eq!(

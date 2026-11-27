@@ -1,6 +1,7 @@
 """Private/public delivery and one-use capability integration assertions."""
 
 import hashlib
+import json
 
 
 def private_access(api, catalogue, owner, project, publication, fixture_files):
@@ -9,8 +10,9 @@ def private_access(api, catalogue, owner, project, publication, fixture_files):
     api.call("POST", path, {}, expected=401)
     grant, _ = api.call("POST", path, {}, owner, 201)
     assert api.sql("SELECT count(*) FROM catalogue_grants WHERE digest='" + hashlib.sha256(grant["grant"].encode()).hexdigest() + "'") == "1"
-    _, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=204)
+    exchange, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=200)
     cookie = headers["set-cookie"].split(";")[0]
+    assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
     assert "Domain=" not in headers["set-cookie"]
     catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=401)
     fragment = next(name for name in fixture_files if name.startswith("static/") and name.endswith(".html"))
@@ -114,8 +116,9 @@ def revoke_access(api, catalogue, owner, project, publication):
     grant_path = project_path + "/publications/" + publication["id"] + "/access-grants"
     member, _ = api.call("POST", project_path + "/members", {"userId": guest["user"]["id"], "role": "reviewer"}, owner, 201)
     grant, _ = api.call("POST", grant_path, {}, guest, 201)
-    _, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=204)
+    exchange, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=200)
     cookie = headers["set-cookie"].split(";")[0]
+    assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
     catalogue.fetch(publication, cookie=cookie)
     api.call("DELETE", project_path + "/members/" + member["id"], {"version": 1}, owner, 204)
     catalogue.fetch(publication, cookie=cookie, expected=404)

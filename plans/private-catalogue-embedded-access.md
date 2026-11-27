@@ -399,16 +399,21 @@ Depends on: 2, 3, 4
 
 Depends on: 5
 
-- [ ] Accept `Authorization: Bearer` as the alternative credential, as the
+- [x] Accept `Authorization: Bearer` as the alternative credential, as the
       design calls say. Keep cookie clearing for the cookie only.
-- [ ] Answer `/_access` with 200 and the token JSON beside the cookie.
-- [ ] Serve the start page for a private uncredentialed frame navigation, and
+      Branch: `calummoore/embedded-access-catalogue-server-bearer-9fes`.
+- [x] Answer `/_access` with 200 and the token JSON beside the cookie.
+      Branch: `calummoore/embedded-access-catalogue-server-bearer-9fes`.
+- [x] Serve the start page for a private uncredentialed frame navigation, and
       the two Mokly files without a credential, with `Service-Worker-Allowed: /`
       on the worker.
-- [ ] Add `authorization` to the CORS request headers and `Authorization` and
+      Branch: `calummoore/embedded-access-catalogue-server-bearer-9fes`.
+- [x] Add `authorization` to the CORS request headers and `Authorization` and
       `Sec-Fetch-Dest` to `Vary`.
-- [ ] Unit tests for each rule, and a test that no other private file opens
+      Branch: `calummoore/embedded-access-catalogue-server-bearer-9fes`.
+- [x] Unit tests for each rule, and a test that no other private file opens
       without a credential.
+      Branch: `calummoore/embedded-access-catalogue-server-bearer-9fes`.
 
 ## Milestone 7: Mokly start page, worker and relay
 

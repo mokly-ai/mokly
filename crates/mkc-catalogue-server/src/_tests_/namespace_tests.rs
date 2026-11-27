@@ -35,11 +35,13 @@ async fn obsolete_namespace_is_a_no_store_indexed_404_on_get_and_head() {
                 cache,
                 etag,
                 content_type,
+                access_worker,
             } = service.serve(input, &mut false).unwrap()
             else {
                 panic!("expected indexed 404");
             };
             assert_eq!(status, 404, "{path}");
+            assert!(!access_worker);
             assert_eq!(cache, "no-store");
             assert_eq!(framing, FileFraming::Full(8));
             assert_eq!(content_type, "text/html");

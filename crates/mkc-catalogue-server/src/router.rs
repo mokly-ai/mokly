@@ -2,6 +2,7 @@
 
 use std::result;
 use std::sync::Arc;
+use std::time::Duration;
 
 use axum::http::{HeaderValue, Method, header};
 use axum::routing::get;
@@ -52,14 +53,18 @@ impl RouterBuilder for RouterFactory {
                     .allow_credentials(true)
                     .allow_methods([Method::GET, Method::HEAD, Method::POST])
                     .allow_headers([
+                        header::AUTHORIZATION,
                         header::CONTENT_TYPE,
                         header::HeaderName::from_static("x-request-id"),
                     ])
+                    .max_age(Duration::from_secs(600))
                     .expose_headers([header::HeaderName::from_static("x-request-id")]),
             )
             .layer(SetResponseHeaderLayer::overriding(
                 header::VARY,
-                HeaderValue::from_static("Origin, Cookie, Accept-Encoding"),
+                HeaderValue::from_static(
+                    "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
+                ),
             ))
             .layer(middleware::from_fn(rpc_error::axum::log_errors))
             .layer(PropagateRequestIdLayer::x_request_id())

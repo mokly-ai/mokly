@@ -29,6 +29,7 @@ async fn partial_response_has_exact_range_headers_and_is_never_coded() {
                 content_type: "application/json".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         },
     )));
@@ -66,6 +67,7 @@ async fn unsatisfied_response_has_total_length_without_a_fallback_body() {
                     content_type: "text/plain".into(),
                     cache: "no-store",
                     etag: "W/\"hash\"".into(),
+                    access_worker: false,
                 })
             }),
     );
@@ -102,6 +104,7 @@ async fn head_range_is_forwarded_without_a_body() {
                 content_type: "text/plain".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         },
     )));
@@ -138,6 +141,7 @@ async fn if_range_presence_is_forwarded_to_the_full_response_selection() {
                     content_type: "text/plain".into(),
                     cache: "no-cache",
                     etag: "W/\"hash\"".into(),
+                    access_worker: false,
                 })
             }),
     );

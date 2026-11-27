@@ -43,7 +43,7 @@ class Catalogue(Api):
             assert response.status == expected, (
                 method, path, response.status, expected, data[:500], self.lines[-20:])
             assert response.getheader("X-Content-Type-Options") == "nosniff"
-            assert response.getheader("Vary") == "Origin, Cookie, Accept-Encoding"
+            assert response.getheader("Vary") == "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
             csp = response.getheader("Content-Security-Policy")
             directives = [part.strip().split() for part in csp.split(";")]
             ancestors = [part[1:] for part in directives if part and part[0] == "frame-ancestors"]

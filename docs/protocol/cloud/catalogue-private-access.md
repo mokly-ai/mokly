@@ -1,6 +1,6 @@
 # Catalogue Private Access
 
-Status: The catalogue server does not answer `/_access` with the token, accept the bearer token, serve the start page or the public Mokly files yet. The [catalogue server bearer and start page milestone](../../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them. The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it.
+Status: The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it.
 
 This is the private access sub-contract of [Catalogue hosting](./catalogue-hosting.md).
 Every file of a private publication needs a credential. The app gets one

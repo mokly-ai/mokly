@@ -17,13 +17,14 @@ def desktop_admission(api, catalogue, owner, project, publication, executable):
                 grant, _ = api.call("POST", f'/v1/projects/{project["id"]}/publications/{publication["id"]}/access-grants', {},
                                     session=owner, expected=201, extra={"Origin": origin})
                 admitted = enabled or origin == api.origin
-                _, headers = host.fetch(publication, "/_access", "POST", {"grant": grant["grant"]},
-                                        origin=origin, expected=204 if admitted else 403)
+                exchange, headers = host.fetch(publication, "/_access", "POST", {"grant": grant["grant"]},
+                                               origin=origin, expected=200 if admitted else 403)
                 assert headers.get("access-control-allow-origin") == (origin if admitted else None)
                 if not admitted:
                     assert "set-cookie" not in headers
                     continue
                 cookie = headers["set-cookie"].split(";")[0]
+                assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
                 for path in ["/", "/mokly-viewer/index.json"]:
                     body, headers = host.fetch(publication, path, cookie=cookie, origin=origin)
                     assert body

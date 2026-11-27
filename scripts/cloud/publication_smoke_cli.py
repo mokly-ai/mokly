@@ -90,8 +90,9 @@ def _stored_envelope(api, project, publication_id):
 
 def _served_build(api, catalogue, owner, project, publication, destination):
     grant, _ = api.call("POST", "/v1/projects/" + project["id"] + "/publications/" + publication["id"] + "/access-grants", {}, owner, 201)
-    _, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=204)
+    exchange, headers = catalogue.fetch(publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=200)
     cookie = headers["set-cookie"].split(";")[0]
+    assert json.loads(exchange)["token"] == cookie.split("=", 1)[1]
     marker = json.loads((destination / ".mokly-export-artifact").read_bytes())
     assert marker["schemaVersion"] == 3
     for entry in marker["files"]:
