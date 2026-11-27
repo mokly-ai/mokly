@@ -107,27 +107,59 @@ The user approved the plan: "impl the plan, run tests/spike before impl". The
 user gave access to a test Mac mini over Tailscale for the WebKit and Safari
 proof. The message answered none of the open decisions, so they stay open.
 
-### Open decisions
+### User answers, 2026-11-27
 
-The message of 2026-11-25 asks the user for these. The milestones that they
-affect wait for the answers.
+The user answered D1 to D7 with "1 = A, 2 = A, 3 = B, 4 = A, 5 = A, 6 = A,
+7 = B". The options check report is
+`.context/private-catalogue-embedded-access/options-check.md`.
 
-- **D1. Where the WebKit proof runs.** Affects Milestones 3 and 8.
-- **D2. Token lifetime and scope.** Affects Milestones 4 and 5.
-- **D3. What a reader sees when no route works.** Affects Milestones 4, 6
-  and 7.
-- **D4. Where the renewal relay lives.** Affects Milestones 4 and 6.
-- **D5. Whose bytes the public start page and worker are.** Affects
-  Milestones 4, 5 and 6.
-- **D6. A catalogue's own service worker.** Affects Milestones 4 and 6.
-- **D7. The words of the blocked stage.** The open follow-up item
-  `blocked-cookie-message-has-no-words.md`. Affects Milestone 7, and adds a
-  mockup milestone when the words change.
-
-The options of each decision are in the message and in
-`.context/private-catalogue-embedded-access/decisions.md`. The options check
-report is `.context/private-catalogue-embedded-access/options-check.md`. The answers go here
-with their date.
+- **D1. Where the WebKit proof runs: A.** The hand-run proof of Milestone 3
+  stays the WebKit proof, and the gate stays Chromium only. Not chosen: B, a
+  WebKit project in the app browser suite; C, A and a manual Safari check
+  after the deploy; D, B and C; E, a scheduled WebKit job; F, a gated WebKit
+  spec in the Mokly browser suite, which was the recommendation; G, a device
+  farm with old Safari; H, real Safari on the `macos-26` runner. Reason: no
+  new gate. The manual Safari check after the deploy stays under the
+  post-merge follow-up, as the approved plan had it.
+- **D2. Token lifetime and scope: A.** The token is the cookie's own signed
+  capability: one publication, one user, 300 seconds. Not chosen: B, a
+  separate 120-second token; C, A and a `Sec-Fetch-Site` and `Origin` check;
+  D, a token bound to a browser key. Reason: the mockup scripts that can read
+  the token can already read the same files, and a shorter life adds
+  failures after a tab sleeps.
+- **D3. What a reader sees when no route works: B.** The app keeps its
+  blocked stage. `postMessageAdapter` reports the failure through a new
+  documented callback, and the app then shows the stage. Not chosen: A,
+  remove the stage; C, keep the stage behind a check that no longer fails;
+  E, a hidden start frame before the viewer mounts; F, a new error code
+  through the viewer's `onError`. Reason: one clear stage is better than
+  many broken frames, and the stage already exists.
+- **D4. Where the renewal relay lives: A.** The relay goes into the frame
+  probe, and the probe budget rises from 11 KiB to 12 KiB (12,288 bytes).
+  Not chosen: B, a second relay script in every screen; C, no relay. Reason:
+  the relay reuses the probe's trust check and adds no script to every
+  screen.
+- **D5. Whose bytes the public files are: A.** The server serves the
+  publication's own CLI-written start page and worker without a credential.
+  Old publications have none and rely on the partitioned cookie. Not chosen:
+  B, A with a hash check against known Mokly releases; C, Mokly files built
+  into the server. Reason: the host name is a random ID, and a writer can
+  already copy the catalogue anywhere.
+- **D6. A catalogue's own service worker: A.** The Mokly worker takes the
+  scope `/`. A mockup's own worker with a narrower scope outranks it, the
+  adapter then reports the failure, and the docs state the limit. Not
+  chosen: B, the scope `/static/`; C, A and a build warning; D, the scope
+  `/static/mokly-generated/`; E, A and a server refusal of authored worker
+  scripts; F, two Mokly registrations. Reason: one registration covers the
+  whole host, and the case is rare.
+- **D7. The words of the blocked stage: B.** The stage takes option C of
+  `blocked-cookie-message-has-no-words.md` now: the title **This publication
+  can’t open in this browser** and the text "Open it in Chrome, Edge or
+  Firefox on a computer." The stage loses the action **Open catalogue in a
+  new tab**. The cloud mockup changes in its own mockup milestone. Not
+  chosen: A, leave the words to the follow-up item. Reason: the stage then
+  gives a way forward that works, in the same pull request. The answer also
+  resolves that follow-up item.
 
 ### Design calls
 
@@ -174,7 +206,8 @@ My calls, 2026-11-25, under the decision test:
 - **Mokly file names.** The start page is
   `mokly-viewer/client/access-start.html`, with its script inline, and the
   worker is `mokly-viewer/client/access-worker.js`, served with
-  `Service-Worker-Allowed: /`. D5 decides whose bytes the server serves.
+  `Service-Worker-Allowed: /`. The server serves the publication's own
+  CLI-written files, as D5 says.
 - **Parent trust.** The start page and the probe accept a token only when
   `event.source === window.parent` and `event.origin` equals the `mokly-host`
   parameter. They send only to that exact origin. The CSP `frame-ancestors`
@@ -187,7 +220,7 @@ My calls, 2026-11-25, under the decision test:
   inspection with the new adapter.
 - **Renewal.** After the reload the screen holds the probe, not the start
   page. A relay in the screen forwards a valid `token` message to the
-  controlling Mokly worker. D4 decides where the relay lives. The adapter
+  controlling Mokly worker. The relay lives in the frame probe, as D4 says. The adapter
   renews each mounted frame before the token expires. The host's callback
   shares one token between frames.
 - **Host API.** `postMessageAdapter` gains an optional `access` callback that
@@ -268,24 +301,48 @@ mini, and in Playwright WebKit, Chromium and Firefox on Linux. G stays the
 route, and F is not needed. Summary:
 `.context/private-catalogue-embedded-access/webkit-proof/RESULT.md`.
 
-## Milestone 4: Documentation for the embedded route
+## Milestone 4: Mockup of the blocked stage words
 
-Depends on: 2, 3, and the answers to D2 to D6
+Tags: mockup
+
+Depends on: none
+
+D7 B gives the blocked stage new words and removes its new-tab action.
+
+- [ ] Change the blocked-cookie card in
+      `docs/mockups/src/screens/product/viewer/stage-access.tsx`: the title
+      **This publication can’t open in this browser**, the text "Open it in
+      Chrome, Edge or Firefox on a computer.", and no action **Open
+      catalogue in a new tab**. Check the words against
+      `docs/protocol/cloud/product-copy.md`.
+- [ ] Run the cloud mockup check that `docs/mockups/README.md` gives, and
+      look at the changed screen at desktop and mobile widths.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockup shows.
+
+## Milestone 5: Documentation for the embedded route
+
+Depends on: 2, 3, 4
 
 - [ ] Write `docs/protocol/mokly-frame-access.md`: the two files, the start
-      page flow, the access channel messages, the worker rules, the loop
-      guard, and the `access` callback of `postMessageAdapter`. No cloud name.
+      page flow, the access channel messages, the worker rules and its scope
+      `/` with the limit of D6, the loop guard, the `access` callback of
+      `postMessageAdapter`, and the failure callback of D3. No cloud name.
 - [ ] Update the frame probe, probe wire, viewer, and export inventory pages
-      for the access relay, the new files, and the callback.
-- [ ] Update the cloud private access rules: the bearer header, the start
-      page answer, the public Mokly files, the `/_access` answer, CORS, and
-      `Vary`. Update `viewer.md` and `viewer-host.md` for the app's bearer
-      reads and the reader's view when no route works.
+      for the access relay, the new files, and the callbacks. Raise the probe
+      budget to 12 KiB (12,288 bytes), as D4 says.
+- [ ] Update the cloud private access rules: the bearer header, the token of
+      D2, the start page answer, the public Mokly files of D5, the `/_access`
+      answer, CORS, and `Vary`. Update `viewer.md` and `viewer-host.md` for
+      the app's bearer reads and the blocked stage of D3 and D7.
+- [ ] Update each protocol statement that waits for
+      `blocked-cookie-message-has-no-words.md`, which that item lists, to the
+      words of D7.
 - [ ] Update the READMEs of the four areas.
 
-## Milestone 5: Catalogue server bearer and start page
+## Milestone 6: Catalogue server bearer and start page
 
-Depends on: 4
+Depends on: 5
 
 - [ ] Accept `Authorization: Bearer` as the alternative credential, as the
       design calls say. Keep cookie clearing for the cookie only.
@@ -298,49 +355,62 @@ Depends on: 4
 - [ ] Unit tests for each rule, and a test that no other private file opens
       without a credential.
 
-## Milestone 6: Mokly start page, worker and relay
+## Milestone 7: Mokly start page, worker and relay
 
-Depends on: 4
+Depends on: 5
 
-Runs in parallel with Milestone 5. The files do not overlap.
+Runs in parallel with Milestone 6. The files do not overlap.
 
 - [ ] Build `access-start.html` and `access-worker.js` in `packages/frame`,
       copy them through the viewer's browser outputs, and write them in the
       static build under `mokly-viewer/client/`.
-- [ ] Add the access relay to the probe bundle.
+- [ ] Add the access relay to the probe bundle, and raise the budget tests
+      `packages/frame/tests/probe_budget.test.ts` and
+      `tests/probe_inert.test.ts` to 12,288 bytes.
 - [ ] Add the `access` callback to `postMessageAdapter`: answer a start page
       request, wait for the reload before `hello`, renew before expiry, and
-      report `unavailable` as D3 says.
+      report the failure through the callback of D3.
 - [ ] Package tests for the channel validation, the adapter states, and the
       worker's header rule. Regenerate the contract fixtures with
       `cargo xtask mokly-fixtures`.
 
-## Milestone 7: App access through the bearer token
+## Milestone 8: App access through the bearer token
 
-Depends on: 5, 6
+Depends on: 6, 7
 
 - [ ] Keep the token from `/_access` in `access.ts`, share it, and renew it
       before expiry.
 - [ ] Send the bearer on the app's private reads and the reachability check.
-- [ ] Pass the `access` callback to `postMessageAdapter` in
-      `published.web.tsx`, and show the reader's view of D3.
+- [ ] Pass the `access` callback and the failure callback to
+      `postMessageAdapter` in `published.web.tsx`, and set the blocked access
+      state when the failure callback fires.
 
-## Milestone 8: End-to-end proof
+## Milestone 9: Blocked stage words
 
-Depends on: 7
+Tags: ui
+
+Depends on: 4, 8
+
+- [ ] Give `AccessBlocked` in `packages/app/src/viewer/stage.tsx` the words
+      of Milestone 4, and remove its action **Open catalogue in a new tab**.
+- [ ] Update the app tests of the stage, and check the stage in a browser
+      at desktop and mobile widths.
+
+## Milestone 10: End-to-end proof
+
+Depends on: 9
 
 - [ ] An app browser spec that drops the catalogue cookie at the network,
       not through a site setting that also blocks workers: a private screen
       loads through the worker, with its images and styles.
 - [ ] The same spec checks a renewal after the token's lifetime, with a
       test clock, not a wait.
-- [ ] Run the WebKit proof against the real catalogue server, as D1 says.
 - [ ] Update the follow-up items that name the changed rules:
-      `private-frames-break-after-cookie-expiry.md`,
-      `blocked-cookie-message-has-no-words.md`, and
-      `private-comparison-overlay-blocks-current.md`.
+      `private-frames-break-after-cookie-expiry.md` and
+      `private-comparison-overlay-blocks-current.md`. Delete
+      `blocked-cookie-message-has-no-words.md`, which D7 resolves.
 
-## Milestone 9: Verification, commit, review, and pull request
+## Milestone 11: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
