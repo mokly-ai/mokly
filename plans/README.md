@@ -8,10 +8,6 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
-- [Source package override](./source-package-override.md) — a
-  `moduleResolution.sourcePackages` entry names the build and source folders
-  of one workspace package, or turns the automatic source detection off for
-  it. Cal answered its decisions. It waits for his approval.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
