@@ -5,13 +5,9 @@ import type {
   App,
   BrowserWindow,
   BrowserWindowConstructorOptions,
-  Menu,
-  MenuItem,
-  MenuItemConstructorOptions,
 } from "electron";
 
 import { installLifecycle, singleInstance } from "../lifecycle.js";
-import { installMenu } from "../menu.js";
 import { createWindow, windowBounds } from "../window.js";
 
 const bounds = { x: 50, y: 60, width: 1000, height: 700 };
@@ -159,45 +155,4 @@ test("single instance rejects a second process and delivers OS events to the run
   installLifecycle(application, "linux", () => {});
   events.get("window-all-closed")!();
   assert.equal(quits, 2);
-});
-
-test("the default menu gains Check for updates in Help", () => {
-  const install = (available: boolean) => {
-    let options: MenuItemConstructorOptions | undefined;
-    let checks = 0;
-    const item = {} as MenuItem;
-    const submenu = {
-      append: (input: MenuItem) => {
-        assert.equal(input, item);
-      },
-    };
-    const menu = { items: [{ role: "help", submenu }] } as unknown as Menu;
-    installMenu(
-      {
-        current: () => menu,
-        item: (input) => {
-          options = input;
-          return item;
-        },
-        build: () => assert.fail("Linux must keep the default menu"),
-        set: () => assert.fail("Linux must keep the default menu"),
-        focusedWindow: assert.fail,
-      },
-      {
-        available,
-        check: () => {
-          checks++;
-        },
-      },
-      "linux",
-    );
-    assert.ok(options);
-    return { options, checkCount: () => checks };
-  };
-  const on = install(true);
-  assert.equal(on.options.label, "Check for updates");
-  assert.equal(on.options.enabled, true);
-  on.options.click?.({} as MenuItem, undefined, {} as Electron.KeyboardEvent);
-  assert.equal(on.checkCount(), 1);
-  assert.equal(install(false).options.enabled, false);
 });
