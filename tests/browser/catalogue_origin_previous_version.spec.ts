@@ -71,7 +71,7 @@ const catalogueHeaders = {
     "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://app.example.test",
   "Referrer-Policy": "no-referrer",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-  Vary: "Origin, Cookie, Accept-Encoding",
+  Vary: "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
 };
 
 const test = browserTest.extend<object, { catalogueURL: string }>({

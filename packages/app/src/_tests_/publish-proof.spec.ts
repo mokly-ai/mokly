@@ -117,7 +117,9 @@ test("the pinned fixture publishes private bytes with isolated access", async ({
   });
   expect(anonymous.status).toBe(401);
   expect(anonymous.headers.get("cache-control")).toBe("no-store");
-  expect(anonymous.headers.get("vary")).toBe("Origin, Cookie, Accept-Encoding");
+  expect(anonymous.headers.get("vary")).toBe(
+    "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
+  );
 
   const access = await page.evaluate(
     async ([origin, project, id]) => {
@@ -149,9 +151,19 @@ test("the pinned fixture publishes private bytes with isolated access", async ({
     headers: { Origin: appOrigin, "content-type": "application/json" },
     body: JSON.stringify({ grant: access.grant }),
   });
-  expect(exchange.status).toBe(204);
+  expect(exchange.status).toBe(200);
+  const exchanged = (await exchange.json()) as {
+    token: unknown;
+    expiresIn: unknown;
+  };
+  expect(Object.keys(exchanged).sort()).toEqual(["expiresIn", "token"]);
+  expect(typeof exchanged.token).toBe("string");
+  expect(exchanged.token).not.toBe("");
+  expect(exchanged.expiresIn).toBe(300);
   expect(exchange.headers.get("cache-control")).toBe("no-store");
-  expect(exchange.headers.get("vary")).toBe("Origin, Cookie, Accept-Encoding");
+  expect(exchange.headers.get("vary")).toBe(
+    "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
+  );
   expect(exchange.headers.get("access-control-allow-origin")).toBe(appOrigin);
   expect(exchange.headers.get("access-control-allow-credentials")).toBe("true");
   const setCookie = exchange.headers.get("set-cookie") ?? "";
@@ -170,6 +182,7 @@ test("the pinned fixture publishes private bytes with isolated access", async ({
   }
   expect(/(?:^|;)\s*Domain=/i.test(setCookie)).toBe(false);
   const cookie = setCookie.split(";", 1)[0];
+  expect(cookie).toBe(`__Host-mkc_catalogue=${String(exchanged.token)}`);
   const privateFile = await catalogueFetch(`${catalogueUrl}/index.html`, {
     headers: { Origin: appOrigin, Cookie: cookie },
   });
@@ -184,7 +197,7 @@ test("the pinned fixture publishes private bytes with isolated access", async ({
   expect(bytes.equals(extracted.stdout)).toBe(true);
   expect(privateFile.headers.get("cache-control")).toBe("no-store");
   expect(privateFile.headers.get("vary")).toBe(
-    "Origin, Cookie, Accept-Encoding",
+    "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
   );
   expect(privateFile.headers.get("access-control-allow-origin")).toBe(
     appOrigin,
