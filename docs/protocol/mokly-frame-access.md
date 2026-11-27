@@ -209,8 +209,10 @@ call. Only one renewal runs at a time. A failed renewal sends nothing and runs
 again at the next renewal time. On each `visibilitychange` to a visible page
 and on each `pageshow`, a renewal whose time has passed runs at once.
 
-Decision: renewal also on `visibilitychange` and `pageshow`, because iOS
-pauses the timers of background tabs.
+Decision: renewal also on `visibilitychange`, because iOS pauses the timers of
+background tabs, and on `pageshow`, because the timers of a page in the
+back-forward cache stop. A loaded page gets `pageshow` only when the browser
+restores it from that cache.
 
 ## Access Relay
 

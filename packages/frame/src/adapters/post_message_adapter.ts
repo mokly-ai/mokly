@@ -4,6 +4,7 @@ import type {
   FrameEvent,
   MountedFrame,
 } from "../frame_adapter.js";
+import { onPageExit } from "../page_exit.js";
 import { origin } from "../probe/values.js";
 
 import { frameHandshake } from "./access_phase.js";
@@ -54,6 +55,7 @@ export function postMessageAdapter(options: {
       let initialSubscription = view.onEvent;
       let ready = false,
         disposed = false;
+      let restoreTimer: number | undefined;
       let release = () => {};
       let resolveReady: (mounted: MountedFrame) => void;
       let rejectReady: (error: FrameError) => void;
@@ -63,6 +65,10 @@ export function postMessageAdapter(options: {
       });
       const notify = (event: FrameEvent) =>
         notifyFrameListeners(win, listeners, event);
+      const finishRestore = () => {
+        win.clearTimeout(restoreTimer);
+        restoreTimer = undefined;
+      };
       const dispose = (
         code: "disposed" | "timeout" | "unavailable" = "disposed",
       ) => {
@@ -77,8 +83,10 @@ export function postMessageAdapter(options: {
         disposed = true;
         view.signal?.removeEventListener("abort", unload);
         handshake.dispose();
+        finishRestore();
         win.removeEventListener("message", receive);
-        win.removeEventListener("pagehide", unload);
+        win.removeEventListener("pagehide", hide);
+        win.removeEventListener("pageshow", restore);
         frame.removeEventListener("load", handshake.load);
         transport.dispose(code);
         releaseRenewal?.();
@@ -92,12 +100,14 @@ export function postMessageAdapter(options: {
         if (!frame.contentWindow) throw new FrameError("unavailable");
         frame.contentWindow.postMessage(json, frameOrigin);
       };
-      const transport = messageTransport(win, nonce, post, () =>
-        dispose("timeout"),
-      );
+      const transport = messageTransport(win, nonce, post, () => {
+        // The restore deadline determines whether the session survives.
+        if (restoreTimer === undefined) dispose("timeout");
+      });
+      const hello = () => transport.send({ type: "hello" });
       const handshake = frameHandshake(
         win,
-        () => transport.send({ type: "hello" }),
+        hello,
         dispose,
         renewal && {
           request: renewal.request,
@@ -121,11 +131,8 @@ export function postMessageAdapter(options: {
         });
       const subscribed = () => {
         void subscribeEvents().catch((error: unknown) => {
-          if (!disposed)
-            notify({
-              type: "error",
-              code: error instanceof FrameError ? error.code : "unavailable",
-            });
+          const code = error instanceof FrameError ? error.code : "unavailable";
+          if (!disposed && code !== "timeout") notify({ type: "error", code });
         });
       };
       const mounted: MountedFrame = {
@@ -204,14 +211,16 @@ export function postMessageAdapter(options: {
         if (handshake.receive(event.data)) return;
         const message = transport.receive(event.data);
         if (!message) return;
-        if (!ready) {
-          if (message.type === "ready" && handshake.ready()) {
+        if (message.type === "ready") {
+          if (ready) finishRestore();
+          else if (handshake.ready()) {
             ready = true;
             if (listeners.size) subscribed();
             resolveReady(mounted);
           }
           return;
         }
+        if (!ready) return;
         if (message.type === "error" && message.requestId === null)
           notify({ type: "error", code: message.code });
         if (
@@ -222,13 +231,25 @@ export function postMessageAdapter(options: {
         forwardPostMessageEvent(message, usage, notify);
       };
       const unload = () => dispose();
+      const hide = onPageExit(unload);
+      const restore = (event: PageTransitionEvent) => {
+        if (event.persisted !== true || !ready) return;
+        win.clearTimeout(restoreTimer);
+        restoreTimer = win.setTimeout(unload, 5_000);
+        try {
+          hello();
+        } catch {
+          unload();
+        }
+      };
       release = ownFrame(frame, unload);
       const releaseRenewal = renewal?.add(win, (message) => {
         if (ready) post(message);
       });
       view.signal?.addEventListener("abort", unload, { once: true });
       win.addEventListener("message", receive);
-      win.addEventListener("pagehide", unload);
+      win.addEventListener("pagehide", hide);
+      win.addEventListener("pageshow", restore);
       frame.addEventListener("load", handshake.load);
       frame.setAttribute("sandbox", "allow-same-origin allow-scripts");
       try {

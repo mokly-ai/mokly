@@ -11,6 +11,13 @@ export function accessClock(context: TestContext) {
   return context.mock.timers;
 }
 
+export function pageTransition(
+  type: "pagehide" | "pageshow",
+  persisted = true,
+) {
+  return Object.assign(new Event(type), { persisted });
+}
+
 export function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((done) => {

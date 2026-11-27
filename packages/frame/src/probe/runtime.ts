@@ -1,4 +1,5 @@
 import type { FrameNavigation, InstanceBoundary } from "../frame_adapter.js";
+import { onPageExit } from "../page_exit.js";
 
 import { canvasKey, canvasPointerInput } from "./canvas_input.js";
 import { contentBox } from "./content_box.js";
@@ -225,7 +226,7 @@ export const probeRuntime = (
     environment.cancelAnimationFrame(pending);
     disposed();
   };
-  win.addEventListener("pagehide", dispose, options);
+  win.addEventListener("pagehide", onPageExit(dispose), options);
   return {
     __list: () => run(reader.__list),
     __highlight: (

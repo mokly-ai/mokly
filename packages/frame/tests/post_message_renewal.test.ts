@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
+import { accessWorkerPath } from "../dist/access/paths.js";
 import { postMessageAdapter } from "../dist/index.js";
 
 import {
@@ -10,8 +12,10 @@ import {
   deferred,
   frameOrigin,
   now,
+  pageTransition,
   tokenPacket,
 } from "./access_adapter_fixture.js";
+import { probeHarness } from "./probe_wire_fixture.js";
 
 test("renewal starts a minute before expiry and sends one token to every ready frame", async (context) => {
   const clock = accessClock(context);
@@ -35,7 +39,12 @@ test("renewal starts a minute before expiry and sends one token to every ready f
   assert.equal(access.mock.callCount(), 1);
   clock.tick(1);
   assert.equal(access.mock.callCount(), 2);
-  direct.window.dispatchEvent(new Event("pageshow"));
+  const hello = direct.posts.at(-1);
+  const beforeRestore = direct.posts.length;
+  direct.window.dispatchEvent(pageTransition("pagehide"));
+  direct.window.dispatchEvent(pageTransition("pageshow"));
+  assert.deepEqual(direct.posts.slice(beforeRestore), [hello]);
+  await direct.ready();
   first.document.dispatchEvent(new Event("visibilitychange"));
   clock.tick(20_000);
   assert.equal(access.mock.callCount(), 2);
@@ -111,7 +120,22 @@ test("visible pages and pageshow renew immediately and disposal removes their li
   await frame.start();
   frame.access("reload");
   frame.load();
-  const mounted = await frame.ready();
+  const probe = probeHarness(
+    readFileSync(
+      new URL("../dist/browser/frame-probe.js", import.meta.url),
+      "utf8",
+    ),
+    new URL(frame.replacements[0]!).search,
+  );
+  const hello = frame.posts.at(-1)!;
+  const exchange = (data: string) => {
+    const before = probe.messages.length;
+    probe.send(data);
+    assert.equal(probe.messages.length, before + 1);
+    frame.raw(probe.messages[before]!.data);
+  };
+  exchange(hello.data);
+  const mounted = await frame.mount;
 
   clock.setTime(now + 60_000);
   frame.document.visibilityState = "hidden";
@@ -123,11 +147,27 @@ test("visible pages and pageshow renew immediately and disposal removes their li
   assert.equal(access.mock.callCount(), 2);
   assert.deepEqual(await visible, tokenPacket("lease", now + 180_000));
 
+  const beforeRestore = frame.posts.length;
+  frame.window.dispatchEvent(pageTransition("pagehide"));
+  probe.listeners.get("pagehide")?.(pageTransition("pagehide"));
   clock.setTime(now + 120_000);
+  probe.listeners.get("pageshow")?.(pageTransition("pageshow"));
+  frame.window.dispatchEvent(pageTransition("pageshow"));
+  assert.deepEqual(frame.posts.slice(beforeRestore), [hello]);
   const shown = frame.nextPost();
-  frame.window.dispatchEvent(new Event("pageshow"));
+  exchange(frame.posts.at(-1)!.data);
+  assert.deepEqual(probe.messages[1], probe.messages[0]);
   assert.equal(access.mock.callCount(), 3);
-  assert.deepEqual(await shown, tokenPacket("lease", now + 240_000));
+  const renewed = await shown;
+  assert.deepEqual(renewed, tokenPacket("lease", now + 240_000));
+  probe.control(frameOrigin + accessWorkerPath);
+  probe.send(renewed.data);
+  assert.deepEqual(probe.workerMessages, [renewed.data]);
+
+  clock.tick(5_000);
+  const measurement = mounted.contentBox!();
+  exchange(frame.posts.at(-1)!.data);
+  assert.equal(await measurement, null);
 
   mounted.dispose();
   assert.deepEqual(
@@ -141,6 +181,7 @@ test("visible pages and pageshow renew immediately and disposal removes their li
   );
   clock.tick(500_000);
   frame.document.dispatchEvent(new Event("visibilitychange"));
-  frame.window.dispatchEvent(new Event("pageshow"));
+  frame.window.dispatchEvent(pageTransition("pagehide"));
+  frame.window.dispatchEvent(pageTransition("pageshow"));
   assert.equal(access.mock.callCount(), 3);
 });

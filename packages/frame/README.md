@@ -79,6 +79,10 @@ worker. The worker adds the token to the requests of the frame. The
 [frame access contract](../../docs/protocol/mokly-frame-access.md) defines the
 start page, the worker, the access channel, the loop guard and the renewal.
 
+A host `pagehide` into the back-forward cache keeps the mount and its renewal.
+On restore, the adapter sends `hello` with the same nonce to check the probe.
+It disposes the mount quietly if the probe does not answer.
+
 ### Usage updates
 
 The viewer's [`stage_sources.ts`](../viewer/src/shell/stage_sources.ts)

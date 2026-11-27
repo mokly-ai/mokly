@@ -33,6 +33,10 @@ access worker that controls the document. The
 [frame access contract](../../../../docs/protocol/mokly-frame-access.md#access-relay)
 defines the relay.
 
+After the handshake, a `pagehide` into the back-forward cache keeps the session
+and relay. Any other `pagehide` disposes the runtime and removes the message
+listener.
+
 ## Published map and markers
 
 `metadata.ts` reads the inert map that the static build writes into each
