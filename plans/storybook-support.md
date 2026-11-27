@@ -156,22 +156,15 @@ A branch from this branch applies each answer and deletes the file.
 Each decision is in full in this plan, with its options and a recommended
 option. None has an answer yet, so no option applies.
 
-- [Decision 18b](#18b-mocks-of-modules-that-another-setup-owns): mocks of
-  modules that another setup owns. It blocks Milestones 30 and 32. On
-  2026-11-26 the user asked whether decision 18, option E, still holds
-  given this item, and a re-check of decision 18 runs before the answer.
-  [Decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere) has the
-  answer D, of 2026-11-26.
-- [Decision 18e](#18e-several-folders-one-graph-for-each-folder): the
-  re-check of decision 18, with the spike result of 2026-11-27. It
-  recommends a folder graph for each Storybook folder, which closes 18b. It
-  blocks Milestones 30 and 32, together with
-  [decision 18e-1](#18e-1-mocks-of-installed-packages-whose-files-differ).
-  [Decisions 18e-2](#18e-2-values-that-have-no-bridge-key),
-  [18e-3](#18e-3-item-32s-warning-under-folder-graphs),
-  [18e-4](#18e-4-entries-of-roots-that-name-no-storybook-folder), and
-  [18e-5](#18e-5-workspace-package-sources-under-folder-graphs) apply only
-  when 18e takes a folder graph.
+- [Decision 18e-4](#18e-4-entries-of-roots-that-name-no-storybook-folder):
+  the graph of the screens of a root that names no Storybook folder.
+- [Decision 18e-5](#18e-5-workspace-package-sources-under-folder-graphs):
+  the setup that compiles a workspace package's source under folder graphs.
+
+Both block Milestones 30 and 32. On 2026-11-27 the user chose B of
+[decision 18e](#18e-several-folders-one-graph-for-each-folder), a folder
+graph for each Storybook folder, E of 18e-1, D of 18e-2, and D of 18e-3.
+Decision 18b closed with that answer.
 
 ### Follow-up items that wait for the user
 
@@ -557,6 +550,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Action:** ask the user, because B and E change the stories of a folder
   that did not ask for the mock, and C and D add a warning that fails
   `--strict`.
+- **Answer:** closed with no option on 2026-11-27, because the user chose B
+  of decision 18e. Each preview's mocks then reach the modules of its own
+  stories only.
 
 ### 18c. A root whose Storybook folder lies elsewhere
 
@@ -856,6 +852,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   the answer to 18e-1.
 - **Action:** ask the user, because B replaces option E, which the user chose
   on 2026-11-19, and it narrows the answers to 18a, 18c, and item 32.
+- **Answer:** B, chosen by the user on 2026-11-27. It replaces option E of
+  decision 18. Decision 18b closes. "What B changes" below applies when
+  track H starts, together with the answers to 18e-4 and 18e-5.
 - **Spike result:** B works for the tested cases, with Storybook 10.6.9,
   Vite 8.3.8, and React 19.2.3, on Node 22.15.0 and 24.22.1. The spike used
   Storybook's real preset loader, `viteFinal` chains, env preset, mock
@@ -1039,6 +1038,7 @@ the milestones do not change before the answer.
   cannot make in an installed package.
 - **Action:** ask the user, because E applies a mock to another file than
   Storybook's browser target, and B adds a warning that fails `--strict`.
+- **Answer:** E, chosen by the user on 2026-11-27.
 
 #### 18e-2. Values that have no bridge key
 
@@ -1096,6 +1096,7 @@ the milestones do not change before the answer.
   the value.
 - **Action:** ask the user, because D changes which values match an entry,
   B adds a warning that fails `--strict`, and C adds an authoring field.
+- **Answer:** D, chosen by the user on 2026-11-27.
 
 #### 18e-3. Item 32's warning under folder graphs
 
@@ -1150,6 +1151,8 @@ the milestones do not change before the answer.
   `#selection` alias, which works as designed.
 - **Action:** ask the user, because every option except C changes the user's
   answer to item 32.
+- **Answer:** D, chosen by the user on 2026-11-27. It replaces the answer B
+  to item 32 under folder graphs.
 
 #### 18e-4. Entries of roots that name no Storybook folder
 
