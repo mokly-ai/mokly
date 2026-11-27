@@ -1,7 +1,5 @@
 # mkc-catalogue-server
 
-Status: The server does not accept the bearer token, answer `/_access` with the token, serve the start page or the public Mokly files, or admit the `authorization` header yet. The [catalogue server bearer and start page milestone](../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them.
-
 The isolated HTTP host for Mokly Cloud publications. Run this binary on the
 wildcard catalogue domain; it serves indexed user-authored HTML and assets.
 The API and app never serve these publication files.
@@ -195,7 +193,9 @@ a unique Postgres schema and a temporary local store.
 - [http.rs](./src/http.rs) — `CatalogueHandler`, the bounded HTTP adapter: one Host header, GET/HEAD file requests and the exact-origin `/_access` grant exchange.
 - [router.rs](./src/router.rs) — `RouterFactory`, which answers CORS preflight before host routing and sets the isolation headers on every response.
 - [routes.rs](./src/routes.rs) — host parsing into a publication or branch alias and single-decoding path validation, including the refused `__mokly` root.
-- [catalogue.rs](./src/catalogue.rs) — `Catalogue` and `PublishedCatalogue`, the authorized exact path resolution that selects the status, cache class, ETag, framing and body source.
+- [catalogue.rs](./src/catalogue.rs) — `Catalogue` and `PublishedCatalogue`, the host and indexed path resolution, redirects and cache policy.
+- [embedded_access.rs](./src/embedded_access.rs) — bearer and lazy cookie forwarding, plus indexed start page and worker selection for uncredentialed requests.
+- [file_response.rs](./src/file_response.rs) — indexed file metadata, weak validators, byte range selection and worker scope.
 - [delivery.rs](./src/delivery.rs) — the body selection between the hot cache and a storage stream, including the single-flight fill.
 - [cache.rs](./src/cache.rs) and [cache_fill.rs](./src/cache_fill.rs) — `BlobCache` and `LruBlobCache`, the lifetime-accounted LRU keyed by `BlobKey`, with `ENTRY_OVERHEAD_BYTES`, `MAX_CACHED_BLOB_BYTES`, the fill reservations and the waiters.
 - [range.rs](./src/range.rs) — pure single-range selection against the indexed length.

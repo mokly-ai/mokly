@@ -74,7 +74,7 @@ def smoke(executable, enabled):
                     assert headers.get("Access-Control-Allow-Origin") == (origin if admitted else None)
                     if admitted:
                         assert headers["Access-Control-Allow-Credentials"] == "true"
-                    assert headers["Vary"] == "Origin, Cookie, Accept-Encoding"
+                    assert headers["Vary"] == "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
                     ancestors = read_frame_ancestors(headers["Content-Security-Policy"])
                     assert ancestors == [expected], ancestors
                     assert headers.get("Set-Cookie") is None

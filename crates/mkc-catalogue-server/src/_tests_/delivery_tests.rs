@@ -236,7 +236,7 @@ async fn populated_cache_never_bypasses_private_authorization() {
     );
     service.access = Arc::new(Unimock::new(
         CatalogueAccessMock::authorize
-            .next_call(matching!(&ID, _, _))
+            .next_call(matching!(&ID, _, _, _))
             .returns(Err(PublicationError::Unauthorized)),
     ));
 

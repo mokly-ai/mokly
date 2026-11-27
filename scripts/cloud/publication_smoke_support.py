@@ -43,7 +43,7 @@ class Catalogue(Api):
             assert response.status == expected, (
                 method, path, response.status, expected, data[:500], self.lines[-20:])
             assert response.getheader("X-Content-Type-Options") == "nosniff"
-            assert response.getheader("Vary") == "Origin, Cookie, Accept-Encoding"
+            assert response.getheader("Vary") == "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
             csp = response.getheader("Content-Security-Policy")
             directives = [part.strip().split() for part in csp.split(";")]
             ancestors = [part[1:] for part in directives if part and part[0] == "frame-ancestors"]
@@ -54,6 +54,28 @@ class Catalogue(Api):
             return data, dict((key.lower(), value) for key, value in response.getheaders())
         finally:
             connection.close()
+
+
+def exchange_catalogue_grant(server, publication, grant, origin):
+    """Exchange a grant and check the capability in both response channels."""
+    body, headers = Catalogue.fetch(
+        server, publication, "/_access", "POST", {"grant": grant}, origin=origin, expected=200,
+    )
+    try:
+        exchange = json.loads(body)
+    except ValueError as error:
+        raise AssertionError(f"Invalid grant exchange JSON: {body!r}") from error
+    assert isinstance(exchange, dict) and exchange.keys() == {"token", "expiresIn"}, body
+    assert exchange["expiresIn"] == 300, body
+    set_cookie = headers.get("set-cookie", "")
+    cookie = set_cookie.split(";", 1)[0]
+    name, _, cookie_value = cookie.partition("=")
+    token = exchange["token"]
+    assert name == "__Host-mkc_catalogue" and cookie_value, (body, set_cookie)
+    assert token == cookie_value, (body, set_cookie)
+    assert "Domain=" not in set_cookie, (body, set_cookie)
+    assert headers.get("access-control-allow-origin") == origin, (body, headers)
+    return cookie, token
 
 
 def files_from_tar(body):

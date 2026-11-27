@@ -5,6 +5,7 @@ use std::task::Poll;
 
 use async_compression::Level;
 use async_compression::tokio::bufread::{BrotliEncoder, GzipEncoder};
+use axum::Json;
 use axum::body::Body;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
@@ -13,12 +14,22 @@ use futures_util::{Stream, StreamExt};
 use mkc_domain::client_origins::AdmittedOrigins;
 use mkc_file_store_interface::stream::BlobStream;
 use rpc_error::RpcError;
+use serde::Serialize;
 use tokio::io::BufReader;
 use tokio_util::io::{ReaderStream, StreamReader};
 
 use crate::catalogue::{Catalogue, FileBody, FileFraming, Served};
 use crate::compression::{Coding, negotiate};
 use crate::error::{Error, ErrorResultExt, Result};
+
+const ACCESS_LIFETIME_SECONDS: u16 = 300;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AccessExchange<'a> {
+    token: &'a str,
+    expires_in: u16,
+}
 
 pub(crate) fn failure(error: Error) -> Response {
     let mut response = RpcError::from(error).into_response();
@@ -42,6 +53,7 @@ pub(crate) async fn render(
             mut content_type,
             cache,
             etag,
+            access_worker,
         } => {
             if content_type == "application/json" {
                 content_type.push_str("; charset=utf-8");
@@ -68,6 +80,12 @@ pub(crate) async fn render(
             }
             if let Some(value) = coding.header() {
                 insert_file_header(&mut response, header::CONTENT_ENCODING, value)?;
+            }
+            if access_worker {
+                response.headers_mut().insert(
+                    header::HeaderName::from_static("service-worker-allowed"),
+                    HeaderValue::from_static("/"),
+                );
             }
             frame(&mut response, framing, coding)?;
             response
@@ -177,10 +195,15 @@ fn insert_file_header(
     Ok(())
 }
 
-pub(crate) fn exchanged(cookie: &str) -> Result<Response> {
-    let mut response = StatusCode::NO_CONTENT.into_response();
+/// Return the same capability to the app and to the browser's cookie store.
+pub(crate) fn exchanged(token: &str) -> Result<Response> {
+    let mut response = Json(AccessExchange {
+        token,
+        expires_in: ACCESS_LIFETIME_SECONDS,
+    })
+    .into_response();
     let cookie = format!(
-        "__Host-mkc_catalogue={cookie}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300; Partitioned"
+        "__Host-mkc_catalogue={token}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age={ACCESS_LIFETIME_SECONDS}; Partitioned"
     );
     insert_file_header(&mut response, header::SET_COOKIE, &cookie)?;
     response

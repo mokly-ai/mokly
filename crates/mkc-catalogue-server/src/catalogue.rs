@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use axum::http::HeaderValue;
 use mkc_domain::blob::{BlobHash, BlobKey};
 use mkc_domain::ids::PublicationId;
 use mkc_domain::values::Visibility;
@@ -15,16 +16,20 @@ use mkc_publications::transaction::Transactions;
 use mkc_store_interface::blob::PublicationFile;
 
 use crate::cache::BlobCache;
-use crate::conditional;
 use crate::error::{Error, ErrorResultExt, Result};
-use crate::range::{self, Selection};
+use crate::file_response;
 use crate::routes::{self, Host};
 
 pub(crate) struct Request {
     pub(crate) host: String,
     pub(crate) path: String,
     pub(crate) query: Option<String>,
-    pub(crate) cookie: Option<String>,
+    /// Unparsed cookie header, used only when authorization falls back to cookies.
+    pub(crate) cookie_header: Option<HeaderValue>,
+    /// Capability from a single well-formed Bearer header.
+    pub(crate) bearer: Option<String>,
+    /// Whether this is a GET navigation into an iframe.
+    pub(crate) iframe_navigation: bool,
     pub(crate) range: Option<String>,
     pub(crate) if_range: bool,
     pub(crate) if_none_match: Option<String>,
@@ -64,6 +69,8 @@ pub(crate) enum Served {
         content_type: String,
         cache: &'static str,
         etag: String,
+        /// Whether the selected representation is the indexed access worker.
+        access_worker: bool,
     },
 }
 
@@ -83,7 +90,8 @@ pub(crate) struct PublishedCatalogue {
     pub(crate) locations: Locations,
 }
 
-trait FileLookup {
+/// Resolve a file by its indexed publication path.
+pub(crate) trait FileLookup {
     fn lookup(&self, publication: PublicationId, path: &str) -> Result<Option<PublicationFile>>;
 }
 
@@ -109,14 +117,13 @@ impl Catalogue for PublishedCatalogue {
                 });
             }
         };
-        let context =
-            match self
-                .access
-                .authorize(publication, request.cookie.as_deref(), clear_cookie)
-            {
-                Ok(value) => value,
-                Err(error) => return Err(Error::publication(error)),
-            };
+        let context = match self.authorize_request(publication, &request, clear_cookie) {
+            Ok(value) => value,
+            Err(error::Error::Unauthorized) => {
+                return self.serve_access_file(publication, &request);
+            }
+            Err(error) => return Err(Error::publication(error)),
+        };
         let mut blob_url = false;
         let mut lookup = if path.is_empty() || path.ends_with('/') {
             format!("{path}index.html")
@@ -183,67 +190,7 @@ impl Catalogue for PublishedCatalogue {
         } else {
             "no-cache"
         };
-        let length = u64::try_from(file.size).context("validate catalogue blob length")?;
-        let etag = format!("W/\"{}\"", file.key.hash);
-        if status == 200
-            && cache != "no-store"
-            && request
-                .if_none_match
-                .as_deref()
-                .is_some_and(|value| conditional::matches(value, file.key.hash.as_str()))
-        {
-            return Ok(Served::File {
-                status: 304,
-                body: None,
-                framing: FileFraming::NotModified(length),
-                content_type: file.content_type,
-                cache,
-                etag,
-            });
-        }
-        let selection = if status == 200 && !request.if_range {
-            request
-                .range
-                .as_deref()
-                .map_or(Selection::Full, |value| range::select(value, length))
-        } else {
-            Selection::Full
-        };
-        if selection == Selection::Unsatisfiable {
-            return Ok(Served::File {
-                status: 416,
-                body: None,
-                framing: FileFraming::Unsatisfiable(length),
-                content_type: file.content_type,
-                cache: "no-store",
-                etag,
-            });
-        }
-        let selected_range = match selection {
-            Selection::Partial(range) => Some(range),
-            Selection::Full | Selection::Unsatisfiable => None,
-        };
-        let body = if request.head {
-            None
-        } else {
-            Some(FileBody::Storage(BodyRequest {
-                key: file.key.clone(),
-                length,
-                range: selected_range,
-            }))
-        };
-        Ok(Served::File {
-            status: if selected_range.is_some() {
-                206
-            } else {
-                status
-            },
-            body,
-            framing: selected_range.map_or(FileFraming::Full(length), FileFraming::Partial),
-            content_type: file.content_type,
-            cache,
-            etag,
-        })
+        file_response::select(&request, file, status, cache)
     }
 
     fn exchange(&self, host: &str, grant: &str) -> Result<String> {

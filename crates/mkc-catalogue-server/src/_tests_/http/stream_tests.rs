@@ -41,6 +41,7 @@ async fn mismatched_full_stream_aborts_before_the_final_byte() {
             content_type: "text/plain".into(),
             cache: "no-cache",
             etag: "W/\"hash\"".into(),
+            access_worker: false,
         })
     }));
     let response = router(catalogue)
@@ -111,6 +112,7 @@ async fn response_backpressure_polls_only_as_the_client_reads() {
                 content_type: "application/octet-stream".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         })
     }));
@@ -159,6 +161,7 @@ async fn dropping_an_unread_response_releases_its_storage_stream() {
                 content_type: "text/plain".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         })
     }));
@@ -253,7 +256,7 @@ fn unread_bodies_do_not_starve_file_or_access_requests() {
         );
         assert_eq!(
             access.status(),
-            StatusCode::NO_CONTENT,
+            StatusCode::OK,
             "access exchange beside unread responses"
         );
         assert_eq!(slow.len(), 8);

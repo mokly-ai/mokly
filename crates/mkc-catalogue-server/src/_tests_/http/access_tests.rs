@@ -8,6 +8,7 @@ use axum::body::{Body, to_bytes};
 use axum::http::{Request, StatusCode};
 use mkc_domain::blob::{BlobHash, BlobKey};
 use mkc_file_store_interface::stream::BlobStream;
+use serde_json::{Value, json};
 use tokio_stream::wrappers::ReceiverStream;
 use tower::ServiceExt;
 use unimock::{MockFn, Unimock, matching};
@@ -33,7 +34,7 @@ fn empty_stream() -> BlobStream {
 }
 
 #[tokio::test]
-async fn grant_exchange_sets_only_a_short_lived_host_cookie() {
+async fn grant_exchange_returns_the_same_capability_as_the_short_lived_host_cookie() {
     let catalogue = Unimock::new(
         ExchangeMock
             .next_call(matching!(_, "grant"))
@@ -52,21 +53,21 @@ async fn grant_exchange_sets_only_a_short_lived_host_cookie() {
         )
         .await
         .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.headers()["vary"],
-        "Origin, Cookie, Accept-Encoding"
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
     );
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_eq!(response.headers()["content-type"], "application/json");
     assert_eq!(
         response.headers()["set-cookie"],
         "__Host-mkc_catalogue=signed; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300; Partitioned"
     );
     assert_eq!(response.headers()["cache-control"], "no-store");
-    assert!(
-        to_bytes(response.into_body(), 1024)
-            .await
-            .unwrap()
-            .is_empty()
+    let bytes = to_bytes(response.into_body(), 1024).await.unwrap();
+    assert_eq!(
+        serde_json::from_slice::<Value>(&bytes).unwrap(),
+        json!({"token": "signed", "expiresIn": 300})
     );
 }
 
@@ -108,7 +109,7 @@ async fn grant_exchange_rejects_foreign_origins_queries_extra_fields_and_oversiz
             .unwrap();
         assert_eq!(
             response.headers()["vary"],
-            "Origin, Cookie, Accept-Encoding"
+            "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
         );
         assert_eq!(response.status().as_u16(), expected);
         assert!(!response.headers().contains_key("set-cookie"));
@@ -159,6 +160,7 @@ async fn invalid_cookies_are_expired_on_success_redirects_and_denials() {
                         content_type: "text/html".into(),
                         cache: "public, max-age=31536000, immutable",
                         etag: "hash".into(),
+                        access_worker: false,
                     })
                 }
             },
@@ -182,7 +184,7 @@ async fn invalid_cookies_are_expired_on_success_redirects_and_denials() {
         assert_eq!(response.headers()["cache-control"], "no-store");
         assert_eq!(
             response.headers()["vary"],
-            "Origin, Cookie, Accept-Encoding"
+            "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
         );
     }
 }
@@ -206,6 +208,7 @@ async fn invalid_cookie_is_expired_when_async_storage_open_fails() {
                     content_type: "text/plain".into(),
                     cache: "no-store",
                     etag: "W/\"hash\"".into(),
+                    access_worker: false,
                 })
             })),
         OpenMock

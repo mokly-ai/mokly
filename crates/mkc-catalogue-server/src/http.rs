@@ -79,22 +79,18 @@ impl Dispatch for CatalogueHandler {
                 Ok(grant) => grant,
                 Err(_) => return Err(Error::InvalidRequest),
             };
-            let cookie =
+            let token =
                 tokio::task::spawn_blocking(move || catalogue.exchange(&host, &grant.grant))
                     .await
                     .context("dispatch catalogue grant exchange")??;
-            return response::exchanged(&cookie);
+            return response::exchanged(&token);
         }
         if parts.method != Method::GET && parts.method != Method::HEAD {
             return Err(Error::InvalidRequest);
         }
-        let cookie = field(header::COOKIE)
-            .and_then(|value| {
-                value
-                    .split(';')
-                    .find_map(|cookie| cookie.trim().strip_prefix("__Host-mkc_catalogue="))
-            })
-            .map(str::to_owned);
+        let iframe_navigation = parts.method == Method::GET
+            && field(HeaderName::from_static("sec-fetch-mode")) == Some("navigate")
+            && field(HeaderName::from_static("sec-fetch-dest")) == Some("iframe");
         let range = joined_header(&parts.headers, header::RANGE);
         let if_none_match = joined_header(&parts.headers, header::IF_NONE_MATCH);
         let accept_encoding = joined_header(&parts.headers, header::ACCEPT_ENCODING);
@@ -102,7 +98,9 @@ impl Dispatch for CatalogueHandler {
             host,
             path: parts.uri.path().to_owned(),
             query: parts.uri.query().map(str::to_owned),
-            cookie,
+            cookie_header: parts.headers.get(header::COOKIE).cloned(),
+            bearer: bearer(&parts.headers).map(str::to_owned),
+            iframe_navigation,
             range,
             if_range: parts.headers.contains_key(header::IF_RANGE),
             if_none_match,
@@ -131,6 +129,24 @@ impl Dispatch for CatalogueHandler {
         }
         Ok(response)
     }
+}
+
+fn bearer(headers: &HeaderMap) -> Option<&str> {
+    let authorization = headers.get_all(header::AUTHORIZATION);
+    let mut values = authorization.iter();
+    let value = values.next()?.to_str().ok()?;
+    if values.next().is_some() {
+        return None;
+    }
+    let (scheme, credential) = value.split_once(' ')?;
+    let token = credential.trim_start_matches(' ');
+    let stem = token.trim_end_matches('=');
+    (scheme.eq_ignore_ascii_case("bearer")
+        && !stem.is_empty()
+        && stem.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~' | b'+' | b'/')
+        }))
+    .then_some(token)
 }
 
 fn joined_header(headers: &HeaderMap, name: HeaderName) -> Option<String> {

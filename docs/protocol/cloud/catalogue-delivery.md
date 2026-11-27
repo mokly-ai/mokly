@@ -1,7 +1,5 @@
 # Catalogue Delivery
 
-Status: CORS does not admit the `authorization` header or send `Access-Control-Max-Age` yet, and `Vary` does not name `Authorization` and `Sec-Fetch-Dest` yet. The [catalogue server bearer and start page milestone](../../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them.
-
 This is the header, range, compression and cache sub-contract of
 [Catalogue hosting](./catalogue-hosting.md).
 

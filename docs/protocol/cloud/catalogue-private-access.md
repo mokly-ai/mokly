@@ -1,11 +1,13 @@
 # Catalogue Private Access
 
-Status: The catalogue server does not answer `/_access` with the token, accept the bearer token, serve the start page or the public Mokly files yet. The [catalogue server bearer and start page milestone](../../../plans/private-catalogue-embedded-access.md#milestone-6-catalogue-server-bearer-and-start-page) adds them. The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it.
+Status: The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it.
 
 This is the private access sub-contract of [Catalogue hosting](./catalogue-hosting.md).
-Every file of a private publication needs a credential. The app gets one
-through a one-use access grant. The publication host exchanges the grant for
-a cookie and a bearer token that hold the same signed capability.
+Every file of a private publication needs a credential except the start page
+and worker of the [embedded access route](#embedded-access-route). The app
+gets a credential through a one-use access grant. The publication host
+exchanges the grant for a cookie and a bearer token that hold the same signed
+capability.
 
 ## Access Grants
 
@@ -71,10 +73,11 @@ deleting the project takes effect on the next request; signing out alone
 leaves the capability usable for at most its five-minute lifetime. Rotate the
 shared signing key to revoke all outstanding capabilities. Credentials, the
 `Authorization` header included, and request bodies are never logged. An
-existing private catalogue returns 401 without access while a nonexistent
-publication returns 404. Decision: that existence oracle is deliberate,
-because the viewer uses 401 to start the grant exchange. The start page below
-also answers 401, so it discloses nothing new.
+existing private catalogue returns 401 without access except when it serves
+one of the two public Mokly files. A nonexistent publication returns 404.
+Decision: the existence oracle is deliberate, because the viewer uses 401 to
+start the grant exchange. The start page answer to a frame navigation also
+carries status 401, so it discloses nothing new.
 
 ## Embedded Access Route
 

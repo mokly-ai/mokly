@@ -8,6 +8,11 @@ use uuid::Uuid;
 
 use crate::error::{Error, Result};
 
+/// Indexed Mokly HTML for an iframe that needs a credential.
+pub(crate) const ACCESS_START_PATH: &str = "mokly-viewer/client/access-start.html";
+/// Indexed Mokly worker with publication-wide scope.
+pub(crate) const ACCESS_WORKER_PATH: &str = "mokly-viewer/client/access-worker.js";
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Host {
     Publication(PublicationId),

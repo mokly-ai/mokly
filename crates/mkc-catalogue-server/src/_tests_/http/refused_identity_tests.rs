@@ -115,7 +115,7 @@ async fn grant_exchange_status_survives_refused_identity_preferences() {
         )
         .await
         .unwrap();
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.headers()["cache-control"], "no-store");
     assert_eq!(
         response.headers()["set-cookie"],

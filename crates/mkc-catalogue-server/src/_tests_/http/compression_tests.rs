@@ -137,7 +137,10 @@ async fn compressed_response_preserves_security_cors_and_request_id_headers() {
     assert_eq!(headers["content-encoding"], "br");
     assert!(!headers.contains_key("content-length"));
     assert_eq!(headers["accept-ranges"], "bytes");
-    assert_eq!(headers["vary"], "Origin, Cookie, Accept-Encoding");
+    assert_eq!(
+        headers["vary"],
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
+    );
     assert_eq!(headers["x-content-type-options"], "nosniff");
     assert_eq!(headers["referrer-policy"], "no-referrer");
     assert_eq!(
@@ -206,6 +209,7 @@ async fn head_and_not_modified_are_coded_while_no_store_stays_identity() {
                 content_type: "application/json".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         },
     )));
@@ -234,6 +238,7 @@ async fn head_and_not_modified_are_coded_while_no_store_stays_identity() {
                 content_type: "application/json".into(),
                 cache: "no-cache",
                 etag: "W/\"hash\"".into(),
+                access_worker: false,
             })
         },
     )));
@@ -256,7 +261,7 @@ async fn head_and_not_modified_are_coded_while_no_store_stays_identity() {
     assert_eq!(response.headers()["cache-control"], "no-cache");
     assert_eq!(
         response.headers()["vary"],
-        "Origin, Cookie, Accept-Encoding"
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
     );
     assert_eq!(response.headers()["accept-ranges"], "bytes");
     assert!(to_bytes(response.into_body(), 16).await.unwrap().is_empty());

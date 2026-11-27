@@ -35,11 +35,13 @@ async fn obsolete_namespace_is_a_no_store_indexed_404_on_get_and_head() {
                 cache,
                 etag,
                 content_type,
+                access_worker,
             } = service.serve(input, &mut false).unwrap()
             else {
                 panic!("expected indexed 404");
             };
             assert_eq!(status, 404, "{path}");
+            assert!(!access_worker);
             assert_eq!(cache, "no-store");
             assert_eq!(framing, FileFraming::Full(8));
             assert_eq!(content_type, "text/html");
@@ -129,7 +131,7 @@ fn obsolete_paths_keep_normal_private_access_checks() {
     let service = PublishedCatalogue {
         access: Arc::new(Unimock::new(
             CatalogueAccessMock::authorize
-                .next_call(matching!(_, _, _))
+                .next_call(matching!(_, _, _, _))
                 .returns(Err(PublicationError::Unauthorized)),
         )),
         transactions: empty.clone(),

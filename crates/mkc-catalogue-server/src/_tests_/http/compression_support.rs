@@ -37,6 +37,7 @@ pub(super) fn full_file(bytes: Arc<[u8]>, cache: &'static str) -> Served {
         content_type: "application/json".into(),
         cache,
         etag: format!("W/\"{}\"", BlobHash::digest(bytes.as_ref())),
+        access_worker: false,
     }
 }
 

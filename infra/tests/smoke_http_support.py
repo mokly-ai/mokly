@@ -43,7 +43,7 @@ class SmokeTransport(unittest.TestCase):
                 b"<!doctype html><html>site documentation</html>"],
             "/": [404, {"Content-Type": "text/plain", "Cache-Control": "no-store",
                 "X-Content-Type-Options": "nosniff", "Access-Control-Allow-Origin": APP,
-                "Access-Control-Allow-Credentials": "true", "Vary": "Origin, Cookie, Accept-Encoding",
+                "Access-Control-Allow-Credentials": "true", "Vary": "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding",
                 "Content-Security-Policy": CSP + " " + DESKTOP}, b"Not found"],
         }
         self.billing_responses = {

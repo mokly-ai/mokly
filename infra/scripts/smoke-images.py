@@ -25,7 +25,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/cloud"))
 from smoke_support import Api
 from publication_exchange import ENVELOPE, INDEX, MARKER, publish
-from publication_smoke_support import Catalogue, files_from_tar, fixture_mokly_version, project_and_token
+from publication_smoke_support import (
+    Catalogue, exchange_catalogue_grant, files_from_tar, fixture_mokly_version, project_and_token,
+)
 
 
 def command(args, **options):
@@ -192,8 +194,7 @@ def rust_smoke(api_root, api_config, catalogue_root, catalogue_config, directory
         publication = publish(api, project, token["secret"], fixture)
         command(["sudo", "cp", "-a", str(api_root / "blobs/.") + "/.", str(catalogue_root / "blobs")])
         grant, _ = api.call("POST", "/v1/projects/" + project["id"] + "/publications/" + publication["id"] + "/access-grants", {}, owner, 201)
-        _, headers = Catalogue.fetch(catalogue, publication, "/_access", "POST", {"grant": grant["grant"]}, origin=api.origin, expected=204)
-        cookie = headers["set-cookie"].split(";")[0]
+        cookie, _ = exchange_catalogue_grant(catalogue, publication, grant["grant"], api.origin)
         data, _ = Catalogue.fetch(catalogue, publication, "/index.html", cookie=cookie, origin=api.origin)
         assert data == fixture["index.html"]
         generation = json.loads(fixture[INDEX])["comparisonUrl"]

@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use axum::body::{Body, to_bytes};
-use axum::http::{Request, StatusCode};
+use axum::http::{Request, StatusCode, header};
 use mkc_domain::blob::{BlobHash, BlobKey};
 use mkc_file_store_interface::stream::BlobStream;
 use mkc_mokly_contract::index::INDEX_PATH;
@@ -34,6 +34,7 @@ async fn assert_json_content_type(path: &str) {
             content_type: "application/json".into(),
             cache: "no-cache",
             etag: "W/\"hash\"".into(),
+            access_worker: false,
         })
     }));
     let response = router(catalogue)
@@ -70,7 +71,7 @@ async fn all_response_classes_have_csp_nosniff_and_exact_cors() {
             move |_, request, _| {
                 assert_eq!(request.host, locations().authority(ID));
                 assert_eq!(request.path, "/index.html");
-                assert_eq!(request.cookie.as_deref(), Some("cookie"));
+                assert_eq!(request.catalogue_cookie(), Some("cookie"));
                 if status == 500 {
                     Err(Error::internal(Error::NotFound))
                 } else if matches!(status, 307 | 308) {
@@ -86,6 +87,7 @@ async fn all_response_classes_have_csp_nosniff_and_exact_cors() {
                         content_type: "text/html".into(),
                         cache: "no-store",
                         etag: "W/\"hash\"".into(),
+                        access_worker: false,
                     })
                 }
             },
@@ -104,7 +106,11 @@ async fn all_response_classes_have_csp_nosniff_and_exact_cors() {
             .unwrap();
         assert_eq!(response.status().as_u16(), status);
         let headers = response.headers();
-        assert_eq!(headers["vary"], "Origin, Cookie, Accept-Encoding");
+        assert_eq!(
+            headers["vary"],
+            "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
+        );
+        assert_eq!(headers.get_all(header::VARY).iter().count(), 1);
         assert_eq!(headers["x-content-type-options"], "nosniff");
         assert_eq!(headers["referrer-policy"], "no-referrer");
         assert_eq!(headers["cache-control"], "no-store");
@@ -137,6 +143,7 @@ async fn get_and_head_keep_identical_file_headers() {
                     content_type: "text/html".into(),
                     cache: "no-cache",
                     etag: "W/\"hash\"".into(),
+                    access_worker: false,
                 })
             },
         )));
@@ -152,6 +159,10 @@ async fn get_and_head_keep_identical_file_headers() {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers()[header::VARY],
+            "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
+        );
         assert_eq!(response.headers()["content-type"], "text/html");
         assert_eq!(response.headers()["content-length"], "4");
         assert_eq!(response.headers()["cache-control"], "no-cache");
@@ -181,7 +192,7 @@ async fn preflight_is_exact_origin_and_head_errors_have_no_body() {
         .unwrap();
     assert_eq!(
         response.headers()["vary"],
-        "Origin, Cookie, Accept-Encoding"
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
     );
     assert!(response.status().is_success());
     assert_eq!(
@@ -206,7 +217,7 @@ async fn preflight_is_exact_origin_and_head_errors_have_no_body() {
         .unwrap();
     assert_eq!(
         response.headers()["vary"],
-        "Origin, Cookie, Accept-Encoding"
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
     );
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert!(
@@ -214,5 +225,49 @@ async fn preflight_is_exact_origin_and_head_errors_have_no_body() {
             .await
             .unwrap()
             .is_empty()
+    );
+}
+
+#[tokio::test]
+async fn admitted_preflight_allows_authorization_and_can_be_cached_for_ten_minutes() {
+    let router = router(Unimock::new(()));
+    let response = router
+        .oneshot(
+            Request::builder()
+                .method("OPTIONS")
+                .uri("/mokly-viewer/index.json")
+                .header(header::HOST, "unknown.example")
+                .header(header::ORIGIN, "https://app.example.com")
+                .header(header::ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "authorization")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let headers = response.headers();
+    assert_eq!(
+        headers[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+        "https://app.example.com"
+    );
+    assert_eq!(headers[header::ACCESS_CONTROL_ALLOW_CREDENTIALS], "true");
+    assert_eq!(
+        headers
+            .get(header::ACCESS_CONTROL_MAX_AGE)
+            .and_then(|value| value.to_str().ok()),
+        Some("600"),
+    );
+    assert!(
+        headers[header::ACCESS_CONTROL_ALLOW_HEADERS]
+            .to_str()
+            .unwrap()
+            .split(',')
+            .any(|name| name.trim() == "authorization")
+    );
+    assert_eq!(headers.get_all(header::VARY).iter().count(), 1);
+    assert_eq!(
+        headers[header::VARY],
+        "Origin, Cookie, Authorization, Sec-Fetch-Dest, Accept-Encoding"
     );
 }
