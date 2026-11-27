@@ -102,7 +102,9 @@ explicitly provide `postMessageAdapter({ frameOrigin })` under the
 independent frames; it owns no global document state.
 A preview frame whose mount rejects, or whose session fails after it loaded,
 shows `This preview could not be loaded.` below the frame with `Try again`.
-Try again mounts that frame again and keeps the rest of the shell as it is. An
+Try again mounts that frame again and keeps the rest of the shell as it is. A
+mount that rejects with `version` shows `This preview was built with an older
+version of Mokly. Update Mokly and build it again.` without `Try again`. An
 inspection error, such as the box limit, leaves the preview usable and shows no
 such line.
 

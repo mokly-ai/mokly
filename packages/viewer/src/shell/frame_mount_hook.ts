@@ -198,7 +198,11 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         readiness.reject(error);
         if (!controller.signal.aborted && active.current === session) {
           session.status = "error";
-          setStatus("error");
+          setStatus(
+            error instanceof FrameError && error.code === "version"
+              ? "outdated"
+              : "error",
+          );
           registry.changed();
         }
       });
@@ -246,6 +250,7 @@ function isFrameFailure(code: FrameErrorCode, loading: boolean): boolean {
     case "disposed":
     case "origin":
     case "timeout":
+    case "version":
       return true;
     case "unavailable":
       return loading;

@@ -108,6 +108,7 @@ export function CanvasLiveFrame({
   return (
     <CanvasFrame
       error={frame.status === "error"}
+      outdated={frame.status === "outdated"}
       focusVisible={input.focusVisible}
       height={size.height}
       kind={plan.kind}

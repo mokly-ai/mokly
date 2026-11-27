@@ -76,6 +76,7 @@ export function CanvasUseCaseFrame({
     <CanvasFrame
       description={step.description}
       error={frame.status === "error"}
+      outdated={frame.status === "outdated"}
       height={size.height}
       kind={plan.kind}
       label={step.title}

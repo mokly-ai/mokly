@@ -50,7 +50,8 @@ export type FrameErrorCode =
   | "invalid-boundary"
   | "limit"
   | "missing-instance"
-  | "disposed";
+  | "disposed"
+  | "version";
 export type FrameEvent =
   | { type: "hover"; key: string | null; boxes: readonly Box[] }
   | { type: "click"; key: string; boxes: readonly Box[] }

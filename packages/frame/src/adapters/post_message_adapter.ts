@@ -5,6 +5,7 @@ import type {
 } from "../frame_adapter.js";
 import { origin } from "../probe/values.js";
 
+import { earlierHello, earlierReady } from "./earlier_probe.js";
 import { FrameError } from "./frame_error.js";
 import { notifyFrameListeners } from "./frame_event_listeners.js";
 import { frameUrl, ownFrame } from "./frame_mount.js";
@@ -60,7 +61,9 @@ export function postMessageAdapter(options: {
       });
       const notify = (event: FrameEvent) =>
         notifyFrameListeners(win, listeners, event);
-      const dispose = (code: "disposed" | "timeout" = "disposed") => {
+      const dispose = (
+        code: "disposed" | "timeout" | "version" = "disposed",
+      ) => {
         if (disposed) return;
         if (ready) {
           try {
@@ -82,14 +85,12 @@ export function postMessageAdapter(options: {
         listeners.clear();
         initialSubscription = undefined;
       };
-      const transport = messageTransport(
-        win,
-        nonce,
-        (json) => {
-          if (!frame.contentWindow) throw new FrameError("unavailable");
-          frame.contentWindow.postMessage(json, frameOrigin);
-        },
-        () => dispose("timeout"),
+      const post = (json: string) => {
+        if (!frame.contentWindow) throw new FrameError("unavailable");
+        frame.contentWindow.postMessage(json, frameOrigin);
+      };
+      const transport = messageTransport(win, nonce, post, () =>
+        dispose("timeout"),
       );
       const check = (keys: readonly string[]) => {
         if (disposed) throw new FrameError("disposed");
@@ -184,6 +185,10 @@ export function postMessageAdapter(options: {
           event.ports.length
         )
           return;
+        if (loaded && !ready && earlierReady(event.data, nonce)) {
+          dispose("version");
+          return;
+        }
         const message = transport.receive(event.data);
         if (!message) return;
         if (!ready) {
@@ -247,6 +252,8 @@ export function postMessageAdapter(options: {
         timer = win.setTimeout(() => dispose("timeout"), 5000);
         try {
           transport.send({ type: "hello" });
+          // A page that an earlier Mokly built answers only its own version.
+          post(earlierHello(nonce));
         } catch {
           dispose();
         }

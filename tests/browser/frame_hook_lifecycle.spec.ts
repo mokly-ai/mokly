@@ -115,6 +115,26 @@ test("a custom adapter rejection reports an owned frame error, and retry mounts 
     .toMatchObject({ pendingMounts: 0, sessions: 1, status: "ready" });
 });
 
+test("a mount that a page from an earlier Mokly rejects reports an outdated frame", async ({
+  page,
+}) => {
+  await page.evaluate(() =>
+    window.frameHookHarness.start("outdated-frame", { deferredMount: true }),
+  );
+  await page.evaluate(() =>
+    window.frameHookHarness.rejectMount("outdated-frame", "version"),
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("outdated-frame")),
+    )
+    .toMatchObject({
+      pendingMounts: 0,
+      sessionStatus: "error",
+      status: "outdated",
+    });
+});
+
 test("inspection errors keep a ready frame ready and load errors fail it", async ({
   page,
 }) => {
