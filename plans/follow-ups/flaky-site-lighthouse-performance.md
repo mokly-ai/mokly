@@ -1,4 +1,4 @@
-# Site Lighthouse performance flakes near its threshold
+# Site Lighthouse performance misses 0.95 on two routes
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
@@ -6,30 +6,27 @@
 - **Category:** Performance.
 - **Added:** 2026-11-19, from the branch `calummoore/combine-mokly-cloud-into-repo-704s` (PR #350), CI run 44596520325.
 - **Location:**
-  - `.github/workflows/ci.yml:629`: the `site-lighthouse` job. `.github/workflows/ci.yml:705`: the `required` job, Required CI, whose `needs` list leaves that job out.
-  - `apps/site/src/lighthouse.ts:34` and `:50`: the throttling profiles of option A. `:96`: `THRESHOLDS`, whose performance entry option C replaces. `:138`: `measurementWithRetry`, the retry that option B replaces. Option E adds a score rule.
-  - `apps/site/scripts/lighthouse.mjs:45-101`: the audit loop, the category scores that it reads, and the shortfall lines. Options B, C, and E change it.
-  - `apps/site/tests/lighthouse.test.ts:24-105`: the tests of the audited pages, the CPU multiplier, the retry, and the thresholds. Options B, C, and E change them.
-  - `docs/protocol/cloud/site-delivery.md:165-182`: the Performance Budget requirement. Options B, C, and E change it. Options D and F keep it.
-  - `apps/site/README.md:128`, `:251`, and `:258`: the command table and the Key Code entries of the budget. Options B, C, and E update them.
-  - `apps/site/tests/site_ci.test.ts:62`: the test that no Lighthouse result can fail Required CI. Every option keeps it.
-  - `apps/site/src/pages/index.astro`: the home page. It draws its demos as static components at build time and embeds no frame. The sandboxed stage frame, where option D investigated, and the script that published its documents are deleted.
-  - `apps/site/scripts/stage/fragments.ts:187`: `rewriteStage`, which rewrites each stage document and collects the resources that it links. Option F inlines the stylesheets there.
-  - `docs/protocol/cloud/site-delivery.md:97-133`: the Home Stage requirement. Lines 102-103 copy each stylesheet beside the stage documents. Option F changes that rule.
-  - `apps/site/tests/stage.test.ts:94` and `:224`: the tests that publish the stage stylesheets and other resources beside the documents. Option F changes them.
-  - `apps/site/README.md:248`: the Key Code entry of the stage publication. Option F updates it.
-- **Reason:** Option D stopped under the user's stop rule, and the recommended option F changes the stage publication requirement, so the user must choose again.
+  - `.github/workflows/ci.yml:629`: the `site-lighthouse` job. `.github/workflows/ci.yml:703`: the `required` job, Required CI, whose `needs` list leaves that job out.
+  - `apps/site/src/lighthouse.ts:34` and `:50`: the throttling profiles of option A. `:81`: `AUDITED`, the audited routes. `:96`: `THRESHOLDS`, whose performance entry option C replaces and option G restores to 0.95. `:138`: `measurementWithRetry`, the retry that option B replaces. Option E adds a score rule.
+  - `apps/site/scripts/lighthouse.mjs:44-102`: the audit loop, the category scores that it reads, and the shortfall lines. Options B, C, and E change it.
+  - `apps/site/tests/lighthouse.test.ts:25-145`: the tests of the audited pages, the CPU multiplier, the retry, the thresholds, and the skipped audit. Options B, C, E, and G change them.
+  - `docs/protocol/cloud/site-delivery.md:126-147`: the Performance Budget requirement. Options B, C, E, and G change it.
+  - `apps/site/README.md:169`, `:355`, and `:366`: the command table and the Key Code entries of the budget. Options B, C, and E update them.
+  - `apps/site/tests/site_ci.test.ts:58`: the test that no Lighthouse result can fail Required CI. Every option keeps it.
+  - `apps/site/src/pages/pricing.astro` and `apps/site/src/pages/changelog.astro`: the two routes under 0.95. Option G works there.
+  - `apps/site/src/pages/index.astro`: the home page. It draws its demos as static components at build time and embeds no frame. #488 deleted the sandboxed stage frame, the script that published its documents, and the code and tests that options D and F named.
+- **Reason:** #488 removed the stage frame, so options D and F no longer apply. The user set the 0.9 threshold only until this item is decided, so the user must choose again.
 
 - **Terms:**
   - **Audit:** one Lighthouse run of one route at one width, which gives one score for each category.
-  - **Budget run:** one run of `npm run site:lighthouse`, which audits 6 routes at 2 widths and prints one table of results.
+  - **Budget run:** one run of `npm run site:lighthouse`, which audits 7 routes at 2 widths and prints one table of results.
   - **Selected result:** the printed audit result for a route and width, using the retry when the first audit fails.
   - **CLS:** cumulative layout shift measures movement during loading across frames, while main-frame CLS measures only the top document.
   - **Transfer and decoded bytes:** transfer bytes count encoded responses and Chrome's response overhead, while decoded bytes count decompressed response bodies.
 - **Background:**
   - The `site-lighthouse` job, Site Lighthouse, makes one budget run on the GitHub-hosted `ubuntu-24.04` runner.
   - On 2026-11-19, PR #350 moved the job there from a Blacksmith runner, under the runner decision of main PR #342.
-  - The budget audits `/`, `/docs/`, `/docs/authoring/config/`, `/docs/cli/serve/`, `/changelog/`, and `/terms/` at 390 px and 1440 px.
+  - The budget audits `/`, `/docs/`, `/docs/authoring/config/`, `/docs/cli/serve/`, `/changelog/`, `/pricing/`, and `/terms/` at 390 px and 1440 px.
   - The thresholds were performance ≥ 0.95, accessibility = 1, best practices ≥ 0.95, and SEO ≥ 0.95.
   - On 2026-11-24, the Canvas redesign (PR #488) gave the same two performance scores in CI runs 45343539672 and 45347529329 and in one local run: `/changelog/` at 390 px scored 0.94, and `/pricing/` at 1440 px scored 0.93. Each other route scored 0.96 or more, the home 0.96 at 390 px and 1.00 at 1440 px. The Canvas home no longer embeds the stage frame.
   - On 2026-11-24, Cal asked for rules that make the budget pass for now. The performance threshold is 0.9 until this item is decided. The other thresholds stay. Each option below names its own threshold.
@@ -41,34 +38,40 @@
   - The job is report-only. Required CI does not need it, so no Lighthouse result can fail Required CI.
   - A failed budget run still fails its own job, which shows as a failed check and keeps its report as an artifact.
   - `docs/protocol/cloud/site-delivery.md` keeps the job report-only "because measured scores vary between runs on shared runners".
-  - The home page embeds a sandboxed stage frame that shows a published mockup. At 1440 px, the frame is `/stage/project-created.desktop.html`. It loads seven external stylesheets and one local font.
-- **Problem:** Home at 1440 px missed the 0.95 performance threshold in 40 of 87 complete CI budget runs. It missed in 3 of 9 local budget runs. CLS alone penalized each failing local result. The shift is in the stage frame. Chrome sometimes lays out that frame before its stylesheets apply, and then counts the styled layout as a shift. Chrome paints nothing before that shift, so users never see it. The exact Chrome trigger is not known, and CI logs hold scores only.
-- **Impact if no action:** Each failure shows a failed check and can need a rerun. Repeated failures can obscure a new regression.
+  - Until #488, the home page embedded a sandboxed stage frame that showed a published mockup. At 1440 px, the frame loaded seven external stylesheets and one local font.
+- **Problem:** Since #488, two routes miss the 0.95 threshold in each recorded run.
+  - Until #488, home at 1440 px missed 0.95 in 40 of 87 complete CI budget runs. Chrome sometimes counted a layout shift in the stage frame that it never painted. #488 removed that frame, and home now scores 1.00 at 1440 px.
+  - Since #488, `/pricing/` at 1440 px scores 0.93 and `/changelog/` at 390 px scores 0.94. Six CI runs printed the same two scores, and one local run gave them too:
+    - Runs 45343539672 and 45347529329 of the #488 pull request used the 0.95 threshold. Every row of both runs missed the accessibility threshold of 1, so each printed row is the retry. No log holds a first-audit score of these runs.
+    - The four `main` runs from #488 to #491, 45376909082, 45386552420, 45390552358, and 45405201390, used 0.9. No row was retried, so each printed score is a first audit, and each of the two scores missed 0.95.
+    - Each recorded audit of the two rows missed 0.95 with the same score, so the misses look stable, not flaky.
+  - In the same four `main` runs, `/docs/authoring/config/` at 390 px scored 0.96 each time, and `/` at 390 px scored 0.96 to 0.99.
+  - The metric that lowers each of the two scores is not known yet.
+- **Impact if no action:** With the 0.9 threshold, a regression that lowers any route from 0.95 to 0.9 passes unnoticed. With 0.95, the job fails on every run.
 - **Root question:** How should site checks detect real regressions with stable pass or fail results?
 - **Options:**
-  - **A.** Keep Lighthouse's simulated throttling and fixed CPU multiplier of 1. These settings already apply at both widths, with one conditional retry. CI passed 47 of 87 budget runs. Local budget runs passed 6 of 9. A adds no new control for the observed shift. Effort: Small.
-  - **B.** Run each audit three times and judge the median score of each category, in place of the one retry. B keeps every current metric. In three local groups of three budget runs, the medians of the first audits passed once. B needs two passing audits in three, and the retry needs one in two. Locally, 5 of 9 first home audits at 1440 px failed. Each local budget run took 75 to 86 seconds, and B triples its audits to 36. Effort: Small.
-  - **C.** Replace the performance-score threshold with per-route caps on total transfer bytes, script transfer bytes, and requests, from the `resource-summary` audit. The cap table below gives candidate values. Keep the other three thresholds and the report-only status, and print the performance score as a diagnostic only. C stops checking load timing and layout shift, so a page that shifts or loads slowly can pass. C does not fix the shift. Effort: Medium.
-  - **D.** Find the source of the shift outside the main frame with repeated local budget runs. If the runs confirm a source in the page, remove the shift there. Keep the 0.95 threshold, the retry, the other three thresholds, and the report-only status. Judge D by the CLS of each audit, because a CLS of 0.143 still passes. A confirmed fix comes with a deterministic regression test for the shift. If users cannot see the shift, or the page cannot remove it, D returns to the user. D is product work beyond this item, and its pass rate is not known. On 2026-11-20, D stopped, because users cannot see the shift. D does not apply as a visible page fix. Effort: Medium.
-  - **E.** Keep the score check, but compute the performance score with main-frame CLS in place of whole-page CLS. Every timing metric still counts. E drops the protection against shifts inside frames. It needs a custom score rule beside the Lighthouse score, and a protocol change. Its pass rate is not measured, although main-frame CLS was 0 in all 14 local home audits at 1440 px. Effort: Medium.
-  - **F.** Publish each stage document with its seven stylesheets inline, in their order and with rebased URLs, in place of copied external stylesheets. The font stays a separate local file. Keep every check, the 0.95 threshold, the retry, the job, the empty sandbox, the three hidden documents that are never fetched, the copy, and the final design. F avoids the trigger in Chrome, and it does not fix a visible defect. It changes the Home Stage publication requirement. In a focused prototype, 10 of 10 home audits at 1440 px scored 1.00. The full proof and a deterministic regression test are pending. Effort: Medium.
+  - **A.** Keep Lighthouse's simulated throttling, the fixed CPU multiplier of 1, and the one conditional retry, with 14 first audits for 7 routes at 2 widths, plus any retries. At 0.95, A is expected to fail every run, because each recorded audit of the two rows missed. At 0.9, A is the lasting lowering that the user excluded on 2026-11-20. Before #488, CI passed 47 of 87 budget runs, and local budget runs passed 6 of 9. Effort: Small.
+  - **B.** Run each audit three times and judge the median score of each category, in place of the one retry. B keeps every current metric and triples the audits to 42 for the 7 routes. Its pass rate is not measured. B needs two passing audits of three, and none of the recorded audits of the two rows reached 0.95, so at 0.95 B is expected to fail every run. At 0.9, B is the lasting lowering. Its median can still join G against the variance that remains. Before #488, in three local groups of three budget runs, the medians of the first audits passed once, and each local budget run of 12 audits took 75 to 86 seconds. Effort: Small.
+  - **C.** Replace the performance-score threshold with a resource budget: per-route caps on total transfer bytes, script transfer bytes, and requests, from the `resource-summary` audit. Keep the other three thresholds and the report-only status, and print the performance score as a diagnostic only. C stops checking load timing and layout shift, so a page that shifts or loads slowly can pass. The cap table below dates from 2026-11-20: it covers six routes before #488 and has no cap for `/pricing/`. So C first measures a new seven-route baseline, and its caps come from that baseline. Effort: Medium.
+  - **D.** Obsolete since 2026-11-24, because #488 removed the stage frame. D read: find the source of the shift outside the main frame with repeated local budget runs. If the runs confirm a source in the page, remove the shift there. Keep the 0.95 threshold, the retry, the other three thresholds, and the report-only status. Judge D by the CLS of each audit, because a CLS of 0.143 still passes. A confirmed fix comes with a deterministic regression test for the shift. If users cannot see the shift, or the page cannot remove it, D returns to the user. D is product work beyond this item, and its pass rate is not known. On 2026-11-20, D stopped, because users cannot see the shift. D does not apply as a visible page fix. Effort: Medium.
+  - **E.** Keep the score check, but compute the performance score with main-frame CLS in place of whole-page CLS. Every timing metric still counts. E drops the protection against shifts inside frames, such as the sample frames of the docs pages. It needs a custom score rule beside the Lighthouse score, and a protocol change. Neither `/pricing/` nor `/changelog/` renders a frame, so E changes neither score: at 0.95 it is expected to fail every run, and at 0.9 it is the lasting lowering. Before #488, main-frame CLS was 0 in all 14 local home audits at 1440 px. Effort: Medium.
+  - **F.** Obsolete since 2026-11-24, because #488 removed the stage frame and its publication code. PR #431 built F, and it closed without a merge. F read: publish each stage document with its seven stylesheets inline, in their order and with rebased URLs, in place of copied external stylesheets. The font stays a separate local file. Keep every check, the 0.95 threshold, the retry, the job, the empty sandbox, the three hidden documents that are never fetched, the copy, and the final design. F avoids the trigger in Chrome, and it does not fix a visible defect. It changes the Home Stage publication requirement. In a focused prototype, 10 of 10 home audits at 1440 px scored 1.00. The full proof and a deterministic regression test are pending. Effort: Medium.
+  - **G.** Measure `/pricing/` at 1440 px and `/changelog/` at 390 px with focused audits, and find the metric that lowers each score. Fix that cause in the page, and restore the 0.95 threshold, with 14 first audits and the one retry. G keeps every check. The cause is not known yet, and a page fix can change the design. At 0.95, `/docs/authoring/config/` at 390 px and `/` at 390 px keep a margin of only 0.01 in some runs, so G measures them too, and B can join G when they flake. Effort: Medium.
 - **Left out:**
-  - Lowering the performance threshold. The user explicitly excluded it, and the score would still vary between audits of one build.
+  - Lowering the performance threshold for good. On 2026-11-20 the user excluded it. On 2026-11-24 the user set 0.9 only until this item is decided.
   - Removing the whole job. It fails the goal, because nothing then measures performance. The three other category checks, which never varied, also go.
   - A dedicated or faster runner. It breaks the rule of `docs/protocol/ci-workflow.md:130` that every job runs on a GitHub-hosted standard runner.
   - Applied throttling. It fails the goal, because each timing metric then depends on the speed of the shared runner.
   - Warm-cache audits. They fail the goal, because they stop measuring a first visit with an empty cache.
-  - Blocking the stage frame in the audit. It fails the goal, because the audit then measures a page that users never get.
-  - More retries. They fail the goal, because the result still changes between runs, and they hide the shift more often.
+  - More retries. They fail the goal, because the result still changes between runs, and they hide a real regression more often.
   - Waiting for a Chrome fix. It fails the goal of stable results for an unknown time.
-  - One combined external stylesheet. It still blocks rendering, so an early layout can still come before it.
-  - Hiding the stage content until its styles apply. It changes the mockup styles and only hides the trigger, so F is better on every point.
-  - Eager loading of the stage documents, or `allow-same-origin` in the frame sandbox. Each breaks a rule of `docs/protocol/cloud/site-delivery.md:117-119`: hidden documents are never fetched, and the sandbox is empty.
-  - Shared by every option: the job stays report-only, and the other three thresholds stay, as `docs/protocol/cloud/site-delivery.md` requires. A, B, C, and E leave page rendering unchanged. The original item listed audit-policy changes. D permitted a page investigation. F changes how the stage loads its styles, not what it shows.
-- **Wider fix:** None in this repository, because the class is the accounting in Chrome of a layout that it never paints. F avoids the trigger without weakening a check.
+  - The approaches that this item left out for the stage frame no longer apply, because #488 removed the frame: blocking the frame in the audit, one combined external stylesheet, hiding the stage content until its styles apply, and eager loading of the stage documents or `allow-same-origin`.
+  - Since #488, only G is expected to pass the 0.95 performance threshold, because A, B, and E keep scores that missed it in each recorded audit. C replaces that threshold with a resource budget. A, B, and E stay listed, so that the user can drop them in the same answer.
+  - Shared by every option: the job stays report-only, and the other three thresholds stay, as `docs/protocol/cloud/site-delivery.md` requires. A, B, C, and E leave page rendering unchanged. G changes the two pages only where the measurement finds the cause.
+- **Wider fix:** None in this repository. The frame shift that defined the class left with #488, and G fixes each new miss at its cause.
 - **Previous examples:** The CI table below confirms main commits `940ddd742`, `b32f3e907`, and `3f01b5f4e`, plus PRs #373, #386, and #390. The History section keeps the original PR #350 failure and rerun.
-- **Recommendation:** F. It keeps every current check, and it avoided the recorded shift in a focused prototype with no visible change. It replaces D, which stopped, and D had replaced the first recommendation, C. C stays the measured resource-budget alternative.
-- **Action:** ask the user, because F changes the stage publication rule of site-delivery.md, and the other options weaken the performance protection.
+- **Recommendation:** G. The two misses repeat in each run, so a measurement can find their cause, and a page fix restores the 0.95 threshold without a weaker check. It replaces F, which #488 made obsolete. C stays the resource-budget alternative, after a new seven-route baseline.
+- **Action:** ask the user, because G restores the 0.95 threshold that the user lowered to 0.9 until this item is decided, and its page fix can change the design.
 
 ## History
 
@@ -81,6 +84,9 @@
 - 2026-11-20: An options check added D and E. The recommendation changed from C to D after the local CLS evidence. C stays as an option.
 - 2026-11-20, 10:44 UTC: The user authorized D. D had to find the actual element and cause, and fix only a page defect, with the final design and copy unchanged. It had to keep the threshold, the retry, and the job, add a regression test only for a defect, and run nine budget runs after a fix. It had to stop and report if the shift was not a page defect, or if a fix needed a design or copy change.
 - 2026-11-20: D stopped, because the shift is not a visible page defect. No tracked file changed. The investigation proposed F, and the recommendation changed from D to F. The user has not answered F yet.
+- 2026-11-20: The user chose F, and PR #431 built it.
+- 2026-11-24: #488 removed the stage frame. On the user's answer of the same day, PR #431, which built F, closed without a merge. Options D and F became obsolete, option G was added, and the recommendation changed from F to G. Options A, B, C, and E keep their measurements from before #488.
+- 2026-11-24: A review of the same change gave A, B, C, E, and G their threshold, their audit count, and their limits after #488, from four more `main` runs.
 
 ## CI evidence, 2026-11-20
 
