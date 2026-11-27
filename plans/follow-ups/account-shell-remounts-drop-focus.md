@@ -56,6 +56,7 @@
   - Commit `5a9f08007` kept the viewer of the app mounted when a panel closed.
 - **Related:**
   - `plans/follow-ups/viewer-bar-resize-drops-held-focus.md`: the same cause. The viewer bar removes a focused control when it changes its layout. Each place needs its own fix.
+  - `plans/follow-ups/settings-close-loses-redrawn-opener.md`: the same cause. A wait's hand-over removes the repository step's manage link while the settings dialog is open, so closing the dialog loses focus. This item keeps held focus, and that item restores focus after a dialog. Both can share one browser check.
   - `plans/follow-ups/session-error-screen-lacks-heading.md`: the same code. Its option A draws the error of the session guard inside the account shell. With C, that error draws inside the shared frame, so the later branch adapts to the earlier one.
 - **Recommendation:** C. It keeps the skip link, the header and the footer in place through every state change of every account route. Screens that are added later get the same frame.
 - **Action:** fix after merge, apply C, because it changes the route layout and every account screen, beyond the email callback that the branch fixed.

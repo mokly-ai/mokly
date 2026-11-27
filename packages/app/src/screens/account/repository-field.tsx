@@ -18,8 +18,8 @@ import type { RepositoryChoices } from "./repository-choices";
  * The line beneath the field, which is where the list is changed: what the App
  * reads is decided on GitHub, one account at a time. The link opens the GitHub
  * accounts pane over this step, however many accounts the workspace connects,
- * because that pane both adds another account and opens each account's own
- * page on GitHub. The dialog closes back to the form as the reader left it.
+ * because that pane is where accounts are added and managed. On a desktop the dialog closes back to the form as the reader
+ * left it; on a phone the pane is its own route, and the form starts again.
  */
 function ManageAccess() {
   const pathname = useAddressPathname();

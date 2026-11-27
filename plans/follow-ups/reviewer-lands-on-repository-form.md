@@ -1,0 +1,31 @@
+# A reviewer lands on a form it cannot submit
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from the check of review finding 5 of round 2 on the branch `calummoore/multiple-org-configuration-error-9mms`.
+- **Location:** `packages/app/src/navigation/destinations.ts:31-42` (`firstStep`), `packages/app/src/screens/account/install-screen.tsx:240-244` (the redirect of a connected workspace), `packages/app/src/screens/account/choose-repository-screen.tsx:186-193`, `packages/app/src/screens/app/cli-project-route.tsx`, `crates/mkc-api/src/platform/project_creation.rs:28`, `docs/protocol/cloud/product-navigation.md:137-138` and `:149`, and `docs/protocol/cloud/product-accounts-and-roles.md:44-54` and `:92-93`.
+- **Reason:** The requirements in force send every reader of a connected workspace with no project to the repository step, so each fix changes a requirement, which the user decides.
+
+- **Terms:**
+  - **Reviewer:** A workspace role that reads publications but creates no project. Comments are a draft contract whose routes answer 503 (`product-accounts-and-roles.md:133-136`).
+  - **Connected workspace:** A workspace whose Mokly GitHub App installation can read repositories.
+  - **Repository step:** The form at `/:workspace/-/new` that creates a project from a GitHub repository.
+  - **Install step:** The step at `/install?workspaceId=W` before it.
+  - **CLI form:** The form at `/:workspace/-/new/cli` that creates a project published from CI.
+- **Background:** `firstStep` sends a reader with no project to the install step while the workspace is not connected, and to the repository step once it is. `product-navigation.md:137-138` and `:149` and `product-accounts-and-roles.md:53-54` require that for every reader. The install step shows a reviewer **No projects yet** and "Ask an owner or admin to create the first project.", and it sends a connected workspace on to the repository step (`install-screen.tsx:242-244`). The repository step hides only the CLI line from a reviewer (`product-accounts-and-roles.md:92-93`). The API refuses project creation below the member role (`project_creation.rs:28`).
+- **Problem:** A reviewer of a connected workspace with no project lands on the full repository form. When they press **Create project**, the API refuses, and the form shows "You don’t have permission to do that." (`packages/app/src/api/form-error.ts:23`). The CLI form has no reviewer branch either.
+- **Impact if no action:** The reviewer fills a form for nothing and learns at the end that they cannot create a project, with no word on whom to ask.
+- **Root question:** What does a reviewer of a connected workspace with no project see?
+- **Options:**
+  - **A.** Send the reviewer to the install step's reviewer screen, **No projects yet** with its line, also for a connected workspace. Change `firstStep`, the redirect at `install-screen.tsx:242-244`, the rows of the navigation table in `product-navigation.md`, one sentence of `product-accounts-and-roles.md`, and a navigation test. Effort: Small.
+  - **B.** Give the repository step a reviewer form: **No projects yet** and the same line, in place of the form. During the session and workspace reads the step does not know the role, so the wait still draws the form. Add a mockup, a test and a sentence to the doc. Effort: Small.
+  - **C.** Apply A, and give the CLI form route the same reviewer answer, so no create form is offered to a reviewer. Effort: Small.
+- **Left out:** Letting reviewers create projects. It changes the role model of `product-accounts-and-roles.md:129-133`. Changing nothing is not an option, because the refusal message comes only after the reviewer fills the form.
+- **Wider fix:** C. It covers both create forms.
+- **Previous examples:** None found of a reviewer offered a create form. The install step's reviewer screen (`install-screen.tsx`) is the model for the fix.
+- **Related:**
+  - `plans/follow-ups/repository-wait-cli-line-unlinked.md`, the same step and the reviewer rule: it records that the wait does not know the role during the session and workspace reads, which limits B.
+  - `plans/follow-ups/members-lack-github-manage-link.md`, the same role pattern and doc: its option F, a shared part for owner-or-admin actions, would also cover the install step's "Ask an owner or admin" line.
+  - `plans/follow-ups/install-step-back-opens-new-workspace.md`, the same screen: A reuses the install step's reviewer screen, whose **Back** is that item's open question.
+- **Recommendation:** C. It reuses the reviewer screen that the install step already draws and closes both create forms.
+- **Action:** ask the user, because each option changes the requirement in `product-navigation.md` and `product-accounts-and-roles.md` that sends every reader of a connected workspace to the repository step.

@@ -154,12 +154,23 @@ test("every setup step waits in its own layout", async ({ page }) => {
   await expect(page.getByText(cliLine)).toBeVisible();
   await expect(page.getByRole("link", { name: cliLine })).toHaveCount(0);
   // The manage link opens the GitHub accounts pane over this step, an address
-  // that needs nothing from the read, so it waits as a link.
+  // that needs nothing from the read, so it waits as a link that works.
   const step = new URL(page.url());
-  await expect(
-    page.getByRole("link", { name: "Manage repository access" }),
-  ).toHaveAttribute("href", paneQuery(step.pathname, "github", step.search));
+  const manage = page.getByRole("link", { name: "Manage repository access" });
+  await expect(manage).toHaveAttribute(
+    "href",
+    paneQuery(step.pathname, "github", step.search),
+  );
+  await manage.click();
+  const pane = page.getByRole("dialog");
+  await expect(pane.getByRole("heading", { level: 1 })).toHaveText(
+    "GitHub accounts",
+  );
+  expect(new URL(page.url()).pathname).toBe(step.pathname);
+  // The read answers under the open pane, which then closes over the step.
   repositories.release();
+  await page.keyboard.press("Escape");
+  await expect(pane).toHaveCount(0);
   await expect(page.getByRole("link", { name: cliLine })).toBeVisible();
 
   // The connect situation's workspaces read names itself in the select.

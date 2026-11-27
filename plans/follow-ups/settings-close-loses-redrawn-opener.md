@@ -1,0 +1,38 @@
+# Closing settings loses focus on a redrawn opener
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the branch `calummoore/multiple-org-configuration-error-9mms`, review finding 6 of round 2.
+- **Location:** `packages/app/src/settings/surface.tsx:151`, `packages/app/src/settings/dialog-host.tsx:95-100` (the dialog drawn through the reads), `packages/app/src/screens/account/repository-field.tsx:24-39` and `:73`, `packages/app/src/screens/account/choose-repository-screen.tsx:149-158` and `:186-189`, `packages/app/src/session/guard.tsx:62` and `:84`, `packages/app/src/screens/app/workspace-route.tsx:99` and `:102`, and `packages/app/src/viewer/focus.ts:1-135`.
+- **Reason:** The fix depends on the open item `plans/follow-ups/wait-rule-link-clause.md`: if the user chooses its option C, the link draws as text in the waits and option A here is the fix.
+
+- **Terms:**
+  - **Settings dialog:** The desktop dialog at `?settings=...` that draws over the page. The page beneath stays mounted under `inert`, and its reads continue.
+  - **Opener:** The control that opened the dialog. `docs/protocol/cloud/settings-dialog.md:59-62` and `docs/protocol/cloud/web-app.md:146-147` require focus to return to it when the dialog closes.
+  - **Wait:** What a screen draws while a read that it needs runs.
+  - **Manage repository access:** The link under the repository step's field. It opens the GitHub accounts pane and stays live in the step's waits.
+- **Background:** The dialog frame of `@firna/ui` saves `document.activeElement` when it opens and focuses that node when it closes (`node_modules/@firna/ui/dist/modal/WebModalFrame.web.js:75` and `:117`). The repository step hands over from a wait to the loaded form at three places: the session guard, the workspace route and `ChooseRepositoryScreen`. Each hand-over draws a different component, so React removes the old link and mounts a new one. The viewer already solves this for its own bar: it records the opener and focuses its current element after close (`viewer/focus.ts`, `packages/app/src/screens/viewer/viewer-screen.tsx:138` and `:170`).
+- **Problem:** A keyboard user who opens the pane from the link during a wait, with Tab, Tab, Enter, and keeps it open while the read answers, closes it with focus on the page body, because the saved node was removed. The same happens when an owner of a one-account workspace removes that account in the pane, because the app moves the open dialog to the install step and the opener is gone.
+- **Impact if no action:** A keyboard user loses their place after closing settings and must find the form's controls again.
+- **Root question:** How does closing settings return focus to the control that opened it, when the page beneath redrew that control while the dialog was open?
+- **Options:**
+  - **A.** Draw the link as text with no link in every wait of the step, as before 2026-11-27. It waits for `plans/follow-ups/wait-rule-link-clause.md` and reverses that branch's choice to keep the link live. Effort: Small.
+  - **B.** When the dialog closes with focus on the body, the host focuses the page link whose `href` equals the pane address that the dialog opened at. It works only for anchor openers and picks the first of two matching links. Effort: Small.
+  - **C.** Give the dialog a return-focus callback that reads the repository route's current link ref after close, and check the sequence with a held read. Only this route gains it. Effort: Medium.
+  - **D.** Add one opener model to `packages/app/src/settings/`, as `viewer/focus.ts` does: a shared settings link records its opener when pressed and keeps a ref to its current anchor; when the dialog closes on the same page with focus on the body, the host focuses that anchor. When the opener's page is gone, as after the removal of the only account, the host focuses the new page's first heading, because no opener is left to return to. The repository field uses the model first; the viewer keeps `viewer/focus.ts` until a later change moves it. Check it with a held read in `packages/app/src/_tests_/setup-waits.spec.ts`, and add an entry for it under `### Key Code` in `packages/app/README.md`. Effort: Medium.
+  - **E.** Add a return-focus target to the dialog frame of `@firna/ui`, release the package and raise the pinned version. It needs a change and a release in another repository. Effort: Medium.
+  - **F.** Keep one layout through the step's session, workspace and repository reads, so the link stays mounted. It must change the hand-overs of the session guard and the workspace route, and the `wait` wrapper that `packages/app/src/screens/account/account-shell.tsx:137` draws around the panel. Effort: Large.
+- **Left out:**
+  - A lookup by link text. B is better on every point.
+  - A fallback to the heading or `main` while the opener still exists. It breaks the requirement to return to the opener. D uses the heading only when the opener's page is gone.
+  - Holding the wait until the dialog closes. The hand-over would then remove the focus that the frame just restored.
+- **Wider fix:** D. It covers any redraw of an opener on a page that opens settings by address: today the repository step and the viewer (`viewer-screen.tsx:171`), which can move to it later.
+- **Previous examples:** `plans/follow-ups/account-shell-remounts-drop-focus.md` records focus that a wait's hand-over drops, without a dialog. Its recommended option leaves panel links out, so focus held on the waiting link also falls to the body when a read answers.
+- **Related:**
+  - `plans/follow-ups/account-shell-remounts-drop-focus.md`, the same cause: its fix keeps held focus, and this item restores focus after a dialog. Both can share one browser check.
+  - `plans/follow-ups/wait-rule-link-clause.md`, conflicting options: its option C would make A of this item the fix.
+  - `plans/follow-ups/repository-form-lost-on-settings-trip.md`, the same step: its option E would need this focus return on a phone.
+  - `plans/follow-ups/members-lack-github-manage-link.md`, the same `ManageAccess`: its option G sends a member's link to GitHub with one account and draws it as text in the wait, which removes the dialog opener for that member.
+  - `plans/follow-ups/viewer-bar-resize-drops-held-focus.md`, the same cause and `viewer/focus.ts`: a redraw removes the focused control.
+- **Recommendation:** D. It is C's work built once where every opener can use it, as the viewer already does, and it stays right under options A and B of `wait-rule-link-clause.md`.
+- **Action:** ask the user, because the fix depends on the answer to `plans/follow-ups/wait-rule-link-clause.md`, which is open.
