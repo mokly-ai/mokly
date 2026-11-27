@@ -27,8 +27,6 @@ export interface RowTarget {
   state: ReferenceRowState;
   /** The address the row opens. */
   href: string;
-  /** Whether the row opens a failed attempt's details rather than the reference. */
-  details: boolean;
 }
 
 /**
@@ -63,7 +61,7 @@ function alias(
  * newest attempt failed opens that attempt's details: a failed build opens its
  * own address and a failed publication its own details. The reference's stage
  * may show another card there — a closed or fork pull request's, or the plan's
- * — so Details never goes through it. Every other row opens the reference,
+ * — so the row never goes through it. Every other row opens the reference,
  * which resolves as before, so a ready publication still wins over a newer
  * build.
  */
@@ -77,20 +75,17 @@ export function rowTarget(
   if (failed && state.fromBuild && row.newestBuild) {
     return {
       state,
-      details: true,
       href: buildPath(workspaceSlug, projectSlug, row.newestBuild.id),
     };
   }
   if (failed && !state.fromBuild && row.newest) {
     return {
       state,
-      details: true,
       href: publicationPath(workspaceSlug, projectSlug, row.newest.id),
     };
   }
   return {
     state,
-    details: false,
     href: alias(row, workspaceSlug, projectSlug),
   };
 }

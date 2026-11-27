@@ -66,7 +66,7 @@ test("a compact layer keeps its bar and draws its pane while settings load", asy
   await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
 
   // The index closes settings, and lists every pane an owner reaches, the
-  // project's included, with Open as words until the scope is known.
+  // project's included, each row a link once the scope is known.
   scope = await holdReads(page, "/v1/workspaces");
   await page.goto("/settings");
   await scope.arrived;
@@ -75,9 +75,10 @@ test("a compact layer keeps its bar and draws its pane while settings load", asy
   await expect(
     page.getByText("Tokens that publish this project"),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open" })).toHaveCount(0);
+  const tokens = page.getByRole("link", { name: /Publishing tokens/ });
+  await expect(tokens).toHaveCount(0);
   scope.release();
-  await expect(page.getByRole("link", { name: "Open" }).first()).toBeVisible();
+  await expect(tokens).toBeVisible();
 });
 
 test("a compact layer draws the requested pane while the session loads", async ({

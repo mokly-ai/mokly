@@ -21,6 +21,7 @@ import {
   facts,
   links,
   pendingLabels,
+  rowLinks,
 } from "./drawn-page";
 import type { DrawnPage } from "./drawn-page";
 
@@ -201,7 +202,7 @@ test("the settings index and the rail list the GitHub accounts pane after the Wo
   ]);
   const index = drawnPage("product/settings/sections", "mobile");
   assert.deepEqual(
-    links(index, "Open")
+    rowLinks(index)
       .map(destination)
       .filter((path) => path?.startsWith("product/settings/")),
     [

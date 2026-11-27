@@ -7,7 +7,7 @@ import { expect, freshEmail, open, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
-import { publishedViewerReady } from "./support";
+import { publicationReference, publishedViewerReady } from "./support";
 
 /** Count every request to one address, without holding it open. */
 async function counted(page: Page, url: string): Promise<() => number> {
@@ -31,9 +31,9 @@ async function counted(page: Page, url: string): Promise<() => number> {
  * the list requests did.
  *
  * The switcher's own composition in `folio-viewer.md`: the reference the
- * reader is on says Current in place of a destination, and the search leads
- * the panel in its bar, before Close, while the title stays the document's
- * one heading for assistive technology.
+ * reader is on says Current and is no link, every other row is a link over
+ * its whole frame, and the search leads the panel in its bar, before Close,
+ * while the title stays the document's one heading for assistive technology.
  */
 test("opening the switcher reads no reference's own history, and it leads with its search and marks the reader's reference Current", async ({
   page,
@@ -68,9 +68,7 @@ test("opening the switcher reads no reference's own history, and it leads with i
   await test.step("the switcher leads with its search and marks the reader's reference Current", async () => {
     const row = (name: string) =>
       panel.getByRole("listitem").filter({ hasText: name });
-    await expect(
-      row("topic-1").getByRole("link", { name: "Open" }),
-    ).toBeVisible();
+    await expect(row("topic-1").getByRole("link")).toBeVisible();
     await expect(row("main")).toContainText("Current");
     await expect(row("main").getByRole("link")).toHaveCount(0);
 
@@ -80,6 +78,27 @@ test("opening the switcher reads no reference's own history, and it leads with i
     await panel.getByLabel("Find a branch or pull request").focus();
     await page.keyboard.press("Tab");
     await expect(panel.getByTestId("close-switcher")).toBeFocused();
+
+    // The whole row is the link: the pointer in the row's own padding, outside
+    // the link's content, shows the text at 5% over the row, and a press there
+    // follows the link. The reader's current row keeps its own fill.
+    const current = row("main");
+    const currentFill = await current.evaluate(
+      (node) => getComputedStyle(node).backgroundColor,
+    );
+    await current.hover({ position: { x: 4, y: 8 } });
+    await expect(current).toHaveCSS("background-color", currentFill);
+    const topic = row("topic-1");
+    const box = await topic.boundingBox();
+    expect(box).not.toBeNull();
+    const padding = { x: 4, y: (box?.height ?? 0) / 2 };
+    await topic.hover({ position: padding });
+    await expect(topic).toHaveCSS(
+      "background-color",
+      "color(srgb 0.0509804 0.0784314 0.0627451 / 0.05)",
+    );
+    await topic.click({ position: padding });
+    await expect(publicationReference(page)).toHaveText("topic-1");
   });
 });
 

@@ -15,7 +15,7 @@ import { ShareGlyph } from "../../viewer/glyphs";
 import { MenuBody, MenuList } from "../../viewer/menu-list";
 import type { MenuItem } from "../../viewer/menu-list";
 import { ViewerPanel } from "../../viewer/panel";
-import type { ViewerPanel as PanelId } from "../../viewer/selection";
+import type { PanelId } from "../../viewer/selection";
 
 import type { SlotInput } from "./slots";
 

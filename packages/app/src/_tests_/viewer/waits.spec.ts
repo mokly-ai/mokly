@@ -155,7 +155,7 @@ test("a pull request alias names its pull request while it waits, and each panel
     await publishedViewerReady(page);
 
     // The switcher: each group waits with a bar for its label and one row,
-    // whose way on keeps its label as text.
+    // which is no link yet.
     let read = await holdReads(
       page,
       (url) => url.pathname === project + "/branches",
@@ -165,11 +165,11 @@ test("a pull request alias names its pull request while it waits, and each panel
     await read.arrived;
     await expectOneHeading(page, "Branches and pull requests");
     await expect(heardIn(panel)).toHaveText("Loading branches…");
-    await expect(panel.getByRole("list", { name: "Branches" })).toBeVisible();
-    await expect(
-      panel.getByRole("list", { name: "Pull requests" }),
-    ).toBeVisible();
-    await expect(panel.getByText("Open", { exact: true })).toHaveCount(2);
+    for (const name of ["Branches", "Pull requests"])
+      await expect(
+        panel.getByRole("list", { name }).getByRole("listitem"),
+      ).toHaveCount(1);
+    await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
     read.release();
     await expect(
       panel.getByRole("listitem").filter({ hasText: "main" }),
@@ -187,9 +187,11 @@ test("a pull request alias names its pull request while it waits, and each panel
     await expectOneHeading(page, "Publication history");
     await expect(heardIn(panel)).toHaveText("Loading publication history…");
     await expect(
-      panel.getByRole("list", { name: "Publications of main" }),
-    ).toBeVisible();
-    await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
+      panel
+        .getByRole("list", { name: "Publications of main" })
+        .getByRole("listitem"),
+    ).toHaveCount(1);
+    await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
     read.release();
     await expect(panel.getByText("Current publication")).toBeVisible();
     await page.getByTestId("close-history").click();
@@ -201,8 +203,10 @@ test("a pull request alias names its pull request while it waits, and each panel
     await read.arrived;
     await expectOneHeading(page, "Projects");
     await expect(heardIn(panel)).toHaveText("Loading projects…");
-    await expect(panel.getByRole("list", { name: "Projects" })).toBeVisible();
-    await expect(panel.getByText("Open", { exact: true })).toHaveCount(1);
+    await expect(
+      panel.getByRole("list", { name: "Projects" }).getByRole("listitem"),
+    ).toHaveCount(1);
+    await expect(panel.getByRole("listitem").getByRole("link")).toHaveCount(0);
     read.release();
     await expect(panel.getByText(made.workspaceName)).toBeVisible();
     await page.getByTestId("close-projects").click();

@@ -161,16 +161,17 @@ between them: a decorative status dot, the ref or the publication time as a
 13px medium title, 14px on a phone, a 12px muted state line beneath, and the
 short SHA in mono before the row's end. A branch reads in mono, as a reference
 does, at 13px also on a phone; a pull request keeps its number in semibold and
-its title in sans. The row's end, its destination, its choice or its mark, sits
-in a column of one width, so the SHAs line up. A switcher's rows are grouped
-under the uppercase group label — the default branch first, then the remaining
-branches, then pull requests — and a group named after something the user
-wrote, such as a workspace, takes a sentence-case label instead, because
-uppercasing a name the user chose changes it. A row that cannot be opened
-offers its details instead of a destination. The row the reader is already on
-takes `signalSoft` with the 8px chrome radius, and in place of a destination it
-carries its mark in semibold `signalDeep`: `Current` in the switcher and the
-projects panel, and `Selected` on Share's chosen screen. History's current
+its title in sans. A row that leads somewhere is one link, and a Share row
+that chooses its screen is one button, each over its whole frame as the Record
+row is, with no trailing label. The row's end, its mark, sits in a column of
+one width, empty on the other rows, so the SHAs line up. A switcher's rows are grouped under the uppercase group label — the
+default branch first, then the remaining branches, then pull requests — and a
+group named after something the user wrote, such as a workspace, takes a
+sentence-case label instead, because uppercasing a name the user chose changes
+it. A row that cannot be opened links to its details instead. The row the
+reader is already on is no link or button. It takes `signalSoft` with the 8px chrome
+radius, and at its end it carries its mark in semibold `signalDeep`: `Current`
+in the switcher and the projects panel, and `Selected` on Share's chosen screen. History's current
 publication carries no mark, because its state line already says Current
 publication.
 

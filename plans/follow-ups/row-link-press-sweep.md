@@ -1,0 +1,34 @@
+# No sweep presses the padding of every row link
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 3
+- **Location:** `docs/mockups/src/_tests_/responsive.spec.ts:44-92` and `docs/mockups/styles/controls.css:34-63`.
+- **Reason:** The recommended fix adds a test for a whole class of defect, and the user approves each such test.
+- **Category:** Test.
+
+- **Terms:**
+  - **Row link:** the `a.row-link` anchor around a list row's content, or the `.row-choice` button of a row whose only action is to choose it. `RowContent` draws both in the app, and `MockLink` draws both in the drawings.
+  - **`::after` box:** the row link's generated box in `controls.css:57-61`. It sets `position: absolute` and `inset: 0`, so it fills the list item around the row.
+  - **Drawing:** one page of the cloud mockup catalogue under `docs/mockups`, which Mokly builds into static HTML.
+  - **Responsive sweep:** the browser spec in `responsive.spec.ts:44-92`. It loads every product drawing at 320px with enlarged text, and it focuses every plain link.
+- **Background:**
+  - The **Record row** rule in `docs/protocol/cloud/folio-chrome.md:35-45` says that a row that leads somewhere is one link over its whole frame.
+  - Before 2026-11-26, only a small trailing Open or Details word was a link, and a press on the rest of the row did nothing. The user called that bad UX. On 2026-11-26 the user decided that each navigation list row is one link over the whole row.
+  - The row link's own box covers only the row's content. The `::after` box adds the list item's padding and the empty end of the row.
+  - Playwright's `click()` on a link presses the centre of the link's own box. The link covers that point also without the `::after` box.
+  - On 2026-11-26 the branch added two direct checks. `packages/app/src/_tests_/viewer/switcher.spec.ts:92-98` and `packages/app/src/_tests_/settings-mobile.spec.ts:156-173` press the list item 4px from its left edge, at mid-height, and check that the reader moves.
+  - A press in the list item's own padding fails when the `::after` rule of `.row-link` and `.row-choice` goes, and also when `.content-list-row` becomes positioned. A press in the row's end column fails only in the first case.
+  - The drawings and the app share `controls.css`. `packages/app/scripts/sync-styles.mjs` copies it into the app.
+- **Problem:** Only one switcher row and one settings index row prove the press area. A list whose frame positions its row, or covers the `::after` box, passes every check.
+- **Impact if no action:** Some lists can lose the whole-row press, which brings back the dead press that the user rejected, and no test fails.
+- **Root question:** How do the tests prove that a press anywhere on every link row follows its link?
+- **Options:**
+  - **A.** Change nothing more. The two app presses guard the shared rule. Effort: Small.
+  - **B.** In the responsive sweep, read the list item's box of each row link on each product drawing. Check that `document.elementFromPoint` 4px from the item's left edge, at mid-height, returns the link or a node inside it. `docs/mockups/src/_tests_/workspace-overlays.ts:62-70` checks an options list this way. It is a test for the class, so it needs the user. Effort: Medium.
+  - **C.** Do B, and in the same sweep hover each row link's list item at the same point. Check that the list item's background is the text at 5% for the scheme: `color(srgb 0.0509804 0.0784314 0.0627451 / 0.05)` in light and `color(srgb 0.956863 0.956863 0.960784 / 0.05)` in dark. The app's switcher spec checks this for one row only. It is a test for the class, so it needs the user. Effort: Medium.
+- **Left out:** A test that reads `controls.css` and checks the text of the `::after` rule. It checks one rule's text, not the press, so a positioned wrapper elsewhere passes it. Fewer than three approaches are real, because the choice is between the two direct presses and a sweep of every row.
+- **Wider fix:** C. It covers the press area and the hover fill of every drawn list in one sweep.
+- **Previous examples:** None found.
+- **Recommendation:** C. It checks the press and the hover on every drawn list, so a list with its own frame cannot lose either without notice.
+- **Action:** ask the user, because C adds a test for a whole class of defect, and the user approves each such test.

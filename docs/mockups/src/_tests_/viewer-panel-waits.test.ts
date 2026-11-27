@@ -99,7 +99,8 @@ const panelWaits = [
       ["Close", false],
       ["Copy link", true],
     ],
-    placeholders: 2,
+    // Each screen row is one button, so a waiting row draws no control.
+    placeholders: 0,
     hidden: [
       // Every link that the answer supplies starts with this address.
       publicationAddress,
@@ -122,7 +123,7 @@ test("a panel's read draws the panel's own groups with one placeholder row in ea
       assert.equal(regions.length, entry.regions, where);
       for (const region of regions) {
         assert.equal(attribute(region, "aria-busy"), "true", where);
-        // A destination's label is known, but its target is the answer's.
+        // A row's target is the answer's, so no waiting row is a link.
         assert.deepEqual(linksIn(region), [], where);
       }
       const rows = regions.flatMap((region) =>

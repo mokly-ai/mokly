@@ -27,6 +27,9 @@
   layout.
 - **Wider fix:** B, because a named area does not depend on the DOM depth.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/member-rows-end-in-manage-control.md`: the
+  same row. Its open choice may remove Manage from the row, which changes
+  this grid too, so do both in one change.
 - **Recommendation:** B. It keeps working when the row's markup changes
   again.
 - **Action:** fix after merge, apply B, because the redesign branch does not
