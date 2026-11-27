@@ -416,21 +416,26 @@ Depends on: 5
 
 Runs in parallel with Milestone 6. The files do not overlap.
 
-- [ ] Build `access-start.html` and `access-worker.js` in `packages/frame`,
+- [x] Build `access-start.html` and `access-worker.js` in `packages/frame`,
       copy them through the viewer's browser outputs, and write them in the
-      static build under `mokly-viewer/client/`.
-- [ ] Add the access relay to the probe bundle, and raise the budget tests
+      static build under `mokly-viewer/client/`. Branch:
+      `calummoore/embedded-access-start-page-worker-and-1p13`.
+- [x] Add the access relay to the probe bundle, and raise the budget tests
       `packages/frame/tests/probe_budget.test.ts` and
-      `tests/probe_inert.test.ts` to 12,288 bytes.
-- [ ] Add the `access` callback to `postMessageAdapter`: answer a start page
+      `tests/probe_inert.test.ts` to 12,288 bytes. Branch:
+      `calummoore/embedded-access-start-page-worker-and-1p13`.
+- [x] Add the `access` callback to `postMessageAdapter`: answer a start page
       request, wait for the reload before `hello`, renew before expiry, and
-      report the failure through the callback of D3.
-- [ ] Package tests for the channel validation, the adapter states, and the
+      report the failure through the callback of D3. Branch:
+      `calummoore/embedded-access-start-page-worker-and-1p13`.
+- [x] Package tests for the channel validation, the adapter states, and the
       worker's header rule. Regenerate the contract fixtures with
-      `cargo xtask mokly-fixtures`.
-- [ ] Add the frame access envelope, version 1, to the version table of
+      `cargo xtask mokly-fixtures`. Branch:
+      `calummoore/embedded-access-start-page-worker-and-1p13`.
+- [x] Add the frame access envelope, version 1, to the version table of
       `docs/protocol/cloud/mokly-artifact-compatibility.md`. The page has 250
-      of 250 lines, so split it first.
+      of 250 lines, so split it first. Branch:
+      `calummoore/embedded-access-start-page-worker-and-1p13`.
 
 ## Milestone 8: App access through the bearer token
 

@@ -1,7 +1,5 @@
 # Static Build Browser And Identity
 
-Status: The inventory does not hold the start page and the access worker yet, and the frame probe cap is still 11,264 bytes. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the files and raises the cap.
-
 This page supplements [Static Delivery](./mokly-export-delivery.md) with the
 standalone browser inventory and the deployment identity algorithm that the
 [shell delivery contract](./mokly-shell-delivery.md#identity) names.

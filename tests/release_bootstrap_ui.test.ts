@@ -68,7 +68,11 @@ for (const registration of registrations) {
     assert.deepEqual(
       files.filter((file) => file.startsWith("dist/browser/")),
       registration.name === "@mokly/frame"
-        ? ["dist/browser/frame-probe.js"]
+        ? [
+            "dist/browser/access-start.html",
+            "dist/browser/access-worker.js",
+            "dist/browser/frame-probe.js",
+          ]
         : [],
     );
     assert.ok((await fs.stat(archivePath)).size > 0);

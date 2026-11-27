@@ -9,6 +9,8 @@ export async function missingPreparedOutputs(
   const missing = [];
   const files = [
     "packages/viewer/dist/index.js",
+    "packages/frame/dist/browser/access-start.html",
+    "packages/frame/dist/browser/access-worker.js",
     "packages/frame/dist/browser/frame-probe.js",
   ];
   if (browser) {
@@ -18,6 +20,8 @@ export async function missingPreparedOutputs(
       "packages/mokly/dist/shim.mjs",
       "packages/mokly/dist/sidecar.js",
       "packages/viewer/dist/browser/shell.js",
+      "packages/viewer/dist/browser/access-start.html",
+      "packages/viewer/dist/browser/access-worker.js",
       "packages/viewer/dist/browser/frame-probe.js",
       `packages/${platformPackage(process.platform, process.arch, true).replace("@mokly/", "")}/bin/${process.platform === "win32" ? "mokly.exe" : "mokly"}`,
     );

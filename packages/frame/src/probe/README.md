@@ -24,6 +24,15 @@ UTF-8 check before parsing. The
 [frame probe handshake and wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md)
 define the handshake, the messages, and their limits.
 
+## Access relay
+
+After the handshake, the probe uses the same parent and origin checks to
+receive access messages. It validates them with
+[`../access/channel.ts`](../access/channel.ts) and forwards tokens to the
+access worker that controls the document. The
+[frame access contract](../../../../docs/protocol/mokly-frame-access.md#access-relay)
+defines the relay.
+
 ## Published map and markers
 
 `metadata.ts` reads the inert map that the static build writes into each

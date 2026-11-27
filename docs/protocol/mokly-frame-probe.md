@@ -1,7 +1,5 @@
 # Frame Probe
 
-Status: The frame probe has no access relay yet, and its budget is still 11 KiB. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the relay and raises the budget.
-
 The frame probe is the in-frame script of the cross-origin
 [frame adapter](./mokly-frame-adapter.md). The
 [frame package](./mokly-frame-package.md) builds it. Decision: the script and

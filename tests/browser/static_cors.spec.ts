@@ -84,6 +84,8 @@ test("the public test host applies exact-origin CORS and headers to copied files
     "mokly-viewer/entries/example/screens/welcome.json",
     "static/mokly-generated/example/screens/welcome/index.mobile.html",
     "mokly-viewer/client/frame-probe.js",
+    "mokly-viewer/client/access-start.html",
+    "mokly-viewer/client/access-worker.js",
     "mokly-viewer/shell.css",
     `mokly-viewer/fonts/${fonts[0]}`,
     "mokly-viewer/missing.json",
@@ -108,6 +110,14 @@ test("the public test host applies exact-origin CORS and headers to copied files
       if (route.endsWith(".json") && !route.includes("missing"))
         expect(response.headers()["content-type"]).toBe(
           "application/json; charset=utf-8",
+        );
+      if (route.endsWith("/access-start.html"))
+        expect(response.headers()["content-type"]).toBe(
+          "text/html; charset=utf-8",
+        );
+      if (route.endsWith("/access-worker.js"))
+        expect(response.headers()["content-type"]).toBe(
+          "text/javascript; charset=utf-8",
         );
       const denied = await request.fetch(`${fixture.frames.url}/${route}`, {
         method,

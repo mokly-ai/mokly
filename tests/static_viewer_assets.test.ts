@@ -23,10 +23,17 @@ test(
           "browser.manifest.json",
           JSON.stringify({
             schemaVersion: 1,
-            modules: ["shell.js", "frame-probe.js"],
+            modules: [
+              "shell.js",
+              "frame-probe.js",
+              "access-start.html",
+              "access-worker.js",
+            ],
           }),
         ],
         ["browser/frame-probe.js", "export {};"],
+        ["browser/access-start.html", "<!doctype html><script></script>"],
+        ["browser/access-worker.js", "export {};"],
         ["shell.css", ""],
         ["assets/brand.svg", "<svg/>"],
         ["assets/fonts/Geist-Variable.woff2", ""],

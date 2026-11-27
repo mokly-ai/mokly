@@ -1,10 +1,10 @@
 # Frame Access
 
-Status: Mokly does not write the start page or the access worker yet, the frame probe has no access relay, and `postMessageAdapter` takes no access options. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines the access route of `postMessageAdapter`. The route opens screens
-from a frame host that needs a credential on every file, also in a browser
+from a frame host that needs a credential on every file except the start page
+and the access worker, which it
+[serves without a credential](#frame-host-requirements), also in a browser
 that refuses the cookie of that frame host inside a cross-site frame.
 
 The host is the page that mounts the viewer and its frame adapter. The frame

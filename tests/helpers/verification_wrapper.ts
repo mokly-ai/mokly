@@ -24,6 +24,8 @@ export async function createHarness(): Promise<string> {
   );
   const files = new Map([
     ["packages/viewer/dist/index.js", ""],
+    ["packages/frame/dist/browser/access-start.html", ""],
+    ["packages/frame/dist/browser/access-worker.js", ""],
     ["packages/frame/dist/browser/frame-probe.js", ""],
     [
       "tests/failing.test.ts",

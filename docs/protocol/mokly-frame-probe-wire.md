@@ -1,7 +1,5 @@
 # Frame Probe Handshake And Wire Protocol
 
-Status: The adapter runs no access phase before its handshake yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds it.
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the [frame probe](./mokly-frame-probe.md).

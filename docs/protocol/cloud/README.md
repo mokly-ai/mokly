@@ -34,6 +34,8 @@ Change a doc only when a requirement or a decision changes.
   count and screens.
 - [Mokly artifact compatibility](./mokly-artifact-compatibility.md) — workspace
   package boundary and drift checks;
+  [artifact delivery](./mokly-artifact-delivery.md) owns the stored and served
+  paths and the private artifact limit, and
   [fixture regeneration](./mokly-fixture-regeneration.md) defines fixture
   ownership, reproducible output, the moves and index corpus and the CLI
   failure codes.

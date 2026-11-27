@@ -23,7 +23,7 @@
   <a href="#development">Development</a>
 </p>
 
-Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. The viewer does not deliver the start page and the access worker yet, and `postMessageAdapter` takes no access options yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
 
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
@@ -244,8 +244,8 @@ package build starts after the builds whose outputs it reads, and the
 [workspace build](../../scripts/build/README.md) skips a package build whose
 inputs and outputs did not change. The viewer build bundles the standalone shell into
 `dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
-into `dist/browser/frame-probe.js`. It also copies the start page and the
-access worker of the frame access route into `dist/browser`. It writes `shell.css` and `styles.css`
+into `dist/browser/frame-probe.js`. It also copies `access-start.html` and
+`access-worker.js` from the frame package into `dist/browser`. It writes `shell.css` and `styles.css`
 from the `@font-face` rules of the shell fonts and the UI package's
 `styles.css`, whose rules keep the cascade order that
 `packages/ui/src/styles.css` lists. The shell fonts are Geist and Geist Mono,
@@ -289,6 +289,9 @@ window only after that task has run.
   the public handle and its highlight requests, geometry, and cancellation
 - [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
   viewer and the browser entry; it holds no style rule
+- [`scripts/build.mjs`](./scripts/build.mjs) bundles the standalone shell and
+  copies the frame package browser files into the inventory that
+  [`scripts/browser.mjs`](./scripts/browser.mjs) writes.
 
 See [viewer modules](./code.md) for more entry points.
 

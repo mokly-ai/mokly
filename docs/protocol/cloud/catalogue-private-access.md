@@ -127,5 +127,5 @@ catalogue cookie in its own browser store. A browser with partitioned cookies
 keeps the app's cookie out of that store. A private-comparison error shows an
 overlay without an action, and the app offers no new-tab link.
 This makes no file public. The
-[private artifact limit](./mokly-artifact-compatibility.md#private-artifact-limit)
+[private artifact limit](./mokly-artifact-delivery.md#private-artifact-limit)
 gives the reads and the decision.

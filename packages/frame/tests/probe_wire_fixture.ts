@@ -2,6 +2,13 @@ import vm from "node:vm";
 
 export function probeHarness(bundle: string, query: string, hasMap = true) {
   const messages: { data: string; origin: string }[] = [];
+  const workerMessages: string[] = [];
+  const serviceWorker = {
+    controller: null as {
+      scriptURL: string;
+      postMessage(data: string): void;
+    } | null,
+  };
   const listeners = new Map<string, EventListener>();
   const documentListeners = new Map<string, EventListener>();
   const wheelOptions = new Map<string, AddEventListenerOptions>();
@@ -84,6 +91,7 @@ export function probeHarness(bundle: string, query: string, hasMap = true) {
     location: new URL(`https://frames.test/static/screen.html${query}`),
     parent,
     document: doc,
+    navigator: { serviceWorker },
     addEventListener(
       type: string,
       listener: EventListener,
@@ -124,8 +132,17 @@ export function probeHarness(bundle: string, query: string, hasMap = true) {
   });
   return {
     messages,
+    workerMessages,
     listeners,
     documentListeners,
+    control(scriptURL: string) {
+      serviceWorker.controller = {
+        scriptURL,
+        postMessage(data) {
+          workerMessages.push(data);
+        },
+      };
+    },
     facts: () => ({ inspected, observed, trapped }),
     activate(index: number) {
       let prevented = false;
@@ -158,12 +175,17 @@ export function probeHarness(bundle: string, query: string, hasMap = true) {
       frames.clear();
       for (const callback of callbacks) callback(time);
     },
-    send(data: unknown, origin = "https://app.test", source: unknown = parent) {
+    send(
+      data: unknown,
+      origin = "https://app.test",
+      source: unknown = parent,
+      ports: unknown[] = [],
+    ) {
       listeners.get("message")?.({
         data,
         origin,
         source,
-        ports: [],
+        ports,
       } as unknown as Event);
     },
   };

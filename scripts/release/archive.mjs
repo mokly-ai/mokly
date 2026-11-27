@@ -101,6 +101,8 @@ function validateViewerReport(report) {
     "dist/data.d.ts",
     "dist/styles.css",
     "dist/shell.css",
+    "dist/browser/access-start.html",
+    "dist/browser/access-worker.js",
     "dist/browser/frame-probe.js",
     "dist/browser/shell.js",
     "dist/assets/fonts/Geist-OFL.txt",

@@ -88,10 +88,18 @@ impl ViewerAssets for PackageAssets {
         }
         let mut routes = BTreeMap::new();
         for name in manifest.modules {
-            if !name.ends_with(".js") || name.contains(['/', '\\', ':']) || name.starts_with('.') {
+            if name.contains(['/', '\\', ':']) || name.starts_with('.') {
                 return Err(ServerError::InvalidAssets);
             }
-            if routes.contains_key(&viewer(&format!("client/{name}"))) {
+            let content_type = if name == "access-start.html" {
+                "text/html; charset=utf-8"
+            } else if name.ends_with(".js") {
+                "text/javascript; charset=utf-8"
+            } else {
+                return Err(ServerError::InvalidAssets);
+            };
+            let route = viewer(&format!("client/{name}"));
+            if routes.contains_key(&route) {
                 return Err(ServerError::InvalidAssets);
             }
             let bytes = match self.tree.read(&dist.join("browser").join(&name)) {
@@ -99,10 +107,10 @@ impl ViewerAssets for PackageAssets {
                 Err(_) => return Err(ServerError::InvalidAssets),
             };
             routes.insert(
-                viewer(&format!("client/{name}")),
+                route,
                 File {
                     bytes: bytes.into(),
-                    content_type: "text/javascript; charset=utf-8".into(),
+                    content_type: content_type.into(),
                 },
             );
         }
