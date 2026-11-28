@@ -23,6 +23,7 @@ import { useId, type CSSProperties, type ReactNode } from "react";
 
 import {
   FrameFailure,
+  FrameOutdated,
   FrameUnavailable,
   type FrameRetry,
   type FrameScheme,
@@ -77,11 +78,13 @@ function sizeStyle(
 function FrameBox({
   children,
   error,
+  outdated,
   overlay,
   retry,
 }: {
   children: ReactNode;
   error: boolean;
+  outdated: boolean;
   overlay: ReactNode;
   retry: FrameRetry | undefined;
 }) {
@@ -90,10 +93,11 @@ function FrameBox({
     <div className="mbk-canvas-frame-clip mbk-reset">
       <div className="mbk-canvas-frame-document mbk-reset">{children}</div>
       {overlay}
-      {unavailable || error ? (
+      {unavailable || error || outdated ? (
         <div className="mbk-canvas-frame-note mbk-reset">
           {unavailable ? <FrameUnavailable /> : null}
           {error ? <FrameFailure retry={retry} /> : null}
+          {outdated ? <FrameOutdated /> : null}
         </div>
       ) : null}
     </div>
@@ -112,6 +116,7 @@ export function CanvasFrame({
   link,
   marks,
   onSelect,
+  outdated = false,
   overlay,
   place,
   retry,
@@ -164,6 +169,11 @@ export function CanvasFrame({
    * such as on a variant set, where a press selects the frame.
    */
   onSelect?: (() => void) | undefined;
+  /**
+   * Whether an earlier version of Mokly built the frame's document, so the
+   * frame cannot read it and trying again cannot help.
+   */
+  outdated?: boolean;
   /**
    * What lies over the frame's document inside its box, at the frame's size
    * rather than the document's, so it keeps its size at every zoom, such as
@@ -239,7 +249,12 @@ export function CanvasFrame({
       {placed ? (
         <div className="mbk-canvas-frame-place mbk-reset">{place}</div>
       ) : (
-        <FrameBox error={error} overlay={overlay} retry={retry}>
+        <FrameBox
+          error={error}
+          outdated={outdated}
+          overlay={overlay}
+          retry={retry}
+        >
           {children}
         </FrameBox>
       )}

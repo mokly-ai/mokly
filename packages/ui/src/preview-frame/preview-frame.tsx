@@ -51,6 +51,19 @@ export function FrameFailure({
 }
 
 /**
+ * The line of a frame whose page an earlier version of Mokly built. Trying
+ * again cannot help, so the line names the way on instead.
+ */
+export function FrameOutdated() {
+  return (
+    <p className="mbk-frame-error mbk-reset" role="status">
+      This preview was built with an older version of Mokly. Update Mokly in the
+      project, then publish it again.
+    </p>
+  );
+}
+
+/**
  * The `<iframe>` element of a preview, sandboxed without scripts. The host
  * passes its document as `src` or `srcDoc` and the attributes through which
  * it finds and drives the frame, and it reads the document through `ref`.

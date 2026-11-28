@@ -51,6 +51,7 @@ function ReadingFrame({
   return (
     <CanvasFrame
       error={frame.status === "error"}
+      outdated={frame.status === "outdated"}
       focusVisible={input.focusVisible}
       kind="document"
       label={label}

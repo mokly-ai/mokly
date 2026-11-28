@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type {
   EntryDetailV4,
+  FrameErrorCode,
   FrameEvent,
   MoklyViewerHandle,
   MoklyViewerProps,
@@ -31,7 +32,7 @@ interface FrameHookHarness {
   emit(id: string, event: FrameEvent): string[];
   highlight(id: string): Promise<void>;
   ready(id: string): Promise<string>;
-  rejectMount(id: string): void;
+  rejectMount(id: string, code?: FrameErrorCode): void;
   rejectUpdate(id: string): void;
   replaceDocument(id: string, kind: "identity" | "source"): void;
   remove(id: string): void;

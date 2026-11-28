@@ -185,6 +185,9 @@ of spelling them in source.
   — `postMessageAdapter`, the opt-in adapter for documents on a separate
   origin. It requests instance box models and document content boxes from
   the probe.
+- [`src/adapters/earlier_probe.ts`](./src/adapters/earlier_probe.ts) — the
+  version 3 handshake and the check of its reply, through which
+  `postMessageAdapter` rejects a page from an earlier Mokly with `version`
 - [`src/adapters/message_transport.ts`](./src/adapters/message_transport.ts)
   — `messageTransport`, the bounded request and reply state of one
   cross-origin session

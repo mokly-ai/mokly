@@ -75,45 +75,58 @@ test("a custom adapter that resolves after unmount is disposed", async ({
     .toMatchObject({ disposals: 1, pendingMounts: 0, sessions: 0 });
 });
 
-test("a custom adapter rejection reports an owned frame error, and retry mounts again", async ({
-  page,
-}) => {
-  await page.evaluate(() =>
-    window.frameHookHarness.start("rejected-frame", { deferredMount: true }),
-  );
-  await expect
-    .poll(() =>
-      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
-    )
-    .toMatchObject({ mounts: 1, pendingMounts: 1, status: "loading" });
+for (const { code, ready, status } of [
+  { code: undefined, ready: "rejected", status: "error" },
+  { code: "version", ready: "version", status: "outdated" },
+] as const) {
+  test(`a custom adapter rejection with ${code ?? "no code"} reports an owned ${status} frame, and retry mounts again`, async ({
+    page,
+  }) => {
+    await page.evaluate(() =>
+      window.frameHookHarness.start("rejected-frame", { deferredMount: true }),
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+      )
+      .toMatchObject({ mounts: 1, pendingMounts: 1, status: "loading" });
 
-  await page.evaluate(() =>
-    window.frameHookHarness.rejectMount("rejected-frame"),
-  );
-  await expect
-    .poll(() =>
-      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
-    )
-    .toMatchObject({ pendingMounts: 0, sessions: 1, status: "error" });
-  expect(
-    await page.evaluate(() => window.frameHookHarness.ready("rejected-frame")),
-  ).toBe("rejected");
+    await page.evaluate(
+      (code) => window.frameHookHarness.rejectMount("rejected-frame", code),
+      code,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+      )
+      .toMatchObject({
+        pendingMounts: 0,
+        sessions: 1,
+        sessionStatus: "error",
+        status,
+      });
+    expect(
+      await page.evaluate(() =>
+        window.frameHookHarness.ready("rejected-frame"),
+      ),
+    ).toBe(ready);
 
-  await page.evaluate(() => window.frameHookHarness.retry("rejected-frame"));
-  await expect
-    .poll(() =>
-      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
-    )
-    .toMatchObject({ mounts: 2, pendingMounts: 1, status: "loading" });
-  await page.evaluate(() =>
-    window.frameHookHarness.resolveMount("rejected-frame"),
-  );
-  await expect
-    .poll(() =>
-      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
-    )
-    .toMatchObject({ pendingMounts: 0, sessions: 1, status: "ready" });
-});
+    await page.evaluate(() => window.frameHookHarness.retry("rejected-frame"));
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+      )
+      .toMatchObject({ mounts: 2, pendingMounts: 1, status: "loading" });
+    await page.evaluate(() =>
+      window.frameHookHarness.resolveMount("rejected-frame"),
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+      )
+      .toMatchObject({ pendingMounts: 0, sessions: 1, status: "ready" });
+  });
+}
 
 test("inspection errors keep a ready frame ready and load errors fail it", async ({
   page,
