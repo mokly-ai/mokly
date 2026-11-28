@@ -9,7 +9,7 @@ use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::discovery::SourceKind;
 use crate::error::Result;
-use crate::globs::{self, DEFAULT_GLOBS};
+use crate::globs;
 
 /// The first source-protection cause in the protocol's precedence order.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -73,12 +73,7 @@ impl SourcePolicy {
     pub fn new(config: &ResolvedConfig, sources: &[String]) -> Result<Self> {
         let mut roots = Vec::new();
         for (index, root) in config.roots.iter().enumerate() {
-            let patterns = root
-                .input
-                .files
-                .clone()
-                .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
-            let globs = match globs::compile(&patterns) {
+            let globs = match globs::for_root(root) {
                 Ok(globs) => globs,
                 Err(reason) => return Err(invalid(format!("roots[{index}].files: {reason}"))),
             };

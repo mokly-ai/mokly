@@ -87,13 +87,7 @@ pub(crate) fn describe(
     let compiler = attempt.compiler;
     let context = attempt.context;
     let story_previews = |selected, modules| {
-        bundle_attempt::story_previews(
-            selected,
-            modules,
-            &params.storybook_folders,
-            tree.as_ref(),
-            &config.repo_root,
-        )
+        bundle_attempt::story_previews(selected, modules, &params.storybook_folders)
     };
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
@@ -101,10 +95,7 @@ pub(crate) fn describe(
             compiler.as_ref(),
             &previous.modules,
             &params,
-            &story_previews(
-                previous.render.storybook_previews.as_ref(),
-                &previous.modules,
-            ),
+            &story_previews(&previous.render.storybook_previews, &previous.modules),
         )?;
         let digest = maps.fingerprint();
         if let Some(existing) = candidates
@@ -131,10 +122,7 @@ pub(crate) fn describe(
             compiler.as_ref(),
             &modules,
             &params,
-            &story_previews(
-                bundle_attempt::selected_previews(&result).as_ref(),
-                &modules,
-            ),
+            &story_previews(&bundle_attempt::selected_previews(&result), &modules),
         )?,
     };
     let class_maps_digest = maps.fingerprint();

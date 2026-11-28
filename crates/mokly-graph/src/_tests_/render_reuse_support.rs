@@ -57,6 +57,10 @@ impl Fixture {
         ];
         let mut generation = JavaScriptGeneration {
             environment: "environment@1".into(),
+            storybook_previews: BTreeMap::from([(
+                ".storybook".into(),
+                Some(".storybook/preview.js".into()),
+            )]),
             class_map_digests: BTreeMap::from([("styles/card.module.css".into(), "map@1".into())]),
             runtime_packages: BTreeSet::from(["react".into(), "react-dom".into()]),
             ..Default::default()

@@ -59,7 +59,7 @@ both sides were rejected, because the copies drift and increase the code size.
 | Method              | Params                                                                                                                                                                                                                                                                                                                                      | Result                                                                                                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                                                                                                                                                                                                                                                    | `{ version }`                                                                                                                                                                     |
-| `readStorybook`     | source root, configuration directory, [Storybook folder](./mokly-storybook.md#storybook-folders), repository roots, resolution settings                                                                                                                                                                                                     | `{ main, entries, inputs, dependencyDirectories }` or `{ mainError }`                                                                                                             |
+| `readStorybook`     | source root, configuration directory, [Storybook folder](./mokly-storybook.md#storybook-folders), repository roots, resolution settings                                                                                                                                                                                                     | `{ main, entries, inputs, absentInputs, dependencyDirectories }` or `{ mainError }`                                                                                               |
 | `bundle`            | entry files, renderer, stories files and each file's [Storybook folder](./mokly-storybook.md#storybook-folders), resolution settings, source root, configuration directory, repository roots, optional `vite`, [`viteInputs`](./mokly-vite-adapter-inputs.md), `capture`, and [`preparation`](./mokly-sidecar-postcss.md#prepared-contexts) | `{ generation, modules, compiled }` or a [short result](./mokly-sidecar-recipes.md#restored-reuse)                                                                                |
 | `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                                                                                                                                                                                                                                                 | nothing                                                                                                                                                                           |
 | `describe`          | generation                                                                                                                                                                                                                                                                                                                                  | `{ screens, pages, useCases, folders, components, stories, diagnostics }`                                                                                                         |
@@ -190,19 +190,20 @@ The [Storybook stories contract](./mokly-storybook.md) defines how the
 sidecar reads stories files, which stories `describe` lists, and how
 `renderStory` prepares and renders a story.
 
-`readStorybook` loads the `main.*` of one Storybook folder before discovery,
-under the [roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
-It resolves the `storybook` package and the imports of `main.*` with the
-resolution settings of its side. `main` is the repository-relative path of
-that `main.*`. `entries` holds each `stories` entry in authored order, as a
-`directory` relative to the source root and a `files` pattern relative to that
-directory. `inputs` maps the repository-relative path of each repository file
-outside `node_modules` that the load read, a link and its target alike, to the
-digest of its bytes. It also maps each other candidate name of `main.*` to its
-digest, or to `null` when that file does not exist. A `main.*` that is
-missing, fails to load, or gives invalid `stories` gives `{ mainError }` with
-the reason. Every other failure gives the error reply of its kind.
-`dependencyDirectories` lists the dependency directories that the load used.
+`readStorybook` loads one folder's `main.*` under the
+[root discovery rules](./mokly-root-discovery.md#roots-from-main). The imports
+resolve as Node resolves them, from the side's selected installation with its
+repository mapping. Mokly's aliases, conditions, main fields, extensions, and
+loaders do not apply. Storybook's loader applies none of these settings, so
+both compilers select the same stories as the project's own Storybook.
+`main` names the selected file relative to the repository. `entries` lists
+`directory` paths relative to the source root and `files` globs relative to
+each directory, in authored order. `inputs` lists each distinct `whole-file`
+digest for each observed repository path outside `node_modules`, including
+links, their targets, and present `main.*` candidates. `absentInputs` lists
+observed absences. `dependencyDirectories` lists the installation directories
+used. Missing or unloadable `main.*` and invalid `stories` give `{ mainError }`
+with the reason. Every other failure gives the error reply of its kind.
 
 ## Consumer PostCSS
 

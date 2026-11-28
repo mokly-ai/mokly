@@ -214,11 +214,9 @@ impl JavaScriptGraph {
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
             let story_previews = bundle_attempt::story_previews(
-                generation.storybook_previews.as_ref(),
+                &generation.storybook_previews,
                 &generation.modules,
                 &config.storybook_folders(&catalogue.inventory.files),
-                assets.as_ref(),
-                &config.repo_root,
             );
             let stylesheet_roots = bundle_styles::prepare_roots(
                 compiler,

@@ -63,9 +63,9 @@ configured root, the exclusions of each record apply to the files of all
 those roots. A file matched by a root's `files` globs stays a protected, watched
 source input even when excluded and never imported. Exclusions match whole file
 paths only: `drafts/**` excludes files below `drafts`, while `drafts` does not
-exclude that directory. A
-`_folder.json` directly inside a root with no prefix describes the catalogue
-top level and may contain only `order` and `exclude`. The file is never an
+exclude that directory. A `_folder.json` that describes the catalogue top
+level may contain only `order` and `exclude`. A record directly inside a
+root with `dir` and no prefix describes the top level. The file is never an
 entry and never a public file.
 
 A directory record must belong to exactly one root. A `_folder.json` found
@@ -75,7 +75,9 @@ are disjoint; see [roots validation](./mokly-configuration.md#roots). No root
 is selected silently, except among the
 [roots from `main.*`](./mokly-root-discovery.md#roots-from-main) of one
 configured root. There, a record belongs to the first of those roots that
-reaches it, and the root with the deepest directory that holds the record
+reaches it. Its folder path comes from the deepest entry whose directory
+holds the record and that owns a story kept below the record's directory.
+If no such entry exists, the deepest entry directory that holds the record
 gives its folder path.
 A vanished record does not discard its directory's entries. Other filesystem
 failures follow [root discovery](./mokly-root-discovery.md#traversal-and-races).

@@ -50,9 +50,13 @@ export function viteGraph(
   children: ReadonlyMap<string, string[]>,
   paths: ModulePaths,
   files: ReadonlyMap<string, Uint8Array>,
-): { modules: Module[]; physical: Map<string, string> } {
+  entryImports: ReadonlyMap<string, string>,
+) {
   const modules = new Map<string, Module>();
   const physical = new Map<string, string>();
+  const root = recipe.modules[0]?.result;
+  const rootEdges = new Set(root && "id" in root ? children.get(root.id) : []);
+  const entryNames = new Map<string, string>();
   const fileOf = (id: string) => {
     const file = viteFile(id);
     return file && files.has(file) ? file : undefined;
@@ -69,6 +73,7 @@ export function viteGraph(
     const file = fileOf(id);
     if (!file) continue;
     const name = paths.name(file);
+    if (rootEdges.has(id)) entryNames.set(id, name);
     const edges = (children.get(id) ?? []).flatMap((child) => flatten(child));
     const prior = modules.get(name);
     physical.set(name, file);
@@ -78,10 +83,16 @@ export function viteGraph(
       imports: [...new Set([...(prior?.imports ?? []), ...edges])],
     });
   }
+  const entryModules = new Map<string, string>();
+  for (const [specifier, id] of entryImports) {
+    const name = entryNames.get(id);
+    if (name !== undefined) entryModules.set(specifier, name);
+  }
   return {
     modules: [...modules.values()].sort((a, b) =>
       a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
     ),
     physical,
+    entryModules,
   };
 }

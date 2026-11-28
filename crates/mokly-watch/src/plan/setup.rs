@@ -5,11 +5,12 @@ use std::path::Path;
 use std::time::Duration;
 
 use mokly_catalogue::config_types::{ResolvedConfig, WatchAction};
+use mokly_catalogue::globs::{self, GlobSyntax};
 use mokly_css::dependencies::DirectoryDependency;
 
 use crate::error::Result;
 use crate::event::Action;
-use crate::pattern::{self, DEFAULT_GLOBS};
+use crate::pattern;
 
 use super::Plan;
 
@@ -51,18 +52,11 @@ impl Plan {
             if root.pending_storybook() {
                 continue;
             }
-            let patterns = root
-                .input
-                .files
-                .clone()
-                .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
+            let globs = globs::for_root(root)?;
             for path in [&root.directory, &root.identity] {
                 plan.roots.insert(path.clone());
-                plan.source_roots.push((
-                    path.clone(),
-                    pattern::configured(&patterns),
-                    root.from_storybook_main(),
-                ));
+                plan.source_roots
+                    .push((path.clone(), globs.clone(), root.from_storybook_main()));
             }
         }
         for path in config
@@ -82,7 +76,7 @@ impl Plan {
             plan.roots.insert(path.clone());
             plan.directories.push((
                 path,
-                pattern::compile(std::slice::from_ref(&directory.glob))?,
+                pattern::compile(std::slice::from_ref(&directory.glob), GlobSyntax::Postcss)?,
             ));
         }
         plan.root_index = plan.roots.iter().cloned().collect();
@@ -107,8 +101,10 @@ impl Plan {
                     }
                 }
             }
-            plan.rules
-                .push((rule.action, pattern::configured(&rule.paths)));
+            plan.rules.push((
+                rule.action,
+                pattern::compile(&rule.paths, GlobSyntax::Posix)?,
+            ));
         }
         plan.resources(resources);
         Ok(plan)

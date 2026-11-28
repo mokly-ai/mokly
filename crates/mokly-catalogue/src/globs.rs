@@ -4,8 +4,13 @@ use std::collections::BTreeSet;
 
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
+use crate::config_types::ResolvedRoot;
+
+mod pattern;
+mod validation;
+
 /// Default source selection, independent of application layout.
-pub(crate) const DEFAULT_GLOBS: [&str; 7] = [
+const DEFAULT_GLOBS: [&str; 7] = [
     "**/*.mockup.{ts,tsx}",
     "**/*.stories.{ts,tsx,js,jsx}",
     "**/*.screen.html",
@@ -15,37 +20,105 @@ pub(crate) const DEFAULT_GLOBS: [&str; 7] = [
     "**/*.md",
 ];
 
-/// Compile safe globs, validating the original and every brace alternative.
-/// `*` stays in one path segment, and backslash escaping is off on every platform
-/// because globset's default for it differs between Unix and Windows.
-pub(crate) fn compile(patterns: &[String]) -> Result<GlobSet, String> {
+/// The source of a pattern determines its syntax and path checks.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum GlobSyntax {
+    /// Configured root, folder exclusion, or watch rule.
+    Posix,
+    /// Pattern from a Storybook `stories` entry.
+    Storybook,
+    /// Glob supplied by a PostCSS directory dependency.
+    Postcss,
+}
+
+/// Errors in the pattern list, its alternatives, or the compiled matcher.
+#[derive(Debug, thiserror::Error)]
+pub enum GlobError {
+    /// The list names the same pattern twice.
+    #[error("duplicate glob {0:?}")]
+    Duplicate(String),
+    /// A pattern or alternative is an unsafe relative path.
+    #[error("not a safe relative POSIX glob: {0:?}")]
+    Unsafe(String),
+    /// A brace group is missing its closing brace.
+    #[error("unclosed brace in glob {0:?}")]
+    UnclosedBrace(String),
+    /// Storybook uses an extglob operator outside Mokly's subset.
+    #[error("unsupported extglob {0}(...)")]
+    UnsupportedExtglob(char),
+    /// A Storybook group is missing its closing parenthesis.
+    #[error("unclosed extglob")]
+    UnclosedExtglob,
+    /// A Storybook group cannot be expressed with glob alternatives.
+    #[error("unsupported Storybook group in glob {0:?}")]
+    UnsupportedGroup(String),
+    /// Globset rejected the pattern.
+    #[error("invalid glob {pattern:?}: {source}")]
+    Pattern {
+        /// The authored pattern.
+        pattern: String,
+        /// The parser error.
+        source: globset::Error,
+    },
+    /// Globset could not build the set of patterns.
+    #[error("invalid globs: {0}")]
+    Set(#[from] globset::Error),
+}
+
+/// Compile grouped globs and check relative path alternatives without expansion.
+/// `*` stays in one path segment and backslash escaping is off on every platform.
+pub fn compile(patterns: &[impl AsRef<str>], syntax: GlobSyntax) -> Result<GlobSet, GlobError> {
     let mut builder = GlobSetBuilder::new();
     let mut seen = BTreeSet::new();
     for pattern in patterns {
+        let pattern = pattern.as_ref();
         if !seen.insert(pattern) {
-            return Err(format!("duplicate glob {pattern:?}"));
+            return Err(GlobError::Duplicate(pattern.into()));
         }
-        validate(pattern)?;
-        for expanded in expand(pattern)? {
-            validate(&expanded)?;
+        if syntax != GlobSyntax::Postcss {
+            validate(pattern)?;
         }
-        let glob = match GlobBuilder::new(pattern)
+        let grouped = if syntax == GlobSyntax::Storybook && pattern.contains('(') {
+            Some(pattern::compile_groups(pattern, true)?)
+        } else {
+            if syntax != GlobSyntax::Postcss && pattern.contains('{') {
+                pattern::compile_groups(pattern, false)?;
+            }
+            None
+        };
+        let glob = match GlobBuilder::new(grouped.as_deref().unwrap_or(pattern))
             .literal_separator(true)
             .backslash_escape(false)
+            .empty_alternates(grouped.is_some())
             .build()
         {
             Ok(glob) => glob,
-            Err(error) => return Err(format!("invalid glob {pattern:?}: {error}")),
+            Err(source) => {
+                return Err(GlobError::Pattern {
+                    pattern: pattern.into(),
+                    source,
+                });
+            }
         };
         builder.add(glob);
     }
-    match builder.build() {
-        Ok(globs) => Ok(globs),
-        Err(error) => Err(format!("invalid globs: {error}")),
+    Ok(builder.build()?)
+}
+
+/// Compile one effective root with the syntax of its configured source.
+pub fn for_root(root: &ResolvedRoot) -> Result<GlobSet, GlobError> {
+    let syntax = if root.from_storybook_main() {
+        GlobSyntax::Storybook
+    } else {
+        GlobSyntax::Posix
+    };
+    match &root.input.files {
+        Some(patterns) => compile(patterns, syntax),
+        None => compile(&DEFAULT_GLOBS, syntax),
     }
 }
 
-pub(crate) fn validate(pattern: &str) -> Result<(), String> {
+fn validate(pattern: &str) -> Result<(), GlobError> {
     if pattern.trim().is_empty()
         || pattern.starts_with(['!', '#', '/'])
         || pattern
@@ -55,48 +128,9 @@ pub(crate) fn validate(pattern: &str) -> Result<(), String> {
             .split('/')
             .any(|segment| matches!(segment, "" | "." | ".."))
     {
-        return Err(format!("not a safe relative POSIX glob: {pattern:?}"));
+        return Err(GlobError::Unsafe(pattern.into()));
     }
     Ok(())
-}
-
-fn expand(pattern: &str) -> Result<Vec<String>, String> {
-    let Some(start) = pattern.find('{') else {
-        return Ok(vec![pattern.into()]);
-    };
-    let mut depth = 0;
-    let mut separators = Vec::new();
-    let mut end = None;
-    for (offset, c) in pattern[start..].char_indices() {
-        match c {
-            '{' => depth += 1,
-            '}' => {
-                depth -= 1;
-                if depth == 0 {
-                    end = Some(start + offset);
-                    break;
-                }
-            }
-            ',' if depth == 1 => separators.push(start + offset),
-            _ => {}
-        }
-    }
-    let Some(end) = end else {
-        return Err(format!("unclosed brace in glob {pattern:?}"));
-    };
-    let mut alternatives = Vec::new();
-    let mut previous = start + 1;
-    for stop in separators.into_iter().chain([end]) {
-        let next = format!(
-            "{}{}{}",
-            &pattern[..start],
-            &pattern[previous..stop],
-            &pattern[end + 1..]
-        );
-        alternatives.extend(expand(&next)?);
-        previous = stop + 1;
-    }
-    Ok(alternatives)
 }
 
 /// Discovery directory denials apply below each explicit root only.
@@ -113,3 +147,7 @@ pub(crate) fn denied_directory(name: &str) -> bool {
             | ".context"
     )
 }
+
+#[cfg(test)]
+#[path = "_tests_/globs_tests.rs"]
+mod globs_tests;

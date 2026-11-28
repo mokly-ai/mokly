@@ -66,6 +66,8 @@ Set `storybook` and omit `dir` to use the `stories` list in the folder's
 ```
 
 Mokly uses Storybook's loader to run `main.*` in Node before discovery.
+Its imports resolve as in your Storybook, so `moduleResolution` settings do
+not apply to them.
 Only roots without `dir` need Node at this step.
 
 In `stories`, a string gives a path or glob relative to the Storybook folder.
@@ -73,8 +75,9 @@ An object gives a `directory` relative to that folder and can include a
 `files` glob relative to `directory`. Mokly selects only
 `*.stories.{ts,tsx,js,jsx}` files.
 
-In `stories` globs, `@(a|b)` matches one alternative and `?(a|b)` matches zero
-or one. Mokly rejects other extglobs.
+In `stories` globs, `(a|b)` and `@(a|b)` each match one alternative.
+`?(a|b)` matches zero or one. Mokly rejects patterns that it cannot convert,
+including `*(...)`, `+(...)`, and `!(...)`.
 
 If several `stories` entries match a file in the same root, Mokly uses the
 first match. Mokly derives the catalogue path from that entry's directory

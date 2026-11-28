@@ -12,6 +12,8 @@ import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 import { entryModule } from "./bundle-entry.js";
 import type { Bundled } from "./bundle.js";
 import { bundleResult, restore } from "./compiled.js";
+import { namePreviews } from "./storybook-folders.js";
+import { storybookInputsAgree } from "./storybook-inputs.js";
 import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteContext, viteModulePaths } from "./vite-context.js";
 import {
@@ -48,7 +50,8 @@ export class ViteCompiler {
     params = { ...params, sourceRoot: paths.sourceRoot };
     let version: string | undefined;
     try {
-      return await withVitePeers(params, compile, async (require) => {
+      const peerParams = { ...params, storybook: "deferred" as const };
+      return await withVitePeers(peerParams, compile, async (require) => {
         const vite = await loadVite(require);
         version = vite.api.version;
         const entry = await entryModule(params);
@@ -74,11 +77,17 @@ export class ViteCompiler {
           input.lookup,
           () => walkVite(viteUrl(viteEntry), fetch, imports, vite.api.version),
         );
-        const { modules, physical } = viteGraph(
+        const { modules, physical, entryModules } = viteGraph(
           recipe,
           children,
           paths,
           input.files,
+          input.entryImports,
+        );
+        const previews = namePreviews(
+          paths.sourceRoot,
+          entry.previewProbe,
+          entryModules,
         );
         await verifyViteInputs(input);
         await verifySetup(setup, directory, paths);
@@ -107,7 +116,7 @@ export class ViteCompiler {
                 params,
                 modules,
                 metadata.metadataInputs,
-                ...Object.entries(entry.previewProbe.selections),
+                ...Object.entries(previews),
                 storybook?.peers,
                 toolchain,
                 input.runtimeKey,
@@ -120,7 +129,9 @@ export class ViteCompiler {
             complete: false,
             durable: false,
             inputs: entry.previewProbe.links,
-            ...(toolchain && capture === "serveEdit"
+            ...(toolchain &&
+            storybookInputsAgree(storybook?.inputs) &&
+            capture === "serveEdit"
               ? { uncaptured: "serveEdit" as const }
               : {}),
           },
@@ -134,9 +145,7 @@ export class ViteCompiler {
           ),
           peers: { ...require.snapshot(), ...input.peers },
           ...(storybook && { storybookReact: storybook.peers }),
-          ...(Object.keys(entry.previewProbe.selections).length && {
-            storybookPreviews: entry.previewProbe.selections,
-          }),
+          ...(Object.keys(previews).length && { storybookPreviews: previews }),
           unmappedDependencyDirectories: [
             ...new Set([
               ...paths.dependencyUsage.unmapped,

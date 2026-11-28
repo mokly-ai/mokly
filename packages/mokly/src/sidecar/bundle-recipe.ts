@@ -23,9 +23,12 @@ import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
-import { recordPreviewInputs } from "./storybook-folders.js";
+import { namePreviews, recordPreviewInputs } from "./storybook-folders.js";
 import type { PreviewProbe } from "./storybook-folders.js";
-import { recordStorybookInputs } from "./storybook-inputs.js";
+import {
+  recordStorybookInputs,
+  storybookInputsAgree,
+} from "./storybook-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
@@ -72,10 +75,14 @@ export async function bundleRecipe(
       })
     : undefined;
   const resolution = params.moduleResolution;
-  const { modules: graph, physical } = measurements.runSync(
-    "sidecar.bundle.graph",
-    () => moduleGraph(compiled.metafile!, paths),
+  const {
+    modules: graph,
+    physical,
+    entryModules,
+  } = measurements.runSync("sidecar.bundle.graph", () =>
+    moduleGraph(compiled.metafile!, paths),
   );
+  const previews = namePreviews(params.sourceRoot, previewProbe, entryModules);
   // The compilation identity: module paths, imports and non-CSS source and
   // loader bytes, then the metadata inputs and the settings hashed below.
   // Without a full capture owner the evidence is never complete, so the
@@ -116,6 +123,9 @@ export async function bundleRecipe(
     physicalInputs,
     metadataInputs,
   );
+  const storybookInputsConsistent = storybookInputsAgree(storybook?.inputs);
+  if (!storybookInputsConsistent && evidence)
+    evidence.physical.complete = false;
   recordStorybookInputs(
     paths,
     storybook?.inputs,
@@ -158,7 +168,7 @@ export async function bundleRecipe(
   const toolchain = await toolchainIdentity();
   if (reuseEvidence.uncaptured === "serveEdit")
     Object.assign(reuseEvidence.inputs, previewProbe.links);
-  if (!toolchain) {
+  if (!toolchain || !storybookInputsConsistent) {
     reuseEvidence.complete = false;
     delete reuseEvidence.uncaptured;
   }
@@ -181,7 +191,7 @@ export async function bundleRecipe(
       params.entryFiles,
       params.storiesFiles,
       params.storybookFolders,
-      Object.entries(previewProbe.selections),
+      Object.entries(previews),
       storybook?.peers,
       params.renderer,
       params.configurationDirectory,
@@ -225,9 +235,7 @@ export async function bundleRecipe(
     ),
     peers,
     ...(storybook && { storybookReact: storybook.peers }),
-    ...(Object.keys(previewProbe.selections).length && {
-      storybookPreviews: previewProbe.selections,
-    }),
+    ...(Object.keys(previews).length && { storybookPreviews: previews }),
     unmappedDependencyDirectories: [
       ...new Set([
         ...paths.dependencyUsage.unmapped,

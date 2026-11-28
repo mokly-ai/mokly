@@ -42,6 +42,10 @@ impl Fixture {
         ];
         let mut generation = JavaScriptGeneration {
             environment: "environment".into(),
+            storybook_previews: BTreeMap::from([(
+                ".storybook".into(),
+                Some(".storybook/preview.js".into()),
+            )]),
             modules: edges
                 .iter()
                 .map(|(path, imports)| {
@@ -150,6 +154,9 @@ fn many_exporters_keep_reference_keys_in_reverse_and_two_worker_scheduling() {
         let mut generation = fixture.generation.clone();
         if unnamed_preview {
             generation.modules.remove(".storybook/preview.js");
+            generation
+                .storybook_previews
+                .insert(".storybook".into(), None);
             generation
                 .resolution_digests
                 .insert(".storybook/preview.js".into(), "unnamed-preview".into());

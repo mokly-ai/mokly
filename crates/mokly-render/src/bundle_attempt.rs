@@ -9,10 +9,8 @@ use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
 use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
-use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
-use crate::bundle_styles;
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::BundleLease;
@@ -114,34 +112,23 @@ pub(crate) fn modules(result: &results::Bundle) -> BTreeMap<String, Vec<String>>
         .collect()
 }
 
-pub(crate) fn selected_previews(
-    result: &results::Bundle,
-) -> Option<BTreeMap<String, Option<String>>> {
-    let previews = &result.compiled.storybook_previews;
-    (!previews.is_empty()).then(|| {
-        previews
-            .iter()
-            .map(|(folder, preview)| {
-                let file = preview
-                    .selected
-                    .as_ref()
-                    .map(|selected| selected.file.clone());
-                (folder.clone(), file)
-            })
-            .collect()
-    })
+pub(crate) fn selected_previews(result: &results::Bundle) -> BTreeMap<String, Option<String>> {
+    result
+        .compiled
+        .storybook_previews
+        .iter()
+        .filter_map(|(folder, preview)| {
+            let selected = preview.selected.as_ref()?;
+            Some((folder.clone(), selected.module.clone()))
+        })
+        .collect()
 }
 
 pub(crate) fn story_previews(
-    selected: Option<&BTreeMap<String, Option<String>>>,
+    selected: &BTreeMap<String, Option<String>>,
     modules: &BTreeMap<String, Vec<String>>,
     folders: &BTreeMap<String, String>,
-    tree: &dyn SourceTree,
-    root: &Path,
 ) -> BTreeMap<String, String> {
-    let Some(selected) = selected else {
-        return bundle_styles::story_previews(modules, folders, tree, root);
-    };
     folders
         .iter()
         .filter_map(|(story, folder)| {

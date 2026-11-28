@@ -79,16 +79,15 @@ rejected, because it keeps that cost on every edit.
 
 Before it compiles, a `bundle` request selects the preview file of each
 [Storybook folder](./mokly-storybook.md#storybook-folders) of its stories
-files. The compiled recipe records this original selection: the selected
-candidate with its real file, and each absent candidate. Compilation,
-`restoreGeneration`, the
+files. The recipe records the chosen candidate, its real file, and each
+absent candidate. It also records the logical name from the compiler's entry
+edge, when the graph names that target. The
 [render input keys](./mokly-watch.md#invalidation-through-the-render-graph),
-and the reuse checks of the sidecar and of the binary use this one record. An
-absent candidate that appears ends reuse, and so does a changed link target on
-the path of the selected candidate. Decision: the original selection is the
-one record that compilation, restore, render keys, and reuse use. A second
-selection after the compile was rejected, because it can miss a new preview or
-a changed link.
+stylesheet roots, and links use that graph name. Compilation, restoration,
+and both reuse checks use the recorded file selection. Reuse ends if an
+absent candidate appears or the chosen candidate changes its link target.
+One selection serves these consumers because a second selection after
+the compile could miss a new preview or a changed link.
 
 ## Reuse And Identity
 
@@ -96,10 +95,11 @@ A compilation is reused only while its inputs stay unchanged. These inputs
 include the ancestor `package.json` and `tsconfig.json` candidates of each
 consumed module up to its source or selected dependency root, the resolved
 `react/package.json`, the [preview selection](#preview-selection) and the
-other preview candidates of each Storybook folder of the stories files, and
-the files that Mokly reads to resolve `@storybook/react` through a framework
-package, each including absent files. Added or removed files in a
-consumed-module directory invalidate reuse, so a higher-priority module in
+other preview candidates of each Storybook folder. A framework fallback for
+`@storybook/react` adds the files it reads and all `package.json` candidates
+of the direct lookup, including absences. Conflicting Storybook input reads
+prevent reuse. Added or removed files in a consumed-module directory
+invalidate reuse, so a higher-priority module in
 that directory cannot remain hidden. Manual `r` uses these same input checks.
 Resolution metadata and directory membership remain observable. CSS bytes
 belong to stylesheet processing rather than the JavaScript compilation.
@@ -117,8 +117,8 @@ and directory that can change how a bundled import or a peer resolves:
 - the `jsconfig.json` candidate beside each `tsconfig.json` candidate, and
   each file that a tsconfig `extends` chain names;
 - the package manifest of each resolved peer;
-- the files that Mokly reads to resolve `@storybook/react` through a framework
-  package;
+- the framework fallback inputs of `@storybook/react`, including direct
+  lookup candidates;
 - each directory where the resolver can look for a candidate before it finds
   its result: relative paths with their extensions and index files, `paths`
   targets, `baseUrl`, each `node_modules` level, and each configured lookup

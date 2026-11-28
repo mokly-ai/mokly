@@ -64,6 +64,56 @@ fn a_preview_stylesheet_edit_moves_only_its_stories_and_watches_nested_css() {
 }
 
 #[test]
+fn esbuild_links_package_root_preview_css_and_keeps_precise_story_keys() {
+    package_root_preview(false);
+}
+
+#[test]
+fn vite_links_package_root_preview_css_and_keeps_precise_story_keys() {
+    package_root_preview(true);
+}
+
+fn package_root_preview(vite: bool) {
+    const FOLDER: &str = "packages/ui/node_modules/shared-preview";
+    const ROUTE: &str = "styles/node_modules/dot-mokly-roots/1/shared-preview/preview.ts.css";
+    let fixture = consumer();
+    fixture.write(
+        "mokly.config.json",
+        &format!(
+            r#"{{
+                "vite":{vite},
+                "moduleResolution":{{"packageRoots":["packages/ui"]}},
+                "roots":[{{"dir":"specs","storybook":"{FOLDER}"}}]
+            }}"#,
+        ),
+    );
+    fixture.write("packages/ui/package.json", r#"{"name":"fixture-ui"}"#);
+    let preview = format!("{FOLDER}/preview.ts");
+    fixture.write(
+        &preview,
+        "import './theme.css'; export default { initialGlobals: { mode: 'one' } };",
+    );
+    fixture.write(&format!("{FOLDER}/theme.css"), ".label {color: teal}");
+
+    let generation = fixture.generation(fixture.prepare().unwrap());
+    let story = generation.render("label/index.mobile.html").unwrap();
+    let html = str::from_utf8(&story.bytes).unwrap();
+    assert!(html.contains(&format!("href=\"../{ROUTE}\"")), "{html}");
+    let css = generation.resource(ROUTE).unwrap().unwrap();
+    assert!(str::from_utf8(&css).unwrap().contains("color: teal"));
+
+    let before = keys(&fixture);
+    fixture.replace("specs/h.ts", "Hello", "After");
+    let after = keys(&fixture);
+    assert_eq!(moved(&before, &after), BTreeSet::from(["s/s".into()]));
+    fixture.replace(&preview, "'one'", "'two'");
+    assert_eq!(
+        moved(&after, &keys(&fixture)),
+        BTreeSet::from(["label".into(), "label/Secondary".into()]),
+    );
+}
+
+#[test]
 fn a_build_with_preview_css_and_a_javascript_image_writes_only_public_paths() {
     let fixture = Consumer::single();
     fixture.write(

@@ -3,7 +3,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use mokly_catalogue::config_types::DEFAULT_STORYBOOK_FOLDER;
 use mokly_graph::render_inputs::preview_candidates;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
@@ -25,7 +24,7 @@ pub(crate) struct RenderEnvironment {
     pub(crate) environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub(crate) resolution_digests: BTreeMap<String, String>,
-    pub(crate) storybook_previews: Option<BTreeMap<String, Option<String>>>,
+    pub(crate) storybook_previews: BTreeMap<String, Option<String>>,
     /// Digests of Vite stylesheet inputs by preview module.
     pub(crate) preview_stylesheet_digests: BTreeMap<String, String>,
     /// Stylesheet path to the digest of its CSS Module bindings.
@@ -112,22 +111,11 @@ pub(crate) fn derive(
     let mut paths = PathMapper::new(working_root, cache_namespace);
     let settings = settings(params, result, &mut paths);
     paths.report_external();
-    let folders: BTreeSet<_> = params
-        .stories_files
-        .iter()
-        .map(|file| {
-            params
-                .storybook_folders
-                .get(file)
-                .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str)
-        })
-        .collect();
     let storybook_previews = selected_previews(result);
     let mut resolution_digests = resolution(
         &compiled.metadata_inputs,
-        folders,
         &result.modules,
-        storybook_previews.as_ref(),
+        &storybook_previews,
     );
     if let Some(env) = compiled
         .vite
@@ -230,25 +218,15 @@ fn package(specifier: &str) -> String {
 /// Keep present resolution files under the names that both sides give them.
 ///
 /// Omit a folder's candidates when its selected preview has a module closure.
-fn resolution<'a>(
+fn resolution(
     inputs: &BTreeMap<String, Option<String>>,
-    folders: impl IntoIterator<Item = &'a str>,
     modules: &[results::Module],
-    previews: Option<&BTreeMap<String, Option<String>>>,
+    previews: &BTreeMap<String, Option<String>>,
 ) -> BTreeMap<String, String> {
     let graph: BTreeSet<_> = modules.iter().map(|module| module.path.as_str()).collect();
     let mut named = BTreeSet::new();
-    for folder in folders {
-        let named_preview = match previews {
-            Some(previews) => previews
-                .get(folder)
-                .and_then(Option::as_deref)
-                .is_some_and(|file| graph.contains(file)),
-            None => preview_candidates(folder)
-                .find(|path| inputs.get(path).is_some_and(Option::is_some))
-                .is_some_and(|path| graph.contains(path.as_str())),
-        };
-        if named_preview {
+    for (folder, module) in previews {
+        if module.as_deref().is_some_and(|file| graph.contains(file)) {
             named.extend(preview_candidates(folder));
         }
     }

@@ -1,15 +1,12 @@
 //! Prepare CSS Modules before evaluation and retain Vite's stylesheet render inputs.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::types::{Bundle as CssBundle, StylesheetBundler, StylesheetRoot};
-use mokly_graph::render_inputs::preview_candidates;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::Bundle;
-use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{RenderError, Result};
 use crate::render_environment::ClassMaps;
@@ -79,35 +76,6 @@ pub(crate) fn local_input_digest(
         }
     }
     Ok((!styles.inputs.is_empty()).then(|| styles.fingerprint()))
-}
-
-pub(crate) fn story_previews(
-    modules: &BTreeMap<String, Vec<String>>,
-    folders: &BTreeMap<String, String>,
-    tree: &dyn SourceTree,
-    root: &Path,
-) -> BTreeMap<String, String> {
-    let selected: BTreeMap<_, _> = folders
-        .values()
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .filter_map(|folder| {
-            let path = preview_candidates(folder).find_map(|path| {
-                if modules.contains_key(&path) {
-                    return Some(path);
-                }
-                let node = tree.project(&root.join(path)).ok()??;
-                let resolved = node.identity.strip_prefix(root).ok()?;
-                let logical = resolved.to_string_lossy().replace('\\', "/");
-                modules.contains_key(&logical).then_some(logical)
-            })?;
-            Some((folder, path))
-        })
-        .collect();
-    folders
-        .iter()
-        .filter_map(|(story, folder)| Some((story.clone(), selected.get(folder)?.clone())))
-        .collect()
 }
 
 pub(crate) struct ModuleRoots<'a> {

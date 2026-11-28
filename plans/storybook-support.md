@@ -3755,6 +3755,21 @@ own lines of this plan.
   derive their paths from that entry's directory, so a folder path from the
   enclosing entry fails with `unused-folder`, and the result then depends on
   the order of the entries.
+- E11. Made on 2026-11-28 from review round 2, replacing the folder path part
+  of E10. A folder record takes its folder path from the deepest entry that
+  owns a kept story below the record's directory. Without such a story, the
+  record takes it from the deepest entry directory that holds it. Stories
+  keep their first-match paths. Reason: the record then describes the folder
+  that its directory's stories use, also when an outer entry selects those
+  stories, and an entry that selects no story never moves a story.
+- E12. Made on 2026-11-28 from review round 2. The imports of `main.*`
+  resolve as Node resolves them, from the side's selected installation with
+  its repository mapping. Mokly's aliases, conditions, main fields,
+  extensions, and loaders do not apply to them. Reason: design call 13 loads
+  `main.*` with Storybook's own loader, which applies none of these settings,
+  so Mokly then selects the same stories as the project's own Storybook on
+  both compilers. The rule replaces a sentence that track E wrote and that is
+  not on the primary branch.
 
 #### Track E decision 1: The route of a preview in a dot folder
 

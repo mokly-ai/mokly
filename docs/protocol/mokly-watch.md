@@ -83,15 +83,15 @@ inputs changes, and only then:
   through its path only, and its manifest only on a closure module's
   directory chain, because only some sides read that manifest;
 - the `main.*` file of a Storybook folder, its other candidate names, and the
-  files that it loads, when
-  Mokly reads `main.*` to resolve `@storybook/react` under the
-  [Storybook folder rules](./mokly-storybook.md#storybook-folders). These move
-  every key.
+  files that it loads, when Mokly reads `main.*` to resolve `@storybook/react`
+  under the [Storybook folder rules](./mokly-storybook.md#storybook-folders).
+  These move every key.
 
 When the module graph does not name the configured renderer, every entry
-module uses the whole bundle as its key. When it does not name the preview
-file of a stories file's Storybook folder, that stories file uses the whole
-bundle as its key. The path or title of a definition that an installed
+module uses the whole bundle as its key. A stories file also uses the whole
+bundle when its folder has a preview and the
+[selection record](./mokly-sidecar-recipes.md#preview-selection) has no graph
+name for it. The path or title of a definition that an installed
 package makes through the unattributed API moves every key. The sidecar does
 not report which module declares such a definition, so no closure shows which
 renders read it.
@@ -165,7 +165,9 @@ during evaluation are buffered and replayed after readiness. Watch targets
 are the roots, the PostCSS directory roots, the rule roots, and the exact
 required files not covered by one of them; a required file with a denied
 directory between a root and itself stays an explicit target. Resolution
-metadata includes missing manifest and tsconfig candidates. File additions and
+metadata includes missing manifest and tsconfig candidates. It includes the
+direct renderer's manifest candidates when Storybook uses the framework
+fallback. File additions and
 removals in a consumed-module directory invalidate compilation reuse. The other
 [reuse evidence](./mokly-sidecar-recipes.md#reuse-and-identity) of a
 compilation, such as `jsconfig.json` candidates, `extends` targets, and peer

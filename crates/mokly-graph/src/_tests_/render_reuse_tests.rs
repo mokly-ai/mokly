@@ -2,8 +2,6 @@
 
 use unimock::Unimock;
 
-use mokly_catalogue::render_sources::{RenderMethod, RenderSource, ResolvedDefinition};
-
 use crate::key::NodeKey;
 
 use crate::render_inputs::RenderKeys;
@@ -18,54 +16,8 @@ mod generated_tests;
 #[path = "render_seed_tests.rs"]
 mod seed_tests;
 
-#[test]
-fn an_unnamed_preview_falls_back_only_for_its_folder_and_named_edits_stay_local() {
-    const SECOND: &str = "packages/ui/button.stories.tsx";
-    const PREVIEW: &str = "packages/ui/.storybook/preview.ts";
-    const LINK: &str = "packages/ui/.storybook/preview.js";
-    let mut fixture = Fixture::new();
-    fixture.generation.modules.insert(SECOND.into(), Vec::new());
-    fixture
-        .generation
-        .modules
-        .insert(PREVIEW.into(), Vec::new());
-    fixture
-        .storybook_folders
-        .insert(SECOND.into(), "packages/ui/.storybook".into());
-    let handle = format!("{SECOND}#default");
-    fixture.entries.insert(
-        "second".into(),
-        RenderSource {
-            handle: handle.clone(),
-            method: RenderMethod::Story,
-            ..Default::default()
-        },
-    );
-    fixture.bindings.insert(
-        handle,
-        ResolvedDefinition {
-            path: "second".into(),
-            title: "Second".into(),
-        },
-    );
-
-    let (first, _) = fixture.reuse(None);
-    fixture.digest(PREVIEW, "changed");
-    let (edit, jobs) = fixture.reuse(Some(&first));
-    assert_eq!(jobs, 1);
-    assert_ne!(edit.module(SECOND), first.module(SECOND));
-    assert_eq!(edit.module(STORY), first.module(STORY));
-
-    fixture
-        .generation
-        .resolution_digests
-        .insert(LINK.into(), "linked preview".into());
-    let (linked, jobs) = fixture.reuse(Some(&edit));
-    assert_eq!(jobs, 0);
-    assert_eq!(linked.module(SECOND), linked.fallback());
-    assert_eq!(linked.module(STORY), first.module(STORY));
-    assert_ne!(linked.module(STORY), linked.fallback());
-}
+#[path = "render_reuse_previews_tests.rs"]
+mod preview_tests;
 
 #[test]
 fn deferred_full_keys_do_not_supply_facts_before_generation_seeding() {
@@ -215,6 +167,10 @@ fn common_roots_modes_shared_inputs_and_fallbacks_keep_full_reference_keys() {
     let mut fixture = Fixture::new();
     let mut previous = fixture.check(None, "initial");
     fixture.generation.modules.remove(".storybook/preview.js");
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), Some(".storybook/preview.ts".into()));
     previous = fixture.check(Some(&previous), "selected preview switches to old member");
     fixture.renderer = Some("runtime/theme.ts".into());
     previous = fixture.check(Some(&previous), "renderer root switches to old member");
@@ -233,11 +189,19 @@ fn common_roots_modes_shared_inputs_and_fallbacks_keep_full_reference_keys() {
         .generation
         .resolution_digests
         .insert(".storybook/preview.js".into(), "unnamed preview".into());
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), None);
     previous = fixture.check(Some(&previous), "story fallback");
     fixture
         .generation
         .resolution_digests
         .remove(".storybook/preview.js");
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), Some(".storybook/preview.ts".into()));
     previous = fixture.check(Some(&previous), "story returns");
     fixture.bindings.remove(&format!("{B}#default"));
     previous = fixture.check(Some(&previous), "module loses last binding");

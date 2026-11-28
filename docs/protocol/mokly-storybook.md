@@ -65,9 +65,12 @@ such as `@storybook/react-vite`, work without a direct `@storybook/react`
 dependency. A required direct dependency was rejected.
 
 `main.*` can name the framework package by its name or by the absolute path of
-its directory. Mokly reads `main.*` for this lookup with the resolution
-settings of the story's side. The `bundle` result reports the dependency
-directories that this read used in its
+its directory. Its imports resolve as Node resolves them, from the side's
+selected installation with its repository mapping. Mokly's aliases,
+conditions, main fields, extensions, and loaders do not apply. Storybook's
+loader applies none of these settings, so both compilers select the same
+stories as the project's own Storybook. The `bundle` result reports the
+dependency directories that this read used in its
 [`unmappedDependencyDirectories`](./mokly-sidecar-modules.md#source-and-dependency-files).
 Only a compile reads `main.*` for this lookup. It reads each `main.*` at most
 once, also when the Vite setup reloads. A reuse check and a

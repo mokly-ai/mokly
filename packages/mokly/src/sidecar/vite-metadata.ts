@@ -5,6 +5,7 @@ import { resolutionInputs } from "./resolution-inputs.js";
 import { recordPreviewInputs } from "./storybook-folders.js";
 import type { PreviewProbe } from "./storybook-folders.js";
 import { recordStorybookInputs } from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 
@@ -13,7 +14,7 @@ export async function viteMetadata(
   input: ViteInputs,
   setup: SetupSnapshot,
   graphFiles: ReadonlySet<string>,
-  storybookInputs?: ReadonlyMap<string, string | null>,
+  storybookInputs?: StorybookInputs,
   previewProbe?: PreviewProbe,
 ) {
   const { params, paths, peers } = input;

@@ -88,16 +88,13 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
     for module in exporters {
         let preview;
         let extra = if let Some(folder) = stories.get(module) {
-            let selected = preview_candidates(folder).find(|path| {
-                graph.contains_key(path) || generation.resolution_digests.contains_key(path)
-            });
-            if selected
-                .as_ref()
-                .is_some_and(|path| !graph.contains_key(path))
-            {
-                continue;
-            }
-            preview = selected.map(|path| closure(graph, [path]));
+            preview = match generation.storybook_previews.get(*folder) {
+                Some(Some(path)) if graph.contains_key(path) => {
+                    Some(closure(graph, [path.clone()]))
+                }
+                Some(_) => continue,
+                None => None,
+            };
             preview.as_ref()
         } else {
             if unnamed_renderer {

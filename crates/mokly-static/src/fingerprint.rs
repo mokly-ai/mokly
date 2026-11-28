@@ -10,7 +10,7 @@ use mokly_model::output::validation::digest;
 use mokly_source_interface::error;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
-use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
+use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
 use crate::fingerprint_evidence::Evidence;
@@ -151,22 +151,7 @@ impl InputTree for CapturedTree {
     #[tracing::instrument(name = "output.fingerprint", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()> {
         let selection = Selection::new(config, excluded)?;
-        let mut absent_storybook = BTreeSet::new();
-        for (path, digest) in config.storybook_inputs() {
-            let path = config.repo_root.join(path);
-            match (digest, self.project(&path)) {
-                (Some(digest), Ok(Some(node)))
-                    if node.kind == FileKind::File
-                        && node.identity.starts_with(&config.repo_root)
-                        && self.digest(&node.identity).as_deref().ok() == Some(digest) => {}
-                (None, Ok(node))
-                    if node.as_ref().is_none_or(|node| node.kind != FileKind::File) =>
-                {
-                    absent_storybook.insert(path);
-                }
-                _ => return Err(Error::InputsChanged { path }),
-            }
-        }
+        let absent_storybook = self.evidence.storybook(config, self, self.live.as_ref())?;
         for root in &config.roots {
             let _ = self.project(&root.directory);
         }

@@ -37,6 +37,7 @@ export interface ViteInputs {
   paths: ModulePaths;
   runtimeKey: string;
   entry: string;
+  entryImports: Map<string, string>;
   files: Map<string, Uint8Array>;
   pluginInputs: Map<string, string | null>;
   diagnostic: (line: string) => void;
@@ -70,8 +71,11 @@ export function moklyViteFirstPlugin(
         if (source === viteEntry || source === viteJsx) return source;
         if (importer === viteEntry) {
           const file = viteFile(source);
-          if (file && input.paths.configuredFile(file))
-            return input.paths.resolve(file);
+          if (file && input.paths.configuredFile(file)) {
+            const resolved = await input.paths.resolve(file);
+            input.entryImports.set(file, resolved);
+            return resolved;
+          }
         }
         if (
           source.startsWith("mokly:runtime") ||

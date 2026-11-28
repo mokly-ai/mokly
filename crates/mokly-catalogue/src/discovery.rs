@@ -1,6 +1,7 @@
 //! One root walk per pass, with explicit ownership and protected source membership.
 
 use std::collections::BTreeMap;
+use std::mem;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -10,10 +11,11 @@ use mokly_source_interface::tree::SourceTree;
 use crate::config::{normalize, relative};
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
-use crate::discovery_walk::{FolderExclusions, Walk};
+use crate::discovery_folders::FolderRecords;
+use crate::discovery_walk::Walk;
 use crate::error::Result;
 use crate::folder_input::FolderInput;
-use crate::globs::{self, DEFAULT_GLOBS};
+use crate::globs;
 use crate::storybook_roots::display_folder;
 
 /// Source file classification, independent of JavaScript evaluation.
@@ -125,20 +127,9 @@ impl Discovery for Discoverer {
         };
         let mut owners = BTreeMap::new();
         let mut candidates = BTreeMap::new();
-        let mut exclusions = FolderExclusions::default();
-        let entry_directories = config
-            .roots
-            .iter()
-            .enumerate()
-            .filter(|(_, root)| root.from_storybook_main())
-            .map(|(index, root)| {
-                (
-                    (root.configured_index(index), root.directory.as_path()),
-                    root,
-                )
-            })
-            .collect();
-        let mut group_start = 0;
+        let mut folders = FolderRecords::default();
+        let mut root_start = 0;
+        let mut file_start = 0;
         let mut not_searched = Vec::new();
         for (index, root) in config.roots.iter().enumerate() {
             let configured = root.configured_index(index);
@@ -146,12 +137,7 @@ impl Discovery for Discoverer {
                 let folder = display_folder(root.storybook.as_str());
                 return Err(invalid(format!("{folder}/main.* has not been loaded")));
             }
-            let patterns = root
-                .input
-                .files
-                .clone()
-                .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
-            let globs = match globs::compile(&patterns) {
+            let globs = match globs::for_root(root) {
                 Ok(globs) => globs,
                 Err(reason) => return Err(invalid(format!("roots[{configured}].files: {reason}"))),
             };
@@ -165,8 +151,7 @@ impl Discovery for Discoverer {
                 output: output.as_deref(),
                 not_searched: Vec::new(),
                 owners: &mut owners,
-                exclusions: &mut exclusions,
-                entry_directories: &entry_directories,
+                folders: &mut folders,
                 candidates: &mut candidates,
                 inventory: &mut inventory,
             };
@@ -179,13 +164,14 @@ impl Discovery for Discoverer {
             {
                 continue;
             }
-            for file in &mut inventory.files[group_start..] {
-                file.excluded = exclusions.excludes(&file.absolute);
-            }
-            if !inventory.files[group_start..]
-                .iter()
-                .any(|file| !file.excluded)
-            {
+            let files = &mut inventory.files[file_start..];
+            mem::take(&mut folders).finish(
+                &config.roots,
+                root_start..=index,
+                files,
+                &mut inventory.folders,
+            )?;
+            if !files.iter().any(|file| !file.excluded) {
                 not_searched.sort_by(|a, b| compare_utf16(a, b));
                 not_searched.dedup();
                 let suffix = if not_searched.is_empty() {
@@ -202,8 +188,8 @@ impl Discovery for Discoverer {
                     "root matches no file: {directory}{suffix}"
                 )));
             }
-            group_start = inventory.files.len();
-            exclusions = FolderExclusions::default();
+            root_start = index + 1;
+            file_start = inventory.files.len();
             not_searched.clear();
         }
         inventory

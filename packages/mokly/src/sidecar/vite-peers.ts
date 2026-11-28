@@ -14,7 +14,7 @@ import { resolutionOptions } from "./resolution.js";
 
 /** Keep the existing consumer peer resolver alive during the Vite compile. */
 export async function withVitePeers<T>(
-  params: BundleParams,
+  params: BundleParams & { storybook?: "deferred" },
   compile: typeof build,
   run: (require: ConsumerRequire) => Promise<T>,
 ): Promise<T> {
@@ -29,6 +29,7 @@ export async function withVitePeers<T>(
   const require = await consumerRequire(
     { ...params, moduleResolution: settings },
     await ModulePaths.create({ ...params, moduleResolution: settings }),
+    params.storybook,
   );
   let outcome: { value: T } | { error: unknown } | undefined;
   await compile({

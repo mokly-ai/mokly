@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { consumer } from "./helpers/mokly_serve.js";
-import { build } from "./helpers/static_changes.js";
+import { completed, consumer, serve } from "./helpers/mokly_serve.js";
+import { build, write } from "./helpers/static_changes.js";
 import { command } from "./helpers/static_publication.js";
 
 const config =
@@ -66,6 +66,41 @@ test("a Storybook folder record takes its path from the deepest entry", async (c
   );
 });
 
+for (const [name, files, prefix, folder] of [
+  ["an overlapping entry", "**/*.stories.tsx", "library", "library/components"],
+  ["an MDX-only entry", "**/*.mdx", undefined, "components"],
+] as const) {
+  test(`a Storybook folder record follows stories owned by the outer entry with ${name}`, async (context) => {
+    const root = await consumer(context, {
+      "mokly.config.json": JSON.stringify({
+        roots: [{ storybook: ".storybook", path: prefix }],
+      }),
+      ".storybook/main.ts": `export default { stories: ["../src/**/*.stories.tsx", "../src/components/${files}"] };`,
+      "src/components/_folder.json": '{"title":"Components","order":["card"]}',
+      "src/components/card.stories.tsx": story,
+      "src/components/guide.mdx": "# Guide",
+    });
+    const { index } = await build(
+      root,
+      ["--no-changes", "--strict"],
+      "plain",
+      context.signal,
+    );
+    assert.deepEqual(
+      index.components.map(({ path }) => path),
+      [`${folder}/card`],
+    );
+    const parent = index.tree.find((node) => node.path === prefix);
+    const nodes = parent?.kind === "folder" ? parent.children : index.tree;
+    assert.deepEqual(
+      nodes.flatMap((node) =>
+        node.kind === "folder" ? [[node.path, node.title, node.order]] : [],
+      ),
+      [[folder, "Components", ["card"]]],
+    );
+  });
+}
+
 test("Build expands Storybook entries in order and selects only supported stories", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": config,
@@ -116,6 +151,48 @@ export default { stories: [
     ),
     [["library", "Selected stories"]],
   );
+});
+
+test("Build reads a bare Storybook group as alternatives", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": config,
+    ".storybook/main.ts":
+      'export default { stories: ["../specs/(atoms|molecules)/*.stories.tsx"] };',
+    "specs/atoms/card.stories.tsx": story,
+    "specs/molecules/panel.stories.tsx": story,
+    "specs/other/hidden.stories.tsx": story,
+  });
+  const { index } = await build(
+    root,
+    ["--no-changes"],
+    "plain",
+    context.signal,
+  );
+  assert.deepEqual(index.components.map(({ path }) => path).sort(), [
+    "library/atoms/card",
+    "library/molecules/panel",
+  ]);
+});
+
+test("Serve watches a story with an omitted optional glob group", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": config,
+    ".storybook/main.ts":
+      'export default { stories: ["../specs/**/extra?(One|Two).stories.tsx"] };',
+    "specs/extraOne.stories.tsx": story,
+  });
+  const running = await serve(context, root, process.env, [], true);
+  const url = await running.ready();
+  const initial = await completed(url, running.signal, "library/extraOne");
+  await write(root, "specs/extra.stories.tsx", story);
+  const updated = await completed(url, running.signal, "library/extra", fetch, {
+    afterRevision: initial.index.revision,
+  });
+  assert.deepEqual(
+    updated.index.components.map(({ path }: { path: string }) => path).sort(),
+    ["library/extra", "library/extraOne"],
+  );
+  await running.close();
 });
 
 for (const [name, main, diagnostic] of [

@@ -13,7 +13,10 @@ A root can match `*.stories.ts`, `*.stories.tsx`, `*.stories.js`, or
 Mokly first tries to resolve `@storybook/react` from the configuration
 directory. If that fails, Mokly looks for it through the framework package
 named in `main.*` in the root's Storybook folder. For example, Mokly can use
-the copy of `@storybook/react` that `@storybook/react-vite` provides.
+the copy of `@storybook/react` that `@storybook/react-vite` provides. If you
+install a direct copy later, it takes precedence. Storybook's loader resolves
+imports in `main.*` as Node does. Mokly's `moduleResolution` aliases,
+conditions, main fields, extensions, and loaders do not affect these imports.
 
 ```tsx
 // specs/components/Button.stories.tsx

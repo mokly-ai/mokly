@@ -80,6 +80,7 @@ fn serve_edit_bundle_stamp_rejects_added_previews_and_retargeted_links() {
             selected: Some(PreviewModule {
                 path: selected.into(),
                 file: first.into(),
+                module: Some(first.into()),
             }),
             absent: vec![earlier.into()],
         },

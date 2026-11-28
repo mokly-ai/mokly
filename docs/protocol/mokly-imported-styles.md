@@ -105,8 +105,10 @@ deliver it in their own bundle. When no root reaches CSS, the catalogue has no
 stylesheet node.
 
 The sidecar's [`bundle` call](./mokly-sidecar.md#bundling) reports the module
-graph. The core reads each root's stylesheet imports from it in
-first-reachability depth-first order of the JavaScript imports, including
+graph. A preview root uses the logical graph name from its
+[selection record](./mokly-sidecar-recipes.md#preview-selection). The core
+reads each root's stylesheet imports in first-reachability depth-first
+order of the JavaScript imports, including
 re-exports and dynamic imports, with modules and stylesheets keyed by their
 resolved logical path, so one root lists a file at most once. A CSS import may resolve inside the source root or a selected dependency
 root. A package stylesheet uses its stable dependency name, such as

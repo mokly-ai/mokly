@@ -120,7 +120,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   regular file, with its resolved file, and the names of the absent
   candidates. Its `PreviewProbe` also keeps the digests of the other present
   candidates and the link targets that the probe saw. `previewModules` gives
-  the selected files, `recordPreviewInputs` adds every candidate to the
+  the selected files. `namePreviews` adds each logical name from the compiler's
+  entry edges. `recordPreviewInputs` adds every candidate to the
   physical and metadata inputs, and `previewsCurrent` checks the selection
   again before a reuse.
 - [`src/sidecar/storybook-main.ts`](./storybook-main.ts) holds
@@ -139,11 +140,11 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   The loader runs in a worker thread from
   [`src/sidecar/storybook-main-worker.ts`](./storybook-main-worker.ts), so
   that the TypeScript loader that Storybook registers and the module cache of
-  `main.*` stay local to one read, also across edits in Serve. Both callers
-  send the side's resolution settings, and the worker loads `main.*` with the
-  module lookup of that side. The worker returns the files that the read
-  resolved or read, with their digests. It also takes the whole-file digest of
-  each repository file that the load opens for reading, from the descriptor
+  `main.*` stay local to one read, also across edits in Serve. The worker
+  resolves Node imports with the side's installation and repository mapping.
+  It clears Mokly's aliases, conditions, main fields, extensions, and loaders.
+  The worker keeps each distinct whole-file digest that it observes. It takes
+  the digest of each repository file that the load opens for reading, from the descriptor
   before the caller reads, and it returns the resolved name of a read through
   a link beside the authored name. A loader failure names the file, the
   installed Storybook version, and the tested range. The result gives the
@@ -155,15 +156,15 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   package from the configuration directory, else from the parent of the
   folder. The worker passes each `stories` entry to Storybook's
   `normalizeStoriesEntry`. The result keeps the entries in order and the
-  dependency directories that the read used. It also keeps the digests of the
-  repository files outside `node_modules` that the read used.
+  dependency directories that the read used. It keeps all observed digests
+  of repository files outside `node_modules` and the absent candidates.
 - [`src/sidecar/storybook-inputs.ts`](./storybook-inputs.ts) holds
   `recordStorybookInputs`, which `bundleRecipe` and `viteMetadata` call. It
-  adds the files that `storybookFrameworks` read to the physical inputs, and
-  to the metadata inputs when they lie inside the source root or a dependency
-  directory. With complete reuse evidence, it also records each file there as
-  an identity input, and a file whose evidence differs makes the evidence
-  incomplete.
+  records the fallback's reads and the direct lookup's `package.json`
+  candidates, including absences, as physical inputs. Paths inside the source
+  root or a selected dependency directory also become metadata inputs.
+  Complete reuse evidence adds each file as an identity input. Conflicting
+  observations of a file make the compilation ineligible for reuse.
 
 ### esbuild Compilation and Reuse
 
@@ -211,9 +212,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   first plugin of each attempt, resolves each of its imports to the canonical
   configured file or selected preview file, so TypeScript `paths` never apply
   to it. Without a captured probe, `entryModule` runs `probePreviews` itself.
-  It returns the probe. The recipe records its selections as
-  `storybookPreviews`, and `restore` adds the recorded selected files to the
-  configured files.
+  It returns the probe. The recipe records its selections and their compiler
+  edge names as `storybookPreviews`. `restore` adds the selected files to
+  the configured files.
 - For a `serveEdit` call with a plan, `bundle` runs no native compile. It
   starts with a guarded planned compile, in which esbuild itself resolves the
   selected safe relative specifiers of the plan. `PlannedRelative.create` in
@@ -745,8 +746,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
   builds digests for setup files, plugin inputs, React manifests, the preview
-  candidates of the compile's `PreviewProbe`, the files and the other `main.*`
-  candidates of the `main.*` read, package
+  candidates of the compile's `PreviewProbe`, Storybook framework fallback
+  inputs, package
   and TypeScript config candidates, and consumed files outside the graph.
   [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot
   with the disk. It invalidates virtual, changed, and unsnapshotted modules, or

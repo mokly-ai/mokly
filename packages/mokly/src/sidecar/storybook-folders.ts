@@ -78,6 +78,7 @@ export async function probePreviews(
           file: inside(params.sourceRoot, file)
             ? logical(params.sourceRoot, file)
             : file,
+          module: null,
         };
       } else {
         otherFiles.set(name, await fileDigest(file));
@@ -94,6 +95,25 @@ export async function probePreviews(
 export function previewModules(selections: Previews | undefined) {
   return Object.entries(selections ?? {}).flatMap(([folder, { selected }]) =>
     selected ? [[folder, selected.file] as const] : [],
+  );
+}
+
+/** Use the graph name of the target that the virtual entry actually imports. */
+export function namePreviews(
+  root: string,
+  { selections }: PreviewProbe,
+  entryModules: ReadonlyMap<string, string>,
+): Previews {
+  return Object.fromEntries(
+    Object.entries(selections).map(([folder, selection]) => {
+      const { selected } = selection;
+      if (!selected) return [folder, selection];
+      const module = entryModules.get(path.resolve(root, selected.file));
+      return [
+        folder,
+        { ...selection, selected: { ...selected, module: module ?? null } },
+      ];
+    }),
   );
 }
 

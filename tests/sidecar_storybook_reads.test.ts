@@ -6,8 +6,11 @@ import test from "node:test";
 
 import type { ReadStorybookReply } from "../packages/mokly/src/generated/sidecar/ReadStorybookReply.js";
 
+import { frameworkProject, main } from "./fixtures/storybook_framework.js";
 import { completed, consumer, serve } from "./helpers/mokly_serve.js";
+import { nativeRoot } from "./helpers/native_resolution.js";
 import { bundleParams, startSidecar } from "./helpers/sidecar.js";
+import { dependency } from "./helpers/sidecar_sources.js";
 import { build, write } from "./helpers/static_changes.js";
 import { command } from "./helpers/static_publication.js";
 
@@ -132,12 +135,96 @@ test("Storybook main records file handles and streams before delivering bytes", 
     ["stream", "stor"],
     ["part", "y content beyond the partial read"],
   ] as const) {
-    assert.equal(
-      reply.inputs[`.storybook/${name}.txt`],
-      createHash("sha256").update(text).digest("hex"),
+    assert.deepEqual(
+      reply.inputs
+        .filter(({ path }) => path === `.storybook/${name}.txt`)
+        .map(({ digest }) => digest),
+      [createHash("sha256").update(text).digest("hex")],
     );
   }
-  assert.equal(reply.inputs[".storybook/written.txt"], undefined);
+  assert.equal(
+    reply.inputs.some(({ path }) => path === ".storybook/written.txt"),
+    false,
+  );
+  await sidecar.call("shutdown");
+});
+
+test("Storybook reports both versions when main rewrites an input between reads", async (context) => {
+  const root = await consumer(context, {
+    ".storybook/main.mjs": `import { readFileSync, writeFileSync } from "node:fs";
+      const file = new URL("./selection.txt", import.meta.url);
+      const before = readFileSync(file, "utf8");
+      writeFileSync(file, "../second");
+      const after = readFileSync(file, "utf8");
+      export default { stories: [before, after] };`,
+    ".storybook/selection.txt": "../first",
+    "first/one.stories.tsx": story,
+    "second/two.stories.tsx": story,
+  });
+  const sidecar = startSidecar(context, root);
+  await sidecar.call("hello");
+  const reply = await sidecar.call<ReadStorybookReply>("readStorybook", {
+    sourceRoot: root,
+    configurationDirectory: ".",
+    folder: ".storybook",
+    repositoryRoots: [],
+    moduleResolution: bundleParams().moduleResolution,
+  });
+  assert.ok("inputs" in reply, JSON.stringify(reply));
+  assert.deepEqual(
+    reply.entries.map(({ directory }) => directory),
+    ["./first", "./second"],
+  );
+  assert.ok(Array.isArray(reply.inputs), JSON.stringify(reply.inputs));
+  assert.deepEqual(
+    reply.inputs
+      .filter(({ path }) => path === ".storybook/selection.txt")
+      .map(({ digest }) => digest)
+      .sort(),
+    ["../first", "../second"]
+      .map((bytes) => createHash("sha256").update(bytes).digest("hex"))
+      .sort(),
+  );
+  await sidecar.call("shutdown");
+});
+
+test("base Storybook main resolves an alias key from the owning package installation", async (context) => {
+  const {
+    root: installation,
+    folder,
+    uiLibraries,
+    params,
+  } = await frameworkProject(context);
+  const source = await nativeRoot(context);
+  await dependency(
+    path.dirname(uiLibraries),
+    "story-selection",
+    'export default "native.stories.tsx";',
+  );
+  await write(
+    source,
+    main,
+    `import files from "story-selection";
+      export default { stories: [{ directory: "../stories", files }] };`,
+  );
+  const sidecar = startSidecar(context, source);
+  await sidecar.call("hello");
+  const reply = await sidecar.call<ReadStorybookReply>("readStorybook", {
+    sourceRoot: source,
+    configurationDirectory: ".",
+    folder,
+    repositoryRoots: [installation],
+    moduleResolution: {
+      ...params.moduleResolution,
+      dependencyRoot: installation,
+      packageRoots: [installation],
+      aliases: { "story-selection": "other-selection" },
+    },
+  });
+  assert.ok("entries" in reply, JSON.stringify(reply));
+  assert.deepEqual(reply.entries, [
+    { directory: "./packages/ui/stories", files: "native.stories.tsx" },
+  ]);
   await sidecar.call("shutdown");
 });
 

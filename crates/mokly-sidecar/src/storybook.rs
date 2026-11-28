@@ -1,11 +1,10 @@
 //! Source-side Storybook configuration discovery over the sidecar protocol.
 
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::methods::ModuleResolution;
+use crate::postcss_evidence::Read;
 
 /// Read one Storybook folder before source discovery.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -54,8 +53,10 @@ pub struct ReadStorybookResult {
     pub main: String,
     /// Entries in authored order.
     pub entries: Vec<StorybookEntry>,
-    /// Source digests by repository-relative path, with null for absent candidates.
-    pub inputs: BTreeMap<String, Option<String>>,
+    /// Distinct whole-file digests under repository-relative paths.
+    pub inputs: Vec<Read>,
+    /// Repository-relative candidate names observed without a file.
+    pub absent_inputs: Vec<String>,
     /// Installation directories used by the loader, relative to the dependency root.
     pub dependency_directories: Vec<String>,
 }
@@ -69,11 +70,13 @@ pub struct PreviewSelection {
     pub absent: Vec<String>,
 }
 
-/// The written path and the resolved module compiled from it.
+/// The written path, its resolved file, and the compiler's module name.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
 pub struct PreviewModule {
     /// Repository-relative name selected by the probe.
     pub path: String,
     /// Resolved filename relative to the source root, or absolute when outside it.
     pub file: String,
+    /// Logical name of the compiler's entry edge target, if the graph names it.
+    pub module: Option<String>,
 }

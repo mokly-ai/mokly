@@ -9,4 +9,8 @@ path: string,
 /**
  * Resolved filename relative to the source root, or absolute when outside it.
  */
-file: string, };
+file: string,
+/**
+ * Logical name of the compiler's entry edge target, if the graph names it.
+ */
+module: string | null, };

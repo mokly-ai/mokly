@@ -81,9 +81,8 @@ fn resolution_names_drop_the_installed_prefix_previews_and_absent_files() {
     assert_eq!(
         resolution(
             &inputs,
-            [".storybook"],
             &[preview(".storybook/preview.tsx")],
-            None,
+            &BTreeMap::from([(".storybook".into(), Some(".storybook/preview.tsx".into()))]),
         ),
         BTreeMap::from([
             ("node_modules/pkg/package.json".to_owned(), "pkg".to_owned()),
@@ -119,13 +118,15 @@ fn only_the_named_folders_drop_candidates_including_the_lower_priority_files() {
     assert_eq!(
         resolution(
             &inputs,
-            [".storybook", "packages/ui/.storybook"],
             &[
                 preview(".storybook/preview.js"),
                 preview("packages/ui/.storybook/preview.tsx"),
                 preview("packages/ui/linked/preview.js"),
             ],
-            None,
+            &BTreeMap::from([
+                (".storybook".into(), Some(".storybook/preview.js".into())),
+                ("packages/ui/.storybook".into(), None),
+            ]),
         ),
         BTreeMap::from([
             ("packages/ui/.storybook/preview.js".into(), "linked".into()),

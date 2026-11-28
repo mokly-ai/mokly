@@ -11,7 +11,10 @@ use crate::config::{invalid_path_text, normalize, relative};
 use crate::config_types::{ResolvedConfig, ResolvedRoot};
 use crate::config_validation::invalid;
 use crate::error::Result;
-use crate::storybook_globs;
+use crate::globs::{self, GlobSyntax};
+
+mod inputs;
+pub use self::inputs::StorybookInputs;
 
 /// Repository-relative Storybook folder and the provenance of an expanded root.
 #[derive(Clone, Debug, PartialEq)]
@@ -30,7 +33,7 @@ struct MainEntry {
 #[derive(Debug, PartialEq)]
 struct MainFile {
     path: String,
-    inputs: BTreeMap<String, Option<String>>,
+    inputs: StorybookInputs,
 }
 
 impl ResolvedStorybook {
@@ -85,21 +88,41 @@ impl ResolvedConfig {
         self.roots.iter().any(ResolvedRoot::pending_storybook)
     }
 
-    /// Local configuration digests and absent main candidates of the effective roots.
-    pub fn storybook_inputs(&self) -> BTreeMap<&str, Option<&str>> {
+    /// Local input paths and all versions for watch and configuration keys.
+    pub fn storybook_inputs(&self) -> BTreeMap<&str, BTreeSet<Option<&str>>> {
+        let mut inputs = BTreeMap::<_, BTreeSet<_>>::new();
+        for main in self.storybook_files() {
+            for (path, versions) in &main.inputs.versions.inputs {
+                let digests = versions.iter().filter_map(|version| version.whole_digest());
+                inputs
+                    .entry(path.as_str())
+                    .or_default()
+                    .extend(digests.map(Some));
+            }
+            for path in &main.inputs.absent {
+                inputs.entry(path.as_str()).or_default().insert(None);
+            }
+        }
+        inputs
+    }
+
+    /// Merge the whole-file witnesses and absences of all expanded folders.
+    pub fn storybook_evidence(&self) -> StorybookInputs {
+        let mut inputs = StorybookInputs::default();
+        for main in self.storybook_files() {
+            inputs.versions.extend(main.inputs.versions.clone());
+            inputs.absent.extend(main.inputs.absent.iter().cloned());
+        }
+        inputs
+    }
+
+    fn storybook_files(&self) -> impl Iterator<Item = &MainFile> {
         self.roots
             .chunk_by(|left, right| {
                 left.storybook.configured_index == right.storybook.configured_index
             })
             .filter_map(|roots| roots.first()?.storybook.entry.as_ref())
-            .flat_map(|entry| {
-                entry
-                    .main
-                    .inputs
-                    .iter()
-                    .map(|(path, digest)| (path.as_str(), digest.as_deref()))
-            })
-            .collect()
+            .map(|entry| entry.main.as_ref())
     }
 }
 
@@ -118,7 +141,7 @@ pub struct StorybookStories {
     /// Entries in authored order.
     pub entries: Vec<StorybookEntry>,
     /// Content digests and absent candidates under repository-relative POSIX paths.
-    pub inputs: BTreeMap<String, Option<String>>,
+    pub inputs: StorybookInputs,
 }
 
 /// Read Storybook configuration with the runtime of the selected source side.
@@ -154,7 +177,9 @@ pub fn expand(
                 let stories = reader.read(config, folder)?;
                 let main = Arc::new(MainFile {
                     path: stories.main,
-                    inputs: with_projected_inputs(tree, &config.repo_root, stories.inputs),
+                    inputs: stories
+                        .inputs
+                        .with_projected_aliases(tree, &config.repo_root),
                 });
                 entry.insert((stories.entries, main))
             }
@@ -171,7 +196,10 @@ pub fn expand(
             };
             let (directory, identity) =
                 project(tree, &config.repo_root, &entry.directory).map_err(error)?;
-            let patterns = storybook_globs::patterns(&entry.files).map_err(error)?;
+            let patterns = vec![entry.files.clone()];
+            if let Err(reason) = globs::compile(&patterns, GlobSyntax::Storybook) {
+                return Err(error(reason.to_string()));
+            }
             let mut effective = root.clone();
             effective.storybook.entry = Some(MainEntry {
                 main: main.clone(),
@@ -185,7 +213,7 @@ pub fn expand(
     }
     let mut known: BTreeSet<_> = config.authored_inputs.iter().cloned().collect();
     for (_, main) in loaded.values() {
-        for (path, _) in main.inputs.iter().filter(|(_, digest)| digest.is_some()) {
+        for path in main.inputs.versions.inputs.keys() {
             let path = config.repo_root.join(path);
             if known.insert(path.clone()) {
                 config.authored_inputs.push(path);
@@ -194,26 +222,6 @@ pub fn expand(
     }
     config.roots = expanded;
     Ok(())
-}
-
-fn with_projected_inputs(
-    tree: &dyn SourceTree,
-    root: &Path,
-    mut inputs: BTreeMap<String, Option<String>>,
-) -> BTreeMap<String, Option<String>> {
-    let projected: Vec<_> = inputs
-        .iter()
-        .filter_map(|(name, digest)| {
-            let digest = digest.as_ref()?;
-            let node = tree.project(&root.join(name)).ok().flatten()?;
-            (node.kind == FileKind::File && node.identity.starts_with(root))
-                .then(|| (relative(&node.identity, root), digest.clone()))
-        })
-        .collect();
-    for (name, digest) in projected {
-        inputs.entry(name).or_insert(Some(digest));
-    }
-    inputs
 }
 
 pub(crate) fn display_folder(folder: &str) -> &str {

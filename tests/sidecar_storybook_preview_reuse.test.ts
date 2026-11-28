@@ -121,6 +121,7 @@ for (const adapter of ["esbuild", "Vite"]) {
       {
         path: ".storybook/preview.ts",
         file: "first/preview.ts",
+        module: "first/preview.ts",
       },
     );
     assert.deepEqual(previous.result.compiled.reuseEvidence.inputs[preview], {

@@ -19,8 +19,9 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 `Runtime` implements `DefinitionProvider`, `GraphFactory`, and the
 catalogue's `StorybookReader`. `Runtime::expand_storybook_roots` expands the
 roots without `dir` before discovery. It sends one `readStorybook` request
-for each Storybook folder, with the source root and the resolution settings
-of its side. It records the dependency directories that the read used. Each
+for each Storybook folder, with the source root and installation settings
+of its side. It records the dependency directories the read used. It collects
+all whole-file witnesses and absent candidates for static verification. Each
 failure of that request becomes `config-invalid`. The CLI injects
 its source readers, physical input reader, sidecar pool, worker scheduler, and
 byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
@@ -104,8 +105,9 @@ side's source reader supplies the confined file identity and any source alias.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, the
 original preview selection of each Storybook folder, and file membership in
-consumed-module directories. A stamp requires each absent preview candidate
-to stay absent and the selected candidate to resolve to the same real file,
+consumed-module directories. A stamp for a framework fallback also includes
+the direct Storybook renderer lookup's manifest candidates. Each absent preview
+candidate must stay absent and the selected candidate must resolve to the same real file,
 and it reads the digest of the selected preview through that file.
 Bundle reuse also reads the captured reuse evidence of the compiled recipe
 again through the injected `PhysicalInputs` reader, outside the side tree. A
@@ -488,10 +490,10 @@ view after the edit and counts real process starts and hello calls.
   the record of the request's resolution settings, and it sends the plan when
   the check passes. It offers each `Full` result with a plan and a toolchain
   identity to `Records`. Its `stamp` records the original preview selection
-  of each folder, and `selected_previews` and `story_previews` give that
-  selection to the render environment, the class maps, the stylesheet roots,
-  and the stylesheet links of each story. A result without a selection falls
-  back to the module-graph lookup of `bundle_styles::story_previews`.
+  of each folder. `selected_previews` and `story_previews` use the compiler's
+  graph name for render keys, class maps, stylesheet roots, and stylesheet
+  links. A selected preview without a graph name gives its stories the
+  whole-bundle render key.
 - [`src/leases.rs`](./src/leases.rs) defines the graph-owned leases.
   `ContextLease::prepare` reserves the one preparation of the PostCSS context
   of an attempt. `ContextLease::begin_use` marks each real stylesheet request,

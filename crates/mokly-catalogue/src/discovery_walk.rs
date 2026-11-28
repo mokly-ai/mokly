@@ -2,23 +2,18 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use globset::GlobSet;
 use mokly_model::canonical::compare_utf16;
-use mokly_model::catalogue::SourceLocation;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config::relative;
 use crate::config_types::{ResolvedConfig, ResolvedRoot};
 use crate::config_validation::invalid;
-use crate::diagnostic::{Code, Issue};
 use crate::discovery::{Inventory, SourceFile, SourceKind};
-use crate::error::{CatalogueError, Result};
-use crate::folder_input;
-use crate::globs::{self, denied_directory};
-use crate::identity::{folder_path, segment};
-use crate::locations::at;
+use crate::discovery_folders::FolderRecords;
+use crate::error::Result;
+use crate::globs::denied_directory;
 
 pub(crate) struct Walk<'a> {
     pub(crate) tree: &'a dyn SourceTree,
@@ -31,25 +26,8 @@ pub(crate) struct Walk<'a> {
     pub(crate) not_searched: Vec<String>,
     pub(crate) candidates: &'a mut BTreeMap<PathBuf, Option<Node>>,
     pub(crate) owners: &'a mut BTreeMap<PathBuf, (String, usize)>,
-    pub(crate) exclusions: &'a mut FolderExclusions,
-    pub(crate) entry_directories: &'a BTreeMap<(usize, &'a Path), &'a ResolvedRoot>,
+    pub(crate) folders: &'a mut FolderRecords,
     pub(crate) inventory: &'a mut Inventory,
-}
-
-#[derive(Default)]
-pub(crate) struct FolderExclusions {
-    records: BTreeMap<PathBuf, Arc<GlobSet>>,
-    directories: BTreeMap<PathBuf, Arc<GlobSet>>,
-}
-
-impl FolderExclusions {
-    pub(crate) fn excludes(&self, path: &Path) -> bool {
-        path.ancestors().skip(1).any(|directory| {
-            self.directories
-                .get(directory)
-                .is_some_and(|globs| globs.is_match(path.strip_prefix(directory).unwrap_or(path)))
-        })
-    }
 }
 
 impl Walk<'_> {
@@ -132,7 +110,7 @@ impl Walk<'_> {
         Ok(())
     }
 
-    fn project_file(&mut self, path: &Path) -> Result<Option<(PathBuf, bool)>> {
+    pub(crate) fn project_file(&mut self, path: &Path) -> Result<Option<(PathBuf, bool)>> {
         let node = if let Some(node) = self.candidates.get(path) {
             node.clone()
         } else {
@@ -204,86 +182,5 @@ impl Walk<'_> {
             excluded: false,
         });
         Ok(())
-    }
-    fn folder(&mut self, directory: &Path) -> Result<()> {
-        let file = directory.join("_folder.json");
-        let Some((identity, first)) = self.project_file(&file)? else {
-            return Ok(());
-        };
-        if !first {
-            if let Some(globs) = self.exclusions.records.get(&identity) {
-                self.exclusions
-                    .directories
-                    .insert(directory.into(), globs.clone());
-            }
-            return Ok(());
-        }
-        let path = relative(&file, &self.config.repo_root);
-        let bytes = match self.tree.read(&file) {
-            Ok(bytes) => bytes,
-            Err(error) if error.is_vanished() => return Ok(()),
-            Err(error) => return Err(invalid(format!("{path}: {}", error.code()))),
-        };
-        let text = match String::from_utf8(bytes) {
-            Ok(text) => text,
-            Err(error) => {
-                let (message, line, column) =
-                    match serde_json::from_slice::<serde_json::Value>(error.as_bytes()) {
-                        Err(source) => (source.to_string(), source.line(), source.column()),
-                        Ok(_) => ("folder record must be UTF-8 JSON".into(), 1, 1),
-                    };
-                return Err(folder_error(
-                    Issue::new(
-                        Code::InvalidFolder,
-                        format!("{path}: invalid JSON: {message}"),
-                    )
-                    .at(SourceLocation {
-                        path,
-                        line,
-                        column,
-                        export: None,
-                    }),
-                ));
-            }
-        };
-        let deepest = directory
-            .ancestors()
-            .find_map(|parent| self.entry_directories.get(&(self.configured, parent)))
-            .copied()
-            .unwrap_or(self.root);
-        let folder_path = folder_path(deepest, directory);
-        let source = at(&path, &text, 0);
-        for name in folder_path.split('/').filter(|segment| !segment.is_empty()) {
-            if let Err(issue) = segment(name, "directory name", &source) {
-                return Err(folder_error(issue));
-            }
-        }
-        let parsed = match folder_input::parse(&text, &path, folder_path) {
-            Ok(parsed) => parsed,
-            Err(issue) => return Err(folder_error(issue)),
-        };
-        let globs = match globs::compile(&parsed.exclude) {
-            Ok(globs) => globs,
-            Err(reason) => return Err(invalid(reason)),
-        };
-        let globs = Arc::new(globs);
-        if self.root.from_storybook_main() {
-            self.exclusions
-                .records
-                .insert(identity.clone(), globs.clone());
-        }
-        self.exclusions.directories.insert(directory.into(), globs);
-        self.inventory
-            .sources
-            .extend([path, relative(&identity, &self.config.repo_root)]);
-        self.inventory.folders.push(parsed);
-        Ok(())
-    }
-}
-
-fn folder_error(issue: Issue) -> CatalogueError {
-    CatalogueError::Invalid {
-        issues: vec![issue],
-        warnings: Vec::new(),
     }
 }

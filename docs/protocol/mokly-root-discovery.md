@@ -109,7 +109,7 @@ the base commit's tree alone.
 ## Glob Validation
 
 Root `files` and directory-carried folder `exclude` use relative POSIX globs.
-Validate both the original string and every brace-expanded alternative.
+Validate the original string and the path of each alternative.
 Reject non-strings, whitespace-only strings, leading `!` or `#`,
 absolute/drive/UNC paths, backslashes, colons, control characters, and
 empty, `.` or `..` segments. Validation adds no public-file defaults. Root
@@ -168,11 +168,11 @@ folder, and `files`, which defaults to Storybook's default,
 `**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))`. Storybook's `titlePrefix` changes
 no path, because paths stay derived from the file.
 
-Mokly converts Storybook's pattern syntax to its own globs. `@(a|b)` matches
-one of the alternatives, and `?(a|b)` matches nothing or one of them. A pattern
-with any other extglob form, such as `*(...)`, `+(...)`, or `!(...)`, fails
-discovery with the `main.*` error below. That error also names the `stories`
-entry.
+Mokly converts Storybook's pattern syntax to its own globs. `(a|b)` and
+`@(a|b)` each match one alternative. `?(a|b)` also permits omitting the group.
+Omitting a whole segment contributes no file match. A pattern that Mokly
+cannot convert, such as `*(...)`, `+(...)`, or `!(...)`, fails discovery with
+the `main.*` error below. That error also names the `stories` entry.
 
 A root from `main.*` selects only stories files, the
 `*.stories.{ts,tsx,js,jsx}` files. Other files that a `stories` entry matches,
@@ -188,13 +188,17 @@ needs a directory.
 
 A file that two `stories` entries of one configured root match belongs to the
 first of them, without an error. A folder record that two `stories` entries of
-one configured root reach also belongs to the first of them. That record takes
-its folder path from the deepest entry directory that holds it. The exclusions
+one configured root reach also belongs to the first of them. The exclusions
 of every folder record of the configured root apply to every file that its
-entries select. Two entries of one configured root can name the same
-directory. A file that the roots of two configured roots
-match fails with the [root overlap error](#glob-validation), which names the
-two configured roots. A `stories` entry whose directory does not exist matches
+entries select. A record takes its folder path from the deepest entry whose
+directory holds the record and that owns a story kept below the record's
+directory. If no such entry exists, the deepest entry directory that holds
+the record gives its folder path.
+
+Two entries of one configured root can name the same directory. A file that
+the roots of two configured roots match fails with the
+[root overlap error](#glob-validation), which names the two configured roots.
+A `stories` entry whose directory does not exist matches
 no file. A `stories` entry whose directory resolves outside the repository root
 fails discovery with the `main.*` error below. A root from `main.*` can match
 no file, but the configured root as a whole must keep at least one file, under
@@ -210,7 +214,9 @@ On the base side, Mokly runs the base commit's own `main.*` from the
 [extracted base sources](./mokly-base-preparation.md#sources). It uses the
 dependencies that the
 [dependency tiers](./mokly-comparison-packages.md#javascript-package-selection)
-select for the base, and it runs before base discovery. So for such a root, the
+select for the base, and it runs before base discovery. The imports of
+`main.*` resolve as the [Storybook folder rules](./mokly-storybook.md#storybook-folders)
+say, on both sides. So for such a root, the
 base extraction and any base install run before base discovery.
 
 `main.*`, each other candidate name of `main.*`, and each local file that the
@@ -219,7 +225,10 @@ through a link with Node's `fs` module, the link and its target inside the
 repository are both inputs. A file that the load opens for reading with
 `fs.open`, `fs.openSync`, or `fs.promises.open` is an input. Its digest covers
 the whole file as it is when the load opens it, also when the load reads only
-part of it. An open for writing makes no input. In Serve, an edit of one of
+part of it. Each version that a load observes stays a version of that input,
+across reads and across Storybook folders, so a static build whose loads read
+two versions of one input fails its input check. An open for writing makes no
+input. In Serve, an edit of one of
 these inputs runs discovery again, as an edit of the configuration file does
 under the
 [configuration change rules](./mokly-watch-runtime.md#configuration-changes).

@@ -3,10 +3,14 @@
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::{Code, Issue};
 use mokly_catalogue::error::{CatalogueError, InternalError, Result};
-use mokly_catalogue::storybook_roots::{self, StorybookEntry, StorybookReader, StorybookStories};
+use mokly_catalogue::storybook_roots::{
+    self, StorybookEntry, StorybookInputs, StorybookReader, StorybookStories,
+};
 use mokly_sidecar::methods::Call;
+use mokly_sidecar::postcss_evidence::Read;
 use mokly_sidecar::storybook::{ReadStorybookParams, ReadStorybookReply};
 use mokly_sidecar::wire::MethodResult;
+use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
 
 use crate::runtime::Runtime;
 use crate::side;
@@ -59,6 +63,12 @@ impl StorybookReader for Runtime {
         for directory in &result.dependency_directories {
             self.dependency_usage.unmapped(directory);
         }
+        let mut versions = ReadEvidence::default();
+        for input in result.inputs {
+            if let Read::WholeFile { path, digest, .. } = input {
+                versions.insert(path, ReadBaseline::ObservedWholeFile(digest));
+            }
+        }
         Ok(StorybookStories {
             main: result.main,
             entries: result
@@ -69,7 +79,10 @@ impl StorybookReader for Runtime {
                     files: entry.files,
                 })
                 .collect(),
-            inputs: result.inputs,
+            inputs: StorybookInputs {
+                versions,
+                absent: result.absent_inputs.into_iter().collect(),
+            },
         })
     }
 }

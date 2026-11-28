@@ -68,6 +68,7 @@ export class ViteContext {
       paths,
       runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
       entry: entry ?? "",
+      entryImports: new Map(),
       files: new Map(),
       pluginInputs: new Map(),
       diagnostic: this.diagnostic,

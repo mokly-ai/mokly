@@ -13,6 +13,8 @@ import {
 } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
+import { directStorybookInputs } from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
 import { storybookFrameworks } from "./storybook-main.js";
 import type { MainSide, StorybookMainCache } from "./storybook-main.js";
 
@@ -28,7 +30,7 @@ export interface ConsumerRequire extends NodeJS.Require {
 export async function consumerRequire(
   params: BundleParams,
   paths: ModulePaths,
-  mainCache?: StorybookMainCache,
+  mainLoad?: StorybookMainCache | "deferred",
 ): Promise<ConsumerRequire> {
   const directory = path.resolve(
     params.sourceRoot,
@@ -40,6 +42,7 @@ export async function consumerRequire(
   const peers = new Map<string, string | Error>();
   let resolver: PluginBuild | undefined;
   let storybook: ReturnType<ConsumerRequire["storybook"]>;
+  let directInputs: StorybookInputs = new Map();
   const names = [
     "react",
     "react/package.json",
@@ -94,6 +97,7 @@ export async function consumerRequire(
         cache,
         react,
         side,
+        directInputs,
       );
   };
   const require = ((name: string) => native(resolve(name))) as ConsumerRequire;
@@ -102,8 +106,11 @@ export async function consumerRequire(
     setup(builder) {
       builder.onStart(async () => {
         resolver = builder;
+        if (mainLoad && params.storiesFiles.length)
+          directInputs = await directStorybookInputs(paths, directory);
         await load(names);
-        if (mainCache) await loadStorybook(mainCache, params);
+        if (mainLoad && mainLoad !== "deferred")
+          await loadStorybook(mainLoad, params);
       });
       builder.onEnd(() => {
         resolver = undefined;

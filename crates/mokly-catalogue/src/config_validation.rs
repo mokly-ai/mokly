@@ -7,11 +7,12 @@ use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::SourceLocation;
 use serde_json::Value;
 
+use crate::config_postcss;
 use crate::config_types::{Config, SourcePackage, SourcePackages};
 use crate::diagnostic::{Code, Issue};
 use crate::error::{CatalogueError, Result};
+use crate::globs::{self, GlobSyntax};
 use crate::locations::{at, json_positions};
-use crate::{config_postcss, globs};
 
 /// Exact schema shipped by the public package; no schema is fetched at runtime.
 pub const CONFIG_SCHEMA: &str = include_str!("../../../packages/mokly/config.schema.json");
@@ -66,7 +67,7 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
                 )));
             }
             if let Some(files) = &root.files
-                && let Err(reason) = globs::compile(files)
+                && let Err(reason) = globs::compile(files, GlobSyntax::Posix)
             {
                 return Err(invalid(format!("roots[{index}].files: {reason}")));
             }
@@ -87,7 +88,7 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
         .iter()
         .flat_map(|watch| watch.rules.iter().flatten())
     {
-        if let Err(reason) = globs::compile(&rule.paths) {
+        if let Err(reason) = globs::compile(&rule.paths, GlobSyntax::Posix) {
             return Err(invalid(format!("watch.rules.paths: {reason}")));
         }
         for path in &rule.paths {

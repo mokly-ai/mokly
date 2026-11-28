@@ -92,19 +92,25 @@ before discovery. `storybook_roots::expand` replaces each such root with one
 root for each `stories` entry, in order. It reads the entries through the
 injected `StorybookReader`, which `mokly-render` implements with a sidecar
 call. It returns at once when no root needs it, so other catalogues start no
-Node before discovery. `storybook_globs` turns the `@(...)` and `?(...)`
-patterns of Storybook into root globs and rejects other extglob forms. Each
-expanded root keeps the index of its configured root. The overlap error and
+Node before discovery. The shared glob compiler handles Storybook's `(a|b)`,
+`@(a|b)`, and `?(a|b)` alternatives. It checks path safety without expanding
+combinations of alternatives. Each expanded root keeps the index of its
+configured root. The overlap error and
 `SourcePolicy` name that configured root, and the empty-root check covers all
 the roots of one configured root together. An expanded root selects only
 stories files. When two entries of one configured root reach the same file or
-folder record, the first entry owns it. A folder record takes its folder path
-from the deepest entry directory that holds it. After all walks of one
-configured root, `Discoverer` applies the exclusions of every folder record
-of that root to every file that its entries select. Expansion adds the local
-files that each `main.*` read to the authored inputs, under the reported path
+folder record, the first entry owns it. After all walks of one configured
+root, `Discoverer` applies the exclusions of every folder record to every
+selected file. A record takes its path from the deepest entry whose directory
+holds the record and that owns a story kept below the record's directory.
+If no such entry exists, it uses the deepest entry directory that holds the
+record.
+
+Expansion adds the local files that each `main.*` read to the authored inputs,
+under the reported path
 and under the in-repository path that the source tree projects it to, and
-`ResolvedConfig::storybook_inputs` gives their digests. `Discoverer` rejects
+`ResolvedConfig::storybook_inputs` gives every observed version and absence
+of each input. `Discoverer` rejects
 a root that still needs its `main.*`. The
 [roots from `main.*` rules](../../docs/protocol/mokly-root-discovery.md#roots-from-main)
 own this behaviour.
@@ -288,13 +294,13 @@ The property test of the source maps over the vendored HTML corpus lives in
   `main.*`, and `expand`, which replaces each root without `dir` with the
   roots of those entries. `expand` registers each input that the read
   reports, and also the projected in-repository path of each present input.
-  [`src/storybook_globs.rs`](./src/storybook_globs.rs) turns a Storybook
-  pattern into root globs.
+- [`src/globs.rs`](./src/globs.rs) compiles shared discovery and watch patterns,
+  including Storybook alternatives.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
-  [`src/discovery_walk.rs`](./src/discovery_walk.rs) walks one root. It
-  collects the `FolderExclusions` of a configured root, which `Discoverer`
-  applies to every file of that root after all of its walks.
+  [`src/discovery_walk.rs`](./src/discovery_walk.rs) walks one root.
+  [`src/discovery_folders.rs`](./src/discovery_folders.rs) applies exclusions
+  and places folder records after all walks of a configured root.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
   `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
   its shared `prop_validators`.

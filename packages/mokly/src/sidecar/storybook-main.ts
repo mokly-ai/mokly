@@ -20,6 +20,12 @@ import {
   storybookCandidates,
   storybookFolders,
 } from "./storybook-folders.js";
+import {
+  discoveryInputs,
+  mergeStorybookInputs,
+  observeStorybookInput,
+} from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
 import { viteMissingImport } from "./vite-lookup-paths.js";
 import { ViteLookup } from "./vite-resolution.js";
 
@@ -39,7 +45,7 @@ export interface MainResult {
   framework?: string;
   entries?: ReadStorybookResult["entries"];
   error?: string;
-  inputs: Array<[string, string | null]>;
+  inputs: StorybookInputs;
 }
 
 type Lookup = (name: string, directory: string) => Promise<string | Error>;
@@ -51,7 +57,7 @@ export async function readStorybook(
 ): Promise<ReadStorybookReply> {
   const paths = await ModulePaths.create(params);
   const directory = path.resolve(paths.sourceRoot, params.folder);
-  const reads = new Map<string, string | null>();
+  const reads: StorybookInputs = new Map();
   const main = await findMain(paths.sourceRoot, params.folder, reads);
   if (!main)
     return {
@@ -89,17 +95,11 @@ export async function readStorybook(
     true,
   );
   if (result.error !== undefined) return { mainError: result.error };
-  for (const [file, digest] of result.inputs) {
-    if (digest !== null) reads.set(file, digest);
-  }
+  mergeStorybookInputs(reads, result.inputs);
   return {
     main: name,
     entries: result.entries ?? [],
-    inputs: Object.fromEntries(
-      [...reads]
-        .filter(([file]) => paths.repositoryOwned(file))
-        .map(([file, digest]) => [logical(paths.sourceRoot, file), digest]),
-    ),
+    ...discoveryInputs(paths, reads),
     dependencyDirectories: dependencyDirectories(paths, result.inputs),
   };
 }
@@ -113,8 +113,8 @@ export async function storybookFrameworks(
   cache: StorybookMainCache,
   missing: Error,
   side: MainSide,
+  inputs: StorybookInputs,
 ) {
-  const inputs = new Map<string, string | null>();
   const peers = new Map<string, string>();
   const directories = new Set<string>();
   for (const folder of storybookFolders(params)) {
@@ -139,7 +139,7 @@ export async function storybookFrameworks(
     }
     const result = await loaded;
     if (result.error !== undefined) throw new Error(result.error);
-    for (const [file, digest] of result.inputs) inputs.set(file, digest);
+    mergeStorybookInputs(inputs, result.inputs);
     for (const dependency of dependencyDirectories(paths, result.inputs))
       directories.add(dependency);
     if (!result.framework) throw missing;
@@ -153,9 +153,10 @@ export async function storybookFrameworks(
     const react = await resolveReact(paths, framework);
     if (!react) throw missing;
     for (const file of [framework, react]) {
-      inputs.set(file, await fileDigest(file));
+      observeStorybookInput(inputs, file, await fileDigest(file));
       const manifest = findPackageJSON(pathToFileURL(file).href);
-      if (manifest) inputs.set(manifest, await fileDigest(manifest));
+      if (manifest)
+        observeStorybookInput(inputs, manifest, await fileDigest(manifest));
     }
     peers.set(folder, react);
   }
@@ -166,31 +167,29 @@ export async function storybookFrameworks(
   };
 }
 
-function dependencyDirectories(
-  paths: ModulePaths,
-  inputs: MainResult["inputs"],
-): string[] {
+function dependencyDirectories(paths: ModulePaths, inputs: StorybookInputs) {
   const root = paths.dependencyRoot ?? paths.sourceRoot;
   const directories = new Set<string>();
-  for (const [file, digest] of inputs) {
-    if (digest === null) continue;
+  for (const [file, versions] of inputs) {
+    if (versions.size === 1 && versions.has(null)) continue;
     const directory = dependencyDirectory(root, file);
     if (directory) directories.add(logical(root, directory));
   }
   return [...directories].sort();
 }
 
-async function findMain(
-  root: string,
-  folder: string,
-  inputs: Map<string, string | null>,
-) {
+async function findMain(root: string, folder: string, inputs: StorybookInputs) {
   let main: string | undefined;
   for (const candidate of storybookCandidates(folder, "main")) {
     const file = path.resolve(root, candidate);
     const present = await regularFile(file);
     if (present && main === undefined) main = file;
-    else inputs.set(file, present ? await fileDigest(file) : null);
+    else
+      observeStorybookInput(
+        inputs,
+        file,
+        present ? await fileDigest(file) : null,
+      );
   }
   return main;
 }
@@ -221,7 +220,7 @@ async function loadMain(
     if (!inside(root, await fs.realpath(file)))
       throw new Error("source is outside sourceRoot");
   } catch (error) {
-    return { error: failure(error), inputs: [] };
+    return { error: failure(error), inputs: new Map() };
   }
   const result = await runMain({
     common,
@@ -237,11 +236,12 @@ async function loadMain(
     throw new Error(failure(error), { cause: error });
   });
   if (result.error !== undefined)
-    return { error: failure(result.error), inputs: [] };
-  result.inputs.push([
+    return { error: failure(result.error), inputs: new Map() };
+  observeStorybookInput(
+    result.inputs,
     manifest,
     createHash("sha256").update(bytes).digest("hex"),
-  ]);
+  );
   return result;
 }
 

@@ -15,6 +15,8 @@ import { fileIdentity } from "./postcss-file-identity.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { resolutionMetadata } from "./postcss-resolution-evidence.js";
+import { observeStorybookInput } from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
 import { isRecord } from "./storybook-main.js";
 import type { MainRequest, MainResult } from "./storybook-main.js";
 import { withViteConfigResolution } from "./vite-config-resolution.js";
@@ -53,10 +55,9 @@ async function read(
   { common, base, stories }: MainRequest,
   paths: ModulePaths,
 ): Promise<MainResult> {
-  const files = new Map<string, string | null>();
-  const record = (file: string) => {
-    if (!files.has(file)) files.set(file, moduleDigest(file));
-  };
+  const inputs: StorybookInputs = new Map();
+  const record = (file: string) =>
+    observeStorybookInput(inputs, file, moduleDigest(file));
   const hooks = registerHooks({
     resolve(specifier, context, next) {
       const result = next(specifier, context);
@@ -70,10 +71,10 @@ async function read(
       return result;
     },
   });
-  const opened = new Map<string, string>();
   const recordRead = (file: string, digest: string, canonical?: string) => {
-    opened.set(file, digest);
-    if (canonical && canonical !== file) opened.set(canonical, digest);
+    observeStorybookInput(inputs, file, digest);
+    if (canonical && canonical !== file)
+      observeStorybookInput(inputs, canonical, digest);
   };
   observeDescriptors((fd, file) => {
     if (!paths.repositoryOwned(file)) return;
@@ -111,16 +112,17 @@ async function read(
           observed.identity?.canonical,
         );
     }
-    const inputs = new Map([...files, ...opened]);
     return {
       ...(typeof name === "string" ? { framework: name } : {}),
       ...(entries && { entries }),
-      inputs: [...inputs].sort(([left], [right]) =>
-        left < right ? -1 : left > right ? 1 : 0,
+      inputs: new Map(
+        [...inputs].sort(([left], [right]) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        ),
       ),
     };
   } catch (error) {
-    return { error: detail(error), inputs: [] };
+    return { error: detail(error), inputs: new Map() };
   } finally {
     hooks.deregister();
   }
@@ -158,7 +160,17 @@ function readEntry(entry: unknown): { directory: string; files?: string } {
   };
 }
 
-const paths = ModulePaths.createSync(request.side);
+const paths = ModulePaths.createSync({
+  ...request.side,
+  moduleResolution: {
+    ...request.side.moduleResolution,
+    aliases: {},
+    conditions: [],
+    mainFields: [],
+    resolveExtensions: [],
+    loaders: {},
+  },
+});
 const lookup = new ViteLookup(
   paths,
   path.resolve(paths.sourceRoot, request.side.configurationDirectory),
