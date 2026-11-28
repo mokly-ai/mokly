@@ -90,11 +90,11 @@ export const navigation = (value: unknown): value is FrameNavigation =>
   shape(value, 3 + Number(Object.hasOwn(value, "fragment"))) &&
   identity(value) &&
   ["primary", "modified", "middle"].includes(value.activation as string);
-export const boundedJson = (value: unknown): unknown => {
+export const boundedJson = (value: unknown, limit = BYTE_LIMIT): unknown => {
   if (
     typeof value !== "string" ||
-    value.length > BYTE_LIMIT ||
-    new TextEncoder().encode(value).length > BYTE_LIMIT
+    value.length > limit ||
+    new TextEncoder().encode(value).length > limit
   )
     return;
   try {
@@ -111,3 +111,12 @@ export const origin = (value: unknown): value is string => {
     return false;
   }
 };
+
+export function hostOrigin(
+  location: Pick<Location, "href" | "origin">,
+): string | undefined {
+  const hosts = new URL(location.href).searchParams.getAll("mokly-host");
+  return hosts.length === 1 && origin(hosts[0]) && hosts[0] !== location.origin
+    ? hosts[0]
+    : undefined;
+}

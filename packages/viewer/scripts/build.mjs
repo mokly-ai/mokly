@@ -39,13 +39,12 @@ await build({
   platform: "browser",
   target: "es2023",
 });
-await fs.copyFile(
-  path.join(
-    path.dirname(fileURLToPath(import.meta.resolve("@mokly/frame"))),
-    "browser/frame-probe.js",
-  ),
-  path.join(browser, "frame-probe.js"),
+const frameBrowser = path.join(
+  path.dirname(fileURLToPath(import.meta.resolve("@mokly/frame"))),
+  "browser",
 );
+for (const asset of ["frame-probe.js", "access-start.html", "access-worker.js"])
+  await fs.copyFile(path.join(frameBrowser, asset), path.join(browser, asset));
 await writeBrowserManifest(browser);
 // The standalone stylesheet that Serve and `build` deliver as
 // `mokly-viewer/shell.css`, and the stylesheet of an embedded root. The

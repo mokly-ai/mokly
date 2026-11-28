@@ -1,7 +1,5 @@
 # Viewer Frame Adapter
 
-Status: `postMessageAdapter` takes no `access` or `onAccessFailure` option yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
-
 ## Public Interface
 
 The [frame package](./mokly-frame-package.md) defines these types and the
@@ -209,7 +207,8 @@ its mount, its handshake with the frame probe, and its wire protocol. The
 [frame probe contract](./mokly-frame-probe.md) defines the frame probe script
 that the static build injects. The [frame access contract](./mokly-frame-access.md)
 defines the `access` and `onAccessFailure` options, which open screens from a
-frame host that needs a credential on every file.
+frame host that needs a credential on every file except the start page and the
+access worker.
 
 ## Related Docs
 

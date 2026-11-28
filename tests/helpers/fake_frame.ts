@@ -30,28 +30,36 @@ export const frameView: FrameMount = {
 };
 
 /** Fake immediate window and deterministic timers, without real network or DOM IO. */
-export function fakeFrame() {
+export function fakeFrame({ useMockTimers = false } = {}) {
   const events = new EventTarget();
+  const document = Object.assign(new EventTarget(), {
+    visibilityState: "visible",
+  });
   const timers = new Map<number, () => void>();
   const posts: { data: string; origin: string }[] = [];
+  const posted = new EventTarget();
   const replacements: string[] = [];
   const attributes = new Map<string, string>();
   let timer = 0;
   const win = Object.assign(events, {
     location: { origin: "https://app.test" },
+    document,
     crypto: webcrypto,
-    setTimeout(callback: () => void) {
+    setTimeout(callback: () => void, delay: number) {
+      if (useMockTimers) return setTimeout(callback, delay);
       const id = ++timer;
       timers.set(id, callback);
       return id;
     },
-    clearTimeout(id: number) {
-      timers.delete(id);
+    clearTimeout(id: number | NodeJS.Timeout) {
+      if (useMockTimers) clearTimeout(id);
+      if (typeof id === "number") timers.delete(id);
     },
   });
   const child = {
     postMessage(data: string, origin: string) {
       posts.push({ data, origin });
+      posted.dispatchEvent(new Event("posted"));
     },
     location: {
       replace(url: string) {
@@ -81,10 +89,19 @@ export function fakeFrame() {
   };
   return {
     frame: element as unknown as HTMLIFrameElement,
+    window: win,
+    document,
     posts,
     replacements,
     attributes,
     timers,
+    nextPost() {
+      return new Promise<(typeof posts)[number]>((resolve) =>
+        posted.addEventListener("posted", () => resolve(posts.at(-1)!), {
+          once: true,
+        }),
+      );
+    },
     nonce: () => (JSON.parse(posts.at(-1)!.data) as { nonce: string }).nonce,
     load: () => element.dispatchEvent(new Event("load")),
     raw,

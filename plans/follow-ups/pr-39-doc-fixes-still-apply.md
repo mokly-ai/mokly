@@ -63,7 +63,7 @@ The fixes, most misleading first. Each line gives the current place and the smal
    - Done by the Mokly 0.18.0 docs: `docs/protocol/cloud/mockup-verification.md:202-203` now only links Mockup baselines.
    - Done by the Mokly 0.18.0 docs: `docs/protocol/cloud/preview-capture.md:116-135` now links Mockup baselines for the base render, and keeps only the capture rules and the capture consequences.
    - `docs/protocol/cloud/preview-seed-local.md:22-25` links the comparison base section of `preview-capture.md`, not Mockup baselines, and restates the base render in one sentence.
-   - `docs/protocol/cloud/mokly-artifact-compatibility.md:161-165` restates two base rules and links Mockups and Mockup tooling, not Mockup baselines.
+   - `docs/protocol/cloud/mokly-artifact-delivery.md:37-41` restates two base rules and links Mockups and Mockup tooling, not Mockup baselines.
    - The copies agree today.
 10. **D7, change wording.** Done on 2026-11-18. Commit `a81cf356` rewrote the sentence. `docs/product-direction.md:58-59` now says that the cloud hosts the workspace packages, which is the steady state. No edit remains.
 11. **D6, owner of the signed-out defect.** Done on 2026-10-30. The plans migration deleted the plan whose [status paragraph](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-dependencies-upgrade.md?plain=1#L1-L12) named no owner. `plans/follow-ups/shared-link-loses-screen-through-sign-in.md` now owns the defect and the open decision on PR #37.

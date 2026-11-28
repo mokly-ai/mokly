@@ -77,6 +77,9 @@ fn builds_twice_with_identical_bytes_and_complete_public_fences() {
     build(other.path(), ".context/second");
     let files = inventory(&root.path().join(".context/first"));
     assert_eq!(files, inventory(&other.path().join(".context/second")));
+    for asset in ["access-start.html", "access-worker.js"] {
+        assert!(!files[Path::new(&format!("mokly-viewer/client/{asset}"))].is_empty());
+    }
     let marker = Ownership::parse(&files[Path::new(".mokly-export-artifact")]).unwrap();
     assert_eq!(files.len(), marker.files.len() + 1);
     for entry in marker.files {

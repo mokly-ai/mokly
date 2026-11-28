@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: No peer sends or reads the frame access envelope yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds it.
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                                                                                                                                       |

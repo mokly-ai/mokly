@@ -1,7 +1,5 @@
 # Frame Probe Handshake And Wire Protocol
 
-Status: The adapter runs no access phase before its handshake yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds it.
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the [frame probe](./mokly-frame-probe.md).
@@ -41,9 +39,16 @@ activation.
 
 The load of the document has no time limit. Ready must arrive within five
 seconds after hello, and each reply within five seconds after its request.
-A timeout disposes the session without retries.
-Disposal/unload clears all work; a fresh mount loads a new document and nonce.
+A timeout outside a restore check disposes the session without retries.
+Disposal clears all work. A fresh mount loads a new document and nonce.
 At most 16 requests are pending.
+
+A `pagehide` with `persisted: true` keeps the session in the back-forward cache.
+Other `pagehide` events dispose it. On a persisted `pageshow` in the host, the
+adapter sends `hello` again for each ready mount with its original nonce. If
+`ready` does not arrive within five seconds, the adapter disposes the mount
+without an error event. During this check, a request timeout fails the request
+without an error event and the `ready` check continues.
 
 A frame that asks for access first runs the access phase of the
 [frame access contract](./mokly-frame-access.md#access-phase). The adapter then

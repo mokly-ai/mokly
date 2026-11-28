@@ -1,10 +1,10 @@
 # Frame Access
 
-Status: Mokly does not write the start page or the access worker yet, the frame probe has no access relay, and `postMessageAdapter` takes no access options. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines the access route of `postMessageAdapter`. The route opens screens
-from a frame host that needs a credential on every file, also in a browser
+from a frame host that needs a credential on every file except the start page
+and the access worker, which it
+[serves without a credential](#frame-host-requirements), also in a browser
 that refuses the cookie of that frame host inside a cross-site frame.
 
 The host is the page that mounts the viewer and its frame adapter. The frame
@@ -100,7 +100,8 @@ The access worker obeys these rules:
 - It keeps an `Authorization` header that a request already has, and the
   cookies that the browser sends with the request.
 - It answers a navigation whose answer is 401 with the start page, so that the
-  frame asks for a new token.
+  frame asks for a new token. It tries to remove the rejected token it added
+  if storage still holds that value, and waits for the result before answering.
 - It stores no response, and it sends the token to no other place.
 
 Decision: the header goes only to the exact origin of the worker, because the
@@ -208,8 +209,10 @@ call. Only one renewal runs at a time. A failed renewal sends nothing and runs
 again at the next renewal time. On each `visibilitychange` to a visible page
 and on each `pageshow`, a renewal whose time has passed runs at once.
 
-Decision: renewal also on `visibilitychange` and `pageshow`, because iOS
-pauses the timers of background tabs.
+Decision: renewal also on `visibilitychange`, because iOS pauses the timers of
+background tabs, and on `pageshow`, because the timers of a page in the
+back-forward cache stop. A loaded page gets `pageshow` only when the browser
+restores it from that cache.
 
 ## Access Relay
 

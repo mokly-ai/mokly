@@ -15,7 +15,7 @@ const harness = (query: string, hasMap = true) =>
 
 test("probe bundle is a bounded standalone IIFE without top-window access", () => {
   assert.ok(
-    Buffer.byteLength(bundle) <= 11264,
+    Buffer.byteLength(bundle) <= 12288,
     `${Buffer.byteLength(bundle)} bytes`,
   );
   assert.doesNotMatch(
@@ -27,6 +27,36 @@ test("probe bundle is a bounded standalone IIFE without top-window access", () =
     /\b(?:fetch|XMLHttpRequest|WebSocket|import|require|eval)\s*\(/,
   );
   assert.doesNotMatch(bundle, /sourceMappingURL|document\.cookie/);
+});
+
+test("after handshake the relay forwards only a valid parent token to the controlling access worker", () => {
+  const fixture = harness("?mokly-host=https%3A%2F%2Fapp.test");
+  const token =
+    '{ "channel":"mokly-frame-access", "version":1, "type":"token", "token":"secret", "expiresAt":5 }';
+  const worker = "https://frames.test/mokly-viewer/client/access-worker.js";
+  fixture.control(worker);
+  fixture.send(token);
+  assert.deepEqual(fixture.workerMessages, []);
+  assert.deepEqual(fixture.messages, []);
+  fixture.send(encodeMessage(nonce, { type: "hello" }));
+  fixture.send(token, "https://wrong.test");
+  fixture.send(token, "https://app.test", {});
+  fixture.send(token, "https://app.test", undefined, [{}]);
+  fixture.send(token.replace("secret", "bad token"));
+  for (const other of [
+    `${worker}?other`,
+    worker.replace("frames.test", "other.test"),
+    "https://frames.test/sw.js",
+  ]) {
+    fixture.control(other);
+    fixture.send(token);
+  }
+  assert.deepEqual(fixture.workerMessages, []);
+  fixture.control(worker);
+  fixture.send(token);
+  assert.deepEqual(fixture.workerMessages, [token]);
+  assert.equal(fixture.messages.length, 1);
+  fixture.send(encodeMessage(nonce, { type: "dispose" }));
 });
 
 test("before a valid handshake only the bounded message listener exists", () => {

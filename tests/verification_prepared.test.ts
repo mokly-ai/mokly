@@ -8,6 +8,8 @@ import { requirePrepared } from "../scripts/verification/prepared.mjs";
 
 const outputs = [
   "packages/viewer/dist/index.js",
+  "packages/frame/dist/browser/access-start.html",
+  "packages/frame/dist/browser/access-worker.js",
   "packages/frame/dist/browser/frame-probe.js",
 ];
 
@@ -42,6 +44,8 @@ test("browser preparation also requires the shim, sidecar, shell and native bina
       "packages/mokly/dist/shim.mjs",
       "packages/mokly/dist/sidecar.js",
       "packages/viewer/dist/browser/shell.js",
+      "packages/viewer/dist/browser/access-start.html",
+      "packages/viewer/dist/browser/access-worker.js",
       "packages/viewer/dist/browser/frame-probe.js",
       "packages/native-",
     ])

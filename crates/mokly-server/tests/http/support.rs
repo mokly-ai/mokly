@@ -128,6 +128,8 @@ impl Harness {
         for (path, content_type) in [
             ("client/shell.js", "text/javascript; charset=utf-8"),
             ("client/frame-probe.js", "text/javascript; charset=utf-8"),
+            ("client/access-start.html", "text/html; charset=utf-8"),
+            ("client/access-worker.js", "text/javascript; charset=utf-8"),
             ("shell.css", "text/css; charset=utf-8"),
             ("fonts/Geist-Variable.woff2", "font/woff2"),
             ("fonts/GeistMono-Variable.woff2", "font/woff2"),

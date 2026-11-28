@@ -1,7 +1,5 @@
 # @mokly/frame
 
-Status: The package does not have the frame access route yet: `postMessageAdapter` takes no access options, the probe has no access relay, and the build writes no start page or access worker. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
-
 `@mokly/frame` holds Mokly's frame adapter interface, the built-in adapters,
 the frame probe that runs inside published pages, and the start page and the
 access worker of the frame access route. The Browse shell uses
@@ -72,13 +70,18 @@ define the cross-origin session, and the
 [frame link navigation contract](../../docs/protocol/mokly-frame-link-navigation.md)
 defines the navigation events that the host resolves.
 
-When the server of the frame origin needs a credential on every file, the host
+When the server of the frame origin needs a credential on every file except the
+start page and the access worker, the host
 passes `postMessageAdapter` an `access` callback, which answers with an access
 token of that server, and `onAccessFailure`. A frame without a credential then loads
 the start page, which asks the adapter for a token and registers the access
 worker. The worker adds the token to the requests of the frame. The
 [frame access contract](../../docs/protocol/mokly-frame-access.md) defines the
 start page, the worker, the access channel, the loop guard and the renewal.
+
+A host `pagehide` into the back-forward cache keeps the mount and its renewal.
+On restore, the adapter sends `hello` with the same nonce to check the probe.
+It disposes the mount quietly if the probe does not answer.
 
 ### Usage updates
 
@@ -143,8 +146,8 @@ cargo xtask check --suite viewer
 
 `npm run build` builds this package after `@mokly/model` and before
 `@mokly/viewer`. The package build compiles `src` into `dist`, then bundles
-the frame probe into `dist/browser/frame-probe.js` and builds the start page
-and the access worker. The viewer build copies those files into
+the frame probe, `access-start.html`, and `access-worker.js` into
+`dist/browser/`. The viewer build copies those files into
 `packages/viewer/dist/browser` and lists them in the viewer's browser module
 inventory.
 
@@ -203,6 +206,18 @@ of spelling them in source.
   — `postMessageAdapter`, the opt-in adapter for documents on a separate
   origin. It requests instance box models and document content boxes from
   the probe.
+- [`src/adapters/access_phase.ts`](./src/adapters/access_phase.ts) runs the
+  start page and probe handshakes of one mount.
+- [`src/adapters/access_renewal.ts`](./src/adapters/access_renewal.ts) schedules
+  token renewal and delivers the answer to ready frames of the adapter.
+- [`src/access/channel.ts`](./src/access/channel.ts) validates and encodes
+  access messages.
+- [`src/access/start.ts`](./src/access/start.ts) runs the cookie check and the
+  worker hand-off before the start page reloads.
+- [`src/access/worker.ts`](./src/access/worker.ts) authenticates requests to its
+  own origin and uses [`token_store.ts`](./src/access/token_store.ts) to keep
+  the latest token in IndexedDB. The store compares the rejected and stored
+  token values and deletes a match in one write transaction.
 - [`src/adapters/message_transport.ts`](./src/adapters/message_transport.ts)
   — `messageTransport`, the bounded request and reply state of one
   cross-origin session
@@ -223,7 +238,7 @@ of spelling them in source.
   and `logicalMarker` in `logical.ts`, and `parseBrowsingTarget` in
   `target.ts`
 - [`scripts/build.mjs`](./scripts/build.mjs) — removes `dist`, compiles the
-  package with `tsconfig.build.json`, and bundles the frame probe
+  package with `tsconfig.build.json`, and builds the three browser assets
 - [`scripts/probe-bundle.mjs`](./scripts/probe-bundle.mjs) — `bundleProbe`,
   which runs esbuild, the string pool of `probe-pool.mjs`, and Terser
 

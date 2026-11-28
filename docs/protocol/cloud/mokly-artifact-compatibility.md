@@ -87,17 +87,18 @@ musl build.
 [viewer namespace](../mokly-viewer-namespace.md) define these independent
 versions. The cloud uses them together.
 
-| Boundary                               | Version                        | Cloud use                                                             |
-| -------------------------------------- | ------------------------------ | --------------------------------------------------------------------- |
-| Upload envelope                        | 3                              | Strict ten-field `mokly-upload.json` parser                           |
-| Export ownership marker                | 3                              | `.mokly-export-artifact` parser                                       |
-| Plan response/exchange                 | 1                              | Plan, blob and completion transport                                   |
-| Catalogue index                        | 9                              | Plan checks, Changes count, check links, screens and the app's viewer |
-| Entry detail                           | 4                              | The receiver's content check and the app's viewer                     |
-| Static deployment file                 | 1                              | Served unchanged; the receiver parses none                            |
-| Frame probe wire envelope              | 4                              | Packaged frame adapter and frame probe                                |
-| Removed page/document preview metadata | 3                              | Packaged removed-preview reader                                       |
-| Historical snapshot identity domain    | `mokly-historical-snapshot-v3` | Package-generated 64 lowercase hex identity                           |
+| Boundary                               | Version                        | Cloud use                                                                             |
+| -------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
+| Upload envelope                        | 3                              | Strict ten-field `mokly-upload.json` parser                                           |
+| Export ownership marker                | 3                              | `.mokly-export-artifact` parser                                                       |
+| Plan response/exchange                 | 1                              | Plan, blob and completion transport                                                   |
+| Catalogue index                        | 9                              | Plan checks, Changes count, check links, screens and the app's viewer                 |
+| Entry detail                           | 4                              | The receiver's content check and the app's viewer                                     |
+| Static deployment file                 | 1                              | Served unchanged; the receiver parses none                                            |
+| Frame probe wire envelope              | 4                              | Packaged frame adapter and frame probe                                                |
+| Frame access envelope                  | 1                              | Packaged frame adapter, published start page and access worker, and frame probe relay |
+| Removed page/document preview metadata | 3                              | Packaged removed-preview reader                                                       |
+| Historical snapshot identity domain    | `mokly-historical-snapshot-v3` | Package-generated 64 lowercase hex identity                                           |
 
 Mokly writes no private generated manifest, no review file, no static
 delivery descriptor and no shell bootstrap envelope. The review result
@@ -134,65 +135,10 @@ namespace. The receiver classifies the artifact version first and accepts
 the comparison paths per
 [upload validation](./publication-upload-validation.md).
 
-## Stored And Served Paths
+## Artifact Delivery
 
-Exports use these paths; the cloud stores and serves them unchanged.
-
-| Export-relative path                                                        | Purpose                                                                           |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `index.html`, `404.html`, `view/<path>/index.html`                          | The shell stub, with the same bytes for every route                               |
-| `static/mokly-generated/<path>/index[.<viewport>][.dark].html`              | Current rendered views and documents                                              |
-| `static/mokly-generated/styles/**`, `static/mokly-generated/assets/**`      | Bundled stylesheets and CSS assets                                                |
-| `static/**` outside the generated tree                                      | Referenced authored closure                                                       |
-| `mokly-viewer/index.json`                                                   | Catalogue index 9, also carried in the Plan archive                               |
-| `mokly-viewer/entries/<path>.json`                                          | Entry detail 4 of each current entry                                              |
-| `mokly-viewer/deployment.json`                                              | Static deployment file 1                                                          |
-| `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**` | Shell bundle, frame probe, styles and fonts                                       |
-| `mokly-viewer/diffs/generations/<64 lowercase hex>/**`                      | Removed details, snapshots, their resources and removed previews, with `no-store` |
-| `mokly-upload.json`, `.mokly-export-artifact`                               | Private ingest metadata                                                           |
-
-A comparison generation holds no review file. Mokly writes no
-private manifest and no comparison summary, and the
-[hosting policy](./publication-upload-validation.md#hosting-policy) still
-refuses both names. The server serves or rewrites no `__mokly/` path and
-provides no `__generations/` alias. Fixed Mokly deployed segments have no `_`
-prefix. Cloud keeps `_access` and `__blobs` reserved. Authored names follow
-their own grammar; the hosting policy must reject those cloud roots.
-
-Entries have file-derived paths: the configuration declares `roots`, a
-variant has a slug, and links use paths. No Mokly command writes catalogue
-output into the repository except `build`, into an ignored output directory,
-so no catalogue output is committed. A comparison renders both
-sides from sources with the CLI that runs it. A base whose
-sources fail current validation makes Changes unavailable, and the upload then
-has no comparison. See [Mockups](./mockups.md) and
-[Mockup tooling](./mockup-tooling.md).
-
-## Private Artifact Limit
-
-The viewer sends `credentials: "omit"` on URL sources, the static
-deployment file, comparison pane documents and removed-preview documents.
-The standalone shell sends `credentials: "same-origin"` on its
-index, detail, deployment, comparison and removed-preview reads.
-The root React API
-accepts index and detail objects, so the app fetches the index and every
-detail itself, for public and private catalogues, with the catalogue cookie
-for a private one. The package has no transport for comparison documents or
-removed previews. Private comparisons and removed-entry previews stay unavailable
-in the embedded viewer. The standalone shell needs a catalogue cookie
-in its own browser cookie store.
-
-Only the app's `POST /_access` sets the catalogue cookie. A browser that
-blocks third-party cookies refuses that cookie or keeps it in the app's own
-store, so a new tab or the system browser never holds it. Decision: the app
-offers no **Open catalogue in a new tab** recovery,
-because a browser that refused the app cookie has none for that tab either.
-The cloud never patches the package at run time, replaces global `fetch`,
-deep-imports internals or exposes private files to restore these reads,
-because it uses only the viewer's documented exports. A credentialed
-transport is a change to the viewer package and its protocol. See
-[Viewer](./viewer.md#private-artifact-limit) and
-[Catalogue hosting](./catalogue-hosting.md#private-access).
+[Mokly artifact delivery](./mokly-artifact-delivery.md) gives the paths that
+the cloud stores and serves, and the private artifact limit.
 
 ## Frame Boundary
 
@@ -202,6 +148,11 @@ different frame wire versions reject each other's frame protocol, so pages
 that a Mokly release with an earlier frame wire version published do not
 work in the viewer. Republish such catalogues after the matching app
 deploys. Stored publications are not converted.
+
+The start page `mokly-viewer/client/access-start.html`, the access worker
+`mokly-viewer/client/access-worker.js` and the relay of the frame probe use
+channel `mokly-frame-access` and frame access version 1, as
+[frame access](../mokly-frame-access.md) defines.
 
 The public index and detail readers gate versions and return copies.
 They do not validate content. The receiver checks the content, as

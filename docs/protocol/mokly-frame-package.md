@@ -1,7 +1,5 @@
 # Frame Package
 
-Status: The package does not have the frame access route yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds the access phase, the start page and the access worker.
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 
 ## Package And Entries

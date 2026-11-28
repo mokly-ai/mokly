@@ -5,11 +5,15 @@ export function browserManifestPath(target) {
   return `${target}.manifest.json`;
 }
 
-/** Record the exact JavaScript outputs after every browser asset is built. */
+/** Record the exact client scripts and start page after they are built. */
 export async function writeBrowserManifest(target) {
   const entries = await fs.readdir(target, { withFileTypes: true });
   const modules = entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        (entry.name.endsWith(".js") || entry.name === "access-start.html"),
+    )
     .map((entry) => entry.name)
     .sort();
   if (modules.length !== entries.length)

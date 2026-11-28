@@ -69,7 +69,7 @@ catalogue host or move publication bytes onto the app or API origin.
 Follow the published
 [delivery contract](../mokly-export-delivery.md).
 Every stored file keeps its export-relative path from the
-[artifact path table](./mokly-artifact-compatibility.md#stored-and-served-paths):
+[artifact path table](./mokly-artifact-delivery.md#stored-and-served-paths):
 
 | Request class                                                                  | Result                                                                  |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |

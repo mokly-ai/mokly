@@ -1,17 +1,16 @@
+import { decodeAccessMessage } from "../access/channel.js";
+import { isAccessWorker } from "../access/paths.js";
+
 import { inspectionError } from "./inspection.js";
 import { probeNavigation } from "./links.js";
 import { readMetadata, unavailableMetadata } from "./metadata.js";
 import { probeRuntime } from "./runtime.js";
 import { encodeMessage, validHostMessage, type MessageBody } from "./schema.js";
-import { boundedJson, BYTE_LIMIT, origin } from "./values.js";
+import { boundedJson, BYTE_LIMIT, hostOrigin } from "./values.js";
 /** The sole pre-handshake effect is this bounded message listener. */
 const win = window,
   parent = win.parent;
-const hosts = new URL(win.location.href).searchParams.getAll("mokly-host");
-const host =
-  hosts.length === 1 && origin(hosts[0]) && hosts[0] !== win.location.origin
-    ? hosts[0]
-    : undefined;
+const host = hostOrigin(win.location);
 let nonce: string | undefined;
 let runtime: ReturnType<typeof probeRuntime> | undefined;
 let lastRequest = 0;
@@ -36,6 +35,16 @@ const receive = (event: MessageEvent<unknown>): void => {
     event.ports.length
   )
     return;
+  if (runtime && decodeAccessMessage(event.data)?.type === "token") {
+    try {
+      const worker = win.navigator.serviceWorker?.controller;
+      if (isAccessWorker(worker, win.location.origin))
+        worker.postMessage(event.data);
+    } catch {
+      // The controller may have stopped.
+    }
+    return;
+  }
   const message = boundedJson(event.data);
   if (!validHostMessage(message, nonce)) return;
   const { type } = message;

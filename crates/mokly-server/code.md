@@ -113,7 +113,8 @@ The [crate README](./README.md) describes the public entry points and usage.
 - [`src/shutdown.rs`](./src/shutdown.rs) defines `Lifecycle`, the ordered
   shutdown hooks.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
-  `PackageAssets`, the built viewer inventory, and `Stylesheet`, a generated
+  `PackageAssets`, which loads the viewer scripts and HTML start page from
+  the browser inventory. It also defines `Stylesheet`, a generated
   stylesheet with its `ETag`. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 

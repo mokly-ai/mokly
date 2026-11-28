@@ -14,7 +14,7 @@
   - Browsers that block third-party cookies, such as Safari, refuse the catalogue cookie. Decision 5 shows a final message without the action **Open catalogue in a new tab**.
   - On iPhone and iPad, every browser uses WebKit, which also blocks the cookie.
   - The app and the mockups still show the old card, whose new-tab action never loads a private catalogue in 0.18.0.
-  - These protocol statements describe Decision 5 and wait for this item: `viewer.md` on the final message and on no new tab, `catalogue-hosting.md` on the final message and no new-tab recovery, `product-mockups-viewer.md` on the blocked-cookie card, `viewer-chrome.md` on the final message, and `mokly-artifact-compatibility.md` on the removed action.
+  - These protocol statements describe Decision 5 and wait for this item: `viewer.md` on the final message and on no new tab, `catalogue-hosting.md` on the final message and no new-tab recovery, `product-mockups-viewer.md` on the blocked-cookie card, `viewer-chrome.md` on the final message, and `mokly-artifact-delivery.md` on the removed action.
 - **Problem:** No one has chosen the words of the message, so the Decision 5 card cannot replace the old card.
 - **Impact if no action:** Readers in browsers that block the cookie get a new-tab action that opens a page that never loads.
 - **Root question:** What does the reader read when this browser cannot open a private publication?

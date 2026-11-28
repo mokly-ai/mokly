@@ -1,6 +1,6 @@
 # Embeddable Mokly Viewer
 
-Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. The viewer does not deliver the files of the frame access route yet, and `postMessageAdapter` takes no access options yet. The [Mokly start page, worker and relay milestone](../../plans/private-catalogue-embedded-access.md#milestone-7-mokly-start-page-worker-and-relay) adds them.
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
 
 ## Package And Props
 
@@ -99,9 +99,10 @@ the details. Missing data is never replaced by examples or invented counts.
 Omitted `frameAdapter` uses `sameOriginAdapter()`. Cross-origin hosts
 explicitly provide `postMessageAdapter({ frameOrigin })` under the
 [adapter protocol](./mokly-frame-adapter.md). A host whose frame host needs a
-credential on every file also passes the `access` and `onAccessFailure`
-options of the [frame access contract](./mokly-frame-access.md). One adapter
-can mount several independent frames; it owns no global document state.
+credential on every file except the start page and the access worker also
+passes the `access` and `onAccessFailure` options of the
+[frame access contract](./mokly-frame-access.md). One adapter can mount several
+independent frames; it owns no global document state.
 A preview frame whose mount rejects, or whose session fails after it loaded,
 shows `This preview could not be loaded.` below the frame with `Try again`.
 Try again mounts that frame again and keeps the rest of the shell as it is. An
