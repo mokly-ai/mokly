@@ -234,8 +234,8 @@ class BuildTemplateTests(BuildTemplateProbeFixture, unittest.TestCase):
     def test_definition_and_assertion_use_the_same_template_environment(self):
         docker = (ROOT / "infra/e2b/build/e2b.Dockerfile").read_text()
         definition = (ROOT / "infra/e2b/build/e2b.toml").read_text()
-        self.assertIn("cpu_count = 8\n", definition)
-        self.assertIn("memory_mb = 16384\n", definition)
+        self.assertIn("cpu_count = 4\n", definition)
+        self.assertIn("memory_mb = 8192\n", definition)
         self.assertRegex(definition, r'template_name = "mokly-build-v[1-9][0-9]*"')
         self.assertNotIn("template_id", definition)
         self.assertIn("ENV HOME=" + ASSERTION.TEMPLATE_HOME, docker)

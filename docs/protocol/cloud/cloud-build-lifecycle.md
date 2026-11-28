@@ -99,7 +99,7 @@ inserts the attempt's upload grant, and bumps the check outbox. The upload
 token is generated before the transaction; only its digest is stored.
 
 A large catalogue needs about eleven minutes for checkout, install and render
-on 4 vCPU and on 8 vCPU. Thirty minutes leaves room for the base install of a comparison and
+on 4 vCPU. Thirty minutes leaves room for the base install of a comparison and
 for the upload.
 
 After the claim commits, the worker mints the attempt's Contents-read
