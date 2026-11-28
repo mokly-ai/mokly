@@ -4143,6 +4143,30 @@ own lines of this plan.
   passes a wrapper's `key` through the reserved prop `__moklyKey`, which the
   wrapper strips as it strips `__moklySource`. Reason: React never passes
   `key` to a component.
+- I13. Made on 2026-11-28 for the outcome J of track I decision 3. The
+  transform instruments the components of each repository-owned module that
+  Mokly compiles, on both compile paths, workspace package sources included.
+  It does not change installed packages, also when esbuild bundles them.
+  Reason: both compile paths then mark the same components, and installed
+  code runs as the package ships it.
+- I14. Made on 2026-11-28. A story component that Mokly does not compile
+  keeps a Mokly element of its own type around each use, as today. Reason:
+  only an instrumented body can write the markers of its own output.
+- I15. Made on 2026-11-28. Each element that a screen supplies to a story
+  component use, in `children` or in another prop, is its own implicit slot,
+  named by its prop and its key, or else its position. A supplied element of
+  a compiled component keeps its type and carries its slot in the hidden
+  prop. A supplied HTML element or element of an installed component gets a
+  Mokly mirror. Text joins the use's props digest in its order. Reason: the
+  answer J keeps E's rules for content that the transform cannot mark.
+- I16. Made on 2026-11-28. The switch of option I is the boolean
+  `contentSlots` of the `mokly` parameter, read from the meta over the
+  preview. It is `true` by default. With `false`, the uses of that component
+  get no implicit slots and no mirrors. Each use keeps its instance region
+  with its markers, and the comparison compares that region's whole output
+  in the screen's view. A story's own value does not apply to uses. Reason:
+  every instance keeps a region, as the instances page requires, and a use
+  names its component, not one story.
 - I10. Track I decision 3 settles how a use renders its content. Changed on
   2026-11-28: its answer is a spike of J, with I as the fallback. The spike
   and its check live under `.context/storybook-support/track-i/spike-j/` in
@@ -4525,6 +4549,13 @@ asChild` fail with "render dropped a Mokly marker" when Suspense drops
       that component as their owner, as the render records page requires.
       The spike did not test it, so the build tests it.
     - The build measures the cost of `b` against E on both Node versions.
+- **Outcome:** J, in the form of variant `b`, a call of the primary
+  orchestrator on 2026-11-28 under the user's rule of the same day. Reason:
+  `b` keeps J's choice, to mark each component where it is defined. It
+  passes every tested identity case on both compilers and both Node
+  versions, and it beats E and the spike's J on the other tested cases.
+  Track I decisions 10 and 11 apply to E, I, and J alike, so they do not
+  change the choice. The user can still ask for I.
 
 The design note of 2026-11-26 for the answer H, with its spike and its
 options check, found that H breaks requirements in force and needs the
