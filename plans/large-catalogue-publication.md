@@ -4,7 +4,7 @@ Status: Active, on the branch `calummoore/catalogue-size-plan-to-fit-the-upload-
 
 Mokly Cloud refuses the catalogue of a large project. On 2026-11-27, the repository `Firna-AI/conductive` at commit `3371d05f` built with `@mokly/mokly` 0.21.0 into 1,746 MB in 11,030 files. The receiver accepts 512 MiB, about 537 MB, of declared bytes. The index was 48.7 MB with 2,162,642 JSON nodes, and the receiver accepts 8 MiB and 262,144 nodes. A pull-request build wrote 26,070 files, above the ceiling of 20,000, because it copies every document two more times. Conductive had 72 entry files on 2026-11-08 and 664 on 2026-11-27.
 
-This plan makes two changes together, as the user chose for item 1 on 2026-11-28. The user also answered items 2 to 9 and 11 on that date. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for the answer to item 2. Every other recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
+This plan makes two changes together, as the user chose for item 1 on 2026-11-28. The user also answered items 2 to 11 on that date. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for the answer to item 2. Every other recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
 
 The plan does not change the build template, the attempt deadline, or the memory of the native process. The workspaces "Build capacity: bigger template and deadline" and "Build capacity: bounded render memory" own them. The plan does not render both colour schemes from one document.
 
@@ -122,7 +122,7 @@ Every item shares these assumptions, unless an item names an option that drops o
 
 ## Decisions
 
-On 2026-11-28 the user answered items 1 to 9 and 11. Implementation starts only after the user answers item 10. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
+On 2026-11-28 the user answered items 1 to 11. Implementation starts after the rewrite of the milestones and a fresh plan review. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
 
 | #   | Item                                             | Source | Severity | Effort | Recommended                                                                                |
 | --- | ------------------------------------------------ | ------ | -------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -135,7 +135,7 @@ On 2026-11-28 the user answered items 1 to 9 and 11. Implementation starts only 
 | 7   | Old publications break at the cutover            | Review | High     | Medium | A, chosen on 2026-11-28: keep old publications, and each branch publishes at its next push |
 | 8   | A format change breaks the cloud until a release | Design | Medium   | Small  | A, chosen on 2026-11-28: one pull request, then a release                                  |
 | 9   | A large build takes far longer than 1 minute     | Design | High     | Small  | A, chosen on 2026-11-28: no time target, and Milestone 8 measures                          |
-| 10  | Usage lists repeat each consumer                 | Review | Medium   | Small  | D: one row for each consumer group that the viewer shows today                             |
+| 10  | Usage lists repeat each consumer                 | Review | Medium   | Small  | D, chosen on 2026-11-28: one row for each consumer group that the viewer shows today       |
 | 11  | Compact JSON changes every detail id             | Design | Low      | Small  | A, chosen on 2026-11-28: the ids hash the compact bytes                                    |
 
 ### 1. A large catalogue cannot publish
@@ -492,6 +492,7 @@ On 2026-11-28 the user answered items 1 to 9 and 11. Implementation starts only 
 - **Related:** Items 1 and 3: the totals of this plan use D.
 - **Recommendation:** D. It gives exactly the rows that the viewer shows, and it saves 52 MB more than F. F keeps the rule of `mokly-live-evidence.md`.
 - **Action:** ask the user, because D changes a rule in force, and F keeps that rule at 52 MB more.
+- **Decision:** D, chosen by the user on 2026-11-28, after the user checked that a component's page still lists every consumer.
 
 ### 11. Compact JSON changes every detail id
 
