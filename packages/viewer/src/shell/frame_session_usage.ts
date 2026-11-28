@@ -9,8 +9,13 @@ import type {
   ShellFrameSession,
 } from "./frame_registry.js";
 
-/** Lifecycle status that a mounted frame reports to its React owner. */
-export type ShellFrameStatus = "error" | "loading" | "ready" | "unavailable";
+/**
+ * Lifecycle status that a mounted frame reports to its React owner. An
+ * outdated frame failed because an earlier Mokly built its page, so trying
+ * again cannot help.
+ */
+export type ShellFrameStatus =
+  "error" | "loading" | "outdated" | "ready" | "unavailable";
 
 /** Frame session with the private state its mount and usage updates share. */
 export interface ActiveSession extends ShellFrameSession {

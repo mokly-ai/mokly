@@ -4,7 +4,8 @@ import { StrictMode } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
-import type { FrameEvent } from "@mokly/frame";
+import type { FrameErrorCode, FrameEvent } from "@mokly/frame";
+import { FrameError } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
@@ -48,7 +49,8 @@ interface FrameHookHarness {
   emit(id: string, event: FrameEvent): string[];
   highlight(id: string): Promise<void>;
   ready(id: string): Promise<string>;
-  rejectMount(id: string): void;
+  /** Reject the pending mount, with a frame error when a code is given. */
+  rejectMount(id: string, code?: FrameErrorCode): void;
   rejectUpdate(id: string): void;
   replaceDocument(id: string, kind: "identity" | "source"): void;
   remove(id: string): void;
@@ -115,8 +117,10 @@ export function installFrameHookHarness(): void {
             : "rejected",
       );
     },
-    rejectMount: (id) =>
-      requiredHost(id).pendingMounts.shift()?.reject(new Error("mount failed")),
+    rejectMount: (id, code) =>
+      requiredHost(id)
+        .pendingMounts.shift()
+        ?.reject(code ? new FrameError(code) : new Error("mount failed")),
     rejectUpdate: (id) =>
       requiredHost(id).pendingUpdates.shift()?.reject(new Error("obsolete")),
     replaceDocument: (id, kind) => {

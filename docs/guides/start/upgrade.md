@@ -178,8 +178,9 @@ box of a document. It can also forward canvas input and focus to the host.
 These changes move its wire version from 3 to 4. Version 4 adds the
 `measure` and `measure-content` requests, the `box-model` and `content-box`
 replies, and the `canvas-wheel`, `canvas-pinch`, `canvas-key`, `canvas-focus`
-and `canvas-blur` events. Pages that an earlier release built and the viewer
-of this release reject one another.
+and `canvas-blur` events. Through `postMessageAdapter`, which Mokly Cloud
+uses, pages that an earlier release built and the viewer of this release
+reject one another.
 
 - Rebuild and republish every hosted catalogue with this release. Upgrade
   `@mokly/viewer` in each embedding application to the same release at the

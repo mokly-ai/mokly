@@ -58,3 +58,25 @@ test("a failed load of a static depiction offers Try again as a link", () => {
     '<p class="mbk-frame-error mbk-reset" role="status">This preview could not be loaded. <a class="mbk-empty-link mbk-reset" href="../loading/">Try again</a></p>',
   );
 });
+
+test("a frame that an earlier Mokly built names the way on, without Try again", () => {
+  render(
+    <CanvasFrame
+      error={false}
+      height={844}
+      kind="mobile"
+      label="Mobile · Light"
+      outdated
+      retry={{ onClick: () => undefined }}
+      scheme="light"
+      width={390}
+    >
+      <i>frame</i>
+    </CanvasFrame>,
+  );
+  assert.equal(
+    screen.getByRole("status").textContent,
+    "This preview was built with an older version of Mokly. Update Mokly in the project, then publish it again.",
+  );
+  assert.equal(screen.queryAllByRole("button").length, 0);
+});
