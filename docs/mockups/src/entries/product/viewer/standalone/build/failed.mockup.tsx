@@ -47,7 +47,7 @@ export default defineScreen({
       slug: "timed-out",
       title: "Build · Failed · Timed out",
       description:
-        "Build — a pull request's build whose publish ran into the fifteen-minute limit; the runner's own line says where it stopped.",
+        "Build — a pull request's build whose publish ran into the sixty-minute limit; the runner's own line says where it stopped.",
       tags: ["product", "canvas", "viewer", "timed-out"],
       props: { state: "timed-out" },
     },

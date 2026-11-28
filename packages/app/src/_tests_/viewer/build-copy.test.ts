@@ -30,7 +30,7 @@ test("each failure cause has its sentence", () => {
     "uncommitted-changes":
       "The build left files that Git doesn’t ignore; add them to .gitignore.",
     "output-limit": "The build printed too much output; print less to publish.",
-    deadline: "The build stopped at its 15-minute limit.",
+    deadline: "The build stopped at its 60-minute limit.",
     idle: "The build stopped after going quiet.",
     infrastructure: "Mokly couldn’t run this build.",
     "repository-unavailable":

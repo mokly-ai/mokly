@@ -224,7 +224,7 @@ async fn idle_budget_is_never_above_the_remaining_deadline() {
 }
 
 #[tokio::test]
-async fn every_process_and_sandbox_lifetime_is_capped_at_3600_seconds() {
+async fn every_process_is_capped_at_3600_seconds_and_the_sandbox_at_3720() {
     let mut request = request();
     request.deadline_at += TimeDelta::seconds(10000);
     let mut calls = complete();

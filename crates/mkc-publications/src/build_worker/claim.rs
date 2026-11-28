@@ -16,7 +16,7 @@ use super::reason::{self, log};
 use super::service::{BuildClaim, ClaimedBuild, DatabaseBuildWorker};
 
 /// Maximum duration of a build attempt, in minutes.
-const ATTEMPT_DEADLINE_MINUTES: i64 = 30;
+const ATTEMPT_DEADLINE_MINUTES: i64 = 60;
 
 impl BuildEligibility for DatabaseBuildWorker {
     fn configured(&self) -> bool {

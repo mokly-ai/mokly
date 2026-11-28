@@ -28,6 +28,9 @@ use crate::process::{ProcessDriver, ProcessExecutor, remaining};
 use crate::publish::Publisher;
 use crate::session::{BuildSession, Session};
 
+/// Seconds by which the sandbox outlives the attempt deadline.
+const SANDBOX_CLEANUP_MARGIN_SECONDS: u64 = 120;
+
 /// The sandbox capabilities that a build attempt uses, usually one shared backend.
 #[derive(Clone)]
 pub struct BuildSandboxCapabilities {
@@ -95,7 +98,7 @@ impl BuildRunner for SandboxBuildRunner {
                 owner: ResourceOwner::platform(request.project_id.0),
                 consumer: SandboxConsumer::Runtime,
                 lifetime: SandboxLifetime::OneShot {
-                    max_lifetime: Duration::from_secs((seconds + 120).min(3600)),
+                    max_lifetime: Duration::from_secs(seconds + SANDBOX_CLEANUP_MARGIN_SECONDS),
                 },
                 deployment_id: self.deployment_id.clone(),
                 profile: "build".into(),

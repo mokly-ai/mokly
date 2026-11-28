@@ -44,7 +44,7 @@ describes.
 | Publish   | Your installed `mokly`, or the version Mokly Cloud pins when the repository installs none         |
 
 Projects that install with Bun publish from CI, and a repository's own Mokly
-must be 0.18.0 or later. Each build has fifteen minutes. Checking out stops
+must be 0.18.0 or later. Each build has sixty minutes. Checking out stops
 after two minutes without output and installing after five. A workspace
 runs two builds at a time; more wait their turn.
 
