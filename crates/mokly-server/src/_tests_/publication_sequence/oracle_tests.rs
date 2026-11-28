@@ -143,7 +143,7 @@ async fn several_edits_keep_every_byte_and_id_and_shared_details_keep_their_buil
     }
     insta::with_settings!({
         description => "The served bytes and the detail ids equal those of the publication \
-            algorithm at main 794b30a91. Each typed revision follows the sharing rule of the \
+            algorithm at main 794b30a91, encoded as compact JSON. Each typed revision follows the sharing rule of the \
             mokly-server README: a shared detail keeps the typed revision of the publication that \
             built it.",
     }, {

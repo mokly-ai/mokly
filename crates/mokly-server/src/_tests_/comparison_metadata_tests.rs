@@ -1,4 +1,4 @@
-//! A classification generation holds removed details with two-space indentation and no review file.
+//! A classification generation holds compact removed details and no review file.
 
 use std::sync::Arc;
 

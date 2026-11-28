@@ -25,7 +25,9 @@
     `propSchema`, `props`, and `controls` into every screen, component,
     and variant record of the index.
   - On 2026-11-01, `main` at `c553bd6f` built `examples/basic`. The index
-    was 2,092,783 bytes, 126,588 bytes with gzip. All 85 variants, of 25
+    was 2,092,783 bytes, 126,588 bytes with gzip. These sizes are of
+    two-space JSON. Since 2026-11-29 every output JSON file is compact, and
+    the example index is about 1,162,000 bytes. All 85 variants, of 25
     parents, had the same prop schema and `controls` as their parent.
   - Without those variant copies the index is 985,133 bytes, 80,039 bytes
     with gzip.
@@ -70,8 +72,6 @@
 - **Previous examples:** PR #223 kept a component's usage lists only in its
   parent detail, the same class of copy in the entry details.
 - **Related:**
-  - [compact-json-output.md](./compact-json-output.md): with both changes
-    the example index is 528,842 bytes.
   - [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md): it
     also needs a new index number. One release can carry both.
 - **Recommendation:** B. It removes the copies with the smallest format

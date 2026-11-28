@@ -1,6 +1,5 @@
 ---
 source: crates/mokly-static/src/_tests_/comparison/output_tests.rs
-assertion_line: 100
 expression: snapshot
 ---
 mokly-viewer/diffs/generations/a511f32ca6512c027d5ef4db80de83637bf4e20abd23ad661a6ab263fb543655/entries/old.json d1c31e25eb17ec567300a62175f44510619fcf7dffc055fe6ee9cc8651680c12

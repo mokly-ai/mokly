@@ -1,7 +1,6 @@
 ---
 source: crates/mokly-server/src/_tests_/publication_sequence/oracle_tests.rs
-assertion_line: 150
-description: "The served bytes and the detail ids equal those of the publication algorithm at main 794b30a91. Each typed revision follows the sharing rule of the mokly-server README: a shared detail keeps the typed revision of the publication that built it."
+description: "The served bytes and the detail ids equal those of the publication algorithm at main 794b30a91, encoded as compact JSON. Each typed revision follows the sharing rule of the mokly-server README: a shared detail keeps the typed revision of the publication that built it."
 expression: output
 ---
 === edit 0: rebuild, revision 1 ===
