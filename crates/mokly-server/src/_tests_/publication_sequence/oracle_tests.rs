@@ -5,6 +5,7 @@ use std::fmt::Write;
 use std::sync::Arc;
 
 use axum::body::to_bytes;
+use mokly_model::canonical_view;
 use mokly_model::namespace::viewer;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::usage::CatalogueUsage;
@@ -41,12 +42,9 @@ async fn record(output: &mut String, label: &str, snapshot: &Snapshot) {
             .to_owned();
         let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
         assert_eq!(length, body.len().to_string(), "{label}: {route}");
-        writeln!(
-            output,
-            "--- {route} ---\n{}",
-            std::str::from_utf8(&body).unwrap()
-        )
-        .unwrap();
+        let text = std::str::from_utf8(&body).unwrap();
+        let view = canonical_view::pretty(text).unwrap_or_else(|| panic!("{label}: {route}"));
+        writeln!(output, "--- {route} ---\n{view}").unwrap();
     }
     assert!(snapshot.files.contains_key(&viewer("index.json")));
 }

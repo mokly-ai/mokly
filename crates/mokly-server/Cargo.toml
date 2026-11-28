@@ -41,6 +41,7 @@ xxhash-rust = { version = "0.8.19", default-features = false, features = ["xxh3"
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }
+mokly-model = { workspace = true, features = ["test-support"] }
 mokly-graph = { workspace = true, features = ["mock"] }
 mokly-html = { workspace = true }
 mokly-css = { workspace = true }

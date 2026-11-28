@@ -23,3 +23,7 @@ url = "2.5.8"
 
 [dev-dependencies]
 insta = "1.49.0"
+
+[features]
+# Exposes `canonical_view` to the snapshot tests of other crates.
+test-support = []

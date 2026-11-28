@@ -2,9 +2,9 @@
 
 use serde_json::{Value, json};
 
-use crate::canonical;
 use crate::read_contract::ContractViolation;
 use crate::readers::{ReadError, detail, index};
+use crate::{canonical, canonical_view};
 
 pub(super) fn empty_index() -> Value {
     json!({"schemaVersion":9,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
@@ -42,9 +42,10 @@ fn index_round_trips_empty_arrays_null_comparison_and_variant_tree() {
         json!([{"kind":"entry","path":"home","children":[{"kind":"entry","path":"home/one"}]}]);
     let decoded = index(&value.to_string()).unwrap();
     assert_eq!(serde_json::to_value(&decoded).unwrap(), value);
+    let bytes = canonical::to_string(&decoded).unwrap();
     insta::assert_snapshot!(
         "public_index_with_variant",
-        canonical::to_string(&decoded).unwrap()
+        canonical_view::pretty(&bytes).unwrap()
     );
 }
 

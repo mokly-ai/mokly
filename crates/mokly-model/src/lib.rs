@@ -4,6 +4,8 @@
 
 pub mod axes;
 pub mod canonical;
+#[cfg(any(test, feature = "test-support"))]
+pub mod canonical_view;
 pub mod catalogue;
 pub mod controls;
 pub mod data;

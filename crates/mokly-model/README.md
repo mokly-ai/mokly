@@ -190,6 +190,11 @@ cargo test -p mokly-model
 cargo xtask generate-types
 ```
 
+A snapshot test of canonical JSON shows the bytes through
+`canonical_view::pretty`. It returns an indented view only when the bytes are
+canonical, so the view still pins every byte. Tests of other crates enable it
+with the `test-support` feature in their dev-dependencies.
+
 ### Key Code
 
 - [`src/versions.rs`](./src/versions.rs) holds every independent format
@@ -197,6 +202,8 @@ cargo xtask generate-types
 - [`src/canonical.rs`](./src/canonical.rs) provides `to_string`, the
   canonical JSON encoder, and `detail_preimage`, the zeroed canonical bytes
   shared by detail hashing and Serve publication.
+- [`src/canonical_view.rs`](./src/canonical_view.rs) provides `pretty`, the
+  readable snapshot view of checked canonical JSON, under `test-support`.
 - [`src/validation.rs`](./src/validation.rs) defines `PropValidator`, the one
   validator for the `PropSchema` profile of
   [`src/prop_schema.rs`](./src/prop_schema.rs) and for complete props.
