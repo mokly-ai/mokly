@@ -52,6 +52,8 @@ export function postMessageAdapter(options: {
       const listeners = new Set<(event: FrameEvent) => void>(
         view.onEvent ? [view.onEvent] : [],
       );
+      const controller = new AbortController();
+      const { signal } = controller;
       let initialSubscription = view.onEvent;
       let ready = false,
         disposed = false;
@@ -81,13 +83,9 @@ export function postMessageAdapter(options: {
           }
         }
         disposed = true;
-        view.signal?.removeEventListener("abort", unload);
+        controller.abort();
         handshake.dispose();
         finishRestore();
-        win.removeEventListener("message", receive);
-        win.removeEventListener("pagehide", hide);
-        win.removeEventListener("pageshow", restore);
-        frame.removeEventListener("load", handshake.load);
         transport.dispose(code);
         releaseRenewal?.();
         release();
@@ -246,11 +244,11 @@ export function postMessageAdapter(options: {
       const releaseRenewal = renewal?.add(win, (message) => {
         if (ready) post(message);
       });
-      view.signal?.addEventListener("abort", unload, { once: true });
-      win.addEventListener("message", receive);
-      win.addEventListener("pagehide", hide);
-      win.addEventListener("pageshow", restore);
-      frame.addEventListener("load", handshake.load);
+      view.signal?.addEventListener("abort", unload, { once: true, signal });
+      win.addEventListener("message", receive, { signal });
+      win.addEventListener("pagehide", hide, { signal });
+      win.addEventListener("pageshow", restore, { signal });
+      frame.addEventListener("load", handshake.load, { signal });
       frame.setAttribute("sandbox", "allow-same-origin allow-scripts");
       try {
         if (!frame.contentWindow) throw new FrameError("unavailable");

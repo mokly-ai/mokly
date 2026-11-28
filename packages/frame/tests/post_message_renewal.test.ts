@@ -170,6 +170,7 @@ test("visible pages and pageshow renew immediately and disposal removes their li
   assert.equal(await measurement, null);
 
   mounted.dispose();
+  frame.assertListenersRemoved();
   assert.deepEqual(
     removeDocumentListener.mock.calls.map(({ arguments: [type] }) => type),
     ["visibilitychange"],

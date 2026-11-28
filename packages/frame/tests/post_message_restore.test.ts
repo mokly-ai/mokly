@@ -56,6 +56,7 @@ test("a non-persisted host hide still disposes the session", async (context) => 
   frame.window.dispatchEvent(pageTransition("pagehide", false));
   assert.deepEqual(frame.messageTypes(), ["hello", "list", "dispose"]);
   await pending;
+  frame.assertListenersRemoved();
   frame.window.dispatchEvent(pageTransition("pageshow"));
   assert.deepEqual(frame.messageTypes(), ["hello", "list", "dispose"]);
 });

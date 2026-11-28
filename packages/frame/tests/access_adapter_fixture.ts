@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+import { getEventListeners } from "node:events";
 import type { TestContext } from "node:test";
 
 import { fakeFrame, frameView } from "../../../tests/helpers/fake_frame.js";
@@ -26,6 +28,13 @@ export function deferred<T>() {
   return { promise, resolve };
 }
 
+function assertNoListeners(target: EventTarget, type: string, owner: string) {
+  const names = getEventListeners(target, type).map(
+    (listener) => listener.name,
+  );
+  assert.deepEqual(names, [], `${owner} ${type} listeners`);
+}
+
 export function accessFrame(adapter: FrameAdapter) {
   const fake = fakeFrame({ useMockTimers: true });
   const abort = new AbortController();
@@ -40,6 +49,13 @@ export function accessFrame(adapter: FrameAdapter) {
     ...fake,
     mount,
     abort: () => abort.abort(),
+    assertListenersRemoved() {
+      for (const type of ["pageshow", "pagehide", "message"])
+        assertNoListeners(fake.window, type, "window");
+      assertNoListeners(fake.frame, "load", "frame");
+      assertNoListeners(fake.document, "visibilitychange", "document");
+      assertNoListeners(abort.signal, "abort", "view signal");
+    },
     access: sendAccess,
     async start() {
       fake.load();

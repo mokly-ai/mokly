@@ -76,16 +76,17 @@ export function accessRenewal(access: () => Promise<AccessToken>) {
     else schedule();
   }
   function listen(win: Window): ReceiverGroup {
+    const controller = new AbortController();
+    const { signal } = controller;
     const visible = () => {
       if (win.document.visibilityState === "visible") checkDue();
     };
-    win.document.addEventListener("visibilitychange", visible);
-    win.addEventListener("pageshow", checkDue);
+    win.document.addEventListener("visibilitychange", visible, { signal });
+    win.addEventListener("pageshow", checkDue, { signal });
     const group: ReceiverGroup = {
       frames: new Set(),
       stopListening() {
-        win.document.removeEventListener("visibilitychange", visible);
-        win.removeEventListener("pageshow", checkDue);
+        controller.abort();
       },
     };
     receivers.set(win, group);
