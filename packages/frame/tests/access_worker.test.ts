@@ -181,6 +181,35 @@ test("a rejected navigation keeps the newer token written after it was sent", as
   );
 });
 
+test("the worker keeps a renewal queued during the rejected token read", async () => {
+  const storage = tokenDatabase();
+  const start = new Response("start");
+  let renewal: Promise<unknown> | undefined;
+  const worker = accessWorker(code, storage, (request) => {
+    if (request.url === startUrl) return start;
+    if (request.url !== screen) return new Response("content");
+    storage.onNextGet(() => {
+      renewal = worker.send(token("renewed", 11));
+    });
+    return new Response(null, { status: 401 });
+  });
+  await worker.send(token("old", 10));
+  assert.equal(await worker.fetch(navigationRequest()), start);
+  assert.equal(worker.requests[0]?.headers.get("Authorization"), "Bearer old");
+  assert.ok(renewal, "Expected a waitUntil promise for the renewal");
+  await renewal;
+  assert.deepEqual(worker.acknowledgements, [
+    { data: tokenStored, writes: 1 },
+    { data: tokenStored, writes: 2 },
+  ]);
+
+  await worker.fetch(new Request(`${frameOrigin}/image.png`));
+  assert.equal(
+    worker.requests.at(-1)?.headers.get("Authorization"),
+    "Bearer renewed",
+  );
+});
+
 test("a rejected navigation with its own authorization keeps a matching stored token", async () => {
   const start = new Response("start");
   const worker = accessWorker(code, tokenDatabase(), (request) =>

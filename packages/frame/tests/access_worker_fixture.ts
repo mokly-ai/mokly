@@ -10,12 +10,24 @@ type AbortPoint = "before-request" | "after-put";
 export function tokenDatabase() {
   const indexedDB = new IDBFactory();
   const writes: unknown[] = [];
+  let nextGet: (() => void) | undefined;
   let nextAbort: AbortPoint | undefined;
   let abortedPuts = 0;
   let committedDeletes = 0;
   let abortedTransactions = 0;
 
-  function observeWrites(transaction: IDBTransaction) {
+  function observeTransaction(transaction: IDBTransaction) {
+    const store = transaction.objectStore("tokens");
+    const get = store.get.bind(store);
+    store.get = (key) => {
+      const request = get(key);
+      const callback = nextGet;
+      nextGet = undefined;
+      callback?.();
+      return request;
+    };
+
+    if (transaction.mode !== "readwrite") return;
     const abortAt = nextAbort;
     nextAbort = undefined;
     const pendingWrites: unknown[] = [];
@@ -29,7 +41,6 @@ export function tokenDatabase() {
     });
     if (abortAt === "before-request") queueMicrotask(() => transaction.abort());
 
-    const store = transaction.objectStore("tokens");
     const put = store.put.bind(store);
     store.put = (value: unknown, key) => {
       const request = put(value, key);
@@ -58,7 +69,7 @@ export function tokenDatabase() {
       const transact = database.transaction.bind(database);
       database.transaction = (storeNames, mode, options) => {
         const transaction = transact(storeNames, mode, options);
-        if (mode === "readwrite") observeWrites(transaction);
+        observeTransaction(transaction);
         return transaction;
       };
     });
@@ -68,6 +79,9 @@ export function tokenDatabase() {
   return {
     indexedDB,
     writes,
+    onNextGet(callback: () => void) {
+      nextGet = callback;
+    },
     abortNextTransaction(point: AbortPoint = "before-request") {
       nextAbort = point;
     },
