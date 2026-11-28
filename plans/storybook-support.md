@@ -4160,13 +4160,30 @@ own lines of this plan.
   Mokly mirror. Text joins the use's props digest in its order. Reason: the
   answer J keeps E's rules for content that the transform cannot mark.
 - I16. Made on 2026-11-28. The switch of option I is the boolean
-  `contentSlots` of the `mokly` parameter, read from the meta over the
-  preview. It is `true` by default. With `false`, the uses of that component
-  get no implicit slots and no mirrors. Each use keeps its instance region
-  with its markers, and the comparison compares that region's whole output
-  in the screen's view. A story's own value does not apply to uses. Reason:
-  every instance keeps a region, as the instances page requires, and a use
-  names its component, not one story.
+  `contentSlots` of the `mokly` parameter. Mokly reads it from the composed
+  parameters of the entry's parent page, so the preview and the meta set it
+  for the whole entry. It is `true` by default. A value that is not a
+  boolean gives the `storybook-parameter-ignored` warning with the reason
+  "not a boolean", and the entry uses `true`. With `false`, the uses of that
+  component get no implicit slots and no mirrors. Each use keeps its
+  instance region with its markers, and in the consumer's comparison that
+  region is transparent: its output compares as the consumer's own output,
+  and the instance regions inside it keep their own projection. Reason:
+  every instance keeps a region, as the instances page requires, a use names
+  its component, not one story, and other entry-level settings already come
+  from the parent page. Decision B4 covers the warning.
+- I17. Made on 2026-11-28. React 19 copies the props without `ref`, and
+  without Symbol keys, before it calls a `forwardRef` render function or
+  builds a class instance. So the shim also records the invocation of a
+  story component element with an explicit `ref` in a weak map keyed by the
+  ref value. The instrumented render function of `forwardRef` takes the one
+  record whose props equal the props that it receives, key by key. No match,
+  or more than one, records no use. The ref value never changes. A class
+  component with an explicit `ref` records no use on the server, because
+  React gives it neither the ref nor the original props there.
+  [story-class-uses-with-refs.md](follow-ups/story-class-uses-with-refs.md)
+  records that limit. Reason: a wrong attribution is worse than a missing
+  use, and a missing use keeps its output in the screen's comparison.
 - I10. Track I decision 3 settles how a use renders its content. Changed on
   2026-11-28: its answer is a spike of J, with I as the fallback. The spike
   and its check live under `.context/storybook-support/track-i/spike-j/` in

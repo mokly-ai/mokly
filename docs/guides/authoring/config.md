@@ -195,6 +195,7 @@ The configuration declares no output directory and no build recipe.
 | `postcss`                   | A local module that supplies consumer PostCSS plugins                       |
 | `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`             |
 | `moduleResolution`          | Consumer aliases, package lookup, extensions, loaders, and `sourcePackages` |
+| `instanceNameProps`         | The props that name a story component use, in order                         |
 | `review.base`               | The Git ref used to find the comparison base                                |
 | `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false           |
 | `watch`                     | Additional watch rules and the debounce interval                            |
