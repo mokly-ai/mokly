@@ -126,11 +126,12 @@ configured links, or after the shared links and before the scheme-specific
 links. Each declared CSS file is a delivery root under the
 [imported stylesheet contract](./mokly-imported-styles.md). Its href is a
 relative URL from the document route to `styles/<repository-relative CSS
-path>` inside `static/mokly-generated/`, with the same per-segment URL
-encoding as configured local stylesheet links. Under the Vite adapter, a
-declared stylesheet whose path does not end in `.css` delivers at that route
-plus `.css`, under the
-[route rules](./mokly-imported-styles.md#routes-and-ownership).
+path>` inside `static/mokly-generated/`, with the path in the route form and
+the same per-segment URL encoding as configured local stylesheet links. Under
+the Vite adapter, a declared stylesheet whose path does not end in `.css`
+delivers at that route plus `.css`. The
+[route rules](./mokly-imported-styles.md#routes-and-ownership) define the
+route form and this suffix.
 The renderer module wraps React
 renders and emits no
 links, so no authored link is reused or anchored on; the configured

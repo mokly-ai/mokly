@@ -10,12 +10,7 @@ fn exports_from_one_module_share_one_stylesheet_root() {
         ("two".into(), vec!["other.css".into()]),
     ]
     .into();
-    let roots = super::roots(
-        &modules,
-        None,
-        &["one".into(), "one".into(), "two".into()],
-        &BTreeMap::new(),
-    );
+    let roots = super::scan_roots(&modules, ["one", "one", "two"], &BTreeMap::new(), false);
     assert_eq!(
         roots
             .iter()

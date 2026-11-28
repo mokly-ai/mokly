@@ -44,6 +44,8 @@ pub(crate) fn finish(
             imported_assets: bundle.imported_assets.clone(),
             environment: bundle.render.environment.clone(),
             resolution_digests: bundle.render.resolution_digests.clone(),
+            storybook_previews: bundle.render.storybook_previews.clone(),
+            preview_stylesheet_digests: bundle.render.preview_stylesheet_digests.clone(),
             class_map_digests: bundle.render.class_map_digests.clone(),
             runtime_packages: bundle.render.runtime_packages.clone(),
             unattributed: BTreeSet::new(),

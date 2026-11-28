@@ -115,7 +115,8 @@ impl Preparation<'_> {
                 ),
             });
         }
-        if !paths::portable(&target, true) {
+        let asset_route = paths::route("assets", &target);
+        if !paths::portable(&asset_route, true) {
             return Err(CssError::Asset {
                 kind: AssetFailure::Route,
                 message: format!(
@@ -123,8 +124,7 @@ impl Preparation<'_> {
                 ),
             });
         }
-        let asset_route = format!("assets/{target}");
-        if !self.result.assets.contains_key(&asset_route) {
+        if !self.result.assets.contains_key(&target) {
             let node = self.confined_node(&target).ok_or_else(failure)?;
             let digest = self
                 .compiler
@@ -147,7 +147,7 @@ impl Preparation<'_> {
                 }
             }
             self.result.assets.insert(
-                asset_route.clone(),
+                target.clone(),
                 OpaqueAsset {
                     path: target.clone(),
                     source: node.identity,
@@ -156,7 +156,7 @@ impl Preparation<'_> {
                 },
             );
         }
-        if let Some(asset) = self.result.assets.get(&asset_route) {
+        if let Some(asset) = self.result.assets.get(&target) {
             for alias in &asset.aliases {
                 self.result
                     .imported_by

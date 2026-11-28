@@ -8,6 +8,7 @@ use ts_rs::TS;
 
 use crate::methods::{Bundle, BundleCapture};
 use crate::results::Module;
+use crate::storybook::PreviewSelection;
 use crate::vite_env::ViteEnvInput;
 
 /// One physical filesystem observation used only to validate compilation reuse.
@@ -145,6 +146,14 @@ pub struct CompiledGeneration {
     pub sources: BTreeMap<String, String>,
     /// Resolved external peers, under the original resolution policy.
     pub peers: BTreeMap<String, Option<String>>,
+    /// Physical `@storybook/react` entry selected through each folder's framework.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(optional, as = "Option<BTreeMap<String, String>>")]
+    pub storybook_react: BTreeMap<String, String>,
+    /// Original preview selection and missing candidates for each compiled folder.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(optional, as = "Option<BTreeMap<String, PreviewSelection>>")]
+    pub storybook_previews: BTreeMap<String, PreviewSelection>,
     /// Physical digest-only compilation and peer inputs, including absent preview candidates.
     pub inputs: BTreeMap<String, Option<String>>,
     /// Logical extra inputs for the Rust reuse check.
@@ -249,6 +258,7 @@ impl CompiledGeneration {
         self.identity == other.identity
             && self.toolchain == other.toolchain
             && self.metadata_identity == other.metadata_identity
+            && self.storybook_previews == other.storybook_previews
             && self.reuse_evidence.complete == other.reuse_evidence.complete
             && self.reuse_evidence.uncaptured == other.reuse_evidence.uncaptured
             && self.reuse_evidence.inputs == other.reuse_evidence.inputs

@@ -68,6 +68,7 @@ export class ViteContext {
       paths,
       runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
       entry: entry ?? "",
+      entryImports: new Map(),
       files: new Map(),
       pluginInputs: new Map(),
       diagnostic: this.diagnostic,
@@ -78,22 +79,34 @@ export class ViteContext {
       peers: {},
     };
     this.input = input;
-    const {
-      entryFiles: _entryFiles,
-      storiesFiles: _storiesFiles,
-      evaluation: _evaluation,
-      viteInputs,
-      ...settings
-    } = params;
-    const { rebuildFiles: _rebuildFiles, ...setupInputs } = viteInputs ?? {};
+    const setupFields = {
+      vite: true,
+      viteInputs: true,
+      evaluation: false,
+      entryFiles: false,
+      renderer: true,
+      storiesFiles: false,
+      storybookFolders: false,
+      moduleResolution: true,
+      sourceRoot: true,
+      configurationDirectory: true,
+      repositoryRoots: true,
+    } satisfies Record<keyof BundleParams, boolean>;
+    const { rebuildFiles: _rebuildFiles, ...setupInputs } =
+      params.viteInputs ?? {};
+    const values: Record<string, unknown> = {
+      ...params,
+      sourceRoot: paths.sourceRoot,
+      configurationDirectory: directory,
+      repositoryRoots: paths.repositoryRoots,
+      viteInputs: setupInputs,
+    };
     const key = JSON.stringify([
-      {
-        ...settings,
-        sourceRoot: paths.sourceRoot,
-        configurationDirectory: directory,
-        repositoryRoots: paths.repositoryRoots,
-        viteInputs: setupInputs,
-      },
+      Object.fromEntries(
+        Object.entries(setupFields).flatMap(([name, included]) =>
+          included ? [[name, values[name]]] : [],
+        ),
+      ),
       paths.dependencyRoots,
       paths.dependencyRoot,
       Object.entries(require.snapshot()).sort(([left], [right]) =>

@@ -52,11 +52,27 @@ fn an_edit_to_a_linked_preview_moves_only_the_story_keys() {
     let root = consumer.root().to_path_buf();
     fs::rename(root.join(".storybook"), root.join("storybook")).unwrap();
     link_directory(&root.join("storybook"), &root.join(".storybook"));
+    consumer.replace(
+        ".storybook/preview.tsx",
+        "import type",
+        "import './theme.css';\nimport type",
+    );
+    consumer.write("storybook/theme.css", "p { color: teal }");
+    let initial = consumer.generation(consumer.prepare().unwrap());
+    assert_eq!(
+        initial
+            .resource("styles/storybook/preview.tsx.css")
+            .unwrap(),
+        Some(b"p {\n  color: teal;\n}\n".to_vec()),
+    );
     let before = keys(&consumer);
     consumer.replace(".storybook/preview.tsx", "\"one\"", "\"two\"");
     let expected: BTreeSet<_> = ["label", "label/Secondary"]
         .into_iter()
         .map(str::to_owned)
         .collect();
-    assert_eq!(moved(&before, &keys(&consumer)), expected);
+    let after = keys(&consumer);
+    assert_eq!(moved(&before, &after), expected);
+    consumer.write("storybook/theme.css", "p { color: maroon }");
+    assert_eq!(moved(&after, &keys(&consumer)), expected);
 }

@@ -98,6 +98,7 @@ fn plan_records_match_resolution_settings_and_require_current_evidence() {
             "stories",
             Bundle {
                 stories_files: vec!["story.ts".into()],
+                storybook_folders: Default::default(),
                 ..original.clone()
             },
             true,

@@ -1,10 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
-import { isBuiltin } from "node:module";
 import path from "node:path";
 
-import { parse } from "@babel/parser";
-import traverseModule from "@babel/traverse";
 import type { BuildResult } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
@@ -13,13 +10,11 @@ import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { importedAssetPaths } from "./asset-imports.js";
-import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
-import { runtimeRequireWarnings } from "./bundle-options.js";
+import { hasUnresolvedRequire } from "./bundle-runtime-requires.js";
 import type { Bundled } from "./bundle.js";
 import { capturedPlan } from "./captured-plan.js";
 import { bundleResult, generationId, restore } from "./compiled.js";
-import { cssModulePrefix } from "./css-modules.js";
 import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -28,6 +23,12 @@ import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
+import { namePreviews, recordPreviewInputs } from "./storybook-folders.js";
+import type { PreviewProbe } from "./storybook-folders.js";
+import {
+  recordStorybookInputs,
+  storybookInputsAgree,
+} from "./storybook-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
@@ -38,65 +39,11 @@ export interface CompiledBundle {
   inputs: { files: Map<string, Uint8Array>; cssModules: Set<string> };
   compiled: Pick<BuildResult, "metafile" | "outputFiles" | "warnings">;
   inputPaths: Map<string, string>;
-  preview: string | null | undefined;
+  previewProbe: PreviewProbe;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
   plan: ResolutionPlan | undefined;
-}
-
-/** Detect runtime loads that leave no import edge. */
-function usesRuntimeRequire(code: string): boolean {
-  if (code.includes("getBuiltinModule")) return true;
-  if (!/\brequire\b(?!\s*\()|\bnew\s+(?:require\b|\/[/*])/.test(code))
-    return false;
-
-  try {
-    let found = false;
-    traverseModule.default(parse(code, { sourceType: "commonjs" }), {
-      ReferencedIdentifier(reference) {
-        const { node, parent, scope } = reference;
-        if (node.name !== "require" || scope.hasBinding("require")) return;
-        if (parent.type === "CallExpression" && parent.callee === node) return;
-        found = true;
-        reference.stop();
-      },
-    });
-    return found;
-  } catch {
-    return true;
-  }
-}
-
-/** Check for emitted requires whose targets are outside the captured resolution. */
-function hasUnresolvedRequire(
-  compiled: CompiledBundle["compiled"],
-  peers: Record<string, string | null>,
-  runtimeKey: string,
-): boolean {
-  if (
-    compiled.warnings.some(({ id }) =>
-      Object.hasOwn(runtimeRequireWarnings, id),
-    )
-  )
-    return true;
-  const resolvedPeers = new Set(Object.values(peers));
-  return (
-    Object.values(compiled.metafile!.outputs).some(({ imports }) =>
-      imports.some(
-        ({ external, kind, path }) =>
-          external &&
-          (path === "module" ||
-            path === "node:module" ||
-            (kind === "require-call" &&
-              !isBuiltin(path) &&
-              !Object.hasOwn(peers, path) &&
-              !resolvedPeers.has(path) &&
-              path !== runtimeKey &&
-              !path.startsWith(runtimeKey + cssModulePrefix))),
-      ),
-    ) || compiled.outputFiles!.some(({ text }) => usesRuntimeRequire(text))
-  );
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -108,7 +55,7 @@ export async function bundleRecipe(
     inputs,
     compiled,
     inputPaths,
-    preview,
+    previewProbe,
     runtimeKey,
     evidence,
     editImports,
@@ -128,10 +75,14 @@ export async function bundleRecipe(
       })
     : undefined;
   const resolution = params.moduleResolution;
-  const { modules: graph, physical } = measurements.runSync(
-    "sidecar.bundle.graph",
-    () => moduleGraph(compiled.metafile!, paths),
+  const {
+    modules: graph,
+    physical,
+    entryModules,
+  } = measurements.runSync("sidecar.bundle.graph", () =>
+    moduleGraph(compiled.metafile!, paths),
   );
+  const previews = namePreviews(params.sourceRoot, previewProbe, entryModules);
   // The compilation identity: module paths, imports and non-CSS source and
   // loader bytes, then the metadata inputs and the settings hashed below.
   // Without a full capture owner the evidence is never complete, so the
@@ -140,6 +91,7 @@ export async function bundleRecipe(
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
+  const storybook = require.storybook();
   const importedAssets = importedAssetPaths(inputs.files);
   measurements.runSync("sidecar.bundle.inputs", () => {
     for (const module of graph) {
@@ -165,13 +117,22 @@ export async function bundleRecipe(
       }
     }
   });
-  for (const file of params.storiesFiles.length ? previewCandidates : []) {
-    const absolute = path.resolve(params.sourceRoot, file);
-    metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
-      absolute,
-      physicalInputs,
-    );
-  }
+  await recordPreviewInputs(
+    params.sourceRoot,
+    previewProbe,
+    physicalInputs,
+    metadataInputs,
+  );
+  const storybookInputsConsistent = storybookInputsAgree(storybook?.inputs);
+  if (!storybookInputsConsistent && evidence)
+    evidence.physical.complete = false;
+  recordStorybookInputs(
+    paths,
+    storybook?.inputs,
+    physicalInputs,
+    metadataInputs,
+    evidence?.physical,
+  );
   for (const root of paths.dependencyRoots) {
     const file = path.join(root, "react/package.json");
     metadataInputs[paths.name(file)] = physicalInputs[file] =
@@ -205,7 +166,9 @@ export async function bundleRecipe(
         inputs: {},
       });
   const toolchain = await toolchainIdentity();
-  if (!toolchain) {
+  if (reuseEvidence.uncaptured === "serveEdit")
+    Object.assign(reuseEvidence.inputs, previewProbe.links);
+  if (!toolchain || !storybookInputsConsistent) {
     reuseEvidence.complete = false;
     delete reuseEvidence.uncaptured;
   }
@@ -227,7 +190,9 @@ export async function bundleRecipe(
       paths.dependencyRoots,
       params.entryFiles,
       params.storiesFiles,
-      preview,
+      params.storybookFolders,
+      Object.entries(previews),
+      storybook?.peers,
       params.renderer,
       params.configurationDirectory,
       params.repositoryRoots,
@@ -269,7 +234,14 @@ export async function bundleRecipe(
       ]),
     ),
     peers,
-    unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
+    ...(storybook && { storybookReact: storybook.peers }),
+    ...(Object.keys(previews).length && { storybookPreviews: previews }),
+    unmappedDependencyDirectories: [
+      ...new Set([
+        ...paths.dependencyUsage.unmapped,
+        ...(storybook?.dependencyDirectories ?? []),
+      ]),
+    ].sort(),
     ...directories,
     inputs: physicalInputs,
     metadataInputs,

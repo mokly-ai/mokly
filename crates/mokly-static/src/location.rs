@@ -30,12 +30,20 @@ impl Boundary {
         for root in config.package_roots() {
             inputs.push(config.repo_root.join(root).join("package.json"));
         }
+        inputs.extend(
+            config
+                .roots
+                .iter()
+                .filter(|root| root.pending_storybook())
+                .map(|root| root.directory.clone()),
+        );
         Self {
             allowed,
             lexical_allowed: None,
             roots: config
                 .roots
                 .iter()
+                .filter(|root| !root.pending_storybook())
                 .flat_map(|root| [root.directory.clone(), root.identity.clone()])
                 .collect(),
             inputs,

@@ -5,13 +5,14 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use globset::GlobSet;
-use mokly_catalogue::config_types::{ResolvedConfig, WatchAction};
-use mokly_css::dependencies::DirectoryDependency;
+use mokly_catalogue::config_types::WatchAction;
+use mokly_catalogue::discovery::SourceKind;
 
-use crate::error::Result;
 use crate::event::{Action, Event, Kind};
-use crate::pattern::{self, DEFAULT_GLOBS};
+use crate::pattern;
 use crate::stylesheet_inputs;
+
+mod setup;
 
 /// Resolved watch inputs and precomputed ancestor lookup for one catalogue state.
 #[derive(Clone)]
@@ -30,104 +31,13 @@ pub struct Plan {
     resolution_directories: BTreeMap<PathBuf, BTreeSet<String>>,
     root_index: HashSet<PathBuf>,
     waypoints: HashSet<PathBuf>,
-    source_roots: Vec<(PathBuf, GlobSet)>,
+    source_roots: Vec<(PathBuf, GlobSet, bool)>,
     directories: Vec<(PathBuf, GlobSet)>,
     rules: Vec<(WatchAction, GlobSet)>,
     output: PathBuf,
 }
 
 impl Plan {
-    /// Compile one plan before modules run, then extend it with their inventories.
-    pub fn new(
-        config: &ResolvedConfig,
-        sources: &[String],
-        directories: &[DirectoryDependency],
-        resources: &BTreeSet<String>,
-    ) -> Result<Self> {
-        let mut plan = Self {
-            repository: config.repo_root.clone(),
-            debounce: Duration::try_from_secs_f64(
-                config
-                    .input
-                    .watch
-                    .as_ref()
-                    .and_then(|watch| watch.debounce_ms)
-                    .unwrap_or(75.0)
-                    .max(0.0)
-                    / 1000.0,
-            )
-            .unwrap_or(Duration::from_secs(86_400))
-            .min(Duration::from_secs(86_400)),
-            exact: HashMap::new(),
-            ancestors: HashMap::new(),
-            root_index: HashSet::new(),
-            resolution_directories: BTreeMap::new(),
-            waypoints: HashSet::new(),
-            roots: BTreeSet::new(),
-            dependency_roots: BTreeMap::new(),
-            source_roots: Vec::new(),
-            directories: Vec::new(),
-            rules: Vec::new(),
-            output: config.repo_root.join("mokly-static"),
-        };
-        for root in &config.roots {
-            let patterns = root
-                .input
-                .files
-                .clone()
-                .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
-            for path in [&root.directory, &root.identity] {
-                plan.roots.insert(path.clone());
-                plan.source_roots
-                    .push((path.clone(), pattern::configured(&patterns)));
-            }
-        }
-        for path in config
-            .authored_inputs
-            .iter()
-            .cloned()
-            .chain(sources.iter().map(|path| config.repo_root.join(path)))
-        {
-            plan.required(path, Action::Rebuild);
-        }
-        plan.required(config.file.clone(), Action::Config);
-        for directory in directories {
-            let path = config.repo_root.join(&directory.path);
-            plan.roots.insert(path.clone());
-            plan.directories.push((
-                path,
-                pattern::compile(std::slice::from_ref(&directory.glob))?,
-            ));
-        }
-        plan.root_index = plan.roots.iter().cloned().collect();
-        plan.waypoints = plan
-            .roots
-            .iter()
-            .flat_map(|root| root.ancestors().map(Path::to_owned))
-            .collect();
-        for rule in config
-            .input
-            .watch
-            .as_ref()
-            .and_then(|watch| watch.rules.as_ref())
-            .into_iter()
-            .flatten()
-        {
-            if !matches!(rule.action, WatchAction::Ignore) {
-                for path in &rule.paths {
-                    let root = pattern::rule_root(&config.repo_root, path);
-                    if !plan.denied(&root, true) {
-                        plan.roots.insert(root);
-                    }
-                }
-            }
-            plan.rules
-                .push((rule.action, pattern::configured(&rule.paths)));
-        }
-        plan.resources(resources);
-        Ok(plan)
-    }
-
     /// Resolution metadata and direct file membership extend exact observation only.
     pub fn resolution(
         &mut self,
@@ -244,13 +154,16 @@ impl Plan {
         if self.denied(&event.path, event.kind == Kind::Directory) {
             return None;
         }
-        for (root, globs) in &self.source_roots {
+        for (root, globs, stories_only) in &self.source_roots {
             if let Ok(suffix) = event.path.strip_prefix(root)
                 && (event.kind == Kind::Directory
                     || suffix
                         .file_name()
                         .is_some_and(|name| name == "_folder.json")
-                    || globs.is_match(suffix))
+                    || ((!stories_only
+                        || SourceKind::from_path(&suffix.to_string_lossy())
+                            == SourceKind::Stories)
+                        && globs.is_match(suffix)))
             {
                 return Some(Action::Rebuild);
             }

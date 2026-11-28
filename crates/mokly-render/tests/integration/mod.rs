@@ -32,6 +32,7 @@ mod postcss_config_reuse_tests;
 mod postcss_contract_tests;
 mod postcss_preparation_tests;
 mod postcss_retirement_tests;
+mod preview_stylesheet_tests;
 mod process_counts;
 mod rebuild_tests;
 mod registry_matrix_tests;

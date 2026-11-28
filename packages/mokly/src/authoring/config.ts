@@ -1,11 +1,14 @@
 import type { ColorScheme } from "./types.js";
 
-export interface RootConfig {
-  dir: string;
-  files?: readonly string[];
+type StorybookFolder = string | { config: string };
+
+export type RootConfig = {
   path?: string;
   transparent?: readonly string[];
-}
+} & (
+  | { dir: string; files?: readonly string[]; storybook?: StorybookFolder }
+  | { dir?: never; files?: never; storybook: StorybookFolder }
+);
 export type ModuleLoader =
   | "js"
   | "jsx"

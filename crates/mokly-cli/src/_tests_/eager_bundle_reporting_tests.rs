@@ -87,6 +87,7 @@ fn eager_base_first_bundle_cache_reports_only_after_adoption() {
         entry_files: Vec::new(),
         renderer: None,
         stories_files: Vec::new(),
+        storybook_folders: Default::default(),
         source_root: "/base".into(),
         configuration_directory: ".".into(),
         repository_roots: Vec::new(),

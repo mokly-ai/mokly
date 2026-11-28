@@ -22,6 +22,7 @@ import { checkRecipeSize } from "./recipe-size.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
 import { renderStory } from "./story-render.js";
+import { readStorybook } from "./storybook-main.js";
 import { ViteCompiler } from "./vite-compiler.js";
 import { evaluateVite } from "./vite-evaluate.js";
 import { withViteNodePeers } from "./vite-node-peers.js";
@@ -83,6 +84,8 @@ export class Session {
     }
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
+      case "readStorybook":
+        return readStorybook(request.params);
       case "bundle": {
         const {
           capture = "full",
@@ -131,7 +134,6 @@ export class Session {
                     return this.kept.compile(options);
                   },
                 );
-          this.generations.set(generation.id, generation);
           const reply: BundleReply =
             source &&
             this.restored.has(source) &&
@@ -139,6 +141,8 @@ export class Session {
             result.plan === undefined
               ? { generation: generation.id, restoredGeneration: source.id }
               : result;
+          this.generations.set(generation.id, generation);
+          this.restored.delete(generation);
           return reply;
         } catch (error) {
           if (preparation)

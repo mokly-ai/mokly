@@ -5,7 +5,7 @@ import type { PostcssFileIdentity } from "./PostcssFileIdentity.js";
 // prettier-ignore
 export type PostcssRead = { "kind": "whole-file",
 /**
- * Absolute child-side file name used by the read.
+ * File name used by the read, in the path space of the reply.
  */
 path: string,
 /**

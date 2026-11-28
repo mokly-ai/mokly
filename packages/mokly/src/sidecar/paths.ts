@@ -13,17 +13,24 @@ import {
 } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
+import { directStorybookInputs } from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
+import { storybookFrameworks } from "./storybook-main.js";
+import type { MainSide, StorybookMainCache } from "./storybook-main.js";
 
 export interface ConsumerRequire extends NodeJS.Require {
   peerPlugin: Plugin;
   snapshot(): Record<string, string | null>;
   resolvePeer(name: string): Promise<string>;
+  loadStorybook(cache: StorybookMainCache, side: MainSide): Promise<void>;
+  storybook(): Awaited<ReturnType<typeof storybookFrameworks>> | undefined;
 }
 
 /** Resolve peers from the configuration directory under this side's policy. */
 export async function consumerRequire(
   params: BundleParams,
   paths: ModulePaths,
+  mainLoad?: StorybookMainCache | "deferred",
 ): Promise<ConsumerRequire> {
   const directory = path.resolve(
     params.sourceRoot,
@@ -34,6 +41,8 @@ export async function consumerRequire(
   const native = sideRequire(paths, path.join(directory, "package.json"));
   const peers = new Map<string, string | Error>();
   let resolver: PluginBuild | undefined;
+  let storybook: ReturnType<ConsumerRequire["storybook"]>;
+  let directInputs: StorybookInputs = new Map();
   const names = [
     "react",
     "react/package.json",
@@ -44,37 +53,52 @@ export async function consumerRequire(
     "@emotion/cache",
     "@emotion/server/create-instance",
   ];
-  const load = async (names: string[]) => {
-    const builder = resolver!;
-    await Promise.all(
-      names.map(async (name) => {
-        const resolved = await resolveImport(paths, builder, name, {
-          resolveDir: directory,
-          kind: "require-call",
-          pluginData: "consumer-peer",
-        });
-        if (resolved.errors.length)
-          peers.set(
-            name,
-            new Error(
-              `could not resolve ${name} from configuration directory: ${resolved.errors.map((error) => error.text).join("; ")}`,
-            ),
-          );
-        else {
-          try {
-            peers.set(name, await importPath(paths, name, resolved));
-          } catch (error) {
-            peers.set(name, new Error(detail(error)));
-          }
-        }
-      }),
-    );
+  const lookup = async (
+    name: string,
+    from: string,
+  ): Promise<string | Error> => {
+    const resolved = await resolveImport(paths, resolver!, name, {
+      resolveDir: from,
+      kind: "require-call",
+      pluginData: "consumer-peer",
+    });
+    if (resolved.errors.length)
+      return Object.assign(
+        new Error(
+          `could not resolve ${name} from configuration directory: ${resolved.errors.map((error) => error.text).join("; ")}`,
+        ),
+        { code: "MODULE_NOT_FOUND" },
+      );
+    try {
+      return await importPath(paths, name, resolved);
+    } catch (error) {
+      return Object.assign(new Error(detail(error)), {
+        code: "MODULE_NOT_FOUND",
+      });
+    }
   };
+  const load = (names: string[]) =>
+    Promise.all(
+      names.map(async (name) => peers.set(name, await lookup(name, directory))),
+    );
   const resolve = (name: string) => {
     const found = peers.get(name);
-    if (found instanceof Error)
-      throw Object.assign(found, { code: "MODULE_NOT_FOUND" });
+    if (found instanceof Error) throw found;
     return found ?? native.resolve(name);
+  };
+  const loadStorybook = async (cache: StorybookMainCache, side: MainSide) => {
+    const react = peers.get("@storybook/react");
+    if (params.storiesFiles.length && react instanceof Error)
+      storybook = await storybookFrameworks(
+        params,
+        paths,
+        directory,
+        lookup,
+        cache,
+        react,
+        side,
+        directInputs,
+      );
   };
   const require = ((name: string) => native(resolve(name))) as ConsumerRequire;
   const peerPlugin: Plugin = {
@@ -82,8 +106,11 @@ export async function consumerRequire(
     setup(builder) {
       builder.onStart(async () => {
         resolver = builder;
+        if (mainLoad && params.storiesFiles.length)
+          directInputs = await directStorybookInputs(paths, directory);
         await load(names);
-        if (params.storiesFiles.length) resolve("@storybook/react");
+        if (mainLoad && mainLoad !== "deferred")
+          await loadStorybook(mainLoad, params);
       });
       builder.onEnd(() => {
         resolver = undefined;
@@ -100,6 +127,8 @@ export async function consumerRequire(
         ]),
       ),
     resolve,
+    loadStorybook,
+    storybook: () => storybook,
     async resolvePeer(name: string) {
       if (!peers.has(name)) await load([name]);
       return resolve(name);

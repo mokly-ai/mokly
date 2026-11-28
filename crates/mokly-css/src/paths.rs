@@ -3,29 +3,44 @@
 use mokly_model::paths::is_windows_device_name;
 use mokly_model::routes;
 
-/// Check an imported CSS or asset route before it becomes public.
-pub fn portable(path: &str, asset: bool) -> bool {
-    if let Some(rest) = path.strip_prefix("node_modules/.mokly-roots/") {
-        let Some((index, suffix)) = rest.split_once('/') else {
-            return false;
-        };
-        return !index.is_empty()
-            && !index.starts_with('0')
-            && index.bytes().all(|byte| byte.is_ascii_digit())
-            && portable_segments(&format!("node_modules/{suffix}"), asset);
+/// Build a generated route from a logical path.
+pub fn route(namespace: &str, path: &str) -> String {
+    let mut route = String::with_capacity(namespace.len() + 1 + path.len());
+    route.push_str(namespace);
+    for part in path.split('/') {
+        route.push('/');
+        if let Some(name) = part
+            .strip_prefix('.')
+            .filter(|_| !matches!(part, "." | ".."))
+        {
+            route.push_str("dot-");
+            route.push_str(name);
+        } else {
+            route.push_str(part);
+        }
     }
-    portable_segments(path, asset)
+    route
 }
 
-fn portable_segments(path: &str, asset: bool) -> bool {
-    let mut previous = "";
+/// Check an imported CSS or asset route before it becomes public.
+pub fn portable(path: &str, asset: bool) -> bool {
+    let mut parents = ["", "", ""];
     path.split('/').all(|part| {
-        let name = if previous == "node_modules" {
+        let scope_allowed = parents[2] == "node_modules"
+            || matches!(
+                parents,
+                ["node_modules", "dot-mokly-roots", index]
+                    if !index.is_empty()
+                        && !index.starts_with('0')
+                        && index.bytes().all(|byte| byte.is_ascii_digit())
+            );
+        let name = if scope_allowed {
             part.strip_prefix('@').unwrap_or(part)
         } else {
             part
         };
-        previous = part;
+        parents.rotate_left(1);
+        parents[2] = part;
         !name.is_empty()
             && name
                 .as_bytes()

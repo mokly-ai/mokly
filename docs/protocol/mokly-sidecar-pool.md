@@ -9,6 +9,8 @@ A sidecar starts when the catalogue uses any of these inputs:
 
 - A JavaScript entry or registered JavaScript component.
 - A Storybook stories file.
+- A root without `dir`, whose `main.*` the sidecar loads before
+  [discovery](./mokly-root-discovery.md#roots-from-main).
 - A configured renderer module.
 - A stylesheet processed by a consumer PostCSS module.
 - A local stylesheet under the

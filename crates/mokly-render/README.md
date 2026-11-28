@@ -16,7 +16,13 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 
 ## What This Crate Does
 
-`Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
+`Runtime` implements `DefinitionProvider`, `GraphFactory`, and the
+catalogue's `StorybookReader`. `Runtime::expand_storybook_roots` expands the
+roots without `dir` before discovery. It sends one `readStorybook` request
+for each Storybook folder, with the source root and installation settings
+of its side. It records the dependency directories the read used. It collects
+all whole-file witnesses and absent candidates for static verification. Each
+failure of that request becomes `config-invalid`. The CLI injects
 its source readers, physical input reader, sidecar pool, worker scheduler, and
 byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
 runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has
@@ -97,8 +103,12 @@ The graph adapter delivers modules marked `importedAsset` with their captured
 digests. It selects the importing module by sorted logical path. The selected
 side's source reader supplies the confined file identity and any source alias.
 Failed candidates release their own contexts. Bundle metadata stamps include
-resolved React manifests, ancestor package and tsconfig candidates, absent
-Storybook previews, and file membership in consumed-module directories.
+resolved React manifests, ancestor package and tsconfig candidates, the
+original preview selection of each Storybook folder, and file membership in
+consumed-module directories. A stamp for a framework fallback also includes
+the direct Storybook renderer lookup's manifest candidates. Each absent preview
+candidate must stay absent and the selected candidate must resolve to the same real file,
+and it reads the digest of the selected preview through that file.
 Bundle reuse also reads the captured reuse evidence of the compiled recipe
 again through the injected `PhysicalInputs` reader, outside the side tree. A
 read error rejects reuse, also for a recorded absence. Incomplete evidence
@@ -106,7 +116,8 @@ never permits reuse, with one exception in the Serve edit capture mode: a
 retained state with a toolchain identity whose evidence holds the
 `uncaptured` marker is reused while its module digests and metadata stamps
 stay current. Its evidence can also hold the private folder files of the
-[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md)
+and the link targets of the preview selection.
 The same reader checks them again, and one change rejects the reuse. A
 captured state is tried before a marked one.
 Each core `bundle` request runs in a `catalogue.bundle` span, which records the
@@ -459,11 +470,16 @@ view after the edit and counts real process starts and hello calls.
   check. A `ServeEdit` attempt still requires `stale_postcss` to find a stale
   PostCSS root. Both require an unused context and no older used head context
   with the same settings, as `Runtime::older_used_head_context` checks. The
-  second request of an evaluation change carries none.
+  second request of an evaluation change carries none. Its `record_usage`
+  adds each `unmappedDependencyDirectories` entry of a result to the side's
+  `DependencyUsage`, also the directories that the framework fallback of
+  `@storybook/react` reports.
 - [`src/bundle_styles.rs`](./src/bundle_styles.rs) prepares the CSS Modules
   class maps of a bundle before `describe`. Under the Vite adapter, it also
   adds the reported inputs of the Vite transforms to the render keys.
-  `prepare_roots` removes the renderer's closure from the entry roots.
+  `prepare_roots` excludes from each later root the stylesheets that the
+  renderer or the selected preview already delivers. It counts a CSS Module
+  as delivered only when that earlier bundle has a class map for its path.
   `local_input_digest` covers the configured and declared stylesheet roots.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
   request with the `capture` mode of the runtime and its optional
@@ -473,7 +489,11 @@ view after the edit and counts real process starts and hello calls.
   Before a `ServeEdit` request of a head runtime, it runs the plan check on
   the record of the request's resolution settings, and it sends the plan when
   the check passes. It offers each `Full` result with a plan and a toolchain
-  identity to `Records`.
+  identity to `Records`. Its `stamp` records the original preview selection
+  of each folder. `selected_previews` and `story_previews` use the compiler's
+  graph name for render keys, class maps, stylesheet roots, and stylesheet
+  links. A selected preview without a graph name gives its stories the
+  whole-bundle render key.
 - [`src/leases.rs`](./src/leases.rs) defines the graph-owned leases.
   `ContextLease::prepare` reserves the one preparation of the PostCSS context
   of an attempt. `ContextLease::begin_use` marks each real stylesheet request,

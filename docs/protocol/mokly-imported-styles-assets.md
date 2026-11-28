@@ -21,11 +21,12 @@ asset and a nested `@import` target are protected inputs of the source
 inventory; a document that references one of them as a public file fails
 with the protected-target diagnostic of the
 [referenced closure](./mokly-public-closure.md), whose reason names the
-importing stylesheet. An in-repository `node_modules` asset is allowed
-and its full repository-relative path is mirrored; when that logical path is
-a symlink into an in-repository workspace package, both the logical and the
-physical identity enter the inventory, and physically installed package code
-is not inventoried.
+importing stylesheet. An in-repository `node_modules` asset is allowed, and
+its route holds its full repository-relative path in the
+[route form](./mokly-imported-styles.md#routes-and-ownership); when that
+logical path is a symlink into an in-repository workspace package, both the
+logical and the physical identity enter the inventory, and physically
+installed package code is not inventoried.
 
 Only these extensions, matched case-sensitively, are assets; every other
 extension fails. The [content type rule](./mokly-content-types.md) gives them
@@ -59,16 +60,22 @@ Assets that JavaScript imports share this delivery and its routes, and they
 can have more types. [JavaScript Asset Imports](./mokly-imported-assets.md)
 gives their rules.
 
-Binary assets are never decoded. `assets/<path>` satisfies the portable
-URL-path rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no
-trailing dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`,
-`com1` to `com9`, `lpt1` to `lpt9`, ignoring case); no empty, `.`, `..`,
-backslash, drive, or colon segment. Only the segment directly after
-`node_modules` may instead match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/`, an npm
-scope such as `@fontsource`; every other constraint still applies, including
-for a stylesheet root inside a scoped package. The rewritten `url()` carries
-the literal `@`; a link encodes it as `%40`, Serve decodes it, and the
-referenced closure accepts and decodes both forms.
+Binary assets are never decoded. The route of an asset is `assets/` and its
+path in the [route form](./mokly-imported-styles.md#routes-and-ownership).
+Each segment of that path, after the route form, satisfies the portable
+URL-path rule: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no trailing dot, and no
+Windows device-name stem (`aux`, `con`, `nul`, `prn`, `com1` to `com9`,
+`lpt1` to `lpt9`, ignoring case); no empty, `.`, `..`, backslash, drive, or
+colon segment. Only an npm scope segment, such as `@fontsource`, may instead
+match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/`. An npm scope segment directly
+follows a `node_modules` segment. In an
+[additional dependency root](./mokly-sidecar-modules.md#source-and-dependency-files),
+it can also directly follow the index of the root, as `@fontsource` does in
+`assets/node_modules/dot-mokly-roots/1/@fontsource/inter/inter.woff2`. Every
+other constraint still applies, including for a stylesheet root inside a
+scoped package. The rewritten `url()` carries the literal `@`; a link encodes
+it as `%40`, Serve decodes it, and the referenced closure accepts and decodes
+both forms.
 
 The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete stylesheet list of a document, its order, href encoding,

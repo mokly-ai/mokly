@@ -74,8 +74,11 @@ fn source_package_order_uses_base_then_working_without_sidecar_sources() {
         )
         .unwrap();
     assert!(sources.dependencies.is_none());
-    assert_eq!(sources.inventory.files.len(), 1);
-    assert_eq!(sources.inventory.files[0].kind, SourceKind::Page);
+    let inventory = sources
+        .inventory
+        .expect("a root with dir is discovered in the source phase");
+    assert_eq!(inventory.files.len(), 1);
+    assert_eq!(inventory.files[0].kind, SourceKind::Page);
     let settings = to_value(resolution(&sources.config)).unwrap();
     assert_eq!(
         settings["sourcePackages"],

@@ -40,7 +40,9 @@ fn config(dir: &str) -> ResolvedConfig {
                 files: None,
                 path: None,
                 transparent: None,
+                storybook: None,
             },
+            storybook: ".storybook".into(),
         }],
     }
 }

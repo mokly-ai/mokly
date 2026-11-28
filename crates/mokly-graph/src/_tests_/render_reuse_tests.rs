@@ -4,7 +4,7 @@ use unimock::Unimock;
 
 use crate::key::NodeKey;
 
-use crate::render_inputs::{PREVIEWS, RenderKeys};
+use crate::render_inputs::RenderKeys;
 
 #[path = "render_reuse_support.rs"]
 mod support;
@@ -15,6 +15,9 @@ use support::{A, B, C, Fixture, RENDERER, STORY};
 mod generated_tests;
 #[path = "render_seed_tests.rs"]
 mod seed_tests;
+
+#[path = "render_reuse_previews_tests.rs"]
+mod preview_tests;
 
 #[test]
 fn deferred_full_keys_do_not_supply_facts_before_generation_seeding() {
@@ -163,7 +166,11 @@ fn binding_attribution_and_resolution_reclassification_keep_full_reference_keys(
 fn common_roots_modes_shared_inputs_and_fallbacks_keep_full_reference_keys() {
     let mut fixture = Fixture::new();
     let mut previous = fixture.check(None, "initial");
-    fixture.generation.modules.remove(PREVIEWS[0]);
+    fixture.generation.modules.remove(".storybook/preview.js");
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), Some(".storybook/preview.ts".into()));
     previous = fixture.check(Some(&previous), "selected preview switches to old member");
     fixture.renderer = Some("runtime/theme.ts".into());
     previous = fixture.check(Some(&previous), "renderer root switches to old member");
@@ -181,9 +188,20 @@ fn common_roots_modes_shared_inputs_and_fallbacks_keep_full_reference_keys() {
     fixture
         .generation
         .resolution_digests
-        .insert(PREVIEWS[0].into(), "unnamed preview".into());
+        .insert(".storybook/preview.js".into(), "unnamed preview".into());
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), None);
     previous = fixture.check(Some(&previous), "story fallback");
-    fixture.generation.resolution_digests.remove(PREVIEWS[0]);
+    fixture
+        .generation
+        .resolution_digests
+        .remove(".storybook/preview.js");
+    fixture
+        .generation
+        .storybook_previews
+        .insert(".storybook".into(), Some(".storybook/preview.ts".into()));
     previous = fixture.check(Some(&previous), "story returns");
     fixture.bindings.remove(&format!("{B}#default"));
     previous = fixture.check(Some(&previous), "module loses last binding");

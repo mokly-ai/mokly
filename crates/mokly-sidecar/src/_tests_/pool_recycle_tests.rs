@@ -69,6 +69,7 @@ fn seed(pool: &Pool, worker: Unimock) {
             entry_files: Vec::new(),
             renderer: None,
             stories_files: Vec::new(),
+            storybook_folders: Default::default(),
             module_resolution: ModuleResolution::default(),
             source_root: "/repo".into(),
             configuration_directory: ".".into(),

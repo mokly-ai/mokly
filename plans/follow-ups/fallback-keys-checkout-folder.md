@@ -5,9 +5,9 @@
 - **Added:** 2026-11-01, from review round 1, finding 1, of the branch
   `conductor/rust-rebuild-133-folder-keys`. The final call split the
   finding: that branch applied option D, and this item holds option A.
-- **Location:** `crates/mokly-graph/src/render_inputs.rs:155`,
+- **Location:** `crates/mokly-graph/src/render_preparation.rs:144`,
   `crates/mokly-render/src/graph.rs:126`,
-  `packages/mokly/src/sidecar/bundle-recipe.ts:157`,
+  `packages/mokly/src/sidecar/bundle-recipe.ts:173`,
   `crates/mokly-graph/src/graph.rs:268`,
   `crates/mokly-render/src/side.rs:87`, `docs/protocol/mokly-sidecar.md:89`,
   and `docs/protocol/mokly-shell-delivery.md:78`.
@@ -25,8 +25,9 @@
     render input key uses.
   - **Generation id:** the sidecar's id of one evaluated JavaScript bundle,
     which a render request names to select its side's bundle.
-  - **Storybook preview:** the shared setup module `.storybook/preview.*`
-    that every story renders with.
+  - **Storybook preview:** the selected `preview.*` module of a root's
+    Storybook folder. The default folder is `.storybook` in the repository
+    root.
 - **Background:**
   - Item 133 of the Rust rebuild made document keys independent of the
     checkout folder. On 2026-10-28 the coordinator chose its option B,
@@ -37,23 +38,27 @@
     directory chains of its closure modules.
   - Commit `337a645c` applied that choice in
     `crates/mokly-render/src/render_environment.rs`. It changed only the
-    bundle environment, at line 120, and not the fallback key.
+    bundle environment, at line 129, and not the fallback key.
   - `docs/protocol/mokly-shell-delivery.md:78` states the requirement. The
     folder of the checkout is not an input of `documentKey`. Two checkouts
     of one commit with equal installed dependencies give equal document
     keys, and their builds give the same `deploymentId`. The status line of
     that page links this item.
-  - `RenderKeys::build` in `crates/mokly-graph/src/render_inputs.rs` gives
-    each entry module its own render input key. Lines 101 to 108 and 155 to
-    159 skip a stories file when a preview exists that the module graph does
-    not name. They skip every other entry module when the graph does not
-    name the configured renderer. These modules use the fallback key, as
-    `docs/protocol/mokly-watch.md:80-82` requires.
-  - `PREVIEWS`, at `render_inputs.rs:19`, lists only `.storybook/preview.*`
-    names. The module graph names each module by its real path. When
-    `.storybook` is a symbolic link to an in-repository folder, such as
-    `storybook`, the graph names `storybook/preview.tsx`, so the preview is
-    unnamed. The real-sidecar test
+  - `RenderKeys::build` at `crates/mokly-graph/src/render_inputs.rs:75` gives
+    each entry module its own render input key. `Prepared::exporters` at
+    `crates/mokly-graph/src/render_preparation.rs:144` skips a stories file
+    when the module graph does not name its folder's selected preview. It also
+    skips other entry modules when the graph does not name the configured
+    renderer. These modules use the fallback key.
+  - `preview_candidates` at `render_inputs.rs:18` derives the ten candidates
+    of each folder in Storybook's extension order. `bundle-recipe.ts:107`
+    records the present and absent candidates. `resolution` at
+    `crates/mokly-render/src/render_environment.rs:196` drops a folder's
+    digests only when the graph names its selected preview. The module graph
+    names each module by its real path. When `.storybook` is a symbolic link
+    to the in-repository folder `storybook`, the graph names
+    `storybook/preview.tsx`. The preview is unnamed for the `.storybook`
+    folder. The real-sidecar test
     `an_edit_to_a_linked_preview_moves_only_the_story_keys`, at
     `crates/mokly-render/tests/integration/key_fallback_tests.rs:50`, builds
     this setup.
@@ -69,10 +74,10 @@
   - `crates/mokly-render/src/graph.rs:126` to line 134 builds the fallback
     key from `generation.id`, the class maps digest, and the binding table.
     Line 145 passes it to `RenderKeys::build`.
-  - `generationId`, at `packages/mokly/src/sidecar/compiled.ts:24`, hashes
+  - `generationId`, at `packages/mokly/src/sidecar/compiled.ts:33`, hashes
     the compilation identity and the evaluation digest. The compilation
-    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:155` to line
-    168, hashes `params.sourceRoot`, the dependency roots, and the
+    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:170` to line
+    185, hashes `params.sourceRoot`, the dependency roots, and the
     repository roots. These are physical paths.
   - The live generation key, at `crates/mokly-graph/src/graph.rs:267` to
     line 269, also hashes `RenderKeys::fallback`. Decision 5 A of PR #227,

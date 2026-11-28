@@ -2,6 +2,8 @@
 
 use std::collections::BTreeMap;
 
+use mokly_sidecar::results::Module;
+
 use super::render_environment_support::{derive, maps, params, result};
 use super::{package, resolution};
 
@@ -77,7 +79,11 @@ fn resolution_names_drop_the_installed_prefix_previews_and_absent_files() {
         ),
     ]);
     assert_eq!(
-        resolution(&inputs, true),
+        resolution(
+            &inputs,
+            &[preview(".storybook/preview.tsx")],
+            &BTreeMap::from([(".storybook".into(), Some(".storybook/preview.tsx".into()))]),
+        ),
         BTreeMap::from([
             ("node_modules/pkg/package.json".to_owned(), "pkg".to_owned()),
             ("package.json".to_owned(), "root".to_owned()),
@@ -96,14 +102,48 @@ fn runtime_package_names_drop_subpaths_and_keep_scopes() {
 }
 
 #[test]
-fn preview_candidates_stay_when_the_graph_names_no_preview() {
-    let inputs = BTreeMap::from([(
-        ".storybook/preview.tsx".to_owned(),
-        Some("preview".to_owned()),
-    )]);
+fn only_the_named_folders_drop_candidates_including_the_lower_priority_files() {
+    let inputs = BTreeMap::from([
+        (".storybook/preview.js".into(), Some("root".into())),
+        (".storybook/preview.tsx".into(), Some("unused".into())),
+        (
+            "packages/ui/.storybook/preview.js".into(),
+            Some("linked".into()),
+        ),
+        (
+            "packages/ui/.storybook/preview.tsx".into(),
+            Some("imported".into()),
+        ),
+    ]);
     assert_eq!(
-        resolution(&inputs, false),
-        BTreeMap::from([(".storybook/preview.tsx".to_owned(), "preview".to_owned())])
+        resolution(
+            &inputs,
+            &[
+                preview(".storybook/preview.js"),
+                preview("packages/ui/.storybook/preview.tsx"),
+                preview("packages/ui/linked/preview.js"),
+            ],
+            &BTreeMap::from([
+                (".storybook".into(), Some(".storybook/preview.js".into())),
+                ("packages/ui/.storybook".into(), None),
+            ]),
+        ),
+        BTreeMap::from([
+            ("packages/ui/.storybook/preview.js".into(), "linked".into()),
+            (
+                "packages/ui/.storybook/preview.tsx".into(),
+                "imported".into()
+            ),
+        ])
     );
-    assert_eq!(resolution(&inputs, true), BTreeMap::new());
+}
+
+fn preview(path: &str) -> Module {
+    Module {
+        path: path.into(),
+        imports: Vec::new(),
+        digest: None,
+        imported_asset: None,
+        package_import: None,
+    }
 }

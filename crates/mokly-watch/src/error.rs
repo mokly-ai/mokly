@@ -1,5 +1,7 @@
 //! Typed watch setup and classification failures.
 
+use mokly_catalogue::globs::GlobError;
+
 /// Watch failures leave the active catalogue in place.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -20,11 +22,11 @@ pub enum Error {
 /// Failures that callers report without branching.
 #[derive(Debug, thiserror::Error)]
 pub enum InternalError {
-    /// A PostCSS directory dependency supplied an invalid glob.
+    /// A watched source pattern could not compile.
     #[error("watch pattern could not compile: {source}")]
     Glob {
         /// Glob parser failure.
-        source: globset::Error,
+        source: GlobError,
     },
     /// A source traversal failed.
     #[error("watch directory could not be read: {source}")]
@@ -32,6 +34,12 @@ pub enum InternalError {
         /// Source-tree failure.
         source: mokly_source_interface::error::SourceError,
     },
+}
+
+impl From<GlobError> for Error {
+    fn from(source: GlobError) -> Self {
+        InternalError::Glob { source }.into()
+    }
 }
 
 /// Watch operation result.

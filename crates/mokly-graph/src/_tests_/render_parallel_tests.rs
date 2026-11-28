@@ -11,7 +11,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::key::{NodeKind, key};
 use crate::workers::{RenderWorkers, RenderWorkersMock, ThreadWorkers};
 
-use super::{PREVIEWS, RenderInputs, RenderKeys, render_reference};
+use super::{RenderInputs, RenderKeys, render_reference};
 
 const RENDERER: &str = "runtime/render.tsx";
 
@@ -34,11 +34,18 @@ impl Fixture {
             ("styles/shared.module.css", &[]),
             (RENDERER, &["shared/a.ts", "runtime/theme.ts"]),
             ("runtime/theme.ts", &[]),
-            (PREVIEWS[0], &["shared/a.ts", "preview/setup.ts"]),
+            (
+                ".storybook/preview.js",
+                &["shared/a.ts", "preview/setup.ts"],
+            ),
             ("preview/setup.ts", &[]),
         ];
         let mut generation = JavaScriptGeneration {
             environment: "environment".into(),
+            storybook_previews: BTreeMap::from([(
+                ".storybook".into(),
+                Some(".storybook/preview.js".into()),
+            )]),
             modules: edges
                 .iter()
                 .map(|(path, imports)| {
@@ -146,16 +153,20 @@ fn many_exporters_keep_reference_keys_in_reverse_and_two_worker_scheduling() {
     ] {
         let mut generation = fixture.generation.clone();
         if unnamed_preview {
-            generation.modules.remove(PREVIEWS[0]);
+            generation.modules.remove(".storybook/preview.js");
+            generation
+                .storybook_previews
+                .insert(".storybook".into(), None);
             generation
                 .resolution_digests
-                .insert(PREVIEWS[0].into(), "unnamed-preview".into());
+                .insert(".storybook/preview.js".into(), "unnamed-preview".into());
         }
         let inputs = RenderInputs {
             generation: &generation,
             bindings: &fixture.bindings,
             renderer: Some(renderer),
             entries: &fixture.entries,
+            storybook_folders: &BTreeMap::new(),
             declarations: &fixture.declarations,
         };
         let fallback = key(NodeKind::RenderInputs, &[b"whole bundle"]);
@@ -176,7 +187,7 @@ fn many_exporters_keep_reference_keys_in_reverse_and_two_worker_scheduling() {
                 "missing.ts",
                 "unknown-entry.tsx",
                 "unnamed-renderer.tsx",
-                PREVIEWS[0],
+                ".storybook/preview.js",
             ]) {
                 assert_eq!(
                     actual.module(module),

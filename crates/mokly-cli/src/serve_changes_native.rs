@@ -144,6 +144,7 @@ impl Source {
             &self.config.file,
             &self.config.repo_root,
             &self.config.authored_inputs,
+            self.config.storybook_inputs(),
             roots,
             self.services.install_scripts,
         ))

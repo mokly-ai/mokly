@@ -6,6 +6,7 @@ import type * as Csf from "storybook/internal/csf";
 import type { BundleExports, Generation } from "./bundle.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
+import { storybookFolder } from "./storybook-folders.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 
@@ -18,6 +19,7 @@ type CaptureContext = (
 export interface StoredStory {
   id: string;
   name: string;
+  folder: string;
   compose: (
     cleanups: Csf.CleanupCallback[],
     captureContext: CaptureContext,
@@ -41,6 +43,7 @@ interface ReadStory {
 }
 
 interface ReadStories {
+  folder: string;
   title: string;
   description: string;
   beforeAll: StoredStory["beforeAll"];
@@ -51,16 +54,22 @@ export function readStories(
   generation: Generation,
   file: string,
   module: Record<string, unknown>,
-  preview: BundleExports["preview"],
+  previews: BundleExports["previews"],
   cache: ExportNameCache,
 ): ReadStories {
-  const storybook = generation.require("@storybook/react") as typeof Storybook;
-  const require = createRequire(generation.require.resolve("@storybook/react"));
+  const folder = storybookFolder(generation.params, file);
+  const peer =
+    generation.compiled.storybookReact?.[folder] ??
+    generation.require.resolve("@storybook/react");
+  const require = createRequire(peer);
+  const storybook = require(peer) as typeof Storybook;
   const csf = require("storybook/internal/csf") as typeof Csf;
   const factory = Object.values(module).find(csf.isStory);
   const meta = record(module.default ?? factory?.meta.input);
   const factoryPreview = factory?.meta.preview;
-  const previewModule = factoryPreview ? undefined : unwrapPreview(preview);
+  const previewModule = record(
+    previews && Object.hasOwn(previews, folder) ? previews[folder] : undefined,
+  );
   const previewConfig = factoryPreview ?? previewModule?.default;
   const annotations = csf.isPreview(previewConfig)
     ? previewConfig.composed
@@ -154,25 +163,12 @@ export function readStories(
   const docs = record(stories[0]?.story.parameters.docs);
   const description = record(docs.description).component;
   return {
+    folder,
     title,
     description: typeof description === "string" ? description : "",
     beforeAll,
     stories,
   };
-}
-
-function unwrapPreview(
-  preview: BundleExports["preview"],
-): BundleExports["preview"] {
-  if (!preview) return;
-  // esbuild stores the CommonJS exports in a read-only default data property.
-  const defaultExport = Object.getOwnPropertyDescriptor(preview, "default");
-  const wrapped: unknown = defaultExport?.value;
-  return defaultExport?.writable === false &&
-    isRecord(wrapped) &&
-    Object.hasOwn(wrapped, "default")
-    ? wrapped
-    : preview;
 }
 
 interface HookAnnotations {

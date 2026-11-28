@@ -3,33 +3,74 @@
 use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 use std::iter;
 
+use mokly_catalogue::config_types::DEFAULT_STORYBOOK_FOLDER;
 use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderMethod};
 use mokly_model::material::digest;
 use serde_json::to_vec;
 
 use crate::render_closure::{Records, chain, handle_module};
-use crate::render_inputs::{PREVIEWS, RenderInputs};
+use crate::render_inputs::{RenderInputs, preview_candidates};
+
+/// The extra closure required by one exporting module.
+#[derive(Clone, Copy)]
+pub(crate) enum Common<'a> {
+    /// Use the catalogue renderer closure.
+    Renderer,
+    /// Use the story's selected preview closure, if present.
+    Preview(Option<&'a str>),
+}
+
+enum Preview {
+    Absent,
+    Named(String),
+    Unnamed,
+}
 
 pub(crate) struct Prepared<'a> {
     pub(crate) records: Records<'a>,
     pub(crate) shared: String,
     exporters: BTreeSet<&'a str>,
-    stories: BTreeSet<&'a str>,
+    stories: BTreeMap<&'a str, &'a str>,
+    previews: BTreeMap<&'a str, Preview>,
     unnamed_renderer: bool,
-    unnamed_preview: bool,
     pub(crate) renderer: Option<&'a str>,
-    pub(crate) preview: Option<&'static str>,
 }
 
 impl<'a> Prepared<'a> {
     pub(crate) fn new(inputs: &RenderInputs<'a>) -> serde_json::Result<Self> {
         let generation = inputs.generation;
         let graph = &generation.modules;
-        let stories: BTreeSet<_> = inputs
+        let stories: BTreeMap<_, _> = inputs
             .entries
             .values()
             .filter(|source| source.method == RenderMethod::Story)
             .filter_map(|source| handle_module(graph, &source.handle))
+            .map(|module| {
+                let folder = inputs
+                    .storybook_folders
+                    .get(module)
+                    .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str);
+                (module, folder)
+            })
+            .collect();
+        let folders: BTreeSet<_> = inputs
+            .storybook_folders
+            .values()
+            .map(String::as_str)
+            .chain(stories.values().copied())
+            .collect();
+        let mut candidates = BTreeSet::new();
+        let previews = folders
+            .into_iter()
+            .map(|folder| {
+                let preview = match generation.storybook_previews.get(folder) {
+                    Some(Some(path)) if graph.contains_key(path) => Preview::Named(path.clone()),
+                    Some(_) => Preview::Unnamed,
+                    None => Preview::Absent,
+                };
+                candidates.extend(preview_candidates(folder));
+                (folder, preview)
+            })
             .collect();
         let mut records = records(generation)?;
         let chained: BTreeSet<&String> = records.chains.values().flatten().collect();
@@ -39,7 +80,7 @@ impl<'a> Prepared<'a> {
             .filter(|(name, _)| {
                 !chained.contains(name)
                     && !runtime_manifest(generation, name)
-                    && !PREVIEWS.contains(&name.as_str())
+                    && !candidates.contains(*name)
             })
             .collect();
         let unattributed: Vec<_> = inputs
@@ -52,9 +93,6 @@ impl<'a> Prepared<'a> {
         let unnamed_renderer = inputs
             .renderer
             .is_some_and(|renderer| !graph.contains_key(renderer));
-        let unnamed_preview = PREVIEWS
-            .iter()
-            .any(|candidate| generation.resolution_digests.contains_key(*candidate));
         let mut exporters = BTreeSet::new();
         for (handle, binding) in inputs.bindings {
             let Some(exporter) = handle_module(graph, handle) else {
@@ -80,22 +118,35 @@ impl<'a> Prepared<'a> {
             shared,
             exporters,
             stories,
+            previews,
             unnamed_renderer,
-            unnamed_preview,
             renderer: inputs.renderer,
-            preview: PREVIEWS
-                .iter()
-                .find(|candidate| graph.contains_key(**candidate))
-                .copied(),
+        })
+    }
+
+    /// Each named preview closure is calculated once, even for several stories.
+    pub(crate) fn named_previews(&self) -> impl Iterator<Item = &str> {
+        self.previews.values().filter_map(|preview| match preview {
+            Preview::Named(path) => Some(path.as_str()),
+            _ => None,
         })
     }
 
     /// Current eligible exporters, selected directly into a caller's job vector.
-    pub(crate) fn exporters(&self) -> impl Iterator<Item = (&'a str, bool)> + '_ {
+    pub(crate) fn exporters(&self) -> impl Iterator<Item = (&'a str, Common<'_>)> + '_ {
         self.exporters.iter().copied().filter_map(|module| {
-            let story = self.stories.contains(module);
-            (!(story && self.unnamed_preview || !story && self.unnamed_renderer))
-                .then_some((module, story))
+            let common = match self
+                .stories
+                .get(module)
+                .map(|folder| &self.previews[folder])
+            {
+                Some(Preview::Absent) => Common::Preview(None),
+                Some(Preview::Named(path)) => Common::Preview(Some(path)),
+                Some(Preview::Unnamed) => return None,
+                None if !self.unnamed_renderer => Common::Renderer,
+                None => return None,
+            };
+            Some((module, common))
         })
     }
 }
@@ -135,7 +186,13 @@ fn records(generation: &JavaScriptGeneration) -> serde_json::Result<Records<'_>>
         } else {
             generation.module_digests.get(path).and_then(Option::as_ref)
         };
-        let record = digest(&to_vec(&(path, imports, content))?);
+        let fields = (path, imports, content);
+        let encoded = if let Some(styles) = generation.preview_stylesheet_digests.get(path) {
+            to_vec(&(fields, styles))?
+        } else {
+            to_vec(&fields)?
+        };
+        let record = digest(&encoded);
         modules.insert(path.as_str(), to_vec(&(path, Some(record)))?);
     }
     for path in generation.modules.values().flatten() {

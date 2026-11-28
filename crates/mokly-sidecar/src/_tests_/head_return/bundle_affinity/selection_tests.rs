@@ -29,6 +29,7 @@ fn head_vite_stylesheets_prefer_the_newest_idle_compiler() {
             configuration_directory: ".".into(),
             entry_files: Vec::new(),
             stories_files: Vec::new(),
+            storybook_folders: Default::default(),
             renderer: None,
             repository_roots: Vec::new(),
             module_resolution: Default::default(),

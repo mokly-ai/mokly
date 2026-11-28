@@ -20,18 +20,35 @@ impl InputStamp {
             identities,
             directories,
             vite_env,
+            previews,
         } = self;
         let mut result = Self {
             vite_env: vite_env.clone(),
             ..Self::default()
         };
+        for path in previews.keys() {
+            result.previews.insert(
+                path.clone(),
+                tree.project(path)
+                    .ok()
+                    .flatten()
+                    .filter(|node| node.kind == mokly_source_interface::tree::FileKind::File)
+                    .map(|node| node.identity),
+            );
+        }
         for path in memberships.keys() {
             result
                 .memberships
                 .insert(path.clone(), membership(tree, path));
         }
         for path in files.keys() {
-            result.file(tree, path.clone());
+            if let Some(Some(selected)) = previews.get(path) {
+                result
+                    .files
+                    .insert(path.clone(), tree.digest(selected).ok());
+            } else {
+                result.file(tree, path.clone());
+            }
         }
         for path in unretained.keys() {
             result

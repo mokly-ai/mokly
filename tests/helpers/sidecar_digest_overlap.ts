@@ -41,6 +41,7 @@ export function controlledReads(
     const entry = handles.get(handle)!;
     return {
       isFile: () => true,
+      isDirectory: () => false,
       size: files[entry.file]!.statSize ?? entry.bytes.length,
     };
   });

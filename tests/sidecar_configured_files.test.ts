@@ -58,11 +58,12 @@ test("a catch-all paths key cannot redirect generated entries, stories, renderer
     assert.equal(exports.entries["entry.mjs"]!.value, "configured", mode);
     assert.equal(exports.stories["story.stories.mjs"]!.value, "story", mode);
     assert.equal(exports.renderer?.default, "renderer", mode);
-    assert.deepEqual(
-      exports.preview?.default,
-      { globals: { proof: "preview" } },
+    const preview = exports.previews?.[".storybook"];
+    assert.ok(
+      preview && typeof preview === "object" && "default" in preview,
       mode,
     );
+    assert.deepEqual(preview.default, { globals: { proof: "preview" } }, mode);
   }
 });
 

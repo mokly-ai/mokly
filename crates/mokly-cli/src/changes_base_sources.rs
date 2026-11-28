@@ -48,7 +48,8 @@ pub(super) trait NativePhases: BaseProvider {
 pub struct NativeSources {
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) config: ResolvedConfig,
-    pub(super) inventory: Inventory,
+    /// Pending Storybook roots defer discovery until the base side has its dependencies.
+    pub(super) inventory: Option<Inventory>,
     pub(super) checkout: Option<CheckoutIdentity>,
     pub(super) dependencies: Option<DependencySources>,
 }
@@ -118,14 +119,20 @@ impl NativeBase {
                 SourceCache::Unleased
             })?;
         }
-        let discovery: &dyn Discovery = &Discoverer { tree: tree.clone() };
-        let inventory = match discovery.discover(&config, None) {
-            Ok(inventory) => inventory,
-            Err(source) => return Err(Error::Catalogue { source }),
+        let inventory = if config.needs_storybook() {
+            None
+        } else {
+            let discovery: &dyn Discovery = &Discoverer { tree: tree.clone() };
+            match discovery.discover(&config, None) {
+                Ok(inventory) => Some(inventory),
+                Err(source) => return Err(Error::Catalogue { source }),
+            }
         };
         let needs_sidecar = configured_sidecar(&config)
-            || inventory.files.iter().any(|file| {
-                !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
+            || inventory.as_ref().is_none_or(|inventory| {
+                inventory.files.iter().any(|file| {
+                    !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
+                })
             });
         let dependencies = if needs_sidecar {
             Some(self.dependencies.sources(request, early)?)
@@ -168,7 +175,8 @@ impl NativeBase {
 }
 
 fn configured_sidecar(config: &ResolvedConfig) -> bool {
-    config.modules.renderer.is_some()
+    config.needs_storybook()
+        || config.modules.renderer.is_some()
         || config.modules.postcss.is_some()
         || (config.vite() && !local_roots(config, &Default::default()).is_empty())
 }

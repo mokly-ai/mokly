@@ -13,13 +13,12 @@ empty root list reads nothing. An explicit whole-tree root lists all regular
 files. Root ownership, globs, and source diagnostics follow the catalogue
 rules. Every base read returns checkout-converted bytes.
 
-HTML, Markdown, YAML and CSS need no extraction. A base that needs
-JavaScript, a renderer module, consumer PostCSS, or the
-[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
-extracts its sources. A
-source archive copies checkout-converted regular files
-with the pinned commit's attributes, including line endings, smudge filters,
-and Git LFS downloads. Network access is allowed within the preparation
+HTML, Markdown, YAML and CSS need no extraction. A base that needs JavaScript,
+a renderer, consumer PostCSS, or the [Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
+extracts its sources. A root without `dir` needs an extraction before discovery to
+[load `main.*`](./mokly-root-discovery.md#roots-from-main). The archive copies regular
+files with the pinned commit's checkout conversion, including line endings, smudge
+filters, and Git LFS downloads. Network access is allowed within the preparation
 limits. The disk use of an extraction stays within the source cache capacity.
 Memory use stays bounded independently of repository size. The comparison of
 an opaque public resource also uses bounded memory, whatever the size of the

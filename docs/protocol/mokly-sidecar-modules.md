@@ -128,9 +128,10 @@ package CSS file. It also covers missing build targets for modules that Node
 loads for the Vite config.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
-configured entry module, stories file, and renderer, and the selected
-Storybook preview, and each import loads that file. TypeScript `paths` never
-apply to these imports, in any attempt of a compile.
+configured entry module, stories file, and renderer, and the selected preview
+file of each [Storybook folder](./mokly-storybook.md#storybook-folders) of the
+stories files, and each import loads that file. TypeScript `paths` never apply
+to these imports, in any attempt of a compile.
 Decision: the imports of the virtual entry never follow `paths`, also when a
 `paths` key matches the path of a configured file. Imports that follow `paths`
 were rejected, because the
@@ -173,8 +174,11 @@ Node's rule for `.mjs` and `.mts` importers, the `__esModule` default otherwise.
 The rule matches unwrapped imports in the same Mokly bundle.
 A wrapper diagnostic names the importer's logical source path as its location
 and the wrapped file's logical name when it describes that module's exports.
-Peers resolve from the configuration directory. Virtual modules do not enter the source inventory. CSS Modules
-in dependencies use the same logical dependency names as their graph records.
+Peers resolve from the configuration directory. When `@storybook/react` does
+not resolve there, it resolves under the
+[Storybook folder rules](./mokly-storybook.md#storybook-folders). Virtual
+modules do not enter the source inventory. CSS Modules in dependencies use the
+same logical dependency names as their graph records.
 A changed map uses a new evaluation digest and retains the old generation
 until its final graph or request releases it.
 An evaluation-only change reuses compiled code without another compilation.

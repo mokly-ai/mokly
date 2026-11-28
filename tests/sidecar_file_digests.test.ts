@@ -15,7 +15,10 @@ function synchronousReads(context: TestContext) {
     assert.fail("digest reads must use the synchronous filesystem boundary");
   });
   context.mock.method(fs, "openSync", () => 17);
-  context.mock.method(fs, "fstatSync", () => ({ isFile: () => true }));
+  context.mock.method(fs, "fstatSync", () => ({
+    isFile: () => true,
+    isDirectory: () => false,
+  }));
   context.mock.method(fs, "readSync", () => 0);
   return context.mock.method(fs, "closeSync", () => undefined);
 }
@@ -27,7 +30,10 @@ test("digests reject FIFO handles through nonblocking opens", async (context) =>
     assert.equal(flags, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
     return 17;
   });
-  context.mock.method(fs, "fstatSync", () => ({ isFile: () => false }));
+  context.mock.method(fs, "fstatSync", () => ({
+    isFile: () => false,
+    isDirectory: () => false,
+  }));
   await assert.rejects(fileDigest("fifo"), { message: "not a regular file" });
   assert.equal(close.mock.callCount(), 1);
 });
@@ -42,7 +48,7 @@ test("digests preserve missing results and close handles after read failures", a
   });
   context.mock.method(fs, "fstatSync", () => {
     if (phase === "stat") throw failure;
-    return { isFile: () => true };
+    return { isFile: () => true, isDirectory: () => false };
   });
   context.mock.method(fs, "readSync", () => {
     if (phase === "read") throw failure;

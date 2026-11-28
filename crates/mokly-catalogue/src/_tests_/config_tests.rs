@@ -15,6 +15,7 @@ fn schema_and_core_accept_the_configuration_examples() {
         json!({}),
         json!({"$schema":"./node_modules/@mokly/mokly/config.schema.json","roots":[{"dir":"specs"}]}),
         json!({"roots":[{"dir":"src/features","transparent":["__mockups__"]}]}),
+        json!({"roots":[{"storybook":".storybook"}]}),
         json!({"roots":[{"dir":"specs"},{"dir":"packages/ui/src","path":"components"}]}),
         json!({"colorSchemes":["dark","light"],"renderer":"specs/renderer.tsx","postcss":"postcss.config.mjs",
             "stylesheets":[{"match":"**","stylesheets":["theme.css","$componentStylesheets","https://example.com/fonts.css"],"darkStylesheets":["dark.css"]}],
@@ -38,6 +39,8 @@ fn schema_and_core_reject_every_invalid_structural_setting() {
         json!({"roots":[]}),
         json!({"roots":[{}]}),
         json!({"roots":[{"dir":"specs","unknown":true}]}),
+        json!({"roots":[{"dir":"specs","storybook":{"config":".storybook","url":"https://example.com"}}]}),
+        json!({"roots":[{"storybook":".storybook","files":["**/*.stories.tsx"]}]}),
         json!({"roots":[{"dir":"specs","files":[]}]}),
         json!({"roots":[{"dir":"specs","path":"safe/COM1/child"}]}),
         json!({"roots":[{"dir":"specs","files":["../*.md"]}]}),
@@ -61,6 +64,16 @@ fn schema_and_core_reject_every_invalid_structural_setting() {
             "core accepted {value}"
         );
     }
+}
+
+#[test]
+fn storybook_files_without_dir_name_the_files_setting() {
+    let text = r#"{"roots":[{"storybook":".storybook","files":["**/*.stories.tsx"]}]}"#;
+    let CatalogueError::Config(issue) = parse(text, "mokly.config.json").unwrap_err() else {
+        panic!()
+    };
+    assert_eq!(issue.code, crate::diagnostic::Code::ConfigInvalid);
+    assert_eq!(issue.message, "roots[0].files requires dir");
 }
 
 #[test]

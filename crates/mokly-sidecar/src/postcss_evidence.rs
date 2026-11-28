@@ -22,7 +22,7 @@ pub struct FileIdentity {
 pub enum Read {
     /// Hash computed before delivering the complete raw buffer to its consumer.
     WholeFile {
-        /// Absolute child-side file name used by the read.
+        /// File name used by the read, in the path space of the reply.
         path: String,
         /// SHA-256 of the delivered raw bytes, before decoding or compilation.
         digest: String,

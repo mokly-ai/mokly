@@ -45,7 +45,9 @@ fn prepare(parsed: &ParsedEntry, kind: EntryKind) -> Result<PreparedEntries, Iss
             files: None,
             path: None,
             transparent: None,
+            storybook: None,
         },
+        storybook: ".storybook".into(),
         directory: "/repo/specs".into(),
         identity: "/repo/specs".into(),
     };

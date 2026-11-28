@@ -66,6 +66,7 @@ fn child_checks_environment() {
                 entry_files: vec!["component.mockup.tsx".into()],
                 renderer: Some("renderer.tsx".into()),
                 stories_files: Vec::new(),
+                storybook_folders: Default::default(),
                 module_resolution: ModuleResolution {
                     package_roots: vec![repository.display().to_string()],
                     ..ModuleResolution::default()

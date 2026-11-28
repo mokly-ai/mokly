@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { ViteCssResult } from "../packages/mokly/src/generated/sidecar/ViteCssResult.js";
 
 import {
@@ -12,6 +13,44 @@ import {
 } from "./fixtures/vite_incremental.js";
 import { reviewFixture, reviewPage } from "./fixtures/vite_review.js";
 import { reportDuration } from "./helpers/durations.js";
+
+test("Vite keeps one setup for a story bundle, a stylesheet, and an added story", async (context) => {
+  const fixture = await reviewFixture(context);
+  const folder = "config/storybook";
+  const firstStory = "src/first.stories.tsx";
+  const secondStory = "src/second.stories.tsx";
+  const stylesheet = "styles/review.css";
+  const story =
+    'export default { title: "Review" }; export const Primary = {};';
+  await fixture.write(firstStory, story);
+  await fixture.write(stylesheet, ".review { color: teal }");
+  const setup = { ...fixture.params, entryFiles: [], storiesFiles: [] };
+  const compile = (storiesFiles: string[]) =>
+    fixture.sidecar.call<BundleResult>("bundle", {
+      ...setup,
+      storiesFiles,
+      storybookFolders: Object.fromEntries(
+        storiesFiles.map((file) => [file, folder]),
+      ),
+    });
+  const first = await compile([firstStory]);
+  assert.deepEqual(
+    first.modules.map(({ path }) => path),
+    [firstStory],
+  );
+  const transformed = await fixture.sidecar.call<ViteCssResult>(
+    "transformViteCss",
+    { setup, stylesheet, file: path.join(fixture.root, stylesheet) },
+  );
+  assert.match(transformed.text, /color: teal/);
+  await fixture.write(secondStory, story);
+  const second = await compile([firstStory, secondStory]);
+  assert.deepEqual(
+    second.modules.map(({ path }) => path),
+    [firstStory, secondStory],
+  );
+  await fixture.sidecar.call("shutdown");
+});
 
 for (const callback of [
   {

@@ -45,7 +45,10 @@ export function callStory(
 }
 
 export async function renderStory(...params: Parameters<typeof callStory>) {
-  const result = await callStory(...params);
+  return expectRenderedStory(await callStory(...params));
+}
+
+export function expectRenderedStory(result: RenderStoryResult): RenderResult {
   assert.ok("html" in result, JSON.stringify(result));
   return result;
 }

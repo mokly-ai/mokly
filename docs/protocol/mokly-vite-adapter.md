@@ -57,16 +57,14 @@ rejected, because it adds a new error.
 
 ## The Setup
 
-One setup compiles every JavaScript entry of a side: each entry module, each
-stories file, the renderer, and the Storybook preview. With a Storybook
-folder, Mokly loads Storybook's merged Vite setup for every JavaScript entry.
+One setup per side compiles every entry module, stories file, renderer, and
+selected preview file of each [Storybook folder](./mokly-storybook.md#storybook-folders) used by the stories.
+With a Storybook folder, every JavaScript entry uses Storybook's merged Vite setup.
 
 Without a Storybook folder, Mokly loads the app setup for every JavaScript
-entry. The app setup comes from the first Vite config file that Vite's own
-lookup finds in the configuration directory. The lookup uses Vite's file names
-and order. Without such a file, Vite's defaults apply. Mokly loads every
-config file that Vite's default config loader accepts, in ES module or
-CommonJS form.
+entry. The setup uses the first config in the configuration directory in Vite's
+file name order. Vite's defaults apply when there is no file. Mokly loads the
+same ES module and CommonJS config files as Vite's default loader.
 
 Decision: one setup compiles every JavaScript entry, and a Storybook folder
 selects Storybook's merged setup. Stories then match Storybook, and each module
@@ -117,7 +115,7 @@ map of a CSS Module. Mokly's plugins handle each import in this list before
 every plugin of the setup:
 
 - the virtual entry, which exports every entry module, stories file, the
-  renderer, and the Storybook preview, under the
+  renderer, and the selected preview file of each Storybook folder, under the
   [module source rules](./mokly-sidecar-modules.md#authoring-and-evaluation);
 - the attributed authoring facade for repository-owned importers of
   `@mokly/mokly`, and the unattributed API for installed packages, under the
@@ -164,9 +162,10 @@ Vite config file or the config import that failed. No Vite diagnostic or
 
 ## Evaluation And One React Runtime
 
-`bundle` evaluates nothing. `describe` evaluates the virtual entry through
-Vite's module runner, after `cssModules` installed the class maps. Each module
-of a generation evaluates once. React and React DOM resolve from the side's
+The [sidecar bundling rules](./mokly-sidecar.md#bundling) say which code
+`bundle` runs. `describe` evaluates the virtual entry through Vite's module
+runner, after `cssModules` installed the class maps. Each module of a
+generation evaluates once. React and React DOM resolve from the side's
 configuration directory through the same lookup as any other import, so a
 setup alias of `react` or `react-dom` selects the side's one React runtime.
 Every module that Vite runs, every dependency that Node loads for it, the JSX
@@ -182,14 +181,14 @@ A Vite compile returns a
 source file and without a transform. The toolchain identity also digests the
 version and the real path of the Vite package.
 
-A Vite compile records no reuse evidence, because Vite's resolver and plugins
+A Vite compile records no resolver evidence, because Vite's resolver and plugins
 do not report the candidates that they probe. So, under the
 [reuse rules](./mokly-sidecar-recipes.md#reuse-and-identity), the
 [bundle cache](./mokly-base-cache.md#bundle-entries) never stores a Vite
-compile, and a `full` request never reuses it. A `serveEdit` request can reuse
-a marked Vite compile under the live checks. A Vite compile emits the
-[operation event](./mokly-sidecar-recipes.md#operation-events) `vite`, as an
-esbuild call emits `esbuild`.
+compile, and a `full` request never reuses it. A `serveEdit` request can reuse a
+marked one under the live checks, which include its preview link targets. A Vite
+compile emits the [operation event](./mokly-sidecar-recipes.md#operation-events)
+`vite`, as an esbuild call emits `esbuild`.
 
 ## Replaced Settings
 

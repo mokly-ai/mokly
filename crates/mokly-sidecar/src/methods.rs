@@ -13,6 +13,7 @@ use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
+use crate::storybook::ReadStorybookParams;
 use crate::vite_css::TransformViteCss;
 
 pub mod source_packages;
@@ -220,7 +221,7 @@ pub struct Hello {
     #[ts(optional)]
     pub capture: Option<CaptureHint>,
     /// Enable process-local timing records on standard error for this session.
-    #[serde(default, skip_serializing_if = "disabled")]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[ts(optional, as = "Option<bool>")]
     pub timings: bool,
 }
@@ -235,7 +236,9 @@ pub(crate) fn disabled(value: &bool) -> bool {
 pub enum Call {
     /// Exchange package versions.
     Hello(Hello),
-    /// Compile without evaluating consumer modules.
+    /// Read the stories configuration of one Storybook folder.
+    ReadStorybook(ReadStorybookParams),
+    /// Compile an unevaluated generation. The compile can load project configuration.
     Bundle(BundleRequest),
     /// Restore an immutable compiled generation in another worker.
     RestoreGeneration(Box<RestoreGeneration>),
@@ -265,17 +268,6 @@ pub enum Call {
     DisposeContext(DisposeContext),
     /// Drain in-flight work and exit.
     Shutdown(Empty),
-}
-
-impl Call {
-    /// Protocol default deadline; the process pool applies environment overrides.
-    pub fn timeout_ms(&self) -> u64 {
-        match self {
-            Self::Bundle(_) | Self::Describe(_) => 120_000,
-            Self::ProcessCss(_) | Self::TransformViteCss(_) => 60_000,
-            _ => 30_000,
-        }
-    }
 }
 
 #[cfg(test)]

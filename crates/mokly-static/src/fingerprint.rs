@@ -1,6 +1,6 @@
 //! Selected source digests and root membership protect one static generation.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -51,6 +51,7 @@ pub struct CapturedTree {
 struct RootCapture {
     selection: Selection,
     members: Membership,
+    absent_storybook: BTreeSet<PathBuf>,
 }
 impl CapturedTree {
     /// Capture one build's inputs without retaining a second copy of their bytes.
@@ -150,6 +151,7 @@ impl InputTree for CapturedTree {
     #[tracing::instrument(name = "output.fingerprint", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()> {
         let selection = Selection::new(config, excluded)?;
+        let absent_storybook = self.evidence.storybook(config, self, self.live.as_ref())?;
         for root in &config.roots {
             let _ = self.project(&root.directory);
         }
@@ -174,8 +176,11 @@ impl InputTree for CapturedTree {
                 .len() as u64,
         );
         tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
-        *self.roots.lock().unwrap_or_else(|error| error.into_inner()) =
-            Some(RootCapture { selection, members });
+        *self.roots.lock().unwrap_or_else(|error| error.into_inner()) = Some(RootCapture {
+            selection,
+            members,
+            absent_storybook,
+        });
         Ok(())
     }
 
@@ -246,7 +251,9 @@ impl InputTree for CapturedTree {
                     .and_then(Option::as_ref)
                     .is_some_and(|node| reads.contains_key(&node.identity))
                 || roots.as_ref().is_some_and(|roots| {
-                    roots.selection.root(path) || roots.members.files.contains(path)
+                    roots.selection.root(path)
+                        || roots.members.files.contains(path)
+                        || roots.absent_storybook.contains(path)
                 });
             if !selected {
                 continue;

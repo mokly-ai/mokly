@@ -4,7 +4,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::discovery::{Discovery, Inventory};
+use mokly_catalogue::discovery::{Discoverer, Discovery, Inventory};
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::version::VERSION;
@@ -110,7 +110,7 @@ impl NativeBase {
         }
         let NativeSources {
             tree,
-            config,
+            mut config,
             inventory,
             checkout,
             dependencies,
@@ -172,9 +172,17 @@ impl NativeBase {
             )?);
         }
         let runtime = Arc::new(runtime);
+        let discovery: Arc<dyn Discovery> = if let Some(inventory) = inventory {
+            Arc::new(Discovered(inventory))
+        } else {
+            runtime
+                .expand_storybook_roots(&mut config)
+                .map_err(|source| Error::Catalogue { source })?;
+            Arc::new(Discoverer { tree: tree.clone() })
+        };
         let builder: &dyn CatalogueBuilder = &Builder {
             tree,
-            discovery: Arc::new(Discovered(inventory)),
+            discovery,
             definitions: runtime.clone(),
         };
         let mut catalogue = match builder.prepare(&config, None) {

@@ -3,8 +3,74 @@
 use std::fs;
 use std::process::Command;
 
+use tempfile::TempDir;
+
 mod changes_support;
-use changes_support::{base, run, run_with_node, write};
+use changes_support::{base, run, run_with_environment, run_with_node, write};
+
+fn storybook_base() -> TempDir {
+    base(&[
+        (
+            "mokly.config.json",
+            r#"{"roots":[{"storybook":".storybook"}],"review":{"base":"fixture-base"}}"#,
+        ),
+        (
+            ".storybook/main.ts",
+            "export default { stories: ['../specs/*.stories.tsx'] };",
+        ),
+        (
+            "specs/card.stories.tsx",
+            "export default {}; export const Card = {};",
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p>Home</p>",
+        ),
+    ])
+}
+
+#[test]
+fn missing_node_for_head_storybook_discovery_is_build_invalid() {
+    let fixture = storybook_base();
+    let root = fixture.path();
+    let output = run_with_environment(
+        root,
+        &["build", "--no-changes"],
+        Some(&root.join("missing-node")),
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(1), "{stderr}");
+    assert!(stderr.contains("[mokly/build-invalid]"), "{stderr}");
+    assert!(stderr.contains("missing-node is unavailable"), "{stderr}");
+}
+
+#[test]
+fn missing_node_for_base_storybook_discovery_makes_the_base_runtime_unavailable() {
+    let fixture = storybook_base();
+    let root = fixture.path();
+    write(
+        root,
+        "mokly.config.json",
+        r#"{"review":{"base":"fixture-base"}}"#,
+    );
+    fs::remove_file(root.join("specs/card.stories.tsx")).unwrap();
+    let output = run_with_environment(
+        root,
+        &["build"],
+        Some(&root.join("missing-node")),
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(output.status.code(), Some(0), "{stderr}");
+    assert!(
+        stdout.contains("Changes unavailable · base runtime unavailable"),
+        "{stdout}\n{stderr}"
+    );
+    assert!(stderr.contains("[mokly/build-invalid]"), "{stderr}");
+    assert!(stderr.contains("missing-node is unavailable"), "{stderr}");
+}
 
 #[test]
 fn ready_counts_use_entry_membership_and_base_override_and_no_changes_stays_git_free() {

@@ -34,11 +34,13 @@ A `bundle` request carries the optional request-only `capture` value: `full`,
 the default, or `serveEdit`. The value is not a bundle setting. The sidecar
 removes it before it compares settings, computes the compilation identity,
 restores a recipe, or checks the recipe size. A `full` request records the
-reuse evidence of the next section. A `serveEdit` request records no capture
-witnesses. A marked compilation keeps the
-[private lookup files](./mokly-sidecar-folder-reuse.md#private-folder-files).
-Every request still records consumed source digests, the module graph,
-metadata digests, directory lists, and the preview selection.
+reuse evidence of the [reuse rules](#reuse-and-identity). A `serveEdit`
+request records no capture witnesses. A marked compilation keeps the
+[private lookup files](./mokly-sidecar-folder-reuse.md#private-folder-files)
+and the link targets of its preview selection, on both compile paths. Every
+request still records consumed source digests, the module graph, metadata
+digests, directory lists, and the
+[preview selection](#preview-selection) of each Storybook folder.
 
 Serve switches its head to `serveEdit` after it publishes its first state,
 before it reports readiness. Each head preparation that starts after the
@@ -47,11 +49,12 @@ preparations, the base side of Serve, `build`, and `publish` send `full`.
 
 A `serveEdit` compilation with a known toolchain identity carries the marker
 `uncaptured: "serveEdit"` in its reuse evidence, with `complete` and `durable`
-false and only its private lookup files, unless a rule below or a
-[package folder rule](./mokly-sidecar-folder-reuse.md) withholds it. Only this
-marker marks a deliberate omission. Evidence that is incomplete for any other
-reason carries no marker, also evidence that the sidecar drops to fit the
-frame limit. A compilation without a toolchain identity carries no marker.
+false and only its private lookup files and preview link targets, unless a
+rule below or a [package folder rule](./mokly-sidecar-folder-reuse.md)
+withholds it. Only this marker marks a deliberate omission. Evidence that is
+incomplete for any other reason carries no marker, also evidence that the
+sidecar drops to fit the frame limit. A compilation without a toolchain
+identity carries no marker.
 
 The marker stays off when an authored absolute import specifier matches a
 TypeScript `paths` key, or when the sidecar cannot tell whether it matches. An
@@ -72,30 +75,50 @@ head. A capture at each graceful stop was rejected, because it delays every
 graceful stop and gives nothing on a forced stop. Capture on every edit was
 rejected, because it keeps that cost on every edit.
 
+## Preview Selection
+
+Before it compiles, a `bundle` request selects the preview file of each
+[Storybook folder](./mokly-storybook.md#storybook-folders) of its stories
+files. The recipe records the chosen candidate, its real file, and each
+absent candidate. It also records the logical name from the compiler's entry
+edge, when the graph names that target. The
+[render input keys](./mokly-watch.md#invalidation-through-the-render-graph),
+stylesheet roots, and links use that graph name. Compilation, restoration,
+and both reuse checks use the recorded file selection. Reuse ends if an
+absent candidate appears or the chosen candidate changes its link target.
+One selection serves these consumers because a second selection after
+the compile could miss a new preview or a changed link.
+
 ## Reuse And Identity
 
 A compilation is reused only while its inputs stay unchanged. These inputs
 include the ancestor `package.json` and `tsconfig.json` candidates of each
 consumed module up to its source or selected dependency root, the resolved
-`react/package.json`, and the Storybook preview candidates, each including
-absent files. Added or removed files in a consumed-module directory invalidate
-reuse, so a higher-priority module in that directory cannot remain hidden.
-Manual `r` uses these same input checks. Resolution metadata and directory
-membership remain observable. CSS bytes belong to stylesheet processing rather
-than the JavaScript compilation.
+`react/package.json`, the [preview selection](#preview-selection) and the
+other preview candidates of each Storybook folder. A framework fallback for
+`@storybook/react` adds the files it reads and all `package.json` candidates
+of the direct lookup, including absences. Conflicting Storybook input reads
+prevent reuse. Added or removed files in a consumed-module directory
+invalidate reuse, so a higher-priority module in
+that directory cannot remain hidden. Manual `r` uses these same input checks.
+Resolution metadata and directory membership remain observable. CSS bytes
+belong to stylesheet processing rather than the JavaScript compilation.
 
 Reuse of a captured compilation also requires an equal toolchain identity and
 unchanged reuse evidence. The toolchain identity digests the Mokly, esbuild, and
 Node versions, every file in the `dist/` directory of the Mokly package that
 runs the sidecar, and the real root of that package. The
 [Vite adapter](./mokly-vite-adapter.md#recipes-and-reuse) adds the Vite
-package to this identity. A Vite compile records no reuse evidence. The reuse
-evidence records each file and directory that can change how a bundled import
-or a peer resolves:
+package to this identity. A Vite compile records no capture witnesses: its
+reuse evidence holds only the link targets of its preview selection, for the
+live checks. The reuse evidence of a captured compilation records each file
+and directory that can change how a bundled import or a peer resolves:
 
 - the `jsconfig.json` candidate beside each `tsconfig.json` candidate, and
   each file that a tsconfig `extends` chain names;
 - the package manifest of each resolved peer;
+- the framework fallback inputs of `@storybook/react`, including direct
+  lookup candidates;
 - each directory where the resolver can look for a candidate before it finds
   its result: relative paths with their extensions and index files, `paths`
   targets, `baseUrl`, each `node_modules` level, and each configured lookup
@@ -111,15 +134,17 @@ cannot record the evidence of an import completely in a `full` request, the
 compilation is never reused and never stored. When the binary reuses a bundle
 result without a `bundle` request, it checks the same evidence. Reuse evidence
 moves no render input key and is not a watch input. The compilation identity
-includes the toolchain identity, the content of the recorded `jsconfig.json` and
-`extends` files, the real path and the manifest content of each resolved peer,
-and the content of each present `tsconfig.json` and `package.json` candidate
-above the source root. So a change to one of them gives a new generation id. The
-other reuse evidence stays out of the identity. An incomplete compilation,
-marked or not, gets a fresh identity at each compile, also when the sidecar
-drops its evidence to fit the frame limit. The binary then never reuses the
-definitions of an earlier generation for it. A complete compilation keeps a
-deterministic identity.
+includes the toolchain identity, the preview selection of each Storybook
+folder, the content of the recorded `jsconfig.json` and `extends` files, the
+real path and the manifest content of each resolved peer, the content of the
+files that Mokly reads to resolve `@storybook/react` through a framework
+package, and the content of each present `tsconfig.json` and
+`package.json` candidate above the source root. So a change to one of them
+gives a new generation id. The other reuse evidence stays out of the identity.
+An incomplete compilation, marked or not, gets a fresh identity at each
+compile, also when the sidecar drops its evidence to fit the frame limit. The
+binary then never reuses the definitions of an earlier generation for it. A
+complete compilation keeps a deterministic identity.
 Decision: a reuse check of a compilation compares recorded digests, whole
 directory entries, and link targets with the filesystem, so it copies no
 resolver rule. A second resolve with esbuild was rejected, because it runs an
@@ -132,10 +157,11 @@ own comparison.
 A marked compilation is reused only by a `serveEdit` request. Its reuse
 checks are the live checks alone: equal settings, equal resolved roots, an
 equal toolchain identity, the unchanged inputs and directory membership of
-the first paragraph of this section, and its unchanged private lookup files.
-Its reuse evidence needs `complete` and `durable` false and no recorded
-entries except these files, and the compilation needs a known toolchain
-identity. A `full` request never reuses a marked compilation.
+the first paragraph of this section, and its unchanged private lookup files
+and preview link targets. Its reuse evidence needs `complete` and `durable`
+false and no recorded entries except these files and link targets, and the
+compilation needs a known toolchain identity. A `full` request never reuses a
+marked compilation.
 A `serveEdit` request tries every captured compilation before a marked one.
 At a `bundle` request, the sidecar compares the toolchain identity of each
 candidate with its own. The binary keeps these rules when it reuses a

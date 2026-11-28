@@ -7,7 +7,7 @@ use crate::key::NodeKey;
 use crate::render_closure::{Parts, closure};
 use crate::render_exporters;
 use crate::render_inputs::{RenderInputs, RenderKeys};
-use crate::render_preparation::Prepared;
+use crate::render_preparation::{Common, Prepared};
 use crate::render_reuse::Facts;
 use crate::workers::RenderWorkers;
 
@@ -38,11 +38,11 @@ pub(crate) fn build(
 ) -> serde_json::Result<Built> {
     let graph = &inputs.generation.modules;
     let prepared = Prepared::new(inputs)?;
-    let (renderer, preview) = common(&prepared, graph);
+    let common = CommonParts::new(&prepared, graph);
     let Mode::Reuse(previous) = mode else {
         let jobs = prepared
             .exporters()
-            .map(|(module, story)| (module, if story { &preview } else { &renderer }))
+            .map(|(module, closure)| (module, common.get(closure)))
             .collect::<Vec<_>>();
         tracing::Span::current().record("recomputed", jobs.len());
         tracing::Span::current().record("reused", 0);
@@ -57,31 +57,22 @@ pub(crate) fn build(
             reuse: matches!(mode, Mode::Deferred).then(|| Box::new(OnceLock::new())),
         });
     };
-    let facts = Facts::new(&prepared, &renderer, &preview)?;
-    let reuse = previous.and_then(|keys| Some((keys, keys.completed_facts()?)));
-    let (same_renderer, same_preview) = reuse.map_or((false, false), |(_, before)| {
-        (
-            facts.same_common(before, false),
-            facts.same_common(before, true),
-        )
-    });
-    let affected = if same_renderer || same_preview {
-        reuse.map_or_else(BTreeSet::new, |(_, before)| facts.affected(before, graph))
-    } else {
-        BTreeSet::new()
-    };
+    let facts = Facts::new(&prepared, &common.renderer, &common.previews)?;
+    let reuse = previous
+        .and_then(|keys| Some((keys, keys.completed_facts()?)))
+        .filter(|(_, before)| facts.same_shared(before));
+    let affected = reuse.map_or_else(BTreeSet::new, |(_, before)| facts.affected(before, graph));
     let mut modules = BTreeMap::new();
     let mut jobs = Vec::new();
-    for (module, story) in prepared.exporters() {
+    for (module, closure) in prepared.exporters() {
         if let Some((previous, before)) = reuse
             && !affected.contains(module)
-            && (if story { same_preview } else { same_renderer })
-            && facts.same_mode(before, module)
+            && facts.same_common(before, module, closure)
             && let Some(key) = previous.keyed(module)
         {
             modules.insert(module.to_owned(), key.clone());
         } else {
-            jobs.push((module, if story { &preview } else { &renderer }));
+            jobs.push((module, common.get(closure)));
         }
     }
     tracing::Span::current().record("reused", modules.len());
@@ -102,23 +93,34 @@ pub(crate) fn build(
 /// Recreate temporary full-algorithm records without scheduling an exporter job.
 pub(crate) fn facts(inputs: &RenderInputs<'_>) -> serde_json::Result<Facts> {
     let prepared = Prepared::new(inputs)?;
-    let (renderer, preview) = common(&prepared, &inputs.generation.modules);
-    Facts::new(&prepared, &renderer, &preview)
+    let common = CommonParts::new(&prepared, &inputs.generation.modules);
+    Facts::new(&prepared, &common.renderer, &common.previews)
 }
 
-fn common<'a>(
-    prepared: &'a Prepared<'_>,
-    graph: &BTreeMap<String, Vec<String>>,
-) -> (Parts<'a>, Parts<'a>) {
-    let renderer = prepared.records.parts(
-        prepared
-            .renderer
-            .map_or_else(BTreeSet::new, |root| closure(graph, [root.to_owned()])),
-    );
-    let preview = prepared.records.parts(
-        prepared
-            .preview
-            .map_or_else(BTreeSet::new, |root| closure(graph, [root.to_owned()])),
-    );
-    (renderer, preview)
+struct CommonParts<'a> {
+    renderer: Parts<'a>,
+    previews: BTreeMap<&'a str, Parts<'a>>,
+    empty: Parts<'a>,
+}
+
+impl<'a> CommonParts<'a> {
+    fn new(prepared: &'a Prepared<'_>, graph: &BTreeMap<String, Vec<String>>) -> Self {
+        let parts = |root: &str| prepared.records.parts(closure(graph, [root.to_owned()]));
+        Self {
+            renderer: prepared.renderer.map_or_else(Parts::empty, parts),
+            previews: prepared
+                .named_previews()
+                .map(|root| (root, parts(root)))
+                .collect(),
+            empty: Parts::empty(),
+        }
+    }
+
+    fn get(&self, common: Common<'_>) -> &Parts<'a> {
+        match common {
+            Common::Renderer => &self.renderer,
+            Common::Preview(Some(root)) => &self.previews[root],
+            Common::Preview(None) => &self.empty,
+        }
+    }
 }

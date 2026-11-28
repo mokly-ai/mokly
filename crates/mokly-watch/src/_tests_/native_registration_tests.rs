@@ -41,7 +41,9 @@ pub(super) fn config() -> ResolvedConfig {
                 files: None,
                 path: None,
                 transparent: None,
+                storybook: None,
             },
+            storybook: ".storybook".into(),
         }],
     }
 }

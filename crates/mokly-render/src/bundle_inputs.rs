@@ -66,6 +66,7 @@ pub(crate) fn params(config: &ResolvedConfig, files: &[SourceFile], side: &SideI
             .filter(|file| file.kind == SourceKind::Stories)
             .map(|file| file.path.clone())
             .collect(),
+        storybook_folders: config.storybook_folders(files),
         renderer: config.renderer(),
         module_resolution: side.module_resolution.clone(),
         source_root: side.source_root.to_string_lossy().into_owned(),

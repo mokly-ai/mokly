@@ -111,10 +111,50 @@ pub(crate) fn modules(result: &results::Bundle) -> BTreeMap<String, Vec<String>>
         .map(|module| (module.path.clone(), module.imports.clone()))
         .collect()
 }
+
+pub(crate) fn selected_previews(result: &results::Bundle) -> BTreeMap<String, Option<String>> {
+    result
+        .compiled
+        .storybook_previews
+        .iter()
+        .filter_map(|(folder, preview)| {
+            let selected = preview.selected.as_ref()?;
+            Some((folder.clone(), selected.module.clone()))
+        })
+        .collect()
+}
+
+pub(crate) fn story_previews(
+    selected: &BTreeMap<String, Option<String>>,
+    modules: &BTreeMap<String, Vec<String>>,
+    folders: &BTreeMap<String, String>,
+) -> BTreeMap<String, String> {
+    folders
+        .iter()
+        .filter_map(|(story, folder)| {
+            let module = selected.get(folder)?.as_ref()?;
+            modules
+                .contains_key(module)
+                .then(|| (story.clone(), module.clone()))
+        })
+        .collect()
+}
+
 /// Capture every compiler digest and direct directory membership.
 pub(crate) fn stamp(result: &results::Bundle, repository: &Path) -> InputStamp {
     let mut stamp = InputStamp::default();
     let compiled = &result.compiled;
+    for preview in compiled.storybook_previews.values() {
+        for path in &preview.absent {
+            stamp.previews.insert(repository.join(path), None);
+        }
+        if let Some(selected) = &preview.selected {
+            stamp.previews.insert(
+                repository.join(&selected.path),
+                Some(repository.join(&selected.file)),
+            );
+        }
+    }
     if let Some(env) = compiled
         .vite
         .as_ref()

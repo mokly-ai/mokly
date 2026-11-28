@@ -1,4 +1,4 @@
-//! Stylesheet roots follow ordered module edges and renderer exclusion.
+//! Stylesheet services and ordered discovery of stylesheet imports.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
@@ -128,19 +128,9 @@ pub(crate) fn attempt(
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]
-pub(crate) fn roots(
+pub(crate) fn scan_roots<'a>(
     modules: &BTreeMap<String, Vec<String>>,
-    renderer: Option<&str>,
-    entries: &[String],
-    loaders: &BTreeMap<String, String>,
-) -> Vec<StylesheetRoot> {
-    scan_roots(modules, renderer, entries, loaders, false)
-}
-
-pub(crate) fn scan_roots(
-    modules: &BTreeMap<String, Vec<String>>,
-    renderer: Option<&str>,
-    entries: &[String],
+    roots: impl IntoIterator<Item = &'a str>,
     loaders: &BTreeMap<String, String>,
     adapter: bool,
 ) -> Vec<StylesheetRoot> {
@@ -150,48 +140,29 @@ pub(crate) fn scan_roots(
         |path| path.ends_with(".css")
     };
     let ancestors = stylesheet_ancestors_for(modules, stylesheet);
-    let files_for = |module: &str| {
-        let mut files = Vec::new();
-        let mut seen = BTreeSet::new();
-        visit_for(
-            module, modules, &ancestors, &mut seen, &mut files, stylesheet,
-        );
-        files
-    };
-    let mut renderer_files = Vec::new();
-    if let Some(renderer) = renderer {
-        renderer_files = files_for(renderer);
-    }
-    let excluded: BTreeSet<_> = renderer_files.iter().cloned().collect();
-    renderer_files.retain(|path| !ignored_for(path, loaders, adapter));
-    let mut roots = Vec::new();
-    if let Some(renderer) = renderer
-        && !renderer_files.is_empty()
-    {
-        roots.push(StylesheetRoot {
-            path: renderer.into(),
-            stylesheets: renderer_files,
-            excluded: BTreeSet::new(),
-            local_css: false,
-        });
-    }
     let mut seen_roots = BTreeSet::new();
-    for entry in entries {
-        if !seen_roots.insert(entry) {
-            continue;
-        }
-        let mut files = files_for(entry);
-        files.retain(|file| !excluded.contains(file) && !ignored_for(file, loaders, adapter));
-        if !files.is_empty() {
-            roots.push(StylesheetRoot {
-                path: entry.clone(),
-                stylesheets: files,
-                excluded: excluded.clone(),
-                local_css: false,
-            });
-        }
-    }
     roots
+        .into_iter()
+        .filter(|path| seen_roots.insert(*path))
+        .filter_map(|path| {
+            let mut files = Vec::new();
+            visit_for(
+                path,
+                modules,
+                &ancestors,
+                &mut BTreeSet::new(),
+                &mut files,
+                stylesheet,
+            );
+            files.retain(|file| !ignored_for(file, loaders, adapter));
+            (!files.is_empty()).then(|| StylesheetRoot {
+                path: path.into(),
+                stylesheets: files,
+                excluded: BTreeSet::new(),
+                local_css: false,
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -269,15 +240,20 @@ fn visit_for(
     }
 }
 
+pub(crate) fn css_module(path: &str, adapter: bool) -> bool {
+    if adapter {
+        vite::css_module(path)
+    } else {
+        path.ends_with(".module.css")
+    }
+}
+
 pub(crate) fn ignored_for(path: &str, loaders: &BTreeMap<String, String>, adapter: bool) -> bool {
     loaders.get(".css").is_some_and(|loader| loader == "empty")
-        || (if adapter {
-            vite::css_module(path)
-        } else {
-            path.ends_with(".module.css")
-        }) && loaders
-            .get(".module.css")
-            .is_some_and(|loader| loader == "empty")
+        || css_module(path, adapter)
+            && loaders
+                .get(".module.css")
+                .is_some_and(|loader| loader == "empty")
 }
 
 #[cfg(test)]

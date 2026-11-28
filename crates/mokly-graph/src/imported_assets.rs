@@ -26,7 +26,8 @@ pub(crate) fn register_imports(
     imports.sort_by_key(|import| (&import.asset.path, &import.module));
     for import in imports {
         let asset = &import.asset;
-        if !paths::portable(&asset.path, true) {
+        let route = paths::route("assets", &asset.path);
+        if !paths::portable(&route, true) {
             return Err(invalid(
                 &asset.path,
                 format!(
@@ -55,13 +56,7 @@ pub(crate) fn register_imports(
             excluded: Default::default(),
             local_css: false,
         };
-        register(
-            format!("assets/{}", asset.path),
-            asset.clone(),
-            &root,
-            names,
-            resources,
-        )?;
+        register(route, asset.clone(), &root, names, resources)?;
     }
     Ok(())
 }
@@ -77,7 +72,11 @@ pub(crate) fn register(
     names: &mut RouteInventory,
     resources: &mut BTreeMap<String, ResourcePlan>,
 ) -> Result<()> {
-    names.insert(&route, true)?;
+    let shared = resources
+        .get(&route)
+        .and_then(|previous| previous.asset.as_ref())
+        .is_some_and(|previous| previous.path == asset.path);
+    names.insert(&route, shared)?;
     let asset_key = key(
         NodeKind::Stylesheet,
         &[route.as_bytes(), asset.digest.as_bytes()],

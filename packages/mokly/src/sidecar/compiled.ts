@@ -10,7 +10,6 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Module } from "../generated/sidecar/Module.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
-import { previewCandidates } from "./bundle-entry.js";
 import type { Generation } from "./bundle.js";
 import { currentFileInputs, everyInput } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
@@ -22,6 +21,7 @@ import {
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
+import { previewModules, previewsCurrent } from "./storybook-folders.js";
 import { toolchainIdentity } from "./toolchain.js";
 import { setupCandidate } from "./vite-setup-input.js";
 import { currentViteToolchain } from "./vite-toolchain.js";
@@ -71,10 +71,8 @@ export function restore(
     if (isBuiltin(name)) return native.resolve(name, options);
     if (!fallback) {
       const paths = ModulePaths.createSync(params);
-      const preview = previewCandidates.find(
-        (file) => compiled.metadataInputs[file],
-      );
-      if (preview) paths.addConfigured(preview);
+      for (const [, file] of previewModules(compiled.storybookPreviews))
+        paths.addConfigured(file);
       fallback = sideRequire(paths, file);
     }
     return fallback.resolve(name, options);
@@ -165,6 +163,12 @@ export async function reuse(
     )
       continue;
     const current =
+      (!params.storiesFiles.length ||
+        (generation.compiled.storybookPreviews !== undefined &&
+          (await previewsCurrent(
+            paths.sourceRoot,
+            generation.compiled.storybookPreviews,
+          ).catch(() => false)))) &&
       (await currentFileInputs(
         generation.compiled.inputs,
         likelyChanged(generation, peers),
@@ -189,7 +193,10 @@ export async function reuse(
           ));
     if (current) {
       selected?.(generation);
-      return restore(params, generation.compiled, generation.modules);
+      return generation.id ===
+        generationId(generation.compiled.identity, params.evaluation)
+        ? generation
+        : restore(params, generation.compiled, generation.modules);
     }
   }
 }

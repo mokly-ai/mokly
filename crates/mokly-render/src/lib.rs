@@ -44,6 +44,7 @@ mod source_lease;
 mod source_paths;
 mod sources;
 mod sources_hint;
+mod storybook_roots;
 mod stylesheet_cache;
 mod stylesheet_capture;
 mod stylesheet_class_maps;

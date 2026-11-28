@@ -275,6 +275,8 @@ const sourceLoaders: Record<string, Loader> = {
   ".mts": "ts",
   ".cts": "ts",
   ".tsx": "tsx",
+  ".mtsx": "tsx",
+  ".ctsx": "tsx",
   ".json": "json",
 };
 

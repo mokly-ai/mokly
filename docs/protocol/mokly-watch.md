@@ -10,7 +10,7 @@ reference. Each input maps to the render graph node it feeds:
 
 | Input                                                                                                                                                              | Node                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| the configuration file                                                                                                                                             | config                            |
+| the configuration file and the [configuration inputs](./mokly-root-discovery.md#roots-from-main) of a root without `dir`                                           | config                            |
 | HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root                                                   | entry source                      |
 | entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports                                                                 | bundle generation, render inputs  |
 | the [inputs of a Vite compile](./mokly-vite-adapter-inputs.md#inputs-and-serve) under the Vite adapter                                                             | bundle generation, render inputs  |
@@ -65,8 +65,10 @@ inputs changes, and only then:
 - the consumed bytes or the ordered imports of a module in its closure: the
   entry module and every module that it imports, directly or through other
   modules;
-- the closure of the renderer module, for an entry module, or of the
-  Storybook preview, for a stories file;
+- the closure of the renderer module, for an entry module, or the closure of
+  the preview file of the stories file's
+  [Storybook folder](./mokly-storybook.md#storybook-folders), for a stories
+  file;
 - the class map of a CSS Module in the closure. A stylesheet edit that keeps
   every class map moves only stylesheet keys;
 - the path or title of a definition that a closure module exports or
@@ -79,14 +81,20 @@ inputs changes, and only then:
   resolved path of a package that the sidecar loads at render time, such as
   React. These move every key. Such a package other than React counts
   through its path only, and its manifest only on a closure module's
-  directory chain, because only some sides read that manifest.
+  directory chain, because only some sides read that manifest;
+- the `main.*` file of a Storybook folder, its other candidate names, and the
+  files that it loads, when Mokly reads `main.*` to resolve `@storybook/react`
+  under the [Storybook folder rules](./mokly-storybook.md#storybook-folders).
+  These move every key.
 
 When the module graph does not name the configured renderer, every entry
-module uses the whole bundle as its key. When it does not name the Storybook
-preview, every stories file does. The path or title of a definition that an
-installed package makes through the unattributed API moves every key. The
-sidecar does not report which module declares such a definition, so no
-closure shows which renders read it.
+module uses the whole bundle as its key. A stories file also uses the whole
+bundle when its folder has a preview and the
+[selection record](./mokly-sidecar-recipes.md#preview-selection) has no graph
+name for it. The path or title of a definition that an installed
+package makes through the unattributed API moves every key. The sidecar does
+not report which module declares such a definition, so no closure shows which
+renders read it.
 
 A render reads only its imports, its props and slots, and its render
 context. A module side effect of one entry module that changes another entry
@@ -157,7 +165,9 @@ during evaluation are buffered and replayed after readiness. Watch targets
 are the roots, the PostCSS directory roots, the rule roots, and the exact
 required files not covered by one of them; a required file with a denied
 directory between a root and itself stays an explicit target. Resolution
-metadata includes missing manifest and tsconfig candidates. File additions and
+metadata includes missing manifest and tsconfig candidates. It includes the
+direct renderer's manifest candidates when Storybook uses the framework
+fallback. File additions and
 removals in a consumed-module directory invalidate compilation reuse. The other
 [reuse evidence](./mokly-sidecar-recipes.md#reuse-and-identity) of a
 compilation, such as `jsconfig.json` candidates, `extends` targets, and peer

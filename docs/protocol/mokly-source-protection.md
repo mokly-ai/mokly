@@ -84,7 +84,9 @@ The inventory is the catalogue model's source set and is never written. It
 is the sorted, unique union of repository-relative POSIX paths
 of:
 
-- the configuration file, and the PostCSS module with its local imports;
+- the configuration file, the PostCSS module with its local imports, and the
+  [configuration inputs](./mokly-root-discovery.md#roots-from-main) of each
+  root without `dir`;
 - every entry source and Markdown document, and for JavaScript the
   transitive module graph that the sidecar's `bundle` reports, including
   inputs that tree shaking removes;

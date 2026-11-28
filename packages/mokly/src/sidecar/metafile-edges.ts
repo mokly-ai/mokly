@@ -52,6 +52,10 @@ export class MetafileEdges {
     this.entry = path.join(sourceRoot, virtualEntry);
   }
 
+  entryImports() {
+    return this.metafile.inputs[this.entry]?.imports ?? [];
+  }
+
   own(file: string): boolean {
     return (
       file.startsWith("mokly-authoring:") ||

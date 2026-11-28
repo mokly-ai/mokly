@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
-import path from "node:path";
 
-import { previewCandidates } from "./bundle-entry.js";
 import { metadataDigest } from "./file-digests.js";
 import { resolutionInputs } from "./resolution-inputs.js";
+import { recordPreviewInputs } from "./storybook-folders.js";
+import type { PreviewProbe } from "./storybook-folders.js";
+import { recordStorybookInputs } from "./storybook-inputs.js";
+import type { StorybookInputs } from "./storybook-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 
@@ -12,6 +14,8 @@ export async function viteMetadata(
   input: ViteInputs,
   setup: SetupSnapshot,
   graphFiles: ReadonlySet<string>,
+  storybookInputs?: StorybookInputs,
+  previewProbe?: PreviewProbe,
 ) {
   const { params, paths, peers } = input;
   const inputs: Record<string, string | null> = {};
@@ -25,8 +29,14 @@ export async function viteMetadata(
     if (!graphFiles.has(file))
       metadataInputs[paths.metadataName(file)] = inputs[file];
   }
-  for (const file of params.storiesFiles.length ? previewCandidates : [])
-    await record(path.resolve(params.sourceRoot, file));
+  if (previewProbe)
+    await recordPreviewInputs(
+      params.sourceRoot,
+      previewProbe,
+      inputs,
+      metadataInputs,
+    );
+  recordStorybookInputs(paths, storybookInputs, inputs, metadataInputs);
   for (const name of ["react/package.json", "react-dom/package.json"]) {
     const file = peers[name];
     if (typeof file === "string") await record(file, await fs.readFile(file));

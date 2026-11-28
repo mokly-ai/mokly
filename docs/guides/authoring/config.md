@@ -27,18 +27,19 @@ JSON file named by `--config`.
 Filesystem fields resolve from the configuration's directory by default.
 Inputs stay inside `repoRoot`. The configuration contains data. Product
 JavaScript runs in entry modules, the renderer, and the optional PostCSS
-module.
+module. Mokly can also run Storybook's `main.*` to select source files.
 
 ## Source roots
 
 A root selects authored files and determines their path prefix.
 
-| Field         | Purpose                                      |
-| ------------- | -------------------------------------------- |
-| `dir`         | Select a config-relative source directory.   |
-| `files`       | Select files with root-relative globs.       |
-| `path`        | Add a prefix to the derived catalogue paths. |
-| `transparent` | Remove named directories from derived paths. |
+| Field         | Purpose                                                               |
+| ------------- | --------------------------------------------------------------------- |
+| `dir`         | Select a config-relative source directory.                            |
+| `files`       | Select files with globs relative to `dir`. This field requires `dir`. |
+| `path`        | Add a prefix to the derived catalogue paths.                          |
+| `transparent` | Remove named directories from derived paths.                          |
+| `storybook`   | Select a config-relative Storybook folder.                            |
 
 The default root is `specs`. Default patterns include mockup modules,
 Storybook stories, HTML screens, HTML components, HTML pages, YAML use cases,
@@ -46,9 +47,45 @@ and Markdown documents. With custom `files` globs, the globs determine the
 entry shape. An ordinary matched JavaScript or TypeScript file is an entry
 module. Every export of that module is inspected.
 
-The same entry can match only one root. Keep product helpers outside the entry
-patterns unless they export a definition. Imported helpers remain watched and
-protected source inputs.
+Mokly rejects a file that matches more than one configured root. Keep product
+helpers outside the entry patterns unless they export a definition. Imported
+helpers remain watched and protected source inputs.
+
+For the `storybook` forms and preview file order, see
+[Choose a Storybook folder](/docs/authoring/storybook/#choose-a-storybook-folder).
+
+### Read stories from `main.*`
+
+Set `storybook` and omit `dir` to use the `stories` list in the folder's
+`main.*`.
+
+```json
+{
+  "roots": [{ "storybook": ".storybook" }]
+}
+```
+
+Mokly uses Storybook's loader to run `main.*` in Node before discovery.
+Its imports resolve as in your Storybook, so `moduleResolution` settings do
+not apply to them.
+Only roots without `dir` need Node at this step.
+
+In `stories`, a string gives a path or glob relative to the Storybook folder.
+An object gives a `directory` relative to that folder and can include a
+`files` glob relative to `directory`. Mokly selects only
+`*.stories.{ts,tsx,js,jsx}` files.
+
+In `stories` globs, `(a|b)` and `@(a|b)` each match one alternative.
+`?(a|b)` matches zero or one. Mokly rejects patterns that it cannot convert,
+including `*(...)`, `+(...)`, and `!(...)`.
+
+If several `stories` entries match a file in the same root, Mokly uses the
+first match. Mokly derives the catalogue path from that entry's directory
+and applies `path` and `transparent`.
+
+If Mokly cannot load `main.*` or read valid `stories`, it reports
+`config-invalid` and names the file. Mokly runs discovery again in
+`mokly serve` when you edit `main.*` or a local file that it imports.
 
 ## Rendering and styles
 
@@ -185,19 +222,19 @@ The configuration declares no output directory and no build recipe.
 
 ## Configuration fields
 
-| Field                       | Meaning                                                                     |
-| --------------------------- | --------------------------------------------------------------------------- |
-| `roots`                     | Source directories, file globs, path prefixes, and transparent directories  |
-| `repoRoot`                  | Repository root; the configuration directory is the default                 |
-| `colorSchemes`              | A unique set that includes `light`; the default is light only               |
-| `stylesheets`               | Ordered route rules with shared and scheme-specific CSS                     |
-| `renderer`                  | A local module that wraps React renders with product providers              |
-| `postcss`                   | A local module that supplies consumer PostCSS plugins                       |
-| `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`             |
-| `moduleResolution`          | Consumer aliases, package lookup, extensions, loaders, and `sourcePackages` |
-| `review.base`               | The Git ref used to find the comparison base                                |
-| `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false           |
-| `watch`                     | Additional watch rules and the debounce interval                            |
+| Field                       | Meaning                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `roots`                     | Source directories, Storybook folders, file globs, path prefixes, and transparent directories  |
+| `repoRoot`                  | Repository root; the configuration directory is the default                                    |
+| `colorSchemes`              | A unique set that includes `light`; the default is light only                                  |
+| `stylesheets`               | Ordered route rules with shared and scheme-specific CSS                                        |
+| `renderer`                  | A local module that wraps React renders with product providers                                 |
+| `postcss`                   | A local module that supplies consumer PostCSS plugins                                          |
+| `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`                                |
+| `moduleResolution`          | Consumer aliases, package roots, conditions, fields, extensions, loaders, and `sourcePackages` |
+| `review.base`               | The Git ref used to find the comparison base                                                   |
+| `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false                              |
+| `watch`                     | Additional watch rules and the debounce interval                                               |
 
 Paths resolve from the configuration file by default. Inputs stay inside `repoRoot`.
 Before a Git operation, `repoRoot` must be the Git repository's top level.

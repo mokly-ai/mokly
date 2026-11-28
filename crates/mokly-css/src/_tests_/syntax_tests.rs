@@ -26,6 +26,7 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
     for path in [
         "images/card.svg",
         "node_modules/@scope/fonts/a.woff2",
+        "assets/node_modules/dot-mokly-roots/1/@scope/pkg/icon.svg",
         "images/foo~bar.png",
     ] {
         assert!(paths::portable(path, true), "{path}");
@@ -39,6 +40,8 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
         "images/.hidden.png",
         "images/_private.png",
         "node_modules/@scope/nul.woff2",
+        "assets/node_modules/dot-mokly-roots/pkg/@scope/icon.svg",
+        "assets/dot-mokly-roots/1/@scope/pkg/icon.svg",
         "node_modules/.mokly-roots//image.png",
     ] {
         assert!(!paths::portable(path, true), "{path}");

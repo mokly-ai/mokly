@@ -7,7 +7,7 @@ use mokly_model::paths::is_path_segment;
 use serde_json::Value;
 
 use crate::diagnostic::{Code, Issue};
-use crate::globs;
+use crate::globs::{self, GlobSyntax};
 use crate::locations::{at, json_positions};
 
 /// Private directory carrier retains exclusion rules outside the model.
@@ -15,9 +15,26 @@ use crate::locations::{at, json_positions};
 pub(crate) struct FolderInput {
     pub(crate) record: FolderRecord,
     pub(crate) exclude: Vec<String>,
+    top_level_field: Option<(&'static str, SourceLocation)>,
 }
 
-pub(crate) fn parse(text: &str, file: &str, path: String) -> Result<FolderInput, Issue> {
+impl FolderInput {
+    pub(crate) fn at_path(mut self, path: String) -> Result<Self, Issue> {
+        if let Some((field, location)) = self.top_level_field.take()
+            && path.is_empty()
+        {
+            return Err(issue(
+                &self.record.source.path,
+                format!("{field} is not allowed at the top level"),
+                location,
+            ));
+        }
+        self.record.path = path;
+        Ok(self)
+    }
+}
+
+pub(crate) fn parse(text: &str, file: &str) -> Result<FolderInput, Issue> {
     let value: Value = match serde_json::from_str(text) {
         Ok(value) => value,
         Err(error) => {
@@ -44,17 +61,15 @@ pub(crate) fn parse(text: &str, file: &str, path: String) -> Result<FolderInput,
     let Some(object) = value.as_object() else {
         return Err(issue(file, "must be a JSON object", location("")));
     };
+    let mut top_level_field = None;
     for key in object.keys() {
-        if !matches!(key.as_str(), "title" | "order" | "hidden" | "exclude") {
-            return Err(issue(file, format!("unknown field {key}"), location(key)));
-        }
-        if path.is_empty() && !matches!(key.as_str(), "order" | "exclude") {
-            return Err(issue(
-                file,
-                format!("{key} is not allowed at the top level"),
-                location(key),
-            ));
-        }
+        let field = match key.as_str() {
+            "title" => "title",
+            "hidden" => "hidden",
+            "order" | "exclude" => continue,
+            _ => return Err(issue(file, format!("unknown field {key}"), location(key))),
+        };
+        top_level_field.get_or_insert_with(|| (field, location(field)));
     }
     let title = if let Some(title) = object.get("title") {
         let Some(title) = title
@@ -130,7 +145,7 @@ pub(crate) fn parse(text: &str, file: &str, path: String) -> Result<FolderInput,
             };
             exclude.push(item.into());
         }
-        if globs::compile(&exclude).is_err() {
+        if globs::compile(&exclude, GlobSyntax::Posix).is_err() {
             return Err(issue(
                 file,
                 "exclude must be an array of safe relative globs",
@@ -143,13 +158,14 @@ pub(crate) fn parse(text: &str, file: &str, path: String) -> Result<FolderInput,
     };
     Ok(FolderInput {
         record: FolderRecord {
-            path,
+            path: String::new(),
             title,
             order,
             hidden,
             source: location(""),
         },
         exclude,
+        top_level_field,
     })
 }
 

@@ -12,11 +12,11 @@ export function describeStoryFile(
   generation: Generation,
   file: string,
   module: Record<string, unknown>,
-  preview: BundleExports["preview"],
+  previews: BundleExports["previews"],
   result: Definitions,
   cache: ExportNameCache,
 ): void {
-  const read = readStories(generation, file, module, preview, cache);
+  const read = readStories(generation, file, module, previews, cache);
   const stories = read.stories.map((entry) => {
     const excludedProps: string[] = [];
     const props = storyProps(
@@ -39,6 +39,7 @@ export function describeStoryFile(
       const stored: StoredStory = {
         id,
         name: title,
+        folder: read.folder,
         compose,
         beforeAll: read.beforeAll,
         dataKeys: Object.keys(props),

@@ -10,6 +10,8 @@ definition provider boundary.
 ## Responsibilities
 
 - Resolve `mokly.config.json` and config-relative input paths.
+- Expand each root without `dir` into the roots of its Storybook `main.*`
+  through an injected reader.
 - Walk roots once per pass and preserve each matched file's root owner.
 - Parse HTML front matter, YAML use cases, Markdown metadata, and folder records.
 - Derive paths, flatten variants, validate schemas and props, and resolve flows.
@@ -84,6 +86,34 @@ so an aliased output directory stays outside the entry inventory.
 subdirectories and symlinks. Excluded files remain protected source inputs.
 The inventory stores lexical paths, physical aliases, file kinds, and root
 ownership. Later stages reuse it instead of walking again.
+
+A root that names a Storybook folder and has no `dir` needs its `main.*`
+before discovery. `storybook_roots::expand` replaces each such root with one
+root for each `stories` entry, in order. It reads the entries through the
+injected `StorybookReader`, which `mokly-render` implements with a sidecar
+call. It returns at once when no root needs it, so other catalogues start no
+Node before discovery. The shared glob compiler handles Storybook's `(a|b)`,
+`@(a|b)`, and `?(a|b)` alternatives. It checks path safety without expanding
+combinations of alternatives. Each expanded root keeps the index of its
+configured root. The overlap error and
+`SourcePolicy` name that configured root, and the empty-root check covers all
+the roots of one configured root together. An expanded root selects only
+stories files. When two entries of one configured root reach the same file or
+folder record, the first entry owns it. After all walks of one configured
+root, `Discoverer` applies the exclusions of every folder record to every
+selected file. A record takes its path from the deepest entry whose directory
+holds the record and that owns a story kept below the record's directory.
+If no such entry exists, it uses the deepest entry directory that holds the
+record.
+
+Expansion adds the local files that each `main.*` read to the authored inputs,
+under the reported path
+and under the in-repository path that the source tree projects it to, and
+`ResolvedConfig::storybook_inputs` gives every observed version and absence
+of each input. `Discoverer` rejects
+a root that still needs its `main.*`. The
+[roots from `main.*` rules](../../docs/protocol/mokly-root-discovery.md#roots-from-main)
+own this behaviour.
 
 `Builder` implements `CatalogueBuilder`. It produces `PreparedCatalogue`: a
 validated in-memory model, private HTML and Markdown bodies, variant slot
@@ -184,7 +214,8 @@ duplicate rules of the [build warnings contract](../../docs/protocol/mokly-build
 
 ## Quick Start
 
-Inject a source tree and the JavaScript definition provider:
+Inject a source tree, the JavaScript definition provider, and the Storybook
+reader:
 
 ```rust
 use std::path::Path;
@@ -193,15 +224,18 @@ use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
+use mokly_catalogue::storybook_roots::{self, StorybookReader};
 use mokly_source_interface::tree::SourceTree;
 
 fn prepare(
     tree: Arc<dyn SourceTree>,
     definitions: Arc<dyn DefinitionProvider>,
+    storybook: &dyn StorybookReader,
     cwd: &Path,
 ) -> mokly_catalogue::error::Result<PreparedCatalogue> {
     let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
-    let config = loader.load(cwd, None)?;
+    let mut config = loader.load(cwd, None)?;
+    storybook_roots::expand(&mut config, tree.as_ref(), storybook)?;
     let builder: &dyn CatalogueBuilder = &Builder {
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
         tree,
@@ -255,8 +289,18 @@ The property test of the source maps over the vendored HTML corpus lives in
   resolved repository root.
 - [`src/config_links.rs`](./src/config_links.rs) provides `link_error`, which
   names the symlink that keeps a failed root or package root from resolving.
+- [`src/storybook_roots.rs`](./src/storybook_roots.rs) defines
+  `StorybookReader`, the boundary that reads the `stories` entries of one
+  `main.*`, and `expand`, which replaces each root without `dir` with the
+  roots of those entries. `expand` registers each input that the read
+  reports, and also the projected in-repository path of each present input.
+- [`src/globs.rs`](./src/globs.rs) compiles shared discovery and watch patterns,
+  including Storybook alternatives.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
+  [`src/discovery_walk.rs`](./src/discovery_walk.rs) walks one root.
+  [`src/discovery_folders.rs`](./src/discovery_folders.rs) applies exclusions
+  and places folder records after all walks of a configured root.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
   `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
   its shared `prop_validators`.

@@ -41,8 +41,10 @@ pub struct DeliveryInputs {
     pub dependency_aliases: BTreeMap<String, String>,
     /// Render input keys of the sidecar bundle's entry modules, when JavaScript renders.
     pub render_keys: Option<Arc<RenderKeys>>,
-    /// Renderer and entry-module CSS roots from the module graph.
+    /// Renderer, preview, and entry-module CSS roots from the module graph.
     pub stylesheet_roots: Vec<StylesheetRoot>,
+    /// Stories file to its selected preview module.
+    pub story_previews: BTreeMap<String, String>,
     /// Imported assets known before document planning and validation.
     pub imported_assets: Vec<ImportedAsset>,
     /// Component parent path to config-relative declared public CSS, in authored order.
@@ -61,6 +63,7 @@ impl Default for DeliveryInputs {
             dependency_aliases: BTreeMap::new(),
             render_keys: None,
             stylesheet_roots: Vec::new(),
+            story_previews: BTreeMap::new(),
             imported_assets: Vec::new(),
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),

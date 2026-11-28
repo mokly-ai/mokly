@@ -27,6 +27,8 @@ pub trait Transaction: Send + Sync {
     fn recovery_path(&self) -> &Path;
     /// Validate added source protections before rendering or installation.
     fn protect(&mut self, inputs: Vec<PathBuf>) -> Result<()>;
+    /// Validate the roots and configuration inputs that discovery will use.
+    fn protect_roots(&mut self, roots: Vec<PathBuf>, inputs: Vec<PathBuf>) -> Result<()>;
     /// Write immutable bytes, validate, then install after the caller drains rendering.
     fn stage(&self, artifact: &Artifact, cancellation: &dyn Cancellation) -> Result<()>;
     /// Commit the prepared stage; all recovery is settled before returning.
@@ -162,6 +164,10 @@ impl Transaction for OutputTransaction {
     fn protect(&mut self, inputs: Vec<PathBuf>) -> Result<()> {
         self.boundary.inputs.extend(inputs);
         self.recheck()
+    }
+    fn protect_roots(&mut self, roots: Vec<PathBuf>, inputs: Vec<PathBuf>) -> Result<()> {
+        self.boundary.roots.extend(roots);
+        self.protect(inputs)
     }
     /// Validates the whole artifact first, then writes it into `stage/` inside
     /// the reservation. The reservation sits beside the output on the same

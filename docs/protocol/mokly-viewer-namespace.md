@@ -159,10 +159,12 @@ Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#`, or
 `~`. This applies to the viewer namespace, `entries`, `generations`,
 `snapshots`, `previews`, `mokly-generated`, and every other fixed segment
 Mokly writes. It adds no validation rule for authored closure names, entry
-paths, or repository paths mirrored below `styles/` and `assets/`; those
-user-chosen names keep their path validation and diagnostics, including
-hidden-segment rejection, and no accepted authored path is rejected or
-renamed for this policy.
+paths, or the repository paths in routes below `styles/` and `assets/`; those
+user-chosen names keep their path validation and diagnostics, and this policy
+rejects or renames no accepted authored path. Authored closure names keep
+their hidden-segment rejection. A route below `styles/` or `assets/` writes
+each segment that starts with a dot in the `dot-` form of the
+[route rule](./mokly-imported-styles.md#routes-and-ownership).
 
 Plain Mokly directory names do not make every consumer path portable to every
 host. GitHub Pages with Jekyll, for example, omits a user-chosen name that

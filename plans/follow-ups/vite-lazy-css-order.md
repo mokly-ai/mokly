@@ -153,9 +153,10 @@
     after a top-level `await import()`, as in
     `tests/fixtures/vite/src/page.mockup.ts:7`.
   - Order by the evaluation that the sidecar observes. It breaks the rule
-    that `bundle` evaluates nothing (`docs/protocol/mokly-vite-adapter.md:168`),
-    and the order can change between renders, against the byte-identical
-    output rule of `docs/protocol/mokly-imported-styles.md:138`.
+    that `bundle` evaluates no module of the generation, in the section
+    "Bundling" of `docs/protocol/mokly-sidecar.md`. The order can also change
+    between renders, against the byte-identical output rule in the section
+    "Bundling" of `docs/protocol/mokly-imported-styles.md`.
   - Read the order from a Vite build in memory. B gives the order of Vite's
     single-file CSS output without a second compile, and the adapter loads
     the setup with the command `serve` only.

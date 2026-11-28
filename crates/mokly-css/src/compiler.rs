@@ -53,12 +53,13 @@ impl Compiler {
         root: &'a StylesheetRoot,
         suffix: &str,
     ) -> Result<Preparation<'a>> {
-        if !paths::portable(&root.path, false) {
+        let mut route = paths::route("styles", &root.path);
+        if !paths::portable(&route, false) {
             return Err(CssError::RootRoute {
                 path: root.path.clone(),
             });
         }
-        let route = format!("styles/{}{suffix}", root.path);
+        route.push_str(suffix);
         Ok(Preparation {
             compiler: self,
             root,

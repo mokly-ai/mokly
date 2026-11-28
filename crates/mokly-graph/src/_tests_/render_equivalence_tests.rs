@@ -39,6 +39,10 @@ fn generation() -> JavaScriptGeneration {
     ];
     JavaScriptGeneration {
         environment: "environment\t\"😀".into(),
+        storybook_previews: BTreeMap::from([(
+            ".storybook".into(),
+            Some(".storybook/preview.ts".into()),
+        )]),
         modules: edges
             .iter()
             .map(|(path, imports)| {
@@ -127,10 +131,14 @@ fn shared_closures_and_fallbacks_keep_reference_keys() {
                 .insert(".storybook/preview.tsx".into(), "preview".into());
         }
         if preview == "unnamed" {
+            generation
+                .storybook_previews
+                .insert(".storybook".into(), None);
             generation.modules.remove(".storybook/preview.tsx");
             generation.modules.remove(".storybook/preview.ts");
         }
         if preview == "absent" {
+            generation.storybook_previews.remove(".storybook");
             generation
                 .resolution_digests
                 .remove(".storybook/preview.tsx");
@@ -145,6 +153,7 @@ fn shared_closures_and_fallbacks_keep_reference_keys() {
                 bindings: &bindings,
                 renderer,
                 entries: &entries,
+                storybook_folders: &BTreeMap::new(),
                 declarations: &declarations,
             };
             let fallback = key(NodeKind::RenderInputs, &[b"whole bundle"]);

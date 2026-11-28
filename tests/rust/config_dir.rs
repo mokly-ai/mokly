@@ -95,6 +95,7 @@ pub fn bundle(pool: &Pool, root: &Path) -> results::Bundle {
             evaluation: None,
             entry_files: vec!["entry.ts".into()],
             stories_files: Vec::new(),
+            storybook_folders: Default::default(),
             renderer: None,
             source_root: root.to_string_lossy().into_owned(),
             configuration_directory: ".".into(),

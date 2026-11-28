@@ -4,7 +4,6 @@ import type { Metafile, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { previewCandidates } from "./bundle-entry.js";
 import type { CaptureDurability } from "./capture-durability.js";
 import { ConfigInputs } from "./config-inputs.js";
 import { mappedPaths } from "./mapped-paths.js";
@@ -22,6 +21,8 @@ import { PlanCandidates } from "./plan-candidates.js";
 import { PnpInputs } from "./pnp-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { bareSpecifier, packageName } from "./specifier.js";
+import { previewModules, probePreviews } from "./storybook-folders.js";
+import type { PreviewProbe } from "./storybook-folders.js";
 
 /** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
@@ -66,28 +67,21 @@ export class ResolutionEvidence {
     },
   };
 
-  async prepare(): Promise<string | null | undefined> {
+  async prepare(): Promise<PreviewProbe> {
+    const previews = await probePreviews(this.params, this.physical);
     for (const file of [
       ...this.params.entryFiles,
       ...this.params.storiesFiles,
       ...(this.params.renderer ? [this.params.renderer] : []),
     ])
       this.candidate(path.resolve(this.params.sourceRoot, file));
-    // Preview selection checks exact files, not module-resolution candidates.
-    let preview: string | null = null;
-    if (this.params.storiesFiles.length)
-      for (const file of previewCandidates) {
-        const present = this.physical.optionalFile(
-          path.resolve(this.params.sourceRoot, file),
-        );
-        if (present && preview === null) preview = file;
-      }
-    if (preview) this.candidate(path.resolve(this.params.sourceRoot, preview));
+    for (const [, file] of previewModules(previews.selections))
+      this.candidate(path.resolve(this.params.sourceRoot, file));
     this.configs.scope(
       path.resolve(this.params.sourceRoot, this.params.configurationDirectory),
     );
     this.configs.manifest(this.params.sourceRoot);
-    return this.physical.complete ? preview : undefined;
+    return previews;
   }
 
   peers(peers: Readonly<Record<string, string | null>>): void {

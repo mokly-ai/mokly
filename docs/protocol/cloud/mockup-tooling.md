@@ -66,9 +66,11 @@ these surfaces from one source.
 The package stylesheet names Geist and Geist Mono, the faces of the
 [Canvas palette](../mokly-viewer-palette.md#canvas-palette), and loads no font
 file, so the viewer drawings use the catalogue's own self-hosted Geist and
-Geist Mono. Mokly mirrors each file that imported CSS references at
+Geist Mono. Mokly delivers each file that imported CSS references at
 `static/mokly-generated/assets/<repository-relative source path>` in the build
-output. The receiver adopts these asset paths per
+output, with the path in the
+[route form](../mokly-imported-styles.md#routes-and-ownership). The receiver
+adopts these asset paths per
 [hosting policy](./publication-upload-validation.md#hosting-policy).
 [Repository generated files](./repository-generated-files.md) owns the ignore
 rules.

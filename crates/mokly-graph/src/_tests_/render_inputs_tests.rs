@@ -56,6 +56,10 @@ impl Fixture {
                 .map(|(path, _)| ((*path).to_owned(), Some(format!("{path}@1"))))
                 .collect(),
             environment: "environment@1".into(),
+            storybook_previews: BTreeMap::from([(
+                ".storybook".into(),
+                Some(".storybook/preview.tsx".into()),
+            )]),
             resolution_digests: [
                 ("package.json", "root@1"),
                 ("node_modules/dep/package.json", "dep@1"),
@@ -105,6 +109,7 @@ impl Fixture {
                 bindings: &self.bindings,
                 renderer: Some("renderer.tsx"),
                 entries: &entries,
+                storybook_folders: &BTreeMap::new(),
                 declarations: &BTreeMap::new(),
             },
             fallback(),

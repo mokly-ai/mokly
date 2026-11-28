@@ -17,6 +17,7 @@ pub(crate) fn policy(input: &SessionInput) -> Option<ContentIdentity> {
         &input.config.file,
         &input.config.repo_root,
         &input.config.authored_inputs,
+        input.config.storybook_inputs(),
         roots,
         &input.catalogue.model.sources,
         input.plans.keys().collect::<Vec<_>>(),

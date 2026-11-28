@@ -31,6 +31,7 @@ fn negative_zero_survives_definitions_and_render_requests() {
                 entry_files: vec!["negative-zero.mockup.tsx".into()],
                 renderer: None,
                 stories_files: Vec::new(),
+                storybook_folders: Default::default(),
                 module_resolution: ModuleResolution {
                     package_roots: vec![
                         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

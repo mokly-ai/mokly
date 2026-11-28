@@ -1,12 +1,14 @@
 # Root Discovery And Source Membership
 
+Status: Mokly does not read a `stories` function in `main.*` or the `stories` entries that Storybook presets add yet. The [Storybook stories function item](../../plans/follow-ups/storybook-stories-function-not-read.md) adds both.
+
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and
 Changes share. Discovery walks a source tree: the working tree for Serve,
 `build`, `publish`, and the head side of a comparison, and the base commit's
 Git tree for the base side under the
-[comparison contract](./mokly-comparison.md#sides). The same roots, globs,
-and diagnostics apply to both trees. In a Git tree a symbolic link entry is
+[comparison contract](./mokly-comparison.md#sides). The same root rules,
+globs, and diagnostics apply to both trees. In a Git tree a symbolic link entry is
 not a file and never matches. The base Git tree does not resolve symbolic links.
 After [lexical normalization](./mokly-configuration.md#shape), a
 root or package root that is a link in the base commit, or lies below one,
@@ -32,11 +34,13 @@ dropped and listed under `not searched` when its root is then empty.
 ## Traversal And Ownership
 
 Discovery walks each root without following symlinks and keeps every regular
-file that matches a `files` glob. Below the root, walks skip directories named
-`.git`, `node_modules`, `dist`, `coverage`, `target`, `test-results`,
-`playwright-report`, or `.context`, and the output directory that `--out`
-names; an explicit root inside such a directory is still scanned, because the
-rule applies below the root only. Regular file basenames are not denied.
+file that matches a `files` glob. The
+[roots from `main.*` rules](#roots-from-main) give the exceptions. Below the
+root, walks skip directories named `.git`, `node_modules`, `dist`, `coverage`,
+`target`, `test-results`, `playwright-report`, or `.context`, and the output
+directory that `--out` names; an explicit root inside such a directory is
+still scanned, because the rule applies below the root only. Regular file
+basenames are not denied.
 `_folder.json` files are read as [folder records](./mokly-folders.md) and
 never as entries, and a folder record's `exclude` globs remove matched files
 from that directory before derivation.
@@ -54,15 +58,15 @@ a module. Entry modules and stories files are bundled and described by the
 [sidecar](./mokly-sidecar.md); HTML, YAML, and Markdown files never are.
 
 Every `_folder.json` inside a walked root is also owned by exactly one root,
-independently of `files`. Overlapping roots that encounter that record fail
-with the [root overlap error](#glob-validation) of a matched file.
+independently of `files`. Overlapping configured roots that encounter that
+record fail with the [root overlap error](#glob-validation) of a matched file.
 
-Every root must keep at least one file; otherwise `root matches no file: <dir>`
-lists denied and vanished paths, including dropped files, sorted under
-`; not searched: <repository-relative paths>`. The union across roots is
-sorted by repository-relative path. Discovery records that ownership, so a
-file derives from the root that selected it rather than from the deepest
-directory that happens to contain it.
+Every configured root must keep at least one file; otherwise
+`root matches no file: <dir>` lists denied and vanished paths, including
+dropped files, sorted under `; not searched: <repository-relative paths>`.
+The union across roots is sorted by repository-relative path. Discovery
+records that ownership, so a file derives from the root that selected it
+rather than from the deepest directory that happens to contain it.
 
 ## Source Membership
 
@@ -105,22 +109,26 @@ the base commit's tree alone.
 ## Glob Validation
 
 Root `files` and directory-carried folder `exclude` use relative POSIX globs.
-Validate both the original string and every brace-expanded alternative.
+Validate the original string and the path of each alternative.
 Reject non-strings, whitespace-only strings, leading `!` or `#`,
 absolute/drive/UNC paths, backslashes, colons, control characters, and
 empty, `.` or `..` segments. Validation adds no public-file defaults. Root
 diagnostics name `roots[<index>].files`; folder diagnostics name the owning
 folder record.
 
-When a file matches two roots before exclusions, fail `config-invalid` with
-`file <path> is matched by roots[<n>] and roots[<m>]`. The path is
-repository-relative and the root indices are zero-based. Physical aliases
-participate in this check.
+When a file matches two configured roots before exclusions, fail
+`config-invalid` with `file <path> is matched by roots[<n>] and roots[<m>]`.
+The path is repository-relative, and the indices are the zero-based indices
+of the configured roots. Physical aliases participate in this check.
 
 ## Root Fields
 
 `roots` is a non-empty list of root objects. `dir` names an existing
-directory inside `repoRoot`, config-relative. `files` is a non-empty list of safe relative POSIX globs matched against
+directory inside `repoRoot`, config-relative. A root needs `dir` unless it
+names a Storybook folder. A root without `dir` takes its directories from
+`main.*` under the [roots from `main.*` rules](#roots-from-main). `storybook`
+names the root's [Storybook folder](./mokly-storybook.md#storybook-folders).
+`files` is a non-empty list of safe relative POSIX globs matched against
 paths relative to `dir` with the same glob syntax and path rules as
 `watch.rules[].paths`; it defaults to `**/*.mockup.{ts,tsx}`,
 `**/*.stories.{ts,tsx,js,jsx}`, `**/*.screen.html`, `**/*.component.html`,
@@ -134,3 +142,93 @@ segment, that derivation removes. Omitting `roots` means `[{ dir: "specs" }]`.
 A missing directory, an empty or duplicate glob, two roots with the same
 `dir`, or an invalid `path` or `transparent` value fails with
 `config-invalid` naming `roots[<index>].<field>`.
+
+## Roots From `main.*`
+
+The objects of `roots` are the configured roots. A configured root that names
+a Storybook folder and has no `dir` takes its directories from the final
+`stories` list of that folder. Storybook computes that list from the folder's
+`main.*` and presets. Before discovery, Mokly runs that `main.*` in
+Node with Storybook's loader. Mokly starts Node before discovery only for such
+a root. A root with `dir`, and every catalogue without such a root, keep
+configuration and discovery free of Node. Decision: Mokly runs `main.*` before discovery only
+for a root that opts in. Mokly then reads every form of `stories`, and only the
+projects that ask for it pay for Node and an early base install. Keeping `dir`
+required, parsing `main.*` without running it, and `mokly init --storybook`
+were rejected.
+
+Each `stories` entry becomes one root of the configured root. These roots take
+the place of the configured root in the declared root order, in the order of
+the entries. A string entry is a glob relative to the Storybook folder. Its
+directory is the part before the first segment with a glob character, and the
+rest is its files glob. A string entry without a glob character reads as in
+Storybook. A directory gets Storybook's default files glob, and a file splits
+into its directory and its file name. An object entry gives `directory`, relative to the
+folder, and `files`, which defaults to Storybook's default,
+`**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))`. Storybook's `titlePrefix` changes
+no path, because paths stay derived from the file.
+
+Mokly converts Storybook's pattern syntax to its own globs. `(a|b)` and
+`@(a|b)` each match one alternative. `?(a|b)` also permits omitting the group.
+Omitting a whole segment contributes no file match. A pattern that Mokly
+cannot convert, such as `*(...)`, `+(...)`, or `!(...)`, fails discovery with
+the `main.*` error below. That error also names the `stories` entry.
+
+A root from `main.*` selects only stories files, the
+`*.stories.{ts,tsx,js,jsx}` files. Other files that a `stories` entry matches,
+such as `.mdx` files, stay out without a warning. Decision: such files stay out
+silently, because Mokly reads no MDX. A warning was rejected, because it would
+fail `--strict` for Storybook's default pattern.
+
+The `path` and `transparent` fields of the configured root apply to each of its
+roots from `main.*`. Paths derive relative to the directory of the `stories`
+entry that selects the file. A configured root without `dir` that sets `files`
+fails with `config-invalid` naming `roots[<index>].files`, because `files`
+needs a directory.
+
+A file that two `stories` entries of one configured root match belongs to the
+first of them, without an error. A folder record that two `stories` entries of
+one configured root reach also belongs to the first of them. The exclusions
+of every folder record of the configured root apply to every file that its
+entries select. A record takes its folder path from the deepest entry whose
+directory holds the record and that owns a story kept below the record's
+directory. If no such entry exists, the deepest entry directory that holds
+the record gives its folder path.
+
+Two entries of one configured root can name the same directory. A file that
+the roots of two configured roots match fails with the
+[root overlap error](#glob-validation), which names the two configured roots.
+A `stories` entry whose directory does not exist matches
+no file. A `stories` entry whose directory resolves outside the repository root
+fails discovery with the `main.*` error below. A root from `main.*` can match
+no file, but the configured root as a whole must keep at least one file, under
+the [empty root rule](#traversal-and-ownership). Its message names the
+Storybook folder in place of `dir`.
+
+Discovery fails with `config-invalid` when `main.*` is missing, fails to load,
+or gives no `stories` list. It fails in the same way when a rule of this section
+rejects a `stories` entry. The message names the `main.*` file,
+repository-relative, and the reason.
+
+On the base side, Mokly runs the base commit's own `main.*` from the
+[extracted base sources](./mokly-base-preparation.md#sources). It uses the
+dependencies that the
+[dependency tiers](./mokly-comparison-packages.md#javascript-package-selection)
+select for the base, and it runs before base discovery. The imports of
+`main.*` resolve as the [Storybook folder rules](./mokly-storybook.md#storybook-folders)
+say, on both sides. So for such a root, the
+base extraction and any base install run before base discovery.
+
+`main.*`, each other candidate name of `main.*`, and each local file that the
+load of `main.*` reads are configuration inputs. When the load reads a file
+through a link with Node's `fs` module, the link and its target inside the
+repository are both inputs. A file that the load opens for reading with
+`fs.open`, `fs.openSync`, or `fs.promises.open` is an input. Its digest covers
+the whole file as it is when the load opens it, also when the load reads only
+part of it. Each version that a load observes stays a version of that input,
+across reads and across Storybook folders, so a static build whose loads read
+two versions of one input fails its input check. An open for writing makes no
+input. In Serve, an edit of one of
+these inputs runs discovery again, as an edit of the configuration file does
+under the
+[configuration change rules](./mokly-watch-runtime.md#configuration-changes).

@@ -29,8 +29,12 @@ pub struct Bundle {
     pub entry_files: Vec<String>,
     /// Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
     pub renderer: Option<String>,
-    /// Storybook files.
+    /// Repository-relative stories files in compile order.
     pub stories_files: Vec<String>,
+    /// Stories file to the repository-relative POSIX folder on this side. Missing entries use `.storybook`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(optional, as = "Option<BTreeMap<String, String>>")]
+    pub storybook_folders: BTreeMap<String, String>,
     /// Consumer resolution policy.
     pub module_resolution: ModuleResolution,
     /// Source checkout or extracted base root.

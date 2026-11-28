@@ -30,6 +30,35 @@ fn run(directory: &Path, args: &[&str], mode: &str) -> Output {
 }
 
 #[test]
+fn explicit_dir_roots_do_not_start_node_for_discovery() {
+    let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        "mokly.config.json",
+        r#"{"roots":[{"dir":"specs","storybook":".storybook"}]}"#,
+    );
+    write(
+        directory.path(),
+        ".storybook/main.ts",
+        "throw new Error('this explicit root does not need Storybook');",
+    );
+    write(
+        directory.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<h1>Home</h1>\n",
+    );
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stderr.is_empty());
+    assert!(directory.path().join("mokly-static/index.html").is_file());
+}
+
+#[test]
 fn plain_and_rich_builds_report_only_the_work_performed() {
     let directory = TempDir::new().unwrap();
     write(directory.path(), "mokly.config.json", "{}");

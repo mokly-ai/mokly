@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use mokly_css::paths;
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_model::material::digest;
 use serde_json::json;
@@ -55,7 +56,7 @@ pub(crate) fn output(bundle: &Bundle) -> NodeKey {
     let assets: Vec<_> = bundle
         .assets
         .iter()
-        .map(|(path, asset)| format!("{path}:{}", asset.digest))
+        .map(|(path, asset)| format!("{}:{}", paths::route("assets", path), asset.digest))
         .collect();
     let mut inputs = vec![bundle.route.as_bytes(), bundle.css.as_bytes()];
     inputs.extend(assets.iter().map(|value| value.as_bytes()));

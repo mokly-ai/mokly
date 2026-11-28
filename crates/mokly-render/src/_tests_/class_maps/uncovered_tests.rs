@@ -64,6 +64,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         entry_files: vec!["entry.ts".into()],
         renderer: None,
         stories_files: vec![],
+        storybook_folders: Default::default(),
         source_root: "/repo".into(),
         configuration_directory: ".".into(),
         repository_roots: vec![],
@@ -77,7 +78,9 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         ("orphan.module.css".into(), vec![]),
     ]);
     assert_eq!(
-        super::prepare(&compiler, &modules, &params).unwrap().maps,
+        super::prepare(&compiler, &modules, &params, &BTreeMap::new())
+            .unwrap()
+            .maps,
         expected
     );
 }

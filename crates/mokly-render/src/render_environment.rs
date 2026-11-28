@@ -3,11 +3,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use mokly_graph::render_inputs::PREVIEWS;
+use mokly_graph::render_inputs::preview_candidates;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
 use serde::Serialize;
+
+use crate::bundle_attempt::selected_previews;
 
 /// The reserved logical prefix of installation metadata outside a side's source root.
 const INSTALLED: &str = "node_modules/.mokly-roots/installed/";
@@ -22,6 +24,9 @@ pub(crate) struct RenderEnvironment {
     pub(crate) environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub(crate) resolution_digests: BTreeMap<String, String>,
+    pub(crate) storybook_previews: BTreeMap<String, Option<String>>,
+    /// Digests of Vite stylesheet inputs by preview module.
+    pub(crate) preview_stylesheet_digests: BTreeMap<String, String>,
     /// Stylesheet path to the digest of its CSS Module bindings.
     pub(crate) class_map_digests: BTreeMap<String, String>,
     /// Package names of the resolved runtime packages.
@@ -37,6 +42,8 @@ struct Settings {
     repository_roots: Vec<String>,
     dependency_roots: Vec<String>,
     peers: BTreeMap<String, Option<String>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    storybook_react: BTreeMap<String, String>,
 }
 
 /// Convert physical settings to names that are stable across equivalent checkouts.
@@ -104,11 +111,12 @@ pub(crate) fn derive(
     let mut paths = PathMapper::new(working_root, cache_namespace);
     let settings = settings(params, result, &mut paths);
     paths.report_external();
-    let previewed = result
-        .modules
-        .iter()
-        .any(|module| PREVIEWS.contains(&module.path.as_str()));
-    let mut resolution_digests = resolution(&compiled.metadata_inputs, previewed);
+    let storybook_previews = selected_previews(result);
+    let mut resolution_digests = resolution(
+        &compiled.metadata_inputs,
+        &result.modules,
+        &storybook_previews,
+    );
     if let Some(env) = compiled
         .vite
         .as_ref()
@@ -143,6 +151,8 @@ pub(crate) fn derive(
     RenderEnvironment {
         environment: digest(&settings),
         resolution_digests,
+        storybook_previews,
+        preview_stylesheet_digests: BTreeMap::new(),
         class_map_digests,
         runtime_packages: compiled.peers.keys().map(|peer| package(peer)).collect(),
     }
@@ -185,6 +195,12 @@ fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_
             .iter()
             .map(|(name, path)| (name.clone(), path.as_deref().map(|path| paths.map(path))))
             .collect(),
+        storybook_react: result
+            .compiled
+            .storybook_react
+            .iter()
+            .map(|(folder, file)| (folder.clone(), paths.map(file)))
+            .collect(),
     }
 }
 
@@ -201,16 +217,22 @@ fn package(specifier: &str) -> String {
 
 /// Keep present resolution files under the names that both sides give them.
 ///
-/// The preview candidates leave only when the module graph names the preview, because
-/// story keys then cover it through its closure. A preview that the graph does not
-/// name stays, so that story keys fall back to the whole bundle.
-pub(crate) fn resolution(
+/// Omit a folder's candidates when its selected preview has a module closure.
+fn resolution(
     inputs: &BTreeMap<String, Option<String>>,
-    previewed: bool,
+    modules: &[results::Module],
+    previews: &BTreeMap<String, Option<String>>,
 ) -> BTreeMap<String, String> {
+    let graph: BTreeSet<_> = modules.iter().map(|module| module.path.as_str()).collect();
+    let mut named = BTreeSet::new();
+    for (folder, module) in previews {
+        if module.as_deref().is_some_and(|file| graph.contains(file)) {
+            named.extend(preview_candidates(folder));
+        }
+    }
     inputs
         .iter()
-        .filter(|(name, _)| !previewed || !PREVIEWS.contains(&name.as_str()))
+        .filter(|(name, _)| !named.contains(*name))
         .filter_map(|(name, value)| {
             let name = name.strip_prefix(INSTALLED).unwrap_or(name);
             value.as_ref().map(|value| (name.to_owned(), value.clone()))

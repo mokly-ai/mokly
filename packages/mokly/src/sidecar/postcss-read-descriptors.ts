@@ -20,6 +20,14 @@ import {
 
 let installed = false;
 
+function readOnly(flags: unknown): boolean {
+  if (typeof flags === "number") {
+    const { O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND } = fs.constants;
+    return (flags & (O_WRONLY | O_RDWR | O_CREAT | O_TRUNC | O_APPEND)) === 0;
+  }
+  return flags == null || flags === "r" || flags === "rs" || flags === "sr";
+}
+
 /** Node's callback metadata preserves named results through util.promisify. */
 function preserveSymbols(original: object, wrapped: object): void {
   for (const symbol of Object.getOwnPropertySymbols(original)) {
@@ -34,14 +42,20 @@ function preserveSymbols(original: object, wrapped: object): void {
  * write, or a read whose arguments cannot be followed, makes the cursor
  * unknown; a close forgets the descriptor.
  */
-export function observeDescriptors(): void {
+export function observeDescriptors(
+  onReadOpen?: (fd: number, file: string) => void,
+): void {
   if (installed) return;
   installed = true;
+  function track(fd: number, file: string, flags: unknown): void {
+    opened(fd, file);
+    if (onReadOpen && readOnly(flags)) onReadOpen(fd, file);
+  }
   const openSync = fs.openSync;
   fs.openSync = (...args) => {
     const fd = openSync(...args);
     const file = filename(args[0]);
-    if (file) opened(fd, file);
+    if (file) track(fd, file, args[1]);
     return fd;
   };
   const open = fs.open;
@@ -54,7 +68,7 @@ export function observeDescriptors(): void {
         function (this: unknown, ...values: unknown[]) {
           const file = filename(args[0]);
           if (!values[0] && typeof values[1] === "number" && file)
-            opened(values[1], file);
+            track(values[1], file, args.length === 2 ? undefined : args[1]);
           return Reflect.apply(done, this, values);
         },
       ]);
@@ -65,7 +79,7 @@ export function observeDescriptors(): void {
     const handle = await promiseOpen(...args);
     const file = filename(args[0]);
     if (file) {
-      opened(handle.fd, file);
+      track(handle.fd, file, args[1]);
       observeHandle(handle);
     }
     return handle;

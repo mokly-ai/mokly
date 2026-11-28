@@ -42,6 +42,7 @@ fn params() -> Bundle {
         entry_files: vec!["entry.ts".into()],
         renderer: None,
         stories_files: vec![],
+        storybook_folders: Default::default(),
         source_root: "/repo".into(),
         configuration_directory: ".".into(),
         repository_roots: vec![],

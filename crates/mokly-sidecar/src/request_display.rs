@@ -8,6 +8,7 @@ impl Display for Call {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Hello(_) => formatter.write_str("hello"),
+            Self::ReadStorybook(value) => write!(formatter, "readStorybook {}", value.folder),
             Self::Bundle(_) => formatter.write_str("bundle"),
             Self::RestoreGeneration(value) => {
                 write!(formatter, "restoreGeneration {}", value.generation)

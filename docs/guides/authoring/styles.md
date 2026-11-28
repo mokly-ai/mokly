@@ -32,6 +32,19 @@ the entry's JavaScript imports and its `@import` chain. With the
 imports. A renderer stylesheet imported with `@import` appears again in the
 entry's imported CSS.
 
+Mokly removes a CSS Module from the entry only when the renderer's bundle
+scopes it under the same path. If the renderer reaches the file through
+another path, such as a package link, or Vite inlines it as plain CSS, the
+entry keeps its own scoped copy, so its class names still match.
+
+For CSS shared by a Storybook folder's stories, see
+[Style stories from the preview](/docs/authoring/storybook/#style-stories-from-the-preview).
+
+In generated stylesheet and asset routes, Mokly replaces a leading `.` in
+each path segment with `dot-`. For example, the stylesheet bundle for
+`.storybook/preview.tsx` uses `styles/dot-storybook/preview.tsx.css` under
+`static/mokly-generated/`.
+
 ## CSS Modules
 
 A `*.module.css` import provides a class map.
@@ -233,8 +246,8 @@ An import names a local file, so an HTTP or HTTPS stylesheet loads from a rule.
 
 In Changes, the comparison details name the bundle that holds each changed
 rule. A configured or declared local stylesheet is a bundle of its own.
-Imported CSS is part of its entry's or the renderer's bundle, so the details
-name that bundle, not the imported file that changed.
+CSS that an entry, the renderer, or a Storybook preview imports is part of
+that module's bundle.
 
 With the [Vite adapter](/docs/authoring/vite/), configured and component-declared
 local stylesheets must use a lowercase suffix that Vite supports. For example,

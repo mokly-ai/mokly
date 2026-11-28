@@ -4,11 +4,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_source_interface::error::{self, SourceError};
 use mokly_source_interface::identity_evidence;
 use mokly_source_interface::range_evidence;
 use mokly_source_interface::read_evidence::ReadBaseline;
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{Error, Result};
 
@@ -19,6 +20,41 @@ pub(crate) struct Evidence {
 }
 
 impl Evidence {
+    pub(crate) fn storybook(
+        &self,
+        config: &ResolvedConfig,
+        captured: &dyn SourceTree,
+        live: &dyn SourceTree,
+    ) -> Result<BTreeSet<PathBuf>> {
+        let inputs = config.storybook_evidence();
+        let mut absent = BTreeSet::new();
+        for name in inputs.absent {
+            let path = config.repo_root.join(name);
+            if !captured
+                .project(&path)
+                .is_ok_and(|node| node.is_none_or(|node| node.kind != FileKind::File))
+            {
+                return Err(Error::InputsChanged { path });
+            }
+            absent.insert(path);
+        }
+        for (name, versions) in inputs.versions.inputs {
+            let path = config.repo_root.join(name);
+            if !captured.project(&path).is_ok_and(|node| {
+                node.is_some_and(|node| {
+                    node.kind == FileKind::File && node.identity.starts_with(&config.repo_root)
+                })
+            }) {
+                return Err(Error::InputsChanged { path });
+            }
+            for version in versions {
+                self.record(&path, &version);
+            }
+        }
+        self.verify(captured, live)?;
+        Ok(absent)
+    }
+
     pub(crate) fn record_pinned(
         &self,
         path: &Path,

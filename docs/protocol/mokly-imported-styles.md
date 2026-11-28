@@ -33,13 +33,15 @@ renders in Node, which has no CSS object model.
 
 The routes are relative to the `static/mokly-generated/` namespace of the
 [artifact path contract](./mokly-artifact-paths.md):
-`styles/<repository-relative root module path>.css` for the bundle of a
-module root, `styles/<repository-relative stylesheet path>` for the bundle
-of a configured or component-declared local stylesheet, and `assets/<repository-relative asset
-path>` for an asset. The module extension is kept before `.css`:
-`src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
-configured `design/base.css` delivers `styles/design/base.css`. The two forms
-can give one route. For example, the stylesheet of the entry module
+`styles/<root module path>.css` for the bundle of a module root,
+`styles/<stylesheet path>` for the bundle of a configured or
+component-declared local stylesheet, and `assets/<asset path>` for an asset.
+Each of these paths is the repository-relative path of the file, or the
+[logical name](./mokly-sidecar-modules.md#source-and-dependency-files) of a
+dependency file, in the route form below. The module extension is kept before
+`.css`: `src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and
+the configured `design/base.css` delivers `styles/design/base.css`. The two
+forms can give one route. For example, the stylesheet of the entry module
 `src/a.tsx` delivers at `styles/src/a.tsx.css`. A configured or declared
 stylesheet `src/a.tsx.css` delivers at the same route. Such a pair fails with
 the [route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
@@ -61,18 +63,39 @@ output directory, publish uploads that output, and the base side of a
 comparison bundles the base commit's sources the same way under the
 [dependency tiers](./mokly-comparison.md#sides).
 
-A route segment starts with a letter, digit, underscore, or hyphen; later
-characters may also be a dot or a tilde. Windows device-name stems and
-trailing dots are invalid. A root module whose file or directory name cannot
-form a route fails with the catalogued message, even when the entry declares
-a valid `path`: the `path` override changes entry identity only, never the
-stylesheet route. Portable module and stylesheet paths give identical routes
-on every platform.
+In the route form, each path segment that starts with a dot is written as
+`dot-` and the rest of the segment. Every other segment stays the same. So
+`.storybook/preview.tsx` delivers `styles/dot-storybook/preview.tsx.css`, and
+the file with Mokly's logical name `node_modules/.mokly-roots/1/pkg/icon.svg`
+delivers `assets/node_modules/dot-mokly-roots/1/pkg/icon.svg`. A source path, a
+logical name, and a diagnostic that names either keep the dot. A route in
+this form can equal the route of another file, such as a file in a real
+`dot-storybook` folder. Such a pair of bundles fails with the
+[route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid),
+and such a pair of asset files fails under the
+[collision rule](./mokly-artifact-paths.md#layout) of the output inventory.
+Decision: the `dot-` form keeps routes readable, and it passes static hosts
+that skip dot folders and the
+[private-file rule](./cloud/publication-upload-validation.md#hosting-policy)
+of Mokly Cloud. Dot segments in routes were rejected, because such hosts and
+Mokly Cloud refuse them. A leading `_` was rejected, because static hosts such
+as Jekyll also skip it. The accepted cost is that such a route does not copy
+its exact source path.
+
+Each route segment in the route form starts with a letter, digit, underscore,
+or hyphen; later characters may also be a dot or a tilde. Windows device-name
+stems and trailing dots are invalid. A root module whose file or directory
+name cannot form a route fails with the catalogued message, even when the
+entry declares a valid `path`: the `path` override changes entry identity
+only, never the stylesheet route. Portable module and stylesheet paths give
+identical routes on every platform.
 
 ## Roots, Collection And Deduplication
 
 The delivery roots are each configured or component-declared local stylesheet,
-the configured renderer module, and every entry module and stories file that reaches CSS,
+the configured renderer module, each
+[preview file](./mokly-storybook.md#storybook-folders) that reaches CSS, and
+every entry module and stories file that reaches CSS,
 sorted by repository-relative POSIX path within each kind. There are no
 other delivery roots. A local stylesheet root has that file as its only
 direct stylesheet; nothing is pruned from it or by it. A module that exports
@@ -82,8 +105,10 @@ deliver it in their own bundle. When no root reaches CSS, the catalogue has no
 stylesheet node.
 
 The sidecar's [`bundle` call](./mokly-sidecar.md#bundling) reports the module
-graph. The core reads each root's stylesheet imports from it in
-first-reachability depth-first order of the JavaScript imports, including
+graph. A preview root uses the logical graph name from its
+[selection record](./mokly-sidecar-recipes.md#preview-selection). The core
+reads each root's stylesheet imports in first-reachability depth-first
+order of the JavaScript imports, including
 re-exports and dynamic imports, with modules and stylesheets keyed by their
 resolved logical path, so one root lists a file at most once. A CSS import may resolve inside the source root or a selected dependency
 root. A package stylesheet uses its stable dependency name, such as
@@ -95,19 +120,34 @@ allowed roots fails at the authored importer. A diagnostic names the logical
 module and never shows a virtual module or an absolute path.
 
 The core then resolves nested local `@import`s, quoted and `url()` forms, to
-form each root's complete stylesheet closure. The renderer's closure includes
-its top-level stylesheets. Before an entry root is bundled, every file of the
-renderer's closure is removed from the entry's direct list and from every
-depth of its `@import` tree, and an excluded nested `@import` is removed
-before PostCSS runs; nothing is pruned by selector or by emitted text. Thus a
-renderer that imports `tokens.css` and `dark-theme.css` never sees
-`tokens.css` reappear through an entry's component CSS. The first linked root
-wins across renderer and entry; within one root, JavaScript first
-reachability wins, and a repeated CSS `@import` keeps CSS's last-position
-rule. A file shared by two entry roots is not suppressed. Remote `@import`s,
-`"https://..."` and `url("https://...")`, stay external: never fetched, never
-inventoried. Prelude imports are placed at the start of the bundle in their
-order; a local `@import` after a style rule fails at its authored file.
+form each root's complete stylesheet closure. The closure of the renderer or
+of a preview file includes its top-level stylesheets. Before a preview root or
+an entry root is bundled, every file of the renderer's closure is removed from
+the root's direct list and from every depth of its `@import` tree, and an
+excluded nested `@import` is removed before PostCSS runs; nothing is pruned by
+selector or by emitted text. A stories file root also drops every file of its
+preview's closure in the same way. Thus a renderer that imports `tokens.css`
+and `dark-theme.css` never sees `tokens.css` reappear through an entry's
+component CSS. The first linked root wins across the renderer, the preview,
+and the entry; within one root, JavaScript first reachability wins, and a
+repeated CSS `@import` keeps CSS's last-position rule. A file shared by two
+entry roots is not suppressed. Both removals drop a CSS Module only when the
+bundle of the renderer or of the preview has a class map for the same path.
+So two roots can each deliver a copy of one CSS Module file, and the later
+copy supplies the scoped selectors of its own path.
+
+Decision: a stories file root drops the files that its preview delivers,
+because Storybook loads each CSS module once, and the renderer rule does the
+same. A second copy in the stories file's stylesheet was rejected. Decision: a
+CSS Module counts as delivered by an earlier bundle only under a path that has
+a class map in that bundle, because JavaScript uses the class map of its own
+path. Dropping it under another name was rejected, because the story or entry
+would then lose its scoped selectors.
+
+Remote `@import`s, `"https://..."` and `url("https://...")`, stay external:
+never fetched, never inventoried. Prelude imports are placed at the start of
+the bundle in their order; a local `@import` after a style rule fails at its
+authored file.
 
 Under the Vite adapter, the
 [import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets)

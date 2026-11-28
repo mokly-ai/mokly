@@ -10,8 +10,9 @@ This page defines the fields, path resolution, and validation of the
 Mokly searches upward from the current working directory for
 `mokly.config.json`, unless `--config` names another JSON file. Discovery
 stops at the filesystem root and reports every directory it searched when
-none is found. The configuration is data: the core reads it without Node.js,
-and no sidecar starts for it.
+none is found. The configuration is data: the core reads it without Node.js.
+No sidecar starts for it, except to read the `main.*` of a root without `dir`
+under the [roots from `main.*` rules](./mokly-root-discovery.md#roots-from-main).
 
 Repository-matching globs operate on repo-relative POSIX paths. The core validates
 the file against the JSON Schema that the package ships as
@@ -21,8 +22,9 @@ following contract:
 
 - `roots`: the directories Mokly scans for HTML screens, components, pages,
   use cases, Markdown documents, entry modules, and stories files, each with
-  optional file globs, a path prefix, and transparent directory names,
-  defaulting to one `specs` root;
+  optional file globs, a path prefix, transparent directory names, and a
+  [Storybook folder](./mokly-storybook.md#storybook-folders), defaulting to
+  one `specs` root;
 - `repoRoot`: the repository root, defaulting to the config file's directory;
 - `colorSchemes`: a light-only or light-and-dark rendering set;
 - `renderer`: the optional module that wraps React screen and component
@@ -61,25 +63,19 @@ The shipped [configuration schema](../../packages/mokly/config.schema.json)
 defines the normative shape: every field, its type, and its accepted values.
 The rules below define how Mokly resolves and applies the fields.
 
-Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`,
-`vite.config`, package roots, and local stylesheet paths) resolve from the
-configuration directory after Mokly removes `.`, `..`, and empty segments.
-This applies in the working tree and in the base tree. A symbolic link
-before a `..` segment does not change that path: `link/../ui` names `ui`.
-Spellings with the same path behave the same in every command. A
-configuration validation message repeats the authored value, and any other
-message names the path without `.` or `..` segments. Mokly removes `..` from
-the spelling and never follows a link first. Following the link was
-rejected, because one field must have one meaning in the core, in the
-sidecar, and on both sides of a comparison.
+Filesystem fields resolve from the configuration directory in both trees.
+They include `repoRoot`, `roots[].dir`, `roots[].storybook`, `renderer`,
+`postcss`, `vite.config`, package roots, and local stylesheet paths.
+Mokly removes `.`, `..`, and empty segments before resolving symbolic links,
+so `link/../ui` names `ui`.
+Equivalent spellings behave the same in every command. A validation message
+repeats the authored value. Other messages use paths without `.` or `..`.
+This order gives each field one meaning in the core, in the sidecar, and
+on both sides of a comparison.
 
-After that lexical step, the `renderer` and `postcss` modules each have one
-resolved path: the repository-relative path of the file that the path
-reaches, with symbolic links resolved. After configuration validation, each
-use of the module and each message that names it gives the resolved path.
-Keeping the link path was rejected, because the sidecar's module graph names
-each module by its resolved path, so a link path would miss the module and
-its stylesheets.
+After validation, each use of `renderer` and `postcss` names the resolved
+repository-relative file, including in messages. Resolving symbolic links
+matches the paths of modules and their stylesheets in the sidecar graph.
 
 `roots[].files` globs are relative to their root. `watch.rules[].paths` are
 repository-relative POSIX globs. A stylesheet `match` applies to catalogue
@@ -123,10 +119,12 @@ Configuration accepts only the declared fields. An undeclared field fails with
 has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
-- path traversal: a `dir`, `renderer`, `postcss`, `vite.config`, package
-  root, or local stylesheet whose lexical path or real path is outside the
-  real path of `repoRoot`; `..` segments that resolve inside it are accepted;
-  under the Vite adapter, `postcss` keeps only the lexical check;
+- path traversal in `dir`, `storybook`, `renderer`, `postcss`, `vite.config`,
+  package roots, or local stylesheets. Both lexical and real paths must stay
+  inside the real `repoRoot`, including paths with `..` segments. Under Vite,
+  `postcss` needs only the lexical check.
+- a named Storybook folder that is not an existing directory, naming
+  `roots[<index>].storybook`, as for `dir`.
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
@@ -180,8 +178,10 @@ globs select; the file kinds are those of the
 
 ## Roots
 
-The [root field contract](./mokly-root-discovery.md#root-fields) defines the
-strict `dir`, `files`, `path`, and `transparent` fields and their defaults.
+The [root field contract](./mokly-root-discovery.md#root-fields) defines
+`dir`, `files`, `path`, `transparent`, `storybook`, and their defaults.
+A root needs `dir` unless it names a Storybook folder and takes its
+[directories from `main.*`](./mokly-root-discovery.md#roots-from-main).
 The [root discovery contract](./mokly-root-discovery.md#traversal-and-ownership)
 defines traversal, folder-record ownership, filesystem races, and the source
 inventory.

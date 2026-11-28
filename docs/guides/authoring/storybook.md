@@ -8,8 +8,15 @@ order: 12
 ## Add a stories file
 
 A root can match `*.stories.ts`, `*.stories.tsx`, `*.stories.js`, or
-`*.stories.jsx`. Default root patterns include them. Install `@storybook/react`
-in the consumer repository when you use this form.
+`*.stories.jsx`. Default root patterns include them.
+
+Mokly first tries to resolve `@storybook/react` from the configuration
+directory. If that fails, Mokly looks for it through the framework package
+named in `main.*` in the root's Storybook folder. For example, Mokly can use
+the copy of `@storybook/react` that `@storybook/react-vite` provides. If you
+install a direct copy later, it takes precedence. Storybook's loader resolves
+imports in `main.*` as Node does. Mokly's `moduleResolution` aliases,
+conditions, main fields, extensions, and loaders do not affect these imports.
 
 ```tsx
 // specs/components/Button.stories.tsx
@@ -52,6 +59,47 @@ without the stories extension.
 Each variant's title is its story's `name`, else its `storyName`, else
 Storybook's start case of the export name. For example, `LargeButton` shows as
 `Large Button`. Its slug stays `LargeButton`.
+
+## Choose a Storybook folder
+
+Set `storybook` on a root to select its Storybook folder. Give a folder path
+or an object such as `{ "config": "packages/ui/.storybook" }`. Mokly resolves
+the path from the directory that contains the configuration file. The default
+folder is `.storybook` in the repository root.
+
+This monorepo example selects the UI package's Storybook folder.
+
+```json
+{
+  "roots": [{ "dir": "packages/ui/src", "storybook": "packages/ui/.storybook" }]
+}
+```
+
+Mokly selects the first `preview.*` file in the folder using Storybook's
+extension order. It checks `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.mts`,
+`.mtsx`, `.cjs`, `.cts`, then `.ctsx`.
+
+To select files from Storybook's `stories` list, see
+[Read stories from `main.*`](/docs/authoring/config/#read-stories-from-main).
+
+### Style stories from the preview
+
+Add a CSS import such as `import "./theme.css"` to the selected preview file.
+Mokly bundles this CSS and links it only in documents for that folder's stories.
+
+After any configured and component-declared stylesheets, a successful story
+document links the available bundles in this order.
+
+1. The Mokly renderer's stylesheet.
+2. The selected preview's stylesheet.
+3. The stories file's stylesheet.
+
+The preview bundle leaves out files that the renderer already delivers.
+The stories file's bundle also leaves out files that its preview already
+delivers. Vite applies this rule only to stylesheets that JavaScript imports.
+A CSS Module counts as delivered only when the earlier bundle scopes it under
+the same path.
+See [Imported styles in Vite](/docs/authoring/vite/#imported-styles).
 
 ## Story formats
 
@@ -162,10 +210,10 @@ and `argTypes.if` omits args whose conditions are false.
 
 ## Decorators and themes
 
-Mokly loads the consumer's `.storybook/preview` annotations and uses
-Storybook's portable story composition. Storybook decorators wrap the story.
-The configured Mokly renderer wraps React mockup screens and components.
-Stories use their Storybook providers.
+Mokly uses Storybook's portable story composition. It applies each root's
+preview annotations to its CSF 2 and CSF 3 stories. Storybook decorators wrap
+the story. The configured Mokly renderer wraps React mockup screens and
+components. Stories use their Storybook providers.
 
 A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
 select a layout or product theme. Mokly creates a view of each included story
@@ -246,16 +294,20 @@ even if a loader, a hook, or the render fails. If a `beforeEach` cleanup
 throws, it fails that render. Storybook's own preview runs a story's cleanups
 when the next story loads.
 
-The preview's `beforeAll` hook runs before the first story render of a
-build. Each render process keeps one active setup. When rebuilt stories render
-in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
-again. This can happen in `mokly serve` after an edit.
+Each render process keeps one active `beforeAll` setup at a time. The setup
+belongs to a Storybook folder and a bundle generation, which is a compiled
+set of stories. Mokly runs the preview's hook before the first story render
+for that setup. Mokly runs the active setup's cleanup only when a story render
+switches folders or bundle generations. It runs the cleanup before the
+story's preview hook.
 
 Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
 run. Loaders and `beforeEach` hooks can read them from `context.globals`.
 
-If `beforeAll` throws during a build, Mokly reuses that error for each story
-render that needs the setup. Mokly runs no `play` function or `afterEach` hook.
+A loader, hook, `beforeAll` cleanup, or render that throws fails the current
+render. If `beforeAll` throws, Mokly reuses that error for later story renders
+that need the same folder and generation's setup. Mokly runs no `play`
+function or `afterEach` hook.
 
 Loaders and hooks run in Node during the static render.
 

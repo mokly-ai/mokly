@@ -12,6 +12,7 @@ use crate::postcss_scan::{Scan, glob};
 #[derive(Clone, Default, PartialEq, Eq)]
 pub(crate) struct InputStamp {
     pub(crate) vite_env: BTreeSet<ViteEnvInput>,
+    pub(crate) previews: BTreeMap<PathBuf, Option<PathBuf>>,
     pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
     pub(crate) unretained: BTreeMap<PathBuf, Option<String>>,
@@ -96,7 +97,18 @@ impl InputStamp {
                     + input.digest.as_ref().map_or(0, String::capacity)
             })
             .sum();
-        (files + directories + memberships + assets + projections + vite_env).saturating_mul(2)
+        let previews: usize = self
+            .previews
+            .iter()
+            .map(|(path, file)| {
+                size_of_val(path)
+                    + size_of_val(file)
+                    + path.capacity()
+                    + file.as_ref().map_or(0, PathBuf::capacity)
+            })
+            .sum();
+        (files + directories + memberships + assets + projections + vite_env + previews)
+            .saturating_mul(2)
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
@@ -131,7 +143,7 @@ impl InputStamp {
 
     /// Whether `tree` still gives the recorded value of every entry. A failed read gives
     /// `None`, so an entry that stays unreadable still matches. The check reads repository
-    /// files first, then the files below `node_modules`, the memberships, the assets, the
+    /// preview selections first, then repository files, files below `node_modules`, the memberships, the assets, the
     /// identities, and the directory scans. It stops at the first entry that differs, so the
     /// order changes only the number of reads.
     pub(crate) fn matches(&self, tree: &dyn SourceTree) -> bool {
@@ -143,11 +155,16 @@ impl InputStamp {
             assets,
             identities,
             directories,
+            previews,
             vite_env: _,
         } = self;
-        let file = |(path, digest): (&PathBuf, &Option<String>)| file_digest(tree, path) == *digest;
+        let file = |(path, digest): (&PathBuf, &Option<String>)| {
+            let selected = previews.get(path).and_then(Option::as_ref).unwrap_or(path);
+            file_digest(tree, selected) == *digest
+        };
         let mut scan = Scan::default();
-        files.iter().filter(|(path, _)| !dependency(path)).all(file)
+        self.previews_current(tree)
+            && files.iter().filter(|(path, _)| !dependency(path)).all(file)
             && files.iter().filter(|(path, _)| dependency(path)).all(file)
             && unretained
                 .iter()
@@ -167,6 +184,16 @@ impl InputStamp {
             && directories.iter().all(|((path, pattern), found)| {
                 directory_files(&mut scan, tree, path, pattern) == *found
             })
+    }
+
+    fn previews_current(&self, tree: &dyn SourceTree) -> bool {
+        self.previews.iter().all(|(path, expected)| {
+            tree.project(path).is_ok_and(|node| {
+                node.filter(|node| node.kind == FileKind::File)
+                    .map(|node| node.identity)
+                    == *expected
+            })
+        })
     }
 }
 

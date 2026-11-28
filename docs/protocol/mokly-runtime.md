@@ -9,13 +9,12 @@ crates; the pages linked below own the exact rules of each subsystem.
 
 ## Source Of Truth
 
-Authored sources define the catalogue: HTML screens, components, and pages,
-use case files, Markdown documents, folder records, entry modules, and
-stories files under the configured roots, plus the configuration file, the
-renderer module, and the configured stylesheets. The catalogue model is built
-from them in memory on every start and after every watched change. The [catalogue index v9](./mokly-shell-delivery.md#catalogue-index)
-and the [entry detail v4](./mokly-shell-delivery.md#entry-detail) are the
-public form of the model.
+The catalogue reads HTML screens, components, pages, use cases, Markdown, folder records,
+entry modules, and stories from its roots. It also reads the configuration file,
+[configuration inputs](./mokly-root-discovery.md#roots-from-main) of roots without
+`dir`, the renderer, and configured stylesheets. Mokly rebuilds the model in memory
+at startup and after each watched change. The public model consists of the
+[catalogue index v9](./mokly-shell-delivery.md#catalogue-index) and [entry detail v4](./mokly-shell-delivery.md#entry-detail).
 
 ## Discovery And Validation
 

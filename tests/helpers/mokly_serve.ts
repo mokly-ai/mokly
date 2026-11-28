@@ -55,6 +55,7 @@ export async function serve(
   environment: NodeJS.ProcessEnv = process.env,
   extra: string[] = [],
   watch = false,
+  sidecars = 1,
 ) {
   const managed = await serveProcess(
     [
@@ -64,7 +65,7 @@ export async function serve(
       "--port",
       "0",
       "--sidecars",
-      "1",
+      String(sidecars),
       ...extra,
     ],
     root,

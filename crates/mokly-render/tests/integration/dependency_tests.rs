@@ -22,13 +22,28 @@ use super::support::{Consumer, workspace};
 
 #[test]
 fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources() {
+    external_css_module(
+        "fixture-theme",
+        "assets/node_modules/dot-mokly-roots/1/fixture-theme/icon.svg",
+    );
+}
+
+#[test]
+fn a_scoped_package_asset_in_an_extra_dependency_root_keeps_its_scope() {
+    external_css_module(
+        "@scope/pkg",
+        "assets/node_modules/dot-mokly-roots/1/@scope/pkg/icon.svg",
+    );
+}
+
+fn external_css_module(package_name: &str, asset: &str) {
     let consumer = Consumer::new();
     let dependencies = tempfile::tempdir().unwrap();
-    let package = dependencies.path().join("node_modules/fixture-theme");
+    let package = dependencies.path().join("node_modules").join(package_name);
     fs::create_dir_all(&package).unwrap();
     fs::write(
         package.join("package.json"),
-        r#"{"name":"fixture-theme","version":"1.0.0"}"#,
+        format!(r#"{{"name":"{package_name}","version":"1.0.0"}}"#),
     )
     .unwrap();
     fs::write(
@@ -53,7 +68,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     consumer.replace(
         "library/chip.tsx",
         "import styles from",
-        "import extra from 'fixture-theme/skin.module.css';\nimport styles from",
+        &format!("import extra from '{package_name}/skin.module.css';\nimport styles from"),
     );
     consumer.replace(
         "library/chip.tsx",
@@ -105,7 +120,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         definitions: runtime.clone(),
     };
     let prepared = builder.prepare(&consumer.config(), None).unwrap();
-    let logical = "node_modules/.mokly-roots/1/fixture-theme/skin.module.css";
+    let logical = format!("node_modules/.mokly-roots/1/{package_name}/skin.module.css");
     assert!(
         prepared
             .javascript
@@ -113,7 +128,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
             .as_ref()
             .unwrap()
             .modules
-            .contains_key(logical)
+            .contains_key(&logical)
     );
     let factory: &dyn GraphFactory = runtime.as_ref();
     let generation = factory
@@ -137,7 +152,6 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
             .clone(),
     )
     .unwrap();
-    let asset = "assets/node_modules/.mokly-roots/1/fixture-theme/icon.svg";
     assert_eq!(
         generation.resource(asset).unwrap().unwrap(),
         b"<svg>base asset</svg>"
@@ -155,7 +169,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
             _ => None,
         })
         .unwrap();
-    assert!(html.contains(&maps.class_maps[logical]["external"]));
+    assert!(html.contains(&maps.class_maps[&logical]["external"]));
     assert!(
         calls
             .iter()

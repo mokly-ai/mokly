@@ -7,8 +7,9 @@ use globset::GlobSet;
 use crate::config::relative;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
+use crate::discovery::SourceKind;
 use crate::error::Result;
-use crate::globs::{self, DEFAULT_GLOBS};
+use crate::globs;
 
 /// The first source-protection cause in the protocol's precedence order.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -31,6 +32,8 @@ pub struct SourcePolicy {
 }
 
 struct RootMatch {
+    configured: usize,
+    stories_only: bool,
     lexical: String,
     physical: String,
     globs: GlobSet,
@@ -38,6 +41,9 @@ struct RootMatch {
 
 impl RootMatch {
     fn matches(&self, path: &str) -> bool {
+        if self.stories_only && SourceKind::from_path(path) != SourceKind::Stories {
+            return false;
+        }
         [&self.lexical, &self.physical].iter().any(|directory| {
             let relative = if directory.is_empty() {
                 Some(path)
@@ -67,16 +73,13 @@ impl SourcePolicy {
     pub fn new(config: &ResolvedConfig, sources: &[String]) -> Result<Self> {
         let mut roots = Vec::new();
         for (index, root) in config.roots.iter().enumerate() {
-            let patterns = root
-                .input
-                .files
-                .clone()
-                .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
-            let globs = match globs::compile(&patterns) {
+            let globs = match globs::for_root(root) {
                 Ok(globs) => globs,
                 Err(reason) => return Err(invalid(format!("roots[{index}].files: {reason}"))),
             };
             roots.push(RootMatch {
+                configured: root.configured_index(index),
+                stories_only: root.from_storybook_main(),
                 lexical: relative(&root.directory, &config.repo_root),
                 physical: relative(&root.identity, &config.repo_root),
                 globs,
@@ -91,10 +94,12 @@ impl SourcePolicy {
     /// Classify both the requested path and its resolved in-repository alias.
     pub fn denial(&self, requested: &str, resolved: Option<&str>) -> Option<ProtectedBy> {
         let paths: Vec<_> = std::iter::once(requested).chain(resolved).collect();
-        for (index, root) in self.roots.iter().enumerate() {
+        for root in &self.roots {
             for path in &paths {
                 if root.matches(path) {
-                    return Some(ProtectedBy::RootMatch { root: index });
+                    return Some(ProtectedBy::RootMatch {
+                        root: root.configured,
+                    });
                 }
             }
         }
