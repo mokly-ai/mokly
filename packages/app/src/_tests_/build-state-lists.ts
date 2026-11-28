@@ -22,9 +22,9 @@ import { publication } from "./viewer/fixtures";
 const failedHead = "8b3f0c2a6e91d47b3c05f8a2e6d19b47c3a0f5e8";
 
 /**
- * History lists a running build as Publishing now with no Details, because the
- * stage already shows it, and a failed build as Unable to publish with Details,
- * which opens the failed build.
+ * History lists a running build as Publishing now with no link, because the
+ * stage already shows it, and a failed build as Unable to publish, whose row
+ * opens the failed build.
  */
 export const history: BuildStateRow = {
   title: "History lists builds in the words publications use",
@@ -59,11 +59,11 @@ export const history: BuildStateRow = {
     const rows = panel.getByRole("listitem");
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText("Publishing now");
-    await expect(rows.nth(0).getByText("Details")).toHaveCount(0);
+    await expect(rows.nth(0).getByRole("link")).toHaveCount(0);
     await expect(rows.nth(1)).toContainText("Ready");
     await expect(rows.nth(2)).toContainText("Unable to publish");
     await expect(rows.nth(2)).toContainText("8b3f0c2");
-    await rows.nth(2).getByText("Details").click();
+    await rows.nth(2).getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(failed));
     await expect(
       cardTitle(page, "Unable to publish this branch"),
@@ -73,14 +73,14 @@ export const history: BuildStateRow = {
 
 /**
  * Switcher rows read the newer of their publication and their build, with the
- * short SHA of whichever they read. Details on a row whose newest build failed
- * opens that build's address, even for a closed pull request, whose own
- * address shows the closed card. The reference the reader is on says Current
- * in place of Details, so each Details below is pressed from another
- * reference's address: the closed pull request's, then the branch's build.
+ * short SHA of whichever they read. A row whose newest build failed opens that
+ * build's address, even for a closed pull request, whose own address shows the
+ * closed card. The reference the reader is on says Current and is no link, so
+ * each failed row below is pressed from another reference's address: the
+ * closed pull request's, then the branch's build.
  */
 export const switcher: BuildStateRow = {
-  title: "switcher rows read their newest build, and Details opens it",
+  title: "switcher rows read their newest build, and a failed row opens it",
   label: "switcher",
   run: async (page, scenario) => {
     const { double, projectId } = scenario;
@@ -144,16 +144,16 @@ export const switcher: BuildStateRow = {
     await expect(row("topic")).toContainText("Unable to publish");
     await expect(row("topic")).toContainText("8b3f0c2");
     await expect(row("#14")).toContainText("octocat · Unable to publish");
-    await row("topic").getByText("Details").click();
+    await row("topic").getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(failed));
     await expect(page.locator(".fo-build-line")).toHaveText(
       "Mokly couldn’t accept this catalogue.",
     );
 
     // The closed pull request's own address shows its closed card, so its
-    // Details opens the failed build itself.
+    // row opens the failed build itself.
     await page.getByTestId("viewer-publication").click();
-    await row("#14").getByText("Details").click();
+    await row("#14").getByRole("link").click();
     await page.waitForURL((url) => url.pathname === scenario.buildAt(closed));
     await expect(
       cardTitle(page, "Unable to publish this pull request"),

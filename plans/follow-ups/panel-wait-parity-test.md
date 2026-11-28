@@ -1,0 +1,35 @@
+# No test compares app and drawn panel waits
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch calummoore/click-on-row-ux-0nhj, review round 1 item 2
+- **Location:** `docs/mockups/src/_tests_/viewer-panel-waits.test.ts:55-153`, `packages/app/src/_tests_/viewer/waits.spec.ts:148-205`, and the waits of the app panels: `packages/app/src/viewer/panels/switcher.tsx:213-219`, `history.tsx:103-158`, `projects.tsx:154-204` and `share.tsx:26-58`.
+- **Reason:** The recommended fix adds a test for a whole class of defect, and the user approves each such test.
+- **Category:** Test.
+
+- **Terms:**
+  - **Wait:** what a region draws while a read that it needs runs. **Wait** in `docs/protocol/cloud/folio-chrome.md:88-103` defines it. A list draws one placeholder row in the row's own frame.
+  - **Waiting row:** that placeholder row. It keeps the row's frame, with bars where the answer supplies text, and it is no link.
+  - **Viewer panel:** one of the four overlays that the viewer's slots open: the branch switcher, Projects, History and Share.
+  - **Drawing:** one page of the cloud mockup catalogue under `docs/mockups`. The app follows the drawings as its design.
+- **Background:**
+  - `viewer-panel-waits.test.ts` reads the built drawings of the four panel waits. It checks the heard labels, the waiting rows, the group labels, the controls and the values that the wait must hide.
+  - Its expected waiting rows are two in the switcher, and one each in Projects, History and Share.
+  - The app's browser spec "each panel waits in its own groups, with one placeholder row in each list" in `waits.spec.ts` holds each panel's read.
+  - It checks one list item in each named list: Branches, Pull requests, Publications of main and Projects. It checks that no list item holds a link.
+  - On `origin/main` that spec counted the waiting rows' Open words instead: two in the switcher and one each in History and Projects.
+  - The branch `calummoore/click-on-row-ux-0nhj` removed the Open label. On 2026-11-26 it replaced the Open counts with the list-item counts above.
+  - Each test copies its expected values by hand. No test compares the app's wait with the drawn wait.
+  - The app's node tests already render components on the server with `renderToStaticMarkup`, for example `packages/app/src/_tests_/action-content.test.ts`.
+- **Problem:** When a panel's wait changes on one side, and its own test changes with it, no check reports that the other side now differs.
+- **Impact if no action:** The app's panel waits can drift from their drawings, and only a review finds the drift.
+- **Root question:** How do the tests keep the wait of each app panel the same as its drawn wait?
+- **Options:**
+  - **A.** Change nothing more. Each side keeps its own counts. Effort: Small.
+  - **B.** Add a node test that renders each panel's wait in the app with `renderToStaticMarkup`. Compare its group labels, waiting rows per list, controls with their disabled state, and heard labels with the drawn wait. The test gives each panel a read that never answers, and the contexts that the panel reads. It is a test for the class, so it needs the user. Effort: Medium.
+  - **C.** Move the expected values of each panel wait into one table that both tests read. Each test still checks only its own side. The table keeps the two sides in step only while both tests read each of its fields. Effort: Medium.
+- **Left out:** Extend the parity suite in `docs/mockups/src/_tests_/app-parity.ts`. It reads the app's source text, so it cannot count rendered rows.
+- **Wider fix:** B.
+- **Previous examples:** Until 2026-11-26 the app's spec counted Open words. When the label went, the spec stopped proving one row per list, and only review found it.
+- **Recommendation:** B. It compares what each side draws, so neither side can drift alone.
+- **Action:** ask the user, because B adds a test for a whole class of defect, and the user approves each such test.

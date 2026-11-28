@@ -10,12 +10,12 @@ import type {
 import { isScreenPath } from "./screen-path";
 
 /** The overlays a viewer slot opens; an absent value means every one is shut. */
-export type ViewerPanel = "projects" | "switcher" | "history" | "share";
+export type PanelId = "projects" | "switcher" | "history" | "share";
 
 /** The viewer's complete URL state: what the stage shows, and what is over it. */
 export interface ViewerUrlState {
   selection: ViewerSelection;
-  panel?: ViewerPanel;
+  panel?: PanelId;
 }
 
 /** What the reader's own preference supplies when the URL names no scheme. */
@@ -32,15 +32,10 @@ export interface SelectionDefaults {
 const views: readonly ViewerView[] = ["all", "changes"];
 const viewports: readonly ViewerViewport[] = ["desktop", "mobile", "both"];
 const schemes: readonly ViewerScheme[] = ["light", "dark"];
-const panels: readonly ViewerPanel[] = [
-  "projects",
-  "switcher",
-  "history",
-  "share",
-];
+const panels: readonly PanelId[] = ["projects", "switcher", "history", "share"];
 
 /** The panels that can only act on a publication the address resolved. */
-const publicationPanels: readonly ViewerPanel[] = ["share"];
+const publicationPanels: readonly PanelId[] = ["share"];
 
 /** The grammar of a package snapshot identity: 64 lowercase hex digits. */
 const snapshotIdentity = /^[0-9a-f]{64}$/;
@@ -52,7 +47,7 @@ const snapshotIdentity = /^[0-9a-f]{64}$/;
  */
 const retiredKeys = ["variantId"] as const;
 
-function needsPublication(panel: ViewerPanel, defaults: SelectionDefaults) {
+function needsPublication(panel: PanelId, defaults: SelectionDefaults) {
   return publicationPanels.includes(panel) && defaults.publication === false;
 }
 

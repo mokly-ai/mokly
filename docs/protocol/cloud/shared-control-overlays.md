@@ -9,16 +9,16 @@ The content-list registration is `design/content-list`. Its rows support four
 optional fields: `status`, one of the four semantic tones, rendered as a
 decorative Firna `StatusDot` in the row's leading slot; `meta`, right-aligned
 metadata in the trailing slot; `mono`, which sets the shared monospace
-treatment on that metadata; and `choose`, which draws the row's action as a
-quiet Firna button rather than a destination link, for a row the reader picks
-from a set instead of navigating to. A row already chosen carries `meta`
-instead of an action, because there is nowhere for it to go. The status stays
-decorative because the row's own description states the state in words, so
-the meaning is never carried by color alone. The destination link is a sibling
-of `ListItem` in a wrapping row: it sits at the right edge and wraps beneath
-the row only when enlarged text needs the width, which keeps ordinary rows
-compact while still fitting 320px at 200% text. Its waiting row is the row's
-own frame with bars in place of its text, not the `loading` rows of Firna's
+treatment on that metadata; and `choose`, for a row the reader picks from a set
+instead of navigating to. The product draws such a row as one button over its
+whole frame, with no trailing label such as Select. A drawing draws it as one
+link to the chosen state, with the same states, because a drawing leads to
+states. A row already chosen carries `meta`
+and is no button, because there is nothing left to choose. The status stays decorative because the
+row's own description states the state in words, so the meaning is never
+carried by color alone. A row with a destination is one link around
+`ListItem` that covers the row's whole frame, with no trailing label. Its
+waiting row is the row's own frame with bars in place of its text, not the `loading` rows of Firna's
 `List`, because their heights differ from the rows they would stand for.
 
 The product controls are thin wrappers over the public `/input`, `/segmented`,
@@ -27,8 +27,9 @@ variants as `design/textarea`, `design/segmented`, `design/switch`,
 `design/options-list`, `design/skeleton` and `design/content-list`.
 DropdownList is the open options surface; `design/selector` is the closed
 select whose trigger opens it, registered because the closed trigger renders
-from the package without a document. ListItem and its catalogue link are siblings in a local responsive row that wraps under
-pressure, as described above. A link is never nested in a clickable row, and
+from the package without a document. A row's catalogue link wraps ListItem, and a
+choice is its sibling in a local responsive row that wraps under pressure, as
+described above. A link never holds another control, and
 the package's trailing slot is never restyled. Textarea uses the same no-op
 change and accessibility contract as Input. Switch takes a
 waiting form, drawn as a placeholder over its own frame, and a working form,

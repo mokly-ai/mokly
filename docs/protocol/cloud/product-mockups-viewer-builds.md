@@ -146,7 +146,7 @@ above the control and Details beneath it. The same request can succeed, so the
 control still leads to the cancelled build, and it still reads Cancel.
 
 The switcher draws both kinds of failed row under the
-[Details rule](./viewer-build-navigation.md#history-and-switcher):
+[failed-row rule](./viewer-build-navigation.md#history-and-switcher):
 `calummoore/protocol-docs`, whose newest attempt is a failed publication,
 opens `product/viewer/standalone/failed`, and Alex's `alex/bun-migration`,
 whose newest build failed, opens that build's drawing,

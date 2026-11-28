@@ -43,7 +43,7 @@
     },
     {
       "path": "mokly-viewer/deployment.json",
-      "sha256": "a6cc00a02e4474dfcd3f5c2ed7504d822e7012099680425aaf0c4a4250d5cf25",
+      "sha256": "a2dea187ce0925dfac87e1f1728dc3886ce6125cc788094b5089f85f472edf48",
       "size": 111
     },
     {
@@ -238,7 +238,7 @@
     },
     {
       "path": "mokly-viewer/index.json",
-      "sha256": "44762a893a9cf4d5672a561385faee9df3722317c81dfc355da19db753bdc202",
+      "sha256": "ee030059ac8e2efae502fd184ccbb79a7316ad48367e25958d6ff0721120a88f",
       "size": 11189
     },
     {

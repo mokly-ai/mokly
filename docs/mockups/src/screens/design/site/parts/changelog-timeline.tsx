@@ -8,6 +8,8 @@
  * Version history carries the same links.
  */
 
+import type { CSSProperties } from "react";
+
 import {
   dayNumber,
   isBreaking,
@@ -92,7 +94,17 @@ function timeline(releases: readonly Release[], gap: number) {
 
 /** A position along the track, as a CSS length. */
 function at(x: number): string {
-  return `${x.toFixed(3)}%`;
+  return `${place(x)}%`;
+}
+
+/** A position along the track, as a number from 0 to 100. */
+function place(x: number): string {
+  return x.toFixed(3);
+}
+
+/** The playhead's place along the track, which keeps its tag inside it. */
+function playheadStyle(x: number): CSSProperties & { "--x": string } {
+  return { "--x": place(x) };
 }
 
 /** The class of a keyframe: its kind, and whether it is the one in view. */
@@ -172,7 +184,7 @@ export function ChangelogTimeline({
         {playhead === undefined ? null : (
           <span
             className="site-changelog-playhead"
-            style={{ left: at(playhead.x) }}
+            style={playheadStyle(playhead.x)}
           >
             <b>v{playhead.release.version}</b>
           </span>

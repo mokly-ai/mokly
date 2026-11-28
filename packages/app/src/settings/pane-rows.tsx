@@ -28,7 +28,6 @@ export function PaneRows({
         detail: pane.summary,
         href: href(pane.id),
         onFollow: () => goToPane(pane.id),
-        action: "Open",
       }))}
     />
   );

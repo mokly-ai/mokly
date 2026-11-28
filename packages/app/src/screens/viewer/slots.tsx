@@ -29,7 +29,7 @@ import {
   publishedDay,
   shortSha,
 } from "../../viewer/resolution";
-import type { ViewerPanel } from "../../viewer/selection";
+import type { PanelId } from "../../viewer/selection";
 
 import type { SlotRefs } from "./carriers";
 import { MoreMenu } from "./more-menu";
@@ -85,7 +85,7 @@ export interface SlotInput {
   subject: ChromeSubject;
   /** Which of the package's two views the address selected. */
   view: ViewerView;
-  panel?: ViewerPanel;
+  panel?: PanelId;
   /** Whether the settings dialog is open, on any pane. */
   settingsOpen: boolean;
   /** Where the bar's composition puts each action, which More's rows follow. */
@@ -96,7 +96,7 @@ export interface SlotInput {
   shareable: boolean;
   refs: SlotRefs;
   /** Each opener names its action, whichever control carried it. */
-  onPanel: (panel: ViewerPanel) => void;
+  onPanel: (panel: PanelId) => void;
   /** What the account rows do, in the account menu and in More. */
   account: AccountActions;
   onLatest?: () => void;

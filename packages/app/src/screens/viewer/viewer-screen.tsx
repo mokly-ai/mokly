@@ -22,7 +22,7 @@ import { useLatestPublication } from "../../viewer/latest";
 import { useAccountActions, useViewerMenus } from "../../viewer/menus";
 import { ViewerHost } from "../../viewer/published";
 import { viewerHref } from "../../viewer/selection";
-import type { ViewerPanel } from "../../viewer/selection";
+import type { PanelId } from "../../viewer/selection";
 import { stageView } from "../../viewer/stage-view";
 
 import { useViewerAddressState } from "./address-state";
@@ -110,10 +110,7 @@ export function ViewerScreen({
   });
 
   const go = useCallback(
-    (
-      next: { selection: ViewerSelection; panel?: ViewerPanel },
-      push: boolean,
-    ) => {
+    (next: { selection: ViewerSelection; panel?: PanelId }, push: boolean) => {
       // Every viewer change is a change to this page's own query, so it is
       // written rather than routed; `src/navigation/address.ts` says why that
       // is not the router's to do.
@@ -147,7 +144,7 @@ export function ViewerScreen({
   // replaces it, so closing either lands on the publication rather than on the
   // panel the reader came through.
   const openPanel = useCallback(
-    (next: ViewerPanel) => {
+    (next: PanelId) => {
       closeMenus();
       overlayOpening(next);
       go({ selection: state.selection, panel: next }, panel === undefined);

@@ -14,10 +14,7 @@ import { HistoryPanel } from "../../viewer/panels/history";
 import { ProjectsPanel } from "../../viewer/panels/projects";
 import { SharePanel } from "../../viewer/panels/share";
 import { SwitcherPanel } from "../../viewer/panels/switcher";
-import type {
-  SelectionDefaults,
-  ViewerPanel as PanelId,
-} from "../../viewer/selection";
+import type { SelectionDefaults, PanelId } from "../../viewer/selection";
 
 /** Everything the open panel needs; the viewer screen owns all of it. */
 export interface PanelInput {

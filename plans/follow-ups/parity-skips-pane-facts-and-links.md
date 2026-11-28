@@ -24,7 +24,10 @@
 - **Left out:** Compare all visible text. It would report every layout sentence that the parity rules leave to review.
 - **Wider fix:** B. It finds the class instead of each case.
 - **Previous examples:** `plans/follow-ups/workspace-pane-mockup-lacks-role.md`.
-- **Related:** `plans/follow-ups/workspace-pane-mockup-lacks-role.md`, same cause.
+- **Related:**
+  - `plans/follow-ups/workspace-pane-mockup-lacks-role.md`, same cause.
+  - `plans/follow-ups/access-drawing-shows-grantee-addresses.md`, same class. The parity suite does not compare the detail line of a row either, so it did not report the drawn addresses on the Access pane.
+  - Row links, the same class. Until 2026-11-27 the Access drawing's grant row linked to the Members pane, but the app's row was plain, and the parity suite did not report it. B can also compare the row links of each drawing with the app's rows.
 - **Recommendation:** B. Fact rows are part of what a pane says.
 - **Action:** ask the user, because condition 3 holds: B adds stricter validation.
 

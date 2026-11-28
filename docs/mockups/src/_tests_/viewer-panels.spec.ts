@@ -80,19 +80,16 @@ for (const viewport of ["desktop", "mobile"] as const)
           ).toBeVisible();
         // A reference with nothing ready still resolves, so its row opens on
         // the stage that says so; only a failed one leads somewhere else.
+        // Every row other than the reader's is a link as a whole.
         await expect(
-          rows.filter({ hasText: "No publication yet" }).getByRole("link", {
-            name: "Open",
-          }),
+          rows.filter({ hasText: "No publication yet" }).getByRole("link"),
         ).toHaveCount(1);
         await expect(
-          rows.filter({ hasText: "Unable to publish" }).getByRole("link", {
-            name: "Details",
-          }),
-        ).toHaveCount(2);
+          rows.filter({ hasText: "Unable to publish" }).getByRole("link"),
+        ).toHaveCount(3);
         // A row reads its newest build while one publishes. The branch the
-        // reader is on is where they already are, so its row says Current in
-        // place of a destination; a pull request with nothing ready opens the
+        // reader is on is where they already are, so its row says Current and
+        // is no link; a pull request with nothing ready opens the
         // build running in its stage.
         const opens = (text: string) =>
           rows
@@ -111,7 +108,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         expect(await opens("alex/token-rotation")).toBe(
           "product/viewer/standalone/publish",
         );
-        // Details opens what failed: a failed publication its own details,
+        // A failed row opens what failed: a failed publication its own details,
         // and a failed build that build's address, never the reference,
         // whose stage may show another card.
         expect(await opens("calummoore/protocol-docs")).toBe(
@@ -154,7 +151,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         const details = async (text: string) =>
           rows
             .filter({ hasText: text })
-            .getByRole("link", { name: "Details" })
+            .getByRole("link")
             .evaluateAll((links) =>
               links.map((link) => link.getAttribute("data-mokly-link")),
             );
@@ -210,9 +207,17 @@ for (const viewport of ["desktop", "mobile"] as const)
         await expect(choices.filter({ hasText: "Selected" })).toHaveText([
           /^Home/,
         ]);
-        await expect(
-          choices.getByRole("link", { name: "Select", exact: true }),
-        ).toHaveCount(4);
+        // Each other row is one control named by its screen, with no
+        // trailing Select, and the selected row is none.
+        await expect(choices.getByRole("link")).toHaveText([
+          /^Whole catalogue/,
+          /^Account/,
+          /^Checkout/,
+          /^Pricing/,
+        ]);
+        await expect(choices.getByText("Select", { exact: true })).toHaveCount(
+          0,
+        );
         await expect(
           page.getByText("Project members can open this link."),
         ).toBeVisible();

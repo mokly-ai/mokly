@@ -30,6 +30,6 @@
 - **Left out:** Restoring the exact `PATH` comparison, because it depends on provider order and still uses a provider value.
 - **Wider fix:** B. E is the structural alternative if the template environment does not reach processes.
 - **Previous examples:** The pinned adapter added explicit streaming environment support in `futex-ai/sandbox` commit `86d8234`.
-- **Related:** `cloud-builds-never-ran-live.md` holds the live build proof. A release for B should also follow the build-reference rule of `docs/ops/build-template.md`.
+- **Related:** "Live Evidence" of `docs/ops/build-template.md` holds the live build proofs. A release for B should also follow the build-reference rule of `docs/ops/build-template.md`.
 - **Recommendation:** F, then B only if F cannot run. F proves that a template-only value survives, on a release that passes the current probe, with no new release. If its `NODE_VERSION` check fails after a passing control run, choose between E and A, and do not weaken the probe.
 - **Action:** ask the user, because F and B need a credentialed E2B run, and their result can force a protocol change.

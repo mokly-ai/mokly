@@ -53,7 +53,7 @@ export default defineScreen({
       slug: "loading",
       title: "Settings · Loading",
       description:
-        "Settings — while the settings scope loads: the rail and the index draw the sections an owner sees, each row's Open is text with no link until the scope gives its address, and screen readers hear Loading settings. Static controls depict the documented action; no live writes occur.",
+        "Settings — while the settings scope loads: the rail and the index draw the sections an owner sees, no row is a link until the scope gives its address, and screen readers hear Loading settings. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "settings", "loading"],
       props: { state: "loading" },
     },

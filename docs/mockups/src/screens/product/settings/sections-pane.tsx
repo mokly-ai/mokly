@@ -14,7 +14,7 @@ import { SettingsSurface } from "./surface";
  * index draws the sections that the address's scope gives an owner, as the
  * rail beside it does: every pane's name and summary are known, so they stay
  * text, and only where each row leads waits, because its address needs the
- * scope's workspace and project. So each row draws Open as text with no link.
+ * scope's workspace and project.
  */
 function SectionIndex({ waiting = false }: { waiting?: boolean }) {
   return (
@@ -31,9 +31,9 @@ function SectionIndex({ waiting = false }: { waiting?: boolean }) {
                   id: pane.id,
                   title: pane.title,
                   detail: pane.summary,
-                  to: paneScreenPath(pane.id),
-                  action: "Open",
-                  ...(waiting ? { waiting: true } : {}),
+                  ...(waiting
+                    ? { waiting: true }
+                    : { to: paneScreenPath(pane.id) }),
                 }))}
             />
           </div>
