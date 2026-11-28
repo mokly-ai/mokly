@@ -4,7 +4,7 @@ Status: Active, on the branch `calummoore/catalogue-size-plan-to-fit-the-upload-
 
 Mokly Cloud refuses the catalogue of a large project. On 2026-11-27, the repository `Firna-AI/conductive` at commit `3371d05f` built with `@mokly/mokly` 0.21.0 into 1,746 MB in 11,030 files. The receiver accepts 512 MiB, about 537 MB, of declared bytes. The index was 48.7 MB with 2,162,642 JSON nodes, and the receiver accepts 8 MiB and 262,144 nodes. A pull-request build wrote 26,070 files, above the ceiling of 20,000, because it copies every document two more times. Conductive had 72 entry files on 2026-11-08 and 664 on 2026-11-27.
 
-This plan makes two changes together, as the user chose for item 1 on 2026-11-28. The user also answered items 2, 3, 4, 6, 7, 8 and 11 on that date. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for the answer to item 2. Every other recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
+This plan makes two changes together, as the user chose for item 1 on 2026-11-28. The user also answered items 2 to 9 and 11 on that date. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for the answer to item 2. Every other recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
 
 The plan does not change the build template, the attempt deadline, or the memory of the native process. The workspaces "Build capacity: bigger template and deadline" and "Build capacity: bounded render memory" own them. The plan does not render both colour schemes from one document.
 
@@ -122,7 +122,7 @@ Every item shares these assumptions, unless an item names an option that drops o
 
 ## Decisions
 
-On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a target of 1 minute for item 9. Implementation starts only after the user answers items 5, 9 and 10. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
+On 2026-11-28 the user answered items 1 to 9 and 11. Implementation starts only after the user answers item 10. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
 
 | #   | Item                                             | Source | Severity | Effort | Recommended                                                                                |
 | --- | ------------------------------------------------ | ------ | -------- | ------ | ------------------------------------------------------------------------------------------ |
@@ -130,11 +130,11 @@ On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a targ
 | 2   | No size target for one publication               | Design | High     | Medium | D, chosen on 2026-11-28: ceilings from what the cloud can safely hold                      |
 | 3   | The receiver counts copies and caps growth       | Design | High     | Medium | C, chosen on 2026-11-28: count each file once, and set ceilings for the answer to item 2   |
 | 4   | The index carries each entry's controls          | Design | High     | Large  | F, chosen on 2026-11-28: each schema once, a component's in its own detail                 |
-| 5   | Pull-request builds copy every document twice    | Design | High     | Large  | C: read snapshots only, and no after side in Mokly Cloud                                   |
+| 5   | Pull-request builds copy every document twice    | Design | High     | Large  | C, chosen on 2026-11-28: read snapshots only, and no after side in Mokly Cloud             |
 | 6   | The required smoke blocks the format change      | Review | High     | Medium | A, chosen on 2026-11-28: the smoke uses the workspace CLI until the release                |
 | 7   | Old publications break at the cutover            | Review | High     | Medium | A, chosen on 2026-11-28: keep old publications, and each branch publishes at its next push |
 | 8   | A format change breaks the cloud until a release | Design | Medium   | Small  | A, chosen on 2026-11-28: one pull request, then a release                                  |
-| 9   | A large build takes far longer than 1 minute     | Design | High     | Small  | C: a separate plan owns the 1-minute target                                                |
+| 9   | A large build takes far longer than 1 minute     | Design | High     | Small  | A, chosen on 2026-11-28: no time target, and Milestone 8 measures                          |
 | 10  | Usage lists repeat each consumer                 | Review | Medium   | Small  | D: one row for each consumer group that the viewer shows today                             |
 | 11  | Compact JSON changes every detail id             | Design | Low      | Small  | A, chosen on 2026-11-28: the ids hash the compact bytes                                    |
 
@@ -324,6 +324,7 @@ On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a targ
 - **Previous examples:** `plans/follow-ups/unread-comparison-snapshots.md`, `skip-equal-before-snapshots.md` and `snapshot-resource-copies.md`. When a base fails validation, the CLI already publishes without a comparison, under `docs/protocol/cloud/cloud-build-runner.md`.
 - **Related:** Item 2: its options B and C need C or a later option here. Item 3: E relies on its distinct count. Item 8: C adds an index field for the after source.
 - **Recommendation:** C. In Mokly Cloud, a pull request that changes every view then adds one copy of each document, not two. Every other host keeps today's guarantee. F protects best against the file ceiling, and H against mixed deployments.
+- **Decision:** C, chosen by the user on 2026-11-28.
 - **Action:** ask the user, because B, C, E, G, H and I change the generation rules of `docs/protocol/mokly-changes-serving.md`, `mokly-export-delivery.md` and `mokly-comparison-panes.md`. C also adds a receiver rule, and F adds a viewer state.
 
 ### 6. The required smoke blocks the format change
@@ -449,7 +450,7 @@ On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a targ
 - **Root question:** How does a cloud build of a large catalogue finish within 1 minute? The user's target of 2026-11-28 replaced the first question, which asked how long a build may take.
 - **Shared assumptions:** The build renders on one sandbox. Option E drops it. `build` and `publish` render every document from its sources. Options D and F drop it.
 - **Options:**
-  - **A.** No time target. The user's target of 2026-11-28 replaces it. Effort: Small.
+  - **A.** No time target. Milestone 8 records the time and the peak memory of both builds, before and after. Effort: Small.
   - **B.** A target of 30 minutes on the bigger template. The user's target of 1 minute replaces it. Effort: Medium.
   - **C.** A separate brainstorm and plan own the 1-minute target, beside the two build-capacity workspaces. This plan records the target, and Milestone 8 measures each build against it. Effort: Small in this plan.
   - **D.** `build` and `publish` reuse an earlier render when its render key is unchanged, through the render store. A pull request then renders only the views that it changes. It reverses the decision of `docs/protocol/mokly-render-store.md`, and a cloud build needs a store that it can trust. Effort: Large.
@@ -462,7 +463,7 @@ On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a targ
 - **Previous examples:** Serve already reuses earlier renders, under `docs/protocol/mokly-render-store.md`.
 - **Related:** None.
 - **Recommendation:** C, changed from B on 2026-11-28. The 1-minute target needs render reuse or many sandboxes, which is a different problem from the size of the output. D and F also reverse a decision in force. D is the wider fix, because the build time then follows the change, not the catalogue.
-- **Decision:** the target is 1 minute, set by the user on 2026-11-28: "target time should be 1 minute". The way to reach it is still open.
+- **Decision:** A, chosen by the user on 2026-11-28, after the user first wrote "target time should be 1 minute". This plan sets no time target, and the 1-minute target is not part of it.
 - **Action:** ask the user, because D and F reverse a decision in force, and C moves the work to a separate plan.
 
 ### 10. Usage lists repeat each consumer
@@ -471,7 +472,7 @@ On 2026-11-28 the user answered items 1, 2, 3, 4, 6, 7, 8 and 11, and set a targ
 - **Source:** Review.
 - **Category:** Docs or spec.
 - **Location:** `crates/mokly-model/src/projection_usage.rs:10-104`, `packages/viewer/src/shell/workspace_usage.tsx:68-122` and `docs/protocol/mokly-live-evidence.md:112-124`.
-- **Background:** `usedBy` and `affected` hold one link for each instance and view of each consumer. Each link repeats the consumer's path, kind and title. The viewer groups the links into one row for each consumer kind, path, removal state and eligibility, with counts and the first link. The rule in `docs/protocol/mokly-live-evidence.md` forbids the merge of distinct view, instance, ownership, removal or eligibility contexts in `affected`.
+- **Background:** `usedBy` and `affected` hold one link for each instance and view of each consumer. Each link repeats the consumer's path, kind and title. The viewer groups the links into one row for each consumer kind, path, removal state and eligibility, with counts and the first link. The rule in `docs/protocol/mokly-live-evidence.md` forbids the merge of distinct view, instance, ownership, removal or eligibility contexts in `affected`. Today only the viewer reads the links, in `packages/viewer/src/shell/workspace_usage.tsx:68-88` and `workspace_panel.tsx:122`. It shows the rows and opens each row's first link. The Rust readers check only that the lists exist, and the cloud reads no entry detail.
 - **Problem:** The lists are 85.1 MB of conductive's compact details. `icon-button.json` alone has 44,206 links.
 - **Impact if no action:** The details stay about 72 MB larger than needed, and the largest detail stays 16.8 MB.
 - **Root question:** How can usage lists shrink while they keep each comparison destination and its counts?
