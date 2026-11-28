@@ -1,0 +1,35 @@
+# A release PR merged behind main can never publish
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the 0.20.0 release, whose tags exist but whose packages never reached npm.
+- **Location:** the sections "Candidate Runs" and "Identity And Completeness Proof" of `docs/protocol/npm-release-evidence.md`, the push and pull-request candidates of `scripts/release/evidence_contract.mjs`, and the section "Release Management" of `docs/protocol/npm-release-management.md`.
+- **Reason:** The performance orchestrator asked for this item. Each fixing option changes a release evidence rule or adds a merge gate.
+
+- **Source:** Implementation.
+- **Category:** Process.
+- **Terms:**
+  - **Release PR:** the Release Please pull request, such as #292 for 0.20.0. Its merge creates the release tags.
+  - **Full profile:** the CI verification with ten reports, on Node 22.15 and on Node 24. A same-repository Release Please pull request run produces it. An ordinary push run on `main` has only the five reports of Node 22.15.
+- **Background:**
+  - Release preparation needs CI evidence for the exact tagged tree, as `docs/protocol/npm-release-evidence.md` requires. A push run on the tag commit has only five reports, so it does not count. The usual evidence is the CI run of the release PR, whose merge commit must have the same tree as the squash merge on `main`.
+  - The release PR #292 merged at 15:20 UTC on 2026-11-20 as `78b08fdf8`. Three PRs, #412, #413, and #414, had merged into `main` after its last CI run. So the tree of `78b08fdf8` differs from every tree that the CI of #292 tested.
+  - The tags `v0.20.0` and `viewer-v0.20.0` exist, but no 0.20.0 package reached npm. A rerun of the old PR CI tests the old merge commit again, and a rerun of the push CI gives only five reports. So no evidence can exist for this tree.
+  - The performance orchestrator released 0.21.0 through the next release PR, #418. It merged #418 only while the PR contained `main` exactly, and it asked the other orchestrators to merge nothing until 0.21.0 was on npm.
+- **Problem:** When `main` moves after the last CI run of the release PR, the merged release has no applicable evidence and can never publish.
+- **Impact if no action:** Each release needs a pause of all other merges. One merge at the wrong time strands a version that is already tagged.
+- **Root question:** How does every merged release PR get CI evidence for its exact tagged tree?
+- **Options:**
+  - **A.** Keep the evidence rules, and add a step to `docs/protocol/npm-release-management.md`: merge the release PR only when its last CI run tested the current `main`, and pause other merges until the release is on npm. People and agents must follow the step. Effort: Small.
+  - **B.** Require an up-to-date branch for the release PR, for example with the GitHub rule "Require branches to be up to date before merging" or with a merge queue. This adds a merge gate. Effort: Small.
+  - **C.** Run the full profile in the push CI run of a release commit, so that the run on the tag commit is always applicable evidence. This changes the rule that the push CI of `main` has only the five-report profile. Effort: Medium.
+  - **D.** When the evidence is absent, let release preparation start a full-profile CI run on the tag commit and wait for it. This adds a dispatched run as a new candidate kind. Effort: Medium.
+- **Left out:**
+  - A local verification on the release runner: `docs/protocol/npm-release-evidence.md` rejects it, because CI owns that work.
+  - Accept the five-report push run as evidence: the release would then ship without the Node 24 verification.
+- **Wider fix:** C. Each tagged tree then gets its own evidence, whatever the merge order.
+- **Previous examples:** None found. The 0.20.0 release is the first case.
+- **Related:**
+  - [registry-verification-window-short.md](./registry-verification-window-short.md) and [lighthouse-failure-blocks-release-evidence.md](./lighthouse-failure-blocks-release-evidence.md) also blocked the releases of 2026-11-20. Their causes differ.
+- **Recommendation:** C. It removes the race, and the release then needs no pause of other merges.
+- **Action:** ask the user, because B adds a merge gate, and C and D change the evidence rules of `docs/protocol/npm-release-evidence.md`.

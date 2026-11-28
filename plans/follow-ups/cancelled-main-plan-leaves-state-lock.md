@@ -1,0 +1,40 @@
+# A cancelled main plan leaves the Terraform lock
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the failed 0.20.0 release run 44762325715 on `78b08fdf8`.
+- **Location:** the `concurrency` block of `.github/workflows/ci.yml:10-12`, the `cloud-provider-plan` job of `.github/workflows/ci.yml:560-608`, the `plan-main-preview` job of `.github/workflows/deploy.yml:278`, and the `-lock-timeout=5m` plan of `infra/scripts/terraform-root.sh:42`.
+- **Reason:** The fix changes how CI cancels runs on `main`.
+
+- **Source:** Implementation.
+- **Category:** CI.
+- **Terms:**
+  - **State lock:** the object `gs://mokly-508518-tf-state/environments/main-preview/default.tflock`. Terraform writes it when a plan or an apply starts and deletes it when the command ends. A second command waits up to `-lock-timeout`, then fails with `Error acquiring the state lock`.
+  - **Provider plan:** the CI job "Credential-gated infrastructure plan". It runs `infra/scripts/terraform-environment.sh main-preview plan` on each push to `main` while the repository variable `MKC_CLOUD_CUTOVER_ENABLED` is `true`.
+- **Background:**
+  - The CI workflow uses `concurrency: group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}` with `cancel-in-progress: true`. On `main` every push has the same group, `ci-CI-refs/heads/main`. So a push to `main` cancels the CI run of the previous push.
+  - Since the cloud cutover, each push to `main` runs the provider plan, which takes the main-preview state lock.
+  - On 2026-11-20, PR #413 merged as `a9859a574`, and its CI run 44762207309 started its provider plan at 15:20:31 UTC. The plan took the lock at 15:20:54, with lock ID `1795188054947089`, `Who: runner@runnervmeozm8`, and `Operation: OperationTypePlan`.
+  - The release PR #292 merged as `78b08fdf8` at 15:20:43. Its CI run 44762325345 cancelled run 44762207309, and the provider plan of the cancelled run stopped at 15:20:59. A cancelled job does not let Terraform delete its lock, so the lock stayed.
+  - Every later main-preview plan then failed after its 5-minute wait with `Error acquiring the state lock`, `googleapi: Error 412`, and the same lock ID:
+    - the provider plan of the release commit's CI run 44762325345 at 15:26 UTC, so Required CI failed on `78b08fdf8`;
+    - "Plan main-preview infrastructure" of Deploy run 44762207249 on `a9859a574` at 15:37 UTC;
+    - "Plan main-preview infrastructure" of Deploy run 44762325474 on `78b08fdf8` at 15:55 UTC, so main-preview did not deploy the release commit.
+  - The Release run 44762325715 then stopped in `prepare-release / prepare` with "CI evidence is absent: no applicable CI evidence was found. Re-run CI on release commit 78b08fdf86d855ccd6bf72c51fee72a829dc4e88. Retry the release after CI passes." Its `publish` job was skipped, so 0.20.0 did not reach npm.
+  - A re-run of the failed CI jobs fails in the same way while the stale lock exists. A later push to `main` also cancels such a re-run, because it shares the group.
+  - At about 18:33 UTC, the performance orchestrator removed the stale lock with a generation check. The provider plan of attempt 3 of CI run 44762325345 then passed at 18:36 UTC. Merges into `main` were paused before the removal, so that no waiting plan could take the lock and then be cancelled.
+- **Problem:** A push to `main` that comes while the previous push's provider plan holds the state lock cancels that plan and leaves the lock behind. Every main-preview plan in CI and in Deploy then fails until an operator removes the lock.
+- **Impact if no action:** Any two merges within a few minutes can block CI on `main`, the main-preview deploy, and a release, until someone with the plan credentials runs `terraform force-unlock`.
+- **Root question:** How does a push to `main` stop an older CI run without leaving the main-preview state lock behind?
+- **Options:**
+  - **A.** Do not cancel CI runs on `main`: keep `cancel-in-progress: true` only for pull requests, for example `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`. Each push to `main` then runs CI to the end. Cost: more runner minutes when several merges come close together. Effort: Small.
+  - **B.** Keep the cancellation, but move the provider plan into its own workflow or job concurrency group with `cancel-in-progress: false`, so that only the plan of each push runs to the end. Effort: Small.
+  - **C.** Run the provider plan with `-lock=false`, because a plan writes no state. Cost: a plan can read a state that an apply is changing, and the cutover runbook may assume the lock. Effort: Small.
+- **Left out:** A longer lock timeout. A stale lock never clears, so the wait only delays the failure.
+- **Wider fix:** A, because no run on `main` is then cancelled in the middle of a credentialed step.
+- **Previous examples:** None found.
+- **Related:**
+  - [release-pr-merged-behind-main.md](./release-pr-merged-behind-main.md): the other cause that stopped 0.20.0. After the lock removal, CI passed on `78b08fdf8`, but release preparation still found no evidence for its tree.
+  - [registry-verification-window-short.md](./registry-verification-window-short.md) and [lighthouse-failure-blocks-release-evidence.md](./lighthouse-failure-blocks-release-evidence.md) blocked the 0.21.0 release. Their causes differ.
+- **Recommendation:** A. It removes the cause with one line and keeps every check on every commit of `main`.
+- **Action:** ask the user, because each option changes the CI workflow's cancellation or locking rule.

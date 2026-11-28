@@ -1,0 +1,34 @@
+# A Site Lighthouse failure blocks release evidence
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the 0.21.0 release, which the performance orchestrator owned.
+- **Location:** the `eligible` filter of `scripts/release/evidence_contract.mjs:24-30`, the run listing of `scripts/release/evidence_github.mjs:61`, the `site-lighthouse` job of `.github/workflows/ci.yml:629`, the section "Candidate Runs" of `docs/protocol/npm-release-evidence.md`, and `docs/protocol/ci-workflow-cloud.md:50-51`.
+- **Reason:** The performance orchestrator asked for this item. The recommended option changes a rule of the release evidence protocol.
+
+- **Source:** Implementation.
+- **Category:** Process.
+- **Terms:**
+  - **Release evidence:** a CI run that release preparation accepts as proof that the tagged tree passed the complete verification. `docs/protocol/npm-release-evidence.md` defines it.
+  - **Site Lighthouse:** the job of `.github/workflows/ci.yml` that measures the performance score of the marketing site. It is a report job: `docs/protocol/ci-workflow-cloud.md` says that it does not block `Required CI`.
+- **Background:**
+  - Release preparation lists only `ci.yml` runs whose conclusion is `success`, at `scripts/release/evidence_github.mjs:61` and `scripts/release/evidence_contract.mjs:27`. Each candidate must also hold one successful `Required CI` job.
+  - Site Lighthouse runs in `ci.yml`. When it fails, the conclusion of the run is `failure`, also when `Required CI` passed. So the run is not a candidate, and the release evidence is absent.
+  - Before 2026-11-20, Site Lighthouse failed in about half of the CI runs, always on the home page at 1440 px with a score of 0.93. The item `flaky-site-lighthouse-performance.md` records it, and PR #431 applies its option F.
+  - The performance orchestrator reported that a Site Lighthouse failure blocked the release evidence of 0.21.0 until the job passed.
+- **Problem:** A failure of a report job blocks the release, although that job does not block `Required CI`.
+- **Impact if no action:** Each release whose CI run has a report job failure waits for reruns of that job.
+- **Root question:** How does release preparation accept a run whose required verification passed, while report jobs keep their signal?
+- **Options:**
+  - **A.** Change nothing. An operator reruns the failed report job until the run passes. Effort: Small.
+  - **B.** Accept a candidate run whose `Required CI` job passed, whatever the overall conclusion of the run. Change the candidate rule of `docs/protocol/npm-release-evidence.md`, the run listing, and the filter, and add tests for both cases. Effort: Small.
+  - **C.** Move Site Lighthouse from `ci.yml` into the Site workflow, `.github/workflows/site.yml`, so that the conclusion of a CI run covers only its verification jobs. Effort: Small.
+- **Left out:**
+  - Mark the job with `continue-on-error`: the job then reports success, and its failure signal is lost.
+  - Fix only the Lighthouse score: PR #431 does that, but a later failure of any report job still blocks the evidence.
+- **Wider fix:** B. Release evidence then depends only on the jobs that `Required CI` covers, also for report jobs that CI adds later.
+- **Previous examples:** None found.
+- **Related:**
+  - [registry-verification-window-short.md](./registry-verification-window-short.md) and [release-pr-merged-behind-main.md](./release-pr-merged-behind-main.md) also blocked the releases of 2026-11-20. Their causes differ.
+- **Recommendation:** B. Release evidence then uses the same job result that decides whether a change can merge.
+- **Action:** ask the user, because B changes the candidate rule of `docs/protocol/npm-release-evidence.md`.
