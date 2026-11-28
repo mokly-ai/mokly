@@ -65,24 +65,36 @@ export function renderInstance(
   output: ReactNode,
   capture: StyleCapture | null,
 ): ReactNode {
+  return instanceRegion(runtime, session, draft, capture)(output);
+}
+
+/** Keep one placement when React retries the same component body. */
+export function instanceRegion(
+  runtime: AuthoringRuntime,
+  session: RenderSession,
+  draft: InstanceDraft,
+  capture: StyleCapture | null,
+): (output: ReactNode) => ReactNode {
   session.instances.push(draft);
   const { key, regionId, componentPath, propsKey } = draft;
   const React = runtime.react;
   const owner: Owner = { kind: "instance", instanceKey: key, seen: new Set() };
-  const owned = capture?.wrap(componentPath, output) ?? output;
-  return React.createElement(
-    React.Fragment,
-    null,
-    session.boundary(
-      `mokly-instance:start id="${regionId}" path="${componentPath}" instance="${key}" props="${propsKey}"`,
-    ),
-    React.createElement(
-      runtime.contexts.owner.Provider,
-      { value: owner },
-      owned,
-    ),
-    session.boundary(`mokly-instance:end id="${regionId}"`),
+  const start = session.boundary(
+    `mokly-instance:start id="${regionId}" path="${componentPath}" instance="${key}" props="${propsKey}"`,
   );
+  const end = session.boundary(`mokly-instance:end id="${regionId}"`);
+  return (output) =>
+    React.createElement(
+      React.Fragment,
+      null,
+      start,
+      React.createElement(
+        runtime.contexts.owner.Provider,
+        { value: owner },
+        capture?.wrap(componentPath, output) ?? output,
+      ),
+      end,
+    );
 }
 
 /** Invocation metadata is secondary and must never expose an absolute path. */

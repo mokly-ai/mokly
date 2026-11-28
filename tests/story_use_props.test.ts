@@ -21,6 +21,7 @@ test("story use props keep data and replace nested callbacks and elements", () =
     scalar: -0,
   };
   assert.deepEqual(record(props), {
+    children: ["mokly:element", "Text"],
     items: [
       { label: "Save", onClick: "mokly:function", icon: "mokly:element" },
       "mokly:function",

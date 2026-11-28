@@ -26,6 +26,7 @@ export interface StyledAdapter {
 export function styledOwners(
   root: Sheet,
   fallback: string | undefined,
+  currentOwner = (owner: string | undefined) => owner,
 ): {
   forOwner(owner: string | undefined, current?: Sheet): Sheet;
   records(): StyleAttribution[];
@@ -61,11 +62,15 @@ export function styledOwners(
     if (view) return view;
     const methods = {
       hasNameForId(id: string, name: string) {
-        ledger.use(JSON.stringify([id, name]), owner);
+        ledger.use(JSON.stringify([id, name]), currentOwner(owner));
         return has(id, name);
       },
       insertRules(id: string, name: string, rules: string[]) {
-        ledger.use(JSON.stringify([id, name]), owner, rules.join("\n"));
+        ledger.use(
+          JSON.stringify([id, name]),
+          currentOwner(owner),
+          rules.join("\n"),
+        );
         return insert(id, name, rules);
       },
     };

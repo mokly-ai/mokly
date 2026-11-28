@@ -11,7 +11,7 @@ function identity(value: unknown): value is object {
   );
 }
 
-function innerType(type: object): object | undefined {
+export function innerType(type: object): object | undefined {
   if (!("$$typeof" in type)) return;
   if (type.$$typeof === memoType && "type" in type && identity(type.type))
     return type.type;

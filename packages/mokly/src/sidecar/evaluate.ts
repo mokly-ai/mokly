@@ -10,7 +10,7 @@ import type { BundleExports } from "./bundle-exports.js";
 import type { Generation } from "./bundle.js";
 import { cssModulePrefix, namedClasses } from "./css-modules.js";
 import { SidecarError, detail } from "./errors.js";
-import { wrapStoryUse } from "./story-use.js";
+import { StoryUses } from "./story-use.js";
 
 /** Evaluate only after the generation's complete class-map table is installed. */
 export function evaluate(generation: Generation): BundleExports {
@@ -28,7 +28,7 @@ export function evaluate(generation: Generation): BundleExports {
       /* Page-only consumers need no React. */
     }
     generation.runtime = new AuthoringRuntime(react);
-    const storyUse = wrapStoryUse(generation);
+    const storyUses = new StoryUses(generation);
     const module = { exports: {} };
     const styleAdapters: NonNullable<BundleExports["styleAdapters"]> = {};
     const classes = new Map(
@@ -45,7 +45,7 @@ export function evaluate(generation: Generation): BundleExports {
               reviewMaterialKey,
             }),
             css: (file: string) => generation.maps![file],
-            storyUse,
+            storyUses,
             style: (name: keyof typeof styleAdapters, adapter: unknown) => {
               styleAdapters[name] = adapter;
             },

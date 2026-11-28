@@ -195,6 +195,36 @@ fn recorded_material_requires_matching_keys_schema_and_complete_regions() {
 }
 
 #[test]
+fn implicit_slots_require_a_story_component() {
+    let (mut usage, mut components) = fixture();
+    let CatalogueUsage::Ready {
+        instances, slots, ..
+    } = &mut usage
+    else {
+        unreachable!()
+    };
+    let name = "children-save";
+    let instance_key = instances[0].key.clone();
+    slots.push(crate::usage::ComponentSlotRecord {
+        key: material::slot_key(&instance_key, name),
+        instance_key,
+        name: name.into(),
+        owner: ComponentInputOwner::Entry,
+        source_slot_key: None,
+    });
+    components[0].story = true;
+    assert!(validate(&usage, EntryKind::Screen, &components).is_ok());
+    components[0].story = false;
+    assert!(matches!(
+        validate(&usage, EntryKind::Screen, &components),
+        Err(crate::readers::ReadError::Contract {
+            message: crate::read_contract::ContractViolation::UsageReference,
+            ..
+        })
+    ));
+}
+
+#[test]
 fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
     let (mut usage, mut components) = fixture();
     components[0].slots = vec!["content".into()];

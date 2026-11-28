@@ -66,27 +66,25 @@ export function jsxModuleSource(
         }`;
   return `import * as reactJsx from "react/jsx-runtime";
         import { resolve } from "node:path";
-        ${recordStoryUses ? 'import runtime from "mokly:runtime";' : ""}
+        ${recordStoryUses ? 'import runtime from "mokly:runtime";\n        export const moklyStory = runtime.storyUses;' : ""}
         export const Fragment = reactJsx.Fragment;
         const locate = source => ({...source, fileName: resolve(${JSON.stringify(path.resolve(root, configurationDirectory))}, source.fileName)});
-        const invocationKey = (props, key) => {
-          const spreadKey = Object.getOwnPropertyDescriptor(props ?? {}, "key")?.value;
-          return spreadKey === undefined ? key : spreadKey;
-        };
         function record(create, type, props, key, source) {
+          if (props && Object.hasOwn(props, "key")) {
+            const { key: spread, ...supplied } = props;
+            props = supplied;
+            if (spread !== undefined) key = spread;
+          }
+          let site = source && typeof source.fileName === "string" ? locate(source) : undefined;
+          ${recordStoryUses ? "site = moklyStory.source(site);" : ""}
           if (type && type[Symbol.for("mokly.component")])
-            return create(type, {...props, __moklyKey: invocationKey(props, key),
-              ...(source ? {__moklySource: locate(source)} : {})}, key);
+            return create(type, {...props, __moklyKey: key,
+              ...(site ? {__moklySource: site} : {})}, key);
           ${
             recordStoryUses
-              ? `
-          if (typeof type === "function" || (type && typeof type === "object")) {
-            return runtime.storyUse(create(type, props, key), invocationKey(props, key),
-              source && typeof source.fileName === "string" ? locate(source) : undefined, reactJsx.jsx);
-          }`
-              : ""
+              ? "return moklyStory.element(create, type, props, key, site);"
+              : "return create(type, props, key);"
           }
-          return create(type, props, key);
         }
         ${entryPoints}`;
 }

@@ -2,24 +2,26 @@ import type { ReactNode } from "react";
 
 import { validatePropValues } from "@mokly/viewer/data";
 
-import type { SlotDraft } from "../generated/sidecar/SlotDraft.js";
 import { SidecarError, detail } from "../sidecar/errors.js";
 
-import { copyData, digest } from "./data.js";
+import { copyData } from "./data.js";
 import { withAuthoringErrors } from "./errors.js";
 import { resolveWrapperInstanceId } from "./instance-names.js";
 import { validateDestination } from "./links.js";
 import type { AuthoringRuntime, DefinitionData, Owner } from "./runtime.js";
 import { wrapperBrand } from "./runtime.js";
 import {
-  inputOwner,
+  rememberedSlot,
+  rememberSlot,
+  slotRegion,
+  suppliedSlot,
+} from "./supplied-slots.js";
+import {
   instancePlacement,
   instanceProps,
   invocationSource,
   renderInstance,
 } from "./usage.js";
-
-const slots = new WeakMap<object, { owner: Owner; key: string }>();
 
 /** Render an adapter under instance ownership, while slots retain input ownership. */
 export function componentWrapper(definition: object, data: DefinitionData) {
@@ -119,54 +121,23 @@ function wrapSlot(
   region: string,
   name: string,
 ): ReactNode {
-  const forwarded =
-    node && typeof node === "object" ? slots.get(node) : undefined;
   const React = runtime.react;
   const session = runtime.session();
-  const key = digest(["mokly-slot-v1", instance, name]);
-  const owner = forwarded?.owner ?? parent;
-  const original: Owner = {
-    ...owner,
-    slotKey: owner.slotKey ?? key,
-  };
-  const draft: SlotDraft = {
-    key,
-    instanceKey: instance,
+  const placement = suppliedSlot(
+    session,
+    parent,
+    instance,
+    region,
     name,
-    owner: inputOwner(owner),
-    ...(forwarded ? { sourceSlotKey: forwarded.key } : {}),
-    instanceRegionId: region,
-    regionIds: [],
-  };
-  session.slots.push(draft);
+    rememberedSlot(node),
+  );
   function Slot() {
     return withAuthoringErrors(() => {
-      const slotRegion = session.nextRegion();
-      draft.regionIds.push(slotRegion);
       const capture = React.useContext(runtime.contexts.styles);
-      const ownerPath =
-        original.kind === "instance"
-          ? session.instances.find(
-              (instance) => instance.key === original.instanceKey,
-            )?.componentPath
-          : capture?.entryOwner;
-      const supplied = capture?.wrap(ownerPath, node) ?? node;
-      return React.createElement(
-        React.Fragment,
-        null,
-        session.boundary(
-          `mokly-slot:start id="${slotRegion}" instance="${region}" name="${name.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}"`,
-        ),
-        React.createElement(
-          runtime.contexts.owner.Provider,
-          { value: { ...original, seen: new Set<string>() } },
-          supplied,
-        ),
-        session.boundary(`mokly-slot:end id="${slotRegion}"`),
-      );
+      return slotRegion(runtime, session, placement, capture)(node);
     });
   }
   const wrapped = React.createElement(Slot);
-  slots.set(wrapped, { owner: original, key });
+  rememberSlot(wrapped, placement);
   return wrapped;
 }

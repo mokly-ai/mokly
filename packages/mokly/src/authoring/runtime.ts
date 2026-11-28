@@ -52,6 +52,7 @@ export interface RenderSession {
 /** Per-render adapter views preserve supplier ownership without changing delivery. */
 export interface StyleCapture {
   entryOwner: string | undefined;
+  run<T>(owner: string | undefined, body: () => T): T;
   wrap(owner: string | undefined, node: React.ReactNode): React.ReactNode;
 }
 

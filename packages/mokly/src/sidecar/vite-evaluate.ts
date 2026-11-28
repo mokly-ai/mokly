@@ -12,7 +12,7 @@ import type { Generation } from "./bundle.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { SidecarError, detail } from "./errors.js";
 import { inside, logical } from "./path-scope.js";
-import { wrapStoryUse } from "./story-use.js";
+import { StoryUses } from "./story-use.js";
 import { viteEvaluationFailure } from "./vite-errors.js";
 import { retainViteNodeInputs } from "./vite-node-peers.js";
 import { candidateLocation } from "./vite-setup-input.js";
@@ -88,7 +88,7 @@ async function replay(
         reviewMaterialKey,
       }),
       css: (file: string) => generation.maps![file],
-      storyUse: wrapStoryUse(generation),
+      storyUses: new StoryUses(generation),
       style: (name: keyof typeof styleAdapters, adapter: unknown) => {
         styleAdapters[name] = adapter;
       },

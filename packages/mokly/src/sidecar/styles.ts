@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import type { ReactNode } from "react";
 
 import type { StyleCapture } from "../authoring/runtime.js";
@@ -28,6 +30,11 @@ export function collectStyles(
 } {
   const styles: CollectedStyle[] = [];
   const React = generation.runtime.react;
+  const bodyOwners = new AsyncLocalStorage<{ owner: string | undefined }>();
+  const currentOwner = (fallback: string | undefined) => {
+    const scope = bodyOwners.getStore();
+    return scope ? scope.owner : fallback;
+  };
   const optional = (name: string) => {
     try {
       return generation.require(name);
@@ -46,7 +53,7 @@ export function collectStyles(
     StyledAdapter | undefined;
   const sheet = styled ? new styled.ServerStyleSheet() : undefined;
   const styledCapture = sheet
-    ? styledOwners(sheet.instance, entryOwner)
+    ? styledOwners(sheet.instance, entryOwner, currentOwner)
     : undefined;
   const native = generation.exports?.styleAdapters
     ?.native as ReturnType<NodeJS.Require>;
@@ -79,7 +86,7 @@ export function collectStyles(
       });
       // Server extraction enables compat mode before rendering, as in ordinary SSR.
       emotionServer = (createServer.default ?? createServer)(cache);
-      emotionCapture = emotionOwners(cache);
+      emotionCapture = emotionOwners(cache, currentOwner);
       node = React.createElement(
         emotion.CacheProvider,
         { value: emotionCapture.forOwner(entryOwner) },
@@ -121,6 +128,7 @@ export function collectStyles(
     }
     const capture: StyleCapture = {
       entryOwner,
+      run: (owner, body) => bodyOwners.run({ owner }, body),
       wrap: (owner, children) =>
         React.createElement(Scope, { owner, children }),
     };

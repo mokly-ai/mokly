@@ -20,7 +20,10 @@ export interface EmotionCache {
 }
 
 /** Observe cache hits as well as inserts without regenerating or renaming CSS. */
-export function emotionOwners(root: EmotionCache): {
+export function emotionOwners(
+  root: EmotionCache,
+  currentOwner = (owner: string | undefined) => owner,
+): {
   forOwner(
     owner: string | undefined,
     current?: EmotionCache | null,
@@ -55,7 +58,7 @@ export function emotionOwners(root: EmotionCache): {
       if (view) return view;
       const inserted = new Proxy(cache.inserted, {
         get(target, key, receiver) {
-          if (typeof key === "string") ledger.use(key, owner);
+          if (typeof key === "string") ledger.use(key, currentOwner(owner));
           return Reflect.get(target, key, receiver);
         },
       });
@@ -65,12 +68,13 @@ export function emotionOwners(root: EmotionCache): {
         sheet: unknown,
         shouldCache: boolean,
       ) => {
-        ledger.use(serialized.name, owner);
+        const activeOwner = currentOwner(owner);
+        ledger.use(serialized.name, activeOwner);
         for (let next = serialized.next; next; next = next.next)
           ledger.link(serialized.name, next.name);
         const result = cache.insert(selector, serialized, sheet, shouldCache);
         if (typeof result === "string")
-          ledger.use(serialized.name, owner, result);
+          ledger.use(serialized.name, activeOwner, result);
         return result;
       };
       view = new Proxy(cache, {

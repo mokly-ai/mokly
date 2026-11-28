@@ -7,6 +7,10 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import { cssModulePrefix } from "./css-modules.js";
 import type { ModulePaths } from "./module-paths.js";
 import {
+  storyBodySource,
+  transformStoryBodies,
+} from "./story-body-transform.js";
+import {
   authoringModulePath,
   authoringModuleSource,
   cssModuleSource,
@@ -189,6 +193,17 @@ export function moklyVitePlugin(
   return {
     name: "mokly",
     enforce: "pre",
+    transform(code, id) {
+      const { params, paths } = current();
+      const file = viteFile(id);
+      if (
+        file &&
+        params.storiesFiles.length &&
+        paths.repositoryOwned(file) &&
+        storyBodySource(file)
+      )
+        return transformStoryBodies(code, file);
+    },
     async load(id) {
       const input = current();
       const inline = css.forId(id);

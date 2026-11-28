@@ -56,7 +56,7 @@ pub(crate) fn validate(
             .iter()
             .find(|component| component.entry.path == receiver.component_id)
             .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
-        if !component.slots.contains(&slot.name) {
+        if !component.story && !component.slots.contains(&slot.name) {
             return Err(invalid(ContractViolation::UsageReference));
         }
         let mut edges = vec![format!("i:{}", receiver.key)];

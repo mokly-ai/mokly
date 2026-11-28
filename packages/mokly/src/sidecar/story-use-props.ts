@@ -1,5 +1,4 @@
 import {
-  copyData,
   maxDataDepth,
   maxDataNodes,
   reservedDataKey,
@@ -46,13 +45,7 @@ export function storyUseDataProps(
         elementText(value, isElement))
     )
       continue;
-    if (name === "children") {
-      try {
-        entries.push([name, copyData(value)]);
-      } catch {
-        // Keep the existing recording rule for direct children.
-      }
-    } else entries.push([name, value]);
+    entries.push([name, value]);
   }
 
   let remaining = maxDataNodes - 1;

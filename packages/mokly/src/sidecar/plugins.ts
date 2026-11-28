@@ -15,6 +15,7 @@ import { plannedResult } from "./native-plan.js";
 import { importCallbackKey, nativeResolution } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import type { ConsumerRequire } from "./paths.js";
+import { transformEsbuildStoryBodies } from "./story-body-transform.js";
 import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
 import {
   authoringModulePath,
@@ -98,7 +99,10 @@ export function consumerPlugins(
               contents: assetModule(paths.name(args.path), inputs.files),
               loader: "text",
             };
-          return { contents, loader: loader as Loader };
+          const code = params.storiesFiles.length
+            ? transformEsbuildStoryBodies(contents, args.path, loader, paths)
+            : undefined;
+          return { contents: code ?? contents, loader: loader as Loader };
         });
         // A repository-owned importer of `@mokly/mokly` (real path in the
         // repository, outside node_modules, dependency roots and this package)
