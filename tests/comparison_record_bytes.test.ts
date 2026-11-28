@@ -1,7 +1,7 @@
 /**
  * One comparison publishes the same records in a static build and in Serve:
  * the index's base commit, each compared entry's comparison facts, and the
- * removed entries' details in two-space JSON, byte for byte.
+ * removed entries' details in compact JSON, byte for byte.
  */
 
 import assert from "node:assert/strict";
@@ -91,7 +91,8 @@ test(
           path.join(built.output, comparison, "entries", `${entry}.json`),
           "utf8",
         );
-        assert.ok(file.startsWith('{\n  "'), file.slice(0, 40));
+        assert.ok(file.startsWith('{"'), file.slice(0, 40));
+        assert.equal(file.indexOf("\n"), file.length - 1, file.slice(0, 40));
         assert.equal(text, file, entry);
       }
     } finally {

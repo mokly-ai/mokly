@@ -1,6 +1,6 @@
 ---
 source: crates/mokly-model/src/_tests_/public_reader_tests.rs
-expression: "canonical::to_string(&decoded).unwrap()"
+expression: "canonical_view::pretty(&bytes).unwrap()"
 ---
 {
   "changesStatus": "disabled",

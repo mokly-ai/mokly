@@ -61,7 +61,7 @@ impl Artifact {
                 })
                 .collect(),
         };
-        let mut marker = serde_json::to_vec_pretty(&ownership)
+        let mut marker = serde_json::to_vec(&ownership)
             .expect("Ownership contains only strings, integer sizes, and a list of entries");
         marker.push(b'\n');
         if marker.len() > FILE_LIMIT {

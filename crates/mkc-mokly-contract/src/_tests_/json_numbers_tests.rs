@@ -9,13 +9,19 @@ use crate::manifest::UploadManifest;
 #[test]
 fn integral_json_numbers_accept_decimal_and_exponent_spellings() {
     assert!(Inventory::parse(br#"{"schemaVersion":3.0,"files":[]}"#, Limits::default()).is_ok());
-    let manifest = include_str!("../../fixtures/mokly-upload.json")
-        .replace("\"schemaVersion\": 3", "\"schemaVersion\": 3e0")
-        .replace("\"pullRequest\": null", "\"pullRequest\": 2.0");
+    let manifest = include_str!("../../fixtures/mokly-upload.json");
+    let manifest = edit(manifest, "\"schemaVersion\":3,", "\"schemaVersion\":3e0,");
+    let manifest = edit(&manifest, "\"pullRequest\":null", "\"pullRequest\":2.0");
     assert!(UploadManifest::parse(manifest.as_bytes(), Limits::default()).is_ok());
-    let index = include_str!("../../fixtures/index-v9.json")
-        .replace("\"schemaVersion\": 9", "\"schemaVersion\": 9.0");
+    let index = include_str!("../../fixtures/index-v9.json");
+    let index = edit(index, "\"schemaVersion\":9,", "\"schemaVersion\":9.0,");
     assert!(CatalogueIndex::parse(index.as_bytes(), Limits::default()).is_ok());
+}
+
+/// Replace the one occurrence of `from`, so that a fixture layout change cannot skip the edit.
+fn edit(text: &str, from: &str, to: &str) -> String {
+    assert_eq!(text.matches(from).count(), 1, "{from}");
+    text.replace(from, to)
 }
 
 #[test]

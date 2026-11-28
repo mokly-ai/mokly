@@ -11,8 +11,8 @@ depends on it. It has no internal crate dependency and performs no file IO.
   [format inventory](../../docs/protocol/mokly-format-versions.md) lists them.
 - Own shared output shapes, output file admission, and one pure marker writer
   for build and publish.
-- Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
-  explicit empty values, omitted absent optionals, and a final LF.
+- Encode canonical JSON with recursive UTF-16 key order, no whitespace between
+  tokens, explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
 - Own the review result, change snapshot, in-memory comparison records, and
@@ -178,7 +178,7 @@ use serde_json::json;
 fn encode() -> Result<()> {
     let value = json!({"z": [], "a": {}});
     let bytes = canonical::to_string(&value)?;
-    assert_eq!(bytes, "{\n  \"a\": {},\n  \"z\": []\n}\n");
+    assert_eq!(bytes, "{\"a\":{},\"z\":[]}\n");
     Ok(())
 }
 ```
@@ -190,6 +190,11 @@ cargo test -p mokly-model
 cargo xtask generate-types
 ```
 
+A snapshot test of canonical JSON shows the bytes through
+`canonical_view::pretty`. It returns an indented view only when the bytes are
+canonical, so the view still pins every byte. Tests of other crates enable it
+with the `test-support` feature in their dev-dependencies.
+
 ### Key Code
 
 - [`src/versions.rs`](./src/versions.rs) holds every independent format
@@ -197,6 +202,8 @@ cargo xtask generate-types
 - [`src/canonical.rs`](./src/canonical.rs) provides `to_string`, the
   canonical JSON encoder, and `detail_preimage`, the zeroed canonical bytes
   shared by detail hashing and Serve publication.
+- [`src/canonical_view.rs`](./src/canonical_view.rs) provides `pretty`, the
+  readable snapshot view of checked canonical JSON, under `test-support`.
 - [`src/validation.rs`](./src/validation.rs) defines `PropValidator`, the one
   validator for the `PropSchema` profile of
   [`src/prop_schema.rs`](./src/prop_schema.rs) and for complete props.

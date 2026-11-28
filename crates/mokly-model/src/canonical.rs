@@ -36,7 +36,8 @@ pub fn sorted(value: Value) -> Value {
     }
 }
 
-/// Encode two-space JSON with recursively sorted keys and one final LF.
+/// Encode compact JSON, with no whitespace between tokens, recursively sorted keys and one
+/// final LF.
 /// Shape owners sort entries, instances, slots and regions before encoding.
 /// Authored variant, step and tag order is retained.
 pub fn to_string(value: &impl Serialize) -> Result<String> {
@@ -48,7 +49,7 @@ pub fn to_string(value: &impl Serialize) -> Result<String> {
 }
 
 fn encode_value(value: &Value) -> Result<String> {
-    let mut text = match serde_json::to_string_pretty(&Sorted(value)) {
+    let mut text = match serde_json::to_string(&Sorted(value)) {
         Ok(text) => text,
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };

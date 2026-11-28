@@ -29,8 +29,7 @@ function sorted(value: Json): Json {
     );
   return value;
 }
-const canonical = (value: Json) =>
-  `${JSON.stringify(sorted(value), null, 2)}\n`;
+const canonical = (value: Json) => `${JSON.stringify(sorted(value))}\n`;
 const digest = (bytes: Uint8Array | string) =>
   crypto.createHash("sha256").update(bytes).digest("hex");
 const identity = (pairs: Array<[string, string]>) =>

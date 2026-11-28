@@ -2,7 +2,7 @@
 
 use mokly_model::namespace::generated;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::{canonical, detail_context, readers};
+use mokly_model::{canonical, canonical_view, detail_context, readers};
 use mokly_server::publication::{PublicationWriter, Publications};
 
 use super::support;
@@ -77,7 +77,7 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
     let index = readers::index(&bytes).unwrap();
     assert_eq!(index.revision, 1);
     assert_eq!(canonical::to_string(&index).unwrap(), bytes);
-    insta::assert_snapshot!("pending_index", bytes);
+    insta::assert_snapshot!("pending_index", canonical_view::pretty(&bytes).unwrap());
     let mut details = std::collections::BTreeMap::new();
     for entry in &harness.generation.catalogue().model.entries {
         let path = &entry.metadata.path;
@@ -111,7 +111,8 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
             assert_eq!(response.bytes().await.unwrap(), harness.snapshot.stub);
         }
     }
-    insta::assert_snapshot!("pending_details", canonical::to_string(&details).unwrap());
+    let details = canonical::to_string(&details).unwrap();
+    insta::assert_snapshot!("pending_details", canonical_view::pretty(&details).unwrap());
     for route in ["", "index.html", "404.html"] {
         let response = harness
             .client

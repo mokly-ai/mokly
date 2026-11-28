@@ -155,7 +155,7 @@ fn a_generation_holds_each_delivered_viewer_face_with_its_exact_bytes() {
 }
 
 #[test]
-fn the_generation_holds_no_review_file_and_its_removed_detail_keeps_two_space_indentation() {
+fn the_generation_holds_no_review_file_and_its_removed_detail_is_compact() {
     let (_, files) = small_generation();
     assert!(!files.iter().any(|file| file.path.ends_with("/review.json")));
     let text = |suffix: &str| {
@@ -166,7 +166,11 @@ fn the_generation_holds_no_review_file_and_its_removed_detail_keeps_two_space_in
         String::from_utf8(file.bytes.to_vec()).unwrap()
     };
     let detail = text("/entries/old.json");
-    assert!(detail.starts_with("{\n  \""), "{detail}");
+    assert!(
+        detail.starts_with("{\"") && detail.ends_with("}\n"),
+        "{detail}"
+    );
+    assert_eq!(detail.matches('\n').count(), 1, "{detail}");
     assert_eq!(
         detail,
         canonical::to_string(&readers::detail(&detail).unwrap()).unwrap()

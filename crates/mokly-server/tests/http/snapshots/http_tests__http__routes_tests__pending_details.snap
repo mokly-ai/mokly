@@ -1,6 +1,6 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
-expression: "canonical::to_string(&details).unwrap()"
+expression: "canonical_view::pretty(&details).unwrap()"
 ---
 {
   "components/button": {
@@ -9,7 +9,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "count",
       "disabled"
     ],
-    "detailId": "4b73722912ebaa4d42488a1c9ff0b43dd99fcdaef05b0b25e1f0b25ecc7b784b",
+    "detailId": "2ecef1a056da3610e1267541d802f3cdf542abfc46a373005b18e3c7c62ecf7b",
     "entry": {
       "kind": "component",
       "path": "components/button"
@@ -57,7 +57,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "count",
       "disabled"
     ],
-    "detailId": "cb76726bfe5151ff300f8658f8a2189744c1863f231c3615c8f8ff2ffe01bdde",
+    "detailId": "c2e38d90556ae91bbb2bcc46f30692e133ac1202ec1f326d0f2df0541d55265e",
     "entry": {
       "kind": "component",
       "path": "components/button/disabled"
@@ -104,7 +104,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title",
       "ignored"
     ],
-    "detailId": "57380f60ebe756999b4148a511daad178c9775fcb29380e70c733b45573aeabc",
+    "detailId": "ed16b5be9a5b8698a482486d2095f7a6697b2e0658e5f6b84ef914ee7b77c6e7",
     "entry": {
       "kind": "component",
       "path": "components/card"
@@ -147,7 +147,7 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "guide": {
-    "detailId": "768a453c5cf4e72e0254554142fa5c3279a1b7cb620874d6bd1d1074b7e14eea",
+    "detailId": "77df9bcb299ce496812b6e4eedd2d680cc1b07f0233e9139caa5e4b032e71a26",
     "entry": {
       "kind": "document",
       "path": "guide"
@@ -166,7 +166,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "visible",
       "resource"
     ],
-    "detailId": "ae2fc46fca65331fb12b16e2a4117fd42e4de73a3fa184ed73fdf1c6123e3c00",
+    "detailId": "afd56fdaeea5ac8b9442be59c2057914ea982705acbb39763132ed66fe154310",
     "entry": {
       "kind": "screen",
       "path": "home"
@@ -214,7 +214,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "visible",
       "resource"
     ],
-    "detailId": "33f520b9000409a66157fa17bb5e64df3d3231a3ca0b8c48224dceabfbc3747a",
+    "detailId": "d68cd09fd83dd629c9f6b7fb370f58d9b1cab2eb15a14eb602fd4152822b6b01",
     "entry": {
       "kind": "screen",
       "path": "home/hidden"
@@ -257,7 +257,7 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "page": {
-    "detailId": "a3f56e7d925c214937be14760c419605b775521ff033b76e47301f0c790120f0",
+    "detailId": "4acdf907cc3ef1a7ea019e95b53e7f753803a8dfed901e5ce20a5ba2f174a967",
     "entry": {
       "kind": "page",
       "path": "page"

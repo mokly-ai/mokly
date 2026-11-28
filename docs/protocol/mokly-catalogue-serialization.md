@@ -21,10 +21,16 @@ in the same order. Only a variant without an eligible current or removed
 parent falls back to kind-then-path order. Instances and slots sort by key,
 and regions by tree order. Tree siblings follow the
 [folder order rule](./mokly-folders.md#order); entry-node variant children
-keep authored order. Emit required empties, omit absent optionals, use
-two-space indentation and a final LF. Identical inputs produce identical
-bytes regardless of enumeration order, time, or output location, so a
+keep authored order. Emit required empties, omit absent optionals, write no
+whitespace between tokens, and end with one final LF. Identical inputs produce
+identical bytes regardless of enumeration order, time, or output location, so a
 detail's bytes change exactly when its content changes.
+
+Every JSON file that a build or a publication exports is compact in the same
+way: the index, the details, the removed previews, the deployment file, the
+ownership marker, and the upload metadata. The decision in force is compact
+JSON instead of two-space indentation, because indentation adds bytes to every
+upload and every fetch, and no reader needs it.
 
 Numbers retain their parsed JSON kind. Integers print as integers. Other
 numbers print the shortest digits that read back as the same IEEE 754 double.

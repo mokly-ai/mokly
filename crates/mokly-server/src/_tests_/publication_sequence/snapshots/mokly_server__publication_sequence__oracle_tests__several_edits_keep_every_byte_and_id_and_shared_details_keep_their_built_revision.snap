@@ -1,15 +1,15 @@
 ---
 source: crates/mokly-server/src/_tests_/publication_sequence/oracle_tests.rs
-description: "The served bytes and the detail ids equal those of the publication algorithm at main 794b30a91. Each typed revision follows the sharing rule of the mokly-server README: a shared detail keeps the typed revision of the publication that built it."
+description: "The served bytes and the detail ids equal those of the publication algorithm at main 794b30a91, encoded as compact JSON. Each typed revision follows the sharing rule of the mokly-server README: a shared detail keeps the typed revision of the publication that built it."
 expression: output
 ---
 === edit 0: rebuild, revision 1 ===
-screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(1)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(1)
+screen-0: b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d, typed revision Some(1)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(1)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -41,7 +41,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -98,7 +98,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -143,7 +143,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -195,12 +195,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 0: foreground usage, revision 2 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(2)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(1)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(2)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(1)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -235,7 +235,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -292,7 +292,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -337,7 +337,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -389,12 +389,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 0: preparing, revision 3 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(3)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(3)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(3)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(3)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -429,7 +429,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -486,7 +486,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -531,7 +531,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -583,12 +583,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 0: complete usage, revision 4 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(4)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(4)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(4)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(4)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -633,7 +633,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -703,7 +703,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -748,7 +748,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -800,8 +800,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 0: ready Changes, revision 5 ===
-screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(5)
-screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(5)
+screen-0: 09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5, typed revision Some(5)
+screen-1: 149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016, typed revision Some(5)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "before": {
@@ -810,7 +810,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+  "detailId": "09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -871,7 +871,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+  "detailId": "149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -955,7 +955,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
         "light"
       ],
       "controls": {},
-      "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+      "detailId": "09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1004,7 +1004,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
         "light"
       ],
       "controls": {},
-      "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+      "detailId": "149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1058,12 +1058,12 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
 }
 
 === edit 0: Pending, revision 6 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(6)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(6)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -1108,7 +1108,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -1178,7 +1178,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1223,7 +1223,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1275,12 +1275,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 0: Disabled, revision 7 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(6)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(6)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -1325,7 +1325,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -1395,7 +1395,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1440,7 +1440,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1492,12 +1492,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 0: Preparing, revision 8 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(6)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(6)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -1542,7 +1542,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -1612,7 +1612,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1657,7 +1657,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1709,12 +1709,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: rebuild, revision 9 ===
-screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(9)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(9)
+screen-0: b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d, typed revision Some(9)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(9)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -1746,7 +1746,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -1803,7 +1803,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1848,7 +1848,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -1900,12 +1900,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 1: foreground usage, revision 10 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(10)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(9)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(10)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(9)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -1940,7 +1940,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -1997,7 +1997,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2042,7 +2042,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2094,12 +2094,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 1: preparing, revision 11 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(11)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(11)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(11)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(11)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -2134,7 +2134,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -2191,7 +2191,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2236,7 +2236,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2288,12 +2288,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 1: complete usage, revision 12 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(12)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(12)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(12)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(12)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -2338,7 +2338,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -2408,7 +2408,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2453,7 +2453,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2505,8 +2505,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: ready Changes, revision 13 ===
-screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(5)
-screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(5)
+screen-0: 09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5, typed revision Some(5)
+screen-1: 149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016, typed revision Some(5)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "before": {
@@ -2515,7 +2515,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+  "detailId": "09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -2576,7 +2576,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+  "detailId": "149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -2660,7 +2660,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
         "light"
       ],
       "controls": {},
-      "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+      "detailId": "09b191319e8f5c3b1e5e37ca6208e8c16a925df64f727be5ac15d9e2c1b9b7f5",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2709,7 +2709,7 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
         "light"
       ],
       "controls": {},
-      "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+      "detailId": "149dff6fc5adcf9644437c2517a2f617e1031d55b8e921c9b41430a38bdfe016",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2763,12 +2763,12 @@ screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, type
 }
 
 === edit 1: Pending, revision 14 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(14)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(14)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -2813,7 +2813,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -2883,7 +2883,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2928,7 +2928,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -2980,12 +2980,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: Disabled, revision 15 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(14)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(14)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -3030,7 +3030,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -3100,7 +3100,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3145,7 +3145,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3197,12 +3197,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: Preparing, revision 16 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
+screen-0: 896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a, typed revision Some(14)
+screen-1: 3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30, typed revision Some(14)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -3247,7 +3247,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -3317,7 +3317,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "detailId": "896b1604e1fe1eb795eecedf8700f291df9b5b3e0a4f6629c4273eb1d5222c4a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3362,7 +3362,7 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
         "light"
       ],
       "controls": {},
-      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "detailId": "3a91cf8605a960e42556863cfeea6f4afcfcb56bd53eb7347b6e0b449f41ce30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3414,12 +3414,12 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 2: rebuild, revision 17 ===
-screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(17)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(17)
+screen-0: b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d, typed revision Some(17)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(17)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -3451,7 +3451,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -3508,7 +3508,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "detailId": "b9051a641dc4fb77739dd87d4dfca1347c4f7486ce8f0fafcbe3d9b7404bce0d",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3553,7 +3553,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3605,12 +3605,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 2: foreground usage, revision 18 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(18)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(17)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(18)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(17)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -3645,7 +3645,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -3702,7 +3702,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3747,7 +3747,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3799,12 +3799,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 2: preparing, revision 19 ===
-screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(19)
-screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(19)
+screen-0: 4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30, typed revision Some(19)
+screen-1: 98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc, typed revision Some(19)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -3839,7 +3839,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -3896,7 +3896,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "detailId": "4c5093a7c5d12f40d1c9ef8f14afaab169b160ab191a45ee5e001dc13d51ec30",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3941,7 +3941,7 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
         "light"
       ],
       "controls": {},
-      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "detailId": "98565e2fed7336b18282a622d7788a8f454dede037fdd10cdfc1498673d2aebc",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -3993,12 +3993,12 @@ screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, type
 }
 
 === edit 2: complete usage, revision 20 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(20)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(20)
+screen-0: eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a, typed revision Some(20)
+screen-1: 143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474, typed revision Some(20)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -4036,7 +4036,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -4093,7 +4093,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4138,7 +4138,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4190,8 +4190,8 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 }
 
 === edit 2: ready Changes, revision 21 ===
-screen-0: 9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a, typed revision Some(21)
-screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, typed revision Some(21)
+screen-0: 27172299aba62a4e61d9ffbe6e4f69b84042698227f5f0f6608fedc216ba3b3c, typed revision Some(21)
+screen-1: d453b3cfdc84ab172f42352056e7148007046eade5fc1de4c946fc178c36ec64, typed revision Some(21)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "before": {
@@ -4200,7 +4200,7 @@ screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a",
+  "detailId": "27172299aba62a4e61d9ffbe6e4f69b84042698227f5f0f6608fedc216ba3b3c",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -4254,7 +4254,7 @@ screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, type
     "title": "Sample"
   },
   "controlOrder": [],
-  "detailId": "09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3",
+  "detailId": "d453b3cfdc84ab172f42352056e7148007046eade5fc1de4c946fc178c36ec64",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -4325,7 +4325,7 @@ screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, type
         "light"
       ],
       "controls": {},
-      "detailId": "9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a",
+      "detailId": "27172299aba62a4e61d9ffbe6e4f69b84042698227f5f0f6608fedc216ba3b3c",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4374,7 +4374,7 @@ screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, type
         "light"
       ],
       "controls": {},
-      "detailId": "09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3",
+      "detailId": "d453b3cfdc84ab172f42352056e7148007046eade5fc1de4c946fc178c36ec64",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4428,12 +4428,12 @@ screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, type
 }
 
 === edit 2: Pending, revision 22 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
+screen-0: eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a, typed revision Some(22)
+screen-1: 143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474, typed revision Some(22)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -4471,7 +4471,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -4528,7 +4528,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4573,7 +4573,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4625,12 +4625,12 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 }
 
 === edit 2: Disabled, revision 23 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
+screen-0: eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a, typed revision Some(22)
+screen-1: 143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474, typed revision Some(22)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -4668,7 +4668,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -4725,7 +4725,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4770,7 +4770,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4822,12 +4822,12 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 }
 
 === edit 2: Preparing, revision 24 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
+screen-0: eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a, typed revision Some(22)
+screen-1: 143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474, typed revision Some(22)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
-  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
   "entry": {
     "kind": "screen",
     "path": "screen-0"
@@ -4865,7 +4865,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 --- mokly-viewer/entries/screen-1.json ---
 {
   "controlOrder": [],
-  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
   "entry": {
     "kind": "screen",
     "path": "screen-1"
@@ -4922,7 +4922,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "detailId": "eaa21c2bd5b4d60c8d9e4ab6af376f7e006e14c37c92dcc3935921ac1cd50a1a",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],
@@ -4967,7 +4967,7 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
         "light"
       ],
       "controls": {},
-      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "detailId": "143731a01edecc4c45ed8a13b36b33351325e826a1cdebbb17d0afdd99b84474",
       "details": {
         "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
         "relatedDocs": [],

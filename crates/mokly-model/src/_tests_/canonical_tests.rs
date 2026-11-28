@@ -40,50 +40,16 @@ fn every_object_sorts_by_utf16_at_every_depth_with_empties_and_number_spellings(
         "": []
     });
     let expected = concat!(
-        "{\n",
-        "  \"\": [],\n",
-        "  \"\\\"quoted\\\\key\\n\": {},\n",
-        "  \"Z\": -9223372036854775808,\n",
-        "  \"a\": [\n",
-        "    {\n",
-        "      \"x\": null,\n",
-        "      \"y\": true\n",
-        "    },\n",
-        "    [],\n",
-        "    [\n",
-        "      {}\n",
-        "    ],\n",
-        "    [\n",
-        "      [\n",
-        "        {\n",
-        "          \"c\": 1,\n",
-        "          \"d\": 0\n",
-        "        }\n",
-        "      ]\n",
-        "    ]\n",
-        "  ],\n",
-        "  \"ab\": [\n",
-        "    0.1,\n",
-        "    -0.0,\n",
-        "    1e-7,\n",
-        "    2.5e+300,\n",
-        "    1.0\n",
-        "  ],\n",
-        "  \"a😀\": -1,\n",
-        "  \"a\u{e000}\": 1,\n",
-        "  \"z\": {\n",
-        "    \"a\": {},\n",
-        "    \"b\": []\n",
-        "  },\n",
-        "  \"é\": 18446744073709551615,\n",
-        "  \"𝄞\": \"clef\",\n",
-        "  \"\u{ffff}\": \"max\"\n",
-        "}\n"
+        "{\"\":[],\"\\\"quoted\\\\key\\n\":{},\"Z\":-9223372036854775808,",
+        "\"a\":[{\"x\":null,\"y\":true},[],[{}],[[{\"c\":1,\"d\":0}]]],",
+        "\"ab\":[0.1,-0.0,1e-7,2.5e+300,1.0],\"a😀\":-1,\"a\u{e000}\":1,",
+        "\"z\":{\"a\":{},\"b\":[]},\"é\":18446744073709551615,\"𝄞\":\"clef\",",
+        "\"\u{ffff}\":\"max\"}\n"
     );
     assert_eq!(to_string(&value).unwrap(), expected);
     assert_eq!(to_string(&json!({})).unwrap(), "{}\n");
     assert_eq!(to_string(&json!([])).unwrap(), "[]\n");
-    assert_eq!(to_string(&json!([[], {}])).unwrap(), "[\n  [],\n  {}\n]\n");
+    assert_eq!(to_string(&json!([[], {}])).unwrap(), "[[],{}]\n");
 }
 
 #[test]
@@ -100,7 +66,7 @@ fn absent_optionals_stay_absent_and_null_constants_stay_present() {
             empty: vec![]
         })
         .unwrap(),
-        "{\n  \"empty\": []\n}\n"
+        "{\"empty\":[]}\n"
     );
     let schema: PropSchema = serde_json::from_value(json!({"const": null})).unwrap();
     assert_eq!(
@@ -159,30 +125,11 @@ fn nested_canonical_preimages_preserve_numbers_escapes_arrays_and_unicode() {
         "detailId": "0".repeat(64)
     });
     let expected = concat!(
-        "{\n",
-        "  \"detailId\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n",
-        "  \"nested\": {\n",
-        "    \"array\": [\n",
-        "      {\n",
-        "        \"detailId\": \"nested\",\n",
-        "        \"revision\": 9\n",
-        "      },\n",
-        "      null,\n",
-        "      true\n",
-        "    ],\n",
-        "    \"numbers\": [\n",
-        "      0,\n",
-        "      -0.0,\n",
-        "      1.5,\n",
-        "      100.0,\n",
-        "      1e+16\n",
-        "    ],\n",
-        "    \"text\": \"café\\n\\t\\\\\\\"detailId\\\\\\\":\\\\\\\"nested\\\\\\\"\",\n",
-        "    \"😀\": [],\n",
-        "    \"\u{e000}\": {}\n",
-        "  },\n",
-        "  \"revision\": 0\n",
-        "}\n"
+        "{\"detailId\":\"0000000000000000000000000000000000000000000000000000000000000000\",",
+        "\"nested\":{\"array\":[{\"detailId\":\"nested\",\"revision\":9},null,true],",
+        "\"numbers\":[0,-0.0,1.5,100.0,1e+16],",
+        "\"text\":\"café\\n\\t\\\\\\\"detailId\\\\\\\":\\\\\\\"nested\\\\\\\"\",",
+        "\"😀\":[],\"\u{e000}\":{}},\"revision\":0}\n"
     );
     assert_eq!(to_string(&value).unwrap(), expected);
     assert_eq!(super::detail_preimage(&value).unwrap(), expected);
@@ -198,7 +145,7 @@ fn nested_canonical_preimages_preserve_numbers_escapes_arrays_and_unicode() {
     changed["revision"] = json!(u64::MAX);
     assert_eq!(super::detail_id(&changed).unwrap(), hash(expected));
     changed.as_object_mut().unwrap().remove("revision");
-    let absent = expected.replace(",\n  \"revision\": 0", "");
+    let absent = expected.replace(",\"revision\":0", "");
     assert_eq!(super::detail_id(&changed).unwrap(), hash(&absent));
     assert_ne!(hash(expected), hash(&absent));
     let ModelError::Internal(InternalError::Json { source }) =
