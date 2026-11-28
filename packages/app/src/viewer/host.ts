@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { CatalogueReadModel, DetailSource } from "@mokly/viewer";
 
+import type { FrameAccess } from "./access-exchange";
 import type { CatalogueSource } from "./source-store";
 
 /** Which of the package's two views the stage shows. */
@@ -72,6 +73,8 @@ export interface HostedCatalogue {
   index: CatalogueReadModel;
   /** The host's own entry detail reads, one identity per source. */
   detail: DetailSource;
+  /** The access callbacks of the private attempt that opened the catalogue. */
+  frameAccess?: FrameAccess;
 }
 
 /**

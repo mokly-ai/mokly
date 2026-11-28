@@ -1,10 +1,19 @@
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { MoklyViewer, postMessageAdapter } from "@mokly/viewer";
 import type { ViewerError, ViewerSlots as PackageSlots } from "@mokly/viewer";
 
+import { unexpectedError } from "../api/errors";
 import { viewerHostProps } from "../layout/drag-covers";
 
+import type { FrameAccess } from "./access-exchange";
 import { packageSlots } from "./bar";
 import { catalogueArtifactOrigin } from "./catalogue-source.web";
 import type { ViewerHostProps } from "./host";
@@ -47,7 +56,7 @@ function comparisonKey(
  *
  * The host passes the package the index and the detail source that it read
  * itself, keyed to the publication origin and credential policy, and the
- * frame adapter keyed to the origin alone, so the package runtime remounts
+ * frame adapter keyed to the same origin and policy, so the package runtime remounts
  * only when one of them changes; a selection or theme change keeps it. Every
  * reported error goes to the document's source, which latches a `version`
  * error until a new source or a document reload, and the stage then draws the
@@ -81,13 +90,34 @@ export function ViewerHost(props: ViewerHostProps) {
     [source],
   );
   const frameOrigin = root?.origin;
-  const frameAdapter = useMemo(
-    () =>
-      frameOrigin === undefined
-        ? undefined
-        : postMessageAdapter({ frameOrigin }),
-    [frameOrigin],
-  );
+  const policy = source?.policy;
+  const frame = useMemo(() => {
+    if (frameOrigin === undefined) return undefined;
+    if (policy === "public")
+      return { adapter: postMessageAdapter({ frameOrigin }) };
+    const binding: { options?: FrameAccess } = {};
+    return {
+      binding,
+      adapter: postMessageAdapter({
+        frameOrigin,
+        async access() {
+          if (binding.options === undefined) throw unexpectedError();
+          return binding.options.access();
+        },
+        onAccessFailure: () => binding.options?.onAccessFailure(),
+      }),
+    };
+  }, [frameOrigin, policy]);
+  const binding = frame?.binding;
+  const frameAccess = catalogue?.frameAccess;
+  useLayoutEffect(() => {
+    if (binding === undefined) return;
+    binding.options = frameAccess;
+    return () => {
+      binding.options = undefined;
+    };
+  }, [binding, frameAccess]);
+  const frameAdapter = frame?.adapter;
   const packaged = useMemo(() => toPackageSelection(selection), [selection]);
   const change = useCallback(
     (next: Parameters<typeof fromPackageSelection>[0]) => {
@@ -100,7 +130,7 @@ export function ViewerHost(props: ViewerHostProps) {
     (reported: ViewerError) => {
       if (source === undefined) return;
       sources?.report(source, reported);
-      if (source.credentialed && reported.code === "comparison") {
+      if (source.policy !== "public" && reported.code === "comparison") {
         setBlockedComparison(selectedComparison);
       }
     },

@@ -483,16 +483,20 @@ Runs in parallel with Milestone 6. The files do not overlap.
 
 Depends on: 6, 7
 
-- [ ] Keep the token from `/_access` in `access.ts`, share it, and renew it
+- [x] Keep the token from `/_access` in `access.ts`, share it, and renew it
       before expiry.
-- [ ] Send the bearer on the app's private reads and the reachability check.
-- [ ] When the cookie confirmation fails, and before the bearer confirmation,
+      Branch: `calummoore/embedded-access-app-bearer-access-jp43`.
+- [x] Send the bearer on the app's private reads and the reachability check.
+      Branch: `calummoore/embedded-access-app-bearer-access-jp43`.
+- [x] When the cookie confirmation fails, and before the bearer confirmation,
       read `mokly-viewer/client/access-start.html` once with the bearer, and
       show the blocked access state on a 404, as the start page check design
       calls say.
-- [ ] Pass the `access` callback and the failure callback to
+      Branch: `calummoore/embedded-access-app-bearer-access-jp43`.
+- [x] Pass the `access` callback and the failure callback to
       `postMessageAdapter` in `published.web.tsx`, and set the blocked access
       state when the failure callback fires.
+      Branch: `calummoore/embedded-access-app-bearer-access-jp43`.
 
 ## Milestone 9: Blocked stage words
 

@@ -1,45 +1,31 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import type {
-  CatalogueReadModel,
-  DetailSource,
-  ViewerError,
-} from "@mokly/viewer";
+import type { ViewerError } from "@mokly/viewer";
 
 import { createCatalogueSources } from "../../viewer/source-store";
 import type {
   IndexAnswer,
+  SourceAccess,
   SourceReads,
   SourceRequest,
 } from "../../viewer/source-store";
-import { repositoryRoot } from "../root";
 
-/** The packaged index: the store keeps it and never reads its fields. */
-async function packagedIndex(): Promise<CatalogueReadModel> {
-  const { readCatalogueIndex } = await import("@mokly/viewer");
-  return readCatalogueIndex(
-    JSON.parse(
-      readFileSync(
-        repositoryRoot + "/docs/protocol/fixtures/catalogue-v9.json",
-        "utf8",
-      ),
-    ),
-  );
-}
+import {
+  bearerAccess,
+  cookieAccess,
+  packagedIndex,
+  publicAccess,
+} from "./catalogue-read-fixture";
 
 const publicA: SourceRequest = {
   origin: "https://p-a.example",
-  credentialed: false,
-  projectId: "project",
-  publicationId: "a",
+  access: publicAccess,
 };
-const privateA: SourceRequest = { ...publicA, credentialed: true };
+const privateA: SourceRequest = { ...publicA, access: cookieAccess() };
 const privateB: SourceRequest = {
   ...privateA,
   origin: "https://p-b.example",
-  publicationId: "b",
 };
 
 const version: ViewerError = {
@@ -55,8 +41,7 @@ function heldReads() {
     request: SourceRequest;
     settle: (answer: IndexAnswer | Error) => void;
   }> = [];
-  const renewals: SourceRequest[] = [];
-  const details: DetailSource[] = [];
+  const detailAccesses: SourceAccess[] = [];
   const reads: SourceReads = {
     index: (request) =>
       new Promise((resolve, reject) => {
@@ -66,20 +51,12 @@ function heldReads() {
             answer instanceof Error ? reject(answer) : resolve(answer),
         });
       }),
-    detail: (_request, _index, renew) => {
-      const detail: DetailSource = async () => {
-        await renew();
-        throw new Error("unused detail");
-      };
-      details.push(detail);
-      return detail;
-    },
-    renew: async (request) => {
-      renewals.push(request);
-      await Promise.resolve();
+    detail: () => async (access) => {
+      detailAccesses.push(access);
+      throw new Error("unused detail");
     },
   };
-  return { reads, answers, renewals, details };
+  return { reads, answers, detailAccesses };
 }
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
@@ -202,17 +179,23 @@ test("every state change reaches the subscribers", async () => {
   assert.deepEqual(seen, ["loading", "ready", "ready"]);
 });
 
-test("detail renewals that arrive together share one exchange", async () => {
-  const { reads, answers, renewals, details } = heldReads();
+test("a retained detail source reads with the new attempt for its origin and policy", async () => {
+  const { reads, answers, detailAccesses } = heldReads();
   const store = createCatalogueSources(reads);
-  const source = store.select(privateA);
+  const first = { ...privateA, access: bearerAccess(() => "first") };
+  const source = store.select(first);
   store.load(source);
   answers[0]?.settle({ index: await packagedIndex() });
   await settled();
-  const detail = details[0];
-  assert.ok(detail);
-  await Promise.allSettled([detail("a"), detail("b")]);
-  assert.deepEqual(renewals, [privateA]);
-  await Promise.allSettled([detail("c")]);
-  assert.deepEqual(renewals, [privateA, privateA]);
+  const ready = store.state(source).read;
+  assert.equal(ready.status, "ready");
+  const { detail } = ready;
+  await assert.rejects(async () => detail("a"), /unused detail/);
+  const next = { ...first, access: bearerAccess(() => "next") };
+  assert.equal(store.select(next), source);
+  assert.equal(store.state(source).read, ready);
+  await assert.rejects(async () => detail("a"), /unused detail/);
+  assert.equal(detailAccesses.length, 2);
+  assert.equal(detailAccesses[0], first.access);
+  assert.equal(detailAccesses[1], next.access);
 });

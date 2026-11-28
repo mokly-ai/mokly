@@ -19,15 +19,12 @@ export interface CatalogueRead {
 /**
  * The document's one source for this publication origin and access policy.
  *
- * The index is read only once access is open, so a private catalogue is read
- * with a confirmed cookie. A failed read is read again the next time access
- * opens, which is what the stage's Try again does: it repeats the access
- * exchange and then the index read. A native tree has no document source and
- * stays closed, because it never mounts the package.
+ * A request exists once access is open and carries the credential that confirmed.
+ * The stage's Try again opens access again, then the hook repeats the failed index
+ * read. A native tree has no document source and stays closed.
  */
 export function useCatalogueSource(
   request: SourceRequest | undefined,
-  open: boolean,
 ): CatalogueRead {
   const sources = useContext(CatalogueSourceContext);
   // Selecting is idempotent for one origin and policy, so a rebuilt route
@@ -44,7 +41,7 @@ export function useCatalogueSource(
         : sources.state(source),
   );
   useEffect(() => {
-    if (open && source !== undefined) sources?.load(source);
-  }, [open, source, sources]);
+    if (source !== undefined) sources?.load(source);
+  }, [source, sources]);
   return { source, state };
 }

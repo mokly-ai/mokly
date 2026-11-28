@@ -1,7 +1,5 @@
 # Viewer Host
 
-Status: The host does not read with the bearer token or pass the frame access options yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds them.
-
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
 what the cloud guarantees to the workspace `@mokly/viewer`
 and what the reader sees when the package reports a version

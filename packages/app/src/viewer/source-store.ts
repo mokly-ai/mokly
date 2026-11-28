@@ -1,24 +1,30 @@
 import type {
   CatalogueReadModel,
   DetailSource,
+  EntryDetailV4,
   ViewerError,
 } from "@mokly/viewer";
+
+import type { PublicationAccess } from "./access-exchange";
+
+export type SourceAccess =
+  | { policy: "public" }
+  | {
+      policy: "cookie" | "bearer";
+      publication: Pick<PublicationAccess, "readCredential">;
+    };
 
 /** One publication's catalogue, as the stage asks for it. */
 export interface SourceRequest {
   /** The API-validated per-publication origin. */
   origin: string;
-  /** Whether the reads carry the publication host's confirmed cookie. */
-  credentialed: boolean;
-  /** The publication whose access exchange a private detail read renews. */
-  projectId: string;
-  publicationId: string;
+  access: SourceAccess;
 }
 
 /** The identity the package runtime is keyed to: one origin, one policy. */
 export interface CatalogueSource {
   readonly origin: string;
-  readonly credentialed: boolean;
+  readonly policy: SourceAccess["policy"];
 }
 
 /** A version failure latched against one source, with its plain diagnostic. */
@@ -44,15 +50,16 @@ export interface SourceState {
 export type IndexAnswer =
   { index: CatalogueReadModel } | { failure: SourceVersionFailure };
 
+export type DetailRead = (
+  access: SourceAccess,
+  path: string,
+  snapshotId?: string,
+) => Promise<EntryDetailV4>;
+
 /** What one source reads with; the web document supplies the real reads. */
 export interface SourceReads {
   index(request: SourceRequest): Promise<IndexAnswer>;
-  detail(
-    request: SourceRequest,
-    index: CatalogueReadModel,
-    renew: () => Promise<void>,
-  ): DetailSource;
-  renew(request: SourceRequest): Promise<void>;
+  detail(origin: string, index: CatalogueReadModel): DetailRead;
 }
 
 /** One document's active source, independent of the route that shows it. */
@@ -75,29 +82,16 @@ interface Entry {
 
 const idle: SourceState = { read: { status: "idle" } };
 
-/** Renewals that arrive together share the one exchange in flight. */
-function shared(run: () => Promise<void>): () => Promise<void> {
-  let running: Promise<void> | undefined;
-  return () => {
-    running ??= run().finally(() => {
-      running = undefined;
-    });
-    return running;
-  };
-}
-
 /** The state one index read settles in: ready with its sources, or failed. */
-async function settle(
-  reads: SourceReads,
-  request: SourceRequest,
-): Promise<SourceState> {
+async function settle(reads: SourceReads, entry: Entry): Promise<SourceState> {
   try {
-    const answer = await reads.index(request);
+    const answer = await reads.index(entry.request);
     if ("failure" in answer) {
       return { read: { status: "failed" }, failure: answer.failure };
     }
-    const renew = shared(() => reads.renew(request));
-    const detail = reads.detail(request, answer.index, renew);
+    const read = reads.detail(entry.source.origin, answer.index);
+    const detail: DetailSource = (path, snapshotId) =>
+      read(entry.request.access, path, snapshotId);
     return { read: { status: "ready", index: answer.index, detail } };
   } catch {
     return { read: { status: "failed" } };
@@ -120,12 +114,15 @@ export function createCatalogueSources(reads: SourceReads): CatalogueSources {
   };
   return {
     select(request) {
-      if (
-        active?.source.origin !== request.origin ||
-        active.source.credentialed !== request.credentialed
-      ) {
-        const { origin, credentialed } = request;
-        active = { source: { origin, credentialed }, request, state: idle };
+      const {
+        origin,
+        access: { policy },
+      } = request;
+      if (active?.source.origin !== origin || active.source.policy !== policy) {
+        active = { source: { origin, policy }, request, state: idle };
+      } else {
+        // A rebuilt route can confirm a new attempt for the same source.
+        active.request = request;
       }
       return active.source;
     },
@@ -146,7 +143,7 @@ export function createCatalogueSources(reads: SourceReads): CatalogueSources {
         return;
       }
       update(entry, { read: { status: "loading" } });
-      void settle(reads, entry.request).then((state) => update(entry, state));
+      void settle(reads, entry).then((state) => update(entry, state));
     },
     report(source, error) {
       const entry = active;
