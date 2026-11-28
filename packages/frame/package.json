@@ -1,6 +1,6 @@
 {
   "name": "@mokly/frame",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "Frame adapters and the frame probe for Mokly catalogues.",
   "license": "MIT",
   "type": "module",
@@ -17,7 +17,7 @@
     }
   },
   "dependencies": {
-    "@mokly/model": "0.22.0"
+    "@mokly/model": "0.23.0"
   },
   "files": [
     "dist",
