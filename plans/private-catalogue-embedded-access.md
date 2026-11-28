@@ -186,6 +186,17 @@ The user answered D1 to D7 with "1 = A, 2 = A, 3 = B, 4 = A, 5 = A, 6 = A,
   be answered before this branch merges into `main`, because D, F and G change
   the published start page and probe. The findings file of that branch holds
   the full item.
+- **D10. A frame can get back a rejected token.** Open since 2026-11-28,
+  from the frame half of finding 2 of the review of the Milestone 8 branch.
+  After an early rejection, such as a signing key change, the app's `access`
+  callback keeps answering with the rejected token while more than two
+  minutes remain, so the first frame that asks ends in the blocked stage. The
+  recommendation is E with D9 D: the start page's `request` says when the
+  access worker already controls the page, and `access` then always runs a new
+  exchange. The other options are A (change nothing), C (remove the reuse
+  rule, so each `access` call exchanges or joins one in flight) and D (one
+  exchange and a remount before the blocked stage, which changes D3). The
+  findings file of that branch holds the full item.
 
 ### Design calls
 
