@@ -91,13 +91,9 @@ impl ViewerAssets for PackageAssets {
             if name.contains(['/', '\\', ':']) || name.starts_with('.') {
                 return Err(ServerError::InvalidAssets);
             }
-            let content_type = if name == "access-start.html" {
-                "text/html; charset=utf-8"
-            } else if name.ends_with(".js") {
-                "text/javascript; charset=utf-8"
-            } else {
+            if name != "access-start.html" && !name.ends_with(".js") {
                 return Err(ServerError::InvalidAssets);
-            };
+            }
             let route = viewer(&format!("client/{name}"));
             if routes.contains_key(&route) {
                 return Err(ServerError::InvalidAssets);
@@ -110,7 +106,7 @@ impl ViewerAssets for PackageAssets {
                 route,
                 File {
                     bytes: bytes.into(),
-                    content_type: content_type.into(),
+                    content_type: content_type(&name),
                 },
             );
         }

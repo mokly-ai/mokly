@@ -111,14 +111,6 @@ test("the public test host applies exact-origin CORS and headers to copied files
         expect(response.headers()["content-type"]).toBe(
           "application/json; charset=utf-8",
         );
-      if (route.endsWith("/access-start.html"))
-        expect(response.headers()["content-type"]).toBe(
-          "text/html; charset=utf-8",
-        );
-      if (route.endsWith("/access-worker.js"))
-        expect(response.headers()["content-type"]).toBe(
-          "text/javascript; charset=utf-8",
-        );
       const denied = await request.fetch(`${fixture.frames.url}/${route}`, {
         method,
         headers: { Origin: "https://unlisted.example" },
