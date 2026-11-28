@@ -51,6 +51,10 @@
   is a new gate that needs the user. The snapshot rule of the `testing` skill
   is in force.
 - **Previous examples:** None found.
+- **Related:**
+  - [readable-json-snapshots.md](./readable-json-snapshots.md): the same
+    cause. A reviewer cannot judge a snapshot change. That item makes four
+    large JSON snapshots readable.
 - **Recommendation:** B. It closes the gap in one pass, and the rule in force
   keeps new snapshots described.
 - **Action:** fix after merge, apply B, because the files lie outside the

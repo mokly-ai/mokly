@@ -24,12 +24,16 @@
   - `visual` in `crates/mokly-model/src/projection_records.rs:47` writes
     `propSchema`, `props`, and `controls` into every screen, component,
     and variant record of the index.
-  - On 2026-11-01, `main` at `c553bd6f` built `examples/basic`. The index
-    was 2,092,783 bytes, 126,588 bytes with gzip. These sizes are of
-    two-space JSON. Since 2026-11-29 every output JSON file is compact, and
-    the example index is about 1,162,000 bytes. All 85 variants, of 25
-    parents, had the same prop schema and `controls` as their parent.
-  - Without those variant copies the index is 985,133 bytes, 80,039 bytes
+  - On 2026-11-01, `main` at `c553bd6f` built `examples/basic` with
+    two-space JSON. The index was 2,092,783 bytes, 126,588 bytes with gzip.
+    All 85 variants, of 25 parents, had the same prop schema and `controls`
+    as their parent. Without those variant copies the index was 985,133
+    bytes, 80,039 bytes with gzip.
+  - Since 2026-11-28 every output JSON file is compact. On that date
+    `mokly build --config examples/basic/mokly.config.json` gave an index
+    of 1,162,229 bytes, about 80,900 bytes with gzip. All 150 variants, of
+    52 parents, had the same prop schema and `controls` as their parent.
+    Without those variant copies the index was 557,202 bytes, 74,838 bytes
     with gzip.
   - The example's design library sets `destination` to an `enum` of all 130
     design paths, in `examples/basic/specs/design/library/schemas.ts:26`.
