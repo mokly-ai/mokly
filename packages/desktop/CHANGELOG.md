@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/mokly-ai/mokly/compare/desktop-v0.3.0...desktop-v0.3.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **desktop:** show Check for updates in a Help menu on every platform ([#604](https://github.com/mokly-ai/mokly/issues/604)) ([716a328](https://github.com/mokly-ai/mokly/commit/716a3285e47ff1e84a6b5d5f86c9f627237af92d))
+* **frame:** name preview pages that an earlier Mokly built ([#602](https://github.com/mokly-ai/mokly/issues/602)) ([dc1c617](https://github.com/mokly-ai/mokly/commit/dc1c617cc8080a098867f0644788b8d41d65c2fa))
+
 ## [0.3.0](https://github.com/mokly-ai/mokly/compare/desktop-v0.2.0...desktop-v0.3.0) (2026-11-27)
 
 
