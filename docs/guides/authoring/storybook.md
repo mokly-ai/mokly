@@ -160,6 +160,103 @@ Non-data args start with the values the file defines. As in Storybook's
 preview, `argTypes.mapping` supplies mapped control values to the component
 and `argTypes.if` omits args whose conditions are false.
 
+## Use story components in screens
+
+Mokly records a use when a screen, product component, or story renders the
+`component` from a stories meta in JSX that Mokly compiles. This also works
+through `memo` or `forwardRef`. Use the same JSX as in the product.
+A stories entry's own pages record only uses of other story components.
+For a `defineComponent` wrapper, follow the [wrapper rules](/docs/authoring/components/#use-the-wrapper).
+
+### Name repeated uses
+
+Give each repeated use a `key` that is unique among its siblings.
+For a stories entry at `components/button`, Mokly gives these uses the ids
+`button-save` and `button-cancel`.
+
+```tsx
+// specs/profile/edit.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+import { Button } from "../components/button.js";
+
+export const edit = defineScreen({
+  title: "Edit profile",
+  description: "Save or cancel profile edits.",
+  relatedDocs: [],
+  render: () => (
+    <>
+      <Button key="save" label="Save" />
+      <Button key="cancel" label="Cancel" />
+    </>
+  ),
+});
+```
+
+Without a usable `key`, Mokly tries `id`, `name`, `data-testid`, then
+`aria-label` by default. Set `instanceNameProps` in `mokly.config.json` to
+change the list. Mokly appends the first name it finds in lowercase
+kebab-case to the last segment of the stories entry's path. Without a name,
+Mokly uses the last segment alone.
+
+If an id repeats in one input scope, Mokly adds the first free number from 2,
+such as `button-2`. Each numbered use gives an `instance-numbered` warning.
+`mokly build --strict` fails on this warning. Give the numbered use a `key`
+that yields a unique id in that scope.
+
+### Compare supplied content
+
+By default, Mokly gives each element in `children` or another prop its own
+slot. Changes compares each slot in the screen that supplied it. Changes
+shows the component's own render edits once, on its page. Changes compares
+data props such as string children. The recorded inputs omit function props.
+
+If `Card` is a story component, Changes keeps this paragraph in the screen's
+comparison.
+
+```tsx
+<Card>
+  <p>Your changes are ready to save.</p>
+</Card>
+```
+
+### Keep React element types
+
+Mokly keeps the type of each component it compiles from your project. Define
+the component at the top level of a module under a name or as a default export.
+A check such as `child.type === Tab` then works as in the product.
+`Children.toArray`, `Children.only`, Radix `asChild`, and string children also
+work as in the product.
+
+Supplied HTML elements and elements from installed packages render through
+Mokly elements. A story component that Mokly cannot compile, such as one
+defined as an object member, also renders through a Mokly element.
+
+If your component checks the type of a child that gets a Mokly element, set
+`parameters: { mokly: { contentSlots: false } }` on its meta. The first
+included story's composed parameters set this field for the whole entry.
+This turns off content slots and their Mokly elements. The component's page
+still lists its uses. Changes compares its rendered output on each screen
+that uses it.
+
+### JSX that records no use
+
+Mokly skips these elements at the call site.
+
+- An element from a `createElement` call.
+- JSX with a `key` after a spread. Put the `key` before the spread.
+- Compiled JSX from an installed package.
+
+An element in this list can still record a use as content of another use.
+Mokly must compile its story component and keep content slots enabled.
+
+A class component with an explicit `ref` records no use. With an explicit
+`ref`, a compiled `forwardRef` use has no record if it shares that ref and
+equal props with another use. It also has no record if other code changes its
+props before it renders.
+
+An element that records no use renders normally. Its output stays in the
+comparison of the screen or component that renders it.
+
 ## Decorators and themes
 
 Mokly loads the consumer's `.storybook/preview` annotations and uses
@@ -282,8 +379,8 @@ warning:
 
 `mokly build --strict` and `mokly publish --strict` fail on this warning. A
 render timeout or crash stops the build. An error in Mokly's own components
-and helpers, such as invalid props for a registered component or a duplicate
-instance ID, still stops the build.
+and helpers still stops the build. Invalid props for a `defineComponent`
+wrapper are one example.
 
 Use code that can render on the server without browser APIs such as `window`
 or `document`.

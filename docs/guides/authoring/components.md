@@ -58,10 +58,14 @@ import { action } from "./components/action.mockup.js";
 </action.Component>;
 ```
 
-`moklyInstance` names this use. It defaults to the last segment of the
-component's resolved path. Give repeated siblings distinct lowercase kebab-case
-names. The wrapper removes this prop before it calls your adapter.
-Imports alone do not record usage. Only a rendered wrapper records an instance.
+Mokly uses `moklyInstance` as the id when you set it. Use lowercase kebab-case
+for this prop. The wrapper removes it before it calls your adapter.
+Otherwise, Mokly appends the JSX `key` in lowercase kebab-case to the last
+segment of the component's resolved path. When neither source gives a name,
+Mokly uses the last segment alone.
+
+Only a rendered wrapper records an instance. For a story component use, set
+its React `key`. See [Use story components in screens](/docs/authoring/storybook/#use-story-components-in-screens).
 
 The optional `element` enables the same adapter in HTML bodies, such as
 `<app-action label="Save"></app-action>`. It must be a unique lowercase custom
@@ -87,7 +91,7 @@ without a visible control.
 
 `slots` declares optional React-node props. Declare `children` to accept
 children. Slot names and schema data keys must be disjoint. Neither can use
-`key`, `ref`, `moklyInstance`, or `__moklySource`.
+`key`, `ref`, `moklyInstance`, `__moklySource`, or `__moklyKey`.
 A slot keeps the ownership of the code that supplied it, including when a
 component forwards it. It is never serialized as a data prop.
 
@@ -202,8 +206,12 @@ can render a supplied slot more than once. An undeclared slot is an error.
 
 `mokly-instance` names one logical use. Its default is the last segment of
 the component's path. Give repeated siblings different lowercase kebab-case
-names. Keep those names when you reorder or restyle them. Duplicate local
-names in one input scope fail the build.
+names. Keep those names when you reorder or restyle them.
+
+Mokly adds a number to a repeated id in one input scope, such as `button-2`.
+The `instance-numbered` warning asks for a unique `moklyInstance` on a React
+wrapper. In an HTML body, it asks for a unique `mokly-instance`.
+`mokly build --strict` fails on this warning.
 
 Rendered instances establish usage. A supplied slot that a component never
 renders does not create usage for components inside it. Empty component

@@ -4037,10 +4037,11 @@ Depends on: 8, 17
 Track I. The protocol states the usage rules of decision 13, with the
 answers to decisions 19 and 21.
 
-- [ ] Update `docs/protocol/mokly-instances.md` and
+- [x] Update `docs/protocol/mokly-instances.md` and
       `docs/protocol/mokly-component-changes.md` with those answers. Under
-      decision 19, option L: names from `moklyInstance`, `key`, and the
-      naming props, numbers as the fallback, and the changed stability rule.
+      decision 19, option L: names from `key` and the naming props, and
+      `moklyInstance` on a wrapper, numbers as the fallback, and the changed
+      stability rule.
       Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
 - [x] Add the warning for numbered uses to
       `docs/protocol/mokly-build-warnings.md`, and the naming props field to
@@ -4191,11 +4192,9 @@ own lines of this plan.
   records that limit. Reason: a wrong attribution is worse than a missing
   use, and a missing use keeps its output in the screen's comparison.
 - I10. Track I decision 3 settles how a use renders its content. Changed on
-  2026-11-28: its answer is a spike of J, with I as the fallback. The spike
-  and its check live under `.context/storybook-support/track-i/spike-j/` in
-  the track I workspace. Their result is in decision 3. The build of J or I
-  waits for the option that the user names after that result, and for track
-  I decisions 10 and 11.
+  2026-11-28: its outcome is J, in the form of the spike check's variant
+  `b`. Milestone 35 builds it. The rules of track I decisions 10 and 11 wait
+  for the user.
 
 The options check of 2026-11-25 for these calls and for track I decision 1
 added options D and E to decision 1, changed I2, I4, I5, I6, I7, and I9, and
@@ -4949,22 +4948,33 @@ Depends on: 34
 
 Screens that render a story component record its use, as decision 13 says.
 
-- [ ] Record an instance of a stories entry in the JSX development shim when
+- [x] Record an instance of a stories entry in the JSX development shim when
       a screen renders its meta's `component`, or a `memo` or `forwardRef`
       wrapper of it, on both compile paths.
-- [ ] Give each such use the id that decision 19 chose: an explicit
-      `moklyInstance` or `key`, then the first naming prop, then a number.
-- [ ] Warn about each numbered use, with the prop to add: a `key` on a
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Give each such use the id that decision 19 chose: an explicit `key`,
+      or `moklyInstance` on a wrapper, then the first naming prop, then a
+      number.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Warn about each numbered use, with the prop to add: a `key` on a
       product component, or `moklyInstance` on a Mokly wrapper.
-- [ ] Add the configuration field that changes the list of naming props.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Add the configuration field that changes the list of naming props.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
 - [ ] Keep the content of each use in Changes, as decision 21 chose:
       `children` and each prop that holds React content become implicit
-      slots, and function props stay out of the props digest.
-- [ ] Test repeated uses, a wrapped component, an edit of a use's children,
+      slots, and function props stay out of the props digest. Parts 1, 2,
+      and 2b are built. The `contentSlots` switch is being built. The rules
+      of track I decisions 10 and 11 wait for the user.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
+- [x] Test repeated uses, a wrapped component, an edit of a use's children,
       and a changed component that affects a screen, on esbuild and on the
       Vite adapter.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
 - [ ] Update `docs/guides/authoring/storybook.md` and
-      `docs/guides/authoring/components.md`.
+      `docs/guides/authoring/components.md`. Updated for every rule in
+      force. The answers to track I decisions 10 and 11 may add to them.
+      Branch: `calummoore/storybook-track-i-story-component-usage-mpng`.
 
 ## Milestone 36: Story component usage verification, review, and pull request
 
