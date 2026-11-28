@@ -42,7 +42,7 @@ test("each build failure selects its recovery sentence", () => {
       "publish",
       "The build printed too much output; print less to publish.",
     ],
-    ["deadline", "publish", "The build stopped at its 60-minute limit."],
+    ["deadline", "publish", "The build stopped at its 15-minute limit."],
     ["idle", "publish", "The build stopped after going quiet."],
     ["infrastructure", "checkout", "Mokly couldn’t run this build."],
     [

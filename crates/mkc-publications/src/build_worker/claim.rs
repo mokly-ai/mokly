@@ -15,9 +15,6 @@ use super::outcome::{Ending, terminal};
 use super::reason::{self, log};
 use super::service::{BuildClaim, ClaimedBuild, DatabaseBuildWorker};
 
-/// Maximum duration of a build attempt, in minutes.
-const ATTEMPT_DEADLINE_MINUTES: i64 = 60;
-
 impl BuildEligibility for DatabaseBuildWorker {
     fn configured(&self) -> bool {
         true
@@ -118,7 +115,7 @@ impl DatabaseBuildWorker {
                 operation_id,
                 lease_token,
                 lease_expires_at: now + Duration::minutes(2),
-                deadline_at: now + Duration::minutes(ATTEMPT_DEADLINE_MINUTES),
+                deadline_at: now + Duration::minutes(15),
             };
             let Some(started) = queries
                 .start_build(build.id, &attempt)

@@ -13,7 +13,7 @@ build ID, `operation_id` the attempt operation ID, `owner` the project ID with
 no agent, `consumer` `SandboxConsumer::Runtime`, `deployment_id`
 `MKC_E2B_DEPLOYMENT_ID`, `profile` `build`, `network`
 `SandboxNetworkPolicy::Open` and `lifetime` `SandboxLifetime::OneShot` for the
-remaining attempt budget plus 120 seconds. The `build` profile
+remaining attempt budget plus 120 seconds, at most 3600. The `build` profile
 uses `MKC_E2B_BUILD_TEMPLATE`, public egress, and denies
 `240.0.0.0/4`, `64:ff9b::/96` and `ff00::/8` plus every `MKC_E2B_DENIED_DESTINATIONS`
 entry, on top of the adapter's private, loopback, link-local (including

@@ -94,7 +94,7 @@ impl Harness {
             .signed_duration_since(now())
             .num_seconds()
             .max(0) as u64;
-        let expected_create = create(&request, budget.min(3600) + 120);
+        let expected_create = create(&request, (budget + 120).min(3600));
         let operation = request.attempt_operation_id;
         let project_id = request.project_id;
         let common = (

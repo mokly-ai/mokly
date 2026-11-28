@@ -60,7 +60,7 @@ commands and exit codes stay in the output and the check:
 | `unsupported-mokly-version` | Update `@mokly/mokly` to 0.18.0 or later to publish.                  |
 | `uncommitted-changes`       | The build left files that Git doesn’t ignore; add them to .gitignore. |
 | `output-limit`              | The build printed too much output; print less to publish.             |
-| `deadline`                  | The build stopped at its 60-minute limit.                             |
+| `deadline`                  | The build stopped at its 15-minute limit.                             |
 | `idle`                      | The build stopped after going quiet.                                  |
 | `infrastructure`            | Mokly couldn’t run this build.                                        |
 | `repository-unavailable`    | Mokly can’t reach this repository; check the GitHub installation.     |

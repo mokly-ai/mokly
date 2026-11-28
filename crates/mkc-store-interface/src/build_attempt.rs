@@ -16,7 +16,7 @@ pub struct BuildAttempt {
     pub lease_token: Uuid,
     /// Lease expiry, normally two minutes after start.
     pub lease_expires_at: DateTime<Utc>,
-    /// Absolute deadline set by the worker when the attempt starts.
+    /// Absolute deadline, normally fifteen minutes after start.
     pub deadline_at: DateTime<Utc>,
 }
 

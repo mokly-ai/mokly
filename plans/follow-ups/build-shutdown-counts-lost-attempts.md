@@ -24,7 +24,7 @@
 - **Options:**
   - **A.** Change nothing. Lease recovery handles the attempt later. Effort: Small.
   - **B.** On shutdown, stop claiming builds, end the running attempts, and requeue them without counting the attempt. Effort: Medium.
-- **Left out:** Wait for running attempts to finish before shutdown. A build can run up to its 60-minute budget, longer than a rollout waits.
+- **Left out:** Wait for running attempts to finish before shutdown. A build can run up to its 15-minute budget, longer than a rollout waits.
 - **Wider fix:** None found.
 - **Previous examples:** None found.
 - **Recommendation:** B. The review recommended it, and the user chose to fix it after the merge.
