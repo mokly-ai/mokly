@@ -146,7 +146,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Problem:** Conductive is above four of these limits. Its declared bytes are 1,746 MB. Its index is 48.7 MB with 2,162,642 nodes. Its pull-request build has 26,070 files and 2,580.5 MB.
 - **Impact if no action:** Conductive never publishes. Each other large catalogue meets the same limits.
 - **Root question:** How does a large and growing catalogue publish within the cloud's limits?
-- **Shared assumptions:** The plan-wide assumptions. Option D drops assumptions 1 and 7. Option F of item 5 drops assumption 8 for the comparison.
+- **Shared assumptions:** The plan-wide assumptions. Option D drops two of them: one catalogue for each project, and every view of each entry in every build. For the comparison only, option F of item 5 drops the rule that a publication above one limit fails as a whole.
 - **Options:**
   - **A.** Mokly writes less, and the quotas stay. This needs every Mokly milestone of this plan, option C of item 4 and the HTML work of the design calls. Conductive's current-only build then lands near 452 MB. It fails again near 2,050 entries, and a pull request that changes every view still fails. Effort: Large.
   - **B.** Mokly takes only compact JSON, and the cloud changes its quotas. The cloud counts each stored file once, and it raises each ceiling until conductive fits. The viewer still fetches a 20.8 MB index at each page load, and each build still writes about 0.89 GB. Effort: Medium.
@@ -157,7 +157,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
   - Compress only the upload. The quotas count decoded bytes.
   - One document for both colour schemes. The renderer writes different inline colours for each scheme, and 0 of 3,442 pairs are equal after the scheme marker.
   - The viewer computes `usedBy` itself. It needs every detail, 414 MB as compact JSON.
-  - Data from a server at view time. The static host runs nothing, under assumption 2.
+  - Data from a server at view time. The static host runs nothing, under the Hosting Contract of `docs/protocol/mokly-export-delivery.md`.
   - Upload only the changed files. The exchange already does it, and the quotas count the whole declared catalogue.
   - A size warning in `mokly build`. A receiver can set quotas below the Mokly ceilings, and the CLI does not know them.
 - **Wider fix:** C. It removes the copies at their source, and it gives the quotas room for growth.
