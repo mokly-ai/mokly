@@ -164,6 +164,13 @@ graph for each Storybook folder, with E of 18e-1, D of 18e-2, D of 18e-3, A of
 
 ### Follow-up items that wait for the user
 
+The user answered track E decision 1 with option F on 2026-11-28, for now,
+and asked for a high-priority re-review of the route strategy, because it is
+hard to change later. The file holds the full item and its options.
+
+- [route-naming-strategy-review.md](follow-ups/route-naming-strategy-review.md):
+  how Mokly names delivered stylesheets and assets in the long term.
+
 The review of track B found these problems outside its scope. Each file
 holds the full item and its recommended option. They block no milestone.
 
