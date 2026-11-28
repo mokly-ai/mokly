@@ -42,34 +42,43 @@ test("Vite keeps reports from nested loads as inline stylesheet dependencies", a
   await fixture.sidecar.call("shutdown");
 });
 
-test("Vite keeps resolveId reports as inputs of the importer", async (context) => {
-  const fixture = await reviewFixture(context);
-  await fixture.write("data/resolve.txt", "before");
-  await fixture.write("src/value.js", 'export default "page";');
-  await fixture.write(
-    "src/review.mockup.ts",
-    reviewPage("value", 'import value from "./value.js";'),
-  );
-  await fixture.write(
-    "vite.config.ts",
-    `import { resolve } from "node:path";
-     export default { plugins: [{ name: "resolve-report", resolveId: {
-       order: "pre",
-       handler(source, importer) {
+for (const [name, hook] of [
+  [
+    "Vite keeps resolveId reports as inputs of the importer",
+    '{ order: "pre", handler }',
+  ],
+  [
+    "Vite keeps ordinary resolveId reports as inputs of the importer",
+    "handler",
+  ],
+] as const) {
+  test(name, async (context) => {
+    const fixture = await reviewFixture(context);
+    await fixture.write("data/resolve.txt", "before");
+    await fixture.write("src/value.js", 'export default "page";');
+    await fixture.write(
+      "src/review.mockup.ts",
+      reviewPage("value", 'import value from "./value.js";'),
+    );
+    await fixture.write(
+      "vite.config.ts",
+      `import { resolve } from "node:path";
+       function handler(source, importer) {
          if (source === "./value.js" && importer?.endsWith("/review.mockup.ts"))
            this.addWatchFile(resolve(import.meta.dirname, "data/resolve.txt"));
-       },
-     } }] };`,
-  );
-  const bundle = await fixture.compile();
-  assert.equal(
-    bundle.compiled.metadataInputs["data/resolve.txt"],
-    createHash("sha256").update("before").digest("hex"),
-  );
-  await fixture.write("data/resolve.txt", "after");
-  await assert.rejects(fixture.compile(), { code: "fresh-worker-required" });
-  await fixture.sidecar.call("shutdown");
-});
+       }
+       export default { plugins: [{ name: "resolve-report", enforce: "pre", resolveId: ${hook} }] };`,
+    );
+    const bundle = await fixture.compile();
+    assert.equal(
+      bundle.compiled.metadataInputs["data/resolve.txt"],
+      createHash("sha256").update("before").digest("hex"),
+    );
+    await fixture.write("data/resolve.txt", "after");
+    await assert.rejects(fixture.compile(), { code: "fresh-worker-required" });
+    await fixture.sidecar.call("shutdown");
+  });
+}
 
 async function nestedReportsFixture(context: TestContext, importer: string) {
   const fixture = await reviewFixture(context);

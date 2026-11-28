@@ -34,6 +34,22 @@ export class VitePluginReports {
     Map<string, ModuleReports>
   >();
 
+  resolvePlugin(current: () => ViteInputs): Plugin {
+    const track = this.trackResolve.bind(this);
+    return {
+      name: "mokly-resolve-reports",
+      enforce: "pre",
+      resolveId: {
+        order: "pre",
+        handler(_source, importer, options) {
+          const original: unknown = options.custom?.mokly?.importer;
+          const owner = typeof original === "string" ? original : importer;
+          if (owner) track(this, current(), owner);
+        },
+      },
+    };
+  }
+
   hooks(current: () => ViteInputs): Pick<Plugin, "load" | "transform"> {
     const reportsFor = this.module.bind(this);
     const track = this.track.bind(this);
@@ -81,7 +97,7 @@ export class VitePluginReports {
     return collected;
   }
 
-  trackResolve(
+  private trackResolve(
     context: Rollup.PluginContext,
     input: ViteInputs,
     importer: string,

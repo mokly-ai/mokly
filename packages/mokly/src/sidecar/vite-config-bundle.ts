@@ -90,7 +90,7 @@ export async function bundleViteConfig(
                 args.kind !== "dynamic-import" &&
                 bareSpecifier(args.path)
                   ? fileURLToPath(
-                      lookup.sync(
+                      lookup.syncTarget(
                         args.path,
                         args.importer,
                         (source, parent) =>
@@ -114,7 +114,7 @@ export async function bundleViteConfig(
                   })
                 ).path;
               if (!resolved) return;
-              const target = await lookup.paths.resolve(resolved);
+              const target = await lookup.resolveFile(resolved, args.path);
               return lookup.paths.repositoryOwned(target)
                 ? { path: target }
                 : { path: pathToFileURL(target).href, external: true };

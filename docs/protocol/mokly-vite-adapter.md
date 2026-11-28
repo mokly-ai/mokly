@@ -33,8 +33,7 @@ Without `config`, Mokly uses no optional file, as for `renderer` and
 [traversal rejection](./mokly-configuration.md#validation).
 
 The field is a bundle setting. A change to it gives a new generation and moves
-every
-[render input key](./mokly-watch.md#invalidation-through-the-render-graph).
+every [render input key](./mokly-watch.md#invalidation-through-the-render-graph).
 Each side reads the field from its own configuration.
 
 ## Loading Vite
@@ -203,6 +202,8 @@ copy of the project's setup. `packageRoots` still names the dependency roots.
 On both sides, the `node_modules` directories of the package roots supplement
 the setup's lookup as the last fallback, as on the
 [esbuild path](./mokly-configuration.md#module-resolution).
+The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+and `sourcePackages` still apply after the setup selects a file.
 
 Mokly's `"empty"` opt-outs for `.css` and `.module.css` still apply, and they
 cover every stylesheet language. `.css` skips every plain and module

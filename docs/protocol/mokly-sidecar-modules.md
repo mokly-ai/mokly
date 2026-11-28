@@ -120,6 +120,13 @@ bundle metadata. The bundle keeps the absent build and source candidates of
 every tried layout as watch inputs. Selected source contents enter through
 the module graph and stylesheet inputs.
 
+Under the [Vite adapter](./mokly-vite-adapter.md#replaced-settings), the rule
+applies to the file that the project's Vite setup selects, on the head and the
+base. It covers a catalogue import, an import in the Vite config file, a
+JavaScript import of a package CSS file, and a stylesheet `@import` of a
+package CSS file. It also covers missing build targets for modules that Node
+loads for the Vite config.
+
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected
 Storybook preview, and each import loads that file. TypeScript `paths` never

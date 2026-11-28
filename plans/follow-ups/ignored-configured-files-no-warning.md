@@ -46,5 +46,6 @@
     - one file that PostCSS loads both by package name and by a relative path
   - The same review found a startup preload that got a false warning.
   - [ignored-module-page-render-requires.md](./ignored-module-page-render-requires.md) records the restored page-render requires that skip the warning.
+- **Related:** [workspace-import-resolution-record.md](./workspace-import-resolution-record.md): shared fix. Its option C gives each workspace import a record that the `ignored-module` warning reads. C here gives each reported load a role for the same warning, so build one input that holds both.
 - **Recommendation:** A. It removes the two skips and uses the evidence that the check already reads. C best protects the codebase.
 - **Action:** fix after merge, apply A, because the fix needs new CLI cases and a protocol list change, and the review had no fix round left.

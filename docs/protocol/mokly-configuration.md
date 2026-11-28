@@ -33,8 +33,7 @@ following contract:
   workspace package layouts that the [sidecar](./mokly-sidecar.md) bundles with;
 - `vite`: `true`, `false`, or an object with an optional `config` path,
   which controls the [Vite adapter](./mokly-vite-adapter.md), off by default;
-- `instanceNameProps`: the props that name a story component use, under the
-  [naming props rule](./mokly-instance-ids.md#naming-props);
+- `instanceNameProps`: the [naming props](./mokly-instance-ids.md#naming-props);
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base, defaulting to `origin/main`;
 - `review.baseInstallScripts`: whether base dependency installs run lifecycle
@@ -222,10 +221,11 @@ matching directory, including outside-configuration and nested workspace imports
 Configuration ancestors and explicit package roots provide fallback lookup.
 An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.
 
-With the default compiler, Mokly applies the
+Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-automatically after module lookup. For JavaScript targets, the rule keeps
-the `resolveExtensions` order and tries only extensions with a script suffix.
+automatically after module lookup, on both compile paths. On the esbuild
+path, for JavaScript targets, the rule keeps the `resolveExtensions` order
+and tries only extensions with a script suffix.
 
 The [Vite adapter](./mokly-vite-adapter.md#replaced-settings) names the
 settings of this section that the project's Vite setup replaces.

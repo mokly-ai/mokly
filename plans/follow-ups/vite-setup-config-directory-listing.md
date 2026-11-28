@@ -75,6 +75,10 @@
     item first, or an unrelated new file stops that build.
   - `plans/follow-ups/vite-setup-read-time-evidence.md`: C here is its option
     C.
+  - `plans/follow-ups/workspace-import-resolution-record.md`: same code. Its
+    option C keeps a record of each lookup of the Vite config, and the setup
+    reuse derives from those records through `setupSnapshot`. Those records
+    are a part of the recorded probes and reads that C here needs.
 - **Recommendation:** B. It removes the false reloads and failures, and it
   keeps the detection of a new file that the config load can read.
 - **Action:** fix after merge, apply B, because its name list must follow the

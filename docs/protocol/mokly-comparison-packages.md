@@ -68,6 +68,32 @@ remaining targets to the same source file. Otherwise Mokly keeps the native
 error. For requires loaded by Node, a native lookup invokes this recovery
 only after `MODULE_NOT_FOUND`.
 
+Under the [Vite adapter](./mokly-vite-adapter.md#replaced-settings), the
+project's Vite setup does the lookup. When the setup, or Mokly's bundle of
+the Vite config file, selects a file for a bare package specifier, Mokly
+applies this rule to that file on the head and the base. The rule reads the
+specifier after the setup applies its aliases. A setup alias whose target is
+a path keeps that target, as a relative import does. When Node loads a module
+for the Vite config at run time, such as the target of a computed `require`,
+Mokly keeps an existing build file on the selected side, as in step 4.
+`resolveExtensions` has no effect under the adapter, so step 3 tries `.tsx`,
+`.ts`, `.jsx`, and `.js`, in this order.
+
+The lookup recovery above does not apply under the adapter. When the working
+tree has no build file, Vite's own package lookup selects no file, and Vite
+fails with its own error, such as `Failed to resolve entry for package`. A
+base with its own installed dependencies fails in the same way for a
+Git-ignored build file, because its installation copies only tracked files. A
+plugin of the setup that returns the path of a missing build file selects that
+file, so the rule applies to it on both sides. Both sides compile the source
+when an export condition, such as `development`, or an alias in the Vite setup
+points to the source.
+
+Decision: under the adapter, the rule applies to the file that the setup
+selects, so both compile paths load the same source file. Rejected: the build
+file that the setup selects, because a base that lacks it then fails, and a
+recovery when the setup selects no file, because it copies Vite's export rules.
+
 ## Layout Order
 
 The working configuration is the `mokly.config.json` of the working tree,
