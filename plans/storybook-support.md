@@ -4143,9 +4143,10 @@ own lines of this plan.
   passes a wrapper's `key` through the reserved prop `__moklyKey`, which the
   wrapper strips as it strips `__moklySource`. Reason: React never passes
   `key` to a component.
-- I10. Track I decision 3 settles how a use renders its content. Its answer,
-  H, waits for the design note under
-  `.context/storybook-support/track-i/` in the track I workspace.
+- I10. Track I decision 3 settles how a use renders its content. Changed on
+  2026-11-28: its answer is a spike of J, with I as the fallback. The spike
+  and its check live under `.context/storybook-support/track-i/spike-j/` in
+  the track I workspace. The build of J or I waits for the spike result.
 
 The options check of 2026-11-25 for these calls and for track I decision 1
 added options D and E to decision 1, changed I2, I4, I5, I6, I7, and I9, and
@@ -4364,6 +4365,31 @@ decision 2 and options E to H to decision 3. The reports are under
     every marker itself, so no Mokly element enters the product's tree. Mokly
     then writes the HTML itself, and layout effects, `useId`, and Suspense act
     as on the client. Effort: Large.
+  - **I.** Do E, with a switch in the `mokly` parameter of a stories meta that
+    keeps the use. For a component with the switch, Mokly records each use
+    when the screen's JSX creates it, so the component's page still lists the
+    screens that use it. The element keeps its own type, and its content gets
+    no mirrors. Its whole output stays in the screen's comparison, as D does
+    for that one component. Only the folding of its own changes is lost: an
+    edit inside its own code shows as a change of each screen, not once on
+    its page. Added by the primary orchestrator's re-check of 2026-11-28.
+    Effort: Medium.
+  - **J.** Mark each component in the module that defines it, not at each
+    use. When Mokly compiles a module that defines a component, a transform
+    replaces the component's binding with one Mokly wrapper, so that every
+    importer, the defining module included, sees the same value, and
+    `child.type === Tab` holds. The JSX shim adds the use's data, such as its
+    key and its source, under a hidden prop with a JavaScript Symbol key,
+    which survives `cloneElement` and never reaches the HTML. When the
+    wrapper renders, it writes the instance markers of a story component use
+    and the slot markers of content that the screen supplied. HTML elements
+    that the screen supplies, such as `<a>`, keep the mirrors of E, and the
+    switch of I stays for a check of an HTML element type. Components that
+    Node loads from installed packages get no wrapper, so their elements keep
+    mirrors. Mokly must change the code of every component module on both
+    compile paths, and handle `memo`, `forwardRef`, and class components. It
+    is not tested. Added by the primary orchestrator's re-check of
+    2026-11-28. Effort: Large.
 - **Left out:**
   - Clone each child with a hidden prop: component children and text get no
     marker, so it fails the goal. E is the working form of the idea.
@@ -4391,6 +4417,15 @@ decision 2 and options E to H to decision 3. The reports are under
   render as in the product, and each one gets a test. Before the build, a
   design note and its options check confirm that H breaks no requirement in
   force and needs no further decision.
+- **Answer changed:** spike of J first, chosen by the user on 2026-11-28,
+  with I as the fallback. When the spike and its independent check show that
+  J works for the tested cases, J applies. Otherwise I applies. Decisions 4
+  to 9 close. Reason given: under G, the switch turns off recording, so a
+  component such as `Tabs`, whose content is checked with
+  `child.type === Tab`, loses its usage list and the folding of its own
+  changes. I keeps the usage list, and J also keeps the folding. The design
+  note of H and its decisions 4 to 9 found that H breaks the private-runtime
+  rule and the failed-views rule.
 
 The design note of 2026-11-26 for the answer H, with its spike and its
 options check, found that H breaks requirements in force and needs the
@@ -4398,6 +4433,9 @@ decisions below. The note, the spike, and the check are under
 `.context/storybook-support/track-i/` in the track I workspace. In each
 decision, the option "do not move to the reconciler" drops H, and that
 answer closes the other five.
+
+Decisions 4 to 9 closed on 2026-11-28 without an answer of their own,
+because the answer of decision 3 no longer takes H.
 
 #### Track I decision 4: Where the reconciler comes from
 
