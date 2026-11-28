@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.0](https://github.com/mokly-ai/mokly/compare/v0.22.0...v0.23.0) (2026-11-28)
+
+
+### Features
+
+* **cloud:** make each list row one link or button over the whole row ([#600](https://github.com/mokly-ai/mokly/issues/600)) ([201b2c3](https://github.com/mokly-ai/mokly/commit/201b2c3eb9486e431fff4c3829eee63c5b682c1e))
+
+
+### Bug Fixes
+
+* **desktop:** show Check for updates in a Help menu on every platform ([#604](https://github.com/mokly-ai/mokly/issues/604)) ([716a328](https://github.com/mokly-ai/mokly/commit/716a3285e47ff1e84a6b5d5f86c9f627237af92d))
+* **frame:** name preview pages that an earlier Mokly built ([#602](https://github.com/mokly-ai/mokly/issues/602)) ([dc1c617](https://github.com/mokly-ai/mokly/commit/dc1c617cc8080a098867f0644788b8d41d65c2fa))
+
 ## [0.22.0](https://github.com/mokly-ai/mokly/compare/v0.21.0...v0.22.0) (2026-11-27)
 
 
