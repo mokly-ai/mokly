@@ -4884,9 +4884,10 @@ Both apply to E, I, and J alike, so they do not decide between J and I.
 - **Previous examples:** Track I decision 7, and option C of track I
   decision 3.
 - **Related:** Track I decision 11. A use whose slots are all dropped with a
-  Suspense branch falls under B. Option I of decision 3 needs the core
-  feature of B, a usage record whose output stays in the screen's
-  comparison.
+  Suspense branch falls under B. The `contentSlots` switch of design call
+  I16, built on 2026-11-28, already makes the region of each use of one
+  component transparent in the screen's comparison. B would apply the same
+  rule to one use.
 - **Recommendation:** D. It is the only option that keeps every tested
   visible edit while uses whose content stays in its slots keep their
   folding.
