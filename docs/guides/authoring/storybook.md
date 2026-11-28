@@ -79,6 +79,23 @@ extension order. It checks `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.mts`,
 To select files from Storybook's `stories` list, see
 [Read stories from `main.*`](/docs/authoring/config/#read-stories-from-main).
 
+### Style stories from the preview
+
+Add a CSS import such as `import "./theme.css"` to the selected preview file.
+Mokly bundles this CSS and links it only in documents for that folder's stories.
+
+After any configured and component-declared stylesheets, a successful story
+document links the available bundles in this order.
+
+1. The Mokly renderer's stylesheet.
+2. The selected preview's stylesheet.
+3. The stories file's stylesheet.
+
+The preview bundle leaves out files that the renderer already delivers.
+The stories file's bundle also leaves out files that its preview already
+delivers. Vite applies this rule only to stylesheets that JavaScript imports.
+See [Imported styles in Vite](/docs/authoring/vite/#imported-styles).
+
 ## Story formats
 
 Mokly reads three forms of Storybook's Component Story Format, or CSF:

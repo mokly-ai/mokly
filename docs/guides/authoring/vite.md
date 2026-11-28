@@ -99,10 +99,10 @@ as in your project's own Vite build:
 and `.sss`. Install the preprocessor in your project as you do for `vite dev`.
 For example, install `sass` to use `.scss` files.
 
-Vite inlines local `@import` rules. Mokly removes the renderer's stylesheets
-from an entry's JavaScript imports, but not from `@import` rules. If an
-entry's stylesheet imports a renderer stylesheet with `@import`, its rules
-appear again after the renderer's CSS.
+For stylesheets that JavaScript imports, a preview or entry bundle leaves out
+files that the renderer already delivers. A stories file's bundle also skips
+JavaScript imports of files that its preview already delivers. Vite inlines
+local `@import` rules, so those rules can include the same CSS in a later bundle.
 
 For a configured or component-declared local stylesheet, Mokly adds `.css`
 to the output path if the source path does not end in `.css`. For example,

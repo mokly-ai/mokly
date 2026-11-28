@@ -1,7 +1,5 @@
 # Imported Stylesheet Delivery
 
-Status: Preview files are not delivery roots yet. The [preview CSS milestone](../../plans/storybook-support.md#milestone-21-preview-css-in-story-documents) adds them.
-
 ## Delivery
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,

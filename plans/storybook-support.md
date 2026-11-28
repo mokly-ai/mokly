@@ -3904,20 +3904,22 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
       its preview file already delivers, as an entry's chain drops the
       renderer's stylesheets. Track D raised this question on 2026-11-23.
       Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Write each route segment that starts with a dot in the `dot-` form, as
+- [x] Write each route segment that starts with a dot in the `dot-` form, as
       the answer F to track E decision 1 says, in every generated route, also
       `node_modules/dot-mokly-roots/`. Update the route rules of
       `docs/protocol/mokly-imported-styles.md` and
       `docs/protocol/mokly-imported-styles-assets.md`, and delete
       `plans/follow-ups/mokly-roots-route-is-private-in-cloud.md`.
       Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 
 ## Milestone 22: Storybook folders verification, review, and pull request
 
 Depends on: 18, 19, 20, 21
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.

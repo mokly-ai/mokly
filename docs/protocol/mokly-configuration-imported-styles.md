@@ -14,7 +14,8 @@ bundles every local delivery root:
 - configured `stylesheets` rules: local paths, config-relative, or HTTP(S)
   URLs, with the scheme-specific lists and the `$componentStylesheets` marker
   of the [configuration contract](./mokly-configuration.md#shape);
-- stylesheets that entry modules and the renderer import, which the
+- stylesheets that entry modules, the renderer, and the
+  [preview files](./mokly-storybook.md#storybook-folders) of stories import, which the
   [sidecar](./mokly-sidecar.md#bundling) reports in the module graph and the
   core delivers under the imported stylesheet contract;
 - component-declared local stylesheet roots under the

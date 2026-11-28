@@ -74,7 +74,8 @@ A declared path is always complete. Index-ness comes from the `index` slug or an
 index document's `README.md`/`index.md` name; the declared path says where that
 folder's own page lives. Its relative-link base is that complete path. These rules
 also apply to a document's front-matter path. Imported CSS delivery derives
-stylesheet routes from the importing module's repository path, never from a
+stylesheet routes from the importing module's repository path, in the
+[route form](./mokly-imported-styles.md#routes-and-ownership), never from a
 declared entry path; importing CSS in a module whose path is not URL-safe
 fails with the [dedicated diagnostic](./mokly-imported-styles-errors.md).
 

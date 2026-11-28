@@ -1,7 +1,5 @@
 # Rendering And Document Assembly
 
-Status: Story documents link no preview stylesheet yet. The [preview CSS milestone](../../plans/storybook-support.md#milestone-21-preview-css-in-story-documents) adds it.
-
 This contract defines how the Rust core turns one view of an entry into a
 document: the boundary between the core and the sidecar, the renderer module,
 the stylesheet list of a document and its order, and document assembly. The
