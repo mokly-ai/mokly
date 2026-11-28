@@ -70,7 +70,18 @@ The detail shapes of this plan, as compact JSON:
 
 A props table in each detail saves only about 4.1 MB once views share their records, so the plan keeps instance props inline.
 
-After the recommended Mokly milestones, the current-only output of conductive is about 622.0 MB as declared and 565.4 MB as distinct files. The HTML is 395.7 MB of that. So each entry costs about 0.36 MB as declared, 0.33 MB as distinct files, 6.4 files, 9.0 path prefixes and 88 index nodes. A pull-request index costs about 109 nodes and 1,844 bytes for each entry. Under option C of item 5, a pull request that changes every view adds the before side. That side costs about 0.24 MB, 4.4 files and 5.7 path prefixes for each entry.
+After the recommended Mokly milestones, the current-only output of conductive is about 622.0 MB as declared and 565.4 MB as distinct files. The HTML is 395.7 MB of that. So each entry costs about 0.36 MB as declared, 0.33 MB as distinct files, 6.4 files, 9.0 path prefixes and 88 index nodes. A pull-request index costs about 109 nodes and 1,844 bytes for each entry. Under option C of item 5, a pull request that changes every view adds the before side. That side costs about 0.24 MB, 4.4 files and 5.7 path prefixes for each entry. A pull request can also remove entries. Each removed entry that pairs with nothing adds an index record of about 114 nodes and 1,900 bytes, and about 6.4 files.
+
+The next table gives each index shape of items 1 and 4. It measures the pull-request index, and it scales it to 4,375 entries, the target of option B of item 2 with 25% room.
+
+| Index shape                                   | Measured                  | At 4,375 entries         |
+| --------------------------------------------- | ------------------------- | ------------------------ |
+| Today's fields, compact, item 4 D             | 21.15 MB, 2,200,238 nodes | 53.8 MB, 5,593,000 nodes |
+| Tables for controls and schemas, item 4 A     | 5.00 MB, 430,881 nodes    | 12.7 MB, 1,095,000 nodes |
+| No controls, schemas or props, item 4 B and C | 3.17 MB, 188,284 nodes    | 8.07 MB, 478,600 nodes   |
+| Navigation index, item 1 E                    | 0.76 MB, 66,846 nodes     | 1.94 MB, 169,900 nodes   |
+
+The index ceilings of option C of item 3 are 8 MiB, about 8.39 MB, and 524,288 nodes. The scaling is linear in the screen and component records.
 
 Corrections to the brief of this workspace:
 
@@ -102,7 +113,7 @@ Every item shares these assumptions, unless an item names an option that drops o
 2. The static output stays complete, and its host runs nothing. Source: `docs/protocol/mokly-export-delivery.md`, Hosting Contract. Every option keeps it.
 3. Each view keeps its own document. Source: the renderer receives the colour scheme under `docs/protocol/mokly-rendering.md`, and the measurement shows 0 equal pairs. Every option keeps it.
 4. A format number changes only with a change of shape or meaning, and at most once in a release window. Source: `docs/protocol/mokly-format-versions.md`. Every option keeps it.
-5. A format change replaces every reader of the old format in the same change, and the cloud converts no stored publication. Source: `docs/protocol/cloud/mokly-artifact-compatibility.md`, Mokly Changes. Option E of item 8 drops the first part, and option G of item 7 drops the second.
+5. A format change replaces every reader of the old format in the same change, and the cloud converts no stored publication. Source: `docs/protocol/cloud/mokly-artifact-compatibility.md`, Mokly Changes. Option E of item 8 and option C of item 7 drop the first part, and option G of item 7 drops the second.
 6. The receiver quotas stay as they are. Source: the requirements of `docs/protocol/cloud/publication-upload-validation.md:20-42`, and `crates/mkc-mokly-contract/src/limits.rs:33-48`. Their reason is gone: they came from an API whose memory grew with the whole export, as `plans/follow-ups/upload-quotas-not-revisited.md` records. Options B, C and E of item 1 drop it.
 7. Every build publishes every view of each entry, four for each conductive entry. Source: `docs/protocol/mokly-component-usage-records.md`, Validation. Option D of item 1 drops it.
 8. A publication that is above one limit fails as a whole. Source: `docs/protocol/mokly-upload-validation.md`, Rejections, and `crates/mokly-publish/src/snapshot.rs:77-84`. Option F of item 5 drops it for the comparison, at the CLI's file ceiling only.
@@ -161,21 +172,22 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Source:** Design.
 - **Category:** Performance.
 - **Location:** `docs/protocol/cloud/publication-upload-validation.md:20-36`.
-- **Background:** Each limit binds at a different catalogue size. After the recommended Mokly milestones, a conductive entry costs about 0.33 MB, 6.4 files, 9.0 path prefixes and 88 index nodes in a current-only build. Under option C of item 5, a pull request that changes every view adds more. It adds about 0.24 MB, 4.4 files and 5.7 path prefixes for each entry. Conductive has 1,721 entries. It grew from 72 to 664 entry files in 19 days, so it doubled about every six days.
+- **Background:** Each limit binds at a different catalogue size. After the recommended Mokly milestones, a conductive entry costs about 0.33 MB, 6.4 files, 9.0 path prefixes and 88 index nodes in a current-only build. Under option C of item 5, a pull request that changes every view adds more. It adds about 0.24 MB, 4.4 files and 5.7 path prefixes for each entry. Each removed entry that pairs with nothing adds about 114 index nodes and 6.4 files. Conductive has 1,721 entries. It grew from 72 to 664 entry files in 19 days, so it doubled about every six days.
 - **Problem:** The plan cannot size the quotas, or decide the optional work, without a target.
 - **Impact if no action:** The limits fail again soon after the change, or the cloud accepts much more than it needs.
 - **Root question:** How large a catalogue must one publication hold, and for which builds?
 - **Shared assumptions:** A target in entries becomes ceilings through conductive's cost for each entry. That holds only for catalogues like conductive, with four views for each entry and few public files. Option D drops it. One target serves every project. Option E of item 3 drops it.
 - **Options:**
   - **A.** Conductive today with 25% room: about 2,150 entries, for current-only builds and pull requests that change few views. It needs a byte ceiling near 1 GiB of distinct files. A pull request that changes a widely used component can still fail. Effort: Small.
-  - **B.** Twice conductive today: about 3,500 entries for every build, also a pull request that changes every view. It needs the ceilings of option C of item 3. Effort: Medium.
+  - **B.** Twice conductive today: about 3,500 entries for every build, also a pull request that changes every view. Such a pull request can also remove about 1,000 entries that pair with nothing, before the 8 MiB index fills. It needs the ceilings of option C of item 3. Effort: Medium.
   - **C.** About 10,000 entries for every build. It needs ceilings about three times those of B. The pull-request index of such a catalogue is about 18 MB, and every page load fetches it. Effort: Large.
   - **D.** No catalogue size. Measure the API memory, the ingest time and the database rows with a synthetic upload. Set each ceiling 25% below the measured safe bound, and report the entry count that fits. The ceilings can then be far above any real need, so one upload can use a lot of storage. The options check of 2026-11-27 added it. Effort: Medium.
+  - **E.** B, and a pull request may also replace every entry, so that 3,500 removed entries stand beside 3,500 current ones. With 25% room, it needs about 972,000 index nodes, a 16 MiB index, about 56,000 files and 2.9 GB of distinct bytes. Option E of item 4 fits it within the ceilings of option C of item 3, without room. The plan review of 2026-11-28 added it. Effort: Medium.
 - **Left out:** None. The options check of 2026-11-27 brought back the approach without a target as D.
 - **Wider fix:** None. A target is a policy, not a fix.
 - **Previous examples:** Option B of `plans/follow-ups/upload-quotas-not-revisited.md` proposed the measurement of D.
-- **Related:** Item 3 takes its ceilings from this answer. Item 5 needs option C or a later option under B or C here.
-- **Recommendation:** B. A 3,500-entry pull-request index stays near 6.5 MB, below the 8 MiB quota, and B covers a pull request that changes every view. At the growth rate of November, twice today lasts about a week, so the user's view of growth decides between B and C.
+- **Related:** Item 3 takes its ceilings from this answer. Item 5 needs option C or a later option under B, C or E here. Item 4: its option E serves E here. Milestone 8 gives each target its own acceptance case.
+- **Recommendation:** B. A 3,500-entry pull-request index stays near 6.5 MB, below the 8 MiB quota, and B covers a pull request that changes every view. At the growth rate of November, twice today lasts about a week, so the user's view of growth decides between B and C. E covers a pull request that removes most of the catalogue.
 - **Action:** ask the user, because the user asked for this choice, and the right size depends on growth that only the user can judge.
 
 ### 3. The receiver counts copies and caps growth
@@ -203,13 +215,15 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
   - **C.** B, and set each ceiling for the target of item 2 with 25% room. These ceilings assume option B of item 4. For option B of item 2, they are:
     - 2.5 GiB of distinct bytes, 50,000 files and an 8 MiB index.
     - 524,288 JSON nodes for the marker and for the index.
-    - A prefix quota of three for each file, 150,000, and a marker byte quota that also follows the file ceiling.
+    - A prefix quota of three for each file, 150,000.
+    - A marker byte quota that follows the file ceiling, up to the 64 MiB file ceiling.
     - A plan-archive member count of its own, apart from the file ceiling.
 
-    The CLI file ceiling changes too. Measure the API memory, the record count and the ingest at the new bounds, with conductive's nested path layout. Effort: Medium.
+    The marker keeps the 64 MiB file ceiling, so 50,000 files fit when the average marker entry stays under about 1,340 bytes. Conductive's entries average about 237 bytes, and 64 MiB holds about 31,000 entries with the longest escaped paths. The CLI file ceiling changes too. Measure the API memory, the record count and the ingest at the new bounds, with conductive's nested path layout. Effort: Medium.
 
   - **D.** Count the gzip size of each distinct file, and store and serve gzip blobs. Today's conductive output is 188.6 MB this way. The marker declares only decoded sizes. So D also needs encoded sizes in the marker, which takes marker version 4, or a check after the Blobs. It does not change the file, prefix or index limits. Effort: Large.
   - **E.** A Team workspace gets the ceilings of C, and a free workspace keeps today's quotas. The receiver already gates an upload on the workspace plan, under `docs/protocol/cloud/billing-plan-gates.md`. It is a pricing choice, an environment without billing needs a default, and a refused free upload needs product copy. The options check of 2026-11-27 added it. Effort: Large.
+  - **F.** C, and the marker gets its own ceiling above 64 MiB in the exporter, the CLI and the receiver. Then 50,000 entries with the longest paths fit. It reverses the decision of `docs/protocol/cloud/publication-upload-validation.md` to size the marker without relaxing the file ceiling, and the Plan memory needs a new budget. The plan review of 2026-11-28 added it. Effort: Medium.
 - **Left out:**
   - Count only the bytes that one upload adds. The first publication of a project adds every byte, so a ceiling for the whole catalogue stays.
   - Remove the quotas. A bound keeps one upload from using up storage and time.
@@ -217,7 +231,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
   - Count each distinct file once in the file limit. Each path costs a database row and a marker entry, whatever its digest.
 - **Wider fix:** C. Each ceiling then follows a stated target, the prefix and marker quotas follow the file ceiling, and duplicates never count.
 - **Previous examples:** `plans/follow-ups/upload-quotas-not-revisited.md` asked to measure the quotas, and no measurement exists.
-- **Related:** Item 1: this item applies only under B, C or E there. Item 2 gives the target. Item 4, option D, needs higher index quotas here.
+- **Related:** Item 1: this item applies only under B, C or E there. Item 2 gives the target. Item 4: options A and D need higher index quotas here, and these ceilings assume option B there.
 - **Recommendation:** C. It counts what the cloud stores, and each ceiling has a reason that a later change can check.
 - **Action:** ask the user, because each option except A changes the quotas of `docs/protocol/cloud/publication-upload-validation.md` or the ceilings of `docs/protocol/mokly-upload-validation.md`.
 
@@ -227,22 +241,23 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Source:** Design.
 - **Category:** Performance.
 - **Location:** `crates/mokly-model/src/projection_records.rs:47-71`, `crates/mokly-model/src/usage_schemas.rs:22-36` and `packages/viewer/src/shell/control_values.ts:196-227`.
-- **Background:** Each screen and component record of the index carries `propSchema`, `props` and `controls`. The viewer reads them for the Props panel of the shown entry. It also reads a component's `props` beside the detail's `before` props in a comparison, in `packages/viewer/src/shell/public_compared.ts:42-44`. The detail already carries `controlOrder`. Conductive's 957 screens use 33 distinct control sets. The Rust usage check reads the component schemas from the index. A decision in force in `docs/protocol/mokly-shell-delivery.md:42-44` chose compression over a smaller index format, because compression keeps every canonical byte and every read of the viewer.
+- **Background:** Each screen and component record of the index carries `propSchema`, `props` and `controls`. The viewer reads them for the Props panel of the shown entry. It also reads a component's `props` beside the detail's `before` props in a comparison, in `packages/viewer/src/shell/public_compared.ts:42-44`. The detail already carries `controlOrder`. Conductive's 957 screens use 33 distinct control sets. The Rust usage check reads the component schemas from the index. Props shows its own loading line and **Try again** until the route's details arrive, under `docs/protocol/mokly-component-controls.md`. A decision in force in `docs/protocol/mokly-shell-delivery.md:42-44` chose compression over a smaller index format, because compression keeps every canonical byte and every read of the viewer.
 - **Problem:** These three fields are about 18 MB of the 20.8 MB compact index, and 2,011,954 of its 2,162,642 nodes. Each page load fetches and parses them.
 - **Impact if no action:** The receiver refuses the index, and every page load of a large catalogue is slow.
 - **Root question:** Where do an entry's prop schema, saved props and controls live, so that page loads stay small and the receiver accepts the index?
 - **Shared assumptions:** The viewer fetches and parses the whole index at each page load, under `docs/protocol/mokly-export-delivery.md`. Option E of item 1 drops it. The decision for compression over a smaller index does not cover the node quota or the parse time. Options A, B and C reverse that decision, and D keeps it.
 - **Options:**
-  - **A.** Tables in the index hold each distinct control set and prop schema once. The index is 4.7 MB with 393,285 nodes. It is already above the quota of 262,144 nodes, and at 3,500 entries it needs about 549,000. Effort: Medium.
-  - **B.** Each entry's detail carries its own prop schema, saved props and controls. The index is 2.85 MB with 150,688 nodes, 88 for each entry. The details grow by about 18 MB, because screens repeat their shared schema. The usage check reads component schemas from the component details. Effort: Large.
+  - **A.** Tables in the index hold each distinct control set and prop schema once. The index is 4.7 MB with 393,285 nodes, already above the quota of 262,144 nodes. At the target it is about 12.7 MB with about 1,095,000 nodes, so it needs an index quota of 16 MiB and 2,097,152 nodes. Effort: Medium.
+  - **B.** Each entry's detail carries its own prop schema, saved props and controls. The index is 2.85 MB with 150,688 nodes, 88 for each entry. The details grow by about 18 MB, because screens repeat their shared schema. The usage check reads component schemas from the component details. Props then waits for the detail, and the shell model joins the fields onto each record with an `omitted` state until the detail holds them. Effort: Large.
   - **C.** B, but one shared file holds each distinct prop schema and control set by digest. The details grow by about 1.3 MB, and the shared file is about 0.6 MB. The viewer fetches one more file before it shows controls. Effort: Large.
-  - **D.** Keep the index, and raise the index quotas to 32 MiB and 4,194,304 nodes. Each page load then fetches 20.8 MB, 4.4 MB with gzip, and parses it. Effort: Small.
+  - **D.** Keep the index, and raise the index quotas to 64 MiB and 8,388,608 nodes. Each page load of conductive today fetches 20.8 MB, 4.4 MB with gzip, and parses it. At the target a page load fetches about 54 MB. Effort: Small.
+  - **E.** B, and each removed record of the index keeps only its navigation fields. Its views and display details move to the removed detail that the generation already holds. A removed record then costs about 32 nodes and 430 bytes, not about 114 nodes and 1,900 bytes. A pull request that removes 3,500 entries beside 3,500 current entries then fits the ceilings of option C of item 3. The plan review of 2026-11-28 added it. Effort: Large.
 - **Left out:**
   - Omit only the copies on variants, option B of `plans/follow-ups/variant-prop-schema-copies.md`. These copies are 10.07 MB and 1,114,589 nodes, but the index then keeps about 1,048,000 nodes, four times the quota. So it fails the goal.
   - Each reader derives the controls from the prop schema. The sidecar adds Storybook `argTypes` to the derived controls, so the read model must carry the result.
 - **Wider fix:** B. No entry field then grows the index.
 - **Previous examples:** `plans/follow-ups/variant-prop-schema-copies.md`. PR #223 kept a component's usage lists only in its parent detail.
-- **Related:** Item 1: option E also splits the index. Item 3: option D needs higher index quotas there. Item 8: A, B and C need index version 10 and entry detail version 5.
+- **Related:** Item 1: option E also splits the index. Item 2: option E there needs E here. Item 3: options A and D need higher index quotas there. Item 8: A, B, C and E need index version 10 and entry detail version 5.
 - **Recommendation:** B. The index keeps only what navigation needs, and each detail stays complete for the entry that it serves.
 - **Action:** ask the user, because each option changes a format or the receiver quotas, and A, B and C reverse a decision in force.
 
@@ -259,11 +274,11 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Problem:** A pull-request build of conductive against its parent commit wrote 26,070 files and 2,580.5 MB. Its generation held 7,520 before files and 7,520 after files, 823.5 MB, although no view was comparable. The CLI refuses more than 20,000 files before any request.
 - **Impact if no action:** Conductive's pull requests never publish, so its GitHub check never runs.
 - **Root question:** How does a pull-request publication of a large catalogue fit the upload limits, so that its check runs and its comparisons load? The options check of 2026-11-27 replaced the first question, which named snapshot files.
-- **Shared assumptions:** A publication that is above one limit fails as a whole. Option F drops it. The output holds each pane document under the generation. B narrows it, C, G and H drop it for the after side, and D drops it. Snapshot bytes are the composed documents. E drops it.
+- **Shared assumptions:** A publication that is above one limit fails as a whole. Option F drops it. The output holds each pane document under the generation. B narrows it, C, G, H and I drop it for the after side, F drops it when its trigger applies, and D drops it. Snapshot bytes are the composed documents. E drops it.
 - **Options:**
   - **A.** Keep both full sides. Effort: Small.
   - **B.** Write snapshots only for the views of comparable entries, for removed entries, and for each document that a kept document embeds. Write only the resources of the kept documents. This is option C of `plans/follow-ups/unread-comparison-snapshots.md`. A pull request that changes every view still writes both sides. Effort: Medium.
-  - **C.** B, and `mokly publish` writes no after side. The upload exchange then requires a receiver to keep each publication at an origin whose files never change. Mokly Cloud already does. The after pane then reads the current document. `mokly build` keeps the captured after side for generic hosts, and Serve keeps its own. The plan review of 2026-11-28 narrowed C to these hosts. Effort: Large.
+  - **C.** B, and `mokly publish` writes no after side. The upload exchange then requires a receiver to keep each publication at an origin whose files never change. Mokly Cloud already does. The after pane then reads the current document. `mokly build` keeps the captured after side for generic hosts, and Serve keeps its own. The fixture generator and the live smoke then check the real `publish` output, which a refused `publish` leaves in its private directory. The plan review of 2026-11-28 narrowed C to these hosts. Effort: Large.
   - **D.** The cloud builds a large pull request current-only. Its check and its viewer then show no Changes. Effort: Small.
   - **E.** A static build keeps the frame probe in each snapshot document. An after snapshot then equals its current document, and an unchanged before snapshot has the same bytes. The distinct count of item 3 and the blob store keep each such file once. The file count and the path prefixes still double, so the prefix quota of 65,536 holds only about 3,200 entries. The options check of 2026-11-27 added it. Effort: Medium.
   - **F.** When a pull-request build would be above the CLI's file ceiling, the build drops the pane documents, publishes, and warns. The index and the details keep Changes, so the check runs, and the viewer shows each comparison as unavailable.
@@ -271,13 +286,18 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
     - A trigger that sees more limits costs more. Examples are one re-plan without panes after an HTTP 413, or a receiver that states its limits before the build. Under option E of item 3, the CLI does not know the quotas of a free workspace.
     - A ready publication without panes wins every later upload of its commit.
     - It needs a format field, a viewer state with its copy, and a mockup. The options check of 2026-11-27 added it. Effort: Large.
-  - **G.** C, and the rule that the user chose on 2026-10-27. The build writes no before document that equals its after document, and the before pane reads the current document. The five open decisions of `plans/follow-ups/skip-equal-before-snapshots.md` come with it. The options check of 2026-11-27 brought it back. Effort: Large.
-  - **H.** B, and current HTML and its local files get immutable addresses that Browse and the after pane both read, on every host. It changes the address of every view and each reader of `static/mokly-generated/`. The plan review of 2026-11-28 added it. Effort: Large.
-  - **I.** C on every host, and the viewer accepts an after document only when its SHA-256 equals the digest that the build records for that view. A host that rewrites HTML then loses its comparisons. The plan review of 2026-11-28 added it. Effort: Large.
+  - **G.** C, and the rule that the user chose on 2026-10-27. The build writes no before document that equals its after document, and the before pane reads the current document. The five open decisions of `plans/follow-ups/skip-equal-before-snapshots.md` come with it. Its checks of the `publish` output follow C. The options check of 2026-11-27 brought it back. Effort: Large.
+  - **H.** B, and one immutable root holds the whole current tree, with its HTML and its local files, on every host. Browse and the after pane both read it, so relative references keep working. It changes the address of every view and each reader of `static/mokly-generated/`. The plan review of 2026-11-28 added it. Effort: Large.
+  - **I.** B, and no build writes an after document. The generation keeps the after resources and each document that an after document embeds.
+    - The viewer reads the after document from its current address. It accepts the document only when its SHA-256 equals the digest that the detail records for that view.
+    - The viewer resolves the document's addresses against its after address inside the generation, so a replaced stylesheet or image never reaches the pane.
+    - It needs a detail field, SHA-256 code for plain-HTTP origins, and about 1,300 more files at the target. A host that rewrites HTML loses its comparisons, and a host that deletes an old generation can drop a pane's styles.
+    - `mokly build` and `mokly publish` then write one output. The plan review of 2026-11-28 added I and then rewrote it. Effort: Large.
 - **Left out:**
   - A before pane that reads the base commit's own publication. The output must stay complete, and a merge base can have no publication.
   - A snapshot store by content inside the output. The viewer cannot rewrite addresses inside stylesheets, and the receiver already stores each digest once.
   - A second deployment check after the pane's HTML arrives. Its later resource requests still fall outside the check.
+  - A digest of the after HTML alone, with its resources read from the current tree. A deployment can keep the HTML and replace a resource.
 - **Wider fix:** F for the class of builds above a ceiling, as the options check of 2026-11-27 found. H for the class of mixed deployments, as the plan review of 2026-11-28 found.
 - **Previous examples:** `plans/follow-ups/unread-comparison-snapshots.md`, `skip-equal-before-snapshots.md` and `snapshot-resource-copies.md`. When a base fails validation, the CLI already publishes without a comparison, under `docs/protocol/cloud/cloud-build-runner.md`.
 - **Related:** Item 2: its options B and C need C or a later option here. Item 3: E relies on its distinct count. Item 8: C adds an index field for the after source.
@@ -306,7 +326,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
   - A temporary skip of the smoke. The gate then proves no real publish.
 - **Wider fix:** D. Its choice by format prevents the block at each later format change. It compares every format that the receiver gates: the envelope, the marker and the index.
 - **Previous examples:** PR #350 added the published-package smoke on 2026-11-19.
-- **Related:** Item 8: its option E removes this problem, and its other options need an answer here. Item 7: E keeps index 9 publications in the window.
+- **Related:** Item 8: its option E removes this problem, and its other options need an answer here. Item 7: under option E here, the index 9 publications of the window also meet the cutover of item 7.
 - **Recommendation:** D. It ends the block at this and every later format change, and the newest release stays in the required smoke on every commit. B protects the package contents best before the release.
 - **Action:** ask the user, because D changes the rule that the required smoke publishes with the newest npm release, which the user chose on 2026-11-19.
 
@@ -317,22 +337,22 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Category:** Docs or spec.
 - **Location:** `crates/mkc-publications/src/reservation/reserve.rs:68-83`, `docs/protocol/cloud/viewer-host.md:100-124` and `docs/ops/deploy.md:800-803`.
 - **Background:** A ready publication wins every later upload of the same project, commit and config path. The new app viewer reads only the new formats. The 0.18 cutover reset each stable environment, as the user chose on 2026-10-26. The cloud converts no stored publication.
-- **Problem:** After the change, each ready publication from before the cutover shows the viewer's version error. A new upload of the same commit returns that old publication. The screens read and the check render of a kept index 9 publication also fail.
+- **Problem:** After the change, each ready publication from before the cutover shows the viewer's version error. A new upload of the same commit returns that old publication. The screens read and the check render of a kept index 9 publication also fail, because they share the index reader of upload admission. Ready publications never expire, under `docs/protocol/cloud/retention.md`.
 - **Impact if no action:** A project can republish, get a success result, and still see a catalogue that the viewer cannot open.
 - **Root question:** What happens to the projects, the stored publications and their links when a format change leaves the cloud unable to read the stored catalogues?
 - **Options:**
   - **A.** Keep old publications as history, and publish a new commit for each active branch. Document what old links show. The screens read and the check render of old publications still fail. Effort: Medium.
   - **B.** Expire the incompatible ready publications in a controlled cutover, and republish their commits. It changes retention and the old addresses. Effort: Large.
-  - **C.** Serve a matching viewer for old publications until they retire. Old links keep working, and the cloud serves two viewer versions. Effort: Large.
+  - **C.** Serve a matching viewer for old publications. They never expire, so the second viewer stays, and each later format change adds one more. It needs a registry copy of an older viewer or a second app deployment, which the workspace-use decision of `docs/protocol/cloud/mokly-artifact-compatibility.md` forbids. Old links show their catalogue, but the screens read and the check render still fail. Effort: Large.
   - **D.** Reset each stable environment, as the 0.18 cutover did. Then republish the dogfood catalogue, recreate the labelled previews, and run the preview and publish proofs. The reset deletes every account, workspace, project, token and publication. Stripe keeps its live subscriptions. Effort: Small.
-  - **E.** Make the format part of the winner rule. A ready winner of an older format then loses to an upload of the same commit in the current format. It needs a migration, and it changes two cloud pages. Effort: Large.
+  - **E.** Make the format part of the winner rule. A ready winner of an older format then loses to an upload of the same commit in the current format. Only the winner changes: an old link that nobody republishes keeps the version error. It needs a migration, and it changes two cloud pages. Effort: Large.
   - **F.** A, and the version error of an older catalogue links the newest catalogue of its branch. It needs a mockup and product copy. Effort: Large.
   - **G.** A one-time job converts each stored publication to the new formats. It reverses the decision that the cloud converts no stored publication, and each later format change needs its own converter. Effort: Large.
 - **Left out:** Republish an unchanged commit. It returns the same old publication.
-- **Wider fix:** C. A matching viewer for each stored publication protects old links across later cutovers.
+- **Wider fix:** C, with the screen and check facts stored apart from the index. Old links and their server reads then survive later cutovers.
 - **Previous examples:** The 0.18 cutover reset each stable environment, under `docs/ops/mokly-release-cutover.md`.
 - **Related:** Item 8: the cutover happens under each of its options. Item 6.
-- **Recommendation:** D. It applies the reset that the decision in force and the 0.18 precedent give, and it leaves no catalogue that the cloud cannot read. C protects existing links best.
+- **Recommendation:** D. It applies the reset that the decision in force and the 0.18 precedent give, and it leaves no catalogue that the cloud cannot read. C keeps old links in the viewer, but not their server reads. Under A, C, E or F, the conditional question of Implementation Order decides those reads.
 - **Action:** ask the user, because D deletes every account of each stable environment, and each other option changes a requirement in force.
 
 ### 8. A format change breaks the cloud until a release
@@ -342,12 +362,12 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Category:** Process.
 - **Location:** `crates/mkc-mokly-contract/src/index.rs:30-37`, `crates/mkc-build-sandbox/src/versions.rs:6` and `docs/ops/mokly-release-cutover.md`.
 - **Background:** Each push to `main` deploys the cloud with the workspace packages. The receiver accepts one index number, and the app's viewer reads one detail number. Customers and the cloud build runner publish with released CLIs. The runner uses the CLI that each repository installs, or the newest release. The rule in `docs/protocol/cloud/mokly-artifact-compatibility.md`, Mokly Changes, says that a protocol addition that the cloud requires must already exist in a published release. Compact JSON and the quota changes need no new format number.
-- **Problem:** From the merge of index version 10, the receiver refuses each released CLI that writes index version 9 with HTTP 426. Each project fails until it upgrades its own CLI to a release that writes index version 10. Options A to D break the release rule above for that window.
+- **Problem:** From the merge of index version 10, the receiver refuses each released CLI that writes index version 9 with HTTP 426. Each project fails until it upgrades its own CLI to a release that writes index version 10. Options A to D break the release rule above for that window. In that window the API's 426 text tells publishers to install 0.18.0, which the receiver refuses. A cloud build that gets HTTP 426 ends as `upload-rejected`, whose card says to check the output.
 - **Impact if no action:** Every cloud publication fails in that window, and each separate format release adds another window and another cutover.
 - **Root question:** How do the format changes reach the cloud and each project with a released CLI, so that publications fail for the shortest time? The options check of 2026-11-27 replaced the first question, because the refusal lasts until each project upgrades, not only until the release.
 - **Options:**
   - **A.** One branch and one pull request for every milestone, then a release. Compact JSON and the quotas wait for the format work. Effort: Small.
-  - **B.** Two pull requests. The first carries the documentation, compact JSON and the quotas. The second carries every format change, and a release follows it. Effort: Small.
+  - **B.** Two pull requests. The first carries the documentation, compact JSON and the quotas. The second carries every format change, and a release follows it. The 426 text then names the last release that the receiver refuses. An example is "Update Mokly to a release newer than 0.22.0, then publish again." It changes the text of `docs/protocol/cloud/rest-api-surface.md`, and A, C and D take the same text. Effort: Small.
   - **C.** One pull request for each milestone, and no release until the last format change merges. The cloud refuses released CLIs from the first format merge to that release. Effort: Medium.
   - **D.** One pull request and one release for each format change. Each takes its own index number and its own cutover. Effort: Large.
   - **E.** Stage the format change across a release. The receiver and the app viewer read both format families until the first release that writes the new one. A later pull request then removes the old family. Released CLIs keep publishing, and the release rule holds. It reverses the decision against two format families, and it adds a third pull request. The plan review of 2026-11-28 added it. Effort: Large.
@@ -355,7 +375,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Wider fix:** None. The grouping is a process choice.
 - **Previous examples:** Release 0.18.0 shipped index version 9 and entry detail version 4 together, from PR #224.
 - **Related:** Items 4 and 5 hold the format changes. Item 6: E removes its problem. Item 7 holds the cutover.
-- **Recommendation:** B. Compact JSON and the quotas help every catalogue at once, and the format changes need one cutover. The first pull request alone does not let conductive publish, because its compact index is still 20.8 MB with 2,162,642 nodes. E keeps the release rule, at the cost of code that reads two format families for one release.
+- **Recommendation:** B. Compact JSON and the quotas help every catalogue at once, and the format changes need one cutover. The first pull request alone does not let conductive publish, because its compact index is still 20.8 MB with 2,162,642 nodes. E keeps the release rule and the 426 text, at the cost of code that reads two format families for one release.
 - **Action:** ask the user, because no option is clearly best: they trade early savings, review size and refusal time. A to D also break a rule in force.
 
 ### 9. No build time target
@@ -443,14 +463,17 @@ Each call is mine, made on the date it names under the decision test. Each one h
 - 2026-11-27: One canonical form serves every JSON file of the output. These files are the index, the details, the generation details, the removed previews, the deployment file, the marker and the upload manifest. Reason: one encoder. Today the marker and the manifest use pretty output at `crates/mokly-model/src/output/artifact.rs:64` and `crates/mokly-model/src/output/upload.rs:128`.
 - 2026-11-27: Compact JSON changes no key and no HTML byte. Reason: `propsKey`, instance keys and slot keys hash compact `serde_json` bytes in `crates/mokly-model/src/material.rs:19-42`.
 - 2026-11-28: Instance props stay inline. Reason: once views share their records, a props table in each detail saves only about 4.1 MB. Inline props keep `CatalogueUsage` as the render answer, the frame adapters and inspection read it. The decision of 2026-11-27 covers "bound or deduplicate the usage records".
-- 2026-11-27: A view whose usage record equals an earlier view of the same detail names that view instead of a copy. The reference exists only in the detail's own view type. The viewer resolves it before it gives a usage record to a frame or to inspection. Reason: 781 of 1,721 entries have four equal views, and the change saves 178.6 MB.
+- 2026-11-27: A view whose usage record equals an earlier view of the same detail names that view instead of a copy. Reason: 781 of 1,721 entries have four equal views, and the change saves 178.6 MB. On 2026-11-28 the plan review moved the reference into the encoded detail only. The detail encoder, which `build` and Serve share, names the earliest equal ready view, and every reader resolves the reference when it decodes a detail. So each in-memory view holds its own `CatalogueUsage`, and no reader or per-view writer can pick a wrong record.
 - 2026-11-27: The detail omits the instance `source`. Reason: no reader of a detail uses it, and the core only validates it in `crates/mokly-model/src/usage_context.rs:76-81`. It saves 12.9 MB after view sharing.
 - 2026-11-27: A detail format change ships in the same release window as the index change. Reason: the receiver gates only the index number. Without an index change, a detail from an older CLI reaches the app's viewer, which reads only the new number. When the answers change the detail without the index, the receiver also gates the detail number.
 - 2026-11-27: The format milestones start after the bounded-memory pull request merges into `main`. Reason: both change `CatalogueAssembler`, the detail spool and `Inventory`. Compact JSON can merge before or after that pull request, because it changes only the encoder and the fixtures.
-- 2026-11-28: The cloud build runner's floor, `MIN_MOKLY_VERSION`, rises only after the first release that writes index version 10, together with its recovery texts. Reason: the toolchain gate requires the workspace version to meet the floor, and versions advance only through the release pull request.
-- 2026-11-28: Preview capture, the image smoke and the cloud script tests read one generated record of the versions that the cloud receiver accepts. Reason: each copies the index version by hand today, so capture would refuse the format pull request's own preview.
+- 2026-11-28: The cloud build runner's floor, `MIN_MOKLY_VERSION`, rises only after the first release that writes index version 10, together with its recovery texts. Reason: the toolchain gate requires the workspace version to meet the floor, and versions advance only through the release pull request. The API's 426 text is the exception: it changes with the receiver, as item 8 proposes.
+- 2026-11-28: Preview capture, the image smoke and the cloud script and infrastructure tests read one generated record of the versions that the cloud receiver accepts. Reason: each copies the index version by hand today, so capture would refuse the format pull request's own preview. These readers are all on AGPL paths.
+- 2026-11-28: The index and detail fixtures get names without a format number, such as `catalogue.json` and `entry-details.json`. Reason: PRs #217, #223 and #224 each renamed them by hand, and a reader that a list misses then breaks. The Mokly release smoke, an MIT path, then needs no record that the AGPL contract crate writes.
+- 2026-11-28: The shell model joins the moved fields onto each record with an `omitted` state until the route's detail holds them. Reason: Props must keep its loading line and **Try again** while the detail loads or fails, and the model already does the same for `usage`.
+- 2026-11-28: Under option C or G of item 5, the fixture generator and the live smoke check the real `publish` output. A refused `publish` leaves it in its private directory. Reason: the two commands then write different outputs, and each check must prove the bytes of the command that it checks.
 - 2026-11-27: The Mokly-owned HTML bytes stay out of this plan under the recommended answers. These are the marker `path` and `props` attributes, 34.2 MB, the frame probe templates, 32.6 MB, and the copies of collected style blocks, 43.2 MB. Reason: option C of item 3 gives the target its room without them. Under option A of item 1 they become a milestone. Inline SVG stays the consumer's markup.
-- 2026-11-27: Verification uses the workspace CLI against a local receiver before the merge, and the hosted cloud after the release. Reason: a released CLI does not exist until after the merge. On 2026-11-28 a one-time Plan-time proof at the target joined it.
+- 2026-11-27: Verification uses the workspace CLI against a local receiver before the merge, and the hosted cloud after the release. Reason: a released CLI does not exist until after the merge. On 2026-11-28 a one-time Plan-time proof at the target joined it. Each proof uses a fresh project and an unpublished head, so `missing` holds every declared digest except those of the Plan-archive files.
 
 ## Replaced Ways
 
@@ -468,15 +491,18 @@ Each milestone also searches for every other consumer of its old way, and it mov
 - Index records carry `propSchema`, `props` and `controls` → the detail carries them. Moved and deleted in Milestone 5. Consumers:
   - `crates/mokly-model/src/projection_records.rs`, the public index types and readers, `usage_schemas.rs` and `detail_context.rs`.
   - The base projections of `mokly-compare`.
-  - The viewer's `control_values.ts`, `component_controls.tsx`, `component_controls_panel.tsx`, `component_control_fields.tsx`, `component_controls_state.ts`, `workspace_props.tsx` and `public_compared.ts`.
-  - The reader fixtures under `docs/protocol/fixtures/`, and the generated types.
+  - The viewer's `control_values.ts`, `component_controls.tsx`, `component_controls_panel.tsx`, `component_control_fields.tsx`, `component_controls_state.ts`, `workspace_props.tsx`, `public_compared.ts` and `packages/viewer/src/catalogue/shell_model.ts`, and `packages/viewer/tests/props_empty_states.test.tsx:196-205`.
+  - The reader fixtures under `docs/protocol/fixtures/`, the generated types, and `docs/protocol/mokly-component-controls.md`.
 - Index version literals in the capture and smoke tools → one generated record of the receiver's versions. Moved and deleted in Milestone 5. Consumers:
   - `infra/scripts/catalogue_capture_plan.py:146-147` and `infra/scripts/smoke-images.py:43`.
   - `scripts/cloud/_tests_/build_upload_fixture_tests.py:38` and `scripts/cloud/_tests_/publication_smoke_fixture_tests.py:37`.
-- One usage record for each view → a view can name an earlier view's record, in the detail's own view type. Moved and deleted in Milestone 6. Consumers:
-  - The build's `crates/mokly-static/src/assembly.rs:121`, and Serve's `crates/mokly-server/src/evidence.rs` and `replacement.rs`.
-  - `crates/mokly-model/src/usage_context.rs` and `detail_validation.rs`.
-  - Each viewer reader of `view.usage` in a detail.
+  - `infra/tests/catalogue_capture_support.py:156`, `infra/tests/test_catalogue_capture_receiver.py:32`, `infra/tests/test_catalogue_capture_plan.py:49-55` and `infra/tests/test_smoke_image_publication.py:19`.
+  - The refused versions of `scripts/cloud/publication_smoke_uploads.py:100-106`.
+- Fixture names with a format number → names without one. Moved and deleted in Milestone 5. Consumers: `scripts/release/smoke_browser.mjs:13`, `xtask/scripts/mokly-fixtures.mjs:105`, `xtask/scripts/mokly-fixture-artifacts.mjs:197`, the reason at `docs/protocol/mokly-format-versions.md:32-35`, and every other reader of the versioned names. A search on 2026-11-28 found 120 such files.
+- One usage record for each view → a view of the encoded detail can name an earlier view's record. Moved and deleted in Milestone 6. Consumers:
+  - The detail encoder that `build` and Serve share, and the Rust and viewer detail readers, which resolve each reference on decode.
+  - The per-view writers stay unchanged: the build's `crates/mokly-static/src/assembly.rs:121`, `crates/mokly-compare/src/projection_removed.rs:99`, and Serve's `crates/mokly-server/src/evidence.rs` and `replacement.rs`.
+  - The in-memory readers stay unchanged too: `crates/mokly-model/src/usage_context.rs`, `detail_validation.rs` and `projection_usage.rs`, and `crates/mokly-compare/src/projection_inputs.rs:35`.
 - One `usedBy` or `affected` link for each instance and view → the shape of item 10. Moved and deleted in Milestone 6. Consumers:
   - `crates/mokly-model/src/projection_usage.rs` and Serve's `crates/mokly-server/src/changes_detail.rs`.
   - `crates/mokly-compare/src/projection_workspace.rs`, `projection_removed.rs` and `detail_validation.rs`.
@@ -484,14 +510,16 @@ Each milestone also searches for every other consumer of its old way, and it mov
 - After snapshots of `mokly publish` → current documents for the after pane. Moved and deleted in Milestone 7. Consumers:
   - `crates/mokly-static/src/comparison_files.rs` and `comparison_output.rs`.
   - The viewer's pane loader, the browser specs of comparisons, and the cloud smoke `scripts/cloud/viewer_index_smoke.py:45-47`.
+  - The fixture generator's `verifyExport` at `xtask/scripts/mokly-fixture-artifacts.mjs:57-74`, the live smoke's `_served_build` at `scripts/cloud/publication_smoke_cli.py:95-100`, `tests/static_changes_publication.test.ts:68-75` and `tests/static_publication_comparison.test.ts:77-107`.
+  - `docs/protocol/cloud/mokly-fixture-regeneration.md:52-59`, `crates/mkc-mokly-contract/fixtures/README.md:53-54` and `docs/ops/publish-smoke.md:117-118`, which say that the upload equals the standalone build.
 - Snapshots and resources of every view → those of the read views only. Moved and deleted in Milestone 7. Consumers: the same files.
 
 ## Implementation Order
 
-Under the recommended answers, the work reaches `main` in two pull requests, as item 8 proposes.
+This plan-only pull request merges first, after the user answers and the rewrite below. Under the recommended answers, the work then reaches `main` in two implementation pull requests, as item 8 proposes.
 
-- The first pull request is the one of this plan. It carries Milestones 1 to 4. Milestones 2 and 3 can run in parallel workspaces after Milestone 1, because they change different crates. If Milestone 3 changes a contract fixture, it merges after Milestone 2.
-- The second pull request starts from `main` after the first one merges, and after the bounded-memory pull request merges. Milestones 5, 6 and 7 run one after the other, because each changes the detail type and the fixtures. Milestones 8 and 9 close it.
+- The first implementation pull request carries Milestones 1 to 4. Milestones 2 and 3 can run in parallel workspaces after Milestone 1, because they change different files. If Milestone 3 changes a contract fixture, it merges after Milestone 2.
+- The second implementation pull request starts from `main` after the first one merges, and after the bounded-memory pull request merges. Milestones 5, 6 and 7 run one after the other, because each changes the detail type and the fixtures. Milestones 8 and 9 close it.
 
 A rule for each milestone that changes a Rust-owned shape or the producer output:
 
@@ -505,25 +533,35 @@ After the user answers, and before Milestone 1 starts:
 - The working agent rewrites the milestones for the chosen combination of answers. It keeps each TODO that an answer needs. It moves each shared TODO to a milestone that the answers keep. Such TODOs are the number raise, the generated types, the fixtures, the upgrade guide and the cutover. It rewrites each `Depends on:` line.
 - When an answer adds a screen state or product copy, the plan gets a first mockup milestone and a tagged UI milestone. Option F of item 5, option E of item 3, option F of item 7 and options B and E of item 10 do so.
 - The working agent sets the pass conditions of Milestone 8 for the chosen target.
+- Each pull request ends with a closing milestone. It runs the gate, the commit and the push, and the review, and then it opens the pull request. Each pull request except the last keeps this plan. The first milestone of each later pull request depends on the merge of the earlier one into `main`. It also depends on the release when the answer puts a release between them. The first commit of each later pull request writes its branch into the status line.
 - A fresh plan review with the `implementation-review` skill checks the rewritten plan.
+
+Under option A, C, E or F of item 7, one more question goes to the user. How do the screens read and the check render of a kept index 9 publication answer? The options are these:
+
+- They keep failing, and each option of item 7 states it.
+- `listScreens` answers 503 `operation-unavailable`, as for a current-only publication, and a rerequest gives the neutral check. Medium.
+- The stored reads accept the old index version beside upload admission. Medium.
+- Admission stores the screen and check facts apart from the index, and a backfill before the format change fills them for old publications. Large.
 
 ## Milestone 1: Documentation and protocol
 
-Depends on: none
+Depends on: the merge of this plan-only pull request, after the user answers
 
 Write the chosen requirements before any code changes. Each page whose behaviour waits gets a status line that links the milestone heading that builds it.
 
 - [ ] Read the `documentation` skill.
 - [ ] State the compact canonical form and the answer to item 11 in `docs/protocol/mokly-catalogue-serialization.md` and `docs/protocol/mokly-export-delivery.md`.
-- [ ] State the counting rule and the ceilings of item 3 in `docs/protocol/cloud/publication-upload-validation.md`, `docs/protocol/mokly-upload-validation.md` and `docs/protocol/mokly-export-ownership.md:118`. State the lower limits of preview capture in `docs/protocol/cloud/preview-capture.md`. Update the memory budget of `docs/ops/environment.md`.
+- [ ] State the counting rule and the ceilings of item 3 in `docs/protocol/cloud/publication-upload-validation.md`, `docs/protocol/mokly-upload-validation.md` and `docs/protocol/mokly-export-ownership.md:118`. State the lower limits of preview capture in `docs/protocol/cloud/preview-capture.md`. Rewrite the marker sentence at `docs/protocol/cloud/publication-upload-validation.md:39-42` for the separate file and marker bounds. Update the memory budget of `docs/ops/environment.md`.
 - [ ] Add the HTTP 426 row for an unsupported index version to `docs/protocol/mokly-upload-validation.md`, as option D of `plans/follow-ups/upload-plan-index-version-status.md` says. Delete that item.
 - [ ] State index version 10 and entry detail version 5 in `docs/protocol/mokly-format-versions.md` and `docs/protocol/cloud/mokly-artifact-compatibility.md`. State the answer to item 8 beside the release rule of that page.
 - [ ] Replace the decision in force of `docs/protocol/mokly-shell-delivery.md:42-44`, which chose compression over a smaller index format. Give the answer to item 4 and its reason.
-- [ ] State the index records and the detail fields of item 4 in `docs/protocol/mokly-catalogue.md` and `docs/protocol/mokly-shell-delivery.md`.
+- [ ] State the index records and the detail fields of item 4 in `docs/protocol/mokly-catalogue.md`, `docs/protocol/mokly-shell-delivery.md` and `docs/protocol/mokly-component-controls.md`. Lines 26 and 42 of the last page put the fields in the index.
 - [ ] State the shared view records, the omitted `source` and the answer to item 10 in `docs/protocol/mokly-component-usage-records.md`, `docs/protocol/mokly-shell-delivery.md` and `docs/protocol/mokly-live-evidence.md`.
 - [ ] State the snapshot rules of item 5 in `docs/protocol/mokly-changes-serving.md`, `mokly-export-delivery.md`, `mokly-comparison-panes.md`, `mokly-artifact-paths.md`, `mokly-comparison-serving.md`, `mokly-selected-comparisons.md` and `docs/protocol/cloud/catalogue-hosting.md`. Under option C, state the receiver rule of an immutable origin in `docs/protocol/mokly-upload-exchange.md`.
 - [ ] State in `docs/protocol/cloud/cloud-build-runner.md` that the floor keeps its value until the first index 10 release ships.
-- [ ] State the answer to item 6 in `docs/protocol/cloud/mokly-fixture-regeneration.md` and `docs/ops/publish-smoke.md`.
+- [ ] State the answer to item 6 in `docs/protocol/cloud/mokly-fixture-regeneration.md` and `docs/ops/publish-smoke.md`. Under option C or G of item 5, also state there and in `crates/mkc-mokly-contract/fixtures/README.md` that the checks read the real `publish` output.
+- [ ] Under options A to D of item 8, state the new 426 text in `docs/protocol/cloud/rest-api-surface.md:147`, with a status line.
+- [ ] Change the reason at `docs/protocol/mokly-format-versions.md:32-35` that each raise renames the fixtures. The decision there keeps its choice.
 - [ ] Add the cutover of item 7 to `docs/ops/mokly-release-cutover.md`. Its publish proof needs the first release that writes index version 10.
 - [ ] Update every other protocol page that names index version 9 or entry detail version 4, each with a status line. A search on 2026-11-27 found 30 pages and READMEs that name them. The READMEs and the user guides change with the code in Milestones 5 to 7.
 - [ ] Update each follow-up item that names a decision or a section that this milestone changes, as the `plans` skill says. Start with `compact-json-output.md`, `variant-prop-schema-copies.md`, `unread-comparison-snapshots.md`, `snapshot-resource-copies.md`, `skip-equal-before-snapshots.md`, `embedded-document-closures.md` and `upload-quotas-not-revisited.md`.
@@ -541,6 +579,7 @@ Every JSON file of the output loses its indentation. No format number changes. E
 - [ ] Write the marker and the upload manifest in the same form.
 - [ ] Hash the bytes that the answer to item 11 names for each detail id.
 - [ ] Update each test that pins pretty bytes, and `tests/helpers/static_identity.ts:32-49`. Add a regression test that a canonical document has no whitespace between its tokens.
+- [ ] Give `crates/mkc-mokly-contract/src/_tests_/json_numbers_tests.rs` explicit JSON input with the required number spellings, such as `3e0` and `9.0`. Its envelope case asserts `schema_version` 3 and `pull_request` `Some(2)`. Show that each case fails when the reader refuses a spelling.
 - [ ] Run `cargo xtask mokly-fixtures`, and commit its output.
 - [ ] Build `examples/basic` and conductive, and record their sizes under `.context/large-catalogue-publication/`.
 - [ ] Delete `plans/follow-ups/compact-json-output.md`.
@@ -555,31 +594,37 @@ The receiver counts each distinct file once, and each ceiling follows the target
 - [ ] Read the `rust` and `testing` skills.
 - [ ] Sum the declared bytes over distinct digests in `crates/mkc-mokly-contract/src/bundle_validation.rs`.
 - [ ] Give the declared-bytes quota its own number in `limits.rs`. Today the check reuses the plan-archive quota, `limits.decompressed()`.
-- [ ] Set the ceilings of item 3 in `limits.rs` and the JSON node budgets in `json_guard.rs`. Derive the prefix quota and the marker byte quota from the file ceiling.
+- [ ] Set the ceilings of item 3 in `limits.rs` and the JSON node budgets in `json_guard.rs`. Derive the prefix quota and the marker byte quota from the file ceiling, and cap the marker quota at the 64 MiB file ceiling.
 - [ ] Give the plan-archive scan of `crates/mkc-mokly-contract/src/tar_scan.rs:173` its own member count, apart from the file ceiling.
 - [ ] Set the file ceiling in `crates/mokly-model/src/output/validation.rs`, and check that `mokly publish` applies it.
 - [ ] Update the test receiver under `tests/helpers/receiver/`, the case at `scripts/cloud/publication_smoke_uploads.py:79-82`, and the allocation limit at `crates/mkc-mokly-contract/tests/memory.rs:56`.
 - [ ] Keep the lower limits of preview capture at `infra/scripts/catalogue_capture_plan.py:17-18`.
 - [ ] Add a regression test for each new bound, and one that a repeated file counts once.
 - [ ] Measure the API with a synthetic upload at the new bounds, with conductive's nested path layout. It passes when the API stays within its 1 GiB limit and the upload ends within 60 minutes.
-- [ ] Run the one-time Plan-time proof on the marker limits. Scale today's conductive marker, without its after-side entries, to the target with 25% room, beside a small stand-in index. Each copied file gets its own digest. The receiver must accept the Plan with every file listed as missing. Record the first larger copy that it refuses.
+- [ ] Run the bounded case of the one-time Plan-time proof. It isolates the file, prefix and marker limits from the byte limit.
+  - Scale today's conductive paths, without the after side, to the target with 25% room. Give each copied file its own digest and a small declared size.
+  - Declare `mokly-upload.json`, and give the stand-in index the base commit and the comparison generation of the marker.
+  - Use a fresh project and an unpublished head. Then `missing` must hold every declared digest except those of the Plan-archive files.
+  - Record the first larger copy that the receiver refuses, and which limit refused it.
 - [ ] Record the results under `.context/large-catalogue-publication/`.
 - [ ] Delete `plans/follow-ups/upload-quotas-not-revisited.md`.
 
-## Milestone 4: First pull request
+## Milestone 4: First implementation pull request
 
 Depends on: 1, 2 and 3
+
+This milestone closes the first implementation pull request.
 
 - [ ] Run the targeted tests and the complete gate, `cargo xtask check`.
 - [ ] Commit with Conventional Commits, and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Then fix the `fix now` findings, and record follow-up items under `plans/follow-ups/` for the rest. Re-review once, and report.
 - [ ] Keep this plan, because the work spans two pull requests.
-- [ ] Record a follow-up item for each problem outside the scope that the reviews of 2026-11-27 and 2026-11-28 found. The CLI reads no rejection body, and the API gives every `TooLarge` refusal one reason, so an HTTP 413 answer names no limit.
-- [ ] Update the description of this pull request with the decisions, the design calls and their dates.
+- [ ] Record a follow-up item for each problem outside the scope that the reviews of 2026-11-27 and 2026-11-28 found. The review folder of the plan branch lists them. The first is this one. The CLI reads no rejection body, and the API gives every `TooLarge` refusal one reason, so an HTTP 413 answer names no limit.
+- [ ] Open the first implementation pull request into `main`. Its description gives the decisions, the design calls and their dates. The user merges it.
 
 ## Milestone 5: Entry fields leave the index
 
-Depends on: 4, and the bounded-memory pull request merged into `main`
+Depends on: 4, the merge of the first implementation pull request into `main`, and the merge of the bounded-memory pull request into `main`
 
 Index version 10 and entry detail version 5 start here. Each detail of a screen or a component carries its prop schema, its saved props and its controls. Expected result for conductive: the index falls from 20.8 MB and 2,162,642 nodes to 2.85 MB and 150,688 nodes. The details grow by about 18 MB, so the total stays about the same.
 
@@ -589,10 +634,12 @@ Index version 10 and entry detail version 5 start here. Each detail of a screen 
 - [ ] Read the component schemas from the component details in `usage_schemas.rs` and `detail_context.rs`. Update the strict and the lenient readers.
 - [ ] Update the base projections of `mokly-compare` and each Serve route that reads the fields.
 - [ ] Run `cargo xtask generate-types`. Then read the control target from the detail in the viewer, and move each viewer consumer of the old fields.
+- [ ] Join the moved fields onto each record in `packages/viewer/src/catalogue/shell_model.ts`, with an `omitted` state until the detail holds them. Props then shows its loading line and **Try again** for a screen with saved props. Add a case where such a detail loads and then fails, and change the rule of `packages/viewer/tests/props_empty_states.test.tsx:196-205`.
 - [ ] Accept only index version 10 in `crates/mkc-mokly-contract/src/index.rs`, and update its tests and its corpus.
-- [ ] Give preview capture, the image smoke and the cloud script tests one generated record of the versions that the cloud receiver accepts. Write it from the contract crate, and move the version checks of the Replaced Ways list to it.
+- [ ] Give preview capture, the image smoke, and the cloud script and infrastructure tests one generated record of the versions that the cloud receiver accepts. Write it from the contract crate, and move the version checks of the Replaced Ways list to it.
 - [ ] Apply the answer to item 6 to the published-package smoke at `scripts/cloud/publication_smoke_cli.py:74-79`.
-- [ ] Rename the fixture names in `xtask/scripts/mokly-fixtures.mjs:105` and `xtask/scripts/mokly-fixture-artifacts.mjs:197`. Rename and rewrite the reader fixtures under `docs/protocol/fixtures/`. Run `cargo xtask mokly-fixtures`.
+- [ ] Under options A to D of item 8, change the 426 text with the receiver at `crates/mkc-api/src/upload_error.rs:23` and `crates/mkc-api/README.md:159`. Change its tests at `crates/mkc-api/src/_tests_/upload/plan_tests.rs:162` and `scripts/cloud/publication_smoke_uploads.py:76` and `:105`.
+- [ ] Give the index and detail fixtures names without a format number, such as `catalogue.json` and `entry-details.json`. Move each reader of the old names once, also `scripts/release/smoke_browser.mjs:13`, `xtask/scripts/mokly-fixtures.mjs:105` and `xtask/scripts/mokly-fixture-artifacts.mjs:197`. Rewrite the reader fixtures under `docs/protocol/fixtures/`. Run `cargo xtask mokly-fixtures`.
 - [ ] Search for every other consumer of the old fields and the old numbers, and move it.
 - [ ] Update each README that names index version 9 or entry detail version 4.
 - [ ] Measure the index of conductive: its bytes and its nodes.
@@ -606,10 +653,12 @@ Depends on: 5
 Expected saving for conductive under option D of item 10: about 264 MB. The details fall from about 432.2 to about 168.2 MB. Under option F they fall to about 220.2 MB.
 
 - [ ] Read the `rust`, `shared-types`, `typescript` and `testing` skills.
-- [ ] Write the shared view records and the omitted `source` in the detail projection. Keep instance props inline. Keep the view reference in the detail's own view type, so that `CatalogueUsage` keeps its shape.
+- [ ] Write the omitted `source` in the detail projection, and keep instance props inline.
+- [ ] Write the view references in the detail encoder that `build` and Serve share. It names the earliest equal ready view. Resolve each reference in the Rust and viewer detail readers when they decode a detail, so that each in-memory view keeps its own `CatalogueUsage`.
+- [ ] Add one round-trip test in Rust and one in TypeScript. In each, the first view differs from the second, and a later view names the second. Assert the exact resolved record of each view.
 - [ ] Write the usage lists that item 10 chooses, in `projection_usage.rs` and Serve's `changes_detail.rs`. Write the same shape for `affected` and for removed entries in `crates/mokly-compare/src/projection_workspace.rs` and `projection_removed.rs`.
 - [ ] Check the new shapes in `usage_context.rs`, `detail_validation.rs` and the lenient readers.
-- [ ] Run `cargo xtask generate-types`. Then give the viewer one reader that resolves a view's usage record from its detail. The render answer, the frame adapters and inspection keep reading `CatalogueUsage`.
+- [ ] Run `cargo xtask generate-types`. The render answer, the frame adapters and inspection keep reading `CatalogueUsage`.
 - [ ] Move the usage rows of `workspace_usage.tsx` and `workspace_panel.tsx` to the chosen list shape. Move the assertion of mixed eligibility at `packages/viewer/tests/usage_rows.test.ts:88` with them.
 - [ ] Run `cargo xtask mokly-fixtures`, and update the reader fixtures.
 - [ ] Measure the details of conductive.
@@ -628,6 +677,7 @@ A current-only build does not change. Expected saving for conductive: a pull req
 - [ ] Load the after pane from the current document where the index says so, in the viewer. Keep Serve's captured after side.
 - [ ] Test an empty selection and a nested embed with a fixture, because conductive has no embed.
 - [ ] Update the cloud smoke at `scripts/cloud/viewer_index_smoke.py:45-47`, which expects after files.
+- [ ] Under option C or G of item 5, capture the real `publish` output. A refused `publish` keeps it in its private directory, as `planReceiver(426)` in `xtask/scripts/mokly-fixture-upload.mjs` already allows. Feed it to `verifyExport` in `xtask/scripts/mokly-fixture-artifacts.mjs` and to `_served_build` in `scripts/cloud/publication_smoke_cli.py`. Move `tests/static_changes_publication.test.ts:68-75` and `tests/static_publication_comparison.test.ts:77-107` with them. The build tests keep checking the after side of `mokly build`.
 - [ ] Run each changed browser spec of comparisons 10 times, and record the pass count.
 - [ ] Run `cargo xtask generate-types` and `cargo xtask mokly-fixtures`.
 - [ ] Delete `plans/follow-ups/unread-comparison-snapshots.md` and `snapshot-resource-copies.md`. Narrow `skip-equal-before-snapshots.md` to the equal before documents of comparable entries. Update `embedded-document-closures.md`, whose lines 42-44 describe static comparisons.
@@ -640,9 +690,10 @@ Depends on: 7
 
 - [ ] Build conductive at `3371d05f` with the workspace CLI, current-only, and record the output.
 - [ ] Add one local commit that changes `components/common/icon-button` and the wrapper of conductive's renderer, `docs/mockups/src/render.tsx`, so that every view gets a before pane. Build it with Changes against its parent.
-- [ ] Publish each case cold to an empty project of a local receiver, as the interactive local procedure of `docs/ops/publish-smoke.md` says. `mokly publish` builds its own output, so the measurements come from the builds above.
+- [ ] Publish each case cold to a fresh project of a local receiver, as the interactive local procedure of `docs/ops/publish-smoke.md` says. Measure the `publish` output that the capture of Milestone 7 keeps, not the standalone builds.
 - [ ] Require a before pane for every view of the published index. Require a marker entry for each pane document, and a successful load of each pane file.
-- [ ] Run the one-time Plan-time proof on the whole new output. Scale its marker and its index to the target of item 2 with 25% room. The receiver must accept the Plan with every file listed as missing. Record the first larger copy that it refuses.
+- [ ] Run the target case of the one-time Plan-time proof on the captured `publish` output. Scale its marker and its index to the target of item 2 with 25% room, with a fresh project and an unpublished head. `missing` must hold every declared digest except those of the Plan-archive files. Record the first larger copy that the receiver refuses.
+- [ ] Give each target of item 2 its own acceptance case. Under its option E, add a pull request that removes every entry.
 - [ ] Record the declared and the distinct bytes, the files, the prefixes, the index bytes and nodes, the build time and the peak RSS. Compare them with the target of item 2.
 - [ ] Open both catalogues in the viewer. Check Browse, the Props panel, Used by and each comparison mode. Save screenshots under `.context/large-catalogue-publication/`.
 
@@ -653,6 +704,8 @@ Depends on: every other milestone
 - [ ] Run the targeted tests and the complete gate, `cargo xtask check`.
 - [ ] Commit with Conventional Commits, and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Then fix the `fix now` findings, and record follow-up items under `plans/follow-ups/` for the rest. Re-review once, and report.
+- [ ] Dispatch `.github/workflows/release-check.yml` on the branch once, and fix each failure. It runs the release smoke that the gate never runs.
+- [ ] Under options A to D of item 8, check that no release came out after the release that the 426 text names.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates. It also gives a permalink to this plan and the follow-up items that the change adds.
 
@@ -661,8 +714,10 @@ Depends on: every other milestone
 - [ ] Release the format changes. The user merges the release pull request.
 - [ ] Raise `MIN_MOKLY_VERSION` in `crates/mkc-build-sandbox/src/versions.rs` to that release. Update its recovery texts with it, and their tests:
   - `packages/app/src/viewer/build-copy.ts:31` and `docs/mockups/src/fixtures/build-copy.ts:15`.
-  - `crates/mkc-publications/src/build_check_summary.rs:170` and `crates/mkc-api/src/upload_error.rs:23`.
-  - `docs/protocol/cloud/viewer-builds.md:60`, `changes-check-builds.md:45` and `rest-api-surface.md:147`.
+  - `crates/mkc-publications/src/build_check_summary.rs:170`.
+  - `docs/protocol/cloud/viewer-builds.md:60`, `changes-check-builds.md:45` and `cloud-build-runner.md:134`.
+  - `apps/site/src/content/docs/cloud/builds.md:47`, `docs/development/cloud.md:28` and `docs/ops/build-template.md:259`.
+  - `crates/mkc-build-sandbox/README.md:29` and `crates/mkc-publications/README.md:161`.
 - [ ] Run the cutover of item 7 in each stable environment.
 - [ ] Record the capture again with `infra/scripts/record-catalogue-capture.py`, against the first release that writes index version 10.
 - [ ] Upgrade `@mokly/mokly` in conductive, in its own repository.
