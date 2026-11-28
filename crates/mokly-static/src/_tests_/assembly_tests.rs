@@ -52,7 +52,7 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
     assert_eq!(
         std::str::from_utf8(files["mokly-viewer/deployment.json"]).unwrap(),
         format!(
-            "{{\n  \"deploymentId\": \"{}\",\n  \"schemaVersion\": 1\n}}\n",
+            "{{\"deploymentId\":\"{}\",\"schemaVersion\":1}}\n",
             index.deployment_id
         )
     );

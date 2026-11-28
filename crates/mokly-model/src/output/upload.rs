@@ -123,9 +123,9 @@ impl UploadMetadata {
         }
     }
 
-    /// Serialize only documented fields, with a final newline.
+    /// Serialize only documented fields as compact JSON, with a final newline.
     pub fn bytes(&self) -> Result<Vec<u8>> {
-        let mut bytes = serde_json::to_vec_pretty(self)
+        let mut bytes = serde_json::to_vec(self)
             .expect("UploadMetadata contains only strings, integer fields, and optional values");
         bytes.push(b'\n');
         if bytes.len() > MANIFEST_LIMIT {

@@ -11,8 +11,8 @@ depends on it. It has no internal crate dependency and performs no file IO.
   [format inventory](../../docs/protocol/mokly-format-versions.md) lists them.
 - Own shared output shapes, output file admission, and one pure marker writer
   for build and publish.
-- Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
-  explicit empty values, omitted absent optionals, and a final LF.
+- Encode canonical JSON with recursive UTF-16 key order, no whitespace between
+  tokens, explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
 - Own the review result, change snapshot, in-memory comparison records, and
@@ -178,7 +178,7 @@ use serde_json::json;
 fn encode() -> Result<()> {
     let value = json!({"z": [], "a": {}});
     let bytes = canonical::to_string(&value)?;
-    assert_eq!(bytes, "{\n  \"a\": {},\n  \"z\": []\n}\n");
+    assert_eq!(bytes, "{\"a\":{},\"z\":[]}\n");
     Ok(())
 }
 ```

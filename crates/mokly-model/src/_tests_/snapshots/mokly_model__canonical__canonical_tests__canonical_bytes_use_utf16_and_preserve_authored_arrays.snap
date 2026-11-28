@@ -1,22 +1,6 @@
 ---
 source: crates/mokly-model/src/_tests_/canonical_tests.rs
+assertion_line: 21
 expression: to_string(&value).unwrap()
 ---
-{
-  "steps": [
-    {
-      "a": 1,
-      "b": 2
-    },
-    {}
-  ],
-  "tags": [
-    "z",
-    "a"
-  ],
-  "😀": null,
-  "": {
-    "a": {},
-    "z": []
-  }
-}
+{"steps":[{"a":1,"b":2},{}],"tags":["z","a"],"😀":null,"":{"a":{},"z":[]}}

@@ -10,7 +10,7 @@ use crate::comparison_metadata;
 use crate::comparison_support::{historical, historical_inputs, history, snapshot};
 
 #[test]
-fn the_generation_has_no_review_file_and_removed_details_keep_two_space_indentation() {
+fn the_generation_has_no_review_file_and_removed_details_are_compact() {
     let (catalogue, plans) = historical_inputs();
     let mut current = catalogue.clone();
     current.model.entries.clear();
@@ -38,7 +38,11 @@ fn the_generation_has_no_review_file_and_removed_details_keep_two_space_indentat
         ["entries/sample.json", "previews/sample/index.json"]
     );
     let detail = std::str::from_utf8(&files["entries/sample.json"].bytes).unwrap();
-    assert!(detail.starts_with("{\n  \""), "{detail}");
+    assert!(
+        detail.starts_with("{\"") && detail.ends_with("}\n"),
+        "{detail}"
+    );
+    assert_eq!(detail.matches('\n').count(), 1, "{detail}");
     assert_eq!(
         detail,
         canonical::to_string(&readers::detail(detail).unwrap()).unwrap()
