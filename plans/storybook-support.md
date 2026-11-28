@@ -153,9 +153,11 @@ A branch from this branch applies each answer and deletes the file.
 
 ### Decisions that wait for the user
 
-No decision of this branch's plan waits for the user. The open decisions of
-tracks E and I are in the plans of their branches: track E decision 1 and
-track I decisions 3 to 9. On
+No decision waits for the user. On 2026-11-28 the user answered track E
+decision 1 with F, and track I decision 3 with a spike of its option J, with
+option I as the fallback. Track I decisions 4 to 9 closed with that answer,
+because it no longer takes option H. Each track records its answers in the
+plan of its branch. On
 2026-11-27 the user chose B of
 [decision 18e](#18e-several-folders-one-graph-for-each-folder), a folder
 graph for each Storybook folder, with E of 18e-1, D of 18e-2, D of 18e-3, A of
