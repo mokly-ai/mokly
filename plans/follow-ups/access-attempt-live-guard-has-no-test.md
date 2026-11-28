@@ -1,0 +1,31 @@
+# Access attempt guard has no order test
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-28, from the check of finding 9 of the re-review of the branch `calummoore/embedded-access-app-bearer-access-jp43`.
+- **Location:** `packages/app/src/viewer/access.ts:61-72` (the `live` flag of `useCatalogueAccess`), `packages/app/src/viewer/access.ts:42` (the key check), and the tests `packages/app/src/_tests_/viewer/access.test.ts:57-77` and `packages/app/src/_tests_/viewer/access-cookie.ts:114`.
+- **Reason:** The guard's behaviour and its key-only test are older than the branch that found them, which came from the import of Mokly Cloud in commit `5cba4dc4b`. That branch narrowed what the guard protects, so the gap is smaller after it.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Access attempt:** one effort of the app to confirm access to one publication. Its key holds the project, the publication, the publication origin, whether access is required and enabled, and the retry count (`access.ts:48-51`). A change of any of these, or **Try again**, starts a new attempt. A click on another entry of the same publication does not.
+  - **Granting state:** the state of an attempt while the app confirms access. The stage then shows the wait "Opening the catalogue" with no action (`packages/app/src/viewer/stage-view.tsx:132-136`).
+- **Background:**
+  - `docs/protocol/cloud/viewer.md`, section "Catalogue Isolation", says that readiness belongs to the exact project, publication, access mode and attempt, and that a previous or late grant result cannot mount a new source.
+  - `useCatalogueAccess` in `access.ts` sets `live = true` when an attempt starts and `live = false` in the cleanup of its effect. It stores a result only while `live` is true. Its only caller is `useViewerCatalogue` in `packages/app/src/screens/viewer/viewer-catalogue.ts:25`.
+  - Separately, the stored state counts only when its key is the same object as the current attempt's key (`access.ts:42`). Since the branch above, the key is an object, not a joined string, so a late result of an earlier attempt can never pass as the current one. Without `live`, a late result can only overwrite the newer stored state, and the newer publication falls back to the granting state.
+  - The unit test at `access.test.ts:57-77` compares keys only. The browser step "a private publication switch confirms access before catalogue loading" in `access-cookie.ts:114` finishes the first attempt before it navigates. No test renders the hook. So removing the `live` check passes every test, by a read of the code.
+- **Problem:** A change that drops the `live` check passes every test, although it breaks the documented rule that readiness belongs to the current attempt.
+- **Impact if no action:** A later change can let a slow, earlier access result overwrite the newer publication's state. The reader then sees "Opening the catalogue" with no action until they navigate or reload.
+- **Root question:** How does a test prove that an earlier access attempt cannot overwrite the current publication's state?
+- **Options:**
+  - **A.** Add a logic test file that renders `useCatalogueAccess` with `createRoot` and `act` inside `withWindowAsync`, as `packages/app/src/_tests_/viewer/use-catalogue-source.test.ts:26-94` does. It holds the first grant request, confirms a second publication, then releases the first answer, and asserts that the second publication's state and credential stay. The grant goes through the module-level API client (`packages/app/src/api/client.ts:58`), which binds `globalThis.fetch` when it loads. So the test replaces `fetch` before it imports the hook, as `packages/app/src/_tests_/session/focus-probe.tsx:15` and `:43-44` do. It needs its own file, because `access.test.ts` already loads the client through its static imports. Add the file to `packages/app/README.md`. Run it with `npm run test:logic --workspace @mokly-cloud/app`. Effort: Small.
+  - **B.** In the browser suite, hold a confirmation with `holdReads` (`packages/app/src/_tests_/viewer/held-reads.ts:10`) or `routeAccessStatus` (`packages/app/src/_tests_/viewer/access-browser-fixture.ts:6`) while the route moves to another publication, then assert the mounted publication and its next detail read. It needs the database and the real servers of `src/_tests_/global-setup.ts`, and runs with `npm run test:browser --workspace @mokly-cloud/app -- src/_tests_/viewer/access.spec.ts`. Effort: Medium.
+  - **C.** Replace the hand-written `live` flag with a shared helper that ties an async result to the attempt that started it, and use it in the other places of `packages/app/src` that keep such a flag, for example `data/use-resource.ts:115` and `viewer/latest.ts:63`. Then the helper's own tests cover each use. Effort: Medium.
+- **Left out:** Another comparison of attempt keys, because it cannot test the order of completions.
+- **Wider fix:** C, because one helper removes the hand-written flags that each need their own order test. Commit `3bf6e3c9a` fixed a late-answer case in the same way, with one shared operation.
+- **Previous examples:** Commit `3bf6e3c9a`, whose test is now `packages/app/src/_tests_/navigation/leave-page.test.ts:109`, "a late GitHub answer preserves the newer screen's flow and callback".
+- **Related:** `plans/follow-ups/viewer-access-cookie-check-reads-no-cookies.md`, same code: it fixes `checkCookieAccess` in `access-cookie.ts`, which option B extends.
+- **Recommendation:** A. It tests the guard at the lowest level that controls the order of answers, without a database. C protects the class best.
+- **Action:** fix after merge, apply A, because the gap is older than the branch that found it, and that branch made it smaller.

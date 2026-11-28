@@ -22,5 +22,6 @@
 - **Left out:** Reading only the browser's stored cookies, because that leaves the outgoing requests unchecked.
 - **Wider fix:** B. One reader of complete headers for both checks removes the provisional-header path from the file.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/access-attempt-live-guard-has-no-test.md`, same code: its option B extends the browser step in `packages/app/src/_tests_/viewer/access-cookie.ts` that this item fixes. `checkCookieAccess` now lives in `access-cookie.ts:27-31` and `:66-75`, not in `access.spec.ts`.
 - **Recommendation:** B. Both checks read the same request boundary, and one helper keeps them alike.
 - **Action:** fix after merge, apply B, because the problem was on `origin/main` before the audit and needs its own branch.
