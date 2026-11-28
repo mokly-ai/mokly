@@ -11,6 +11,7 @@ import {
 } from "../../viewer/catalogue-source.web";
 
 import {
+  bearerAccess,
   cookieAccess,
   current,
   guidePath,
@@ -100,6 +101,31 @@ test("an answer from another origin is refused", async () => {
   );
 });
 
+test("an off-origin removed detail is refused before credential renewal or transport", async () => {
+  let exchanges = 0;
+  let requests = 0;
+  const access = bearerAccess(() => {
+    exchanges += 1;
+    assert.fail("off-origin reads must not start an exchange");
+  });
+  const detail = detailSource({
+    root,
+    index: {
+      ...(await packagedIndex()),
+      comparisonUrl: "https://another-publication.example/",
+    },
+    transport: async () => {
+      requests += 1;
+      assert.fail("off-origin reads must not reach the transport");
+    },
+  });
+  await assert.rejects(detail(access, removed.screen, removed.snapshotId), {
+    name: "CatalogueReadError",
+    status: undefined,
+  });
+  assert.deepEqual({ exchanges, requests }, { exchanges: 0, requests: 0 });
+});
+
 test("current and removed details are read from their own paths", async () => {
   const currentPath = "/mokly-viewer/entries/product/browse/details.json";
   const removedPath = "/" + generation + removed.screen + ".json";
@@ -109,13 +135,16 @@ test("current and removed details are read from their own paths", async () => {
   });
   const detail = detailSource({
     root,
-    access: () => publicAccess,
     index: await packagedIndex(),
     transport,
   });
-  const read = await detail("product/browse/details");
+  const read = await detail(publicAccess, "product/browse/details");
   assert.equal(read.entry.path, "product/browse/details");
-  const previous = await detail(removed.screen, removed.snapshotId);
+  const previous = await detail(
+    publicAccess,
+    removed.screen,
+    removed.snapshotId,
+  );
   assert.equal(previous.entry.snapshotId, removed.snapshotId);
   assert.deepEqual(calls, [
     { path: currentPath, credentials: "omit", authorization: null },
@@ -130,11 +159,10 @@ test("a detail of another version keeps the readers' typed version error", async
   });
   const detail = detailSource({
     root,
-    access: () => publicAccess,
     index: await packagedIndex(),
     transport,
   });
-  await assert.rejects(detail("guide"), (error) => {
+  await assert.rejects(detail(publicAccess, "guide"), (error) => {
     assert.ok(error instanceof MoklyVersionError);
     assert.equal(error.boundary, "detail");
     assert.equal(error.supported, 4);
@@ -156,12 +184,12 @@ async function privateDetail(
     renewals += 1;
     await renewal?.();
   });
-  const detail = detailSource({
+  const read = detailSource({
     root,
-    access: () => access,
     index: await packagedIndex(),
     transport: reads.transport,
   });
+  const detail = (path: string) => read(access, path);
   return { detail, calls: reads.calls, renewals: () => renewals };
 }
 
@@ -198,11 +226,10 @@ test("only a private read renews, and only after a 401", async () => {
     const reads = host({}, { [guidePath]: [status] });
     const detail = detailSource({
       root,
-      access: () => access,
       index: await packagedIndex(),
       transport: reads.transport,
     });
-    await assert.rejects(detail("guide"), { status });
+    await assert.rejects(detail(access, "guide"), { status });
     assert.equal(reads.calls.length, 1, `${access.policy} ${status}`);
   }
 });

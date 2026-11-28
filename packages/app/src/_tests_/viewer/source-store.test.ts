@@ -1,16 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { DetailSource, ViewerError } from "@mokly/viewer";
+import type { ViewerError } from "@mokly/viewer";
 
 import { createCatalogueSources } from "../../viewer/source-store";
 import type {
   IndexAnswer,
+  SourceAccess,
   SourceReads,
   SourceRequest,
 } from "../../viewer/source-store";
 
 import {
+  bearerAccess,
   cookieAccess,
   packagedIndex,
   publicAccess,
@@ -39,8 +41,7 @@ function heldReads() {
     request: SourceRequest;
     settle: (answer: IndexAnswer | Error) => void;
   }> = [];
-  const detailRequests: SourceRequest[] = [];
-  const details: DetailSource[] = [];
+  const detailAccesses: SourceAccess[] = [];
   const reads: SourceReads = {
     index: (request) =>
       new Promise((resolve, reject) => {
@@ -50,16 +51,12 @@ function heldReads() {
             answer instanceof Error ? reject(answer) : resolve(answer),
         });
       }),
-    detail: (request) => {
-      const detail: DetailSource = async () => {
-        detailRequests.push(request());
-        throw new Error("unused detail");
-      };
-      details.push(detail);
-      return detail;
+    detail: () => async (access) => {
+      detailAccesses.push(access);
+      throw new Error("unused detail");
     },
   };
-  return { reads, answers, detailRequests, details };
+  return { reads, answers, detailAccesses };
 }
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
@@ -183,16 +180,22 @@ test("every state change reaches the subscribers", async () => {
 });
 
 test("a retained detail source reads with the new attempt for its origin and policy", async () => {
-  const { reads, answers, detailRequests, details } = heldReads();
+  const { reads, answers, detailAccesses } = heldReads();
   const store = createCatalogueSources(reads);
-  const source = store.select(privateA);
+  const first = { ...privateA, access: bearerAccess(() => "first") };
+  const source = store.select(first);
   store.load(source);
   answers[0]?.settle({ index: await packagedIndex() });
   await settled();
-  const detail = details[0];
-  assert.ok(detail);
-  const next = { ...privateA, access: cookieAccess() };
-  assert.equal(store.select(next), source);
+  const ready = store.state(source).read;
+  assert.equal(ready.status, "ready");
+  const { detail } = ready;
   await assert.rejects(async () => detail("a"), /unused detail/);
-  assert.equal(detailRequests[0], next);
+  const next = { ...first, access: bearerAccess(() => "next") };
+  assert.equal(store.select(next), source);
+  assert.equal(store.state(source).read, ready);
+  await assert.rejects(async () => detail("a"), /unused detail/);
+  assert.equal(detailAccesses.length, 2);
+  assert.equal(detailAccesses[0], first.access);
+  assert.equal(detailAccesses[1], next.access);
 });

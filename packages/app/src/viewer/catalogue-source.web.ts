@@ -1,8 +1,8 @@
-import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/viewer";
+import type { CatalogueReadModel } from "@mokly/viewer";
 
-import { bearerRequest, browserTransport } from "./access-exchange";
+import { browserTransport } from "./access-exchange";
 import type { CatalogueTransport } from "./access-exchange";
-import type { SourceAccess, SourceReads } from "./source-store";
+import type { DetailRead, SourceAccess, SourceReads } from "./source-store";
 
 /**
  * The package's public readers. The package ships only an ES module, so the
@@ -60,15 +60,18 @@ function detailUrl(
   );
 }
 
-/** A catalogue read that another origin or an unsuccessful status answered. */
+/** An off-origin request or response, or an unsuccessful reply from the publication. */
 export class CatalogueReadError extends Error {
-  /** The status of a same-origin answer; absent for another origin's. */
+  /** Present only when the publication origin returned an unsuccessful status. */
   readonly status: number | undefined;
+  /** The credential revision sent on a failed private request. */
+  readonly revision: number | undefined;
 
-  constructor(status?: number) {
+  constructor(status?: number, revision?: number) {
     super("The catalogue could not be loaded.");
     this.name = "CatalogueReadError";
     this.status = status;
+    this.revision = revision;
   }
 }
 
@@ -86,26 +89,29 @@ function sameOrigin(response: Response, root: URL): boolean {
   }
 }
 
-function readRequest(access: SourceAccess): RequestInit {
-  if (access.policy === "bearer") {
-    const token = access.publication.currentToken();
-    if (token === undefined) throw new CatalogueReadError();
-    return bearerRequest(token);
-  }
-  return { credentials: access.policy === "cookie" ? "include" : "omit" };
-}
-
 /** One JSON read with the credential confirmed by this publication's host. */
 async function readJson(
   url: URL,
   root: URL,
   access: SourceAccess,
   transport: CatalogueTransport,
+  rejectedRevision?: number,
 ): Promise<unknown> {
   if (url.origin !== root.origin) throw new CatalogueReadError();
-  const response = await transport(url, readRequest(access));
+  const credential =
+    access.policy === "public"
+      ? undefined
+      : await access.publication.readCredential(
+          access.policy,
+          rejectedRevision,
+        );
+  const response = await transport(
+    url,
+    credential?.init ?? { credentials: "omit" },
+  );
   if (!sameOrigin(response, root)) throw new CatalogueReadError();
-  if (!response.ok) throw new CatalogueReadError(response.status);
+  if (!response.ok)
+    throw new CatalogueReadError(response.status, credential?.revision);
   const value: unknown = await response.json();
   return value;
 }
@@ -124,39 +130,32 @@ export async function readIndex(
 /** What one detail source reads with. */
 export interface DetailReads {
   root: URL;
-  access: () => SourceAccess;
   index: CatalogueReadModel;
   transport?: CatalogueTransport;
 }
 
-function unauthorized(error: unknown): boolean {
-  return error instanceof CatalogueReadError && error.status === 401;
-}
-
-/** One entry's version-checked detail, as the package's `detail` source answers. */
-export type DetailRead = (
-  path: string,
-  snapshotId?: string,
-) => Promise<EntryDetailV4>;
-
 /**
- * The package's `detail` source. A private read that answers 401 runs the
- * access exchange once more and repeats the read once, because the catalogue
- * credential lives 300 seconds and details load during navigation.
+ * A private detail read retries a 401 once. An exchange is needed only while
+ * the rejected credential is current.
  */
 export function detailSource(reads: DetailReads): DetailRead {
   const transport = reads.transport ?? browserTransport;
-  return async (path, snapshotId) => {
-    const access = reads.access();
+  return async (access, path, snapshotId) => {
     const url = detailUrl(reads.root, reads.index, path, snapshotId);
-    const read = () => readJson(url, reads.root, access, transport);
+    const read = (rejectedRevision?: number) =>
+      readJson(url, reads.root, access, transport, rejectedRevision);
     let value: unknown;
     try {
       value = await read();
     } catch (error) {
-      if (access.policy === "public" || !unauthorized(error)) throw error;
-      await access.publication.renewCatalogueAccess();
-      value = await read();
+      if (
+        !(error instanceof CatalogueReadError) ||
+        error.status !== 401 ||
+        error.revision === undefined
+      ) {
+        throw error;
+      }
+      value = await read(error.revision);
     }
     const { readEntryDetail } = await viewer();
     return readEntryDetail(value);
@@ -184,10 +183,9 @@ export function catalogueReads(
         throw error;
       }
     },
-    detail(request, index) {
+    detail(origin, index) {
       return detailSource({
-        root: catalogueArtifactOrigin(request().origin),
-        access: () => request().access,
+        root: catalogueArtifactOrigin(origin),
         index,
         transport,
       });

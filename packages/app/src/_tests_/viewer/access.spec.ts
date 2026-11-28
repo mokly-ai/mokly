@@ -12,6 +12,7 @@ import { publishedProject } from "./support";
 
 const shell = "[data-mokly-shell]";
 const startPage = `/${accessStartPath}`;
+const index = "/mokly-viewer/index.json";
 
 function originOf(catalogueUrl: string | null): string {
   if (catalogueUrl === null)
@@ -84,7 +85,6 @@ test("a failed cookie confirmation opens the private catalogue with bearer reads
   const made = await publishedProject(page, "bearer-access");
   const origin = originOf(made.catalogueUrl);
   await routeAccessStatus(page, origin, "/", 401, false);
-  const index = "/mokly-viewer/index.json";
   const detail = "/mokly-viewer/entries/start.json";
   const requests: Request[] = [];
   page.on("request", (request) => {
@@ -116,9 +116,9 @@ test("a failed cookie confirmation opens the private catalogue with bearer reads
     requests.map((request) => request.allHeaders()),
   );
   expect(cookie?.authorization).toBeUndefined();
-  expect(check?.authorization?.startsWith("Bearer ")).toBe(true);
+  expect(check?.authorization).toMatch(/^Bearer /);
   for (const headers of [check, ...reads]) {
-    expect(headers?.authorization === check?.authorization).toBe(true);
+    expect(headers?.authorization).toBe(check?.authorization);
     expect(headers?.cookie).toBeUndefined();
   }
 });
@@ -159,14 +159,40 @@ test("a private frame that cannot open with its token replaces the viewer with t
   page,
 }) => {
   const made = await publishedProject(page, "unavailable-frame-access");
-  await routeUnavailableFrame(page, originOf(made.catalogueUrl));
+  const origin = originOf(made.catalogueUrl);
+  await routeAccessStatus(page, origin, "/", "abort", false);
+  const frameTokens = await routeUnavailableFrame(page, origin);
+  let exchanges = 0;
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (
+      url.origin === origin &&
+      url.pathname === "/_access" &&
+      request.method() === "POST"
+    )
+      exchanges += 1;
+  });
+  const indexRead = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return (
+      url.origin === origin &&
+      url.pathname === index &&
+      request.method() === "GET"
+    );
+  });
 
   await open(page, made.publicationPath);
   await expect(page.locator(shell)).toBeVisible();
+  const authorization = await (await indexRead).headerValue("authorization");
+  expect(authorization).toMatch(/^Bearer /);
   await page.getByRole("link", { name: /^Start( Changed)?$/ }).click();
   await expect(
     page.getByText("Open the catalogue in its own tab"),
   ).toBeVisible();
   await expect(page.getByTestId("open-catalogue-tab")).toBeVisible();
   await expect(page.locator(shell)).toHaveCount(0);
+  expect(frameTokens.length).toBeGreaterThan(0);
+  for (const token of frameTokens)
+    expect(`Bearer ${token}`).toBe(authorization);
+  expect(exchanges).toBe(1);
 });

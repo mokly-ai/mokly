@@ -1,6 +1,7 @@
 import type {
   CatalogueReadModel,
   DetailSource,
+  EntryDetailV4,
   ViewerError,
 } from "@mokly/viewer";
 
@@ -10,10 +11,7 @@ export type SourceAccess =
   | { policy: "public" }
   | {
       policy: "cookie" | "bearer";
-      publication: Pick<
-        PublicationAccess,
-        "currentToken" | "renewCatalogueAccess"
-      >;
+      publication: Pick<PublicationAccess, "readCredential">;
     };
 
 /** One publication's catalogue, as the stage asks for it. */
@@ -52,10 +50,16 @@ export interface SourceState {
 export type IndexAnswer =
   { index: CatalogueReadModel } | { failure: SourceVersionFailure };
 
+export type DetailRead = (
+  access: SourceAccess,
+  path: string,
+  snapshotId?: string,
+) => Promise<EntryDetailV4>;
+
 /** What one source reads with; the web document supplies the real reads. */
 export interface SourceReads {
   index(request: SourceRequest): Promise<IndexAnswer>;
-  detail(request: () => SourceRequest, index: CatalogueReadModel): DetailSource;
+  detail(origin: string, index: CatalogueReadModel): DetailRead;
 }
 
 /** One document's active source, independent of the route that shows it. */
@@ -85,7 +89,9 @@ async function settle(reads: SourceReads, entry: Entry): Promise<SourceState> {
     if ("failure" in answer) {
       return { read: { status: "failed" }, failure: answer.failure };
     }
-    const detail = reads.detail(() => entry.request, answer.index);
+    const read = reads.detail(entry.source.origin, answer.index);
+    const detail: DetailSource = (path, snapshotId) =>
+      read(entry.request.access, path, snapshotId);
     return { read: { status: "ready", index: answer.index, detail } };
   } catch {
     return { read: { status: "failed" } };

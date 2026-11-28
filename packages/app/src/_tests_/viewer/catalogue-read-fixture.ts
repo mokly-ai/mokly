@@ -71,8 +71,32 @@ export function cookieAccess(
   return {
     policy: "cookie",
     publication: {
-      currentToken: () => assert.fail("cookie reads do not use a token"),
-      renewCatalogueAccess,
+      async readCredential(policy, rejectedRevision) {
+        assert.equal(policy, "cookie");
+        if (rejectedRevision !== undefined) await renewCatalogueAccess();
+        return { init: { credentials: "include" }, revision: 1 };
+      },
+    },
+  };
+}
+
+export function bearerAccess(
+  token: () => string | Promise<string>,
+): SourceAccess {
+  return {
+    policy: "bearer",
+    publication: {
+      async readCredential(policy, rejectedRevision) {
+        assert.equal(policy, "bearer");
+        assert.equal(rejectedRevision, undefined, "unexpected retry");
+        return {
+          init: {
+            credentials: "omit",
+            headers: { authorization: `Bearer ${await token()}` },
+          },
+          revision: 1,
+        };
+      },
     },
   };
 }

@@ -40,7 +40,6 @@ export function useViewerCatalogue(
     origin === undefined || readAccess === undefined
       ? undefined
       : { origin, access: readAccess },
-    readAccess !== undefined,
   );
   const read = state.read;
   return {

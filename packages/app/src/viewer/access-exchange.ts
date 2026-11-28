@@ -20,7 +20,7 @@ export const browserTransport: CatalogueTransport = (url, init) =>
 
 export const accessStartPath = "mokly-viewer/client/access-start.html";
 
-export function bearerRequest(token: string): RequestInit {
+function bearerRequest(token: string): RequestInit {
   return { credentials: "omit", headers: { authorization: `Bearer ${token}` } };
 }
 
@@ -45,10 +45,17 @@ interface ExchangeTransport {
   now?: () => number;
 }
 
+interface ReadCredential {
+  init: RequestInit;
+  revision: number;
+}
+
 export interface PublicationAccess {
   confirm(): Promise<PrivateAccessState>;
-  currentToken(): string | undefined;
-  renewCatalogueAccess(): Promise<void>;
+  readCredential(
+    policy: "cookie" | "bearer",
+    rejectedRevision?: number,
+  ): Promise<ReadCredential>;
   access: FrameAccess["access"];
 }
 
@@ -59,7 +66,7 @@ async function readToken(
   response: Response,
   receivedAt: number,
 ): Promise<AccessToken | undefined> {
-  // The catalogue server can set the cookie even when its reply has no token.
+  // The browser can store the cookie from the headers even if the body is lost.
   const body: unknown = await response.json().catch(() => undefined);
   if (
     typeof body !== "object" ||
@@ -93,7 +100,7 @@ export function createPublicationAccess(
     now = Date.now,
   }: ExchangeTransport = {},
 ): PublicationAccess {
-  let token: AccessToken | undefined;
+  let credential: { revision: number; token?: AccessToken } = { revision: 0 };
   let running: Promise<void> | undefined;
 
   async function exchangeGrant() {
@@ -105,14 +112,38 @@ export function createPublicationAccess(
       body: JSON.stringify({ grant: grant.grant }),
     });
     if (!accepted.ok) throw unexpectedError();
-    token = await readToken(accepted, now());
+    credential = {
+      revision: credential.revision + 1,
+      token: await readToken(accepted, now()),
+    };
   }
 
-  function renewCatalogueAccess() {
+  function renewCatalogueAccess(rejectedRevision = credential.revision) {
+    if (rejectedRevision !== credential.revision) return Promise.resolve();
     running ??= exchangeGrant().finally(() => {
       running = undefined;
     });
     return running;
+  }
+
+  async function bearerCredential(
+    reuseMarginMs: number,
+    rejectedRevision?: number,
+  ) {
+    // A rejection of an older revision needs no exchange, but the current
+    // token must still be usable; a missing or expired one renews first.
+    const held = credential.token;
+    if (
+      rejectedRevision === credential.revision ||
+      held === undefined ||
+      held.expiresAt - now() <= reuseMarginMs
+    ) {
+      await renewCatalogueAccess();
+    }
+    const { token, revision } = credential;
+    if (token === undefined || token.expiresAt <= now())
+      throw unexpectedError();
+    return { token, revision };
   }
 
   const publication: PublicationAccess = {
@@ -126,6 +157,7 @@ export function createPublicationAccess(
         if (cookie?.ok) {
           return { status: "granted", policy: "cookie", publication };
         }
+        const { token } = credential;
         if (token === undefined) throw unexpectedError();
 
         const bearer = bearerRequest(token.token);
@@ -145,15 +177,20 @@ export function createPublicationAccess(
         };
       }
     },
-    currentToken: () => token?.token,
-    renewCatalogueAccess,
-    async access() {
-      if (token !== undefined && token.expiresAt - now() > reuseAboveMs) {
-        return token;
+    async readCredential(policy, rejectedRevision) {
+      if (policy === "bearer") {
+        const { token, revision } = await bearerCredential(0, rejectedRevision);
+        return { init: bearerRequest(token.token), revision };
       }
-      await renewCatalogueAccess();
-      if (token === undefined || token.expiresAt <= now())
-        throw unexpectedError();
+      if (rejectedRevision !== undefined)
+        await renewCatalogueAccess(rejectedRevision);
+      return {
+        init: { credentials: "include" },
+        revision: credential.revision,
+      };
+    },
+    async access() {
+      const { token } = await bearerCredential(reuseAboveMs);
       return token;
     },
   };

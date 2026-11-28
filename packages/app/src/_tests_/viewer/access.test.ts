@@ -188,7 +188,10 @@ test("a failed bearer confirmation remains retryable", async () => {
 test("a tokenless exchange preserves cookie access and refuses bearer access", async () => {
   const cookie = host({ exchange: () => new Response(null, { status: 204 }) });
   assert.equal((await cookie.publication.confirm()).status, "granted");
-  assert.equal(cookie.publication.currentToken(), undefined);
+  assert.deepEqual(await cookie.publication.readCredential("cookie"), {
+    init: { credentials: "include" },
+    revision: 1,
+  });
   await assert.rejects(cookie.publication.access(), { name: "ApiError" });
 
   const bearer = host({
@@ -200,5 +203,7 @@ test("a tokenless exchange preserves cookie access and refuses bearer access", a
     bearer.calls.map(({ path }) => path),
     ["/_access", "/"],
   );
-  assert.equal(bearer.publication.currentToken(), undefined);
+  await assert.rejects(bearer.publication.readCredential("bearer"), {
+    name: "ApiError",
+  });
 });
