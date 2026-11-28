@@ -3826,6 +3826,11 @@ own lines of this plan.
   route form that Jekyll and Mokly Cloud accept.
 - **Action:** ask the user, because each option changes a route requirement
   or adds a build error. Milestone 21 waits for the answer.
+- **Answer:** F, chosen by the user on 2026-11-28, "for now". Mokly's own
+  `node_modules/.mokly-roots/` segment becomes `node_modules/dot-mokly-roots/`.
+  The user asked for a high-priority re-review of the whole route strategy,
+  which [route-naming-strategy-review.md](follow-ups/route-naming-strategy-review.md)
+  records. Milestone 21 applies F.
 
 ## Milestone 19: A Storybook folder for each root
 
@@ -3892,9 +3897,17 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
       the renderer.
 - [ ] Test that a preview that imports global CSS styles its stories, and
       that Changes shows an edit of that CSS.
-- [ ] Decide whether a story's stylesheet chain drops the stylesheets that
+- [x] Decide whether a story's stylesheet chain drops the stylesheets that
       its preview file already delivers, as an entry's chain drops the
       renderer's stylesheets. Track D raised this question on 2026-11-23.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [ ] Write each route segment that starts with a dot in the `dot-` form, as
+      the answer F to track E decision 1 says, in every generated route, also
+      `node_modules/dot-mokly-roots/`. Update the route rules of
+      `docs/protocol/mokly-imported-styles.md` and
+      `docs/protocol/mokly-imported-styles-assets.md`, and delete
+      `plans/follow-ups/mokly-roots-route-is-private-in-cloud.md`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 22: Storybook folders verification, review, and pull request
