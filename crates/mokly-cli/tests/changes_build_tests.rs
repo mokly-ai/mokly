@@ -6,7 +6,7 @@ use std::process::Command;
 use tempfile::TempDir;
 
 mod changes_support;
-use changes_support::{base, run, run_with_node, write};
+use changes_support::{base, run, run_with_environment, run_with_node, write};
 
 fn storybook_base() -> TempDir {
     base(&[
@@ -33,10 +33,11 @@ fn storybook_base() -> TempDir {
 fn missing_node_for_head_storybook_discovery_is_build_invalid() {
     let fixture = storybook_base();
     let root = fixture.path();
-    let output = run_with_node(
+    let output = run_with_environment(
         root,
         &["build", "--no-changes"],
         Some(&root.join("missing-node")),
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(1), "{stderr}");
@@ -54,7 +55,12 @@ fn missing_node_for_base_storybook_discovery_makes_the_base_runtime_unavailable(
         r#"{"review":{"base":"fixture-base"}}"#,
     );
     fs::remove_file(root.join("specs/card.stories.tsx")).unwrap();
-    let output = run_with_node(root, &["build"], Some(&root.join("missing-node")));
+    let output = run_with_environment(
+        root,
+        &["build"],
+        Some(&root.join("missing-node")),
+        &[("MOKLY_TEST_STATIC_COLUMNS", "4096")],
+    );
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(output.status.code(), Some(0), "{stderr}");
