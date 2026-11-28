@@ -4,7 +4,7 @@ Status: Active, on the branch `calummoore/catalogue-size-plan-to-fit-the-upload-
 
 Mokly Cloud refuses the catalogue of a large project. On 2026-11-27, the repository `Firna-AI/conductive` at commit `3371d05f` built with `@mokly/mokly` 0.21.0 into 1,746 MB in 11,030 files. The receiver accepts 512 MiB, about 537 MB, of declared bytes. The index was 48.7 MB with 2,162,642 JSON nodes, and the receiver accepts 8 MiB and 262,144 nodes. A pull-request build wrote 26,070 files, above the ceiling of 20,000, because it copies every document two more times. Conductive had 72 entry files on 2026-11-08 and 664 on 2026-11-27.
 
-This plan proposes two changes together. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for a growth target. Every recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
+This plan makes two changes together, as the user chose for item 1 on 2026-11-28. Mokly writes less in four steps: compact canonical JSON, entry fields out of the index, usage records written once, and fewer snapshots. The cloud counts each stored file once, and it sizes its quotas for the answer to item 2. Every other recommendation below is a proposal of 2026-11-27 or 2026-11-28, not a choice.
 
 The plan does not change the build template, the attempt deadline, or the memory of the native process. The workspaces "Build capacity: bigger template and deadline" and "Build capacity: bounded render memory" own them. The plan does not render both colour schemes from one document.
 
@@ -122,21 +122,21 @@ Every item shares these assumptions, unless an item names an option that drops o
 
 ## Decisions
 
-Implementation starts only after the user answers items 1 to 11. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
+The user chose C for item 1 on 2026-11-28. Implementation starts only after the user answers items 2 to 11. Answer each item by its number and letter. Items 6, 7 and 10 come from the plan review of 2026-11-28. The user's rule of 2026-11-28 and the options check of that date changed items 1, 2, 3, 6, 7, 8 and 9.
 
-| #   | Item                                             | Source | Severity | Effort | Recommended                                                          |
-| --- | ------------------------------------------------ | ------ | -------- | ------ | -------------------------------------------------------------------- |
-| 1   | A large catalogue cannot publish                 | Design | High     | Large  | C: Mokly writes less, and the cloud resizes its quotas               |
-| 2   | No size target for one publication               | Design | High     | Medium | D: ceilings from what the cloud can safely hold                      |
-| 3   | The receiver counts copies and caps growth       | Design | High     | Medium | C: count each file once, and set ceilings for the target             |
-| 4   | The index carries each entry's controls          | Design | High     | Large  | B: each detail carries its own                                       |
-| 5   | Pull-request builds copy every document twice    | Design | High     | Large  | C: read snapshots only, and no after side in Mokly Cloud             |
-| 6   | The required smoke blocks the format change      | Review | High     | Medium | D: the smoke chooses its producer by format                          |
-| 7   | Old publications break at the cutover            | Review | High     | Medium | A: keep old publications, and each branch publishes at its next push |
-| 8   | A format change breaks the cloud until a release | Design | Medium   | Medium | F: B, and the runner uses the newest release for an older CLI        |
-| 9   | No build time target                             | Design | Medium   | Medium | B: a pull-request build within the 30-minute deadline                |
-| 10  | Usage lists repeat each consumer                 | Review | Medium   | Small  | D: one row for each consumer group that the viewer shows today       |
-| 11  | Compact JSON changes every detail id             | Design | Low      | Small  | A: the ids hash the compact bytes                                    |
+| #   | Item                                             | Source | Severity | Effort | Recommended                                                                  |
+| --- | ------------------------------------------------ | ------ | -------- | ------ | ---------------------------------------------------------------------------- |
+| 1   | A large catalogue cannot publish                 | Design | High     | Large  | C, chosen on 2026-11-28: Mokly writes less, and the cloud resizes its quotas |
+| 2   | No size target for one publication               | Design | High     | Medium | D: ceilings from what the cloud can safely hold                              |
+| 3   | The receiver counts copies and caps growth       | Design | High     | Medium | C: count each file once, and set ceilings for the target                     |
+| 4   | The index carries each entry's controls          | Design | High     | Large  | B: each detail carries its own                                               |
+| 5   | Pull-request builds copy every document twice    | Design | High     | Large  | C: read snapshots only, and no after side in Mokly Cloud                     |
+| 6   | The required smoke blocks the format change      | Review | High     | Medium | D: the smoke chooses its producer by format                                  |
+| 7   | Old publications break at the cutover            | Review | High     | Medium | A: keep old publications, and each branch publishes at its next push         |
+| 8   | A format change breaks the cloud until a release | Design | Medium   | Medium | F: B, and the runner uses the newest release for an older CLI                |
+| 9   | No build time target                             | Design | Medium   | Medium | B: a pull-request build within the 30-minute deadline                        |
+| 10  | Usage lists repeat each consumer                 | Review | Medium   | Small  | D: one row for each consumer group that the viewer shows today               |
+| 11  | Compact JSON changes every detail id             | Design | Low      | Small  | A: the ids hash the compact bytes                                            |
 
 ### 1. A large catalogue cannot publish
 
@@ -168,6 +168,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Related:** Items 2 to 5 and item 10, work that waits for the answer. Item 3 applies only under B, C, E and F. Option E also answers item 4. Item 8: conductive pins `@mokly/mokly` 0.21.0, so each option here reaches its cloud build only with option F, H or J there.
 - **Recommendation:** C. The Mokly changes make the index and the details fast to load and to build, and only a quota change leaves room for growth. E matters when a catalogue grows far past conductive, because each page load fetches the whole index.
 - **Action:** ask the user, because A, B, C, E and F change requirements in force.
+- **Decision:** C. On 2026-11-28 the user wrote "ok, lets just go with the current plan", and then "I just meant for point 1".
 
 ### 2. No size target for one publication
 
