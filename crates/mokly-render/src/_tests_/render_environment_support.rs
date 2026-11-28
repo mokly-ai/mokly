@@ -119,6 +119,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
             sources: BTreeMap::new(),
             peers: BTreeMap::from([("react".to_owned(), Some(physical(react)))]),
             storybook_react: Default::default(),
+            storybook_previews: Default::default(),
             inputs: BTreeMap::new(),
             metadata_inputs: BTreeMap::from([("package.json".to_owned(), Some("root".to_owned()))]),
             input_directories: BTreeMap::new(),

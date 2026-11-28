@@ -128,9 +128,13 @@ React and React DOM resolve from that side's configuration directory through
 its settings, with one React runtime. The JSX development shim forwards to
 the consumer runtime and attaches invocation source only to Mokly wrappers.
 
-`bundle` evaluates nothing. `cssModules` must install all maps before
-`describe` evaluates the generation. A bundle or evaluation failure returns
-`bundle-failed` with its source and diagnostic.
+`bundle` evaluates no module of the generation, and `describe` evaluates it.
+`cssModules` must install all maps before `describe` evaluates the generation.
+`bundle` can run the project configuration that its compile loads. The current
+cases are the [Vite setup](./mokly-vite-adapter.md#the-setup) and the `main.*`
+that Mokly reads when `@storybook/react` resolves only through the
+[framework package](./mokly-storybook.md#storybook-folders). A bundle or
+evaluation failure returns `bundle-failed` with its source and diagnostic.
 
 ## Style Collection
 
@@ -193,11 +197,11 @@ resolution settings of its side. `main` is the repository-relative path of
 that `main.*`. `entries` holds each `stories` entry in authored order, as a
 `directory` relative to the source root and a `files` pattern relative to that
 directory. `inputs` maps the repository-relative path of each repository file
-outside `node_modules` that the load read to the digest of its bytes. It
-also maps each other candidate name of `main.*` to its digest, or to `null`
-when that file does not exist. A `main.*` that is missing, fails to load, or
-gives invalid `stories` gives `{ mainError }` with the reason. Every other
-failure gives the error reply of its kind.
+outside `node_modules` that the load read, a link and its target alike, to the
+digest of its bytes. It also maps each other candidate name of `main.*` to its
+digest, or to `null` when that file does not exist. A `main.*` that is
+missing, fails to load, or gives invalid `stories` gives `{ mainError }` with
+the reason. Every other failure gives the error reply of its kind.
 `dependencyDirectories` lists the dependency directories that the load used.
 
 ## Consumer PostCSS

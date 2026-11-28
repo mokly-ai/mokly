@@ -59,3 +59,21 @@ pub struct ReadStorybookResult {
     /// Installation directories used by the loader, relative to the dependency root.
     pub dependency_directories: Vec<String>,
 }
+
+/// The preview choice made before compiling the stories of one folder.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+pub struct PreviewSelection {
+    /// First regular preview file in Storybook order, if present.
+    pub selected: Option<PreviewModule>,
+    /// Candidate paths observed without a regular file.
+    pub absent: Vec<String>,
+}
+
+/// The written path and the resolved module compiled from it.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+pub struct PreviewModule {
+    /// Repository-relative name selected by the probe.
+    pub path: String,
+    /// Resolved filename relative to the source root, or absolute when outside it.
+    pub file: String,
+}

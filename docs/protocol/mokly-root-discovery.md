@@ -1,5 +1,7 @@
 # Root Discovery And Source Membership
 
+Status: Mokly does not read a `stories` function in `main.*` or the `stories` entries that Storybook presets add yet. The [Storybook stories function item](../../plans/follow-ups/storybook-stories-function-not-read.md) adds both.
+
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and
 Changes share. Discovery walks a source tree: the working tree for Serve,
@@ -144,8 +146,9 @@ A missing directory, an empty or duplicate glob, two roots with the same
 ## Roots From `main.*`
 
 The objects of `roots` are the configured roots. A configured root that names
-a Storybook folder and has no `dir` takes its directories from the `stories`
-field of that folder's `main.*`. Before discovery, Mokly runs that `main.*` in
+a Storybook folder and has no `dir` takes its directories from the final
+`stories` list of that folder. Storybook computes that list from the folder's
+`main.*` and presets. Before discovery, Mokly runs that `main.*` in
 Node with Storybook's loader. Mokly starts Node before discovery only for such
 a root. A root with `dir`, and every catalogue without such a root, keep
 configuration and discovery free of Node. Decision: Mokly runs `main.*` before discovery only
@@ -185,8 +188,11 @@ needs a directory.
 
 A file that two `stories` entries of one configured root match belongs to the
 first of them, without an error. A folder record that two `stories` entries of
-one configured root reach also belongs to the first of them. Two entries of
-one configured root can name the same directory. A file that the roots of two configured roots
+one configured root reach also belongs to the first of them. That record takes
+its folder path from the deepest entry directory that holds it. The exclusions
+of every folder record of the configured root apply to every file that its
+entries select. Two entries of one configured root can name the same
+directory. A file that the roots of two configured roots
 match fails with the [root overlap error](#glob-validation), which names the
 two configured roots. A `stories` entry whose directory does not exist matches
 no file. A `stories` entry whose directory resolves outside the repository root
@@ -196,7 +202,7 @@ the [empty root rule](#traversal-and-ownership). Its message names the
 Storybook folder in place of `dir`.
 
 Discovery fails with `config-invalid` when `main.*` is missing, fails to load,
-or has no `stories` array. It fails in the same way when a rule of this section
+or gives no `stories` list. It fails in the same way when a rule of this section
 rejects a `stories` entry. The message names the `main.*` file,
 repository-relative, and the reason.
 
@@ -208,7 +214,12 @@ select for the base, and it runs before base discovery. So for such a root, the
 base extraction and any base install run before base discovery.
 
 `main.*`, each other candidate name of `main.*`, and each local file that the
-load of `main.*` reads are configuration inputs. In
-Serve, an edit of one of them runs discovery again, as an edit of the
-configuration file does under the
+load of `main.*` reads are configuration inputs. When the load reads a file
+through a link with Node's `fs` module, the link and its target inside the
+repository are both inputs. A file that the load opens for reading with
+`fs.open`, `fs.openSync`, or `fs.promises.open` is an input. Its digest covers
+the whole file as it is when the load opens it, also when the load reads only
+part of it. An open for writing makes no input. In Serve, an edit of one of
+these inputs runs discovery again, as an edit of the configuration file does
+under the
 [configuration change rules](./mokly-watch-runtime.md#configuration-changes).

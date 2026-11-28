@@ -14,12 +14,13 @@ import {
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 import { storybookFrameworks } from "./storybook-main.js";
-import type { StorybookMainCache } from "./storybook-main.js";
+import type { MainSide, StorybookMainCache } from "./storybook-main.js";
 
 export interface ConsumerRequire extends NodeJS.Require {
   peerPlugin: Plugin;
   snapshot(): Record<string, string | null>;
   resolvePeer(name: string): Promise<string>;
+  loadStorybook(cache: StorybookMainCache, side: MainSide): Promise<void>;
   storybook(): Awaited<ReturnType<typeof storybookFrameworks>> | undefined;
 }
 
@@ -27,7 +28,7 @@ export interface ConsumerRequire extends NodeJS.Require {
 export async function consumerRequire(
   params: BundleParams,
   paths: ModulePaths,
-  mainCache: StorybookMainCache = new Map(),
+  mainCache?: StorybookMainCache,
 ): Promise<ConsumerRequire> {
   const directory = path.resolve(
     params.sourceRoot,
@@ -82,6 +83,19 @@ export async function consumerRequire(
     if (found instanceof Error) throw found;
     return found ?? native.resolve(name);
   };
+  const loadStorybook = async (cache: StorybookMainCache, side: MainSide) => {
+    const react = peers.get("@storybook/react");
+    if (params.storiesFiles.length && react instanceof Error)
+      storybook = await storybookFrameworks(
+        params,
+        paths,
+        directory,
+        lookup,
+        cache,
+        react,
+        side,
+      );
+  };
   const require = ((name: string) => native(resolve(name))) as ConsumerRequire;
   const peerPlugin: Plugin = {
     name: "consumer-peers",
@@ -89,16 +103,7 @@ export async function consumerRequire(
       builder.onStart(async () => {
         resolver = builder;
         await load(names);
-        const react = peers.get("@storybook/react");
-        if (params.storiesFiles.length && react instanceof Error)
-          storybook = await storybookFrameworks(
-            params,
-            paths,
-            directory,
-            lookup,
-            mainCache,
-            react,
-          );
+        if (mainCache) await loadStorybook(mainCache, params);
       });
       builder.onEnd(() => {
         resolver = undefined;
@@ -115,6 +120,7 @@ export async function consumerRequire(
         ]),
       ),
     resolve,
+    loadStorybook,
     storybook: () => storybook,
     async resolvePeer(name: string) {
       if (!peers.has(name)) await load([name]);

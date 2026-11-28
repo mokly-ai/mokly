@@ -4,11 +4,8 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { logical } from "./path-scope.js";
 import { confinedFile } from "./paths.js";
-import {
-  previewCandidates,
-  regularFile,
-  selectPreviews,
-} from "./storybook-folders.js";
+import { previewModules, probePreviews } from "./storybook-folders.js";
+import type { PreviewProbe } from "./storybook-folders.js";
 
 export const virtualEntry = "mokly-entry";
 
@@ -20,7 +17,7 @@ export const virtualEntry = "mokly-entry";
  */
 export async function entryModule(
   params: BundleParams,
-  capturedPreviews?: ReadonlyMap<string, string>,
+  capturedPreviews?: PreviewProbe,
 ) {
   const files = [
     ...params.entryFiles,
@@ -33,7 +30,8 @@ export async function entryModule(
       logical(params.sourceRoot, path.resolve(params.sourceRoot, file)),
       await confinedFile(params.sourceRoot, file),
     );
-  const previews = capturedPreviews ?? (await probePreviews(params));
+  const previewProbe = capturedPreviews ?? (await probePreviews(params));
+  const previews = new Map(previewModules(previewProbe.selections));
   const imports = files.map(
     (file, index) =>
       `import * as m${index} from ${JSON.stringify(path.resolve(params.sourceRoot, file))};`,
@@ -60,17 +58,5 @@ export async function entryModule(
   );
   if (params.renderer)
     imports.push(`export const renderer = m${files.length - 1};`);
-  return { contents: imports.join("\n"), inputPaths, previews };
-}
-
-async function probePreviews(params: BundleParams) {
-  const files = await Promise.all(
-    previewCandidates(params).map(async (file) =>
-      (await regularFile(path.resolve(params.sourceRoot, file)))
-        ? file
-        : undefined,
-    ),
-  );
-  const present = new Set(files);
-  return selectPreviews(params, (file) => present.has(file));
+  return { contents: imports.join("\n"), inputPaths, previews, previewProbe };
 }

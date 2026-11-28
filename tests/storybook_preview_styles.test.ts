@@ -161,6 +161,38 @@ test("a mapped preview stylesheet collides with a real dot-storybook route", asy
   );
 });
 
+test("CSS-free preview and entry modules link only their own stylesheets", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": JSON.stringify({
+      roots: [{ dir: "specs" }, { dir: "src", files: ["a.tsx"] }],
+      stylesheets: [
+        {
+          match: "home/index.html",
+          stylesheets: ["dot-storybook/preview.tsx.css", "src/a.tsx.css"],
+        },
+      ],
+    }),
+    ".storybook/preview.tsx": "export default {};",
+    "dot-storybook/preview.tsx.css": ".site {color: teal}",
+    "src/a.tsx": component("", "<p>Card</p>"),
+    "src/a.tsx.css": ".site {background: white}",
+    "specs/default.stories.tsx": story,
+    "specs/home.screen.html": htmlScreen,
+  });
+  await build(root, ["--no-changes", "--strict"], "plain", context.signal);
+
+  const documents = await Promise.all(
+    ["default", "card", "home"].map((entry) =>
+      generated(root, `${entry}/index.mobile.html`),
+    ),
+  );
+  assert.deepEqual(documents.map(styleLinks), [
+    [],
+    [],
+    [rootPreview, "styles/src/a.tsx.css"],
+  ]);
+});
+
 test("a preview with renderer-owned CSS keeps its route while a failed story keeps its inline stylesheet", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": JSON.stringify({ renderer: "renderer.tsx" }),

@@ -154,7 +154,7 @@ pub fn expand(
                 let stories = reader.read(config, folder)?;
                 let main = Arc::new(MainFile {
                     path: stories.main,
-                    inputs: stories.inputs,
+                    inputs: with_projected_inputs(tree, &config.repo_root, stories.inputs),
                 });
                 entry.insert((stories.entries, main))
             }
@@ -194,6 +194,26 @@ pub fn expand(
     }
     config.roots = expanded;
     Ok(())
+}
+
+fn with_projected_inputs(
+    tree: &dyn SourceTree,
+    root: &Path,
+    mut inputs: BTreeMap<String, Option<String>>,
+) -> BTreeMap<String, Option<String>> {
+    let projected: Vec<_> = inputs
+        .iter()
+        .filter_map(|(name, digest)| {
+            let digest = digest.as_ref()?;
+            let node = tree.project(&root.join(name)).ok().flatten()?;
+            (node.kind == FileKind::File && node.identity.starts_with(root))
+                .then(|| (relative(&node.identity, root), digest.clone()))
+        })
+        .collect();
+    for (name, digest) in projected {
+        inputs.entry(name).or_insert(Some(digest));
+    }
+    inputs
 }
 
 pub(crate) fn display_folder(folder: &str) -> &str {

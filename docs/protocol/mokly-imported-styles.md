@@ -129,10 +129,18 @@ and `dark-theme.css` never sees `tokens.css` reappear through an entry's
 component CSS. The first linked root wins across the renderer, the preview,
 and the entry; within one root, JavaScript first reachability wins, and a
 repeated CSS `@import` keeps CSS's last-position rule. A file shared by two
-entry roots is not suppressed. Decision: a stories file root drops the files
-that its preview delivers, because Storybook loads each CSS module once, and
-the renderer rule does the same. A second copy in the stories file's
-stylesheet was rejected.
+entry roots is not suppressed. Both removals drop a CSS Module only when the
+bundle of the renderer or of the preview has a class map for the same path.
+So two roots can each deliver a copy of one CSS Module file, and the later
+copy supplies the scoped selectors of its own path.
+
+Decision: a stories file root drops the files that its preview delivers,
+because Storybook loads each CSS module once, and the renderer rule does the
+same. A second copy in the stories file's stylesheet was rejected. Decision: a
+CSS Module counts as delivered by an earlier bundle only under a path that has
+a class map in that bundle, because JavaScript uses the class map of its own
+path. Dropping it under another name was rejected, because the story or entry
+would then lose its scoped selectors.
 
 Remote `@import`s, `"https://..."` and `url("https://...")`, stay external:
 never fetched, never inventoried. Prelude imports are placed at the start of

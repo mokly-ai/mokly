@@ -154,11 +154,13 @@ impl InputTree for CapturedTree {
         let mut absent_storybook = BTreeSet::new();
         for (path, digest) in config.storybook_inputs() {
             let path = config.repo_root.join(path);
-            match digest {
-                Some(digest) if self.digest(&path).as_deref().ok() == Some(digest) => {}
-                None if self
-                    .project(&path)
-                    .is_ok_and(|node| node.is_none_or(|node| node.kind != FileKind::File)) =>
+            match (digest, self.project(&path)) {
+                (Some(digest), Ok(Some(node)))
+                    if node.kind == FileKind::File
+                        && node.identity.starts_with(&config.repo_root)
+                        && self.digest(&node.identity).as_deref().ok() == Some(digest) => {}
+                (None, Ok(node))
+                    if node.as_ref().is_none_or(|node| node.kind != FileKind::File) =>
                 {
                     absent_storybook.insert(path);
                 }

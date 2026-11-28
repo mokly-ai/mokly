@@ -64,18 +64,25 @@ impl<'a> Prepared<'a> {
             .into_iter()
             .map(|folder| {
                 let paths: Vec<_> = preview_candidates(folder).collect();
-                let preview = paths
-                    .iter()
-                    .find_map(|path| {
-                        if graph.contains_key(path) {
-                            Some(Preview::Named(path.clone()))
-                        } else if generation.resolution_digests.contains_key(path) {
-                            Some(Preview::Unnamed)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or(Preview::Absent);
+                let preview = match &generation.storybook_previews {
+                    Some(previews) => match previews.get(folder).and_then(Option::as_ref) {
+                        Some(path) if graph.contains_key(path) => Preview::Named(path.clone()),
+                        Some(_) => Preview::Unnamed,
+                        None => Preview::Absent,
+                    },
+                    None => paths
+                        .iter()
+                        .find_map(|path| {
+                            if graph.contains_key(path) {
+                                Some(Preview::Named(path.clone()))
+                            } else if generation.resolution_digests.contains_key(path) {
+                                Some(Preview::Unnamed)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or(Preview::Absent),
+                };
                 candidates.extend(paths);
                 (folder, preview)
             })

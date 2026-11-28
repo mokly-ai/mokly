@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use globset::GlobSet;
 use mokly_model::canonical::compare_utf16;
@@ -30,26 +31,36 @@ pub(crate) struct Walk<'a> {
     pub(crate) not_searched: Vec<String>,
     pub(crate) candidates: &'a mut BTreeMap<PathBuf, Option<Node>>,
     pub(crate) owners: &'a mut BTreeMap<PathBuf, (String, usize)>,
-    pub(crate) folder_globs: &'a mut BTreeMap<PathBuf, GlobSet>,
+    pub(crate) exclusions: &'a mut FolderExclusions,
+    pub(crate) entry_directories: &'a BTreeMap<(usize, &'a Path), &'a ResolvedRoot>,
     pub(crate) inventory: &'a mut Inventory,
 }
 
+#[derive(Default)]
+pub(crate) struct FolderExclusions {
+    records: BTreeMap<PathBuf, Arc<GlobSet>>,
+    directories: BTreeMap<PathBuf, Arc<GlobSet>>,
+}
+
+impl FolderExclusions {
+    pub(crate) fn excludes(&self, path: &Path) -> bool {
+        path.ancestors().skip(1).any(|directory| {
+            self.directories
+                .get(directory)
+                .is_some_and(|globs| globs.is_match(path.strip_prefix(directory).unwrap_or(path)))
+        })
+    }
+}
+
 impl Walk<'_> {
-    pub(crate) fn directory(
-        &mut self,
-        directory: &Path,
-        inherited: &[(PathBuf, GlobSet)],
-    ) -> Result<()> {
+    pub(crate) fn directory(&mut self, directory: &Path) -> Result<()> {
         enum Work {
             Directory(PathBuf),
             Child(PathBuf, FileKind),
-            Leave(usize),
         }
-        let mut exclusions = inherited.to_vec();
         let mut pending = vec![Work::Directory(directory.into())];
         while let Some(work) = pending.pop() {
             match work {
-                Work::Leave(length) => exclusions.truncate(length),
                 Work::Child(path, FileKind::Directory) => {
                     let name = path
                         .file_name()
@@ -78,7 +89,7 @@ impl Walk<'_> {
                             .globs
                             .is_match(path.strip_prefix(&self.root.directory).unwrap_or(&path))
                     {
-                        self.file(&path, &exclusions)?;
+                        self.file(&path)?;
                     }
                 }
                 Work::Child(_, _) => {}
@@ -103,14 +114,12 @@ impl Walk<'_> {
                         }
                     };
                     children.sort_by(|a, b| compare_utf16(&a.name, &b.name));
-                    let length = exclusions.len();
                     if children
                         .iter()
                         .any(|child| child.name == "_folder.json" && child.kind == FileKind::File)
                     {
-                        self.folder(&directory, &mut exclusions)?;
+                        self.folder(&directory)?;
                     }
-                    pending.push(Work::Leave(length));
                     pending.extend(
                         children
                             .into_iter()
@@ -181,7 +190,7 @@ impl Walk<'_> {
         );
         Ok(Some((node.identity, true)))
     }
-    fn file(&mut self, path: &Path, exclusions: &[(PathBuf, GlobSet)]) -> Result<()> {
+    fn file(&mut self, path: &Path) -> Result<()> {
         let Some((identity, true)) = self.project_file(path)? else {
             return Ok(());
         };
@@ -192,20 +201,20 @@ impl Walk<'_> {
             identity: relative(&identity, &self.config.repo_root),
             root_index: self.index,
             kind: SourceKind::from_path(&relative_path),
-            excluded: exclusions.iter().any(|(directory, globs)| {
-                globs.is_match(path.strip_prefix(directory).unwrap_or(path))
-            }),
+            excluded: false,
         });
         Ok(())
     }
-    fn folder(&mut self, directory: &Path, exclusions: &mut Vec<(PathBuf, GlobSet)>) -> Result<()> {
+    fn folder(&mut self, directory: &Path) -> Result<()> {
         let file = directory.join("_folder.json");
         let Some((identity, first)) = self.project_file(&file)? else {
             return Ok(());
         };
         if !first {
-            if let Some(globs) = self.folder_globs.get(&identity) {
-                exclusions.push((directory.into(), globs.clone()));
+            if let Some(globs) = self.exclusions.records.get(&identity) {
+                self.exclusions
+                    .directories
+                    .insert(directory.into(), globs.clone());
             }
             return Ok(());
         }
@@ -237,7 +246,12 @@ impl Walk<'_> {
                 ));
             }
         };
-        let folder_path = folder_path(self.root, directory);
+        let deepest = directory
+            .ancestors()
+            .find_map(|parent| self.entry_directories.get(&(self.configured, parent)))
+            .copied()
+            .unwrap_or(self.root);
+        let folder_path = folder_path(deepest, directory);
         let source = at(&path, &text, 0);
         for name in folder_path.split('/').filter(|segment| !segment.is_empty()) {
             if let Err(issue) = segment(name, "directory name", &source) {
@@ -252,10 +266,13 @@ impl Walk<'_> {
             Ok(globs) => globs,
             Err(reason) => return Err(invalid(reason)),
         };
+        let globs = Arc::new(globs);
         if self.root.from_storybook_main() {
-            self.folder_globs.insert(identity.clone(), globs.clone());
+            self.exclusions
+                .records
+                .insert(identity.clone(), globs.clone());
         }
-        exclusions.push((directory.into(), globs));
+        self.exclusions.directories.insert(directory.into(), globs);
         self.inventory
             .sources
             .extend([path, relative(&identity, &self.config.repo_root)]);

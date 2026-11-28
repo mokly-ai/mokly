@@ -60,6 +60,7 @@ export class ViteCompiler {
           paths,
           entry.contents,
         );
+        await require.loadStorybook(new Map(), params);
         const imports = new Map<string, string[]>();
         const fetch = createViteFetch(
           setup.server,
@@ -89,6 +90,7 @@ export class ViteCompiler {
           setup.state,
           graphFiles,
           storybook?.inputs,
+          entry.previewProbe,
         );
         setup.snapshot = await snapshotViteInputs(input, metadata, setup.state);
         const toolchain = await viteToolchain(version, vite.root);
@@ -105,6 +107,7 @@ export class ViteCompiler {
                 params,
                 modules,
                 metadata.metadataInputs,
+                ...Object.entries(entry.previewProbe.selections),
                 storybook?.peers,
                 toolchain,
                 input.runtimeKey,
@@ -116,7 +119,7 @@ export class ViteCompiler {
           reuseEvidence: {
             complete: false,
             durable: false,
-            inputs: {},
+            inputs: entry.previewProbe.links,
             ...(toolchain && capture === "serveEdit"
               ? { uncaptured: "serveEdit" as const }
               : {}),
@@ -131,8 +134,14 @@ export class ViteCompiler {
           ),
           peers: { ...require.snapshot(), ...input.peers },
           ...(storybook && { storybookReact: storybook.peers }),
+          ...(Object.keys(entry.previewProbe.selections).length && {
+            storybookPreviews: entry.previewProbe.selections,
+          }),
           unmappedDependencyDirectories: [
-            ...paths.dependencyUsage.unmapped,
+            ...new Set([
+              ...paths.dependencyUsage.unmapped,
+              ...(storybook?.dependencyDirectories ?? []),
+            ]),
           ].sort(),
           ...metadata,
         };

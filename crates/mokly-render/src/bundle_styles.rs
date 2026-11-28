@@ -6,7 +6,6 @@ use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::types::{Bundle as CssBundle, StylesheetBundler, StylesheetRoot};
-use mokly_css::vite;
 use mokly_graph::render_inputs::preview_candidates;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::Bundle;
@@ -181,6 +180,9 @@ fn stylesheet_closure(
     if vite {
         closure.extend(bundle.dependency_digests.into_keys());
     }
+    closure.retain(|path| {
+        !stylesheets::css_module(path, vite) || bundle.css_modules.contains_key(path)
+    });
     Ok(closure)
 }
 
@@ -227,13 +229,10 @@ pub(crate) fn prepare(
             Err(source) => return Err(RenderError::Css { source }),
         };
     }
-    for path in modules.keys().filter(|path| {
-        if params.vite {
-            vite::css_module(path)
-        } else {
-            path.ends_with(".module.css")
-        }
-    }) {
+    for path in modules
+        .keys()
+        .filter(|path| stylesheets::css_module(path, params.vite))
+    {
         if !styles.maps.contains_key(path) && !stylesheets::ignored_for(path, loaders, params.vite)
         {
             let root = StylesheetRoot {

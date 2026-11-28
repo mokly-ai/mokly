@@ -60,6 +60,7 @@ fn result(cache: CacheOutcome) -> MethodResult {
             sources: Default::default(),
             peers: Default::default(),
             storybook_react: Default::default(),
+            storybook_previews: Default::default(),
             inputs: Default::default(),
             metadata_inputs: Default::default(),
             input_directories: Default::default(),

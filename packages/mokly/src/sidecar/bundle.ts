@@ -198,11 +198,11 @@ async function bundleAttempt(
       cssModules: new Set<string>(),
       virtualOrigins,
     };
-    const { contents, inputPaths, previews } = await entryModule(
+    const { contents, inputPaths, previews, previewProbe } = await entryModule(
       params,
       capture.previews,
     );
-    capture.previews = previews;
+    capture.previews = previewProbe;
     const relative =
       capture.mode === "serveEdit" &&
       resolution.mode === "planned" &&
@@ -271,7 +271,7 @@ async function bundleAttempt(
         inputs,
         compiled,
         inputPaths,
-        previews,
+        previewProbe,
         runtimeKey,
         evidence,
         editImports,

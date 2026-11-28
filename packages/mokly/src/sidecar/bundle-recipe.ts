@@ -23,7 +23,8 @@ import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
-import { previewCandidates } from "./storybook-folders.js";
+import { recordPreviewInputs } from "./storybook-folders.js";
+import type { PreviewProbe } from "./storybook-folders.js";
 import { recordStorybookInputs } from "./storybook-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
 
@@ -35,7 +36,7 @@ export interface CompiledBundle {
   inputs: { files: Map<string, Uint8Array>; cssModules: Set<string> };
   compiled: Pick<BuildResult, "metafile" | "outputFiles" | "warnings">;
   inputPaths: Map<string, string>;
-  previews: ReadonlyMap<string, string>;
+  previewProbe: PreviewProbe;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
@@ -51,7 +52,7 @@ export async function bundleRecipe(
     inputs,
     compiled,
     inputPaths,
-    previews,
+    previewProbe,
     runtimeKey,
     evidence,
     editImports,
@@ -109,13 +110,12 @@ export async function bundleRecipe(
       }
     }
   });
-  for (const file of previewCandidates(params)) {
-    const absolute = path.resolve(params.sourceRoot, file);
-    metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
-      absolute,
-      physicalInputs,
-    );
-  }
+  await recordPreviewInputs(
+    params.sourceRoot,
+    previewProbe,
+    physicalInputs,
+    metadataInputs,
+  );
   recordStorybookInputs(
     paths,
     storybook?.inputs,
@@ -156,6 +156,8 @@ export async function bundleRecipe(
         inputs: {},
       });
   const toolchain = await toolchainIdentity();
+  if (reuseEvidence.uncaptured === "serveEdit")
+    Object.assign(reuseEvidence.inputs, previewProbe.links);
   if (!toolchain) {
     reuseEvidence.complete = false;
     delete reuseEvidence.uncaptured;
@@ -179,7 +181,7 @@ export async function bundleRecipe(
       params.entryFiles,
       params.storiesFiles,
       params.storybookFolders,
-      [...previews],
+      Object.entries(previewProbe.selections),
       storybook?.peers,
       params.renderer,
       params.configurationDirectory,
@@ -223,7 +225,15 @@ export async function bundleRecipe(
     ),
     peers,
     ...(storybook && { storybookReact: storybook.peers }),
-    unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
+    ...(Object.keys(previewProbe.selections).length && {
+      storybookPreviews: previewProbe.selections,
+    }),
+    unmappedDependencyDirectories: [
+      ...new Set([
+        ...paths.dependencyUsage.unmapped,
+        ...(storybook?.dependencyDirectories ?? []),
+      ]),
+    ].sort(),
     ...directories,
     inputs: physicalInputs,
     metadataInputs,

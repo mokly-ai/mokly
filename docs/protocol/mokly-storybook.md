@@ -64,6 +64,16 @@ reads `main.*` only when the configuration directory does not resolve
 such as `@storybook/react-vite`, work without a direct `@storybook/react`
 dependency. A required direct dependency was rejected.
 
+`main.*` can name the framework package by its name or by the absolute path of
+its directory. Mokly reads `main.*` for this lookup with the resolution
+settings of the story's side. The `bundle` result reports the dependency
+directories that this read used in its
+[`unmappedDependencyDirectories`](./mokly-sidecar-modules.md#source-and-dependency-files).
+Only a compile reads `main.*` for this lookup. It reads each `main.*` at most
+once, also when the Vite setup reloads. A reuse check and a
+[Vite stylesheet transform](./mokly-vite-adapter-styles.md#stylesheet-transforms)
+do not read it.
+
 When Storybook's loader fails on a `main.*` file during `bundle`, `bundle`
 fails with `bundle-failed`. Its message names the file, the installed
 Storybook version, and the Storybook range that Mokly's tests cover. Decision:

@@ -10,7 +10,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::config::{normalize, relative};
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
-use crate::discovery_walk::Walk;
+use crate::discovery_walk::{FolderExclusions, Walk};
 use crate::error::Result;
 use crate::folder_input::FolderInput;
 use crate::globs::{self, DEFAULT_GLOBS};
@@ -125,7 +125,19 @@ impl Discovery for Discoverer {
         };
         let mut owners = BTreeMap::new();
         let mut candidates = BTreeMap::new();
-        let mut folder_globs = BTreeMap::new();
+        let mut exclusions = FolderExclusions::default();
+        let entry_directories = config
+            .roots
+            .iter()
+            .enumerate()
+            .filter(|(_, root)| root.from_storybook_main())
+            .map(|(index, root)| {
+                (
+                    (root.configured_index(index), root.directory.as_path()),
+                    root,
+                )
+            })
+            .collect();
         let mut group_start = 0;
         let mut not_searched = Vec::new();
         for (index, root) in config.roots.iter().enumerate() {
@@ -153,11 +165,12 @@ impl Discovery for Discoverer {
                 output: output.as_deref(),
                 not_searched: Vec::new(),
                 owners: &mut owners,
-                folder_globs: &mut folder_globs,
+                exclusions: &mut exclusions,
+                entry_directories: &entry_directories,
                 candidates: &mut candidates,
                 inventory: &mut inventory,
             };
-            walk.directory(&root.directory, &[])?;
+            walk.directory(&root.directory)?;
             not_searched.extend(walk.not_searched);
             if config
                 .roots
@@ -165,6 +178,9 @@ impl Discovery for Discoverer {
                 .is_some_and(|next| next.configured_index(index + 1) == configured)
             {
                 continue;
+            }
+            for file in &mut inventory.files[group_start..] {
+                file.excluded = exclusions.excludes(&file.absolute);
             }
             if !inventory.files[group_start..]
                 .iter()
@@ -187,6 +203,7 @@ impl Discovery for Discoverer {
                 )));
             }
             group_start = inventory.files.len();
+            exclusions = FolderExclusions::default();
             not_searched.clear();
         }
         inventory

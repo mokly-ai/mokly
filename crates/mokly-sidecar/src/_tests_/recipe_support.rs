@@ -59,6 +59,7 @@ fn compiled(id: &str, capture: BundleCapture, inputs: Inputs) -> CompiledGenerat
         sources: BTreeMap::new(),
         peers: BTreeMap::new(),
         storybook_react: Default::default(),
+        storybook_previews: Default::default(),
         inputs,
         metadata_inputs: BTreeMap::new(),
         input_directories: BTreeMap::new(),

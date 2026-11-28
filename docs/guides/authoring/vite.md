@@ -104,6 +104,11 @@ files that the renderer already delivers. A stories file's bundle also skips
 JavaScript imports of files that its preview already delivers. Vite inlines
 local `@import` rules, so those rules can include the same CSS in a later bundle.
 
+An earlier stylesheet can `@import` a CSS Module, and Vite then inlines it as
+plain CSS. The story or entry that imports the same module from JavaScript
+still keeps its own scoped copy, because its class names need the scoped
+selectors.
+
 For a configured or component-declared local stylesheet, Mokly adds `.css`
 to the output path if the source path does not end in `.css`. For example,
 `design/base.scss` becomes `styles/design/base.scss.css` in the generated

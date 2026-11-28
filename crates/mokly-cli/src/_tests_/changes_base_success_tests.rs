@@ -112,6 +112,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     sources: BTreeMap::new(),
                     peers: BTreeMap::new(),
                     storybook_react: Default::default(),
+                    storybook_previews: Default::default(),
                     inputs: BTreeMap::new(),
                     metadata_inputs: BTreeMap::new(),
                     input_directories: BTreeMap::new(),

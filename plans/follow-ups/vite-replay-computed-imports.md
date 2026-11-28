@@ -29,10 +29,12 @@
 - **Background:**
   - Vite's development runner can request a module when execution computes
     its path.
-  - `docs/protocol/mokly-vite-adapter.md` says that `bundle` evaluates
-    nothing, and that each module of a generation evaluates once. It also
-    says that `restoreGeneration` replays a recipe in another process
-    without a read of a current source file and without a transform.
+  - The section "Bundling" of `docs/protocol/mokly-sidecar.md` says that
+    `bundle` evaluates no module of the generation, and that `describe`
+    evaluates it. `docs/protocol/mokly-vite-adapter.md` says that each module
+    of a generation evaluates once. It also says that `restoreGeneration`
+    replays a recipe in another process without a read of a current source
+    file and without a transform.
     `docs/protocol/mokly-sidecar-recipes.md:22` and
     `docs/protocol/mokly-sidecar-modules.md:166` state the same rules. So an
     old generation never renders the bytes of a later edit.
@@ -117,8 +119,8 @@
     compile snapshot, and a target that runs only in another process or a
     later render still misses.
   - Run a discovery evaluation during `bundle`. It breaks the rules that
-    `bundle` evaluates nothing and that each module evaluates once. An import
-    that runs only during a render still misses.
+    `bundle` evaluates no module of the generation and that each module
+    evaluates once. An import that runs only during a render still misses.
   - Load a computed package target through Node at replay. The module graph
     never records that package, so render keys and Serve's watch miss it.
     Replay has no Vite resolver, so aliases and conditions can select another

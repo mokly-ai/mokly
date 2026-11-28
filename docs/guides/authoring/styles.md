@@ -32,6 +32,11 @@ the entry's JavaScript imports and its `@import` chain. With the
 imports. A renderer stylesheet imported with `@import` appears again in the
 entry's imported CSS.
 
+Mokly removes a CSS Module from the entry only when the renderer's bundle
+scopes it under the same path. If the renderer reaches the file through
+another path, such as a package link, or Vite inlines it as plain CSS, the
+entry keeps its own scoped copy, so its class names still match.
+
 For CSS shared by a Storybook folder's stories, see
 [Style stories from the preview](/docs/authoring/storybook/#style-stories-from-the-preview).
 

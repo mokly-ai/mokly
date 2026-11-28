@@ -12,6 +12,60 @@ export default { render: () => <output>Story</output> };
 export const Primary = {};
 `;
 
+for (const nestedFirst of [false, true]) {
+  test(`folder exclusions cover every Storybook entry with nested entry first=${nestedFirst}`, async (context) => {
+    const entries = [
+      "../stories/overview.stories.tsx",
+      "../stories/admin/*.stories.tsx",
+    ];
+    const root = await consumer(context, {
+      "mokly.config.json": config,
+      ".storybook/main.ts": `export default { stories: ${JSON.stringify(nestedFirst ? entries.toReversed() : entries)} };`,
+      "stories/_folder.json":
+        '{"title":"Storybook stories","exclude":["admin/hidden.stories.tsx"]}',
+      "stories/overview.stories.tsx": story,
+      "stories/admin/hidden.stories.tsx": story,
+      "stories/admin/visible.stories.tsx": story,
+    });
+    const { index } = await build(
+      root,
+      ["--no-changes", "--strict"],
+      "plain",
+      context.signal,
+    );
+    assert.deepEqual(index.components.map(({ path }) => path).sort(), [
+      "library/overview",
+      "library/visible",
+    ]);
+  });
+}
+
+test("a Storybook folder record takes its path from the deepest entry", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": config,
+    ".storybook/main.ts":
+      'export default { stories: ["../src/**/*.mdx", "../src/components/**/*.stories.tsx"] };',
+    "src/components/_folder.json": '{"title":"Components"}',
+    "src/components/card.stories.tsx": story,
+  });
+  const { index } = await build(
+    root,
+    ["--no-changes", "--strict"],
+    "plain",
+    context.signal,
+  );
+  assert.deepEqual(
+    index.components.map(({ path }) => path),
+    ["library/card"],
+  );
+  assert.deepEqual(
+    index.tree.flatMap((node) =>
+      node.kind === "folder" ? [[node.path, node.title]] : [],
+    ),
+    [["library", "Components"]],
+  );
+});
+
 test("Build expands Storybook entries in order and selects only supported stories", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": config,

@@ -238,7 +238,7 @@ pub enum Call {
     Hello(Hello),
     /// Read the stories configuration of one Storybook folder.
     ReadStorybook(ReadStorybookParams),
-    /// Compile without evaluating consumer modules.
+    /// Compile an unevaluated generation. The compile can load project configuration.
     Bundle(BundleRequest),
     /// Restore an immutable compiled generation in another worker.
     RestoreGeneration(Box<RestoreGeneration>),

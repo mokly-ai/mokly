@@ -27,7 +27,7 @@ use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
 use crate::stylesheets::StylesheetAttempt;
-use crate::{bundle_styles, declarations, definition_handle, sources, stylesheets};
+use crate::{bundle_attempt, bundle_styles, declarations, definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -213,7 +213,8 @@ impl JavaScriptGraph {
                 })
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
-            let story_previews = bundle_styles::story_previews(
+            let story_previews = bundle_attempt::story_previews(
+                generation.storybook_previews.as_ref(),
                 &generation.modules,
                 &config.storybook_folders(&catalogue.inventory.files),
                 assets.as_ref(),

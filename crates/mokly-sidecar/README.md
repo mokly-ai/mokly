@@ -671,6 +671,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/storybook.rs`](./src/storybook.rs) defines `ReadStorybookParams` and
   `ReadStorybookResult`, the params and the result of a `readStorybook` call,
   which reads the `stories` entries of one Storybook folder before discovery.
+  It also defines `PreviewSelection` and `PreviewModule`, the original preview
+  selection of one folder: the selected candidate with its resolved file, and
+  the absent candidates. `CompiledGeneration::storybook_previews` keeps one
+  for each compiled folder, on the esbuild path and under the Vite adapter.
   [`src/request_timeout.rs`](./src/request_timeout.rs) gives
   `Call::timeout_ms`, the default deadline of each request.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the

@@ -94,6 +94,8 @@ document links the available bundles in this order.
 The preview bundle leaves out files that the renderer already delivers.
 The stories file's bundle also leaves out files that its preview already
 delivers. Vite applies this rule only to stylesheets that JavaScript imports.
+A CSS Module counts as delivered only when the earlier bundle scopes it under
+the same path.
 See [Imported styles in Vite](/docs/authoring/vite/#imported-styles).
 
 ## Story formats

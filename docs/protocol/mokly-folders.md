@@ -57,7 +57,10 @@ and transparent directories apply:
 The file is strict JSON with the fields above and no `path`. `exclude` globs
 use the [safe relative glob grammar](./mokly-root-discovery.md#glob-validation) and match repository
 files relative to the directory; a matched file is neither an entry nor a
-document. A file matched by a root's `files` globs stays a protected, watched
+document. Among the
+[roots from `main.*`](./mokly-root-discovery.md#roots-from-main) of one
+configured root, the exclusions of each record apply to the files of all
+those roots. A file matched by a root's `files` globs stays a protected, watched
 source input even when excluded and never imported. Exclusions match whole file
 paths only: `drafts/**` excludes files below `drafts`, while `drafts` does not
 exclude that directory. A
@@ -71,7 +74,9 @@ inside the directories of two configured roots fails with the same
 are disjoint; see [roots validation](./mokly-configuration.md#roots). No root
 is selected silently, except among the
 [roots from `main.*`](./mokly-root-discovery.md#roots-from-main) of one
-configured root.
+configured root. There, a record belongs to the first of those roots that
+reaches it, and the root with the deepest directory that holds the record
+gives its folder path.
 A vanished record does not discard its directory's entries. Other filesystem
 failures follow [root discovery](./mokly-root-discovery.md#traversal-and-races).
 

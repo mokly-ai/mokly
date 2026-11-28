@@ -240,15 +240,20 @@ fn visit_for(
     }
 }
 
+pub(crate) fn css_module(path: &str, adapter: bool) -> bool {
+    if adapter {
+        vite::css_module(path)
+    } else {
+        path.ends_with(".module.css")
+    }
+}
+
 pub(crate) fn ignored_for(path: &str, loaders: &BTreeMap<String, String>, adapter: bool) -> bool {
     loaders.get(".css").is_some_and(|loader| loader == "empty")
-        || (if adapter {
-            vite::css_module(path)
-        } else {
-            path.ends_with(".module.css")
-        }) && loaders
-            .get(".module.css")
-            .is_some_and(|loader| loader == "empty")
+        || css_module(path, adapter)
+            && loaders
+                .get(".module.css")
+                .is_some_and(|loader| loader == "empty")
 }
 
 #[cfg(test)]

@@ -91,6 +91,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                             sources: BTreeMap::new(),
                             peers: BTreeMap::new(),
                             storybook_react: Default::default(),
+                            storybook_previews: Default::default(),
                             inputs: BTreeMap::new(),
                             metadata_inputs: BTreeMap::new(),
                             input_directories: BTreeMap::new(),

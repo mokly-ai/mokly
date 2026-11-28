@@ -9,8 +9,10 @@ use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
 use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
+use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
+use crate::bundle_styles;
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::BundleLease;
@@ -111,10 +113,61 @@ pub(crate) fn modules(result: &results::Bundle) -> BTreeMap<String, Vec<String>>
         .map(|module| (module.path.clone(), module.imports.clone()))
         .collect()
 }
+
+pub(crate) fn selected_previews(
+    result: &results::Bundle,
+) -> Option<BTreeMap<String, Option<String>>> {
+    let previews = &result.compiled.storybook_previews;
+    (!previews.is_empty()).then(|| {
+        previews
+            .iter()
+            .map(|(folder, preview)| {
+                let file = preview
+                    .selected
+                    .as_ref()
+                    .map(|selected| selected.file.clone());
+                (folder.clone(), file)
+            })
+            .collect()
+    })
+}
+
+pub(crate) fn story_previews(
+    selected: Option<&BTreeMap<String, Option<String>>>,
+    modules: &BTreeMap<String, Vec<String>>,
+    folders: &BTreeMap<String, String>,
+    tree: &dyn SourceTree,
+    root: &Path,
+) -> BTreeMap<String, String> {
+    let Some(selected) = selected else {
+        return bundle_styles::story_previews(modules, folders, tree, root);
+    };
+    folders
+        .iter()
+        .filter_map(|(story, folder)| {
+            let module = selected.get(folder)?.as_ref()?;
+            modules
+                .contains_key(module)
+                .then(|| (story.clone(), module.clone()))
+        })
+        .collect()
+}
+
 /// Capture every compiler digest and direct directory membership.
 pub(crate) fn stamp(result: &results::Bundle, repository: &Path) -> InputStamp {
     let mut stamp = InputStamp::default();
     let compiled = &result.compiled;
+    for preview in compiled.storybook_previews.values() {
+        for path in &preview.absent {
+            stamp.previews.insert(repository.join(path), None);
+        }
+        if let Some(selected) = &preview.selected {
+            stamp.previews.insert(
+                repository.join(&selected.path),
+                Some(repository.join(&selected.file)),
+            );
+        }
+    }
     if let Some(env) = compiled
         .vite
         .as_ref()

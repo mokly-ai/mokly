@@ -2,12 +2,12 @@
 
 use std::collections::BTreeMap;
 use std::iter;
+use std::sync::OnceLock;
 
 use globset::{GlobBuilder, GlobMatcher};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::names::ModuleNames;
 use mokly_css::types::{Bundle, StylesheetRoot};
-use mokly_css::{paths, vite};
 use mokly_html::tree;
 use mokly_html::tree::Node;
 use mokly_model::axes::ColorScheme;
@@ -30,11 +30,38 @@ pub(crate) fn register_modules(
         .map_err(|source| GraphError::Css { source })
 }
 
-/// Compiled stylesheet `match` globs, in configuration order.
+#[derive(Default)]
+struct StylesheetRoutes {
+    local: BTreeMap<String, String>,
+    modules: BTreeMap<String, String>,
+}
+
+impl StylesheetRoutes {
+    fn registered(resources: &BTreeMap<String, ResourcePlan>) -> Self {
+        let mut routes = Self::default();
+        for (route, resource) in resources {
+            if resource.asset.is_some() {
+                continue;
+            }
+            let by_source = if resource.root.local_css {
+                &mut routes.local
+            } else {
+                &mut routes.modules
+            };
+            by_source.insert(resource.root.path.clone(), route.clone());
+        }
+        routes
+    }
+}
+
+/// Compiled stylesheet `match` globs and registered routes for one generation.
 /// `literal_separator` keeps `*` and `?` inside one path segment. Backslash escaping is
 /// off on every platform, because globset turns it on by default only where `\` is not
 /// a path separator, so the same pattern would match differently on Windows.
-pub(crate) struct Matchers(Vec<GlobMatcher>);
+pub(crate) struct Matchers {
+    globs: Vec<GlobMatcher>,
+    routes: OnceLock<StylesheetRoutes>,
+}
 
 impl Matchers {
     pub(crate) fn new(config: &ResolvedConfig) -> Result<Self> {
@@ -54,7 +81,10 @@ impl Matchers {
                 }
             }
         }
-        Ok(Self(matchers))
+        Ok(Self {
+            globs: matchers,
+            routes: OnceLock::new(),
+        })
     }
 }
 
@@ -145,20 +175,19 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         resources,
         module,
     } = input;
+    let registered = matchers
+        .routes
+        .get_or_init(|| StylesheetRoutes::registered(resources));
     let mut links = Vec::new();
-    let component_paths: Vec<_> = components
-        .iter()
-        .flat_map(|component| {
-            inputs
-                .component_stylesheets
-                .get(component)
-                .into_iter()
-                .flatten()
-        })
-        .collect();
     let mut shared = Vec::new();
     let mut specific = Vec::new();
-    for (rule, matcher) in config.input.stylesheets.iter().flatten().zip(&matchers.0) {
+    for (rule, matcher) in config
+        .input
+        .stylesheets
+        .iter()
+        .flatten()
+        .zip(&matchers.globs)
+    {
         if !matcher.is_match(format!("{path}/index.html")) {
             continue;
         }
@@ -181,47 +210,45 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
             }
         })
         .collect();
+    let component_paths = || {
+        components
+            .iter()
+            .flat_map(|component| {
+                inputs
+                    .component_stylesheets
+                    .get(component)
+                    .into_iter()
+                    .flatten()
+            })
+            .filter(|path| {
+                config
+                    .repository_path(path)
+                    .is_some_and(|logical| !configured.contains(&logical))
+            })
+            .cloned()
+    };
     let mut ordered = Vec::new();
     let mut marker = false;
     for value in shared {
         if value == "$componentStylesheets" {
-            ordered.extend(
-                component_paths
-                    .iter()
-                    .filter(|path| {
-                        config
-                            .repository_path(path)
-                            .is_some_and(|logical| !configured.contains(&logical))
-                    })
-                    .map(|path| (*path).clone()),
-            );
+            ordered.extend(component_paths());
             marker = true;
         } else {
             ordered.push(value);
         }
     }
     if !marker {
-        ordered.extend(
-            component_paths
-                .iter()
-                .filter(|path| {
-                    config
-                        .repository_path(path)
-                        .is_some_and(|logical| !configured.contains(&logical))
-                })
-                .map(|path| (*path).clone()),
-        );
+        ordered.extend(component_paths());
     }
     ordered.extend(specific);
     for path in ordered {
         let href = if external(&path) {
             path
-        } else if let Some(logical) = config.repository_path(&path) {
-            let mut css = paths::route("styles", &logical);
-            if config.vite() {
-                css.push_str(vite::suffix(&logical));
-            }
-            routes::relative(route, &css)
+        } else if let Some(css) = config
+            .repository_path(&path)
+            .and_then(|logical| registered.local.get(&logical))
+        {
+            routes::relative(route, css)
         } else {
             continue;
         };
@@ -236,10 +263,8 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         .chain(inputs.story_previews.get(*module).map(String::as_str))
         .chain(iter::once(*module))
     {
-        let mut css = paths::route("styles", root);
-        css.push_str(".css");
-        if resources.contains_key(&css) {
-            let href = routes::relative(route, &css);
+        if let Some(css) = registered.modules.get(root) {
+            let href = routes::relative(route, css);
             if !links.contains(&href) {
                 links.push(href);
             }

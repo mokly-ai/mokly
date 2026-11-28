@@ -115,30 +115,45 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   the `storybookFolders` bundle param, with `.storybook` for a file without
   one, and `storybookFolders`, the sorted folders of the stories files.
   `storybookCandidates` gives the `main` or `preview` file names of a folder in
-  Storybook's extension order. `previewCandidates` lists the preview
-  candidates of every folder, also absent ones, which the recipe hashes, and
-  `selectPreviews` takes the first present preview of each folder.
+  Storybook's extension order. `probePreviews` makes the original preview
+  selection of each folder before the compile: the first candidate that is a
+  regular file, with its resolved file, and the names of the absent
+  candidates. Its `PreviewProbe` also keeps the digests of the other present
+  candidates and the link targets that the probe saw. `previewModules` gives
+  the selected files, `recordPreviewInputs` adds every candidate to the
+  physical and metadata inputs, and `previewsCurrent` checks the selection
+  again before a reuse.
 - [`src/sidecar/storybook-main.ts`](./storybook-main.ts) holds
-  `storybookFrameworks`, which `consumerRequire` in
-  [`src/sidecar/paths.ts`](./paths.ts) calls when the configuration directory
-  does not resolve `@storybook/react`. For each folder, it finds `main.*` in
-  Storybook's order and reads its `framework` with Storybook's own loader from
-  the project's `storybook` package. Then it resolves `@storybook/react` from
-  the framework package. When a step finds no file or package, it throws the
-  error that the lookup of `@storybook/react` from the configuration directory
-  gave. The loader runs in a worker thread from
+  `storybookFrameworks`, which the `loadStorybook` method of `consumerRequire`
+  in [`src/sidecar/paths.ts`](./paths.ts) calls when the configuration
+  directory does not resolve `@storybook/react`. The esbuild compile calls
+  `loadStorybook` from its peer lookup with the `main.*` cache of the call.
+  The Vite compile calls it after `ViteContext` opens the setup. The reuse
+  probe and the Vite stylesheet transform do not call it. For each folder,
+  `storybookFrameworks` finds `main.*` in Storybook's order and reads its
+  `framework` with Storybook's own loader from the project's `storybook`
+  package. Then it resolves `@storybook/react` from the framework package. A
+  framework named by an absolute directory resolves through its
+  `package.json`. When a step finds no file or package, it throws the error
+  that the lookup of `@storybook/react` from the configuration directory gave.
+  The loader runs in a worker thread from
   [`src/sidecar/storybook-main-worker.ts`](./storybook-main-worker.ts), so
   that the TypeScript loader that Storybook registers and the module cache of
-  `main.*` stay local to one read, also across edits in Serve. The worker
-  returns the files that the read resolved or read, with their digests. A
-  loader failure names the file, the installed Storybook version, and the
-  tested range. The result gives the `@storybook/react` entry of each folder,
-  which the compiled recipe keeps as `storybookReact`. The same file holds
+  `main.*` stay local to one read, also across edits in Serve. Both callers
+  send the side's resolution settings, and the worker loads `main.*` with the
+  module lookup of that side. The worker returns the files that the read
+  resolved or read, with their digests. It also takes the whole-file digest of
+  each repository file that the load opens for reading, from the descriptor
+  before the caller reads, and it returns the resolved name of a read through
+  a link beside the authored name. A loader failure names the file, the
+  installed Storybook version, and the tested range. The result gives the
+  `@storybook/react` entry of each folder, which the compiled recipe keeps as
+  `storybookReact`, and the dependency directories that the loads used, which
+  the recipe adds to `unmappedDependencyDirectories`. The same file holds
   `readStorybook`, which `Session` runs for a `readStorybook` request before
   discovery. It finds the `main.*` of one folder and resolves the `storybook`
   package from the configuration directory, else from the parent of the
-  folder. The worker then loads `main.*` with the module lookup of the
-  request's side and passes each `stories` entry to Storybook's
+  folder. The worker passes each `stories` entry to Storybook's
   `normalizeStoriesEntry`. The result keeps the entries in order and the
   dependency directories that the read used. It also keeps the digests of the
   repository files outside `node_modules` that the read used.
@@ -157,8 +172,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   attempts, while each attempt keeps its own consumed-file and CSS-module
   records. `startCapture` in
   [`src/sidecar/bundle-capture.ts`](./bundle-capture.ts) creates that shared
-  state. It also keeps the preview selection of each Storybook folder and the
-  `main.*` reads, so every attempt of a call uses the same previews and reads
+  state. It also keeps the `PreviewProbe` of the call and the `main.*` reads,
+  so every attempt of a call uses the original preview selection and reads
   each `main.*` once. Each attempt takes its esbuild options and plugin order
   from `bundleOptions` in
   [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
@@ -195,8 +210,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   [`src/sidecar/configured-files.ts`](./configured-files.ts), the
   first plugin of each attempt, resolves each of its imports to the canonical
   configured file or selected preview file, so TypeScript `paths` never apply
-  to it. Without captured preview selections, every call selects only regular
-  preview files.
+  to it. Without a captured probe, `entryModule` runs `probePreviews` itself.
+  It returns the probe. The recipe records its selections as
+  `storybookPreviews`, and `restore` adds the recorded selected files to the
+  configured files.
 - For a `serveEdit` call with a plan, `bundle` runs no native compile. It
   starts with a guarded planned compile, in which esbuild itself resolves the
   selected safe relative specifiers of the plan. `PlannedRelative.create` in
@@ -409,10 +426,12 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   building an oversized string.
 - [`src/sidecar/compiled.ts`](./compiled.ts) holds `reuse`, which
   accepts an earlier compilation only while its settings, dependency roots,
-  toolchain, input digests, and directory lists still match. It tries the
-  captured compilations first, and also checks their reuse evidence. Then a
-  `serveEdit` request tries the marked compilations with these live checks
-  and their private folder files. A `full` request never takes a marked
+  toolchain, input digests, and directory lists still match. For a request
+  with stories files, `previewsCurrent` must also find the recorded
+  `storybookPreviews` unchanged. It tries the captured compilations first, and
+  also checks their reuse evidence. Then a `serveEdit` request tries the
+  marked compilations with these live checks, their private folder files, and
+  their preview link targets. A `full` request never takes a marked
   compilation. `reuse` reads first the input that failed the last check of the
   process, then the inputs whose digests differ from another held generation of
   equal settings. The checks stop at the first difference, so this order changes
@@ -635,9 +654,16 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 ### Vite Compilation and Replay
 
 - [`vite-compiler.ts`](./vite-compiler.ts) compiles `vite` requests into a
-  `ViteRecipe` with empty, incomplete reuse evidence.
+  `ViteRecipe` with incomplete reuse evidence that holds only the link targets
+  of the preview probe. It runs the `@storybook/react` framework fallback
+  only after `ViteContext` admits the setup, so a request that needs a fresh
+  worker stops before it loads `main.*`.
   [`vite-context.ts`](./vite-context.ts) defines `ViteContext`, which keeps one
-  Vite server for the JavaScript and stylesheet requests of a side. It sends
+  Vite server for the JavaScript and stylesheet requests of a side. Its setup
+  key takes only the bundle params that `open` classifies as setup inputs, so
+  a change to the entry files, the stories files, or their Storybook folders
+  keeps the server. The classification names every `BundleParams` field, so
+  the type check fails until a new field is classified. It sends
   `fresh-worker-required` when a setup reload needs empty Node module caches.
   A stylesheet dependency edit can replace the server in the same process.
   Before replacement, the old server receives the detected file changes.
@@ -680,6 +706,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   receives an external result without a file.
 - [`vite-peers.ts`](./vite-peers.ts) runs one esbuild peer lookup for Vite and
   peers other than React, then loads Vite and finds its real package path.
+  The lookup itself loads no `main.*`, so the reuse probe and the stylesheet
+  transform run no framework fallback.
   [`vite-node-peers.ts`](./vite-node-peers.ts) scopes Node's resolve hook to each
   request so dependencies of a Vite generation load one React runtime.
   It keeps the peer paths of evaluated generations. It also keeps the digests
@@ -717,7 +745,7 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
   builds digests for setup files, plugin inputs, React manifests, the preview
-  candidates of each Storybook folder, the files and the other `main.*`
+  candidates of the compile's `PreviewProbe`, the files and the other `main.*`
   candidates of the `main.*` read, package
   and TypeScript config candidates, and consumed files outside the graph.
   [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot

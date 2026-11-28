@@ -7,6 +7,7 @@ import type { CaptureDurability } from "./capture-durability.js";
 import { metadataRuntime } from "./metadata-proof.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
+import type { PreviewProbe } from "./storybook-folders.js";
 import type { StorybookMainCache } from "./storybook-main.js";
 
 /** The capture state that the compile attempts of one bundle share. */
@@ -16,7 +17,7 @@ export interface BundleCaptureState {
   reads: Map<string, Uint8Array>;
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
-  previews?: ReadonlyMap<string, string> | undefined;
+  previews?: PreviewProbe;
   mains?: StorybookMainCache;
   plan?: ResolutionPlan;
   editImports?: ServeEditImports;

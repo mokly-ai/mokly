@@ -55,6 +55,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         sources: Default::default(),
                         peers: Default::default(),
                         storybook_react: Default::default(),
+                        storybook_previews: Default::default(),
                         inputs: Default::default(),
                         metadata_inputs: Default::default(),
                         input_directories: Default::default(),

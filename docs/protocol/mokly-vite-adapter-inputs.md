@@ -33,6 +33,10 @@ the `watchChange` hooks and the watcher listeners of its plugins, once. A
 `bundle` request never uses a transform of older bytes than the bytes that the
 graph reports.
 
+The `bundle` and `transformViteCss` requests of a side use the same setup while
+these inputs stay unchanged. A change to the entry files, to the stories files,
+or to the Storybook folder of a stories file does not reload the setup.
+
 Each setup uses one snapshot of the bytes or absence of each dotenv candidate.
 The config record includes the file selection probes and the bytes consumed
 by the config bundle. A compile fails with the changed input's name

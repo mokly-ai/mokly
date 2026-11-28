@@ -98,8 +98,12 @@ expanded root keeps the index of its configured root. The overlap error and
 `SourcePolicy` name that configured root, and the empty-root check covers all
 the roots of one configured root together. An expanded root selects only
 stories files. When two entries of one configured root reach the same file or
-folder record, the first entry owns it. Expansion adds the local files that
-each `main.*` read to the authored inputs, and
+folder record, the first entry owns it. A folder record takes its folder path
+from the deepest entry directory that holds it. After all walks of one
+configured root, `Discoverer` applies the exclusions of every folder record
+of that root to every file that its entries select. Expansion adds the local
+files that each `main.*` read to the authored inputs, under the reported path
+and under the in-repository path that the source tree projects it to, and
 `ResolvedConfig::storybook_inputs` gives their digests. `Discoverer` rejects
 a root that still needs its `main.*`. The
 [roots from `main.*` rules](../../docs/protocol/mokly-root-discovery.md#roots-from-main)
@@ -282,11 +286,15 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/storybook_roots.rs`](./src/storybook_roots.rs) defines
   `StorybookReader`, the boundary that reads the `stories` entries of one
   `main.*`, and `expand`, which replaces each root without `dir` with the
-  roots of those entries.
+  roots of those entries. `expand` registers each input that the read
+  reports, and also the projected in-repository path of each present input.
   [`src/storybook_globs.rs`](./src/storybook_globs.rs) turns a Storybook
   pattern into root globs.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
+  [`src/discovery_walk.rs`](./src/discovery_walk.rs) walks one root. It
+  collects the `FolderExclusions` of a configured root, which `Discoverer`
+  applies to every file of that root after all of its walks.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
   `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
   its shared `prop_validators`.

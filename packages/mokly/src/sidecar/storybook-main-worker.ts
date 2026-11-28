@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import fs from "node:fs";
 import { registerHooks } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -6,9 +8,11 @@ import { parentPort, workerData } from "node:worker_threads";
 import type * as StorybookCommon from "storybook/internal/common";
 
 import { detail } from "./errors.js";
-import { fileDigest } from "./file-digests.js";
+import { missingFile } from "./file-digests.js";
 import { ModulePaths } from "./module-paths.js";
 import { readEvidence } from "./postcss-evidence.js";
+import { fileIdentity } from "./postcss-file-identity.js";
+import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { resolutionMetadata } from "./postcss-resolution-evidence.js";
 import { isRecord } from "./storybook-main.js";
@@ -17,15 +21,41 @@ import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteLookup } from "./vite-resolution.js";
 
 const request: MainRequest = workerData;
+const { openSync, fstatSync, readSync, closeSync } = fs;
+const buffer = Buffer.allocUnsafe(64 * 1024);
 
-async function read({
-  common,
-  base,
-  stories,
-}: MainRequest): Promise<MainResult> {
-  const files = new Map<string, Promise<string | null>>();
+function descriptorDigest(fd: number): string {
+  const hash = createHash("sha256");
+  let offset = 0;
+  for (;;) {
+    const count = readSync(fd, buffer, 0, buffer.length, offset);
+    if (count === 0) return hash.digest("hex");
+    hash.update(buffer.subarray(0, count));
+    offset += count;
+  }
+}
+
+function moduleDigest(file: string): string | null {
+  try {
+    const fd = openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+    try {
+      return fstatSync(fd).isFile() ? descriptorDigest(fd) : null;
+    } finally {
+      closeSync(fd);
+    }
+  } catch (error) {
+    if (missingFile(error)) return null;
+    throw error;
+  }
+}
+
+async function read(
+  { common, base, stories }: MainRequest,
+  paths: ModulePaths,
+): Promise<MainResult> {
+  const files = new Map<string, string | null>();
   const record = (file: string) => {
-    if (!files.has(file)) files.set(file, fileDigest(file));
+    if (!files.has(file)) files.set(file, moduleDigest(file));
   };
   const hooks = registerHooks({
     resolve(specifier, context, next) {
@@ -40,6 +70,21 @@ async function read({
       return result;
     },
   });
+  const opened = new Map<string, string>();
+  const recordRead = (file: string, digest: string, canonical?: string) => {
+    opened.set(file, digest);
+    if (canonical && canonical !== file) opened.set(canonical, digest);
+  };
+  observeDescriptors((fd, file) => {
+    if (!paths.repositoryOwned(file)) return;
+    const identity = fileIdentity(fd, file);
+    if (!identity) return;
+    try {
+      recordRead(file, descriptorDigest(fd), identity.canonical);
+    } catch {
+      // A descriptor that cannot supply bytes keeps its native behaviour.
+    }
+  });
   observeFileReads();
   try {
     const loader: typeof StorybookCommon = await import(
@@ -47,15 +92,7 @@ async function read({
     );
     const main = loader.getInterpretedFile(base);
     if (main) record(main);
-    const config: unknown = stories
-      ? await withViteConfigResolution(
-          new ViteLookup(
-            ModulePaths.createSync(stories),
-            path.resolve(stories.sourceRoot, stories.configurationDirectory),
-          ),
-          () => loader.serverRequire(base),
-        )
-      : await loader.serverRequire(base);
+    const config: unknown = await loader.serverRequire(base);
     const framework = isRecord(config) ? config.framework : undefined;
     const name = isRecord(framework) ? framework.name : framework;
     const entries = stories
@@ -63,15 +100,18 @@ async function read({
           loader,
           isRecord(config) ? config.stories : undefined,
           path.dirname(base),
-          stories.sourceRoot,
+          paths.sourceRoot,
         )
       : undefined;
-    const inputs = new Map<string, string | null>();
-    for (const [file, digest] of files) inputs.set(file, await digest);
     for (const observed of readEvidence([]).reads) {
       if (observed.kind === "whole-file")
-        inputs.set(observed.path, observed.digest);
+        recordRead(
+          observed.path,
+          observed.digest,
+          observed.identity?.canonical,
+        );
     }
+    const inputs = new Map([...files, ...opened]);
     return {
       ...(typeof name === "string" ? { framework: name } : {}),
       ...(entries && { entries }),
@@ -118,4 +158,11 @@ function readEntry(entry: unknown): { directory: string; files?: string } {
   };
 }
 
-parentPort?.postMessage(await read(request));
+const paths = ModulePaths.createSync(request.side);
+const lookup = new ViteLookup(
+  paths,
+  path.resolve(paths.sourceRoot, request.side.configurationDirectory),
+);
+parentPort?.postMessage(
+  await withViteConfigResolution(lookup, () => read(request, paths)),
+);

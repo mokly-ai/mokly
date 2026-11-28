@@ -3747,6 +3747,14 @@ own lines of this plan.
   Reason: decision B2 keeps one setup at a time, because a setup changes
   globals that the whole process shares, and two folders' setups would share
   them too.
+- E10. Made on 2026-11-28 from the review of track E. A folder record that
+  two `stories` entries of one configured root reach keeps its first owner,
+  as E4 says, and takes its folder path from the deepest entry directory that
+  holds it. The exclusions of every record of the configured root apply to
+  every file that its entries select. Reason: the stories of a nested entry
+  derive their paths from that entry's directory, so a folder path from the
+  enclosing entry fails with `unused-folder`, and the result then depends on
+  the order of the entries.
 
 #### Track E decision 1: The route of a preview in a dot folder
 

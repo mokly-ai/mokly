@@ -26,6 +26,7 @@ fn persistent_compilation_identity_requires_stable_metadata_and_toolchain_only()
         sources: Default::default(),
         peers: Default::default(),
         storybook_react: Default::default(),
+        storybook_previews: Default::default(),
         inputs: Default::default(),
         metadata_inputs: Default::default(),
         input_directories: Default::default(),

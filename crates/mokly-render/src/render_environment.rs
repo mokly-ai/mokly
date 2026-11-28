@@ -10,6 +10,8 @@ use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
 use serde::Serialize;
 
+use crate::bundle_attempt::selected_previews;
+
 /// The reserved logical prefix of installation metadata outside a side's source root.
 const INSTALLED: &str = "node_modules/.mokly-roots/installed/";
 
@@ -23,6 +25,7 @@ pub(crate) struct RenderEnvironment {
     pub(crate) environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub(crate) resolution_digests: BTreeMap<String, String>,
+    pub(crate) storybook_previews: Option<BTreeMap<String, Option<String>>>,
     /// Digests of Vite stylesheet inputs by preview module.
     pub(crate) preview_stylesheet_digests: BTreeMap<String, String>,
     /// Stylesheet path to the digest of its CSS Module bindings.
@@ -119,7 +122,13 @@ pub(crate) fn derive(
                 .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str)
         })
         .collect();
-    let mut resolution_digests = resolution(&compiled.metadata_inputs, folders, &result.modules);
+    let storybook_previews = selected_previews(result);
+    let mut resolution_digests = resolution(
+        &compiled.metadata_inputs,
+        folders,
+        &result.modules,
+        storybook_previews.as_ref(),
+    );
     if let Some(env) = compiled
         .vite
         .as_ref()
@@ -154,6 +163,7 @@ pub(crate) fn derive(
     RenderEnvironment {
         environment: digest(&settings),
         resolution_digests,
+        storybook_previews,
         preview_stylesheet_digests: BTreeMap::new(),
         class_map_digests,
         runtime_packages: compiled.peers.keys().map(|peer| package(peer)).collect(),
@@ -224,13 +234,21 @@ fn resolution<'a>(
     inputs: &BTreeMap<String, Option<String>>,
     folders: impl IntoIterator<Item = &'a str>,
     modules: &[results::Module],
+    previews: Option<&BTreeMap<String, Option<String>>>,
 ) -> BTreeMap<String, String> {
     let graph: BTreeSet<_> = modules.iter().map(|module| module.path.as_str()).collect();
     let mut named = BTreeSet::new();
     for folder in folders {
-        let selected =
-            preview_candidates(folder).find(|path| inputs.get(path).is_some_and(Option::is_some));
-        if selected.is_some_and(|path| graph.contains(path.as_str())) {
+        let named_preview = match previews {
+            Some(previews) => previews
+                .get(folder)
+                .and_then(Option::as_deref)
+                .is_some_and(|file| graph.contains(file)),
+            None => preview_candidates(folder)
+                .find(|path| inputs.get(path).is_some_and(Option::is_some))
+                .is_some_and(|path| graph.contains(path.as_str())),
+        };
+        if named_preview {
             named.extend(preview_candidates(folder));
         }
     }

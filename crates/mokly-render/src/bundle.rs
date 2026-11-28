@@ -86,8 +86,9 @@ pub(crate) fn describe(
     let attempt = stylesheets::attempt(runtime, config, &side);
     let compiler = attempt.compiler;
     let context = attempt.context;
-    let story_previews = |modules| {
-        bundle_styles::story_previews(
+    let story_previews = |selected, modules| {
+        bundle_attempt::story_previews(
+            selected,
             modules,
             &params.storybook_folders,
             tree.as_ref(),
@@ -100,7 +101,10 @@ pub(crate) fn describe(
             compiler.as_ref(),
             &previous.modules,
             &params,
-            &story_previews(&previous.modules),
+            &story_previews(
+                previous.render.storybook_previews.as_ref(),
+                &previous.modules,
+            ),
         )?;
         let digest = maps.fingerprint();
         if let Some(existing) = candidates
@@ -127,7 +131,10 @@ pub(crate) fn describe(
             compiler.as_ref(),
             &modules,
             &params,
-            &story_previews(&modules),
+            &story_previews(
+                bundle_attempt::selected_previews(&result).as_ref(),
+                &modules,
+            ),
         )?,
     };
     let class_maps_digest = maps.fingerprint();

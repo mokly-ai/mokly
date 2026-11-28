@@ -63,7 +63,9 @@ records matching regular files and folder records, then hashes those files and
 the configured inputs through `CapturedTree`. For a root without `dir`, it
 walks the roots from `main.*` instead. Before that walk, `CapturedTree::begin`
 compares each local Storybook configuration input with the digest that the
-`main.*` read recorded, and a difference returns `InputsChanged`.
+`main.*` read recorded. It reads a present input through its resolved name,
+which must be a regular file inside the repository, so a linked input compares
+the bytes of its target. A difference returns `InputsChanged`.
 After the CLI expands the roots, `Transaction::protect_roots` adds the roots
 from `main.*` and the authored inputs to the output boundary and checks the
 output again. Inventoried sidecar modules retain the digests of the exact bundled bytes.

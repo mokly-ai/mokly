@@ -26,10 +26,13 @@ import { ViteLookup } from "./vite-resolution.js";
 // The workspace devDependency pins the Storybook versions used by the tests.
 const testedRange = "^10.6.2";
 
+export type MainSide = Omit<ReadStorybookParams, "folder">;
+
 export interface MainRequest {
   common: string;
   base: string;
-  stories?: ReadStorybookParams;
+  side: MainSide;
+  stories: boolean;
 }
 
 export interface MainResult {
@@ -82,16 +85,12 @@ export async function readStorybook(
     main,
     directory,
     manifest,
-    paths.sourceRoot,
-    params,
+    { ...params, sourceRoot: paths.sourceRoot },
+    true,
   );
   if (result.error !== undefined) return { mainError: result.error };
-  const dependencies = new Set<string>();
-  const dependencyRoot = paths.dependencyRoot ?? paths.sourceRoot;
   for (const [file, digest] of result.inputs) {
     if (digest !== null) reads.set(file, digest);
-    const dependency = dependencyDirectory(dependencyRoot, file);
-    if (dependency) dependencies.add(logical(dependencyRoot, dependency));
   }
   return {
     main: name,
@@ -101,7 +100,7 @@ export async function readStorybook(
         .filter(([file]) => paths.repositoryOwned(file))
         .map(([file, digest]) => [logical(paths.sourceRoot, file), digest]),
     ),
-    dependencyDirectories: [...dependencies].sort(),
+    dependencyDirectories: dependencyDirectories(paths, result.inputs),
   };
 }
 
@@ -113,9 +112,11 @@ export async function storybookFrameworks(
   lookup: Lookup,
   cache: StorybookMainCache,
   missing: Error,
+  side: MainSide,
 ) {
   const inputs = new Map<string, string | null>();
   const peers = new Map<string, string>();
+  const directories = new Set<string>();
   for (const folder of storybookFolders(params)) {
     const absolute = path.resolve(paths.sourceRoot, folder);
     const main = await findMain(paths.sourceRoot, folder, inputs);
@@ -127,14 +128,27 @@ export async function storybookFrameworks(
     if (manifest instanceof Error) throw missing;
     let loaded = cache.get(main);
     if (!loaded) {
-      loaded = loadMain(main, absolute, manifest, paths.sourceRoot);
+      loaded = loadMain(
+        main,
+        absolute,
+        manifest,
+        { ...side, sourceRoot: paths.sourceRoot },
+        false,
+      );
       cache.set(main, loaded);
     }
     const result = await loaded;
     if (result.error !== undefined) throw new Error(result.error);
     for (const [file, digest] of result.inputs) inputs.set(file, digest);
+    for (const dependency of dependencyDirectories(paths, result.inputs))
+      directories.add(dependency);
     if (!result.framework) throw missing;
-    const framework = await lookup(result.framework, absolute);
+    const specifierOrManifest =
+      path.isAbsolute(result.framework) &&
+      !(await regularFile(result.framework))
+        ? path.join(result.framework, "package.json")
+        : result.framework;
+    const framework = await lookup(specifierOrManifest, absolute);
     if (framework instanceof Error) throw missing;
     const react = await resolveReact(paths, framework);
     if (!react) throw missing;
@@ -145,7 +159,25 @@ export async function storybookFrameworks(
     }
     peers.set(folder, react);
   }
-  return { inputs, peers: Object.fromEntries(peers) };
+  return {
+    inputs,
+    peers: Object.fromEntries(peers),
+    dependencyDirectories: [...directories].sort(),
+  };
+}
+
+function dependencyDirectories(
+  paths: ModulePaths,
+  inputs: MainResult["inputs"],
+): string[] {
+  const root = paths.dependencyRoot ?? paths.sourceRoot;
+  const directories = new Set<string>();
+  for (const [file, digest] of inputs) {
+    if (digest === null) continue;
+    const directory = dependencyDirectory(root, file);
+    if (directory) directories.add(logical(root, directory));
+  }
+  return [...directories].sort();
 }
 
 async function findMain(
@@ -167,8 +199,13 @@ async function loadMain(
   file: string,
   directory: string,
   manifest: string,
-  root: string,
-  stories?: ReadStorybookParams,
+  {
+    sourceRoot: root,
+    configurationDirectory,
+    repositoryRoots,
+    moduleResolution,
+  }: MainSide,
+  stories: boolean,
 ): Promise<MainResult> {
   let version = "unknown";
   const failure = (error: unknown) =>
@@ -189,7 +226,13 @@ async function loadMain(
   const result = await runMain({
     common,
     base: path.join(directory, "main"),
-    ...(stories && { stories }),
+    side: {
+      sourceRoot: root,
+      configurationDirectory,
+      repositoryRoots,
+      moduleResolution,
+    },
+    stories,
   }).catch((error: unknown) => {
     throw new Error(failure(error), { cause: error });
   });
