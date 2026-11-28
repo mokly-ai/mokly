@@ -145,7 +145,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Category:** Product bug.
 - **Location:** `crates/mkc-mokly-contract/src/bundle_validation.rs:29-37`, `crates/mkc-mokly-contract/src/json_guard.rs:16`, `crates/mokly-model/src/canonical.rs:42-57` and `crates/mokly-static/src/comparison_files.rs:32-68`.
 - **Background:** `mokly publish` builds the static output, and it uploads each file that the project lacks. The receiver checks the declared catalogue before any file arrives. It accepts 512 MiB of declared bytes, 19,999 marker entries, 65,536 path prefixes, an 8 MiB index and 262,144 JSON nodes in the index. The CLI refuses more than 20,000 files before any request.
-- **Problem:** Conductive is above four of these limits. Its declared bytes are 1,746 MB. Its index is 48.7 MB with 2,162,642 nodes. Its pull-request build has 26,070 files and 2,580.5 MB.
+- **Problem:** Conductive is above four of these limits. Its declared bytes are 1,746 MB, its index has 48.7 MB and 2,162,642 nodes, and its pull-request build has 26,070 files. The recommended size cuts of this plan still leave its current-only output at about 622 MB as declared, above the 512 MiB quota.
 - **Impact if no action:** Conductive never publishes. Each other large catalogue meets the same limits.
 - **Root question:** How does a large and growing catalogue publish to Mokly Cloud as it is, while the cloud stays protected? The options check of 2026-11-28 replaced the first question, which named the cloud's limits.
 - **Shared assumptions:** The plan-wide assumptions. For the comparison only, option F of item 5 drops the rule that a publication above one limit fails as a whole.
