@@ -72,7 +72,7 @@ pub struct Bundle {
     pub route: String,
     /// Normalized CSS with one final LF.
     pub css: String,
-    /// Generated asset routes and digest-only source identities.
+    /// Logical asset paths and digest-only source identities.
     pub assets: BTreeMap<String, OpaqueAsset>,
     /// Path-scoped class exports, supplied to the sidecar before evaluation.
     pub css_modules: BTreeMap<String, BTreeMap<String, String>>,

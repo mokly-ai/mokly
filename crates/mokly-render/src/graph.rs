@@ -6,7 +6,6 @@ use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::types::StylesheetBundler;
 use mokly_graph::delivery_inputs::DeliveryInputs;
 use mokly_graph::document_store::Persistence;
 use mokly_graph::error::{GraphError, InternalError};
@@ -115,6 +114,7 @@ impl JavaScriptGraph {
             dependency_aliases: side.dependency_aliases.clone(),
             render_keys: None,
             stylesheet_roots: Vec::new(),
+            story_previews: BTreeMap::new(),
             imported_assets: Vec::new(),
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),
@@ -137,15 +137,12 @@ impl JavaScriptGraph {
                     context: prepared.context.clone(),
                 });
             }
-            let vite_compiler: Option<&dyn StylesheetBundler> = if config.vite() {
-                let attempt = attempt
-                    .get_or_insert_with(|| stylesheets::attempt(&self.runtime, config, &side));
-                Some(attempt.compiler.as_ref())
-            } else {
-                None
-            };
+            let compiler = attempt
+                .get_or_insert_with(|| stylesheets::attempt(&self.runtime, config, &side))
+                .compiler
+                .as_ref();
             let mut vite_generation;
-            let generation = if let Some(compiler) = vite_compiler
+            let generation = if config.vite()
                 && let Some(digest) =
                     bundle_styles::local_input_digest(compiler, config, &declarations)?
             {
@@ -216,6 +213,23 @@ impl JavaScriptGraph {
                 })
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
+            let story_previews = bundle_styles::story_previews(
+                &generation.modules,
+                &config.storybook_folders(&catalogue.inventory.files),
+                assets.as_ref(),
+                &config.repo_root,
+            );
+            let stylesheet_roots = bundle_styles::prepare_roots(
+                compiler,
+                bundle_styles::ModuleRoots {
+                    modules: &generation.modules,
+                    renderer: renderer.as_deref(),
+                    entries: &modules,
+                    previews: &story_previews,
+                    loaders: &side.module_resolution.loaders,
+                    vite: config.vite(),
+                },
+            )?;
             inputs = DeliveryInputs {
                 persistence: None,
                 resources: self.runtime.resources.clone(),
@@ -223,13 +237,8 @@ impl JavaScriptGraph {
                 style_references: self.runtime.style_references.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
-                stylesheet_roots: bundle_styles::prepare_roots(
-                    &generation.modules,
-                    renderer.as_deref(),
-                    &modules,
-                    &side.module_resolution.loaders,
-                    vite_compiler,
-                )?,
+                stylesheet_roots,
+                story_previews,
                 component_stylesheets: declarations,
                 imported_assets: imported_assets::prepare(
                     assets.as_ref(),

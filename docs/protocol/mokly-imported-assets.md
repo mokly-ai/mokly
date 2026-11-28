@@ -189,8 +189,9 @@ references against the base too.
 
 Each imported asset of the [module graph](./mokly-sidecar.md#bundling) of a
 generation joins that generation, also when no document references it. Its
-route is `static/mokly-generated/assets/{logical-path}`. The route follows the
-portable path rule of
+route is `static/mokly-generated/assets/{logical-path}`, with the logical path
+in the [route form](./mokly-imported-styles.md#routes-and-ownership) of
+stylesheet routes. The route follows the portable path rule of
 [stylesheet assets](./mokly-imported-styles-assets.md#assets-links-and-delivery).
 A stylesheet asset at the same logical path shares the route and its bytes. An
 imported asset whose route is not portable fails the build with the

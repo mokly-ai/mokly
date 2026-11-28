@@ -91,7 +91,7 @@ fn imports_assets_and_modules_share_one_per_root_bundle() {
     assert_eq!(bundle.route, "styles/css/base.css");
     assert!(bundle.css.ends_with('\n'));
     assert!(bundle.css.contains("../../assets/images/a.svg?q#id"));
-    let asset = &bundle.assets["assets/images/a.svg"];
+    let asset = &bundle.assets["images/a.svg"];
     assert_eq!(asset.path, "images/a.svg");
     assert_eq!(asset.source, Path::new("/repo/images/a.svg"));
     assert_eq!(asset.digest, digest(b"<svg/>"));

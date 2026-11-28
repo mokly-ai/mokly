@@ -64,10 +64,17 @@ renderer's stylesheets are the files of the renderer's closure. Under the
 adapter, that closure holds the renderer's top-level stylesheets and each file
 that their transform reports as a dependency. Mokly removes each renderer
 stylesheet only from the stylesheets that JavaScript imports. A renderer
-stylesheet that an entry stylesheet imports comes back after the renderer's
-CSS, as in the project's own Vite build. The
+stylesheet that a preview or entry stylesheet imports comes back after the
+renderer's CSS, as in the project's own Vite build. The
 [nested-import diagnostic](./mokly-imported-styles-postcss.md#transform) does
 not apply under the adapter.
+
+The closure of a [preview file](./mokly-storybook.md#storybook-folders) holds
+its top-level stylesheets and each file that their transform reports as a
+dependency, as the renderer's closure does. For each stories file of the
+preview, Mokly also removes each file of that closure, but only from the
+stylesheets that JavaScript imports. A preview stylesheet that an entry
+stylesheet imports comes back after the preview's CSS.
 
 Decision: the setup resolves these imports, as in the project's own Vite
 build, and a shared Sass partial causes no false failure. Pruning at every

@@ -130,10 +130,11 @@ fn replacements(value: &str, route: &str) -> Vec<Replacement> {
         };
         let path = &name[..end];
         rest = &name[end + 1..];
-        if paths::portable(path, true) {
+        let asset_route = paths::route("assets", path);
+        if paths::portable(&asset_route, true) {
             changes.push(Replacement {
                 range: offset + start..value.len() - rest.len(),
-                url: routes::relative(route, &format!("assets/{path}")),
+                url: routes::relative(route, &asset_route),
             });
         }
     }

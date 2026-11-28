@@ -23,6 +23,8 @@ pub(crate) struct RenderEnvironment {
     pub(crate) environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub(crate) resolution_digests: BTreeMap<String, String>,
+    /// Digests of Vite stylesheet inputs by preview module.
+    pub(crate) preview_stylesheet_digests: BTreeMap<String, String>,
     /// Stylesheet path to the digest of its CSS Module bindings.
     pub(crate) class_map_digests: BTreeMap<String, String>,
     /// Package names of the resolved runtime packages.
@@ -152,6 +154,7 @@ pub(crate) fn derive(
     RenderEnvironment {
         environment: digest(&settings),
         resolution_digests,
+        preview_stylesheet_digests: BTreeMap::new(),
         class_map_digests,
         runtime_packages: compiled.peers.keys().map(|peer| package(peer)).collect(),
     }

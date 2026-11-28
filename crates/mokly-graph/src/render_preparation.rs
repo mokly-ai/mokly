@@ -194,7 +194,13 @@ fn records(generation: &JavaScriptGeneration) -> serde_json::Result<Records<'_>>
         } else {
             generation.module_digests.get(path).and_then(Option::as_ref)
         };
-        let record = digest(&to_vec(&(path, imports, content))?);
+        let fields = (path, imports, content);
+        let encoded = if let Some(styles) = generation.preview_stylesheet_digests.get(path) {
+            to_vec(&(fields, styles))?
+        } else {
+            to_vec(&fields)?
+        };
+        let record = digest(&encoded);
         modules.insert(path.as_str(), to_vec(&(path, Some(record)))?);
     }
     for path in generation.modules.values().flatten() {

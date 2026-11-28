@@ -86,9 +86,22 @@ pub(crate) fn describe(
     let attempt = stylesheets::attempt(runtime, config, &side);
     let compiler = attempt.compiler;
     let context = attempt.context;
+    let story_previews = |modules| {
+        bundle_styles::story_previews(
+            modules,
+            &params.storybook_folders,
+            tree.as_ref(),
+            &config.repo_root,
+        )
+    };
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
-        let maps = bundle_styles::prepare(compiler.as_ref(), &previous.modules, &params)?;
+        let maps = bundle_styles::prepare(
+            compiler.as_ref(),
+            &previous.modules,
+            &params,
+            &story_previews(&previous.modules),
+        )?;
         let digest = maps.fingerprint();
         if let Some(existing) = candidates
             .iter()
@@ -110,7 +123,12 @@ pub(crate) fn describe(
     let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
         Some(maps) => maps,
-        None => bundle_styles::prepare(compiler.as_ref(), &modules, &params)?,
+        None => bundle_styles::prepare(
+            compiler.as_ref(),
+            &modules,
+            &params,
+            &story_previews(&modules),
+        )?,
     };
     let class_maps_digest = maps.fingerprint();
     if bundle_attempt::existing(runtime, &result.generation)
@@ -136,6 +154,7 @@ pub(crate) fn describe(
             .and_then(|base| base.cache_namespace.as_deref()),
     );
     render.resolution_digests.extend(maps.inputs);
+    render.preview_stylesheet_digests = maps.preview_inputs;
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules

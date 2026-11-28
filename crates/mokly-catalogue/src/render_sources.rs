@@ -42,6 +42,8 @@ pub struct JavaScriptGeneration {
     pub environment: String,
     /// Present resolution files by logical name without the installed-input prefix.
     pub resolution_digests: BTreeMap<String, String>,
+    /// Digests of Vite stylesheet inputs keyed by the preview module that consumes them.
+    pub preview_stylesheet_digests: BTreeMap<String, String>,
     /// CSS Modules stylesheet path to the digest of its class map.
     pub class_map_digests: BTreeMap<String, String>,
     /// Names of the packages that the sidecar loads at render time and does not bundle.

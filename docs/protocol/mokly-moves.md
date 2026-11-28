@@ -78,8 +78,9 @@ and fragment retained. Relative spelling and directory depth are not material.
 During candidate matching, bundled stylesheets, assets and the document
 resources of the closure at different routes can use equal content digests; same-route resources keep
 route identity. CSS digests resolve their URL tokens recursively. Accepted entry
-moves map root-module stylesheet routes and assets under corresponding source
-directories. Document resources map by their source-relative reference.
+moves map the routes of root-module stylesheets and of assets whose source files
+lie under corresponding source directories. Document resources map by their
+source-relative reference.
 Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
 through the same resource map. Equal moved resources suppress current
 rendered-resource evidence. A different image or stylesheet stays

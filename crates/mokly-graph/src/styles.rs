@@ -7,7 +7,7 @@ use globset::{GlobBuilder, GlobMatcher};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::names::ModuleNames;
 use mokly_css::types::{Bundle, StylesheetRoot};
-use mokly_css::vite;
+use mokly_css::{paths, vite};
 use mokly_html::tree;
 use mokly_html::tree::Node;
 use mokly_model::axes::ColorScheme;
@@ -217,12 +217,11 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         let href = if external(&path) {
             path
         } else if let Some(logical) = config.repository_path(&path) {
-            let suffix = if config.vite() {
-                vite::suffix(&logical)
-            } else {
-                ""
-            };
-            routes::relative(route, &format!("styles/{logical}{suffix}"))
+            let mut css = paths::route("styles", &logical);
+            if config.vite() {
+                css.push_str(vite::suffix(&logical));
+            }
+            routes::relative(route, &css)
         } else {
             continue;
         };
@@ -230,12 +229,15 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
             links.push(href);
         }
     }
-    for root in config
-        .renderer()
+    let renderer = config.renderer();
+    for root in renderer
+        .as_deref()
         .into_iter()
-        .chain(iter::once((*module).to_owned()))
+        .chain(inputs.story_previews.get(*module).map(String::as_str))
+        .chain(iter::once(*module))
     {
-        let css = format!("styles/{root}.css");
+        let mut css = paths::route("styles", root);
+        css.push_str(".css");
         if resources.contains_key(&css) {
             let href = routes::relative(route, &css);
             if !links.contains(&href) {

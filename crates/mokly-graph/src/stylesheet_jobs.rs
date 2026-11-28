@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use mokly_css::paths;
 use mokly_css::types::{Bundle, OpaqueAsset, StylesheetRoot};
 
 use crate::error::{GraphError, Result};
@@ -27,7 +28,8 @@ pub(crate) fn register_assets(
     names: &mut RouteInventory,
     resources: &mut BTreeMap<String, ResourcePlan>,
 ) -> Result<()> {
-    for (route, asset) in assets {
+    for (path, asset) in assets {
+        let route = paths::route("assets", &path);
         imported_assets::register(route, asset, root, names, resources)?;
     }
     Ok(())

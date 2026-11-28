@@ -3891,12 +3891,15 @@ Depends on: 19
 
 The CSS that a preview file imports reaches its stories, as decision 4 says.
 
-- [ ] Give each preview file a bundled stylesheet route, as the renderer has,
+- [x] Give each preview file a bundled stylesheet route, as the renderer has,
       and link it as design call 15 says.
-- [ ] Watch the preview's stylesheets and add them to the render keys, as for
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Watch the preview's stylesheets and add them to the render keys, as for
       the renderer.
-- [ ] Test that a preview that imports global CSS styles its stories, and
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Test that a preview that imports global CSS styles its stories, and
       that Changes shows an edit of that CSS.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [x] Decide whether a story's stylesheet chain drops the stylesheets that
       its preview file already delivers, as an entry's chain drops the
       renderer's stylesheets. Track D raised this question on 2026-11-23.

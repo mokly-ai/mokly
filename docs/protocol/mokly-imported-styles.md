@@ -35,13 +35,15 @@ renders in Node, which has no CSS object model.
 
 The routes are relative to the `static/mokly-generated/` namespace of the
 [artifact path contract](./mokly-artifact-paths.md):
-`styles/<repository-relative root module path>.css` for the bundle of a
-module root, `styles/<repository-relative stylesheet path>` for the bundle
-of a configured or component-declared local stylesheet, and `assets/<repository-relative asset
-path>` for an asset. The module extension is kept before `.css`:
-`src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
-configured `design/base.css` delivers `styles/design/base.css`. The two forms
-can give one route. For example, the stylesheet of the entry module
+`styles/<root module path>.css` for the bundle of a module root,
+`styles/<stylesheet path>` for the bundle of a configured or
+component-declared local stylesheet, and `assets/<asset path>` for an asset.
+Each of these paths is the repository-relative path of the file, or the
+[logical name](./mokly-sidecar-modules.md#source-and-dependency-files) of a
+dependency file, in the route form below. The module extension is kept before
+`.css`: `src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and
+the configured `design/base.css` delivers `styles/design/base.css`. The two
+forms can give one route. For example, the stylesheet of the entry module
 `src/a.tsx` delivers at `styles/src/a.tsx.css`. A configured or declared
 stylesheet `src/a.tsx.css` delivers at the same route. Such a pair fails with
 the [route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
@@ -63,13 +65,32 @@ output directory, publish uploads that output, and the base side of a
 comparison bundles the base commit's sources the same way under the
 [dependency tiers](./mokly-comparison.md#sides).
 
-A route segment starts with a letter, digit, underscore, or hyphen; later
-characters may also be a dot or a tilde. Windows device-name stems and
-trailing dots are invalid. A root module whose file or directory name cannot
-form a route fails with the catalogued message, even when the entry declares
-a valid `path`: the `path` override changes entry identity only, never the
-stylesheet route. Portable module and stylesheet paths give identical routes
-on every platform.
+In the route form, each path segment that starts with a dot is written as
+`dot-` and the rest of the segment. Every other segment stays the same. So
+`.storybook/preview.tsx` delivers `styles/dot-storybook/preview.tsx.css`, and
+the file with Mokly's logical name `node_modules/.mokly-roots/1/pkg/icon.svg`
+delivers `assets/node_modules/dot-mokly-roots/1/pkg/icon.svg`. A source path, a
+logical name, and a diagnostic that names either keep the dot. A route in
+this form can equal the route of another file, such as a file in a real
+`dot-storybook` folder. Such a pair of bundles fails with the
+[route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid),
+and such a pair of asset files fails under the
+[collision rule](./mokly-artifact-paths.md#layout) of the output inventory.
+Decision: the `dot-` form keeps routes readable, and it passes static hosts
+that skip dot folders and the
+[private-file rule](./cloud/publication-upload-validation.md#hosting-policy)
+of Mokly Cloud. Dot segments in routes were rejected, because such hosts and
+Mokly Cloud refuse them. A leading `_` was rejected, because static hosts such
+as Jekyll also skip it. The accepted cost is that such a route does not copy
+its exact source path.
+
+Each route segment in the route form starts with a letter, digit, underscore,
+or hyphen; later characters may also be a dot or a tilde. Windows device-name
+stems and trailing dots are invalid. A root module whose file or directory
+name cannot form a route fails with the catalogued message, even when the
+entry declares a valid `path`: the `path` override changes entry identity
+only, never the stylesheet route. Portable module and stylesheet paths give
+identical routes on every platform.
 
 ## Roots, Collection And Deduplication
 

@@ -24,10 +24,13 @@ views like a variant. The logical entry route of every kind is
 identifier and not a document.
 
 Resources share the namespace: a root's bundled stylesheet at
-`styles/<repository-relative module path>.css` and a stylesheet or JavaScript
-asset at `assets/<repository-relative asset path>` under the
+`styles/<module path>.css` and a stylesheet or JavaScript asset at
+`assets/<asset path>` under the
 [imported stylesheet contract](./mokly-imported-styles.md) and the
-[JavaScript asset contract](./mokly-imported-assets.md). A Markdown
+[JavaScript asset contract](./mokly-imported-assets.md). Each such path is a
+repository-relative or logical path in the
+[route form](./mokly-imported-styles.md#routes-and-ownership) of the imported
+stylesheet contract. A Markdown
 document's resource is a closure file at `static/<repository-relative path>`
 under the [documents contract](./mokly-documents.md); no copy is made under
 `static/mokly-generated/`. `styles` and `assets` are
