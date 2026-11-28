@@ -1,151 +1,91 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { asApiError, unexpectedError } from "../api/errors";
-import type { ApiError } from "../api/errors";
-import { issueCatalogueGrant } from "../data/publications";
+import { createPublicationAccess } from "./access-exchange";
+import type { FrameAccess, PrivateAccessState } from "./access-exchange";
 
 /** Where the reader stands with the publication host's own credential. */
 export type AccessState =
-  | { status: "open" }
-  | { status: "granting" }
-  | { status: "granted" }
-  | { status: "refused"; error: ApiError }
-  | { status: "blocked" };
+  { status: "open" } | { status: "granting" } | PrivateAccessState;
 
 /** What the viewer needs before it can point the host at a catalogue. */
 export interface CatalogueAccess {
   state: AccessState;
   retry: () => void;
+  frame?: FrameAccess;
 }
 
-/** What one publication's access exchange is asked for. */
 export interface AccessRequest {
   projectId: string;
   publicationId: string;
-  /** Public catalogues are readable without a credential, so none is asked for. */
+  origin?: string;
+  /** A public catalogue needs no exchange. */
   required: boolean;
-  /** Nothing is exchanged until the route has a ready publication to open. */
+  /** Only a ready publication can open. */
   enabled: boolean;
 }
 
-/** One access answer and the exact source attempt it belongs to. */
+/** The identity of one attempt, even on a return to the same publication. */
+type AccessAttempt = AccessRequest & { attempt: number };
+
 export interface ScopedAccess {
-  key: string;
+  key: AccessAttempt;
   state: AccessState;
 }
 
 const granting: AccessState = { status: "granting" };
 
-/** Readiness for the source being rendered, never for an earlier source. */
+/** Readiness for the source being rendered. */
 export function currentAccessState(
-  currentKey: string,
+  currentKey: AccessAttempt,
   settled: ScopedAccess,
 ): AccessState {
   return settled.key === currentKey ? settled.state : granting;
 }
 
-/**
- * Exchange one new grant at the publication's own host for its cookie, and
- * answer that host's origin, or nothing when the host refused the grant.
- *
- * The app session never leaves the app origin. The API issues a one-use grant,
- * and the publication's own host exchanges it for a host-only cookie.
- */
-async function exchangeGrant(
-  projectId: string,
-  publicationId: string,
-): Promise<string | undefined> {
-  const grant = await issueCatalogueGrant(projectId, publicationId);
-  const accepted = await fetch(grant.exchangeUrl, {
-    method: "POST",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ grant: grant.grant }),
-  });
-  return accepted.ok ? new URL(grant.exchangeUrl).origin : undefined;
-}
-
-/**
- * Prove the reader may open this publication to the host that serves it.
- *
- * Only after the exchange is the catalogue reachable. The exchange is
- * confirmed by asking that host for the catalogue once: a browser that refuses
- * the cookie answers the same way an expired one does, and telling those apart
- * is the difference between offering a retry that will work and one that
- * cannot.
- */
-async function exchange(
-  projectId: string,
-  publicationId: string,
-): Promise<AccessState> {
-  const origin = await exchangeGrant(projectId, publicationId);
-  if (origin === undefined) {
-    return { status: "refused", error: unexpectedError() };
-  }
-  const reachable = await fetch(origin + "/", { credentials: "include" });
-  return reachable.ok ? { status: "granted" } : { status: "blocked" };
-}
-
-/**
- * Run the exchange again while the catalogue stays mounted, for a private
- * detail read that answered 401. It never changes the access state, whose
- * retry would remount the viewer; a refusal fails only the read that asked.
- */
-export async function renewCatalogueAccess(
-  projectId: string,
-  publicationId: string,
-): Promise<void> {
-  if ((await exchangeGrant(projectId, publicationId)) === undefined) {
-    throw unexpectedError();
-  }
-}
-
-/**
- * The credential the stage needs before it mounts, and the way back when the
- * reader's has expired. A public catalogue needs none, so nothing is asked for
- * and the stage opens immediately.
- */
 export function useCatalogueAccess(input: AccessRequest): CatalogueAccess {
   const [attempt, setAttempt] = useState(0);
-  const { projectId, publicationId, required, enabled } = input;
-  const key = [projectId, publicationId, required, enabled, attempt].join(":");
-  const [scoped, setScoped] = useState<ScopedAccess>({
-    key,
-    state: granting,
-  });
+  const { projectId, publicationId, origin, required, enabled } = input;
+  const key = useMemo(
+    () => ({ projectId, publicationId, origin, required, enabled, attempt }),
+    [projectId, publicationId, origin, required, enabled, attempt],
+  );
+  const [scoped, setScoped] = useState<ScopedAccess>({ key, state: granting });
 
   useEffect(() => {
-    if (!enabled) return;
-    if (!required) {
+    if (!key.enabled) return;
+    if (!key.required) {
       setScoped({ key, state: { status: "open" } });
       return;
     }
+    if (key.origin === undefined) return;
     let live = true;
-    setScoped({ key, state: granting });
-    exchange(projectId, publicationId)
-      .then((next) => {
-        if (live) setScoped({ key, state: next });
-      })
-      .catch((caught: unknown) => {
-        if (!live) return;
-        setScoped({
-          key,
-          state: {
-            status: "refused",
-            error: asApiError(caught) ?? unexpectedError(),
-          },
-        });
-      });
+    const publication = createPublicationAccess({
+      projectId: key.projectId,
+      publicationId: key.publicationId,
+      origin: key.origin,
+    });
+    void publication.confirm().then((state) => {
+      if (live) setScoped({ key, state });
+    });
     return () => {
       live = false;
     };
-  }, [projectId, publicationId, required, enabled, attempt, key]);
+  }, [key]);
 
+  const state = currentAccessState(key, scoped);
+  const frame = useMemo<FrameAccess | undefined>(() => {
+    if (state.status !== "granted") return undefined;
+    return {
+      access: state.publication.access,
+      onAccessFailure: () => {
+        setScoped((current) =>
+          current.key === key && current.state === state
+            ? { key, state: { status: "blocked" } }
+            : current,
+        );
+      },
+    };
+  }, [key, state]);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
-  return { state: currentAccessState(key, scoped), retry };
-}
-
-/** Whether the stage may mount the catalogue this access was asked for. */
-export function accessOpen(state: AccessState): boolean {
-  return state.status === "open" || state.status === "granted";
+  return { state, retry, frame };
 }

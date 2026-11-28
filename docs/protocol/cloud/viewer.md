@@ -1,6 +1,6 @@
 # Publication Viewer
 
-Status: The app does not confirm with the bearer token or show the blocked stage on the report of the frame adapter yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds them. The blocked stage does not have its title and text yet, and it still offers a new tab. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) adds them.
+Status: The blocked stage does not have its title and text yet, and it still offers a new tab. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) adds them.
 
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request

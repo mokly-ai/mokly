@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import type {
-  CatalogueReadModel,
-  DetailSource,
-  ViewerError,
-} from "@mokly/viewer";
+import type { DetailSource, ViewerError } from "@mokly/viewer";
 
 import { createCatalogueSources } from "../../viewer/source-store";
 import type {
@@ -14,32 +9,21 @@ import type {
   SourceReads,
   SourceRequest,
 } from "../../viewer/source-store";
-import { repositoryRoot } from "../root";
 
-/** The packaged index: the store keeps it and never reads its fields. */
-async function packagedIndex(): Promise<CatalogueReadModel> {
-  const { readCatalogueIndex } = await import("@mokly/viewer");
-  return readCatalogueIndex(
-    JSON.parse(
-      readFileSync(
-        repositoryRoot + "/docs/protocol/fixtures/catalogue-v9.json",
-        "utf8",
-      ),
-    ),
-  );
-}
+import {
+  cookieAccess,
+  packagedIndex,
+  publicAccess,
+} from "./catalogue-read-fixture";
 
 const publicA: SourceRequest = {
   origin: "https://p-a.example",
-  credentialed: false,
-  projectId: "project",
-  publicationId: "a",
+  access: publicAccess,
 };
-const privateA: SourceRequest = { ...publicA, credentialed: true };
+const privateA: SourceRequest = { ...publicA, access: cookieAccess() };
 const privateB: SourceRequest = {
   ...privateA,
   origin: "https://p-b.example",
-  publicationId: "b",
 };
 
 const version: ViewerError = {
@@ -55,7 +39,7 @@ function heldReads() {
     request: SourceRequest;
     settle: (answer: IndexAnswer | Error) => void;
   }> = [];
-  const renewals: SourceRequest[] = [];
+  const detailRequests: SourceRequest[] = [];
   const details: DetailSource[] = [];
   const reads: SourceReads = {
     index: (request) =>
@@ -66,20 +50,16 @@ function heldReads() {
             answer instanceof Error ? reject(answer) : resolve(answer),
         });
       }),
-    detail: (_request, _index, renew) => {
+    detail: (request) => {
       const detail: DetailSource = async () => {
-        await renew();
+        detailRequests.push(request());
         throw new Error("unused detail");
       };
       details.push(detail);
       return detail;
     },
-    renew: async (request) => {
-      renewals.push(request);
-      await Promise.resolve();
-    },
   };
-  return { reads, answers, renewals, details };
+  return { reads, answers, detailRequests, details };
 }
 
 const settled = () => new Promise((resolve) => setImmediate(resolve));
@@ -202,8 +182,8 @@ test("every state change reaches the subscribers", async () => {
   assert.deepEqual(seen, ["loading", "ready", "ready"]);
 });
 
-test("detail renewals that arrive together share one exchange", async () => {
-  const { reads, answers, renewals, details } = heldReads();
+test("a retained detail source reads with the new attempt for its origin and policy", async () => {
+  const { reads, answers, detailRequests, details } = heldReads();
   const store = createCatalogueSources(reads);
   const source = store.select(privateA);
   store.load(source);
@@ -211,8 +191,8 @@ test("detail renewals that arrive together share one exchange", async () => {
   await settled();
   const detail = details[0];
   assert.ok(detail);
-  await Promise.allSettled([detail("a"), detail("b")]);
-  assert.deepEqual(renewals, [privateA]);
-  await Promise.allSettled([detail("c")]);
-  assert.deepEqual(renewals, [privateA, privateA]);
+  const next = { ...privateA, access: cookieAccess() };
+  assert.equal(store.select(next), source);
+  await assert.rejects(async () => detail("a"), /unused detail/);
+  assert.equal(detailRequests[0], next);
 });

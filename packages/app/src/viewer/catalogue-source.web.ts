@@ -1,21 +1,14 @@
 import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/viewer";
 
-import { renewCatalogueAccess } from "./access";
-import type { SourceReads } from "./source-store";
+import { bearerRequest, browserTransport } from "./access-exchange";
+import type { CatalogueTransport } from "./access-exchange";
+import type { SourceAccess, SourceReads } from "./source-store";
 
 /**
  * The package's public readers. The package ships only an ES module, so the
  * readers load through `import()`, which the logic tests can also run.
  */
 const viewer = () => import("@mokly/viewer");
-
-/** The small fetch shape the catalogue reads use and their focused tests stub. */
-export type CatalogueTransport = (
-  url: URL,
-  init: RequestInit,
-) => Promise<Response>;
-
-const browserTransport: CatalogueTransport = (url, init) => fetch(url, init);
 
 /** Validate and canonicalize the API-supplied per-publication origin. */
 export function catalogueArtifactOrigin(value: string): URL {
@@ -93,19 +86,24 @@ function sameOrigin(response: Response, root: URL): boolean {
   }
 }
 
-/**
- * One JSON read with the source's credential policy: the cookie only for a
- * private catalogue, and only the publication's own host may answer.
- */
+function readRequest(access: SourceAccess): RequestInit {
+  if (access.policy === "bearer") {
+    const token = access.publication.currentToken();
+    if (token === undefined) throw new CatalogueReadError();
+    return bearerRequest(token);
+  }
+  return { credentials: access.policy === "cookie" ? "include" : "omit" };
+}
+
+/** One JSON read with the credential confirmed by this publication's host. */
 async function readJson(
   url: URL,
   root: URL,
-  credentialed: boolean,
+  access: SourceAccess,
   transport: CatalogueTransport,
 ): Promise<unknown> {
-  const response = await transport(url, {
-    credentials: credentialed ? "include" : "omit",
-  });
+  if (url.origin !== root.origin) throw new CatalogueReadError();
+  const response = await transport(url, readRequest(access));
   if (!sameOrigin(response, root)) throw new CatalogueReadError();
   if (!response.ok) throw new CatalogueReadError(response.status);
   const value: unknown = await response.json();
@@ -115,10 +113,10 @@ async function readJson(
 /** Read one publication's catalogue index v9 through the public reader. */
 export async function readIndex(
   root: URL,
-  credentialed: boolean,
+  access: SourceAccess,
   transport: CatalogueTransport = browserTransport,
 ): Promise<CatalogueReadModel> {
-  const value = await readJson(indexUrl(root), root, credentialed, transport);
+  const value = await readJson(indexUrl(root), root, access, transport);
   const { readCatalogueIndex } = await viewer();
   return readCatalogueIndex(value);
 }
@@ -126,10 +124,8 @@ export async function readIndex(
 /** What one detail source reads with. */
 export interface DetailReads {
   root: URL;
-  credentialed: boolean;
+  access: () => SourceAccess;
   index: CatalogueReadModel;
-  /** The access exchange again, which a private read runs after a 401. */
-  renew: () => Promise<void>;
   transport?: CatalogueTransport;
 }
 
@@ -146,21 +142,21 @@ export type DetailRead = (
 /**
  * The package's `detail` source. A private read that answers 401 runs the
  * access exchange once more and repeats the read once, because the catalogue
- * cookie lives 300 seconds and details load during navigation.
+ * credential lives 300 seconds and details load during navigation.
  */
 export function detailSource(reads: DetailReads): DetailRead {
   const transport = reads.transport ?? browserTransport;
-  const read = (url: URL) =>
-    readJson(url, reads.root, reads.credentialed, transport);
   return async (path, snapshotId) => {
+    const access = reads.access();
     const url = detailUrl(reads.root, reads.index, path, snapshotId);
+    const read = () => readJson(url, reads.root, access, transport);
     let value: unknown;
     try {
-      value = await read(url);
+      value = await read();
     } catch (error) {
-      if (!reads.credentialed || !unauthorized(error)) throw error;
-      await reads.renew();
-      value = await read(url);
+      if (access.policy === "public" || !unauthorized(error)) throw error;
+      await access.publication.renewCatalogueAccess();
+      value = await read();
     }
     const { readEntryDetail } = await viewer();
     return readEntryDetail(value);
@@ -176,7 +172,7 @@ export function catalogueReads(
       try {
         const root = catalogueArtifactOrigin(request.origin);
         return {
-          index: await readIndex(root, request.credentialed, transport),
+          index: await readIndex(root, request.access, transport),
         };
       } catch (error) {
         // The reader's typed failure is preserved for the version card, with
@@ -188,17 +184,13 @@ export function catalogueReads(
         throw error;
       }
     },
-    detail(request, index, renew) {
+    detail(request, index) {
       return detailSource({
-        root: catalogueArtifactOrigin(request.origin),
-        credentialed: request.credentialed,
+        root: catalogueArtifactOrigin(request().origin),
+        access: () => request().access,
         index,
-        renew,
         transport,
       });
-    },
-    renew(request) {
-      return renewCatalogueAccess(request.projectId, request.publicationId);
     },
   };
 }

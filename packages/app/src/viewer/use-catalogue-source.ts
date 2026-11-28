@@ -20,10 +20,11 @@ export interface CatalogueRead {
  * The document's one source for this publication origin and access policy.
  *
  * The index is read only once access is open, so a private catalogue is read
- * with a confirmed cookie. A failed read is read again the next time access
- * opens, which is what the stage's Try again does: it repeats the access
- * exchange and then the index read. A native tree has no document source and
- * stays closed, because it never mounts the package.
+ * with the credential that confirmed, the cookie or the bearer token. A failed
+ * read is read again the next time access opens, which is what the stage's
+ * Try again does: it repeats the access exchange and then the index read. A
+ * native tree has no document source and stays closed, because it never
+ * mounts the package.
  */
 export function useCatalogueSource(
   request: SourceRequest | undefined,
