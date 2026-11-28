@@ -153,17 +153,23 @@ A branch from this branch applies each answer and deletes the file.
 
 ### Decisions that wait for the user
 
-Each decision is in full in this plan, with its options and a recommended
-option. None has an answer yet, so no option applies.
-
-- [Decision 18b](#18b-mocks-of-modules-that-another-setup-owns): mocks of
-  modules that another setup owns. It blocks Milestones 30 and 32. On
-  2026-11-26 the user asked whether decision 18, option E, still holds
-  given this item, and a re-check of decision 18 runs before the answer.
-  [Decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere) has the
-  answer D, of 2026-11-26.
+No decision of this branch's plan waits for the user. The open decisions of
+tracks E and I are in the plans of their branches: track E decision 1 and
+track I decisions 3 to 9. On
+2026-11-27 the user chose B of
+[decision 18e](#18e-several-folders-one-graph-for-each-folder), a folder
+graph for each Storybook folder, with E of 18e-1, D of 18e-2, D of 18e-3, A of
+18e-4, and B of 18e-5. Decision 18b closed with that answer. Track H applies
+"What B changes" of 18e when it starts.
 
 ### Follow-up items that wait for the user
+
+The user answered track E decision 1 with option F on 2026-11-28, for now,
+and asked for a high-priority re-review of the route strategy, because it is
+hard to change later. The file holds the full item and its options.
+
+- [route-naming-strategy-review.md](follow-ups/route-naming-strategy-review.md):
+  how Mokly names delivered stylesheets and assets in the long term.
 
 The review of track B found these problems outside its scope. Each file
 holds the full item and its recommended option. They block no milestone.
@@ -547,6 +553,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Action:** ask the user, because B and E change the stories of a folder
   that did not ask for the mock, and C and D add a warning that fails
   `--strict`.
+- **Answer:** closed with no option on 2026-11-27, because the user chose B
+  of decision 18e. Each preview's mocks then reach the modules of its own
+  stories only.
 
 ### 18c. A root whose Storybook folder lies elsewhere
 
@@ -685,6 +694,585 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   a Mokly preset after the core presets replaces the core `STORYBOOK_*`
   values with the values that Vite loads from the folder's parent, and Mokly
   restores the process environment after the presets of each folder load.
+
+### 18e. Several folders: one graph for each folder
+
+- **Severity:** High, changed from Medium by the options check of
+  2026-11-27, because the problem is wrong output and it blocks track H.
+  **Effort:** Large.
+- **Source:** Review: the re-check of decision 18 that the user asked for on
+  2026-11-26. The spike of 2026-11-27 tested option B.
+- **Category:** Docs or spec.
+- **Location:** [Decision 18](#18-several-storybook-folders-share-one-vite-setup)
+  and [decision 18b](#18b-mocks-of-modules-that-another-setup-owns).
+- **Terms:**
+  - **Folder graph:** one Vite server and one module runner for each
+    Storybook folder. A file that two folders load compiles once in each.
+  - **Registries:** the sidecar's maps that tie a value to a catalogue entry:
+    definitions, link targets, and story components. A wrapper lookup that
+    misses stops the build with "unexported component", at
+    `packages/mokly/src/authoring/components.ts:26-29`.
+  - **Bridge:** a registry key made of the resolved file and the export name,
+    in place of the module object. The two copies of one export, in two
+    folder graphs, then match one entry.
+  - **Declaring module:** the module whose own code binds an export. A barrel
+    file that re-exports the value is not its declaring module.
+  - **Catalogue renderer:** the one module that the `renderer` configuration
+    field names. It wraps every React screen and component render.
+- **Background:**
+  - Decision 18 had two goals: each folder's stories compile as in their own
+    Storybook, and a module that two folders use keeps one identity.
+  - Option E compiles each file once, with its owner's setup. So a story sees
+    a shared module as the other folder compiles it, with that folder's
+    aliases, plugins, env values, and mocks. 18b is the mock case of this.
+  - E does not keep one identity either. Two setups can resolve one import to
+    two files, and in the spike a component then read the wrong React
+    context. Item 32, answered B, warns about that split.
+  - Option C of decision 18, a graph for each folder, said that a registered
+    component from another folder's root then fails as unexported. Item 32
+    says that C gives a module two identities. The bridge removes the first
+    failure, and the second is the cost of B below.
+  - Track D's evaluator already sees the id of each module that it runs, at
+    `packages/mokly/src/sidecar/vite-evaluate.ts:103-117`. So it can record
+    each module's exports for a bridge.
+  - No code for several folders exists yet. Track H waits for this answer.
+- **Problem:** E gives each module one version for all importers. So no rule
+  can match two Storybooks that treat one shared module differently, and E's
+  one identity still splits.
+- **Impact if no action:** Under E, each answer to 18b drops a mock, or gives
+  some stories a mock that their own Storybook does not use. A later move to
+  folder graphs would mean rewriting track H's Vite code.
+- **Root question:** How does each story compile as its own Storybook compiles
+  it, and each screen with a setup that all its imports can use, while each
+  use, link, and wrapper keeps one catalogue entry? The options check of
+  2026-11-27 wrote this question, because screens and components also
+  evaluate in the folder graphs.
+- **Options:** rewritten on 2026-11-27 from the spike result below.
+  - **A.** Keep option E, and answer 18b with its option E. A mock of a
+    module that no folder owns reaches every folder's stories. A mock never
+    reaches a module that another folder owns. Answers 18a, 18c, and 18d, and
+    track H's scope, stay. The E prototype compiled a shared tree of 200
+    modules once. Effort: Large, as track H plans it.
+  - **B.** One folder graph for each Storybook folder, plus the bridge. Each
+    story, screen, and the catalogue renderer evaluate in folder graphs:
+    - A story or a screen evaluates in the graph of the folder that its root
+      names. Each graph compiles every module that its entries import with
+      its own setup, so each preview's mocks reach every module of its own
+      stories and no stories of another folder.
+    - The catalogue renderer evaluates once in each graph that renders React.
+      A renderer in one graph gave the screens of the other graph the
+      default context value.
+    - Every graph uses one `react` and `react-dom`. A folder alias of `react`
+      failed to load, and a second React copy in one package broke hooks.
+    - The bridge key names the declaring module, which Vite's server-side
+      export getters give. A key from the first module that exports a value
+      split in an import cycle. The spike read the getters from the text of
+      Vite's output. Mokly's own export parser, in `export-name-cache.ts`, is
+      a more stable source. Every registry lookup uses the key: the
+      wrapper, the deferred links, the use references in
+      `describe-records.ts`, the render-time links in `render-session.ts`,
+      and story components with their `memo` and `forwardRef` inner types.
+    - A value that two graphs load matches one entry, and each render uses
+      its own graph's copy, as each Storybook does.
+    - The bridge cannot match a value that is not a module export, or two
+      files that one import resolves to in two graphs. A wrapper then keeps
+      its "unexported component" error, and a story use is lost. Decisions
+      18e-2 and 18e-3 settle these cases.
+    - Costs: each module that several graphs import compiles and runs once
+      in each, at every build, because the bundle cache stores no Vite
+      compile. A module's process-wide side effects run once for each graph.
+      A shared file that needs an alias that only another folder's setup has
+      fails in this graph, as it fails in this folder's own Storybook. The
+      source of a workspace package can differ, because that Storybook can
+      load the package's build file. Decision 18e-5 settles it.
+    - The compiled recipe holds one copy of a shared module's code for each
+      graph that loads it. A recipe above the 64 MiB frame limit fails with
+      `bundle-failed`. The spike did not measure recipe bytes.
+    - It changes earlier answers. The list under the spike result gives each
+      change. Effort: Large.
+  - **C.** Keep E, and fork each mocked module, and each module on its import
+    chain, for each folder that mocks it. The bridge ties the copies to their
+    entries. Mocks then match, but E's other limits stay, and the fork rules
+    add complexity. The spike did not test it. Effort: Large, more than B.
+  - **D.** Do B, and run each folder graph in its own sidecar process, with
+    the folder's parent as its working directory. The spike showed that
+    presets, env values, and `beforeAll` hooks do not need it. It isolates
+    only other process-wide state: a shared module's global side effects and
+    Storybook's spy registry. The spike tested its render boundary, not its
+    protocol between processes or its cost. Effort: Large, the most.
+  - **E.** Do B, and evaluate a module once for all graphs when its compiled
+    code, its resolved imports, and its run-time values are equal in each
+    graph that loads it. Only the modules that differ, such as a mocked
+    module and its importers, get one copy for each graph. Equal shared code
+    keeps one identity and runs its global effects once. The compile cost
+    stays as in B, the runner needs option A's unique URLs again, and equal
+    modules share state across folders, which no Storybook does. The spike
+    did not test it. Effort: Large, more than B. Added by the options check
+    of 2026-11-27.
+  - **F.** Do B, and add a `vite` field that names modules that evaluate once
+    for every graph. A named module compiles with the setup of the first
+    root that names a folder, keeps one identity, and loses the other
+    folders' aliases, plugins, and mocks. A built package can already do
+    this through `ssr.external` in the optional file. Effort: Large, B and a
+    Medium field. Added by the options check of 2026-11-27.
+  - **G.** Do B for stories only. Screens and components compile as option A
+    says: each module once, with its owner's setup. The story graphs then
+    need no copy of the catalogue renderer, but Mokly builds both module
+    models and the bridge between them, and 18b needs an answer again for
+    screens. Effort: Large, about A and B together. Added by the options
+    check of 2026-11-27.
+- **Left out:** Option C of decision 18 without a bridge, because a wrapper
+  or a link from another folder stops the build. A bridge for wrappers only,
+  because story component uses would then match only inside one folder. One
+  setup for the whole catalogue, because a per-package alias fails the whole
+  bundle. One Storybook folder for each configuration, because the catalogue
+  is no longer one. A fork of the mocked module alone, because each importer
+  still loads the real module. B with the catalogue renderer in one graph,
+  because the screens of the other graphs lose its providers. A renderer for
+  each Storybook folder in a new field, because a copy of the one renderer in
+  each graph gives every screen the same providers with no field. A and B
+  behind a configuration switch, because with A a folder's stories do not
+  render as in their own Storybook, and with B it is B and a second module
+  model.
+- **Wider fix:** B, because one rule gives every folder its own setup and
+  mocks for all its modules. D also isolates process-wide state.
+- **Previous examples:** 18b, the mock case. Item 32, the split. Option D of
+  decision 18, where one alias key keeps one target.
+- **Related:**
+  - 18b waits for this item. A answers it with 18b's option E, and B, C, and
+    D close it.
+  - Decision 17 keeps its rule for one folder.
+  - Milestone 32's first TODO, the presets of two folders in one process,
+    passed in the spike for every option.
+  - Decisions 18e-1 to 18e-5 below. 18e-1 applies to every option. 18e-2 to
+    18e-5 apply only when this decision takes a folder graph: B, D, E, F, or
+    G.
+  - Track H, Milestones 30 to 33, waits for this answer.
+- **Recommendation:** B. It is the cheapest option that compiles every module
+  of a folder's stories with that folder's setup and mocks, and the spike
+  tested it end to end at a bounded cost. D also isolates process-wide state,
+  at the highest cost. Mocks reach every shape of installed package only with
+  the answer to 18e-1.
+- **Action:** ask the user, because B replaces option E, which the user chose
+  on 2026-11-19, and it narrows the answers to 18a, 18c, and item 32.
+- **Answer:** B, chosen by the user on 2026-11-27. It replaces option E of
+  decision 18. Decision 18b closes. "What B changes" below applies when
+  track H starts, together with the answers to 18e-4 and 18e-5.
+- **Spike result:** B works for the tested cases, with Storybook 10.6.9,
+  Vite 8.3.8, and React 19.2.3, on Node 22.15.0 and 24.22.1. The spike used
+  Storybook's real preset loader, `viteFinal` chains, env preset, mock
+  plugin, mocker, and story composition. Mokly's registries, the JSX shim,
+  the recipe capture, and the Serve edit were prototypes. An independent
+  check reran every probe on both Node versions with the same results, and
+  six more probes found the renderer, key, React, mock, cost, and folder
+  limits below. The results:
+  - The presets of two folders loaded in one process, in both orders, and
+    each folder got its own merged setup. Answer D of 18d gave each folder
+    its own `STORYBOOK_*` values. So no option needs a process for each
+    folder for its presets.
+  - Each graph compiled its stories and every module that they import with
+    its own alias, plugin, and env values. A shared file compiled once in
+    each graph.
+  - App's preview mocks reached app's stories and a module inside
+    `packages/ui`. Ui's stories got the real modules. A mock reached an
+    installed package only when Storybook's target and the file that the
+    server loads were one file. Decision 18e-1 covers the other shapes.
+  - One render used one copy of each module, with one React. Contexts and
+    hooks worked.
+  - The bridge matched a wrapper, a link, and story component uses across
+    graphs. It also matched barrel re-exports, default exports, symbolic
+    links, and `memo` and `forwardRef` wrappers.
+  - Each graph worked on the base side, in a replay of its recorded module
+    fetches with no Vite server, and after an edit. An edit of a shared file
+    invalidated both graphs.
+  - The cost, against an option E prototype with a shared tree of 200
+    modules, gives the median of five runs on Node 22.15.0 and 24.22.1:
+
+    | Folders | Cold compile, B over E | Cold start, B over E | Cold start, added | Serve edit, added | Peak memory, B over E |
+    | ------- | ---------------------- | -------------------- | ----------------- | ----------------- | --------------------- |
+    | 2       | 1.8 to 2.0             | 1.16 to 1.26         | 0.24 to 0.41 s    | Less than 4 ms    | 1.02 to 1.05          |
+    | 5       | 3.0 to 4.2             | 1.51 to 1.76         | 0.95 to 1.33 s    | 54 to 72 ms       | 1.09 to 1.35          |
+
+    The cold start includes preset loading, server creation, compile,
+    evaluation, and render. A replay compiles nothing and took 1.4 to 2.4
+    times E's evaluation time. In this fixture almost every module is
+    shared, which is the worst case for B. With 200 local modules in each of
+    five folders, B's cold compile was 1.36 to 1.47 times E's.
+
+  - The env preset, the `beforeAll` hooks, Storybook's mocker global, and its
+    spy registry clash in the same way under E. Only a shared module's global
+    side effect is new under B: it ran once in each graph.
+- **What B changes:** the user has not chosen B, so none of these changes
+  applies yet.
+  - 18a B no longer chooses the setup of shared files. Decision 18e-4 settles
+    which graph runs the entries of a root that names no Storybook folder.
+  - 18b closes with no option, because each preview's mocks reach every
+    module of its own stories, as in Storybook.
+  - 18c D keeps its first rule: a file that a root's globs match runs in
+    that root's folder graph. Its other rules no longer choose a JavaScript
+    setup. The spike did not test whether they still choose the setup of a
+    configured stylesheet that no graph imports.
+  - 18d D stays, and its values reach every module of a folder's stories.
+  - Item 32: two files that one import resolves to keep two bridge keys.
+    The approved warning would fire on normal per-folder aliases, so
+    decision 18e-3 replaces its trigger.
+  - Milestone 30: the first TODO states folder graphs, the bridge, the
+    renderer rule, and the limits, in place of one identity and one place in
+    one module graph. The answer to 18b leaves.
+  - Milestone 32: the TODO of option E becomes one Vite server and one module
+    runner for each folder graph, with no transport between servers and no
+    URLs that are unique across servers. One React serves every graph. The
+    bridge covers every registry lookup and the style adapters of each
+    graph. Each graph records its own module fetches. The TODO of 18b leaves.
+    The tests of two folders check that a shared module runs once in each
+    graph and that a mock never reaches another folder's stories.
+  - Design call 18: one server and one runner for each folder graph. Each
+    import resolves and compiles in its own graph, and each module has one
+    identity in each graph. Each changed file still goes to every server.
+  - Design call 22: Mokly still calls the optional file once for each setup.
+    The setup that a call returns compiles every module of its folder's
+    entries.
+  - Also: Milestone 35's `StoryComponents` uses the bridge key, and
+    Milestone 14's one React covers every graph.
+- **Evidence:** `.context/storybook-support/spike-57/REPORT.md`, and the
+  independent check in `.context/storybook-support/spike-57-check/REPORT.md`.
+
+Design calls of the spike. These calls are the orchestrator's, made on
+2026-11-27 from the spike. Milestone 32 applies them under every option of
+this decision. They stay in this section until the user answers it, so that
+the milestones do not change before the answer.
+
+- S1. Under the adapter, Mokly keeps the named `STORYBOOK_*` defines of
+  Storybook's env plugin and removes its define of the whole
+  `import.meta.env` object for the server environment. Vite then builds that
+  object. Reason: in the spike the whole-object define hid each folder's
+  `VITE_*` values and `MODE`, and it added quotes around the values that an
+  object read returned. Decision 17 requires stories to match Storybook,
+  where Vite supplies these values.
+- S2. In Serve, an edit of a loaded Storybook setup file, such as `main.*`
+  or a preset module, starts a new sidecar process. Edits of other files keep
+  the current Vite servers. Reason: Storybook's preset loader caches each
+  preset module at its first URL, so a new load in the same process returned
+  the old setup.
+- S3. Design call 24 stays: one mocker for each sidecar process, one story
+  render at a time, and one spy registry for the process. The guide states
+  that `clearAllMocks()` clears the spies of every folder. Reason: the one
+  mocker gave the right automock and spy values for two folders, and a
+  scoped registry needs a change to Storybook's test library. Under D of
+  this decision, each process has its own registry, and the guide sentence
+  changes.
+- S4. With several Storybook folders, the one active `beforeAll` setup of
+  answer D of B2 also switches when the next story has another preview: the
+  cleanup of the old setup runs, and then the new preview's `beforeAll`
+  runs. Reason: in the spike, two open `beforeAll` scopes in one process gave
+  both folders the second preview's global, and serial hooks with cleanup
+  gave each folder its own. B2 is the orchestrator's own call, and this
+  applies under every option.
+
+#### 18e-1. Mocks of installed packages whose files differ
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** None. Milestone 32 is not built.
+- **Background:**
+  - Storybook's mock plugin picks the file of a mocked installed package with
+    the browser resolve conditions `browser`, `import`, `module`, and
+    `default`.
+  - Mokly's server environment resolves the same import with Node's
+    conditions and the conditions of design call J1.
+  - Design call J2 compiles a mocked installed package in Vite, so that the
+    mock can reach it.
+  - Milestone 32 already records the limit when a mock misses the Node entry.
+  - In `storybook dev`, Vite pre-bundles each mocked installed package, and
+    the mock plugin also matches the pre-bundled file by the package name.
+    Mokly pre-bundles nothing, so only the match by file can apply.
+  - J2 runs a mocked package inside Vite's module runner, which cannot run a
+    CommonJS file. So an automock or a spy of a CommonJS package fails
+    under every option. A `__mocks__` redirect replaces the file, so it still
+    works.
+- **Problem:** The mock reached an installed package only when both
+  resolutions gave one file. With J1 and J2, it missed for three of four
+  package shapes: `node` before `storybook`, separate `node` and `browser`
+  builds, and a `storybook` build that differs from the `browser` build.
+  Nothing reported the miss.
+- **Impact if no action:** A story renders the real package where its
+  Storybook renders the mock, with no warning.
+- **Root question:** How does a preview's `sb.mock()` of an installed package
+  reach each import of that package in Mokly's render, as it does in the
+  folder's own Storybook? The options check of 2026-11-27 wrote this
+  question, because Storybook's dev server matches the package by its name,
+  not only by its file.
+- **Options:**
+  - **A.** Apply J1 and J2, and the guide states that both resolutions must
+    give one file. Effort: Small.
+  - **B.** A, and warn when a mocked package resolves to another file than
+    Storybook's target. The warning names the folder and both files, and it
+    fails `--strict`. Effort: Medium.
+  - **C.** Resolve each mocked installed package, for the server, to the file
+    that Storybook's mock plugin picks. The mock then always reaches it, but
+    a browser build can fail in Node. Effort: Medium.
+  - **D.** A project can choose, for each package, to mock the file that the
+    server resolves. Mokly and the browser can then mock different files.
+    Effort: Large.
+  - **E.** Mokly applies each mock of an installed package to the file that
+    the server resolves for the mocked name, with `extractMockCalls`,
+    `findMockRedirect`, and `getAutomockCode` from
+    `storybook/internal/mocking-utils`. This is what `storybook dev` does for
+    the pre-bundled package. The server keeps its Node build. An automock
+    wraps the Node build, whose exports can differ from the browser build in
+    rare packages. It uses Storybook internals, as design call 13 does. The
+    spike did not test it. Effort: Medium. Added by the options check of
+    2026-11-27.
+- **Left out:** A package that Node loads outside Vite: no Vite plugin, and
+  so no mock, reaches it. A pre-bundle of each mocked package, as
+  `storybook dev` does: it breaks the adapter rule of no pre-bundle and no
+  written file. A Node loader hook that mocks the package: Node keeps one
+  copy for the process, so the mock reaches every folder's stories. Browser
+  conditions for the whole server environment: C is better on every point.
+- **Wider fix:** E, changed from C by the options check of 2026-11-27,
+  because E holds for any file that a package's exports give the server, and
+  C must know Storybook's browser target.
+- **Previous examples:** Design calls J1 and J2.
+- **Related:** It applies to every option of 18e. Milestone 32 waits for it.
+- **Recommendation:** E, changed from B by the options check of 2026-11-27.
+  It should reach every tested package shape with no warning, and it keeps
+  the file that Node can run. B's warning asks for a fix that a project often
+  cannot make in an installed package.
+- **Action:** ask the user, because E applies a mock to another file than
+  Storybook's browser target, and B adds a warning that fails `--strict`.
+- **Answer:** E, chosen by the user on 2026-11-27.
+
+#### 18e-2. Values that have no bridge key
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation, from the spike.
+- **Category:** Docs or spec.
+- **Location:** None. Folder graphs are not built.
+- **Background:**
+  - Under B, the bridge matches a value of one graph with its copy in
+    another graph through its declaring module and export name.
+  - A definition that no entry module exports fails today in one graph too,
+    because the registration walk reads only the exports of entry modules.
+  - The case that is new under B is a value that one module makes and that
+    two graphs reach by a path that is not a direct export. Examples are a
+    member of an exported object, such as `Icons.Close`, or the `component`
+    of a stories meta.
+  - Inside one graph, the object still matches itself.
+- **Problem:** Across graphs, such a value has no key. A wrapper then fails
+  with "unexported component", a link fails as an unknown definition, and a
+  story component use is lost without a message.
+- **Impact if no action:** A screen of one folder that renders such a
+  component from another folder shows no use of it in Changes.
+- **Root question:** How does a value that a module makes, but does not
+  export directly, keep its tie to its catalogue entry when another folder's
+  graph renders it? The options check of 2026-11-27 wrote this question, so
+  that the options can prevent the miss.
+- **Options:**
+  - **A.** Keep the match by object inside one graph and the current wrapper
+    and link errors. The guide states that a value must be a module export
+    to match across folders. Effort: Small.
+  - **B.** A, and warn when a stories meta's component has no bridge key and
+    another graph evaluates the same file. The warning names the export to
+    add, and it fails `--strict`. Effort: Medium.
+  - **C.** An authoring field gives such a value an explicit identity.
+    Mokly then needs rules for collisions. Effort: Large.
+  - **D.** The bridge key adds a member path: the declaring module, the
+    export, and the own data properties that lead to the value, as B already
+    keys the inner function of a `forwardRef`. Mokly reads only own data
+    properties, to a fixed depth, so no getter runs. When a value has two
+    paths, the first path in sorted order wins. A value from a cache or from
+    a call at render time still has no key. Effort: Medium. Added by the
+    options check of 2026-11-27.
+- **Left out:** A match by title, because two values can share a title. A
+  match by the first module that exports a value, because an import cycle
+  gave two keys in the spike. A key from the call that makes the value,
+  because one factory gives every value the same call site.
+- **Wider fix:** C, because every value can then have a key.
+- **Previous examples:** None found.
+- **Related:** It applies only when 18e takes a folder graph. 18e-3 covers a
+  miss from two resolved files.
+- **Recommendation:** D, changed from B by the options check of 2026-11-27.
+  It ties the likely cases with no change to the project, as decision 13
+  intends for story component uses. B can tie its warning only to the
+  stories file, and without D it cannot name the module that must export
+  the value.
+- **Action:** ask the user, because D changes which values match an entry,
+  B adds a warning that fails `--strict`, and C adds an authoring field.
+- **Answer:** D, chosen by the user on 2026-11-27.
+
+#### 18e-3. Item 32's warning under folder graphs
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** `plans/follow-ups/vite-setups-split-module-identity.md`.
+- **Background:**
+  - On 2026-11-25 the user chose option B of item 32: Mokly warns when two
+    setups resolve one import specifier to different files, and the warning
+    fails `--strict`.
+  - Under B of 18e, each graph compiles a shared file with its own setup.
+  - In the spike, `#setup` in `packages/shared/setup.tsx` resolved to a
+    different file in each graph, by design.
+- **Problem:** The approved warning fires on that normal per-folder alias.
+- **Impact if no action:** A monorepo with per-folder aliases fails
+  `--strict` under folder graphs, also when every render is right.
+- **Root question:** Under folder graphs, how does the user learn that a
+  per-folder resolution made a render or a catalogue tie wrong? The options
+  check of 2026-11-27 wrote this question, because under B each render uses
+  one graph, so a split no longer splits module state inside a render, and
+  two resolved files are two components.
+- **Options:**
+  - **A.** Report no split. The guide states that each graph resolves with
+    its own setup. Effort: Small.
+  - **B.** Report a split only when it makes a bridge lookup miss: a wrapper,
+    a link, or a story component use. The warning fails `--strict`.
+    Effort: Medium.
+  - **C.** Keep item 32's answer B for every split. Effort: Medium.
+  - **D.** Add no warning. When a wrapper fails as unexported or a link fails
+    as an unknown definition, and the same specifier resolves in another
+    graph to the file that holds the registered definition, the existing
+    error names both files and both folders. Story uses stay silent, because
+    two files are two components. Nothing new fails `--strict`. Effort:
+    Medium. Added by the options check of 2026-11-27.
+  - **E.** Report each split as a warning that `--strict` does not count, as
+    `base-dependencies` is. A build with per-folder aliases still passes,
+    but each build of such a monorepo prints these warnings. Effort: Medium.
+    Added by the options check of 2026-11-27.
+- **Left out:** Item 32's option C, one resolution of a workspace package
+  name for every graph, because a folder's stories then lose their own
+  aliases.
+- **Wider fix:** D, changed from B by the options check of 2026-11-27,
+  because each render already uses one graph, and D explains every split
+  that stops the build, whatever setting causes it.
+- **Previous examples:** Item 32.
+- **Related:** It applies only when 18e takes a folder graph. 18e-2 covers a
+  miss from a value without an export.
+- **Recommendation:** D, changed from B by the options check of 2026-11-27.
+  It explains the two errors that a split can cause, and it stays silent
+  where two files are two components. B also fires for the spike's own
+  `#selection` alias, which works as designed.
+- **Action:** ask the user, because every option except C changes the user's
+  answer to item 32.
+- **Answer:** D, chosen by the user on 2026-11-27. It replaces the answer B
+  to item 32 under folder graphs.
+
+#### 18e-4. Entries of roots that name no Storybook folder
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review, from the options check of 2026-11-27.
+- **Category:** Docs or spec.
+- **Location:** None. Folder graphs are not built.
+- **Background:**
+  - The user chose answer B of 18a on 2026-11-25, for option E of decision 18. A file that no Storybook folder owns compiles with the setup of the
+    first root, in configuration order, that names a folder.
+  - Under option E, that rule covers shared files. Under a folder graph, each
+    graph compiles its own imports, so the rule covers only entries: screens
+    and components of a root that names no folder, when no `.storybook`
+    folder exists in the source root.
+  - Such an entry evaluates in one graph, and that graph compiles its whole
+    import tree.
+  - In the spike, such a screen with the first folder's setup rendered with
+    that folder's alias and its preview's mocks. With a plain Vite setup, its
+    import of a folder alias failed with `Cannot find module '#setup'`.
+- **Problem:** Under a folder graph, answer B of 18a gives the whole import
+  tree of these entries the first folder's aliases and mocks. The user chose
+  the rule for shared files only.
+- **Impact if no action:** Milestone 30 cannot state the graph of these
+  entries, and a change of root order can change their render.
+- **Root question:** Under folder graphs, which setup compiles a screen or a
+  component whose root names no Storybook folder, with every module that it
+  imports?
+- **Options:**
+  - **A.** Keep answer B of 18a: the graph of the first root that names a
+    folder, with that folder's preview mocks. A catalogue with one folder
+    already compiles every entry with that folder's setup, as decision 17
+    says. Effort: Small.
+  - **B.** A, but in an extra graph with that folder's setup and without its
+    preview mocks. This adds one Vite server. Effort: Medium.
+  - **C.** A plain Vite setup of the configuration directory, as a catalogue
+    without a Storybook folder uses. This adds one Vite server, and an import
+    that needs a folder's alias fails, as in the spike. Effort: Medium.
+  - **D.** When roots name several folders, the configuration must name the
+    setup of each root that names no folder. Without it, the configuration
+    check fails. Effort: Medium.
+- **Left out:** Each module with the setup of the folder that owns it: that
+  is option G of 18e.
+- **Wider fix:** D, because the project then chooses each setup.
+- **Previous examples:** Decision 18a, options A to E.
+- **Related:** It applies only when 18e takes a folder graph. Decision 18a
+  answered it for option E.
+- **Recommendation:** A. It keeps the user's answer to 18a and decision 17's
+  rule for one folder, and it adds no server and no configuration error. D
+  gives the project the most control.
+- **Action:** ask the user, because under a folder graph answer B of 18a
+  decides the whole import tree of these entries, and the user chose it for
+  shared files only.
+- **Answer:** A, chosen by the user on 2026-11-27. Such an entry runs in the
+  graph of the first root, in configuration order, that names a Storybook
+  folder, with that folder's preview mocks. Option E, A with a guide sentence
+  on the root `storybook` field, was offered the same day and not chosen.
+
+#### 18e-5. Workspace package sources under folder graphs
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review, from the options check of 2026-11-27.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-comparison-packages.md`, "Workspace
+  Package Sources".
+- **Terms:**
+  - **Source step:** Mokly's rule that loads a workspace package's source in
+    place of its build file. It applies under Vite since answer B of track D
+    decision 6.
+- **Background:**
+  - A folder's own Storybook loads another workspace package as its build
+    file when that package's exports name the build.
+  - Under a folder graph, the source step gives the importing graph the
+    package's source, which then compiles with the importing folder's setup.
+  - Under option E, the source compiles with the setup of the folder that
+    owns the package.
+  - The optional file of design call 22 can add an alias to each setup.
+  - The spike did not test this case.
+- **Problem:** A package source that needs its own folder's alias or plugin
+  fails in the importing graph, while the importing folder's own Storybook
+  loads the build and works.
+- **Impact if no action:** A build fails, or a source compiles without its own
+  plugin, for a layout that works in both Storybooks.
+- **Root question:** Under folder graphs, which setup compiles the source of a
+  workspace package that the importing folder's Storybook loads as a build?
+- **Options:**
+  - **A.** The importing graph's setup. The guide states that a package's
+    source must compile with each importing folder's setup, and that the
+    optional file can add a missing alias. Effort: Small.
+  - **B.** The importing graph adds the `resolve.alias` entries of the folder
+    that owns the package, only for files inside that package. The owner's
+    plugins stay out. Effort: Medium.
+  - **C.** For a package whose directory another Storybook folder owns, skip
+    the source step and load the build file, as that Storybook does. Changes
+    then shows an edit of the package only after a new build of it. Effort:
+    Medium.
+  - **D.** Inside the importing graph, compile the files of such a package in
+    a server with the setup of the folder that owns it. The importing
+    preview's mocks then do not reach them. Effort: Large.
+- **Left out:** The owner's whole setup merged into each graph, because
+  plugins can conflict, as option D of decision 18 found.
+- **Wider fix:** B, because a package then resolves its own imports in every
+  graph.
+- **Previous examples:** Answer B of track D decision 6.
+- **Related:** It applies only when 18e takes a folder graph. The cost line
+  of option B of 18e names it.
+- **Recommendation:** A. In many monorepos the importing Storybook also loads
+  the source, and A then matches it exactly, while the optional file fixes
+  the other layouts. B serves more layouts with no project change.
+- **Action:** ask the user, because the spike did not test this layout, so
+  no option is clearly best, and C changes the user's answer to track D
+  decision 6.
+- **Answer:** B, chosen by the user on 2026-11-27. For an importer inside a
+  workspace package, the importing graph first applies the `resolve.alias`
+  entries of the Storybook folder that owns the package. The importing
+  folder's aliases stay for its own files. The owner's plugins stay out.
+  Reason: a package's source that shares an alias key, such as `@/`, with the
+  importing folder must not resolve to the importing folder's file.
 
 ### 19. Ids of story component uses
 
@@ -1421,7 +2009,7 @@ track.
 | E. Storybook folders       | 18 to 22   | Track B                                         |
 | F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26                 |
 | G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27         |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18e |
 | I. Story component usage   | 34 to 36   | Tracks B and D                                  |
 | J. Spike for decision 18   | 37         | Nothing                                         |
 
