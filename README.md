@@ -163,15 +163,16 @@ follow the command, for example `mokly build --config tools/mokly.config.json`.
 | `mokly serve --base <ref>` | Serve with Changes against another Git base                        |
 | `mokly build`              | Validate, render every view, and write the static site             |
 | `mokly build --out <path>` | Write the static site to `path` instead of `mokly-static/`         |
-| `mokly build --strict`     | Fail on warnings as well as on errors                              |
+| `mokly build --strict`     | Fail on errors and on warnings except `base-dependencies`          |
 | `mokly build --base <ref>` | Compare against another Git base; `--no-changes` writes no Changes |
 | `mokly publish`            | Build into a private directory and upload to a catalogue service   |
 | `mokly --help`             | Show every command and option                                      |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. Warnings print on standard error without changing the exit status;
-`--strict` turns them into a failed command. No command writes into the
-repository: `build` writes its output directory and the
+[`--strict`](./docs/protocol/mokly-build-warnings.md#strict-mode) turns every
+warning except `base-dependencies` into a failed command. No command writes
+into the repository: `build` writes its output directory and the
 `.mokly-export-reservations/` directory, which Git must ignore, and the
 caches live in the operating system's cache directory. `publish` requires
 a clean Git checkout.

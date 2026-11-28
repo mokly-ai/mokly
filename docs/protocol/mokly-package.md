@@ -88,9 +88,9 @@ The [help and version contract](./mokly-terminal-help.md) defines their exact
 stdout bytes, including `-v` and the bare package version.
 
 `serve` and `build` are the two verbs. `build` validates the catalogue,
-renders every view, fails on errors and, with `--strict`, on warnings, and
-writes the static output into the directory `--out` names, `mokly-static/`
-at the repository root by default, which Git must ignore; the
+renders every view, fails on errors and, with `--strict`, on warnings except
+`base-dependencies`, and writes the static output into the directory `--out` names,
+`mokly-static/` at the repository root by default, which Git must ignore; the
 [static build contract](./mokly-export.md) owns that output. `publish` runs
 the same build into its own directory outside the repository and uploads the
 result under the [upload contract](./mokly-upload.md); it accepts `--strict`

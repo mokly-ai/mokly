@@ -234,7 +234,7 @@ npx mokly serve
 ```
 
 A build validates every view. It fails on errors. Strict mode also fails on
-warnings. Screen documents use
+warnings other than `base-dependencies`. Screen documents use
 `static/mokly-generated/account/invoice/index.mobile.html` and
 `index.desktop.html`; dark views add `.dark` before `.html`.
 

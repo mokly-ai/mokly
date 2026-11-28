@@ -108,7 +108,7 @@ pub struct Build {
     /// Static output directory (default mokly-static/).
     #[arg(long, value_parser = nonempty)]
     pub out: Option<String>,
-    /// Fail on warnings before writing output.
+    /// Fail on warnings except base-dependencies before writing output.
     #[arg(long)]
     pub strict: bool,
     /// Skip comparisons and base lookup.
@@ -134,7 +134,7 @@ pub struct Publish {
     /// Maximum parallel Blob requests, 1 through 32.
     #[arg(long, default_value = "8", value_parser = clap::value_parser!(u8).range(1..=32))]
     pub upload_concurrency: u8,
-    /// Fail on every build warning before uploading.
+    /// Fail on build warnings except base-dependencies before uploading.
     #[arg(long)]
     pub strict: bool,
     /// Skip comparisons and base lookup.

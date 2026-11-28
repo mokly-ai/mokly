@@ -30,7 +30,8 @@ npx mokly build --no-changes
   path resolves against the loaded configuration's directory, like every
   configured path. The directory must satisfy the
   [output safety contract](./mokly-export-safety.md); `--out` on `serve` fails.
-- `--strict` fails the build on warnings as well as on errors. Without it,
+- [`--strict`](./mokly-build-warnings.md#strict-mode) fails the build on errors
+  and on warnings except `base-dependencies`. Without it,
   [build warnings](./mokly-build-warnings.md) print once each on standard
   error and change neither the output nor the exit status. `publish` follows
   the same opt-in strict policy.
@@ -121,7 +122,7 @@ Changes; Serve's watcher ignores the same paths.
 reserves the resolved output against concurrent writers under the
 [safety contract](./mokly-export-safety.md), before it resolves Git or
 renders. It resolves the base commit without changing the checkout. With
-`--strict`, a warning fails the build before any write.
+`--strict`, a warning other than `base-dependencies` fails the build before any write.
 
 ### Input Fingerprint
 
@@ -220,9 +221,10 @@ before it reaches the terminal.
 private directory outside the repository. No option names that output. The
 `Mokly publish build` line of the [terminal errors contract](./mokly-terminal-errors.md) reports the output path. The command then
 uploads the result under the [upload contract](./mokly-upload.md). It needs a
-clean checkout, fails on warnings only with `--strict` before it writes or uploads, and
-`publish --no-changes` builds current-only. Private-directory retention and
-cleanup follow the [upload cleanup rule](./mokly-upload.md#cli).
+clean checkout, fails on warnings except `base-dependencies` only with
+`--strict` before it writes or uploads, and `publish --no-changes` builds
+current-only. Private-directory retention and cleanup follow the
+[upload cleanup rule](./mokly-upload.md#cli).
 
 ## Output Safety
 
