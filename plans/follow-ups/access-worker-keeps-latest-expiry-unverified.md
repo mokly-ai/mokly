@@ -1,0 +1,38 @@
+# Access worker trusts an unverified expiry order
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-28, from the review of the branch `calummoore/embedded-access-start-page-worker-and-1p13`, the wider fix of finding 1.
+- **Location:** `packages/frame/src/access/token_store.ts:48-53` (`storeToken`), `packages/frame/src/access/token_store.ts:10` (the database open), and `docs/protocol/mokly-frame-access.md`, section "Access Worker".
+- **Reason:** Each wider fix changes the Access Worker rule that the worker keeps the token with the latest expiry, and no user decision covers that rule.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Access worker:** the Mokly service worker `mokly-viewer/client/access-worker.js` on a publication host. It stores the bearer token in IndexedDB and adds it to requests to its own exact origin.
+  - **Latest-expiry rule:** the Access Worker rule that the worker keeps only the token with the latest `expiresAt`. A design call of 2026-11-27 set it, with no recorded reason. Its likely purpose is that an older token from a second app tab cannot replace a newer one.
+  - **Start page:** the public Mokly page that a frame without a credential loads. It asks the host for a token and hands it to the access worker.
+  - **Relay:** the code in the frame probe that passes a renewed token from the host to the access worker. The start page and the relay send the same `token` message.
+- **Background:**
+  - Nothing verifies the `expiresAt` that comes with a token. The host computes it from its own clock. A script on the publication origin can write a record with a late expiry. A backward clock change of more than the 300-second token life can do the same.
+  - Since commit `a63f90929`, the worker deletes the stored record in one transaction when a navigation that carried it gets 401, before it answers with the start page (`token_store.ts:55-65`, `worker.ts:28-34`). So the start page then stores a fresh token.
+  - One gap stays: a navigation that the worker did not intercept, for example the first navigation before the worker runs while a stored record already exists, gets the start page from the server. The start page's token then loses to the stored record, the next navigation fails again, and the adapter's loop guard calls `onAccessFailure` (`packages/frame/src/adapters/access_phase.ts:30-37`, `:52-54`). The app then shows its final blocked stage, as `docs/protocol/cloud/viewer.md`, section "Catalogue Isolation", requires, and the reader must reload the page.
+  - A script that opens the IndexedDB database `mokly-frame-access` at a version above 1 makes every later open by the worker fail, under every option here. That is a separate question for a separate item if it matters.
+  - Only scripts on the publication origin can write these records. `docs/protocol/cloud/catalogue-private-access.md`, section "Credentials", records the user's decision of 2026-11-27 that the token is the cookie's own capability, because those scripts can already read every private file.
+  - A published access worker never changes, so a later rule change reaches only publications built after it.
+- **Problem:** The order of stored tokens depends on an expiry value that nobody verifies.
+- **Screenshot:** Mark the blocked stage when a protected screen fails again after the viewer supplies a fresh credential.
+- **Impact if no action:** In the gap above, a bad stored record ends in the app's final blocked stage until the reader reloads the page.
+- **Root question:** How does the access worker choose between two tokens without trusting an unverified expiry?
+- **Options:**
+  - **A.** Change nothing. The delete after a 401 stays the only defence. Effort: Small.
+  - **B.** Verify the token and its expiry under the frame host's authority before a stored record can win. This needs a credential contract change. Effort: Large.
+  - **D.** `storeToken` always writes, so the newest delivered token wins. A token with an earlier expiry can then replace one with a later expiry. The host reuses a token while more than two minutes remain (`docs/protocol/cloud/viewer-host.md`, "Sources"), so the screens of another tab can lose files for less than two minutes, until that tab renews. Effort: Small.
+  - **E.** A start page hand-off always replaces the stored token, and relay renewals keep the latest-expiry rule. Both deliveries send the same `token` message from the screen's URL, so the worker can tell them apart only with a new field, which changes the access channel. Effort: Small, because it is one field and one branch in `storeToken`.
+  - **F.** When a delivered token loses to a stored token with a different value, the worker requests the sender's URL once with the stored token, and replaces it on 401 in one transaction. This keeps the expiry order but adds a request and changes the rule that the worker adds the token only to its documents' requests. Effort: Medium.
+- **Left out:** Option C of the source finding, credential storage on a trusted origin that brokers protected reads, because it changes publication delivery and costs far more than D. A limit on how far ahead `expiresAt` may be, because it adds a maximum token life that the contract does not have. A check on message senders, because documents of the origin can write IndexedDB directly.
+- **Wider fix:** D, because it keeps the unverified expiry out of the choice.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/access-reload-order-cancels-mount.md`, same code: option E here and its options B and C change `start.ts`.
+- **Recommendation:** D. It is the smallest change that removes the trust in the expiry. F fits if the order between tabs must stay.
+- **Action:** ask the user, because each option except A changes the Access Worker rule, and only a release before the first publications reaches them all.

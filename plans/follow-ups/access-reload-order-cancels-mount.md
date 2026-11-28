@@ -1,0 +1,36 @@
+# Access reload order can cancel a mount
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-28, from the review of the branch `calummoore/embedded-access-start-page-worker-and-1p13`, finding 4.
+- **Location:** `packages/frame/src/adapters/access_phase.ts:79-81`, `:86-87` and `:95-98`, and `packages/frame/src/access/start.ts:82-87`, where the start page posts `reload` and then reloads.
+- **Reason:** Only Firefox can deliver the two events in the wrong order, and only under load. A later adapter release fixes it for every published start page, because each one sends `reload` before it reloads.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Start page:** the public Mokly page `mokly-viewer/client/access-start.html` that a private frame loads when it has no credential. It asks the host for a token, then posts `reload` on the `mokly-frame-access` channel and reloads itself.
+  - **Relay:** the code in the frame probe of a published screen that passes a token from the adapter to the access worker. It sends no message to the host.
+  - **Access phase:** the stages of `postMessageAdapter` from the start page load to the handshake of the reloaded screen. After `reload`, the adapter waits for the next frame `load` and then sends `hello`.
+- **Background:**
+  - The adapter expects the `reload` message first and the replacement document's frame `load` event second. In the `start-loaded` stage, a frame `load` disposes the mount, and a later `reload` is ignored without a failure report.
+  - These Gecko facts come from a read of the Firefox engine source on 2026-11-28, not from a run in a browser. In Gecko, the preference `dom.separate_event_queue_for_post_message.enabled` (on by default) defers posted messages while the top-level page has not finished loading, and runs them only in idle periods of at least 12 ms. The cross-process frame `load` fires at normal priority. So the frame `load` can arrive first while the viewer page still loads an image or another frame and its main thread is busy.
+  - The same read found that Chromium and WebKit keep the posting order in practice.
+  - An in-memory run of the adapter with the reverse order confirmed that it disposes the mount and reports no failure. The viewer then shows its frame error, because `packages/viewer/src/shell/frame_mount_hook.ts:197-202` sets the error state on every mount rejection.
+  - In Gecko, a `reload` posted from the start page's own `load` listener can also reach the host before the host sees that `load`. In practice this does not happen, because the start page loads no file and finishes before the token arrives.
+  - `docs/protocol/mokly-frame-access.md`, section "Access Phase", says that after `reload` the adapter waits for the next document and then sends `hello`. A `reload` ends the 10-second access deadline.
+- **Problem:** When the frame `load` of the reloaded screen reaches the adapter before the start page's `reload` message, the adapter cancels the mount, and the reader sees a preview error after the credential and the navigation both succeeded.
+- **Screenshot:** Mark the preview error when the protected document has loaded but the adapter has cancelled its mount.
+- **Impact if no action:** A rare Firefox reader gets a preview error on a private screen, and Try again fixes it.
+- **Root question:** How does the viewer recognize the document that replaces the start page, whatever order the browser delivers the frame's messages and `load` events in?
+- **Options:**
+  - **A.** In `access_phase.ts`, record the replacement `load` and the `reload` message independently after the start page's own `load`, and start the handshake when both have arrived. Count the start page's own `load` first, so that an early `reload` also works. Keep the 10-second deadline until `reload` arrives. Add one order test to `packages/frame/tests/post_message_access.test.ts`. Risk: two independent flags add one more state to the phase. Effort: Small.
+  - **B.** The host acknowledges `reload` before the start page navigates. This changes the access messages and the published start page. Effort: Medium.
+  - **C.** The adapter reloads the frame itself after `reload`. This changes the start page steps and the meaning of `reload`. Effort: Medium.
+  - **D.** The reloaded document's probe sends an access `loaded` message, so both signals travel on the ordered message path. This changes the relay rule that the relay sends nothing to the host, and adds probe bytes. Effort: Medium.
+- **Left out:** A fixed delay, because it gives no order. Sending `hello` at the first `load` after the token, because it breaks the rule that `hello` follows `reload`.
+- **Wider fix:** D, because the replacement document then signals on the ordered message path. D alone still leaves the early `reload` before the start page's own `load`, and it changes the relay rule of `docs/protocol/mokly-frame-access.md`, so it needs the user. If the open plan decision on renewal (D9) makes the relay send `request` to the host, D no longer adds a new relay rule. B, C, and D each change published files, so each still needs A for start pages that are already published.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/access-worker-keeps-latest-expiry-unverified.md`, same code: its option E and options B and C here change `start.ts`.
+- **Recommendation:** A. It changes only the host's adapter and covers every published start page. D, the wider fix, is blocked until the user decides on the relay rule.
+- **Action:** fix after merge, apply A, because it is a rare product bug that a later adapter release fixes everywhere.

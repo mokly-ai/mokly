@@ -4,7 +4,7 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from PR #341, branch `calummoore/mokly-stamp-early-exit`, at the request of the follow-up orchestrator, which owns the flaky-test items.
 - **Location:** `tests/browser/hosts.ts:45-50`, `tests/browser/setup.ts:63` and `:141`, `tests/browser/example_setup.ts:32`, `tests/helpers/example_base.ts:1-8`, and `scripts/verification/serve-process.mjs:137-159`.
-- **Reason:** On 2026-11-26 the user chose option B, and the branch `calummoore/ci-speed-flaky-decisions-a` applied it. The fix waits for the next CI failure, which now names the exit code and the signal.
+- **Reason:** On 2026-11-26 the user chose option B, and the branch `calummoore/ci-speed-flaky-decisions-a` applied it. The first failure that names the exit code and the signal came on 2026-11-28, so option A can start.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -72,7 +72,9 @@
   - The file watch failure was a separate machine prerequisite. The machine had 63,308 watches against a limit of 65,536. The Conductive runner owned 63,215 of those watches. Raising the machine limit to 1,048,576 changed no product, test, assertion, or workflow.
   - One narrow lifecycle check passed on `a177da3ca`, and one passed on the frozen main control `36cfd7cf7`. Both reached Browse readiness and Changes unavailable, kept exactly one expected Git diagnostic, and stopped with exit code 0 and no signal. These narrow checks did not reproduce the full Browser workload.
   - The unchanged full Browser rerun at `7f4220e7a` then passed all 2,305 cases, with zero failures, skips, or cancellations. Its strict reporter completed without errors. An ignored Node diagnostics-channel observer recorded the shared Example native binary, shim, and Node worker. All three exited with code 0 and no signal. The observer added no signal handler or stop policy. This pass identifies no cause for the earlier cleanup failure. No product, test, or workflow fix was made.
-- **Problem:** Global teardown sometimes fails after every test passed because the Example Serve worker does not exit with code 0. Its output contains the same `[mokly/git-failed]` text as the expected initial diagnostic. The error omits the exit code and signal, so it cannot identify a second Git failure or another stop cause.
+  - On 2026-11-28, a local run of the complete browser suite (`npm run test:browser`, 917 test cases) on the branch `calummoore/embedded-access-start-page-worker-and-1p13` at commit `55537c5c2` passed every case but exited 1 in teardown with `Example Serve did not stop cleanly, exit code null, signal SIGKILL` and one `[mokly/git-failed] Git exited with status 128: fatal: Needed a single revision` line. The rerun passed. That branch changed `PackageAssets::load` in `crates/mokly-server/src/assets.rs`, but not `scripts/verification/serve-process.mjs`, `tests/browser/hosts.ts`, or the Git code. The run log was not kept.
+  - That failure is the first that names the signal. `signal SIGKILL` with `exit code null` means that the Node worker died from SIGKILL, which the 10-second stop guard of `scripts/verification/serve-process.mjs:143-149` sends. An outside kill, such as the out-of-memory killer, would look the same.
+- **Problem:** Global teardown sometimes fails after every test passed because the Example Serve worker does not exit with code 0. Its output contains the same `[mokly/git-failed]` text as the expected initial diagnostic. Since 2026-11-26 the error names the exit code and the signal, and the first failure that named them, on 2026-11-28, ended with `signal SIGKILL` from the stop guard.
 - **Impact if no action:** Required CI fails on healthy pull requests, and each author must rerun the job or ask why. One rerun of PR #341 failed again.
 - **Root question:** Why does the Example Serve worker sometimes end with an exit code other than 0 when the global teardown stops it?
 - **Options:**
@@ -87,5 +89,5 @@
 - **Previous examples:** The deleted item `browser-host-cleanup-failure.md`, at the permalink above, recorded the same cleanup failure before PR #322 kept its inner errors.
 - **Related:** None.
 - **Recommendation:** B. The first recommendation was A, before the repetitions of 2026-11-19. All 21 clean runs gave no failure to study. B makes the next CI failure show the exit code and signal of `server.stop()`. A stays the only option that fixes the failure. It still needs a reproducible failure or a named source.
-- **Action:** fix after merge, apply A when a CI failure gives the exit code and the signal, because the user chose B on 2026-11-26 to get that evidence first.
+- **Action:** fix after merge, apply A, because the evidence that the user's choice of B on 2026-11-26 waited for came on 2026-11-28: the stop guard killed the worker.
 - **Applied:** On 2026-11-26, `tests/browser/hosts.ts` started to name the exit code and the signal in the error, for example `Example Serve did not stop cleanly, exit code 1, signal null:`. `tests/browser_host_parent_death.test.ts` checks that text. A SIGKILL from the 10-second stop guard of `scripts/verification/serve-process.mjs` shows as `signal SIGKILL`.
