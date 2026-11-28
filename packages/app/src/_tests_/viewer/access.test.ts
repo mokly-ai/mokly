@@ -189,8 +189,7 @@ test("a tokenless exchange preserves cookie access and refuses bearer access", a
   const cookie = host({ exchange: () => new Response(null, { status: 204 }) });
   assert.equal((await cookie.publication.confirm()).status, "granted");
   assert.deepEqual(await cookie.publication.readCredential("cookie"), {
-    init: { credentials: "include" },
-    revision: 1,
+    credentials: "include",
   });
   await assert.rejects(cookie.publication.access(), { name: "ApiError" });
 

@@ -64,14 +64,11 @@ function detailUrl(
 export class CatalogueReadError extends Error {
   /** Present only when the publication origin returned an unsuccessful status. */
   readonly status: number | undefined;
-  /** The credential revision sent on a failed private request. */
-  readonly revision: number | undefined;
 
-  constructor(status?: number, revision?: number) {
+  constructor(status?: number) {
     super("The catalogue could not be loaded.");
     this.name = "CatalogueReadError";
     this.status = status;
-    this.revision = revision;
   }
 }
 
@@ -95,23 +92,16 @@ async function readJson(
   root: URL,
   access: SourceAccess,
   transport: CatalogueTransport,
-  rejectedRevision?: number,
+  renew = false,
 ): Promise<unknown> {
   if (url.origin !== root.origin) throw new CatalogueReadError();
-  const credential =
+  const init: RequestInit =
     access.policy === "public"
-      ? undefined
-      : await access.publication.readCredential(
-          access.policy,
-          rejectedRevision,
-        );
-  const response = await transport(
-    url,
-    credential?.init ?? { credentials: "omit" },
-  );
+      ? { credentials: "omit" }
+      : await access.publication.readCredential(access.policy, renew);
+  const response = await transport(url, init);
   if (!sameOrigin(response, root)) throw new CatalogueReadError();
-  if (!response.ok)
-    throw new CatalogueReadError(response.status, credential?.revision);
+  if (!response.ok) throw new CatalogueReadError(response.status);
   const value: unknown = await response.json();
   return value;
 }
@@ -134,28 +124,23 @@ export interface DetailReads {
   transport?: CatalogueTransport;
 }
 
-/**
- * A private detail read retries a 401 once. An exchange is needed only while
- * the rejected credential is current.
- */
+/** A private detail read renews access after a 401 and retries once. */
 export function detailSource(reads: DetailReads): DetailRead {
   const transport = reads.transport ?? browserTransport;
   return async (access, path, snapshotId) => {
     const url = detailUrl(reads.root, reads.index, path, snapshotId);
-    const read = (rejectedRevision?: number) =>
-      readJson(url, reads.root, access, transport, rejectedRevision);
     let value: unknown;
     try {
-      value = await read();
+      value = await readJson(url, reads.root, access, transport);
     } catch (error) {
       if (
+        access.policy === "public" ||
         !(error instanceof CatalogueReadError) ||
-        error.status !== 401 ||
-        error.revision === undefined
+        error.status !== 401
       ) {
         throw error;
       }
-      value = await read(error.revision);
+      value = await readJson(url, reads.root, access, transport, true);
     }
     const { readEntryDetail } = await viewer();
     return readEntryDetail(value);

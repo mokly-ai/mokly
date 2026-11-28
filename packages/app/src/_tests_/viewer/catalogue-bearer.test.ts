@@ -157,7 +157,7 @@ test("a bearer read renews an expired token before sending the request", async (
   ]);
 });
 
-test("a late bearer 401 retries with the current revision without exchanging again", async () => {
+test("a late bearer 401 renews again and retries with the new token", async () => {
   const { access, exchanges } = await confirmedBearer();
   const { calls, transport } = host(
     { [indexPath]: indexFile, [guidePath]: current("guide") },
@@ -185,7 +185,7 @@ test("a late bearer 401 retries with the current revision without exchanging aga
     held.resolve();
   }
   assert.equal((await slow).entry.path, "guide");
-  assert.equal(exchanges(), 2);
+  assert.equal(exchanges(), 3);
   assert.deepEqual(
     calls.map(({ authorization }) => authorization),
     [
@@ -193,12 +193,12 @@ test("a late bearer 401 retries with the current revision without exchanging aga
       "Bearer token-1",
       "Bearer token-1",
       "Bearer token-2",
-      "Bearer token-2",
+      "Bearer token-3",
     ],
   );
 });
 
-test("a late bearer 401 renews when the current token was lost", async () => {
+test("a late bearer 401 renews once and retries after the token body was lost", async () => {
   const { publication, access, clock, exchanges } = await confirmedBearer(
     (number) =>
       number === 2

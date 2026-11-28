@@ -71,10 +71,10 @@ export function cookieAccess(
   return {
     policy: "cookie",
     publication: {
-      async readCredential(policy, rejectedRevision) {
+      async readCredential(policy, renew) {
         assert.equal(policy, "cookie");
-        if (rejectedRevision !== undefined) await renewCatalogueAccess();
-        return { init: { credentials: "include" }, revision: 1 };
+        if (renew) await renewCatalogueAccess();
+        return { credentials: "include" };
       },
     },
   };
@@ -86,15 +86,12 @@ export function bearerAccess(
   return {
     policy: "bearer",
     publication: {
-      async readCredential(policy, rejectedRevision) {
+      async readCredential(policy, renew = false) {
         assert.equal(policy, "bearer");
-        assert.equal(rejectedRevision, undefined, "unexpected retry");
+        assert.equal(renew, false, "unexpected retry");
         return {
-          init: {
-            credentials: "omit",
-            headers: { authorization: `Bearer ${await token()}` },
-          },
-          revision: 1,
+          credentials: "omit",
+          headers: { authorization: `Bearer ${await token()}` },
         };
       },
     },
