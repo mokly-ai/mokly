@@ -1,0 +1,53 @@
+# Plan reservation costs three round trips per file
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-28, from the branch `calummoore/build-capacity-raise-upload-limits-aern`, which raised the upload limits.
+- **Location:** `crates/mkc-publications/src/reservation/reserve.rs:53` and `:101-159`, `crates/mkc-store-interface/src/blob.rs:51-57`, `crates/mkc-store-pg/src/blob.rs:71-81` and `:95-125`, `crates/mkc-api/src/publishing.rs:118`, `crates/mkc-api/src/upload_plan.rs:125-143`, `infra/helm/mokly-cloud/templates/services.yaml:28`, `infra/terraform/modules/dns/main.tf:34` and `:45`, `crates/mokly-publish/src/http.rs:116` and `crates/mokly-publish/src/retry.rs:28`.
+- **Reason:** Option C is about a day of database work beyond the limit raise of the branch that added this item, and nobody measured the production round-trip time that decides how urgent it is.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Plan request:** the first upload request, which posts the plan archive, reserves every declared file and answers the hashes that the project still lacks.
+  - **Reservation:** the `blobs` row of each new hash and the `publication_files` row of each declared path, which the plan request writes first.
+  - **Round trip:** one SQL statement that the API sends to Postgres, and the wait for its answer.
+  - **Plan admission:** one of the two places for a running plan request in each API process.
+  - **Blocking pool:** the Tokio thread pool of an API process that runs synchronous work, such as a plan request.
+- **Background:**
+  - `PublicationIngest::reserve` in `crates/mkc-publications/src/reservation/reserve.rs` runs the reservation in one serializable write transaction, at line 53.
+  - `reserve_candidates`, at lines 101-159 of that file, walks the declared files in hash-then-path order. For each distinct hash, it reads the project's blob row and inserts one when none exists. Then it inserts one publication file row for each path of that hash. So a new file with its own hash costs about three round trips.
+  - The store has only single-row methods for this work: `blob`, `insert_blob` and `insert_publication_file` in `crates/mkc-store-interface/src/blob.rs:51-57`. Their Postgres queries are in `crates/mkc-store-pg/src/blob.rs:71-81` and `:95-125`.
+  - The store makes up to eight attempts at a serializable write transaction, so it retries up to seven times after a serialization or uniqueness failure, in `crates/mkc-store-pg/src/retry.rs:19-40`. Each retry runs every statement again.
+  - Each API process has two plan admissions, from `Semaphore::new(2)` at `crates/mkc-api/src/publishing.rs:118`. The plan worker holds its admission for the whole plan request, the reservation included, in `crates/mkc-api/src/upload_plan.rs:125-143`. The worker runs on the blocking pool, so it keeps running after the client connection closes.
+  - The section "Canonical Blob Lock Order" of `docs/protocol/cloud/persistence-publication-storage.md` requires that a transaction inserts and locks blob rows in ascending project order, then bytewise hash order.
+  - On 2026-11-28 the user approved higher upload limits. Mokly Cloud now accepts 60,000 files and 6 GiB of declared bytes, not 20,000 files and 512 MiB. The real catalogue `Firna-AI/conductive` at commit `3371d05f2` needed the raise: its main-branch build has 11,030 files, and its pull-request build has 26,070.
+  - Production plans today hold 19 to 46 files and take 0.3 to 0.6 s at the load balancer. That hides the cost of each statement.
+- **Problem:**
+  - On 2026-11-28 a release API with local Postgres received synthetic plans. Each plan held the 48.7 MB index of conductive and small files, each with its own hash.
+  - Without a delay, 26,070 files took 5.3 s, and 60,000 files took 12.8 s. That is about 71 µs per round trip.
+  - Behind a local proxy that added about 2.2 ms to each round trip, 11,030 files took 76.6 s. That run left about 1.5 s beyond its round trips. A plan of 26,070 files took more than 120 s.
+  - Production reaches Cloud SQL through a Cloud SQL Auth Proxy sidecar over a private network, in `infra/helm/mokly-cloud/templates/_runtime.tpl:10-15`. The tier is `db-custom-1-3840` with 1 vCPU, in `infra/terraform/modules/sql/main.tf:27`. Nobody measured its round-trip time.
+  - Estimate: a plan takes about 1.5 s plus 3 × files × round-trip time, for files with their own hashes. At 1 ms per round trip, 11,030 files take about 35 s, 26,070 files about 80 s, and 60,000 files about 182 s.
+  - Three limits cut a slow plan:
+    - The load-balancer backend timeout of the stable environments, `timeoutSec: 30` in `infra/helm/mokly-cloud/templates/services.yaml:28`.
+    - The proxied origin timeout of Cloudflare, about 100 s by default. Cloudflare proxies the API host, under `proxied = true` in `infra/terraform/modules/dns/main.tf:45` for the hosts at line 34. The repository does not configure the timeout.
+    - The 120-second request timeout of the CLI in `crates/mokly-publish/src/http.rs:116`, with five attempts in `crates/mokly-publish/src/retry.rs:28`.
+  - By the estimate, a plan fits the 30-second timeout only below about 0.86 ms per round trip at 11,030 files, 0.36 ms at 26,070 files and 0.16 ms at 60,000 files.
+- **Impact if no action:** The first publish of a large catalogue can pass the load-balancer timeout. Each retry of the CLI sends the plan again while the earlier worker can still hold an admission, so the publish can fail after five attempts.
+- **Root question:** How does a plan for tens of thousands of files answer within the request deadlines?
+- **Options:**
+  - **A.** Keep the statements for each file, and measure the first large production publish. Large first publishes may time out and retry five times. Effort: Small.
+  - **B.** Raise the load-balancer backend timeout to about 100 s. It is still too short at 60,000 files, and it only moves the failure to the Cloudflare timeout. A raised time limit needs the approval of the user. Effort: Small.
+  - **C.** In a separate branch, batch the reservation into set-based statements, for example one read of all hashes and then multi-row inserts in chunks of about 1,000 rows. The rows keep the canonical blob lock order, and the behaviour at the boundary stays the same. The work follows the `databases` skill. Effort: Medium.
+  - **D.** Move the reservation out of the plan request into an asynchronous step. It changes the exchange contract of the CLI and Mokly Cloud, so their protocol pages change with it. Effort: Large.
+- **Left out:**
+  - A larger Cloud SQL tier. A statement took about 71 µs on local Postgres, so the network round trip through the proxy, not the database CPU, sets the cost. The user also chose this tier on 2026-11-24 to save cost.
+  - Lower file quotas. The 11,030-file main-branch build fits the old quota, and at 1 ms per round trip it still passes 30 s.
+- **Wider fix:** C. The number of statements then grows with the number of chunks, not with the number of files.
+- **Previous examples:** `mark_batch` in `crates/mkc-publications/src/blob_writer.rs:259-281` also sends one `mark_blob_stored` statement for each stored blob, in one transaction for each batch. It runs inside the blob requests, so no single request carries the whole catalogue.
+- **Related:**
+  - `plans/follow-ups/production-ingest-timing-not-reviewed.md`: the same measurement. That task reads the production plan traces. Option A here needs the duration of a large first plan, which the load-balancer log gives.
+  - `plans/follow-ups/database-connection-budget.md`: the same database. A plan holds one pool connection for its whole transaction, so option C also shortens that hold.
+- **Recommendation:** C. It removes the round trips for each file at any production round-trip time, so a plan can reach the 60,000-file quota.
+- **Action:** ask the user, because the task message of 2026-11-28 says to stop and report each change outside its scope, and option C changes the plan reservation, which that scope left out.

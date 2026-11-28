@@ -68,5 +68,5 @@ spec:
                 {{- include "mkc.storageEnv" $ | nindent 16 }}
                 {{- end }}
               resources:
-                {{- toYaml $.Values.api.resources | nindent 16 }}
+                {{- toYaml $.Values.api.jobResources | nindent 16 }}
 {{- end }}

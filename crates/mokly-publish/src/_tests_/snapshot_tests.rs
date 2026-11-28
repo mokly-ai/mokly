@@ -100,9 +100,8 @@ fn finalization_timestamp_changes_the_marker_and_keeps_content_digests() {
 
 #[test]
 fn file_count_and_regular_file_limits_fail_before_upload_preparation() {
-    let repeated = file("file", b"");
     let mut output = artifact(false);
-    output.files = vec![repeated; 20_001];
+    output.files = vec![file("file", b""); 60_001];
     assert!(matches!(Prepared::new(&output), Err(Error::TooLarge)));
     output.files = vec![file("oversized", &vec![0; 64 * 1024 * 1024 + 1])];
     assert!(matches!(Prepared::new(&output), Err(Error::TooLarge)));
@@ -111,4 +110,34 @@ fn file_count_and_regular_file_limits_fail_before_upload_preparation() {
             .upload(),
         Err(Error::TooLarge)
     ));
+}
+
+#[test]
+fn upload_preparation_accepts_sixty_thousand_files_including_the_marker() {
+    let mut files = Inventory::default();
+    for (path, bytes) in [
+        ("index.html", b"shell".as_slice()),
+        ("404.html", b"shell"),
+        (INDEX, b"{}"),
+    ] {
+        files.insert(path.into(), bytes.into()).unwrap();
+    }
+    for index in 0..59_995 {
+        files
+            .insert(format!("file-{index:05}"), Vec::new().into())
+            .unwrap();
+    }
+    let output = Artifact::finalize(
+        "/private/build".into(),
+        files,
+        Some(publication().metadata(&inventory(false)).unwrap()),
+    )
+    .unwrap();
+    assert_eq!(output.files.len(), 60_000);
+    let prepared = Prepared::new(&output);
+    assert!(
+        matches!(prepared, Ok(ref upload) if upload.ownership.files.len() == 59_999),
+        "{:?}",
+        prepared.err()
+    );
 }

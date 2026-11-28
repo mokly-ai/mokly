@@ -147,6 +147,8 @@ spec:
           ports:
             - { name: http, containerPort: 8080 }
           env:
+            - name: MALLOC_ARENA_MAX
+              value: "2"
             - name: MKC_BIND
               value: "0.0.0.0:8080"
             - name: MKC_ENV
@@ -211,7 +213,7 @@ spec:
             periodSeconds: 20
           resources:
             limits:
-              memory: 1Gi
+              memory: 1536Mi
             requests:
               cpu: 250m
               memory: 512Mi

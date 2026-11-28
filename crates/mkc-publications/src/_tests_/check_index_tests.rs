@@ -15,6 +15,7 @@ use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 use crate::check_worker::{ChecksWorker, PublicationChecks};
+use crate::stored_index::BoundedStoredIndexReader;
 
 use super::support::{
     PROJECT, PUBLICATION, claim, clock, locations, now, organization_query, project, publication,
@@ -77,7 +78,7 @@ fn a_index_from_an_earlier_schema_spends_the_permanent_budget() {
         );
         let worker = PublicationChecks {
             transactions: transactions(queries),
-            files: Arc::new(files),
+            files: Arc::new(BoundedStoredIndexReader::new(Arc::new(files))),
             github: Arc::new(Unimock::new(())),
             runtime: clock(),
             locations: locations(),

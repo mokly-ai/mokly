@@ -8,6 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::ingest::{PublicationIngest, UploadAuthorization};
 use crate::policy::AccessPolicyMock;
+use crate::stored_index::BoundedStoredIndexReader;
 use crate::upload_authorization::Credential;
 
 use super::support::{PROJECT, bearer, clock, project, runtime, token, transactions};
@@ -40,7 +41,7 @@ fn service_with_files(
         )),
         validator: Arc::new(validator),
         writer: Arc::new(writer),
-        files: Arc::new(files),
+        files: Arc::new(BoundedStoredIndexReader::new(Arc::new(files))),
     }
 }
 

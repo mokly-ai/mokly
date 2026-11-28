@@ -326,20 +326,40 @@ release has one reviewable source for each number.
 
 ### API Upload Memory Sizing
 
-The API workload has a 1 GiB memory limit. The default 512 MiB upload budget
-covers retained decompressed file allocations across both admitted requests,
-including every shared writer and GCS request-body clone. It leaves 512 MiB of
-headroom for the two compressed request bodies (each capped at 100 MiB), their
-bounded channels and gzip buffers, at most 20,000 path/index records and typed
-artifact data, up to sixteen concurrent 64 KiB GCS response bodies at the
-default eight workers per admitted upload, database clients, the async runtime
-and the process baseline. File bodies are not copied for parallel puts.
-Capacity exhaustion returns retryable
+The API Deployment has a 1.5 GiB (`1536Mi`) memory limit. API jobs, the
+preview-seed job included, keep a 1 GiB limit. The default 512 MiB upload
+budget covers retained decompressed file allocations across both admitted
+requests, including every shared writer and GCS request-body clone.
+The rest of the limit is headroom for the memory outside that budget. The
+worst case, measured on 2026-11-28, is about 1.4 GiB:
+
+| Memory use                                                                    | Size          |
+| ----------------------------------------------------------------------------- | ------------- |
+| Upload budget                                                                 | 512 MiB       |
+| Marker and index parsing of the two admitted plans                            | About 300 MiB |
+| Two stored-index reads, each with 64 MiB of bytes and about 81 MiB of parsing | About 290 MiB |
+| Two compressed plan bodies, each capped at 100 MiB                            | Up to 200 MiB |
+| Runtime and process baseline                                                  | About 100 MiB |
+
+The runtime row includes the bounded channels and gzip buffers, up to sixteen
+concurrent 64 KiB GCS response bodies at the default eight workers per
+admitted upload, database clients and the async runtime. File bodies are not
+copied for parallel puts. Capacity exhaustion returns retryable
 `upload-unavailable` immediately instead of borrowing from that headroom.
+
+The process holds at most two parsed stored indexes at a time. Completion, the
+screens API and GitHub check rendering share these two read slots. A caller
+waits for a free slot, and its slot stays taken until it drops the parsed
+index.
+
+The API Deployment and the preview-seed job set `MALLOC_ARENA_MAX=2`, which
+limits glibc to two allocator arenas. Freed parse memory then stays in arenas
+that later reads reuse. On 2026-11-28, eight parallel stored-index reads left
+631 MiB resident after they ended without this limit, and 166 MiB with it.
 
 ### Catalogue Memory Sizing
 
-The catalogue workload also has a 1 GiB memory limit. Its default 128 MiB hot
+The catalogue workload has a 1 GiB memory limit. Its default 128 MiB hot
 cache budget covers retained entries, fills and evicted objects still held by
 responses, leaving 896 MiB for concurrent uncached streams, compression,
 database clients, the async runtime and the process baseline. Set

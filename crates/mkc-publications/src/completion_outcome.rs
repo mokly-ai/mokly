@@ -12,6 +12,7 @@ use mkc_store_interface::store::Queries;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::ingest::{Ingested, UploadAuthorization};
+use crate::stored_index::LoadedIndex;
 
 /// What a completion does for one upload.
 #[derive(Debug)]
@@ -35,7 +36,7 @@ pub(crate) enum Outcome {
 #[derive(Debug)]
 pub(crate) enum StoredIndex {
     /// The stored index, decoded.
-    Loaded(Box<CatalogueIndex>),
+    Loaded(Box<LoadedIndex>),
     /// The index's file reference or stored bytes were gone. Closing an
     /// upload releases its references, so only the ready transaction decides
     /// whether this fails the completion: it does when the upload is still to
@@ -47,7 +48,7 @@ impl StoredIndex {
     /// The decoded index, when completion loaded one.
     pub(crate) fn index(&self) -> Option<&CatalogueIndex> {
         match self {
-            Self::Loaded(index) => Some(index.as_ref()),
+            Self::Loaded(index) => Some(index.index()),
             Self::Missing => None,
         }
     }

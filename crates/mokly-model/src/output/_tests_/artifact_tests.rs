@@ -38,19 +38,19 @@ fn plain_build_uses_the_same_sorted_writer_without_upload_metadata() {
 #[test]
 fn marker_writer_has_no_publication_file_count_ceiling() {
     let mut files = Inventory::default();
-    for index in 0..20_000 {
+    for index in 0..60_000 {
         files
             .insert(format!("file-{index:05}"), Vec::new().into())
             .unwrap();
     }
     let output = Artifact::finalize("/site".into(), files, None).unwrap();
-    assert_eq!(output.files.len(), 20_001);
+    assert_eq!(output.files.len(), 60_001);
     assert_eq!(
         Ownership::parse(&output.files.last().unwrap().bytes)
             .unwrap()
             .files
             .len(),
-        20_000
+        60_000
     );
 }
 

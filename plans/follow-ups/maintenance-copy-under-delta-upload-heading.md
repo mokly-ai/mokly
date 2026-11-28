@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the retention review's independent check.
-- **Location:** `docs/ops/environment.md:360-402`.
+- **Location:** `docs/ops/environment.md:380-422`.
 - **Reason:** The section structure already exists on main and is unrelated to the implemented retention behavior.
 
 **Background:** The environment guide has a `Delta Upload Settings` heading.

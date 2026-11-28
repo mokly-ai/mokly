@@ -1,0 +1,64 @@
+# The catalogue index nears the file ceiling
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-28, from the branch `calummoore/build-capacity-raise-upload-limits-aern`, which raised the upload limits.
+- **Location:**
+  - The 64 MiB layers: `crates/mokly-model/src/output/validation.rs:9`, `crates/mkc-mokly-contract/src/limits.rs:15` and `:40`, `crates/mkc-file-store-interface/src/store.rs:12`, `crates/mkc-db/migrations/202609162000_publications/up.sql:90` and `crates/mkc-api/src/upload_blob.rs:25`.
+  - The pages that state 64 MiB: `docs/protocol/mokly-export.md:186`, `docs/protocol/mokly-export-ownership.md:65`, `docs/protocol/mokly-upload-validation.md:51`, `docs/protocol/cloud/publication-upload-validation.md:24` and `docs/guides/ci/the-upload.md:111`.
+  - The index format: `crates/mokly-model/src/projection_records.rs:47`, `crates/mokly-model/src/usage_schemas.rs:24-36`, `crates/mokly-model/src/detail_context.rs:24`, `crates/mkc-mokly-contract/src/index.rs:28-43`, `packages/viewer/src/catalogue/index_reader.ts:11`, `docs/protocol/mokly-catalogue-serialization.md:24-25`, `docs/protocol/mokly-format-versions.md:7` and `docs/protocol/mokly-catalogue-delivery.md:42-43`.
+- **Reason:** Each option that keeps a large catalogue publishing changes a protocol requirement, either the index format or the 64 MiB file limit, and the user has not chosen one.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Catalogue index:** the file `mokly-viewer/index.json` of a build, which the Browse shell parses on each page load and Mokly Cloud parses at upload and later.
+  - **Entry detail:** the JSON file of one catalogue entry under `mokly-viewer/entries/`, which the viewer fetches when a reader opens the entry.
+  - **File ceiling:** the largest regular file that each layer accepts: 64 MiB, or 67,108,864 bytes.
+  - **Receiver:** the upload validation of Mokly Cloud in `crates/mkc-mokly-contract`, which checks each upload against its quotas.
+- **Background:**
+  - Every layer caps a file at 64 MiB:
+    - The CLI, with `FILE_LIMIT` in `crates/mokly-model/src/output/validation.rs:9`.
+    - The receiver, with `Quotas.file` in `crates/mkc-mokly-contract/src/limits.rs:15` and its default at line 40.
+    - The file stores, with `MAX_FILE_BYTES` in `crates/mkc-file-store-interface/src/store.rs:12`.
+    - The database, with the CHECK on `blobs.size` in `crates/mkc-db/migrations/202609162000_publications/up.sql:90`.
+    - The blob request, with `BLOB_LIMIT` in `crates/mkc-api/src/upload_blob.rs:25`.
+  - On 2026-11-28 the user approved higher upload limits, and the receiver quota for the index rose from 8 MiB to the 64 MiB ceiling. The section "Plan Archive And Limits" of `docs/protocol/cloud/publication-upload-validation.md` records the decision: a higher quota was rejected, because every layer caps a file at 64 MiB.
+  - A regular file over 64 MiB fails `mokly build` with `export-invalid`, under `docs/protocol/mokly-export.md:186`.
+  - The ownership marker format allows a `size` from 0 to 67108864 only, in `docs/protocol/mokly-export-ownership.md:65`.
+  - `docs/protocol/mokly-catalogue-serialization.md:24-25` requires two-space indentation in the canonical JSON of the index and of every entry detail.
+  - `visual` at `crates/mokly-model/src/projection_records.rs:47` writes `propSchema`, `props` and `controls` into each screen, component and variant record of the index. `docs/protocol/mokly-catalogue-delivery.md:42-43` requires these fields on component parents.
+  - The Rust detail reader checks each entry detail against the parent schemas of the index. `UsageSchemas::new` at `crates/mokly-model/src/usage_schemas.rs:24-36` reads them, and `crates/mokly-model/src/detail_context.rs:24` calls it.
+  - The receiver accepts index version 9 only, in `crates/mkc-mokly-contract/src/index.rs:28-43`, and so does the viewer, in `packages/viewer/src/catalogue/index_reader.ts:11`. `docs/protocol/mokly-format-versions.md:7` lists that version.
+- **Problem:**
+  - On 2026-11-28 the index of `Firna-AI/conductive` at commit `3371d05f2`, built with `@mokly/mokly` 0.21.0, was 48,728,724 bytes, or 48.7 MB. The ceiling is 67.1 MB, so the index has 1.38 times room.
+  - The index is pretty-printed JSON. Measured from the built file on 2026-11-28, it is 4.4 MB with gzip at level 6 and 20.8 MB when re-encoded as compact JSON without whitespace.
+  - It holds 1,750 records: 764 components, 957 screens and 29 use cases. The 957 screens hold 17.4 MB of the compact JSON, mostly controls.
+  - Across all records, `controls` take 11.2 MB, `propSchema` 5.4 MB and `props` 1.3 MB of the compact JSON. Without these three fields, the compact index is 2.85 MB.
+  - The entry folder of conductive, `docs/mockups/src/entries`, held 72 `.tsx` files at commit `18ecb698f` of 2026-11-08 and 667 at `3371d05f2` of 2026-11-27. So the catalogue roughly doubled in size every six days in November 2026.
+- **Impact if no action:** When the index of a growing catalogue passes 64 MiB, its build fails, and it can neither publish nor build locally. At the growth of November 2026, conductive reaches the ceiling within days.
+- **Root question:** How does the index of a growing catalogue stay under the file ceiling?
+- **Options:**
+  - **A.** Keep 64 MiB, and accept that a build fails when its index passes it. Effort: Small.
+  - **B.** Raise the file ceiling to 128 MiB at every layer, and release the CLI change in a new Mokly version. It doubles the memory that one blob can take. Effort: Large.
+    - A new migration for the CHECK on `blobs.size`, and larger blob memory reservations.
+    - The pages that state 64 MiB change, and so does the decision of 2026-11-28 in `docs/protocol/cloud/publication-upload-validation.md`.
+    - The marker format caps `size` at 67108864, so B can also need a new marker version.
+  - **C.** Keep 64 MiB, and shrink the index in the output format. Write compact JSON, and move the `controls`, `propSchema` and `props` of each record out of the index, for example into the entry details. Effort: Large.
+    - It needs a new index version, because the receiver and the viewer read version 9 only.
+    - It changes the Rust writer `visual`, the viewer reader and the receiver in one change.
+    - The Rust detail reader needs another source for the parent schemas.
+    - The indentation rule, the format version list and the component fields of the protocol pages change with it.
+- **Left out:**
+  - Split the index into several files, each under the ceiling. Every reader must then join the parts, and C already brings the measured index far below the ceiling.
+  - Gzip the index that Mokly Cloud stores. Each layer applies the ceiling to the decoded bytes, and every reader parses those.
+- **Wider fix:** C. Without the three fields, the compact index takes about 1.6 KB for each record on average, so the ceiling then allows about 41,000 records.
+- **Previous examples:** Until 2026-11-28 the receiver quota for the index was 8 MiB, and the 48.7 MB conductive index passed it. The branch that added this item raised the quota.
+- **Related:**
+  - `plans/follow-ups/compact-json-output.md`: a shared fix. Compact JSON is the first step of option C. Alone, it makes the conductive index 20.8 MB.
+  - `plans/follow-ups/variant-prop-schema-copies.md`: a shared fix. Its options B and C remove copies of prop schemas and controls from the index, a part of option C here.
+  - `plans/follow-ups/skip-equal-before-snapshots.md`: the same release. It also needs a new index version, so one release can carry both.
+  - `plans/follow-ups/receiver-read-model-validation.md`: the same code. It changes the index parser in `crates/mkc-mokly-contract/src/index.rs:28-43`, which option C also changes.
+  - `plans/follow-ups/screens-api-reparses-index.md`: the same cause. The size of the index that Mokly Cloud stores sets the parse cost of each page of the screens API, and option C here cuts most of it.
+- **Recommendation:** C. It makes the index smaller for every reader, the browser included, while B only moves the ceiling and doubles the memory that one blob can take.
+- **Action:** ask the user, because C changes the index format and B changes the 64 MiB file requirement, and no option is clearly best.

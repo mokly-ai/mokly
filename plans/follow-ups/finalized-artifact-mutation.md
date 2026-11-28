@@ -23,6 +23,7 @@
 - **Left out:** Rechecking the finalized files against the marker before staging repeats checks. The user decision of 2026-11-03 says to check author and external input once, then trust typed output from the same Mokly version. Deleting or weakening the safety tests has no approval.
 - **Wider fix:** C. An immutable finalized type prevents changes around the marker writer.
 - **Previous examples:** The earlier raw `Vec<File>` finalizer API allowed ordinary files to bypass shared admission. Its replacement requires `Inventory`, but does not close writes to finalized fields.
+- **Related:** `plans/follow-ups/cli-holds-catalogue-in-memory.md`: the same code. Its option B changes how `Artifact` keeps the bytes of each file, and option C here makes the fields of `Artifact` private. One branch can do both.
 - **Recommendation:** C. It preserves the marker invariant through the type, but needs more than mechanical accessor changes.
 - **Action:** ask the user, because C removes existing public mutation and needs a design that preserves two tests of live safety boundaries.
 

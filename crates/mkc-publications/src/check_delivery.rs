@@ -4,9 +4,7 @@ use mkc_domain::app_paths;
 use mkc_domain::slug::WorkspaceSlug;
 use mkc_github_interface::check::{CheckRun, Conclusion, Error, ErrorResultExt, Result};
 use mkc_github_interface::checks::Status;
-use mkc_mokly_contract::error::Error as ContractError;
-use mkc_mokly_contract::index::{CatalogueIndex, INDEX_PATH};
-use mkc_mokly_contract::limits::Limits;
+use mkc_mokly_contract::index::INDEX_PATH;
 use mkc_store_interface::project::Project;
 use mkc_store_interface::publication::{Publication, PublicationFailure, PublicationState};
 use mkc_store_interface::publication_event::PublicationEvent;
@@ -14,6 +12,7 @@ use mkc_store_interface::publication_event::PublicationEvent;
 use crate::check_summary;
 use crate::check_worker::PublicationChecks;
 use crate::error::{self, Error as PublicationError};
+use crate::stored_index::Error as IndexReadError;
 
 /// Shared immutable publication rendering for publication and build outboxes.
 #[unimock::unimock(api = CheckRendererMock)]
@@ -105,25 +104,18 @@ impl CheckRenderer for PublicationChecks {
                 })
                 .context("load check catalogue index reference")?;
             let file = file.ok_or_else(|| Error::internal(PublicationError::NotFound))?;
-            let bytes = self
-                .files
-                .get(&file.key)
-                .context("load immutable check catalogue index")?
-                .ok_or_else(|| Error::internal(PublicationError::NotFound))?;
-            let index = match CatalogueIndex::parse(&bytes, Limits::default()) {
-                Ok(index) => index,
-                Err(
-                    ContractError::UnsupportedVersion { .. }
-                    | ContractError::Invalid { .. }
-                    | ContractError::TooLarge { .. },
-                ) => return Err(Error::Validation),
+            let index = match self.files.load(&file.key) {
+                Ok(Some(index)) => index,
+                Ok(None) => return Err(Error::internal(PublicationError::NotFound)),
+                Err(IndexReadError::Invalid(_)) => return Err(Error::Validation),
                 Err(error) => return Err(Error::internal(error)),
             };
+            let index = index.index();
             if index.changes_count().is_some() {
                 check.conclusion = Some(Conclusion::Success);
                 check.title = "Catalogue ready to review.".to_owned();
                 check.summary = check_summary::summary(
-                    &index,
+                    index,
                     &self.locations,
                     organization,
                     &project.slug,

@@ -20,5 +20,6 @@
 - **Impact if no action:** A slow ingest path stays unnoticed until users complain about publish times.
 - **Needs:** Real production publishes and access to the production traces.
 - **Done when:** The maintenance runbook records the dated measurements. A slow result becomes its own follow-up item.
+- **Related:** `plans/follow-ups/plan-reservation-round-trips.md`: the same measurement. Its option A measures the first large production plan, and this task reads the production plan traces.
 
 Source: [the post-merge notes](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/publication-storage-scaling.md?plain=1#L586-L607) of the deleted plan.

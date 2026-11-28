@@ -5,7 +5,6 @@ use std::sync::Arc;
 use mkc_auth::runtime::Runtime;
 use mkc_config::publications::PublicationSettings;
 use mkc_file_store_interface::seed::SeedStore;
-use mkc_file_store_interface::store::FileStore;
 use mkc_mokly_contract::archive::{GzipTarReader, TarballReader};
 use mkc_mokly_contract::bundle::{ContractValidator, UploadValidator};
 use mkc_mokly_contract::limits::Limits;
@@ -15,6 +14,7 @@ use mkc_publications::capability::{CapabilityFactory, HmacCapabilityFactory};
 use mkc_publications::ingest::{Ingest, PublicationIngest};
 use mkc_publications::locations::Locations;
 use mkc_publications::policy::{AccessPolicy, DatabaseAccessPolicy};
+use mkc_publications::stored_index::{BoundedStoredIndexReader, StoredIndexReader};
 use mkc_publications::transaction::{StoreTransactions, Transactions};
 use mkc_store_interface::store::Store;
 use mkc_upload_memory::budget::ProcessUploadMemoryBudget;
@@ -31,7 +31,7 @@ pub(crate) struct Publishing {
     pub(crate) seed: Arc<dyn SeedStore>,
     pub(crate) ingest: Arc<dyn Ingest>,
     pub(crate) reader: Arc<dyn TarballReader>,
-    pub(crate) files: Arc<dyn FileStore>,
+    pub(crate) indexes: Arc<dyn StoredIndexReader>,
     pub(crate) transactions: Arc<dyn Transactions>,
     pub(crate) locations: Locations,
     pub(crate) viewer: Arc<dyn Viewer>,
@@ -74,6 +74,7 @@ impl PublishingFactory for SystemPublishingFactory {
             runtime: runtime.clone(),
             worker_count: settings.ingest_workers,
         });
+        let indexes: Arc<dyn StoredIndexReader> = Arc::new(BoundedStoredIndexReader::new(files));
         let policy: Arc<dyn AccessPolicy> = Arc::new(DatabaseAccessPolicy);
         let locations = Locations {
             app_origin: app_origin.to_owned(),
@@ -84,7 +85,7 @@ impl PublishingFactory for SystemPublishingFactory {
         let viewer: Arc<dyn Viewer> = Arc::new(ViewerService {
             store,
             artifacts: Arc::new(StoredArtifacts {
-                files: files.clone(),
+                files: indexes.clone(),
             }),
             locations: locations.clone(),
         });
@@ -108,7 +109,7 @@ impl PublishingFactory for SystemPublishingFactory {
             policy,
             writer,
             validator,
-            files: files.clone(),
+            files: indexes.clone(),
         });
         let upload: Arc<dyn UploadHandler> = Arc::new(StreamingUpload {
             ingest: ingest.clone(),
@@ -122,7 +123,7 @@ impl PublishingFactory for SystemPublishingFactory {
             seed: storage.seed,
             ingest,
             reader,
-            files,
+            indexes,
             transactions,
             locations,
             upload,

@@ -142,7 +142,11 @@ The chart renders these values as exact quoted decimal environment variables
 in every environment. `catalogue.hotCacheBytes: 0` disables the hot cache.
 Invalid types and ranges fail schema validation before a workload is rendered.
 
-The API's 1 GiB memory limit pairs with the 512 MiB process-wide upload budget.
+The API Deployment has a 1.5 GiB (`1536Mi`) memory limit and a 512 MiB memory
+request. The process-wide upload budget is 512 MiB. The API and preview-seed
+containers set `MALLOC_ARENA_MAX` to `"2"` to limit glibc allocator arenas.
+API jobs and the migration init container use `api.jobResources`, with a 1 GiB
+memory limit.
 Raw Blob buffers remain charged through storage writes. Gzip Blob requests
 charge both encoded and decoded sizes until the encoded body is decoded, then
 keep the decoded reservation through storage. The remaining headroom covers

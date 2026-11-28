@@ -49,7 +49,7 @@ v3 ceilings; receivers may impose lower quotas and return 413.
 | Plan request body, compressed                            | 100 MiB           |
 | Plan archive decompressed, including headers and padding | 512 MiB           |
 | One regular file, Blob or ownership marker               | 64 MiB            |
-| Regular files, including upload manifest and marker      | 20,000            |
+| Regular files, including upload manifest and marker      | 60,000            |
 | Upload manifest                                          | 16 KiB            |
 | Relative path                                            | 1,024 UTF-8 bytes |
 | Plan or Complete response body read by the CLI           | 16 MiB            |

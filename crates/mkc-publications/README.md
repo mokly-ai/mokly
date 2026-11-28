@@ -177,8 +177,8 @@ schedules only eligible failed, timed-out or cancelled current heads.
 ## Quick Start
 
 Compose the ingest service at a composition root from the store, the file
-store and the `mkc-mokly-contract` receiver, then hand `Arc<dyn Ingest>` to
-the HTTP boundary:
+store, the stored-index reader and the `mkc-mokly-contract` receiver, then
+hand `Arc<dyn Ingest>` to the HTTP boundary:
 
 ```rust
 use std::sync::Arc;
@@ -189,12 +189,14 @@ use mkc_mokly_contract::bundle::UploadValidator;
 use mkc_publications::blob_writer::ParallelBlobWriter;
 use mkc_publications::ingest::{Ingest, PublicationIngest};
 use mkc_publications::policy::DatabaseAccessPolicy;
+use mkc_publications::stored_index::StoredIndexReader;
 use mkc_publications::transaction::{StoreTransactions, Transactions};
 use mkc_store_interface::store::Store;
 
 fn ingest(
     store: Arc<dyn Store>,
     files: Arc<dyn FileStore>,
+    indexes: Arc<dyn StoredIndexReader>,
     validator: Arc<dyn UploadValidator>,
 ) -> Arc<dyn Ingest> {
     let transactions: Arc<dyn Transactions> = Arc::new(StoreTransactions { store });
@@ -205,15 +207,20 @@ fn ingest(
         policy: Arc::new(DatabaseAccessPolicy),
         validator,
         writer: Arc::new(ParallelBlobWriter {
-            files: files.clone(),
+            files,
             transactions,
             runtime,
             worker_count: 8,
         }),
-        files,
+        files: indexes,
     })
 }
 ```
+
+Build one reader per process with
+`Arc::new(BoundedStoredIndexReader::new(files.clone()))`, and pass the same
+reader to the ingest, the viewer and check delivery. Its two read slots then
+bound the parsed indexes of the whole process.
 
 ## Development
 
@@ -256,6 +263,7 @@ preview-seed exchanges.
 - [preflight.rs](./src/preflight.rs) — the plan request: admits the attempt, validates the archive, reserves every declared file, stores the artifacts and emits the `publication upload planned` trace event.
 - [blob_upload.rs](./src/blob_upload.rs) — the blob request: resolves the reservation before the body is read and stores only a body whose digest and length match it.
 - [completion.rs](./src/completion.rs) — the completion request: resolves the attempt in the released order, checks pending blobs, reloads the stored catalogue index and runs the ready transaction.
+- [stored_index.rs](./src/stored_index.rs) — `StoredIndexReader` and `BoundedStoredIndexReader`, which load accepted indexes for completion, the viewer and check delivery under two process-wide read slots, and hold each slot until its parsed index is dropped.
 - [completion_outcome.rs](./src/completion_outcome.rs) — `Outcome` and `decide`, the one decision the fast check and the ready transaction both take from the attempt's own row, so a repeated completion never treats its own upload as another winner.
 - [reservation/reserve.rs](./src/reservation/reserve.rs) — the reservation transaction: authorizes the envelope, finds the ready winner of a replay, and reserves blob rows and paths in canonical hash-then-path order.
 - [reservation/finish.rs](./src/reservation/finish.rs) — the ready transaction: rereads the attempt, requires every referenced blob to be durable, and commits the state, Changes totals, screen selections, branch alias and ready event together.

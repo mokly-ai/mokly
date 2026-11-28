@@ -11,6 +11,7 @@ use mkc_mokly_contract::index::INDEX_PATH;
 use mkc_publications::error::Result;
 use mkc_publications::ingest::{Ingest, PublicationIngest};
 use mkc_publications::policy::DatabaseAccessPolicy;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_publications::transaction::{QueryWork, StoreTransactions, Transactions};
 use mkc_store_interface::publication::PublicationState;
 use mkc_store_interface::publication_event::EventKind;
@@ -76,6 +77,12 @@ fn overlapping_completions_of_one_upload_publish_it_once_and_keep_its_files() {
             queries.insert_publication_file(&index)
         }))
         .unwrap();
+    let files = Arc::new(Unimock::new(
+        FileStoreMock::get
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| Ok(Some(bytes.clone()))))
+            .n_times(2),
+    ));
     let ingest = Arc::new(PublicationIngest {
         transactions: Arc::new(Overlap {
             inner: StoreTransactions {
@@ -89,12 +96,7 @@ fn overlapping_completions_of_one_upload_publish_it_once_and_keep_its_files() {
         policy: Arc::new(DatabaseAccessPolicy),
         validator: Arc::new(Unimock::new(())),
         writer: Arc::new(Unimock::new(())),
-        files: Arc::new(Unimock::new(
-            FileStoreMock::get
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(Some(bytes.clone()))))
-                .n_times(2),
-        )),
+        files: Arc::new(BoundedStoredIndexReader::new(files)),
     });
     let requests: Vec<_> = (0..2)
         .map(|_| {

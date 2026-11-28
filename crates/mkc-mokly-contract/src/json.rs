@@ -1,18 +1,14 @@
 //! Strict typed JSON decoding and presence-sensitive optional fields.
 //!
-//! Structs decode from maps without buffering an untyped tree. Tagged Changes
-//! objects use `object` and `string_enum` to retain map and literal-string
-//! requirements inside serde's buffered payloads. Optional fields distinguish
-//! absence from null, and each scalar keeps the deserializer's type check.
+//! Structs decode from maps and enums decode from literal strings. Optional
+//! fields distinguish absence from null, and each scalar keeps the
+//! deserializer's type check.
 //! `json_guard` owns the budgets and the duplicate-key check before typed decoding.
 
-use std::fmt;
-use std::marker::PhantomData;
 use std::result;
 
 use serde::Deserialize;
-use serde::de::value::{MapAccessDeserializer, StringDeserializer};
-use serde::de::{Deserializer, MapAccess, Visitor};
+use serde::de::Deserializer;
 use serde_json::Value;
 
 use crate::error::{Rejection, Result, invalid};
@@ -91,31 +87,3 @@ mod json_bounds_tests;
 #[cfg(test)]
 #[path = "_tests_/json_objects_tests.rs"]
 mod json_objects_tests;
-
-/// Force maps inside internally tagged enum payloads, which serde buffers first.
-pub(crate) fn object<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
-    deserializer: D,
-) -> result::Result<T, D::Error> {
-    deserializer.deserialize_map(ObjectValue(PhantomData))
-}
-
-/// Decode a buffered tagged field through map access instead of positional struct syntax.
-struct ObjectValue<T>(PhantomData<T>);
-impl<'de, T: Deserialize<'de>> Visitor<'de> for ObjectValue<T> {
-    type Value = T;
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("a JSON object")
-    }
-    fn visit_map<A: MapAccess<'de>>(self, access: A) -> result::Result<T, A::Error> {
-        T::deserialize(ObjectDeserializer(MapAccessDeserializer::new(access)))
-    }
-}
-
-/// Require a literal string for enums inside serde-buffered tagged payloads.
-pub(crate) fn string_enum<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
-    deserializer: D,
-) -> result::Result<T, D::Error> {
-    T::deserialize(StringDeserializer::<D::Error>::new(String::deserialize(
-        deserializer,
-    )?))
-}

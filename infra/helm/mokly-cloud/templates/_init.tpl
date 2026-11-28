@@ -23,7 +23,7 @@
   securityContext:
     {{- include "mkc.security" .root | nindent 4 }}
   resources:
-    {{- toYaml .root.Values.api.resources | nindent 4 }}
+    {{- toYaml .root.Values.api.jobResources | nindent 4 }}
 {{- else if eq .workload "catalogue" -}}
 - name: wait-for-api
   image: {{ .root.Values.app.image | quote }}

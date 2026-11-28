@@ -1,8 +1,7 @@
 //! Completion requests, resolved in the released order before the ready transaction.
 
 use mkc_domain::ids::PublicationId;
-use mkc_mokly_contract::index::{CatalogueIndex, INDEX_PATH};
-use mkc_mokly_contract::limits::Limits;
+use mkc_mokly_contract::index::INDEX_PATH;
 use mkc_store_interface::publication::{Publication, PublicationFailure};
 
 use crate::completion_outcome::{self, Outcome, StoredIndex, ingested};
@@ -55,8 +54,10 @@ impl CompleteUpload for PublicationIngest {
         if !pending.is_empty() {
             return Err(Error::Incomplete);
         }
-        let index = self.index(&attempt)?;
-        let result = self.finish(&authorization, &attempt, &metadata, &index);
+        let result = {
+            let index = self.index(&attempt)?;
+            self.finish(&authorization, &attempt, &metadata, &index)
+        };
         if let Err(error) = &result
             && matches!(
                 error,
@@ -125,16 +126,13 @@ impl CompletionSteps for PublicationIngest {
         let Some(file) = file else {
             return Ok(StoredIndex::Missing);
         };
-        let Some(bytes) = self
+        let Some(index) = self
             .files
-            .get(&file.key)
+            .load(&file.key)
             .context("read stored catalogue index")?
         else {
             return Ok(StoredIndex::Missing);
         };
-        Ok(StoredIndex::Loaded(Box::new(
-            CatalogueIndex::parse(&bytes, Limits::default())
-                .context("decode stored catalogue index")?,
-        )))
+        Ok(StoredIndex::Loaded(Box::new(index)))
     }
 }

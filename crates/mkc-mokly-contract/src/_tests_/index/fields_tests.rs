@@ -2,7 +2,10 @@
 
 use serde_json::json;
 
-use crate::error::{Error, Rejection};
+use crate::error::{Error, Rejection, Result};
+use crate::index::CatalogueIndex;
+use crate::index_values::ChangeKind;
+use crate::limits::Limits;
 
 use super::support::{parse, valid};
 
@@ -128,4 +131,63 @@ fn unread_fields_do_not_add_receiver_rejections() {
     assert_eq!(index.base(), Some(""));
     assert_eq!(index.current_screens()[0].title, " \t");
     assert!(index.current_screens()[0].views.is_empty());
+}
+
+#[test]
+fn record_changes_require_kind_and_included_only_when_ready() {
+    for (changes, expected) in [
+        (
+            r#"{"kind":{"extra":[1]},"included":[true],"status":"preparing"}"#,
+            None,
+        ),
+        (r#"{"status":"pending","kind":0,"included":"true"}"#, None),
+        (
+            r#"{"included":null,"status":"unavailable","kind":false}"#,
+            None,
+        ),
+        (r#"{"status":"disabled"}"#, None),
+        (
+            r#"{"kind":"added","extra":{"nested":[]},"included":true,"status":"ready"}"#,
+            Some(ChangeKind::Added),
+        ),
+        (
+            r#"{"status":"ready","kind":"changed","included":false}"#,
+            None,
+        ),
+    ] {
+        let result = parse_changes(changes);
+        assert!(
+            matches!(&result, Ok(index) if index.counted_records().first().map(|record| record.kind) == expected),
+            "{changes}: {result:?}"
+        );
+    }
+
+    for changes in [
+        r#"{"kind":"added","included":true}"#,
+        r#"{"status":{"ready":null},"kind":"added","included":true}"#,
+        r#"{"status":"Ready","kind":"added","included":true}"#,
+        r#"{"status":"ready","included":true}"#,
+        r#"{"kind":"added","status":"ready"}"#,
+        r#"{"kind":{"added":null},"included":true,"status":"ready"}"#,
+        r#"{"included":"true","kind":"added","status":"ready"}"#,
+    ] {
+        assert!(
+            matches!(
+                parse_changes(changes),
+                Err(Error::Invalid {
+                    reason: Rejection::Json
+                })
+            ),
+            "{changes}"
+        );
+    }
+}
+
+fn parse_changes(changes: &str) -> Result<CatalogueIndex> {
+    let bytes = format!(
+        r#"{{"schemaVersion":9,"changesStatus":"disabled","comparisonUrl":null,
+        "components":[],"documents":[],"pages":[],"useCases":[],"removedEntries":[],
+        "screens":[{{"path":"screen","title":"Screen","views":[],"changes":{changes}}}]}}"#
+    );
+    CatalogueIndex::parse(bytes.as_bytes(), Limits::default())
 }

@@ -6,7 +6,7 @@ use serde::de::IgnoredAny;
 
 use crate::index::CatalogueIndex;
 use crate::json;
-use crate::json_guard::{JSON_DEPTH, JSON_KEYS, JSON_NODES};
+use crate::json_guard::{JSON_DEPTH, JSON_KEYS};
 use crate::limits::Limits;
 
 #[test]
@@ -34,7 +34,7 @@ fn json_depth_accepts_256_values_and_rejects_257() {
 
 #[test]
 fn node_budget_precedes_typed_decoding() {
-    let bytes = format!("[{}0]", "0,".repeat(JSON_NODES - 1));
+    let bytes = format!("[{}0]", "0,".repeat(4_194_303));
     assert_eq!(
         json::decode::<u64>(bytes.as_bytes())
             .unwrap_err()
@@ -60,7 +60,7 @@ fn retained_key_budget_includes_ignored_objects() {
 
 #[test]
 fn inclusive_node_and_key_budgets_accept_and_keys_are_shared_between_open_objects() {
-    let bytes = format!("[{}0]", "0,".repeat(JSON_NODES - 2));
+    let bytes = format!("[{}0]", "0,".repeat(4_194_302));
     assert!(json::decode::<IgnoredAny>(bytes.as_bytes()).is_ok());
     let keys = (0..JSON_KEYS)
         .map(|i| format!("\"{i}\":0"))

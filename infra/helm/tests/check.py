@@ -83,9 +83,19 @@ def check(update=False):
             check_builds(rendered, options, run, GOLDEN, environment, update)
             api = chart_support.resource(documents, "Deployment", "api")
             catalogue = chart_support.resource(documents, "Deployment", "catalogue")
-            api_env = chart_support.environment(api["spec"]["template"]["spec"]["containers"][0])
+            api_container = api["spec"]["template"]["spec"]["containers"][0]
+            api_env = chart_support.environment(api_container)
             catalogue_env = chart_support.environment(
                 catalogue["spec"]["template"]["spec"]["containers"][0]
+            )
+            resources = api_container["resources"]
+            api_memory = (
+                resources["limits"]["memory"],
+                resources["requests"]["memory"],
+                api_env.get("MALLOC_ARENA_MAX"),
+            )
+            assert api_memory == ("1536Mi", "512Mi", {"value": "2"}), (
+                environment, api_memory
             )
             desktop_client = "false" if environment == "preview-pr" else "true"
             assert api_env["MKC_DESKTOP_CLIENT"] == {"value": desktop_client}

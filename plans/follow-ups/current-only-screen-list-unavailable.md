@@ -28,6 +28,7 @@
 - **Left out:** Infer screens from file names. The artifact boundary forbids undocumented inputs.
 - **Wider fix:** None.
 - **Previous examples:** The comparison listing already reads the stored catalogue index.
+- **Related:** `plans/follow-ups/screens-api-reparses-index.md`: the same code, and the options interact. Its option C serves the screens list from the database. If it lands first, option B here must also store the screens of a publication without a comparison.
 - **Recommendation:** B. The metadata exists in every current index, and the adoption removes a 503 that readers meet.
 - **Action:** ask the user, because condition 3 holds: B is Large. B also replaces the 503 requirement of `docs/protocol/cloud/viewer-read-model.md`, so record the user's approval before that change.
 

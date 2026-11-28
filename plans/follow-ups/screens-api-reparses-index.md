@@ -1,0 +1,56 @@
+# Screens API parses the whole index per page
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-28, from the branch `calummoore/build-capacity-raise-upload-limits-aern`, which raised the upload limits.
+- **Location:**
+  - The screens API: `crates/mkc-api/src/viewer/service.rs:93-107` and `:143-156`, `crates/mkc-api/src/viewer/artifacts.rs:19-26`, `crates/mkc-api/src/viewer/input.rs:87` and `crates/mkc-api/src/pagination.rs:58`.
+  - The read slots: `crates/mkc-publications/src/stored_index.rs:54-66`.
+  - The stored screen views: `crates/mkc-publications/src/screen_observation.rs:9-26`, `crates/mkc-publications/src/reservation/finish.rs:46` and `:140`, `crates/mkc-db/migrations/202609162000_publications/up.sql:63-70`, `crates/mkc-db/migrations/202610081500_screen_paths/up.sql:1` and `crates/mkc-db/migrations/202611021200_publication_base_comparison/up.sql:9-20`.
+  - The app: `packages/app/src/data/publications.ts:41`, `:52` and `:177-189`.
+  - The protocol pages: `docs/protocol/cloud/viewer-read-model.md:202-207`, `:228-229` and `:240-244`, and `docs/protocol/cloud/publication-review.md:90-91`.
+- **Reason:** Option C needs a migration and a new write in the ready transaction, and a single reader still gets the full list of a large catalogue, in an estimated 8 s.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Stored index:** the catalogue index file `mokly-viewer/index.json` that Mokly Cloud stored for a publication when its upload began.
+  - **Read slot:** one of the two places in each API process where a stored index can be loaded and parsed, held until the caller drops it.
+  - **Ready transaction:** the last database transaction of an upload, which publishes it and stores its Changes totals and screen views.
+  - **Publication with a comparison:** a publication whose upload carries Changes against a base commit, the only kind that the screens API lists.
+  - **Screen views:** the `publication_screen_views` rows of a publication with a comparison, one for each current screen path with each viewport and colour scheme.
+- **Background:**
+  - `GET /v1/projects/{projectId}/publications/{publicationId}/screens` lists the current screens of a publication with a comparison. A page holds 50 screens by default and 100 at most, in `crates/mkc-api/src/viewer/input.rs:87` and `crates/mkc-api/src/pagination.rs:58`.
+  - For each page, `ViewerService::index` at `crates/mkc-api/src/viewer/service.rs:143-156` loads and parses the whole stored index through `StoredArtifacts::index` in `crates/mkc-api/src/viewer/artifacts.rs:19-26`. Then lines 93-107 project all screens, drop the ones up to the cursor and cut one page.
+  - Since 2026-11-28, `BoundedStoredIndexReader` in `crates/mkc-publications/src/stored_index.rs:54-66` gives each API process two read slots. The last upload request, GitHub check rendering and the screens API share them.
+  - The Share panel of the app reads this list through `listScreens` in `packages/app/src/data/publications.ts:177-189`. It sends no `limit`, so the API default of 50 applies. It follows up to 20 pages, under `defaultPageSize` at line 41 and `referencePageLimit` at line 52. So one open of the Share panel for 957 screens reads the stored index 20 times.
+  - The ready transaction already stores the screen views of a publication with a comparison. `crates/mkc-publications/src/screen_observation.rs:9-26` builds them, and `crates/mkc-publications/src/reservation/finish.rs:46` and `:140` write them.
+  - `crates/mkc-db/migrations/202609162000_publications/up.sql:63-70` creates the table, and `crates/mkc-db/migrations/202610081500_screen_paths/up.sql:1` renames its `screen_id` column to `screen_path`. The table has no title column, so the list cannot come from it today.
+  - The trigger in `crates/mkc-db/migrations/202611021200_publication_base_comparison/up.sql:9-20` refuses screen views for a publication without a comparison.
+  - The protocol pages name the source of the list. `docs/protocol/cloud/viewer-read-model.md:202-207` says that the projection reads the stored catalogue index. Lines 228-229 and 240-241 say that only `listScreens` reads it, and lines 241-244 require a reauthorization after that read. `docs/protocol/cloud/publication-review.md:90-91` says that the list reads the stored index with the same projection and the same bounds as admission.
+  - `docs/ops/environment.md:327-358` puts the worst case of the API at about 1.4 GiB of its 1.5 GiB memory limit.
+- **Problem:**
+  - On 2026-11-28 a release API stored a copy of the 46.5 MiB index of `Firna-AI/conductive`, marked as a comparison. One reader listed its 957 screens in 10 pages of 100 in 3.8 s. The Share panel asks for 20 pages of 50, about twice that work.
+  - With the two read slots, 8 parallel readers of 10 pages took 15.3 s, and the API peaked at 220 MiB. The slots bound that memory, but each reader waits for them.
+- **Impact if no action:** The Share panel of a large catalogue opens slowly. Parallel readers wait for each other and delay the last upload request and check rendering, which use the same two read slots.
+- **Root question:** How does the screens API answer each page without parsing the whole stored index again?
+- **Options:**
+  - **A.** Keep it. Effort: Small.
+  - **B.** Cache the parsed screen list for each immutable index key, under a byte budget. The first read of each publication in each process still parses the index. The budget must fit in the about 100 MiB that the API worst case leaves under its limit. Effort: Medium.
+  - **C.** Store the title of each current screen in the ready transaction, and serve the screens API from the database. Effort: Medium.
+    - A migration adds the title to the stored screens. A publication that became ready before the migration has no stored titles, so the list keeps the index read for it.
+    - The list keeps every field, its order, its bounds and its availability. The protocol lines above name the stored index only as the source, so they change without a new requirement.
+    - The open item `plans/follow-ups/current-only-screen-list-unavailable.md` decides whether a publication without a comparison gets a list. That choice stays open, because C changes only the source of the list.
+- **Left out:**
+  - Request 100 screens per page in the Share panel. It halves the reads of one open, but each page still parses the whole index.
+  - Shrink the index, as option C of `plans/follow-ups/index-room-under-file-ceiling.md` proposes. Each page then parses less, but still the whole index.
+  - Parse only the `screens` array. The screens hold 17.4 MB of the 20.8 MB of compact JSON in that index, so the saving is small.
+- **Wider fix:** C. It removes the index read from the request path, so viewer traffic no longer competes with the last upload request for the read slots.
+- **Previous examples:** Check delivery parses the whole stored index for each check of a ready publication, in `crates/mkc-publications/src/check_delivery.rs:107-124`. Share validation in `crates/mkc-api/src/viewer/share_validation.rs` already answers from the stored screen views, the pattern of option C.
+- **Related:**
+  - `plans/follow-ups/current-only-screen-list-unavailable.md`: the same code. Its option B lists the screens of a publication without a comparison from the stored index. If option C here lands first, that work must also store the screens of such a publication, and the trigger above refuses them today.
+  - `plans/follow-ups/index-room-under-file-ceiling.md`: the same cause. The size of the stored index sets the parse cost of each page, and its option C cuts most of that size.
+  - `plans/follow-ups/check-card-moved-line.md`: the same code and the same kind of fix. Its option A stores an index fact in the ready transaction with a migration. Its option B reads the stored index on each publication read, which would compete for the same two read slots.
+  - `plans/follow-ups/api-operations-share-one-blocking-pool.md`: the same cause of waiting. A screens request waits for a read slot while it holds a blocking worker of the API, so parallel readers add to the pressure on that pool.
+- **Recommendation:** C. It removes the index read from the request path.
+- **Action:** fix after merge, apply C, because it needs a migration, and a single reader still gets the full list in an estimated 8 s.

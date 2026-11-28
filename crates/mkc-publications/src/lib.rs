@@ -37,6 +37,7 @@ mod reservation;
 pub mod retention;
 mod screen_observation;
 pub mod screens;
+pub mod stored_index;
 pub mod transaction;
 mod upload_authorization;
 

@@ -5,7 +5,6 @@ use std::sync::Arc;
 use chrono::Duration;
 use mkc_auth::runtime::Runtime;
 use mkc_domain::ids::{ProjectId, PublicationId};
-use mkc_file_store_interface::store::FileStore;
 use mkc_github_interface::check::CheckRuns;
 use mkc_store_interface::publication_event::{EventKind, PublicationEvent};
 use tracing::warn;
@@ -13,6 +12,7 @@ use tracing::warn;
 use crate::check_delivery::Delivery;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::locations::Locations;
+use crate::stored_index::StoredIndexReader;
 use crate::transaction::Transactions;
 
 /// Check worker behavior supplied to the sibling GitHub event/runtime wiring.
@@ -28,8 +28,8 @@ pub trait ChecksWorker: Send + Sync {
 pub struct PublicationChecks {
     /// Persistent outbox and immutable publication queries.
     pub transactions: Arc<dyn Transactions>,
-    /// Exact retained catalogue index bytes.
-    pub files: Arc<dyn FileStore>,
+    /// Bounded reads of accepted index files for check rendering.
+    pub files: Arc<dyn StoredIndexReader>,
     /// Provider adapter; never a concrete GitHub dependency here.
     pub github: Arc<dyn CheckRuns>,
     /// Event IDs and acknowledgement time.

@@ -66,7 +66,7 @@ impl GitHubComposer for GitHubComposition {
         });
         let publications = Arc::new(PublicationChecks {
             transactions: publishing.transactions.clone(),
-            files: publishing.files.clone(),
+            files: publishing.indexes.clone(),
             github: github.clone(),
             runtime: self.runtime.clone(),
             locations: publishing.locations.clone(),

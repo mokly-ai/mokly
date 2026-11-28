@@ -31,6 +31,8 @@ capabilities:
 {{- end -}}
 
 {{- define "mkc.apiEnv" -}}
+- name: MALLOC_ARENA_MAX
+  value: "2"
 - name: MKC_BIND
   value: {{ printf "0.0.0.0:%v" .Values.api.port | quote }}
 - name: MKC_ENV

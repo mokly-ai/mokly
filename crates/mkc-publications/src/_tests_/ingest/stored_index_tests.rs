@@ -17,6 +17,7 @@ use uuid::Uuid;
 
 use crate::error::{Error, Result};
 use crate::ingest::{Ingest, Ingested, PublicationIngest};
+use crate::stored_index::BoundedStoredIndexReader;
 use crate::tests::support::{PROJECT, PUBLICATION, publication};
 
 use super::{authorization, exchange, service_with_files};
@@ -98,7 +99,7 @@ fn complete(queries: impl Clause, files: Unimock) -> Result<Ingested> {
 /// Allow only the reads before finish; IDs and policy calls remain unexpected.
 fn complete_before_ready(queries: impl Clause, files: Unimock) -> Result<Ingested> {
     PublicationIngest {
-        files: Arc::new(files),
+        files: Arc::new(BoundedStoredIndexReader::new(Arc::new(files))),
         ..exchange(Unimock::new(queries), Unimock::new(()), false)
     }
     .complete(authorization(), PUBLICATION)

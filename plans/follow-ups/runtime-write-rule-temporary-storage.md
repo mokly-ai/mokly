@@ -109,11 +109,15 @@
   `docs/protocol/mokly-imported-styles-assets.md` records the exception for
   the verified copies of generated assets, and it releases each copy when its
   last user ends.
-- **Related:** `plans/follow-ups/authored-requests-need-temporary-space.md`.
-  Option D here keeps no authored copy, which also removes the failure of
-  that item. Under C or E, the fix of that item keeps the sentence true,
-  because a copy still goes away when the last request or response that holds
-  it ends.
+- **Related:**
+  - `plans/follow-ups/authored-requests-need-temporary-space.md`.
+    Option D here keeps no authored copy, which also removes the failure of
+    that item. Under C or E, the fix of that item keeps the sentence true,
+    because a copy still goes away when the last request or response that
+    holds it ends.
+  - `plans/follow-ups/cli-holds-catalogue-in-memory.md`: the same rule. Its
+    option C adds spill files of publish outside the repository, which the
+    rule of this item must then name.
 - **Recommendation:** C. It states one rule that is true for every current
   writer, and the owner pages already give each lifetime. D does not name the
   Git and publish writers, so it cannot replace C, and it fits with the item

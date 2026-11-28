@@ -76,7 +76,7 @@ def marker_rejections(api, project, secret, files):
         assert refused["error"]["message"] == "Update Mokly to 0.18.0 and publish again."
         assert "data" not in refused["error"]
     entry = {"path": "index.html", "sha256": "0" * 64, "size": 1}
-    for entries in [[dict(entry, path="p" + str(index) + ".html") for index in range(20_000)],
+    for entries in [[dict(entry, path="p" + str(index) + ".html") for index in range(60_000)],
                     [dict(entry, size=64 * 1024 * 1024 + 1)]]:
         changed = marker(files, files=entries)
         assert reason(plan(api, project, secret, plan_archive(changed), 413)) == "upload-too-large"

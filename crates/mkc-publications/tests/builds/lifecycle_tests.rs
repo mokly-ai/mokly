@@ -14,6 +14,7 @@ use mkc_publications::build_scheduler::{
 use mkc_publications::build_worker::service::BuildClaim;
 use mkc_publications::check_worker::PublicationChecks;
 use mkc_publications::locations::Locations;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_store_interface::build::NewBuild;
 use mkc_store_interface::build_state::{BuildFailure, BuildState, BuildTrigger};
 use mkc_store_interface::github_refs::Branch;
@@ -68,7 +69,7 @@ async fn real_worker_publishes_only_after_its_grant_upload_and_delivers_its_chec
     };
     let publications = Arc::new(PublicationChecks {
         transactions: fixture.transactions.clone(),
-        files: fixture.files.clone(),
+        files: Arc::new(BoundedStoredIndexReader::new(fixture.files.clone())),
         github: github.clone(),
         runtime: fixture.runtime.clone(),
         locations: locations.clone(),

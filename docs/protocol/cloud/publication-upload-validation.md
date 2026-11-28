@@ -22,27 +22,36 @@ requests.
 | Compressed plan request bytes                                           | 100 MiB           |
 | Decompressed plan bytes, including tar headers/padding                  | 512 MiB           |
 | Regular file bytes, archived or declared                                | 64 MiB            |
-| Archived regular files scanned before the exact-set check               | 20,000            |
-| Declared marker entries, excluding the marker itself                    | 19,999            |
-| Sum of all declared file sizes                                          | 512 MiB           |
+| Archived regular files scanned before the exact-set check               | 60,000            |
+| Declared marker entries, excluding the marker itself                    | 59,999            |
+| Sum of all declared file sizes (receiver quota)                         | 6 GiB             |
 | Upload envelope bytes                                                   | 16 KiB            |
-| Ownership marker bytes (receiver quota)                                 | 48 MiB            |
-| Catalogue index bytes (receiver quota)                                  | 8 MiB             |
-| JSON nodes per artifact, including object keys (receiver quota)         | 262,144           |
+| Ownership marker bytes (receiver quota)                                 | 64 MiB            |
+| Catalogue index bytes (receiver quota)                                  | 64 MiB            |
+| JSON nodes per artifact, including object keys (receiver quota)         | 4,194,304         |
 | Simultaneously retained JSON key digests (receiver quota)               | 65,536            |
 | Nested JSON values, counting the root as level 1 (receiver quota)       | 256               |
 | Every archived, declared, config or index entry path                    | 1,024 UTF-8 bytes |
 | Segments per path (receiver quota)                                      | 64                |
-| Distinct archive prefixes, including files/directories (receiver quota) | 65,536            |
+| Distinct archive prefixes, including files/directories (receiver quota) | 262,144           |
 
 Limits are checked before allocating or reading an entry body. Quotas may be
 lowered, never raised above these values. Each artifact must fit both the
-regular-file limit and its own quota. The 48 MiB marker quota covers the
-largest marker the exporter can format for 19,999 maximum-length entries
-without relaxing the file ceiling. The 8 MiB index quota bounds the memory
-that the receiver needs to read one index. The 256-level depth
-limit is chosen so that the complete 64-level tagged component-prop codec
-fits.
+regular-file limit and its own quota. The file-count and declared-size quotas
+leave more than twice the room of the largest real catalogue build measured,
+a pull-request build of 26,070 files and 2,580 MB. The declared-size quota is
+separate from the decompressed plan limit, because the plan archive holds only
+its three artifacts and the other declared files arrive as blobs. The prefix
+quota leaves room for 60,000 files and their directories. The node quota
+covers a 64 MiB index at the node density of real catalogues and bounds the
+memory of one parse. The 256-level depth limit is chosen so that the complete
+64-level tagged component-prop codec fits.
+
+Decision: the ownership marker and catalogue index quotas equal the 64 MiB
+regular-file limit. A higher quota was rejected, because the CLI, the
+receiver, the file stores and the database each cap a file at 64 MiB. The
+marker quota holds 59,999 entries of typical length. A marker with
+maximum-length paths reaches the byte quota at a lower entry count.
 
 The memory of derived path sets, not only byte counters, is bounded by these
 limits.
@@ -89,7 +98,7 @@ An array such as `[4]` is an invalid bundle, not an unsupported version.
    `"3"`, is HTTP 426 before `files` is read. Schemas 1 and 2 are unsupported.
 2. The root and entries require object syntax; positional arrays are invalid.
    A missing version or `files`, a non-array `files`, or a wrongly typed root
-   field is HTTP 400. The receiver caps the entry count at 19,999 with 413.
+   field is HTTP 400. The receiver caps the entry count at 59,999 with 413.
 3. Classify entries in source order. Require each object, its three primitive
    fields and an integer numeric `size` first. Then check its path and size
    limits, with 413 for excess. Then reject negative sizes, bad digests and

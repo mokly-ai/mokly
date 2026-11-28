@@ -13,6 +13,7 @@ use mkc_mokly_contract::limits::Limits;
 use mkc_publications::blob_writer::ParallelBlobWriter;
 use mkc_publications::ingest::{Ingest, PublicationIngest};
 use mkc_publications::policy::DatabaseAccessPolicy;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_store_interface::build_state::UploadOutcome;
 use mkc_upload_memory::budget::ProcessUploadMemoryBudget;
 use serde::Deserialize;
@@ -57,7 +58,7 @@ impl UploadExchange {
                 runtime: fixture.runtime.clone(),
                 worker_count: 4,
             }),
-            files,
+            files: Arc::new(BoundedStoredIndexReader::new(files)),
         });
         Arc::new(Self {
             ingest,

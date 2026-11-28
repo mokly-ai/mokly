@@ -10,6 +10,7 @@ use mkc_mokly_contract::limits::Limits;
 use mkc_mokly_contract::manifest::UploadManifest;
 use mkc_publications::ingest::{Ingest, PublicationIngest, UploadAuthorization};
 use mkc_publications::policy::DatabaseAccessPolicy;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_store_interface::blob::{Blob, PublicationFile};
 use mkc_store_interface::build::NewBuild;
 use mkc_store_interface::build_attempt::BuildAttempt;
@@ -135,17 +136,18 @@ impl Upload {
             assert!(q.mark_blob_stored(&blob.key).unwrap());
         });
         let empty = Arc::new(Unimock::new(()));
+        let files = Arc::new(Unimock::new(
+            FileStoreMock::get
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(Some(INDEX_BYTES.to_vec()))),
+        ));
         let ingest: Arc<dyn Ingest> = Arc::new(PublicationIngest {
             transactions: f.transactions.clone(),
             runtime: f.runtime.clone(),
             policy: Arc::new(DatabaseAccessPolicy),
             validator: empty.clone(),
             writer: empty,
-            files: Arc::new(Unimock::new(
-                FileStoreMock::get
-                    .each_call(matching!(_))
-                    .answers(&|_, _| Ok(Some(INDEX_BYTES.to_vec()))),
-            )),
+            files: Arc::new(BoundedStoredIndexReader::new(files)),
         });
         let authorization = ingest
             .authorize_completion(f.project.id, &bearer, publication.id)

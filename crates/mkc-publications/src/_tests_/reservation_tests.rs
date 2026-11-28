@@ -61,7 +61,9 @@ fn finish(queries: impl Clause, attempt: &Publication) -> Result<Ingested> {
         &authorization,
         attempt,
         &publication().metadata.unwrap(),
-        &StoredIndex::Loaded(Box::new(super::index_fixture::released())),
+        &StoredIndex::Loaded(Box::new(super::index_fixture::load(
+            super::index_fixture::RELEASED_BYTES.to_vec(),
+        ))),
     )
 }
 

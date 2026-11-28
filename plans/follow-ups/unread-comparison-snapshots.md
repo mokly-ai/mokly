@@ -64,7 +64,7 @@
 - **Problem:** A build with Changes writes both snapshot sides of every
   view, also of views that offer no comparison.
 - **Impact if no action:** In the example, unread snapshots are 44% of the
-  output bytes and 53% of its files. Large catalogues reach the 20,000-file
+  output bytes and 53% of its files. Large catalogues reach the 60,000-file
   upload limit of `docs/protocol/mokly-upload-validation.md` sooner.
 - **Root question:** Which snapshot files must a build write so that every
   comparison that a host can open still loads?

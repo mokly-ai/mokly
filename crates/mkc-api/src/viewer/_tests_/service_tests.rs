@@ -1,10 +1,11 @@
 //! Read rollback, incomplete upstream metadata and expiry during artifact IO.
 
-use std::io;
 use std::sync::Arc;
 
 use mkc_domain::values::Visibility;
+use mkc_file_store_interface::store::FileStoreMock;
 use mkc_mokly_contract::index::INDEX_PATH;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_store_interface::blob::BlobsMock;
 use mkc_store_interface::organization::OrganizationsMock;
 use mkc_store_interface::project::ProjectsMock;
@@ -14,12 +15,12 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::payload::Payload;
 use crate::platform::error::Error;
-use crate::viewer::artifacts::ArtifactsMock;
+use crate::viewer::artifacts::StoredArtifacts;
 use crate::viewer::input::{Action, Query, Read};
 use crate::viewer::service::{Viewer, ViewerService};
 
 use super::support::{
-    PROJECT, PUBLICATION, file, index, locations, project, viewer_publication, workspace,
+    INDEX_BYTES, PROJECT, PUBLICATION, file, locations, project, viewer_publication, workspace,
 };
 
 #[test]
@@ -154,15 +155,16 @@ fn artifact_reads_recheck_retention_before_returning_screens() {
                 }))
                 .once(),
         ));
+        let files = Arc::new(Unimock::new(
+            FileStoreMock::get
+                .some_call(matching!((key) if *key == &file().key))
+                .returns(Ok((!missing_bytes).then(|| INDEX_BYTES.to_vec()))),
+        ));
         let service = ViewerService {
             store: Arc::new(store),
-            artifacts: Arc::new(Unimock::new(ArtifactsMock.next_call(matching!(_)).returns(
-                if missing_bytes {
-                    Err(Error::internal(io::Error::from(io::ErrorKind::NotFound)))
-                } else {
-                    Ok(index())
-                },
-            ))),
+            artifacts: Arc::new(StoredArtifacts {
+                files: Arc::new(BoundedStoredIndexReader::new(files)),
+            }),
             locations: locations(),
         };
         let action = Action {

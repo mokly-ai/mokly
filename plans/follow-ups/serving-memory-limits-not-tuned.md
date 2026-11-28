@@ -14,8 +14,8 @@
   - `MKC_INGEST_WORKERS`, the number of parallel ingest workers.
   - `MKC_UPLOAD_MEMORY_BYTES`, the shared upload byte budget.
   - `MKC_CATALOGUE_HOT_CACHE_BYTES`, the size of the hot cache.
-  - The chart sets eight ingest workers, a 512 MiB upload budget, a 128 MiB cache and 1 GiB workload limits, in `infra/helm/mokly-cloud/values.yaml:60-99`.
-  - `docs/ops/environment.md:266-333` derives the headroom from those budgets, not from observed use.
+  - The chart sets eight ingest workers, a 512 MiB upload budget, a 128 MiB cache, a 1.5 GiB limit for the API Deployment and 1 GiB limits for the app, the catalogue and the API jobs, in `infra/helm/mokly-cloud/values.yaml:61-98`.
+  - `docs/ops/environment.md:327-367` sizes the API and catalogue memory. The catalogue headroom comes from its budget. The API breakdown comes from a local worst-case measurement of 2026-11-28, not from production use.
   - The catalogue server reports hit, miss, eviction and refusal counters for its cache.
   - The repository records no production measurement. That absence does not prove that nobody measured, and no current out-of-memory failure is known.
 - **Task:** Under real traffic, measure and record the values below in `docs/ops/environment.md`. Change only the three settings above, and only within their documented ranges.

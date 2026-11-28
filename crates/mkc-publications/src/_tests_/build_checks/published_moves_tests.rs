@@ -20,6 +20,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::build_check_worker::{BuildCheckDelivery, BuildChecksWorker};
 use crate::check_worker::PublicationChecks;
+use crate::stored_index::BoundedStoredIndexReader;
 use crate::tests::build_fixtures::{
     BUILD, OPERATION, build, check, clock_runtime, locations, organization, project, publication,
     transactions,
@@ -83,13 +84,14 @@ fn published_build_renders_shared_moves_fixture_without_losing_its_identity() {
     ));
     let store = transactions(queries);
     let runtime = clock_runtime();
+    let files = Arc::new(Unimock::new(
+        FileStoreMock::get
+            .some_call(matching!(_))
+            .returns(Ok(Some(INDEX_BYTES.to_vec()))),
+    ));
     let renderer = PublicationChecks {
         transactions: store.clone(),
-        files: Arc::new(Unimock::new(
-            FileStoreMock::get
-                .some_call(matching!(_))
-                .returns(Ok(Some(INDEX_BYTES.to_vec()))),
-        )),
+        files: Arc::new(BoundedStoredIndexReader::new(files)),
         github: Arc::new(Unimock::new(())),
         runtime: runtime.clone(),
         locations: locations(),

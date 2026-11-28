@@ -10,6 +10,7 @@ fn construction_clamps_every_quota_and_copies_cannot_mutate_limits() {
     let limits = Limits::lowered(Quotas {
         compressed: u64::MAX,
         decompressed: u64::MAX,
+        declared: u64::MAX,
         file: u64::MAX,
         files: usize::MAX,
         manifest: u64::MAX,

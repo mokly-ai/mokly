@@ -94,13 +94,17 @@ pub(super) fn with_marker(mut files: ArchiveFiles, marker: &Value) -> ArchiveFil
 }
 
 pub(super) fn validate(files: ArchiveFiles) -> Result<PlanBundle> {
+    validate_with_limits(files, Limits::default())
+}
+
+pub(super) fn validate_with_limits(files: ArchiveFiles, limits: Limits) -> Result<PlanBundle> {
     let validator: &dyn UploadValidator = &ContractValidator {
         reader: Arc::new(Unimock::new(
             ReaderMock::read
                 .next_call(matching!(_, _))
-                .returns(ScannedArchive::from_files(files, Limits::default())),
+                .returns(ScannedArchive::from_files(files, limits)),
         )),
-        limits: Limits::default(),
+        limits,
     };
     validator.validate(&mut Cursor::new(Vec::<u8>::new()))
 }
@@ -142,12 +146,10 @@ fn versions_and_limits_precede_structure() {
         br#"{"schemaVersion":1,"newRoot":true}"#.to_vec().into(),
     );
     assert_eq!(validate(files.clone()).unwrap_err().status_code(), 426);
-    files.insert(MARKER.to_owned(), vec![b' '; 48 * 1024 * 1024 + 1].into());
+    files.insert(MARKER.to_owned(), vec![b' '; 64 * 1024 * 1024 + 1].into());
     assert!(matches!(
         validate(files),
-        Err(Error::TooLarge {
-            limit: Limit::Inventory
-        })
+        Err(Error::TooLarge { limit: Limit::File })
     ));
     let mut marker = marker(&plan(&[]));
     marker["schemaVersion"] = json!(1);
@@ -160,8 +162,8 @@ fn versions_and_limits_precede_structure() {
 }
 
 #[test]
-fn declared_sizes_share_the_decompressed_ceiling() {
-    let large: Vec<Value> = (0..9)
+fn declared_sizes_above_six_gib_are_rejected() {
+    let large: Vec<Value> = (0..96)
         .map(|n| json!({"path":format!("static/{n}.bin"),"sha256":"a".repeat(64),"size":64 * 1024 * 1024}))
         .collect();
     assert!(matches!(

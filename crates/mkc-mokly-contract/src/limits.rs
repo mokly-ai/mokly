@@ -9,16 +9,17 @@ pub struct Quotas {
     pub compressed: u64,
     /// Tar bytes including framing.
     pub decompressed: u64,
+    /// Total bytes of all regular files declared in the marker.
+    pub declared: u64,
     /// Regular file bytes.
     pub file: u64,
     /// Regular file count including metadata.
     pub files: usize,
     /// Upload envelope bytes.
     pub manifest: u64,
-    /// Ownership marker bytes; 48 MiB holds the largest formatted schema 3
-    /// marker: 19,999 entries of 2,186 bytes (a 1,024-byte path of quotation
-    /// marks that each expand to two JSON bytes, a 64-byte hash and an
-    /// eight-digit size) plus 42 framing bytes is 43,717,856.
+    /// Ownership marker bytes. The 64 MiB file ceiling fits 59,999 typical
+    /// entries of about 210 bytes each. Maximum-length entries reach the
+    /// byte ceiling at a lower count.
     pub inventory: u64,
     /// Catalogue index bytes.
     pub index: u64,
@@ -35,14 +36,15 @@ impl Default for Quotas {
         Self {
             compressed: 100 * 1024 * 1024,
             decompressed: 512 * 1024 * 1024,
+            declared: 6 * 1024 * 1024 * 1024,
             file: 64 * 1024 * 1024,
-            files: 20_000,
+            files: 60_000,
             manifest: 16 * 1024,
-            inventory: 48 * 1024 * 1024,
-            index: 8 * 1024 * 1024,
+            inventory: 64 * 1024 * 1024,
+            index: 64 * 1024 * 1024,
             path: 1024,
             path_segments: 64,
-            prefixes: 65_536,
+            prefixes: 262_144,
         }
     }
 }
@@ -66,6 +68,7 @@ impl Limits {
             quotas: Quotas {
                 compressed: requested.compressed.min(ceiling.compressed),
                 decompressed: requested.decompressed.min(ceiling.decompressed),
+                declared: requested.declared.min(ceiling.declared),
                 file: requested.file.min(ceiling.file),
                 files: requested.files.min(ceiling.files),
                 manifest: requested.manifest.min(ceiling.manifest),
@@ -91,6 +94,11 @@ impl Limits {
     /// Tar bytes including framing.
     pub fn decompressed(self) -> u64 {
         self.quotas.decompressed
+    }
+
+    /// Total bytes of all regular files declared in the marker.
+    pub fn declared(self) -> u64 {
+        self.quotas.declared
     }
 
     /// Regular file bytes.

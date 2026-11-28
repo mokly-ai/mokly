@@ -19,6 +19,8 @@ pub(super) const PROJECT: ProjectId = ProjectId(Uuid::from_u128(1));
 pub(super) const PUBLICATION: PublicationId = PublicationId(Uuid::from_u128(2));
 pub(super) const USER: UserId = UserId(Uuid::from_u128(3));
 pub(super) const WORKSPACE: OrganizationId = OrganizationId(Uuid::from_u128(4));
+pub(super) const INDEX_BYTES: &[u8] =
+    include_bytes!("../../../../mkc-mokly-contract/fixtures/index-v9.json");
 
 pub(super) fn now() -> DateTime<Utc> {
     DateTime::from_timestamp(1_700_000_000, 0).unwrap()
@@ -109,9 +111,5 @@ pub(super) fn locations() -> Locations {
 }
 
 pub(super) fn index() -> CatalogueIndex {
-    CatalogueIndex::parse(
-        include_bytes!("../../../../mkc-mokly-contract/fixtures/index-v9.json"),
-        Limits::default(),
-    )
-    .unwrap()
+    CatalogueIndex::parse(INDEX_BYTES, Limits::default()).unwrap()
 }

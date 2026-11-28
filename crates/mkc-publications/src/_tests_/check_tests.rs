@@ -18,6 +18,7 @@ use uuid::Uuid;
 
 use crate::check_worker::{ChecksWorker, PublicationChecks};
 use crate::error::Error;
+use crate::stored_index::BoundedStoredIndexReader;
 
 use super::check_fixture;
 use super::support::{
@@ -129,7 +130,7 @@ fn comparisons_succeed_and_current_only_is_neutral() {
         );
         let worker = PublicationChecks {
             transactions: transactions(queries),
-            files: Arc::new(files),
+            files: Arc::new(BoundedStoredIndexReader::new(Arc::new(files))),
             github: Arc::new(github),
             runtime: clock(),
             locations: locations(),

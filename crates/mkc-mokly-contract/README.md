@@ -45,7 +45,8 @@ policy and the reserved roots apply at plan validation, so upstream valid
 marker cases stay valid marker shapes. Marker and index unknown fields are
 ignored. Envelope unknown fields are rejected. The index reader checks only
 the fields that the receiver reads: the base fields, the record paths and
-titles, `changes`, and the screen view axes. It does not validate the
+titles, the `status` of each `changes` object with its `kind` and `included`
+when it is `ready`, and the screen view axes. It does not validate the
 catalogue tree, details, usage, resource evidence or producer attribution.
 
 `PlanBundle::index()` returns the validated index facts. `index_bytes()`
@@ -124,7 +125,8 @@ cargo xtask check
 Unit tests use unimock at the injected reader boundary; byte-level tests
 exercise in-memory compressed streams. The integration tests validate the real
 frozen plan archives and refuse a complete export as a plan. The allocation
-test bounds memory for maximum-size archives and JSON artifacts. The fixture
+test bounds memory for maximum-size archives, JSON artifacts and ignored
+`changes` values. The fixture
 generator captures envelope 3 and index 9 from the real workspace CLI. The Rust
 and Node checks run the shared index Changes-count corpus, both captured
 indexes and the published catalogue. Each corpus case checks its exact input
@@ -160,6 +162,7 @@ a failing decoder.
 - [scanned_archive.rs](./src/scanned_archive.rs) — `ScannedArchive::from_files`, the validated-namespace result an alternate reader builds.
 - [bundle_validation.rs](./src/bundle_validation.rs) — the plan checks: exact artifact set, declared digests, hosting policy, reserved roots and the comparison generation.
 - [manifest.rs](./src/manifest.rs), [inventory.rs](./src/inventory.rs) and [index.rs](./src/index.rs) — `UploadManifest`, `Inventory` and `CatalogueIndex`, each with its version probe and `parse`.
+- [index_document.rs](./src/index_document.rs) — the decoded index fields and the `Changes` map visitor, which skips every other value of a `changes` object without buffering it.
 - [index_records.rs](./src/index_records.rs) and [index_values.rs](./src/index_values.rs) — the validated record, count, screen and view-axis types for publication consumers.
 - [index_validation.rs](./src/index_validation.rs) and [index_projection.rs](./src/index_projection.rs) — the documented read-field checks and the ordered publication facts.
 - [json_guard.rs](./src/json_guard.rs) — the streaming JSON preflight that bounds nodes, retained key digests and depth (`JSON_DEPTH`, 256 levels) and rejects duplicate keys before typed decoding.

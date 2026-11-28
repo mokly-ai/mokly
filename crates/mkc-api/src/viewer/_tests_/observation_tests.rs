@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mkc_domain::values::Visibility;
 use mkc_file_store_interface::store::FileStoreMock;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_store_interface::blob::BlobsMock;
 use mkc_store_interface::organization::OrganizationsMock;
 use mkc_store_interface::project::ProjectsMock;
@@ -95,7 +96,7 @@ fn history_and_publication_never_read_files_or_recheck_each_row() {
                     })),
             )),
             artifacts: Arc::new(StoredArtifacts {
-                files: Arc::new(files),
+                files: Arc::new(BoundedStoredIndexReader::new(Arc::new(files))),
             }),
             locations: locations(),
         };

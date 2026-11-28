@@ -13,7 +13,7 @@ use crate::error::{Error, Limit, Rejection, Result, invalid};
 /// Inclusive value depth, with the root at level one.
 pub(crate) const JSON_DEPTH: usize = 256;
 /// Values, containers and object keys visited per artifact.
-pub(crate) const JSON_NODES: usize = 262_144;
+pub(crate) const JSON_NODES: usize = 4_194_304;
 /// Key digests retained across all currently open objects.
 pub(crate) const JSON_KEYS: usize = 65_536;
 

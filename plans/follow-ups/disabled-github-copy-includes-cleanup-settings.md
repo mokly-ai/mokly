@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-31, from post-push retention review finding 3 and its independent check.
-- **Location:** `docs/ops/environment.md:370-371`; `docs/ops/environment.md:240-241`; `infra/README.md:11-12`.
+- **Location:** `docs/ops/environment.md:390-391`; `docs/ops/environment.md:240-241`; `infra/README.md:11-12`.
 - **Reason:** The user deferred this work to a follow-up on 2026-11-02. It does not block the current PR.
 - **Decision:** The user approved deferral, without selecting an implementation option. Keep C as the recommendation for future work.
 

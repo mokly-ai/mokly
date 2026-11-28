@@ -240,3 +240,5 @@
     Blobs again against each new index.
   - [cloud-removed-detail-source.md](./cloud-removed-detail-source.md) checks
     the same embedded viewer upgrade for removed entries.
+  - [index-room-under-file-ceiling.md](./index-room-under-file-ceiling.md)
+    changes the same index parser in its option C, a new index version.

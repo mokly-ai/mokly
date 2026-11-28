@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use mkc_domain::ids::{PublicationId, UserId};
-use mkc_mokly_contract::index::CatalogueIndex;
 use mkc_publications::locations::Locations;
+use mkc_publications::stored_index::LoadedIndex;
 use mkc_store_interface::publication::PublicationState;
 use mkc_store_interface::store::Store;
 use mkc_store_interface::viewer::PublicationKey;
@@ -94,7 +94,7 @@ impl Viewer for ViewerService {
                         let index = self
                             .index(&row, &mut checked)?
                             .ok_or(Error::OperationUnavailable)?;
-                        let mut screens = projection::screens(&index);
+                        let mut screens = projection::screens(index.index());
                         if let Some(Key::Screen(after)) = &query.after {
                             screens.retain(|screen| &screen.path > after);
                         }
@@ -144,7 +144,7 @@ impl ViewerService {
         &self,
         row: &Retained,
         checked: &mut Vec<PublicationId>,
-    ) -> Result<Option<CatalogueIndex>> {
+    ) -> Result<Option<LoadedIndex>> {
         match &row.comparison {
             Some(file) => {
                 checked.push(row.context.publication.id);

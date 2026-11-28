@@ -10,7 +10,7 @@ use mkc_mokly_contract::archive::ArchiveFiles;
 use mkc_mokly_contract::error::{ArtifactKind, Error, Limit};
 use mkc_mokly_contract::index::CatalogueIndex;
 use mkc_mokly_contract::inventory::Inventory;
-use mkc_mokly_contract::limits::Limits;
+use mkc_mokly_contract::limits::{Limits, Quotas};
 use mkc_mokly_contract::scanned_archive::ScannedArchive;
 
 #[global_allocator]
@@ -46,18 +46,43 @@ fn files(count: usize, segments: usize) -> ArchiveFiles {
 
 #[test]
 fn adversarial_allocations_and_retention_are_bounded() {
+    ignored_changes_allocations();
     path_allocations();
     json_allocations();
 }
 
+fn ignored_changes_allocations() {
+    let ignored = "{},".repeat(199_999);
+    let document = format!(
+        r#"{{"schemaVersion":9,"changesStatus":"disabled","comparisonUrl":null,
+        "components":[],"documents":[],"pages":[],"useCases":[],"removedEntries":[],
+        "screens":[{{"path":"screen","title":"Screen","views":[],
+        "changes":{{"extra":[{ignored}{{}}],"status":"disabled"}}}}]}}"#
+    );
+    let region = Region::new(GLOBAL);
+    let index = CatalogueIndex::parse(document.as_bytes(), Limits::default()).unwrap();
+    let stats = region.change();
+    assert_eq!(index.current_screens()[0].path, "screen");
+    assert!(stats.bytes_allocated < 64 * 1024, "{stats:?}");
+    println!(
+        "200,000 ignored Changes objects: {} allocated bytes",
+        stats.bytes_allocated
+    );
+}
+
 fn path_allocations() {
-    for (segments, expected, allocated_maximum) in [
-        (512, Limit::PathSegments, 64 * 1024),
-        (64, Limit::PrefixCount, 80 * 1024 * 1024),
+    let lower_prefixes = Limits::lowered(Quotas {
+        prefixes: 65_536,
+        ..Quotas::default()
+    });
+    for (segments, limits, expected, allocated_maximum) in [
+        (512, Limits::default(), Limit::PathSegments, 64 * 1024),
+        (64, lower_prefixes, Limit::PrefixCount, 80 * 1024 * 1024),
+        (64, Limits::default(), Limit::PrefixCount, 320 * 1024 * 1024),
     ] {
         let files = files(20_000, segments);
         let region = Region::new(GLOBAL);
-        let result = ScannedArchive::from_files(files, Limits::default());
+        let result = ScannedArchive::from_files(files, limits);
         let stats = region.change();
         assert!(matches!(result, Err(Error::TooLarge { limit }) if limit == expected));
         assert!(
@@ -65,7 +90,8 @@ fn path_allocations() {
             "{segments} segments: {stats:?}"
         );
         println!(
-            "20,000 paths, {segments} segments: {} allocated bytes before 413",
+            "20,000 paths, {segments} segments, up to {} prefixes: {} allocated bytes before 413",
+            limits.prefixes(),
             stats.bytes_allocated
         );
     }
@@ -165,27 +191,16 @@ fn increment(digits: &mut Vec<u8>) {
 
 fn json_allocations() {
     let depth = format!("{}0{}", "[".repeat(16_384), "]".repeat(16_384));
-    for (artifact, limit) in [
-        (ArtifactKind::Inventory, Limit::Inventory),
-        (ArtifactKind::Index, Limit::Index),
-    ] {
-        measured(
-            &many_files(64 * 1024 * 1024, artifact),
-            artifact,
-            limit,
-            1024,
-        );
-        measured(
-            &many_keys(64 * 1024 * 1024, 1, artifact),
-            artifact,
-            limit,
-            1024,
-        );
-        let nodes = many_files(2 * 1024 * 1024, artifact);
+    for artifact in [ArtifactKind::Inventory, ArtifactKind::Index] {
+        let nodes = many_files(17 * 1024 * 1024, artifact);
         let keys = many_keys(3 * 1024 * 1024, 32, artifact);
         measured(&nodes, artifact, Limit::JsonNodes, 64 * 1024);
         measured(&keys, artifact, Limit::JsonKeys, 12 * 1024 * 1024);
         measured(depth.as_bytes(), artifact, Limit::JsonDepth, 64 * 1024);
+        for mut bytes in [nodes, keys] {
+            bytes.resize(64 * 1024 * 1024 + 1, b' ');
+            measured(&bytes, artifact, Limit::File, 1024);
+        }
     }
     let bytes = many_keys(2 * 1024 * 1024, 32, ArtifactKind::Inventory);
     let region = Region::new(GLOBAL);

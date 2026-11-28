@@ -105,6 +105,11 @@ missing blobs or more than 512 MiB of them, a blob whose length or digest
 differs from its declaration and a completion before every missing blob
 arrived. Refusals use statuses the CLI does not retry, and each one fails
 capture; when the CLI exits non-zero, capture reports the first refusal.
+Decision: capture keeps these blob limits below the
+[receiver quotas](./publication-upload-validation.md#plan-archive-and-limits).
+Raising them was rejected, because capture records only the catalogue of this
+repository, and the seed path keeps its own bounds of 100 MiB for the plan and
+64 MiB for each other object.
 
 The stored plan and blobs are byte-for-byte what `mokly publish` sends to a
 receiver that holds none of the catalogue. Capture is unprivileged because

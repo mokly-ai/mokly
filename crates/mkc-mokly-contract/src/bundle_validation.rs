@@ -30,7 +30,7 @@ pub(crate) fn validate(archive: ScannedArchive, limits: Limits) -> Result<PlanBu
         .files
         .iter()
         .try_fold(0_u64, |total, file| total.checked_add(file.size));
-    if declared_bytes.is_none_or(|total| total > limits.decompressed()) {
+    if declared_bytes.is_none_or(|total| total > limits.declared()) {
         return Err(Error::TooLarge {
             limit: Limit::DeclaredBytes,
         });

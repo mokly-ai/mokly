@@ -80,7 +80,7 @@
 - **Problem:** A build with Changes writes a second copy of each unchanged
   view document.
 - **Impact if no action:** Each output carries about 12 MB of copies in the
-  example. Large catalogues reach the 20,000-file upload limit of
+  example. Large catalogues reach the 60,000-file upload limit of
   `docs/protocol/mokly-upload-validation.md` sooner.
 - **Root question:** How does a comparison show an unchanged view's before
   pane without a second copy of its document?
@@ -131,6 +131,8 @@
     two rules work together.
   - [variant-prop-schema-copies.md](./variant-prop-schema-copies.md): it
     also needs a new index number. One release can carry both.
+  - [index-room-under-file-ceiling.md](./index-room-under-file-ceiling.md):
+    its option C also needs a new index number. One release can carry both.
   - [embedded-document-closures.md](./embedded-document-closures.md): its
     option C gives the list of embedded documents that option 5A needs.
 - **Recommendation:** 1A, 2A, 3A, 4A, 5A. Shared view documents are 98.4% of

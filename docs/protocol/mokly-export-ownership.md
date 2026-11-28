@@ -115,7 +115,7 @@ Receivers validate the marker before answering a plan request:
 | Complete requested while a listed digest is still missing           | 409 on Complete                  |
 
 [Upload limits](./mokly-upload-validation.md#export-files-and-limits) also apply to
-every inventory path and file: at most 20,000 regular files including this
+every inventory path and file: at most 60,000 regular files including this
 marker and the per-file, path and upload manifest ceilings. The marker uses the
 regular-file limit (64 MiB), not the upload envelope's 16 KiB limit. An empty
 inventory is a valid marker shape but cannot be a valid upload: `index.html`,

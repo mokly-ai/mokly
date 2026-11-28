@@ -2,30 +2,26 @@
 
 use std::sync::Arc;
 
-use mkc_file_store_interface::store::FileStore;
-use mkc_mokly_contract::index::CatalogueIndex;
-use mkc_mokly_contract::limits::Limits;
+use mkc_publications::stored_index::{LoadedIndex, StoredIndexReader};
 use mkc_store_interface::blob::PublicationFile;
 
 use crate::platform::error::{Error, ErrorResultExt, Result};
 
 #[unimock::unimock(api = [ArtifactsMock])]
 pub(crate) trait Artifacts: Send + Sync {
-    fn index(&self, file: &PublicationFile) -> Result<CatalogueIndex>;
+    fn index(&self, file: &PublicationFile) -> Result<LoadedIndex>;
 }
 
 pub(crate) struct StoredArtifacts {
-    pub(crate) files: Arc<dyn FileStore>,
+    pub(crate) files: Arc<dyn StoredIndexReader>,
 }
 
 impl Artifacts for StoredArtifacts {
-    fn index(&self, file: &PublicationFile) -> Result<CatalogueIndex> {
-        let bytes = self
-            .files
-            .get(&file.key)
-            .context("read accepted catalogue index bytes")?
-            .ok_or_else(|| Error::internal(MissingArtifact))?;
-        CatalogueIndex::parse(&bytes, Limits::default()).context("decode accepted catalogue index")
+    fn index(&self, file: &PublicationFile) -> Result<LoadedIndex> {
+        self.files
+            .load(&file.key)
+            .context("read accepted catalogue index")?
+            .ok_or_else(|| Error::internal(MissingArtifact))
     }
 }
 

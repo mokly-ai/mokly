@@ -11,6 +11,7 @@ use mkc_github_interface::check::CheckRunsMock;
 use mkc_mokly_contract::index::INDEX_PATH;
 use mkc_publications::check_worker::{ChecksWorker, PublicationChecks};
 use mkc_publications::locations::Locations;
+use mkc_publications::stored_index::BoundedStoredIndexReader;
 use mkc_publications::transaction::StoreTransactions;
 use mkc_store_interface::publication::PublicationState;
 use mkc_store_interface::publication_changes::Changes;
@@ -73,7 +74,7 @@ fn a_minted_check_destination_resolves_after_both_slugs_are_renamed() {
         transactions: Arc::new(StoreTransactions {
             store: store.clone(),
         }),
-        files,
+        files: Arc::new(BoundedStoredIndexReader::new(files)),
         runtime,
         locations: Locations {
             app_origin: "https://app.example.com".into(),

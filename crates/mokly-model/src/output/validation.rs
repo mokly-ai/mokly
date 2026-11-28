@@ -12,7 +12,7 @@ pub const MANIFEST_LIMIT: usize = 16 * 1024;
 /// Maximum byte length of an exchange response.
 pub const RESPONSE_LIMIT: usize = 16 * 1024 * 1024;
 /// Maximum regular files, including the ownership marker.
-pub const FILE_COUNT_LIMIT: usize = 20_000;
+pub const FILE_COUNT_LIMIT: usize = 60_000;
 /// Root ownership marker path.
 pub const MARKER: &str = ".mokly-export-artifact";
 /// Root upload metadata path.

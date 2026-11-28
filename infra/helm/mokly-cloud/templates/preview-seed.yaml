@@ -36,7 +36,7 @@ spec:
               env:
                 {{- include "mkc.apiEnv" . | nindent 16 }}
               resources:
-                {{- toYaml .Values.api.resources | nindent 16 }}
+                {{- toYaml .Values.api.jobResources | nindent 16 }}
               volumeMounts:
                 - { name: tmp, mountPath: /tmp }
                 - { name: secrets, mountPath: /var/run/mokly-secrets, readOnly: true }

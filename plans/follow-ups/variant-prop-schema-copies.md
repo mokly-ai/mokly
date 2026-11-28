@@ -74,6 +74,9 @@
     the example index is 528,842 bytes.
   - [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md): it
     also needs a new index number. One release can carry both.
+  - [index-room-under-file-ceiling.md](./index-room-under-file-ceiling.md):
+    a shared fix. Its option C moves `controls`, `propSchema` and `props`
+    out of the index, which also removes the variant copies of this item.
 - **Recommendation:** B. It removes the copies with the smallest format
   change, and the detail check already uses only parent schemas.
 - **Action:** ask the user, because option B changes the catalogue index

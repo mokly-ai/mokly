@@ -9,7 +9,6 @@ use mkc_auth::runtime::Runtime;
 use mkc_domain::blob::{BlobHash, BlobKey};
 use mkc_domain::ids::{BuildId, ProjectId, PublicationId};
 use mkc_domain::slug::{ProjectSlug, WorkspaceSlug};
-use mkc_file_store_interface::store::FileStore;
 use mkc_mokly_contract::bundle::UploadValidator;
 use mkc_store_interface::build_state::UploadOutcome;
 use mkc_store_interface::publication::Publication;
@@ -21,6 +20,7 @@ use crate::completion::CompleteUpload;
 use crate::error::Result;
 use crate::policy::AccessPolicy;
 use crate::preflight::Preflight;
+use crate::stored_index::StoredIndexReader;
 use crate::transaction::Transactions;
 use crate::upload_authorization::{Credential, UploadPolicy};
 
@@ -155,8 +155,8 @@ pub struct PublicationIngest {
     pub validator: Arc<dyn UploadValidator>,
     /// Pending-blob persistence boundary.
     pub writer: Arc<dyn BlobWriter>,
-    /// Verified reads of stored artifacts at completion.
-    pub files: Arc<dyn FileStore>,
+    /// Bounded reads of accepted index files at completion.
+    pub files: Arc<dyn StoredIndexReader>,
 }
 
 impl Ingest for PublicationIngest {

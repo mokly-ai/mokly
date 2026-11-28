@@ -40,5 +40,6 @@
   - In the Mokly server, authored-file requests held a render worker while they waited for the same route. `plans/follow-ups/same-route-waits-hold-workers.md` records that class.
 - **Related:**
   - `plans/follow-ups/auth-admission-keys-full-ipv6-address.md` covers per-address admission. The ten-place limit applies across all client addresses.
+  - `plans/follow-ups/screens-api-reparses-index.md`: the same cause of waiting. A screens request waits for one of the two stored-index read slots of its API process while it holds a blocking worker.
 - **Recommendation:** B. It bounds every kind of operation in one place and keeps a worker free for health.
 - **Action:** fix after merge, apply B, because it changes the request path of every operation, and the branch already moved the password wait off the pool.

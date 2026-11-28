@@ -56,6 +56,9 @@
 - **Related:**
   - [variant-prop-schema-copies.md](./variant-prop-schema-copies.md): with
     both changes the example index is 528,842 bytes.
+  - [index-room-under-file-ceiling.md](./index-room-under-file-ceiling.md):
+    a shared fix. Compact JSON is the first step of its option C. It makes
+    the 48.7 MB index of a large real catalogue 20.8 MB.
 - **Recommendation:** B. A two-line code change makes the index about 40%
   smaller and the details about 56% smaller.
 - **Action:** ask the user, because option B changes the indentation rule

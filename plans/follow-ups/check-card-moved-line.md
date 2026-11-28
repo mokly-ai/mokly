@@ -29,6 +29,7 @@
 - **Left out:** Change nothing and keep the requirement, because the card then breaks the requirement in force.
 - **Wider fix:** None, because this is one missing field, not a class of defects.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/screens-api-reparses-index.md`: the same code and the same kind of fix. Its option C stores the screen titles in the ready transaction with a migration. Option B here would read the stored index on each publication read, through the same two read slots.
 - **Recommendation:** A. One stored observation then feeds the check and the card, so they agree, and the publication read stays one read.
 - **Action:** fix after merge, apply A, because the fix needs a migration, an API field, the OpenAPI document and the generated client types, which lie outside the viewer chrome branch. Keep the code, the OpenAPI document and `docs/protocol/cloud/rest-api.md` in agreement, as `AGENTS.md` asks for the API's reasons. The change adds a response field and no reason.
 - **Done when:** The card draws the moved line when entries moved, and the status line of `docs/protocol/cloud/viewer-chrome-check.md` no longer names this item.

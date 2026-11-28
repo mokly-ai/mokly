@@ -55,6 +55,7 @@
 - **Previous examples:** PR #222 moved the cache to each command's
   composition root and measured its charge in Serve on 2026-10-28. It did
   not measure publish.
+- **Related:** `plans/follow-ups/cli-holds-catalogue-in-memory.md`: the same cause. Publish also keeps the bytes of the whole catalogue through the upload.
 - **Recommendation:** B. It uses evidence and ends ownership at
   the last consumer. C frees the memory with less code, but it changes the
   cache without a measured need.

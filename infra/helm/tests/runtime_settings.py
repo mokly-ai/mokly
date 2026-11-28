@@ -99,9 +99,11 @@ def rendered_settings(renders):
     return actual
 
 
-def check_parity(document, actual):
-    """Reject documented omissions and undocumented rendered settings."""
+def check_parity(document, actual, *, chart_settings=()):
+    """Check documented and chart-defined deployment targets in both directions."""
     settings = documented_settings(document)
+    for name, marker in chart_settings:
+        settings.setdefault(name, deployment_targets(marker))
     expected = {
         (environment_name, workload, name)
         for name, targets in settings.items()
@@ -119,8 +121,11 @@ def check_parity(document, actual):
 
 
 def check_runtime_settings(document, renders):
-    """Check the operations document against complete chart renders."""
-    check_parity(document, rendered_settings(renders))
+    """Check the operations settings and the Helm README's allocator control."""
+    check_parity(
+        document, rendered_settings(renders),
+        chart_settings=(("MALLOC_ARENA_MAX", "env:api@all"),),
+    )
 
 
 def format_settings(settings):

@@ -4,10 +4,12 @@ use std::sync::Arc;
 
 use mkc_domain::blob::{BlobHash, BlobKey};
 use mkc_domain::ids::{ProjectId, PublicationId};
-use mkc_file_store_interface::store::{FileStore, FileStoreMock};
+use mkc_file_store_interface::store::FileStoreMock;
 use mkc_mokly_contract::index::INDEX_PATH;
 use mkc_store_interface::blob::{BlobsMock, PublicationFile};
 use unimock::{Clause, MockFn, Unimock, matching};
+
+use crate::stored_index::{BoundedStoredIndexReader, StoredIndexReader};
 
 use super::index_fixture::current_document;
 
@@ -40,11 +42,12 @@ pub(super) fn reference(
         .n_times(calls)
 }
 
-pub(super) fn files(calls: usize) -> Arc<dyn FileStore> {
-    Arc::new(Unimock::new(
+pub(super) fn files(calls: usize) -> Arc<dyn StoredIndexReader> {
+    let store = Arc::new(Unimock::new(
         FileStoreMock::get
             .each_call(matching!(_))
             .answers(&|_, _| Ok(Some(bytes())))
             .n_times(calls),
-    ))
+    ));
+    Arc::new(BoundedStoredIndexReader::new(store))
 }

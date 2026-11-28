@@ -78,7 +78,9 @@ fn finish_with_lock(queries: impl Clause, locked: bool) -> Result<Ingested> {
         &authorization,
         &attempt(),
         &attempt().metadata.unwrap(),
-        &StoredIndex::Loaded(Box::new(super::index_fixture::current_only())),
+        &StoredIndex::Loaded(Box::new(super::index_fixture::load(
+            serde_json::to_vec(&super::index_fixture::current_document("disabled")).unwrap(),
+        ))),
     )
 }
 

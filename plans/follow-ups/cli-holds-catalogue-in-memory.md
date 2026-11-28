@@ -1,0 +1,51 @@
+# Publish holds the whole catalogue in memory
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-28, from the branch `calummoore/build-capacity-raise-upload-limits-aern`, which raised the upload limits.
+- **Location:**
+  - The build: `crates/mokly-model/src/output/inventory.rs:21-28`, `crates/mokly-model/src/output/artifact.rs:16-21`, `:25-29` and `:40-79`, and `crates/mokly-cli/src/publication_runtime.rs:61-69`.
+  - The upload: `crates/mokly-publish/src/snapshot.rs:59-72` and `:76-113`, and `crates/mokly-publish/src/settings.rs:46-47`.
+  - The rules: `docs/protocol/mokly-publication.md:90` and `docs/protocol/mokly-runtime.md:240-243`.
+  - The cloud build template: `infra/e2b/build/e2b.toml:3-4`.
+- **Reason:** The fix changes the Mokly build, the CLI upload and two Mokly protocol rules, outside the receiver limits that the branch that added this item raised, and it reaches users only in a Mokly release.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Artifact:** the in-memory result of a Mokly build, `Artifact` in `crates/mokly-model/src/output/artifact.rs`, which lists every regular output file with its bytes.
+  - **Declared bytes:** the sum of the file sizes in the ownership marker `.mokly-export-artifact`, which Mokly Cloud caps at 6 GiB since 2026-11-28.
+  - **Installed output:** the files that a build writes into its output directory, here the private directory that `mokly publish` builds into.
+  - **Receiver:** the service that accepts the upload of `mokly publish`, such as Mokly Cloud.
+- **Background:**
+  - `mokly publish` builds the catalogue into its own private output directory in the same process, then uploads it. `crates/mokly-cli/src/publication_runtime.rs:61-69` runs the static build and passes its `Artifact` to `Finalized::new`.
+  - The build keeps the bytes of every output file from the moment it admits the file. `Inventory::insert` at `crates/mokly-model/src/output/inventory.rs:21-28` stores each file with its `Bytes`. `Artifact::finalize` at `crates/mokly-model/src/output/artifact.rs:40-79` moves them into the `Artifact`, in the fields at lines 16-21 and 25-29.
+  - `crates/mokly-static/README.md:84` says that publish consumes those same immutable bytes. `Prepared::new` in `crates/mokly-publish/src/snapshot.rs:76-113` maps each distinct digest to the same shared `Bytes`, in the `blobs` map at line 71. The map holds no copy, but it keeps every file in memory until the upload ends.
+  - The CLI sends at most 32 blob requests at a time, under `crates/mokly-publish/src/settings.rs:46-47`.
+  - Two rules bound the options. `docs/protocol/mokly-publication.md:90` requires: "Installed output is never read back." `docs/protocol/mokly-runtime.md:240-243` names the caches and the unnamed copies of asset responses as the only files that Mokly writes outside the repository.
+  - On 2026-11-28 the user approved higher upload limits. Mokly Cloud now accepts 6 GiB of declared bytes, not 512 MiB.
+  - The cloud build template has 2 vCPU and 4 GiB of memory, in `infra/e2b/build/e2b.toml:3-4` and `docs/protocol/cloud/cloud-build-template.md:11`.
+- **Problem:**
+  - The main-branch build of `Firna-AI/conductive` at commit `3371d05f2` declares 1,744 MB, and its pull-request build declares 2,580 MB. The build and the upload hold all of these bytes in memory at once.
+  - On 2026-11-28 `mokly build --no-changes` of the main-branch catalogue peaked at 4,398,648 KB, about 4.2 GiB, in its largest process. GNU `time` gives only the largest single process, and the run did not record whether it was the Rust core, a render sidecar or the browser.
+- **Impact if no action:** A catalogue whose declared bytes come near the memory of its machine cannot publish, although the receiver accepts up to 6 GiB. In the 4 GiB cloud build template, the bytes of the conductive pull-request build alone take 2.58 GB.
+- **Root question:** How does publish upload a catalogue that is larger than the memory of its machine?
+- **Options:**
+  - **A.** Keep it, and cap catalogues by the memory of the machine. Effort: Small.
+  - **B.** Stream the output through the disk. The build writes each admitted file into the staging directory of its output transaction at once and keeps only its path, digest and size. Publish then reads each blob back from its private output directory when it uploads, and checks its digest against the marker. Effort: Large.
+    - It changes `Inventory` and `Artifact`, which every build uses, and the upload snapshot of `crates/mokly-publish`.
+    - It changes the rule of `docs/protocol/mokly-publication.md:90` that installed output is never read back, so that page changes with it.
+  - **C.** Keep the output bytes outside the process heap without a read of the installed output. The build also writes each admitted file once to a private spill file outside the output directory, and publish uploads from that file. Effort: Large.
+    - It doubles the disk writes of each build, and every exit path must remove the spill files.
+    - It changes the rule of `docs/protocol/mokly-runtime.md:240-243` on files outside the repository, so that page changes with it.
+- **Left out:**
+  - Drop the bytes only after the build installs the output, and read the blobs back for the upload. The build still holds every byte before it installs, so the peak stays the same.
+  - Upload each file while the build renders. The first upload request needs the complete marker with every digest, so no upload can start before the build ends.
+- **Wider fix:** B. The output then takes memory only for the files that the build is writing and the blobs that publish is sending, not for the whole catalogue.
+- **Previous examples:** `plans/follow-ups/publish-render-cache-lifetime.md` records an earlier case: publish keeps up to 256 MiB of render cache from its build through the upload.
+- **Related:**
+  - `plans/follow-ups/finalized-artifact-mutation.md`: the same code. Its option C makes the fields of `Artifact` private, and option B here changes how `Artifact` keeps the bytes. One branch can do both.
+  - `plans/follow-ups/publish-render-cache-lifetime.md`: the same cause. Publish keeps the memory of its build through the upload.
+  - `plans/follow-ups/runtime-write-rule-temporary-storage.md`: the same rule. It decides how `docs/protocol/mokly-runtime.md` names the temporary storage of publish, and option C here adds such storage.
+- **Recommendation:** B. It writes each file once and keeps only its path, digest and size, and its digest check still refuses any byte that differs from the validated build.
+- **Action:** ask the user, because option B changes the rule of `docs/protocol/mokly-publication.md:90` that installed output is never read back, and no user decision covers that change.
