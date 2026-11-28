@@ -1,4 +1,4 @@
-import type { Request } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 
 import { accessStartPath } from "../../viewer/access-exchange";
 import { expect, open, test } from "../harness";
@@ -13,11 +13,28 @@ import { publishedProject } from "./support";
 const shell = "[data-mokly-shell]";
 const startPage = `/${accessStartPath}`;
 const index = "/mokly-viewer/index.json";
+const blockedTitle = "This publication can’t open in this browser";
 
 function originOf(catalogueUrl: string | null): string {
   if (catalogueUrl === null)
     throw new Error("The publication has no catalogue origin.");
   return new URL(catalogueUrl).origin;
+}
+
+/** The blocked stage is one final message: its title, its line, no action. */
+async function expectBlockedStage(page: Page): Promise<void> {
+  const card = page.getByRole("alert").filter({
+    has: page.getByRole("heading", { name: blockedTitle, exact: true }),
+  });
+  await expect(card).toBeVisible();
+  await expect(
+    card.getByText("Open it in Chrome, Edge or Firefox on a computer.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(card.getByRole("button")).toHaveCount(0);
+  await expect(card.getByRole("link")).toHaveCount(0);
+  await expect(page.getByTestId("open-catalogue-tab")).toHaveCount(0);
 }
 
 test(
@@ -73,8 +90,9 @@ test("a refused private catalogue leaves a retry or a covered comparison", async
     expect(embedded.status()).toBe(401);
     expect(embeddedCookieNames).not.toContain(catalogueCookie);
     expect(embeddedCookieNames).not.toContain("mkc_session");
+    // The overlay draws the blocked stage card.
     await expect(
-      page.getByText("Open the catalogue in its own tab"),
+      page.getByRole("heading", { name: blockedTitle, exact: true }),
     ).toBeVisible();
   });
 });
@@ -132,10 +150,7 @@ test("a missing start page shows the blocked stage before the viewer mounts", as
   await routeAccessStatus(page, origin, startPage, 404, true);
 
   await open(page, made.publicationPath);
-  await expect(
-    page.getByText("Open the catalogue in its own tab"),
-  ).toBeVisible();
-  await expect(page.getByTestId("open-catalogue-tab")).toBeVisible();
+  await expectBlockedStage(page);
   await expect(page.locator(shell)).toHaveCount(0);
 });
 
@@ -186,10 +201,7 @@ test("a private frame that cannot open with its token replaces the viewer with t
   const authorization = await (await indexRead).headerValue("authorization");
   expect(authorization).toMatch(/^Bearer /);
   await page.getByRole("link", { name: /^Start( Changed)?$/ }).click();
-  await expect(
-    page.getByText("Open the catalogue in its own tab"),
-  ).toBeVisible();
-  await expect(page.getByTestId("open-catalogue-tab")).toBeVisible();
+  await expectBlockedStage(page);
   await expect(page.locator(shell)).toHaveCount(0);
   expect(frameTokens.length).toBeGreaterThan(0);
   for (const token of frameTokens)

@@ -227,27 +227,20 @@ export function AccessRefused({
 }
 
 /**
- * The browser keeps the publication host's cookie out of this page, so the
- * catalogue is offered where document navigation can use the credential: its
- * own first-party tab. Published static hydration remains credential-free.
+ * No credential of the publication's host reaches its screens in this page:
+ * the browser keeps the host's cookie out, and the screens cannot open through
+ * the embedded route either, because the publication has no start page or its
+ * frames report that no access route works. Asking again cannot work, and the
+ * catalogue's own tab would hold no credential either. The card is final: it
+ * offers no action, and its line sends the reader to a browser on a computer
+ * that opens the publication.
  */
-export function AccessBlocked({ catalogueUrl }: { catalogueUrl: string }) {
+export function AccessBlocked() {
   return (
     <StageCard>
-      <StateMessage
-        title="Open the catalogue in its own tab"
-        error
-        action={
-          <Action
-            label="Open catalogue in a new tab"
-            tone="primary"
-            size="md"
-            icon="external"
-            onPress={() => window.open(catalogueUrl, "_blank", "noopener")}
-            testID="open-catalogue-tab"
-          />
-        }
-      />
+      <StateMessage title="This publication can’t open in this browser" error>
+        Open it in Chrome, Edge or Firefox on a computer.
+      </StateMessage>
     </StageCard>
   );
 }

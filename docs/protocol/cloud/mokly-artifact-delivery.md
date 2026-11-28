@@ -1,7 +1,5 @@
 # Mokly Artifact Delivery
 
-Status: The app still offers **Open catalogue in a new tab**. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) removes it.
-
 This is the delivery sub-contract of
 [Artifact compatibility](./mokly-artifact-compatibility.md). It gives the
 paths that the cloud stores and serves, and the private artifact limit.
