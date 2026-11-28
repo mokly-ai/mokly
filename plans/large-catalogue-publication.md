@@ -116,7 +116,7 @@ Every item shares these assumptions, unless an item names an option that drops o
 3. Each view keeps its own document. Source: the renderer receives the colour scheme under `docs/protocol/mokly-rendering.md`, and the measurement shows 0 equal pairs. Every option keeps it.
 4. A format number changes only with a change of shape or meaning, and at most once in a release window. Source: `docs/protocol/mokly-format-versions.md`. Every option keeps it.
 5. A format change replaces every reader of the old format in the same change, and the cloud converts no stored publication. Source: `docs/protocol/cloud/mokly-artifact-compatibility.md`, Mokly Changes. Options E, G and I of item 8 and option C of item 7 drop the first part. Option G of item 7 drops the second.
-6. The receiver quotas stay as they are. Source: the requirements of `docs/protocol/cloud/publication-upload-validation.md:20-42`, and `crates/mkc-mokly-contract/src/limits.rs:33-48`. Their reason is gone: they came from an API whose memory grew with the whole export, as `plans/follow-ups/upload-quotas-not-revisited.md` records. Options B, C and E of item 1 drop it.
+6. The receiver quotas stay as they are. Source: the requirements of `docs/protocol/cloud/publication-upload-validation.md:20-42`, and `crates/mkc-mokly-contract/src/limits.rs:33-48`. Their reason is gone: they came from an API whose memory grew with the whole export, as `plans/follow-ups/upload-quotas-not-revisited.md` records. Options B, C, E and F of item 1 drop it.
 7. Every build publishes every view of each entry, four for each conductive entry. Source: `docs/protocol/mokly-component-usage-records.md`, Validation. Every option keeps it, and the user's rule of 2026-11-28 rules out fewer views that the project chooses.
 8. A publication that is above one limit fails as a whole. Source: `docs/protocol/mokly-upload-validation.md`, Rejections, and `crates/mokly-publish/src/snapshot.rs:77-84`. Option F of item 5 drops it for the comparison, at the CLI's file ceiling only.
 
@@ -167,7 +167,7 @@ Implementation starts only after the user answers items 1 to 11. Answer each ite
 - **Previous examples:** Item 1 of the workspace "conductivity build issue" on 2026-11-27. The items `plans/follow-ups/compact-json-output.md`, `variant-prop-schema-copies.md`, `unread-comparison-snapshots.md` and `upload-quotas-not-revisited.md` hold parts of the same problem.
 - **Related:** Items 2 to 5 and item 10, work that waits for the answer. Item 3 applies only under B, C, E and F. Option E also answers item 4. Item 8: conductive pins `@mokly/mokly` 0.21.0, so each option here reaches its cloud build only with option F, H or J there.
 - **Recommendation:** C. The Mokly changes make the index and the details fast to load and to build, and only a quota change leaves room for growth. E matters when a catalogue grows far past conductive, because each page load fetches the whole index.
-- **Action:** ask the user, because A, B, C and E change requirements in force.
+- **Action:** ask the user, because A, B, C, E and F change requirements in force.
 
 ### 2. No size target for one publication
 
