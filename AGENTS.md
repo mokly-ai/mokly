@@ -92,6 +92,10 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
   runs `npm ci` and `npm run build` first when the install or the build is
   missing or out of date with `package-lock.json`. It does not rebuild after
   a source change, so run `npm run build` first.
+- Cloud dev stack: `npm run dev:cloud` builds, then starts Postgres when
+  none answers, the API, the catalogue server, and the app on `:8081`. The
+  [local servers guide](./docs/development/cloud.md#local-servers) says
+  more.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
   Node test files under `tests/`, `packages/viewer/tests/`,
   `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`,
