@@ -3943,9 +3943,11 @@ Depends on: 18, 19, 20, 21
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 
 ## Milestone 23: Failed stories documentation
 
