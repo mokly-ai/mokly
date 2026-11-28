@@ -1,5 +1,7 @@
 # Storybook Story Setup
 
+Status: Mokly does not read the [`contentSlots`](#globals-for-views) field yet, and it warns about that field as an unknown field. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds it.
+
 This page continues the [Storybook stories contract](./mokly-storybook.md). It
 defines how the sidecar sets up each story render, and the globals that each
 view gives a story.
@@ -62,15 +64,15 @@ Each story render gets the view's viewport, `mobile` or `desktop`, as the
 global `moklyViewport`. It gets the view's colour scheme, `light` or `dark`,
 as the global `moklyColorScheme`.
 
-A story can have a `mokly` parameter with the fields `colorSchemes` and
-`viewports`. `colorSchemes` maps a colour scheme name, `light` or `dark`, to
-an object of Storybook globals. `viewports` maps a viewport name, `mobile` or
-`desktop`, to an object of Storybook globals. Mokly reads the parameter from
-the composed parameters of each story, so the preview, the meta, and the
-story can each set or override it. For each view, Mokly applies these globals
-over the composed story's globals, the story's own `globals` included. Before
-the loaders, the `beforeEach` hooks, and the render run, it applies them in
-this order, so that a later item wins:
+A story can have a `mokly` parameter with the fields `colorSchemes`,
+`viewports`, and `contentSlots`. `colorSchemes` maps a colour scheme name,
+`light` or `dark`, to an object of Storybook globals. `viewports` maps a
+viewport name, `mobile` or `desktop`, to an object of Storybook globals. Mokly
+reads these two fields from the composed parameters of each story, so the
+preview, the meta, and the story can each set or override them. For each view,
+Mokly applies these globals over the composed story's globals, the story's own
+`globals` included. Before the loaders, the `beforeEach` hooks, and the render
+run, it applies them in this order, so that a later item wins:
 
 1. The mapped globals of the view's viewport.
 2. The mapped globals of the view's colour scheme.
@@ -83,19 +85,32 @@ Documentation alone, detection of `addon-themes`, and a map in
 colour scheme, so both maps apply to it. The mapped globals win over the
 story's own `globals`, as the globals of a Chromatic mode do.
 
+`contentSlots` is a boolean, and it is `true` by default. With `false`, each
+use that is an instance of the entry renders its content as in the product,
+under the
+[story component use rules](./mokly-story-component-uses.md#content-without-slots).
+Mokly reads `contentSlots` from the composed parameters of the first included
+story, which the parent page renders. So the preview, the meta, and that story
+set it for the whole entry, and a value that only another story sets changes
+nothing. Decision: one value holds for the whole entry, because a use names
+its component, not one story. The other settings of an entry, such as its
+tags, also come from the first included story.
+
 Mokly ignores each of these malformed values on its own and uses the valid rest:
 
-| Malformed value                                                  | Path                                      | Reason                  |
-| ---------------------------------------------------------------- | ----------------------------------------- | ----------------------- |
-| A `mokly` parameter that is not a plain object, such as an array | `mokly`                                   | `not an object`         |
-| A field other than `colorSchemes` and `viewports`                | such as `mokly.colourSchemes`             | `unknown field`         |
-| A `colorSchemes` or `viewports` value that is not a plain object | `mokly.colorSchemes` or `mokly.viewports` | `not an object`         |
-| A name other than `light` and `dark` in `colorSchemes`           | such as `mokly.colorSchemes.sepia`        | `unknown colour scheme` |
-| A name other than `mobile` and `desktop` in `viewports`          | such as `mokly.viewports.tablet`          | `unknown viewport`      |
-| A mapped value that is not a plain object                        | such as `mokly.colorSchemes.dark`         | `not an object`         |
+| Malformed value                                                    | Path                                      | Reason                  |
+| ------------------------------------------------------------------ | ----------------------------------------- | ----------------------- |
+| A `mokly` parameter that is not a plain object, such as an array   | `mokly`                                   | `not an object`         |
+| A field other than `colorSchemes`, `viewports`, and `contentSlots` | such as `mokly.colourSchemes`             | `unknown field`         |
+| A `colorSchemes` or `viewports` value that is not a plain object   | `mokly.colorSchemes` or `mokly.viewports` | `not an object`         |
+| A name other than `light` and `dark` in `colorSchemes`             | such as `mokly.colorSchemes.sepia`        | `unknown colour scheme` |
+| A name other than `mobile` and `desktop` in `viewports`            | such as `mokly.viewports.tablet`          | `unknown viewport`      |
+| A mapped value that is not a plain object                          | such as `mokly.colorSchemes.dark`         | `not an object`         |
+| A `contentSlots` value that is not a boolean                       | `mokly.contentSlots`                      | `not a boolean`         |
 
-A `mokly` parameter that is absent or `undefined` is not malformed. Mokly does
-not check the globals inside a mapped object. Each malformed value gives one
+A `mokly` parameter that is absent or `undefined` is not malformed. An ignored
+`contentSlots` value leaves the default `true`. Mokly does not check the
+globals inside a mapped object. Each malformed value gives one
 `storybook-parameter-ignored` build warning on each story page whose composed
 parameters hold it, so a value in the preview gives a warning on each story
 page that does not override it. Its subject is the entry of that page: the

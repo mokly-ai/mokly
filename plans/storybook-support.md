@@ -4072,7 +4072,9 @@ own lines of this plan.
   both compile paths. A Mokly facade for `react` that also sees
   `createElement` is a larger change, and
   [story-uses-after-spread-keys.md](follow-ups/story-uses-after-spread-keys.md)
-  records it.
+  records it. Changed on 2026-11-28 by the build of J: an element of these kinds still
+  becomes a use when another use receives it as content and Mokly compiles
+  its story component, because the content rule then carries its slot.
 - I3. On the pages of a stories entry, a use of its own component records no
   instance. Uses of other story components there record instances as in a
   screen. Reason: such a page compares the component itself, and an instance
@@ -4147,8 +4149,12 @@ own lines of this plan.
   transform instruments the components of each repository-owned module that
   Mokly compiles, on both compile paths, workspace package sources included.
   It does not change installed packages, also when esbuild bundles them.
-  Reason: both compile paths then mark the same components, and installed
-  code runs as the package ships it.
+  Changed on 2026-11-28 by the build: it marks only a component that the
+  module defines at its top level, under a name or as its default export. A
+  component in another form, such as a destructured binding, a definition
+  inside a function, or an object member, counts as one that Mokly does not
+  compile. Reason: both compile paths then mark the same components, and
+  installed code runs as the package ships it.
 - I14. Made on 2026-11-28. A story component that Mokly does not compile
   keeps a Mokly element of its own type around each use, as today. Reason:
   only an instrumented body can write the markers of its own output.
@@ -4843,7 +4849,11 @@ Both apply to E, I, and J alike, so they do not decide between J and I.
   leave the compared inputs of the screen equal under J, and 3 under E. A
   fallback for a slot without a placement catches 5 of them. One edit stays
   hidden under every tested form: a receiver that renders the slot and also
-  reads the element's props outside it.
+  reads the element's props outside it. Added on 2026-11-28 by the build of
+  J: an element that a prop value holds inside a class instance gets no
+  slot, and it records as a fixed text. Option C sees it in a public field.
+  No option sees it in a private field, because the recorded form of a class
+  instance holds only its own enumerable fields.
 - **Impact if no action:** After a visible edit, Changes shows the screen as
   unchanged. This breaks the rule that missing input evidence never means
   unchanged inputs.

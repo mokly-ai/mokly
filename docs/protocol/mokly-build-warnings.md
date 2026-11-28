@@ -1,7 +1,5 @@
 # Build Warnings
 
-Status: Mokly raises the `instance-numbered` warning only for story component uses yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds it for wrappers and HTML component elements.
-
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is

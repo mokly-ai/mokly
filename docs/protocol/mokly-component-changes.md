@@ -1,6 +1,6 @@
 # Component Change Attribution
 
-Status: A [story component use](./mokly-story-component-uses.md) still leaves out each prop value that is not data. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds their [recorded forms](./mokly-story-component-uses.md#recorded-props). How Changes keeps the content that a screen passes into a story component use is not settled yet: the answer to [track I decision 3](../../plans/storybook-support.md#track-i-decision-3-the-content-of-a-use-and-faithful-rendering) waits for its design note.
+Status: How Changes keeps supplied content that the component of a [story component use](./mokly-story-component-uses.md) reads or renders outside its slots is not settled yet. [Track I decision 10](../../plans/storybook-support.md#track-i-decision-10-supplied-content-that-bypasses-its-slot) waits for the user. Until then, an edit of such content can drop out of Changes. The [transparent region](#normalization-and-input-ownership) of a use is not built yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) applies the answer and adds the region.
 
 ## Changes Membership
 
@@ -15,8 +15,9 @@ owns the membership list. This page states how a component edit is attributed.
 | Edit                                                    | Direct Changes entries                                    | Secondary impact                                              |
 | ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
 | Component render, or the styles its render returns      | Component                                                 | Its consuming screens and components                          |
+| Render of a story component with `contentSlots: false`  | Component and each consumer whose output changes          | Its consuming screens and components                          |
 | Screen supplies different props to an instance          | Screen                                                    | None from this edit alone                                     |
-| Screen changes a function prop of a story component use | None                                                      | None                                                          |
+| Screen changes a function prop of a story component use | None, unless the use's region is transparent              | None                                                          |
 | Screen changes the slot content it supplies             | Screen                                                    | None from this edit alone                                     |
 | Screen adds, removes, replaces, or reorders an instance | Screen                                                    | Usage links update                                            |
 | Screen changes surrounding content or layout            | Screen                                                    | The ordinary screen and use case rules                        |
@@ -105,12 +106,13 @@ Instances pair across the sides by owner, scoped instance id, component path,
 viewport, and scheme, read from the instance regions of the
 [tree model](./mokly-comparison.md#tree-model); a variant entry's own
 comparison is keyed by that entry's path. In a consumer's view, a paired
-instance region is compared by its identity, the component path, the instance
-id, and the canonical props digest that the region carries, not by its
-rendered content. The caller's slot content and the order of its instances
-stay in the caller's comparison. This suppresses the component's internal
-rendering changes in the consumer and keeps the consumer's input changes, even
-when the two sides render identical HTML.
+instance region, other than a transparent one below, is compared by its
+identity, the component path, the instance id, and the canonical props digest
+that the region carries, not by its rendered content. The caller's slot
+content and the order of its instances stay in the caller's comparison. This
+suppresses the component's internal rendering changes in the consumer and
+keeps the consumer's input changes, even when the two sides render identical
+HTML.
 
 The component under review is never projected against itself on its own page.
 Nested registered components use the same boundary, so a child-only render
@@ -138,13 +140,28 @@ A [story component use](./mokly-story-component-uses.md) pairs and compares
 like any other instance. Its props digest uses the same canonical JSON over
 its [recorded props](./mokly-story-component-uses.md#recorded-props), which
 leave out its function props. So an edit of a function prop alone changes no
-input of the use. Neither the core nor a reader validates the props of a use
-against the prop schema of its stories entry. The catalogue record of a
-stories entry marks it as one, and the instances of every other component
-keep the schema check. Decision: function props stay out, because Mokly never
-fingerprints a callback's source or a function's identity. The schema does
-not validate a use, because it describes the stories' args, not every prop of
-the component, and a product use cannot change its props for Mokly.
+input of the use. Decision: function props stay out, because Mokly never
+fingerprints a callback's source or a function's identity. By default, each
+element of its [content](./mokly-story-component-uses.md#content) is a slot,
+so an edit of that element stays in the caller's comparison.
+
+Neither the core nor a reader validates the props of a use against the prop
+schema of its stories entry. The catalogue record of a stories entry marks it
+as one, and the instances of every other component keep the schema check.
+Decision: the schema does not validate a use, because it describes the
+stories' args, not every prop of the component. A product use also cannot
+change its props for Mokly.
+
+When a stories entry sets
+[`contentSlots`](./mokly-storybook-setup.md#globals-for-views) to `false`, the
+instance region of each of its uses is transparent in the consumer's view.
+Its output compares as the consumer's own output, and each instance region
+inside it keeps its own projection. So each edit that changes the output
+changes the consumer, an edit of a function prop or of the component's render
+included. Each side uses the value of its own stories entry. The CSS rules
+still treat the region as an instance region of its component. Decision: the
+use keeps its region, because every instance has a region under the
+[instance contract](./mokly-instances.md#ownership-regions).
 
 Review-ignore regions keep their id, material key, and one-sided adoption
 rules. An ignore region may lie inside a component's render, but it may not

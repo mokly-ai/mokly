@@ -1,7 +1,5 @@
 # Instance Ids
 
-Status: A repeated id of a `defineComponent` wrapper or an HTML component element still fails the build, and a wrapper does not take its id from `key` yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds both.
-
 This page continues the [instance contract](./mokly-instances.md). It defines
 the local id of each instance, the numbers of repeated ids, and the
 `instance-numbered` warning.

@@ -104,6 +104,9 @@ is `ready`, `pending`, or `unavailable` and never omitted.
 A receiver's [upload check](./mokly-upload-validation.md#catalogue-content)
 rejects invalid hashes, missing references, cycles, incorrect ordering,
 duplicate records, invalid source locations, and owners absent from the view.
-It ignores unknown fields, under the
+It also rejects a slot whose receiving component does not declare its name.
+An instance of a stories entry accepts every slot name, because its
+[implicit slots](./mokly-story-component-uses.md#content) take their names from
+its content. The check ignores unknown fields, under the
 [serialization contract](./mokly-catalogue-serialization.md#versions). The
 viewer trusts the usage records of a detail of its version.

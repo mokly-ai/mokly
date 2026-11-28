@@ -124,10 +124,16 @@ The head source root is the working repository. The base source root is the
 extracted base commit. Resolution settings select each side's dependency
 installation under the [comparison tiers](./mokly-comparison.md#sides).
 React and React DOM resolve from that side's configuration directory through
-its settings, with one React runtime. The JSX development shim forwards to
-the consumer runtime and attaches invocation source only to Mokly wrappers.
-It also records each [story component use](./mokly-story-component-uses.md)
-and its invocation source.
+its settings, with one React runtime.
+
+Mokly compiles the JSX of each repository module in development mode on both
+compile paths. So each element reaches the JSX development shim with its
+invocation source. The shim forwards each element to the consumer runtime.
+Only a Mokly wrapper receives the invocation source and the `key` of its
+element, as reserved props. The shim also records each
+[story component use](./mokly-story-component-uses.md) with its invocation
+source. Production JSX that a project's Vite plugin still emits for a
+repository module reaches the same shim without invocation sources.
 
 `bundle` evaluates nothing. `cssModules` must install all maps before
 `describe` evaluates the generation. A bundle or evaluation failure returns

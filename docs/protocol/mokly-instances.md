@@ -1,6 +1,6 @@
 # Component Instance Identity
 
-Status: A repeated id of a `defineComponent` wrapper or an HTML component element still fails the build, and a wrapper does not take its id from `key` yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds both, under the [instance id rules](./mokly-instance-ids.md).
+Status: The rule for a Suspense branch with instance or slot markers that the render replaces with its fallback is not settled yet. [Track I decision 11](../../plans/storybook-support.md#track-i-decision-11-suspense-branches-that-the-render-drops) waits for the user. Until then, such a render can fail, although an [unrendered branch](#ownership-regions) has no record. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) applies the answer.
 
 ## Identity And Scope
 
