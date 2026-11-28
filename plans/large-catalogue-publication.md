@@ -1,6 +1,6 @@
 # Large Catalogue Publication
 
-Status: Active. On branch `calummoore/catalogue-size-plan-to-fit-the-upload-pjqr`, no pull request yet. Every decision of this plan waits for the user, and no implementation is approved. The plan-only pull request keeps this plan. The last implementation pull request deletes it, as the `plans` skill says.
+Status: Active. [PR #608](https://github.com/mokly-ai/mokly/pull/608) is open. Every decision of this plan waits for the user, and no implementation is approved. The plan-only pull request keeps this plan. The last implementation pull request deletes it, as the `plans` skill says.
 
 Mokly Cloud refuses the catalogue of a large project. On 2026-11-27, the repository `Firna-AI/conductive` at commit `3371d05f` built with `@mokly/mokly` 0.21.0 into 1,746 MB in 11,030 files. The receiver accepts 512 MiB, about 537 MB, of declared bytes. The index was 48.7 MB with 2,162,642 JSON nodes, and the receiver accepts 8 MiB and 262,144 nodes. A pull-request build wrote 26,070 files, above the ceiling of 20,000, because it copies every document two more times. Conductive had 72 entry files on 2026-11-08 and 664 on 2026-11-27.
 
