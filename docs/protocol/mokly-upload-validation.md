@@ -19,7 +19,7 @@ The catalogue service does not support this Mokly version. Update the service an
 
 | Rejection                                                                                                               | HTTP status            | CLI category                      |
 | ----------------------------------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
-| Unsupported envelope or present non-3 ownership `schemaVersion`                                                         | 426                    | `upload-unsupported-version`      |
+| Present unsupported `schemaVersion` of any Plan file, including the envelope, ownership marker, or catalogue index      | 426                    | `upload-unsupported-version`      |
 | Invalid archive, missing marker version, malformed value/path, catalogue content that fails its check, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
 | Oversized or invalid gzip Blob, decoded mismatch, or other `Content-Encoding`                                           | 400                    | `upload-invalid-bundle`           |
 | Any exceeded limit, including declared file size or path byte length                                                    | 413                    | `upload-too-large`                |
