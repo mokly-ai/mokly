@@ -91,8 +91,12 @@ export class AuthoringRuntime {
     });
   }
 
+  currentSession(): RenderSession | undefined {
+    return this.active.getStore();
+  }
+
   session(): RenderSession {
-    const session = this.active.getStore();
+    const session = this.currentSession();
     if (!session)
       throw new Error("Mokly markers require a sidecar render context");
     return session;

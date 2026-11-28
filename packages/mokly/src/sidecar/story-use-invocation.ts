@@ -20,6 +20,12 @@ export type CreateElement = (
   props: Props,
   key?: unknown,
 ) => Element;
+export type CreateSuppliedElement = (
+  type: Element["type"],
+  props: Props,
+  key?: unknown,
+  original?: Element,
+) => Element;
 
 export function invocation(value: unknown): Invocation | undefined {
   return value && typeof value === "object"

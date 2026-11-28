@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 
-import { innerType, storyComponentType } from "./story-components.js";
+import {
+  forwardRefType,
+  innerType,
+  storyComponentType,
+} from "./story-components.js";
 import type { Props } from "./story-use-invocation.js";
 
 function object(value: unknown): value is object {
@@ -32,6 +36,16 @@ function* componentTypes(type: object): Generator<object> {
   ) {
     seen.add(current);
     yield current;
+  }
+}
+
+export function refComponentKind(
+  type: object,
+): "forwardRef" | "class" | undefined {
+  for (const component of componentTypes(type)) {
+    if ("$$typeof" in component && component.$$typeof === forwardRefType)
+      return "forwardRef";
+    if (reactClass(component)) return "class";
   }
 }
 

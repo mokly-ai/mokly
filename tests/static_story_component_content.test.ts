@@ -5,6 +5,7 @@ import type { EntryDetailV4 } from "../packages/model/dist/index.js";
 
 import { viteFixture } from "./fixtures/vite/support.js";
 import { build, git, json, write } from "./helpers/static_changes.js";
+import { storyMetas } from "./helpers/story_use_render.js";
 
 function badge(implementation: string) {
   return `import { memo } from "react";
@@ -18,8 +19,17 @@ const Body = () => <><Badge key="saved"><i>${label}</i></Badge><Badge key="saved
 export default defineScreen({ title: "Consumer", description: "", relatedDocs: [], render: Body });`;
 }
 
+function refConsumer(label: string) {
+  return `import { createRef } from "react";
+import { defineScreen } from "@mokly/mokly";
+import { Box, Forward } from "./ref-content.js";
+const ref = createRef();
+const Body = () => <Box><Forward ref={ref} label={${JSON.stringify(label)}} /></Box>;
+export default defineScreen({ title: "Ref consumer", description: "", relatedDocs: [], render: Body });`;
+}
+
 for (const vite of [false, true]) {
-  test(`${vite ? "Vite" : "esbuild"} Changes keeps supplied children and folds story implementation edits`, async (context) => {
+  test(`${vite ? "Vite" : "esbuild"} Changes keeps supplied content and folds story implementation edits`, async (context) => {
     const { root } = await viteFixture(context);
     await write(root, ".gitignore", "node_modules/\n.context/\n");
     await write(
@@ -42,6 +52,22 @@ for (const vite of [false, true]) {
     await write(root, "usage/consumer.mockup.tsx", consumer("Before child"));
     await write(
       root,
+      "usage/ref-content.tsx",
+      `import { forwardRef } from "react";
+      export function Box({ children }) { return <section>{children}</section>; }
+      export const Forward = forwardRef(({ label }, ref) => <b>{label}</b>);`,
+    );
+    for (const [file, source] of Object.entries(
+      storyMetas("./ref-content.js", ["Box", "Forward"]),
+    ))
+      await write(root, `usage/${file}`, source);
+    await write(
+      root,
+      "usage/ref-consumer.mockup.tsx",
+      refConsumer("Before label"),
+    );
+    await write(
+      root,
       "usage/affected.mockup.tsx",
       `import { defineScreen } from "@mokly/mokly";
       import { Badge } from "./Badge.js";
@@ -61,12 +87,18 @@ for (const vite of [false, true]) {
     const edited = consumer("After child 😀");
     await write(root, "usage/Badge.tsx", badge("After implementation"));
     await write(root, "usage/consumer.mockup.tsx", edited);
+    await write(
+      root,
+      "usage/ref-consumer.mockup.tsx",
+      refConsumer("After label"),
+    );
     const result = await build(root, [], "plain");
     assert.deepEqual(
       result.index.screens.map(({ path, changes }) => [path, changes]),
       [
         ["affected", { status: "ready", included: false, kind: "unmodified" }],
         ["consumer", { status: "ready", included: true, kind: "changed" }],
+        ["ref-consumer", { status: "ready", included: true, kind: "changed" }],
       ],
     );
     assert.deepEqual(

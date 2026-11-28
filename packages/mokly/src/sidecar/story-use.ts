@@ -9,6 +9,7 @@ import {
   BodyBindings,
   mirrorStatics,
   reactClass,
+  refComponentKind,
 } from "./story-use-bindings.js";
 import {
   prepareStoryUse,
@@ -18,10 +19,12 @@ import {
   invocation,
   storyInvocation,
   type CreateElement,
+  type CreateSuppliedElement,
   type Element,
   type Invocation,
   type Props,
 } from "./story-use-invocation.js";
+import { StoryUseRefs } from "./story-use-refs.js";
 
 type Body = (...args: unknown[]) => ReactNode;
 type Constructor = abstract new (...args: unknown[]) => object;
@@ -35,6 +38,7 @@ interface JsxSource {
 export class StoryUses {
   private readonly bodies = new BodyBindings();
   private readonly early = new WeakMap<object, Invocation>();
+  private readonly refs = new StoryUseRefs();
   private readonly columns = new Map<string, Map<string, number>>();
   private readonly classes = new WeakMap<object, PreparedStoryUse>();
   private factory?: CreateElement;
@@ -44,6 +48,28 @@ export class StoryUses {
   private jsx(): CreateElement {
     return (this.factory ??= this.generation.require("react/jsx-runtime").jsx);
   }
+
+  private readonly createSupplied: CreateSuppliedElement = (
+    type,
+    props,
+    key,
+    original,
+  ) => {
+    const element = this.jsx()(type, props, key);
+    const use = invocation(props);
+    if (
+      original &&
+      use?.type === type &&
+      Object.hasOwn(props, "ref") &&
+      refComponentKind(use.type) === "forwardRef"
+    )
+      this.recordRefUse(
+        element,
+        use,
+        invocation(original.props) ?? this.early.get(original.props),
+      );
+    return element;
+  };
 
   mark(type: object, name?: string): void {
     this.bodies.mark(type, name);
@@ -101,14 +127,21 @@ export class StoryUses {
     const known = this.generation.storyComponents.handles(type).length > 0;
     if (this.generation.definitions && !known && !retained)
       return create(type, props, key);
+    const explicitRef = props && Object.hasOwn(props, "ref");
+    const refKind =
+      explicitRef || retained ? refComponentKind(type) : undefined;
+    if (explicitRef && refKind === "class") return create(type, props, key);
     const use: Invocation = retained
       ? { ...retained, key: key === undefined ? retained.key : key }
       : { type, key, source, slots: [] };
     if (this.bodies.instrumented(type) || retained) {
-      if (known || retained)
-        return create(type, { ...props, [storyInvocation]: use }, key);
-      const element = create(type, props, key);
-      this.early.set(element.props, use);
+      const element = create(
+        type,
+        known || retained ? { ...props, [storyInvocation]: use } : props,
+        key,
+      );
+      if (!known && !retained) this.early.set(element.props, use);
+      if (refKind === "forwardRef") this.recordRefUse(element, use, retained);
       return element;
     }
     const element = create(type, props, key);
@@ -132,7 +165,7 @@ export class StoryUses {
   ): ReactNode {
     const input = Array.from(args);
     if (constructor) return Reflect.construct(original, input, constructor);
-    const use = this.forBody(self, input[0]);
+    const use = this.forBody(self, input[0], input[1]);
     if (!use) return Reflect.apply(original, receiver, input);
     const React = this.generation.runtime.react;
     const state = React.useRef<PreparedStoryUse | null>(null);
@@ -166,9 +199,33 @@ export class StoryUses {
     return withAuthoringErrors(() => prepared.finish(output));
   }
 
-  private forBody(self: object, props: unknown): Invocation | undefined {
+  private recordRefUse(
+    element: Element,
+    use: Invocation,
+    replaces?: Invocation,
+  ): void {
+    this.refs.record(
+      element.props,
+      use,
+      this.generation.runtime.currentSession(),
+      replaces,
+    );
+  }
+
+  private forBody(
+    self: object,
+    props: unknown,
+    ref?: unknown,
+  ): Invocation | undefined {
     if (!props || typeof props !== "object") return;
-    const use = invocation(props) ?? this.early.get(props);
+    let use = invocation(props) ?? this.early.get(props);
+    if (!use && ref != null)
+      use = this.refs.match(
+        props,
+        ref,
+        this.generation.runtime.currentSession(),
+        (type) => this.generation.storyComponents.handles(type).length > 0,
+      );
     if (
       use &&
       this.bodies.matches(use.type, self) &&
@@ -185,7 +242,7 @@ export class StoryUses {
         props as Props,
         use,
         (type) => this.bodies.instrumented(type),
-        this.jsx(),
+        this.createSupplied,
       ),
     );
   }

@@ -16,7 +16,7 @@ import { storyComponentPath } from "./story-components.js";
 import { originalSlot, storyUseContent } from "./story-use-content.js";
 import {
   storyInvocation,
-  type CreateElement,
+  type CreateSuppliedElement,
   type Invocation,
   type Props,
 } from "./story-use-invocation.js";
@@ -33,7 +33,7 @@ export function prepareStoryUse(
   input: Props,
   use: Invocation,
   instrumented: (type: object) => boolean,
-  create: CreateElement,
+  create: CreateSuppliedElement,
 ): PreparedStoryUse {
   const { runtime } = generation;
   const React = runtime.react;

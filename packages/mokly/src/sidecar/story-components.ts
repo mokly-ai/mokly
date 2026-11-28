@@ -2,7 +2,7 @@ import { wrapperBrand } from "../authoring/runtime.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 
 const memoType = Symbol.for("react.memo");
-const forwardRefType = Symbol.for("react.forward_ref");
+export const forwardRefType = Symbol.for("react.forward_ref");
 
 function identity(value: unknown): value is object {
   return (

@@ -18,7 +18,7 @@ import { mirrorStatics } from "./story-use-bindings.js";
 import {
   storyInvocation,
   invocation,
-  type CreateElement,
+  type CreateSuppliedElement,
   type Element,
   type Props,
 } from "./story-use-invocation.js";
@@ -35,7 +35,7 @@ export function storyUseContent(
   parent: Owner,
   receiver: ContentReceiver,
   instrumented: (type: object) => boolean,
-  create: CreateElement,
+  create: CreateSuppliedElement,
 ): { output: Props; data: Props } {
   const React = runtime.react;
   const names = new Set<string>();
@@ -70,6 +70,7 @@ export function storyUseContent(
         type,
         { ...element.props, [storyInvocation]: attachment },
         element.key ?? undefined,
+        element,
       );
       rememberSlot(marked, slot);
       return marked;
