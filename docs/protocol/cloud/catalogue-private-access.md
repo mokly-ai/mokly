@@ -1,6 +1,6 @@
 # Catalogue Private Access
 
-Status: The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it.
+Status: The app sends no bearer token yet. The [app access milestone](../../../plans/private-catalogue-embedded-access.md#milestone-8-app-access-through-the-bearer-token) adds it. The app still offers a new-tab action on its blocked stage. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) removes it.
 
 This is the private access sub-contract of [Catalogue hosting](./catalogue-hosting.md).
 Every file of a private publication needs a credential except the start page

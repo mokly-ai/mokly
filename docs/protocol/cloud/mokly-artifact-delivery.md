@@ -48,8 +48,8 @@ The standalone shell sends `credentials: "same-origin"` on its
 index, detail, deployment, comparison and removed-preview reads.
 The root React API
 accepts index and detail objects, so the app fetches the index and every
-detail itself, for public and private catalogues, with the catalogue cookie
-for a private one. The package has no transport for comparison documents or
+detail itself, for public and private catalogues, with the credential that
+[Viewer host](./viewer-host.md#sources) defines for a private one. The package has no transport for comparison documents or
 removed previews. Private comparisons and removed-entry previews stay unavailable
 in the embedded viewer. The standalone shell needs a catalogue cookie
 in its own browser cookie store.

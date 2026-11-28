@@ -161,7 +161,7 @@ The user answered D1 to D7 with "1 = A, 2 = A, 3 = B, 4 = A, 5 = A, 6 = A,
   gives a way forward that works, in the same pull request. The answer also
   resolves that follow-up item.
 
-### Open decision, 2026-11-27
+### Open decisions, 2026-11-27 and 2026-11-28
 
 - **D8. The words on the private comparison overlay.** The overlay reuses the
   blocked stage card, so D7 gives it words that are false there. The message
@@ -171,6 +171,21 @@ The user answered D1 to D7 with "1 = A, 2 = A, 3 = B, 4 = A, 5 = A, 6 = A,
   available for private publications** and the text "Choose another screen to
   keep browsing." D8 blocks the last TODO of Milestone 4 and the overlay part
   of Milestone 9.
+- **D9. Which frames get the bearer, and how renewal reaches them.** Open
+  since 2026-11-28, from findings 2, 7 and 8 of the review of the Milestone 7
+  branch. The adapter sends each renewal to every ready frame, including
+  frames that open with the cookie, but frames that load directly through an
+  existing worker, and a renewal that comes due while no frame is ready, get
+  none. The recommendation is D with G: after its handshake the probe sends the
+  existing `request` once when the access worker controls its page, the
+  adapter renews only frames that asked, and the start page removes a stale
+  worker when the cookie check passes. The other options are A (call `access`
+  after the first direct `ready`), B (a host option with the confirmed token),
+  C (a new probe message), E (send or renew a token at each `ready`) and F (D,
+  and the start page asks for the token only after the cookie fails). D9 must
+  be answered before this branch merges into `main`, because D, F and G change
+  the published start page and probe. The findings file of that branch holds
+  the full item.
 
 ### Design calls
 
@@ -489,7 +504,9 @@ Depends on: 9
       not through a site setting that also blocks workers: a private screen
       loads through the worker, with its images and styles.
 - [ ] The same spec checks a renewal after the token's lifetime, with a
-      test clock, not a wait.
+      test clock, not a wait. It reads the bearer of a request after the
+      renewal, or moves the server's clock past the old expiry, so that it
+      fails when the renewed token never reaches the worker.
 - [ ] Update the follow-up items that name the changed rules:
       `private-frames-break-after-cookie-expiry.md` and
       `private-comparison-overlay-blocks-current.md`. Delete

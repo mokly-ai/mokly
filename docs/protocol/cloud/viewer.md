@@ -31,8 +31,9 @@ mapping, the consumed `onError` codes and the version failure.
 ## Private Artifact Limit
 
 The app reads the catalogue index and every entry detail itself, with the
-catalogue cookie for a private catalogue, and passes them to the package as
-objects, as [Viewer host](./viewer-host.md#sources) defines.
+credential of [Catalogue isolation](#catalogue-isolation) for a private
+catalogue, and passes them to the package as objects, as
+[Viewer host](./viewer-host.md#sources) defines.
 The viewer sends its own reads with `credentials: "omit"`, and its root
 React API has no transport for them. These reads are the documents of a pinned
 comparison, which its Side by side, Overlay, Difference and Swipe modes
