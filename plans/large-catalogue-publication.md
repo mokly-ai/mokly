@@ -1,6 +1,6 @@
 # Large Catalogue Publication
 
-Status: Active. [PR #608](https://github.com/mokly-ai/mokly/pull/608) is open. Every decision of this plan waits for the user, and no implementation is approved. The plan-only pull request keeps this plan. The last implementation pull request deletes it, as the `plans` skill says.
+Status: Active, on the branch `calummoore/catalogue-size-plan-to-fit-the-upload-pjqr`. No pull request is open. The planning pull request, PR #608, closed on 2026-11-28 at the user's request, because a pull request opens only when its implementation is complete. Every decision of this plan waits for the user, and no implementation is approved. The first implementation pull request brings this plan to `main` and keeps it. The last implementation pull request deletes it, as the `plans` skill says.
 
 Mokly Cloud refuses the catalogue of a large project. On 2026-11-27, the repository `Firna-AI/conductive` at commit `3371d05f` built with `@mokly/mokly` 0.21.0 into 1,746 MB in 11,030 files. The receiver accepts 512 MiB, about 537 MB, of declared bytes. The index was 48.7 MB with 2,162,642 JSON nodes, and the receiver accepts 8 MiB and 262,144 nodes. A pull-request build wrote 26,070 files, above the ceiling of 20,000, because it copies every document two more times. Conductive had 72 entry files on 2026-11-08 and 664 on 2026-11-27.
 
@@ -558,7 +558,7 @@ Each milestone also searches for every other consumer of its old way, and it mov
 
 ## Implementation Order
 
-This plan-only pull request merges first, after the user answers and the rewrite below. Under the recommended answers, the work then reaches `main` in two implementation pull requests, as item 8 proposes.
+The plan stays on this branch until the user answers and the rewrite below is done. Under the recommended answers, the work then reaches `main` in two implementation pull requests, as item 8 proposes. Each pull request opens only when its milestones are complete, as the user asked on 2026-11-28.
 
 - The first implementation pull request carries Milestones 1 to 4. Milestones 2 and 3 can run in parallel workspaces after Milestone 1, because they change different files. If Milestone 3 changes a contract fixture, it merges after Milestone 2.
 - The second implementation pull request starts from `main` after the first one merges, and after the bounded-memory pull request merges. Milestones 5, 6 and 7 run one after the other, because each changes the detail type and the fixtures. Milestones 8 and 9 close it.
@@ -591,7 +591,7 @@ Under option A, C, E or F of item 7, one more question goes to the user. How do 
 
 ## Milestone 1: Documentation and protocol
 
-Depends on: the merge of this plan-only pull request, after the user answers
+Depends on: the user's answers and the rewrite in Implementation Order
 
 Write the chosen requirements before any code changes. Each page whose behaviour waits gets a status line that links the milestone heading that builds it.
 
