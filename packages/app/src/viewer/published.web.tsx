@@ -22,13 +22,11 @@ import { PlaceholderViewer } from "./placeholder";
 import { CatalogueSourceContext } from "./source-context";
 import { AccessBlocked } from "./stage";
 
-function comparisonOverlay(
-  catalogueOrigin: string,
-): PackageSlots["stageOverlay"] {
+function comparisonOverlay(): PackageSlots["stageOverlay"] {
   return {
     content: (
       <div className="fo-viewer-overlay fo-stage-canvas">
-        <AccessBlocked catalogueUrl={catalogueOrigin} />
+        <AccessBlocked />
       </div>
     ),
     pointerEvents: "auto",
@@ -61,7 +59,7 @@ function comparisonKey(
  * reported error goes to the document's source, which latches a `version`
  * error until a new source or a document reload, and the stage then draws the
  * version card in place of the package. A private `comparison` error adds the
- * stage overlay that offers the catalogue in its own tab.
+ * stage overlay, which draws the blocked stage card.
  */
 export function ViewerHost(props: ViewerHostProps) {
   const {
@@ -160,7 +158,7 @@ export function ViewerHost(props: ViewerHostProps) {
   const packageChrome: PackageSlots = comparisonBlocked
     ? {
         ...composed,
-        stageOverlay: comparisonOverlay(catalogue.source.origin),
+        stageOverlay: comparisonOverlay(),
       }
     : { ...composed };
   // The wrapper's mark lets the Mac window's drag check find what the package

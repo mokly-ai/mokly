@@ -1,7 +1,5 @@
 # Publication Viewer
 
-Status: The blocked stage does not have its title and text yet, and it still offers a new tab. The [blocked stage words milestone](../../../plans/private-catalogue-embedded-access.md#milestone-9-blocked-stage-words) adds them.
-
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
 links. The app hosts the workspace `@mokly/viewer` and fills its slots with

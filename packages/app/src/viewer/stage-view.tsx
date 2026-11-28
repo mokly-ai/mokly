@@ -126,7 +126,6 @@ function unpublishedCard(
 function readyView(
   access: AccessState,
   catalogue: SourceState,
-  catalogueUrl: string,
   actions: StageActions,
 ): StageView {
   const opening: StageView = {
@@ -145,7 +144,7 @@ function readyView(
   if (access.status === "blocked") {
     return {
       status: "unavailable",
-      message: <AccessBlocked catalogueUrl={catalogueUrl} />,
+      message: <AccessBlocked />,
     };
   }
   if (catalogue.failure) {
@@ -276,10 +275,5 @@ export function stageView(input: {
         ),
     };
   }
-  return readyView(
-    access,
-    input.catalogue,
-    publication.catalogueUrl ?? "",
-    actions,
-  );
+  return readyView(access, input.catalogue, actions);
 }

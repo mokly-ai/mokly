@@ -504,12 +504,16 @@ Tags: ui
 
 Depends on: 4, 8
 
-- [ ] Give `AccessBlocked` in `packages/app/src/viewer/stage.tsx` the words
+- [x] Give `AccessBlocked` in `packages/app/src/viewer/stage.tsx` the words
       of Milestone 4, and remove its action **Open catalogue in a new tab**.
-- [ ] Remove the allowances that Milestone 4 added to
+      Branch: `calummoore/embedded-access-blocked-stage-words-qxdt`.
+- [x] Remove the allowances that Milestone 4 added to
       `docs/mockups/src/_tests_/app-parity-allowances.ts` for the new words.
-- [ ] Update the app tests of the stage, and check the stage in a browser
+      Branch: `calummoore/embedded-access-blocked-stage-words-qxdt`.
+- [x] Update the app tests of the stage, and check the stage in a browser
       at desktop and mobile widths.
+      Branch: `calummoore/embedded-access-blocked-stage-words-qxdt`.
+      Screenshots: `.context/private-catalogue-embedded-access/m9/`.
 
 ## Milestone 10: End-to-end proof
 
