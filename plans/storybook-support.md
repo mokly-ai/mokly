@@ -4146,7 +4146,9 @@ own lines of this plan.
 - I10. Track I decision 3 settles how a use renders its content. Changed on
   2026-11-28: its answer is a spike of J, with I as the fallback. The spike
   and its check live under `.context/storybook-support/track-i/spike-j/` in
-  the track I workspace. The build of J or I waits for the spike result.
+  the track I workspace. Their result is in decision 3. The build of J or I
+  waits for the option that the user names after that result, and for track
+  I decisions 10 and 11.
 
 The options check of 2026-11-25 for these calls and for track I decision 1
 added options D and E to decision 1, changed I2, I4, I5, I6, I7, and I9, and
@@ -4426,6 +4428,103 @@ decision 2 and options E to H to decision 3. The reports are under
   changes. I keeps the usage list, and J also keeps the folding. The design
   note of H and its decisions 4 to 9 found that H breaks the private-runtime
   rule and the failed-views rule.
+- **Spike result, 2026-11-28:** the spike of J ran in the track I workspace
+  with its independent check. Both used React and react-dom 19.2.3, esbuild
+  0.28.2, and Vite 8.3.8 on Node 24.21.0 and 22.15.0. The evidence is under
+  `.context/storybook-support/track-i/spike-j/` in that workspace: the spike
+  in `REPORT.md` and `out/`, and the check in `check/out/`.
+  - J as the spike built it replaces each component binding with a wrapper
+    after the definition. It fails these cases:
+    - a cyclic importer keeps the original function;
+    - a class body or a named function that names itself sees another
+      value;
+    - a subclass of a wrapped class fails to construct, and a prototype
+      read gives `undefined`;
+    - invocation lines move by three or more;
+    - every compiled component renders through an extra layer, so its own
+      `useId` changes.
+  - The check's variant `b` keeps J's choice. It marks each component where
+    it is defined, and it uses the Symbol carrier, E's mirrors for supplied
+    HTML elements, and I's switch. It runs the original body of each
+    function, arrow, inner function of `memo` and `forwardRef`, and class
+    `render` method inside a helper, and keeps the binding. Call results and
+    tagged templates keep a binding wrapper. `b` passed every identity case
+    on both compilers and both Node versions, with the cyclic case included.
+    It adds no layer, and it keeps 5 of 6 `useId` values where E and J keep 1.
+  - Under the user's rule, J works for every tested case, within the limits
+    that its text accepts, only in the form of `b`. J in the form of the
+    spike does not. The primary orchestrator relays this result to the user,
+    and the build waits for the option that the user then names.
+  - The verdicts:
+
+    | Question                | Spike   | Check                                                          |
+    | ----------------------- | ------- | -------------------------------------------------------------- |
+    | 1. Identity             | Partly  | Partly for the spike's J, proven for `b`                       |
+    | 2. Detection            | Partly  | Partly: destructured exports get no mark                       |
+    | 3. Hidden data          | Refuted | Partly: the Symbol survives clones, maps, and spreads          |
+    | 4. Markers              | Partly  | Partly: the core rejects implicit slots until I9 lands         |
+    | 5. Patterns             | Partly  | Partly: 12 of 14 for J, 9 of 14 for E, content can bypass slot |
+    | 6. Rules in force       | Partly  | Partly: dropped Suspense branches fail today's code too        |
+    | 7. Both sides and Serve | Partly  | Partly: both sides use the same transform, not rerun           |
+    | 8. Installed packages   | Proven  | Proven, not rerun                                              |
+    | 9. Cost                 | Proven  | Proven for the spike's J, `b` not measured                     |
+
+  - The cost of the spike's J against E, in milliseconds, as medians. The
+    1-minute load average was between 2.79 and 3.79 on four CPUs. E has no
+    transform step.
+
+    | Node    | Corpus         | Compiler | J transform |      E / J bundle |    E / J render | J ÷ E render |
+    | ------- | -------------- | -------- | ----------: | ----------------: | --------------: | -----------: |
+    | 24.21.0 | Example        | esbuild  |       97.00 |   122.78 / 124.81 |   13.04 / 12.30 |        0.94× |
+    | 24.21.0 | Example        | Vite     |       97.00 |   203.64 / 226.68 |   13.89 / 13.08 |        0.94× |
+    | 24.21.0 | 500 components | esbuild  |       35.17 |   627.43 / 742.83 | 252.16 / 220.13 |        0.87× |
+    | 24.21.0 | 500 components | Vite     |       35.17 | 1545.29 / 1655.03 | 199.69 / 245.48 |        1.23× |
+    | 22.15.0 | Example        | esbuild  |      100.52 |    91.45 / 141.90 |   12.27 / 11.14 |        0.91× |
+    | 22.15.0 | Example        | Vite     |      100.52 |   235.86 / 198.81 |   12.41 / 12.98 |        1.05× |
+    | 22.15.0 | 500 components | esbuild  |       33.60 |   583.17 / 902.86 | 250.68 / 237.44 |        0.95× |
+    | 22.15.0 | 500 components | Vite     |       33.60 | 1893.01 / 1849.85 | 266.06 / 248.69 |        0.93× |
+
+  - The check's corrections to the spike report:
+    - Question 3 is partly, not refuted. React copies props without Symbol
+      keys only when the config holds `key` or the code calls
+      `createElement`. A shim that moves a spread `key` into the key
+      argument keeps the Symbol in 3 of 4 spread forms. The fourth, a `key`
+      after a spread, compiles to `createElement`, and
+      [story-uses-after-spread-keys.md](follow-ups/story-uses-after-spread-keys.md)
+      covers it.
+    - The spike's J warnings name wrong lines. `b` keeps the lines.
+    - A styled-components tagged template gets no mark in the spike's J.
+      `b` wraps it as a call result. A destructured export gets no mark in
+      either, and I's switch is its remedy.
+    - After `useId` values are normalized, J matches 12 of 14 plain outputs
+      and E matches 9 of 14. The two that J misses are filters by HTML
+      element type and by installed component type, which J's text leaves
+      to E's mirrors and I's switch.
+    - Today's branch code, `defineComponent` wrappers, and `MockLink
+asChild` fail with "render dropped a Mokly marker" when Suspense drops
+      a marked branch. With no story use recorded, the wrapper and
+      `MockLink` cases still fail, so the defect is older than track I.
+      Track I decision 11 holds it.
+    - Under the Vite adapter with `NODE_ENV=production`, the development
+      JSX shim does not run, and today's branch records no story use. This
+      breaks design call I2, so the build fixes it without a decision.
+  - Design calls of 2026-11-28 for the build of J in the form of `b`, if J
+    applies:
+    - Mokly keeps its work for each component instance in a ref, because
+      React calls a function again after an update in the render phase.
+    - The product body runs outside Mokly's error scope, so that a product
+      throw stays the story's failure under the track F rules.
+    - The transform adds no line. An invocation location that it cannot
+      keep is left out, never guessed.
+    - The shim gives use data only to story component elements, moves a
+      spread `key` into the key argument, and carries the slot of an
+      element that a component re-creates with its own type.
+    - The transform reuses `@babel/parser`, which the repository already
+      has.
+    - Rules that a component body inserts through a style library take
+      that component as their owner, as the render records page requires.
+      The spike did not test it, so the build tests it.
+    - The build measures the cost of `b` against E on both Node versions.
 
 The design note of 2026-11-26 for the answer H, with its spike and its
 options check, found that H breaks requirements in force and needs the
@@ -4674,6 +4773,117 @@ because the answer of decision 3 no longer takes H.
   and need no reconciler.
 - **Action:** ask the user, because A keeps one path for all catalogues and B
   keeps the other catalogues unchanged.
+
+The spike of J and its check of 2026-11-28 raised the two decisions below.
+Both apply to E, I, and J alike, so they do not decide between J and I.
+
+#### Track I decision 10: Supplied content that bypasses its slot
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Review, from the check of the spike of J.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-component-changes.md:107` and `:133`,
+  `docs/protocol/mokly-story-component-uses.md:51`.
+- **Background:** Under decision 21, each element that a screen passes into
+  a story component use becomes a slot of the use. Changes compares the
+  slot in the screen's own view and the rest of the use only by its id, its
+  path, and its props digest. Under E and J the supplied element keeps its
+  props, so the receiving component can read them, re-create the element, or
+  render its content without the element. Track I decision 7 asked the same
+  question for H and closed without an answer.
+- **Problem:** The check found 6 visible edits of supplied content that
+  leave the compared inputs of the screen equal under J, and 3 under E. A
+  fallback for a slot without a placement catches 5 of them. One edit stays
+  hidden under every tested form: a receiver that renders the slot and also
+  reads the element's props outside it.
+- **Impact if no action:** After a visible edit, Changes shows the screen as
+  unchanged. This breaks the rule that missing input evidence never means
+  unchanged inputs.
+- **Root question:** How does Changes keep every edit of supplied content
+  when the receiving component reads the content or renders it outside its
+  slot?
+- **Options:**
+  - **A.** Keep the projection, and state the limit in the guide. The six
+    edits drop out of Changes. Effort: Small.
+  - **B.** A use with a supplied slot that gets no placement keeps its whole
+    output in the screen's comparison. The edit of a slot that is placed and
+    also read stays hidden. A use whose component never renders a supplied
+    slot loses its folding. Effort: Medium.
+  - **C.** The props digest of a use also holds a canonical form of each
+    supplied element: its type name, its key, its data props, and its nested
+    elements. A screen edit of supplied content then changes the use's
+    inputs. An edit of the code of a screen component inside that content,
+    with equal props, stays hidden. Effort: Medium.
+  - **D.** Do B and C. Every tested visible edit then stays visible, and uses
+    whose content stays in its slots keep their folding. The check did not
+    build C. Effort: Large.
+  - **E.** Do B, and also fall back when other code reads a supplied
+    element's props, which a proxy detects. Radix `asChild` reads every prop,
+    so most uses lose their folding. Effort: Large.
+- **Left out:** A warning or an error for such a use: a new error that the
+  user did not approve, for code that renders correctly. No projection for
+  every use with content: decision 21 rejected it.
+- **Wider fix:** D.
+- **Previous examples:** Track I decision 7, and option C of track I
+  decision 3.
+- **Related:** Track I decision 11. A use whose slots are all dropped with a
+  Suspense branch falls under B. Option I of decision 3 needs the core
+  feature of B, a usage record whose output stays in the screen's
+  comparison.
+- **Recommendation:** D. It is the only option that keeps every tested
+  visible edit while uses whose content stays in its slots keep their
+  folding.
+- **Action:** ask the user, because B applies the rule that decision 21
+  rejected to some uses, and C adds content to the props digest, which no
+  rule covers.
+
+#### Track I decision 11: Suspense branches that the render drops
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium.
+- **Source:** Review, from the check of the spike of J.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/markup.ts:104`,
+  `docs/protocol/mokly-instances.md:196`,
+  `docs/protocol/mokly-sidecar-render-records.md:40`.
+- **Background:** Each Mokly marker is a template element with a random
+  token that the sidecar records. A render fails with "render dropped a
+  Mokly marker" when a recorded token is not in the output, and the render
+  records page requires complete consumption of the markers. On the server,
+  a Suspense boundary whose content suspends or throws renders its fallback
+  and drops that content. `defineComponent` wrappers and `MockLink asChild`
+  write markers on `origin/main`, and track I gives every story component
+  use markers. The instances page says that an unrendered branch has no
+  record.
+- **Problem:** Today's branch sidecar fails 8 of 10 scenarios that plain
+  React renders with the fallback. The wrapper and `MockLink` cases fail
+  without track I too.
+- **Impact if no action:** A screen or a story with a pending or failing
+  Suspense branch, such as a `React.lazy` section, stops the build with
+  `render-failed` once it renders a story component, under E, I, and J.
+- **Root question:** What does Mokly record for a marked branch that
+  Suspense replaces with its fallback?
+- **Options:**
+  - **A.** Keep the failure. Each such view stops the build. Effort: Small.
+  - **B.** Drop the records of each region whose two tokens never reach the
+    output, and renumber the input orders. A region that lost only one
+    token, and a token that leaks into the output as text, still fail. A
+    later use keeps the number that it took, such as `Healthy-3` after a
+    dropped `Healthy-2`. Effort: Medium.
+  - **C.** Do B, and recompute the ids, keys, and markers of later uses after
+    the render, so that their numbers close up. Effort: Large.
+- **Left out:** A failed view or a warning for such a view: the product
+  renders the fallback, and a warning would fail `--strict` for correct
+  code. A second render without uses: it costs a render and gives no usage
+  evidence.
+- **Wider fix:** B. It covers every marker kind.
+- **Previous examples:** None found.
+- **Related:** Track I decision 10.
+- **Recommendation:** B. It follows the rule for unrendered branches,
+  matched plain React in every tested scenario that plain React renders, and
+  keeps the checks for a forged or partly dropped marker.
+- **Action:** ask the user, because B changes the requirement of complete
+  marker consumption on the render records page and overrides a render
+  failure that `origin/main` has.
 
 ## Milestone 35: Story component usage
 
