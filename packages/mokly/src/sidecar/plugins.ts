@@ -20,7 +20,7 @@ import {
   authoringModulePath,
   authoringModuleSource,
   cssModuleSource,
-  jsxDevelopmentModuleSource,
+  jsxModuleSource,
   runtimeImportAllowed,
 } from "./virtual-modules.js";
 
@@ -140,10 +140,11 @@ export function consumerPlugins(
           namespace: "mokly-jsx",
         }));
         build.onLoad({ filter: /.*/, namespace: "mokly-jsx" }, (args) => ({
-          contents: jsxDevelopmentModuleSource(
+          contents: jsxModuleSource(
             root,
             params.configurationDirectory,
             args.path === "jsx" && params.storiesFiles.length > 0,
+            "development",
           ),
           resolveDir: root,
           loader: "js",

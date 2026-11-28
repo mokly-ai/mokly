@@ -13,8 +13,16 @@ import {
   startSidecar,
 } from "./helpers/sidecar.js";
 
-for (const vite of [false, true]) {
-  test(`${vite ? "Vite" : "esbuild"} records rendered story components and their wrappers`, async (context) => {
+for (const { name, vite, forceProductionJsx } of [
+  { name: "esbuild", vite: false },
+  { name: "Vite", vite: true },
+  {
+    name: "Vite with a production JSX plugin",
+    vite: true,
+    forceProductionJsx: true,
+  },
+]) {
+  test(`${name} records rendered story components and their wrappers`, async (context) => {
     const { root, params } = await viteFixture(context);
     await fs.cp(
       path.join(sidecarFixture, "story-usage"),
@@ -23,7 +31,26 @@ for (const vite of [false, true]) {
         recursive: true,
       },
     );
-    const sidecar = startSidecar(context, root);
+    if (forceProductionJsx)
+      await fs.writeFile(
+        path.join(root, "vite.config.ts"),
+        `import { transformWithOxc } from "vite";
+        export default { plugins: [{
+          name: "force-production-jsx",
+          enforce: "pre",
+          async transform(code, id) {
+            if (!id.endsWith("/usage/screen.mockup.tsx")) return;
+            const result = await transformWithOxc(code, id, {
+              jsx: { runtime: "automatic", development: false },
+            });
+            return { code: result.code, map: result.map };
+          },
+        }] };`,
+      );
+    const sidecar = startSidecar(context, root, {
+      ...process.env,
+      NODE_ENV: undefined,
+    });
     await sidecar.call("hello");
     const { generation } = await sidecar.call<BundleResult>("bundle", {
       ...params,
@@ -79,6 +106,22 @@ for (const vite of [false, true]) {
       id: ["string", "original-id"],
       label: ["string", "Memo"],
     });
+    const sites = [
+      [17, 9],
+      [23, 9],
+      [24, 9],
+      [25, 9],
+      [26, 9],
+      [7, 15],
+    ];
+    assert.deepEqual(
+      result.instances.map(({ source }) => source),
+      sites.map(([line, column]) =>
+        forceProductionJsx
+          ? undefined
+          : { path: "usage/screen.mockup.tsx", line, column },
+      ),
+    );
     assert.deepEqual(result.slots, []);
     assert.match(
       result.html,

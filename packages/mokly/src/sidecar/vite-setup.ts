@@ -131,6 +131,8 @@ async function loadSetup(
       "development",
       false,
       (config) => {
+        if (config.oxc && typeof config.oxc.jsx === "object")
+          config.oxc.jsx.development = true;
         postcss.configure(vite, config);
         configureViteCss(config, lookup, css);
       },

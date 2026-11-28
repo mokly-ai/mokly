@@ -8,6 +8,7 @@ import type { ModulePaths } from "./module-paths.js";
 export const viteEntry = "\0mokly-entry";
 export const viteJsx = "\0mokly-jsx";
 export const viteDependencyJsx = "\0mokly-jsx-dependency";
+export const viteProductionJsx = "\0mokly-jsx-production";
 
 export function viteCss(file: string): string {
   return "\0mokly-css:" + Buffer.from(file).toString("base64url");

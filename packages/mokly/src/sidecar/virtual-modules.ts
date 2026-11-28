@@ -45,22 +45,35 @@ export function runtimeImportAllowed(
 }
 
 /** Build the JSX shim with call-site paths resolved from the configuration. */
-export function jsxDevelopmentModuleSource(
+export function jsxModuleSource(
   root: string,
   configurationDirectory: string,
   recordStoryUses: boolean,
+  mode: "development" | "production",
 ): string {
-  return `import { jsx, jsxs, Fragment } from "react/jsx-runtime";
+  const entryPoints =
+    mode === "development"
+      ? `export function jsxDEV(type, props, key, staticChildren, source) {
+          return record(staticChildren ? reactJsx.jsxs : reactJsx.jsx, type, props, key, source);
+        }`
+      : `export * from "react/jsx-runtime";
+        export default reactJsx.default;
+        export function jsx(type, props, key) {
+          return record(reactJsx.jsx, type, props, key);
+        }
+        export function jsxs(type, props, key) {
+          return record(reactJsx.jsxs, type, props, key);
+        }`;
+  return `import * as reactJsx from "react/jsx-runtime";
         import { resolve } from "node:path";
         ${recordStoryUses ? 'import runtime from "mokly:runtime";' : ""}
-        export { Fragment };
+        export const Fragment = reactJsx.Fragment;
         const locate = source => ({...source, fileName: resolve(${JSON.stringify(path.resolve(root, configurationDirectory))}, source.fileName)});
         const invocationKey = (props, key) => {
           const spreadKey = Object.getOwnPropertyDescriptor(props ?? {}, "key")?.value;
           return spreadKey === undefined ? key : spreadKey;
         };
-        export function jsxDEV(type, props, key, staticChildren, source) {
-          const create = staticChildren ? jsxs : jsx;
+        function record(create, type, props, key, source) {
           if (type && type[Symbol.for("mokly.component")])
             return create(type, {...props, __moklyKey: invocationKey(props, key),
               ...(source ? {__moklySource: locate(source)} : {})}, key);
@@ -69,12 +82,13 @@ export function jsxDevelopmentModuleSource(
               ? `
           if (typeof type === "function" || (type && typeof type === "object")) {
             return runtime.storyUse(create(type, props, key), invocationKey(props, key),
-              source && typeof source.fileName === "string" ? locate(source) : undefined, jsx);
+              source && typeof source.fileName === "string" ? locate(source) : undefined, reactJsx.jsx);
           }`
               : ""
           }
           return create(type, props, key);
-        }`;
+        }
+        ${entryPoints}`;
 }
 
 /** Build the CSS Modules stub with caller-selected runtime and class imports. */

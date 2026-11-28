@@ -10,7 +10,7 @@ import {
   authoringModulePath,
   authoringModuleSource,
   cssModuleSource,
-  jsxDevelopmentModuleSource,
+  jsxModuleSource,
   runtimeImportAllowed,
 } from "./virtual-modules.js";
 import {
@@ -37,7 +37,10 @@ import {
   viteFile,
   viteId,
   viteJsx,
+  viteProductionJsx,
 } from "./vite-urls.js";
+
+const jsxModules = new Set([viteJsx, viteDependencyJsx, viteProductionJsx]);
 
 export interface ViteInputs {
   params: BundleParams;
@@ -74,12 +77,7 @@ export function moklyViteFirstPlugin(
         source = viteId(source);
         const inline = css.forId(source);
         if (inline) return inline.id;
-        if (
-          source === viteEntry ||
-          source === viteJsx ||
-          source === viteDependencyJsx
-        )
-          return source;
+        if (source === viteEntry || jsxModules.has(source)) return source;
         if (importer === viteEntry) {
           const file = viteFile(source);
           if (file && input.paths.configuredFile(file))
@@ -89,8 +87,9 @@ export function moklyViteFirstPlugin(
           source.startsWith("mokly:runtime") ||
           source.startsWith(cssModulePrefix)
         ) {
+          const caller = viteId(importer ?? "");
           const namespace =
-            viteId(importer ?? "") === viteJsx
+            caller === viteJsx || caller === viteProductionJsx
               ? "mokly-jsx"
               : importer?.startsWith("\0mokly-authoring:")
                 ? "mokly-authoring"
@@ -142,8 +141,7 @@ export async function resolveViteLibrary(
   const react = viteReactImport(
     source,
     input.peers,
-    !input.params.storiesFiles.length ||
-      (!!file && input.paths.repositoryOwned(file)),
+    !!file && input.paths.repositoryOwned(file),
   );
   if (react) return react;
   return input.styles.resolve(source, importer, resolve, input.external);
@@ -196,11 +194,12 @@ export function moklyVitePlugin(
       const inline = css.forId(id);
       const { params, paths } = input;
       if (id === viteEntry) return input.entry;
-      if (id === viteJsx || id === viteDependencyJsx)
-        return jsxDevelopmentModuleSource(
+      if (jsxModules.has(id))
+        return jsxModuleSource(
           paths.sourceRoot,
           params.configurationDirectory,
-          id === viteJsx && params.storiesFiles.length > 0,
+          id !== viteDependencyJsx && params.storiesFiles.length > 0,
+          id === viteProductionJsx ? "production" : "development",
         );
       if (id.startsWith("\0mokly-authoring:"))
         return (
