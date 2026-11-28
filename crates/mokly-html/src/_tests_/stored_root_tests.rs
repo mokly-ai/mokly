@@ -46,6 +46,7 @@ fn stored_roots_keep_variant_props_axes_slots_and_current_handles_without_render
             method: RenderMethod::Component,
             slots: BTreeMap::from([("footer".into(), "current:footer".into())]),
             stylesheets: vec![],
+            content_slots: None,
         },
     );
     let recorded = Arc::new(Mutex::new(Vec::new()));

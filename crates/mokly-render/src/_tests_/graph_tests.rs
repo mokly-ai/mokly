@@ -107,6 +107,7 @@ fn hash_in_module_path_keeps_its_stylesheet_root_and_reports_route_error() {
                     method: RenderMethod::Page,
                     slots: BTreeMap::new(),
                     stylesheets: Vec::new(),
+                    content_slots: None,
                 },
             )]),
             generation: Some(JavaScriptGeneration {

@@ -12,7 +12,6 @@ import {
 import type { InstanceDraft } from "../generated/sidecar/InstanceDraft.js";
 
 import type { Generation } from "./bundle.js";
-import { storyComponentPath } from "./story-components.js";
 import { originalSlot, storyUseContent } from "./story-use-content.js";
 import {
   storyInvocation,
@@ -46,16 +45,17 @@ export function prepareStoryUse(
 
   const supplier = originalSlot(use.slots);
   const parent = supplier ?? surrounding;
-  const componentPath =
+  const component =
     generation.bindings &&
-    storyComponentPath(
-      generation.storyComponents.handles(use.type),
+    generation.storyComponents.entry(
+      use.type,
       generation.bindings,
       session.storyComponentHandle,
     );
   let props = clean;
   let draft: InstanceDraft | undefined;
-  if (componentPath) {
+  if (component) {
+    const componentPath = component.path;
     const { id, numbered } = resolveInstanceId(
       componentPath.split("/").at(-1)!,
       parent.seen,
@@ -64,15 +64,17 @@ export function prepareStoryUse(
       generation.params.instanceNameProps,
     );
     const placement = instancePlacement(session, parent, id);
-    const content = storyUseContent(
-      runtime,
-      session,
-      clean,
-      parent,
-      placement,
-      instrumented,
-      create,
-    );
+    const content = component.contentSlots
+      ? storyUseContent(
+          runtime,
+          session,
+          clean,
+          parent,
+          placement,
+          instrumented,
+          create,
+        )
+      : { output: clean, data: clean };
     const source = storySource(use.source, session);
     props = content.output;
     draft = {
@@ -85,7 +87,7 @@ export function prepareStoryUse(
   }
 
   const styleOwner =
-    componentPath ??
+    component?.path ??
     (supplier && supplierStyleOwner(supplier, session, capture));
   let regions: ((output: ReactNode) => ReactNode)[] | undefined;
   return {

@@ -91,11 +91,16 @@ impl Fixture {
     }
 
     fn keys(&self) -> RenderKeys {
+        self.keys_with_content_slots(None)
+    }
+
+    fn keys_with_content_slots(&self, content_slots: Option<bool>) -> RenderKeys {
         let entries = BTreeMap::from([(
             "st".to_owned(),
             RenderSource {
                 handle: format!("{STORIES}#default"),
                 method: RenderMethod::Story,
+                content_slots,
                 ..RenderSource::default()
             },
         )]);
@@ -122,6 +127,16 @@ impl Fixture {
             .resolution_digests
             .insert(name.into(), format!("{name}@2"));
     }
+}
+
+#[test]
+fn story_content_slots_change_the_render_key_outside_the_story_module() {
+    let fixture = Fixture::new();
+    let default = fixture.keys();
+    let enabled = fixture.keys_with_content_slots(Some(true));
+    let disabled = fixture.keys_with_content_slots(Some(false));
+    assert_eq!(default.module(S), enabled.module(S));
+    assert_ne!(default.module(S), disabled.module(S));
 }
 
 fn fallback() -> NodeKey {

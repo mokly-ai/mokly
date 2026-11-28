@@ -39,7 +39,7 @@ pub(crate) struct Collection {
     pub(crate) candidate: Option<Classification>,
     pub(crate) work: ReuseWork,
     pub(crate) probes: Arc<Probes>,
-    pub(crate) paths: Option<[u8; 32]>,
+    pub(crate) projection: Option<[u8; 32]>,
     pub(crate) recording: Arc<AtomicBool>,
 }
 
@@ -80,7 +80,7 @@ impl Collection {
                 ..ReuseWork::default()
             },
             probes,
-            paths: None,
+            projection: None,
             recording,
         }
     }
@@ -90,12 +90,12 @@ impl Collection {
         self.recording.store(false, Ordering::Release);
     }
     pub(crate) fn key(&self, route: &ViewRoutes, consumer: &Consumer<'_>) -> Option<[u8; 32]> {
-        let paths = self.paths?;
+        let projection = self.projection?;
         reuse_digest::digest(&(
             consumer.previous,
             consumer.current,
             &consumer.component,
-            &paths,
+            &projection,
             route.key.viewport,
             route.key.color_scheme,
             &route.before,

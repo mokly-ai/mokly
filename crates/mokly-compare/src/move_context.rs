@@ -8,6 +8,7 @@ use mokly_model::catalogue::ModelEntry;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_types::ViewKey;
+use crate::instance_policy::{self, Transparency, TransparentComponents};
 use crate::move_inventory::{self, PlanIndex, VariantIndex};
 use crate::resource_memo::ResourceMemo;
 
@@ -15,6 +16,7 @@ pub(crate) struct RenderedMoves<'a> {
     pub(crate) memo: Arc<dyn ResourceMemo>,
     pub(crate) before: Arc<dyn RenderGeneration>,
     pub(crate) after: Arc<dyn RenderGeneration>,
+    pub(crate) transparent: Transparency,
     before_plans: &'a PlanIndex<'a>,
     after_plans: &'a PlanIndex<'a>,
     before_variants: VariantIndex,
@@ -30,12 +32,15 @@ impl<'a> RenderedMoves<'a> {
         after_plans: &'a PlanIndex<'a>,
         memo: Arc<dyn ResourceMemo>,
     ) -> Self {
-        let before_variants = move_inventory::variant_index(&before.catalogue().model);
-        let after_variants = move_inventory::variant_index(&after.catalogue().model);
+        let catalogues = [before.catalogue(), after.catalogue()];
+        let [before_variants, after_variants] =
+            catalogues.map(|catalogue| move_inventory::variant_index(&catalogue.model));
+        let transparent = catalogues.map(instance_policy::transparent);
         Self {
             memo,
             before,
             after,
+            transparent,
             before_plans,
             after_plans,
             before_variants,
@@ -48,6 +53,13 @@ impl<'a> RenderedMoves<'a> {
         match side {
             ReviewSide::Before => self.before.as_ref(),
             ReviewSide::After => self.after.as_ref(),
+        }
+    }
+
+    pub(crate) fn transparent_on(&self, side: ReviewSide) -> &TransparentComponents {
+        match side {
+            ReviewSide::Before => &self.transparent[0],
+            ReviewSide::After => &self.transparent[1],
         }
     }
 

@@ -45,6 +45,7 @@ impl MoveEvidence for RenderedMoves<'_> {
             let mut projection = Projection {
                 ignored: ignores,
                 instances,
+                transparent_components: self.transparent_on(side).clone(),
                 paths: paths.clone(),
                 route,
                 resources,
@@ -174,6 +175,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 &format!("static/mokly-generated/{}", right_plan.route),
                 paths,
                 &resources.aliases,
+                &self.transparent,
             );
             let owned = owned_styles::compare(
                 [&left_document.tree, &right_document.tree],

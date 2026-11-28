@@ -7,6 +7,7 @@ use mokly_graph::cache::Artifact;
 
 use crate::comparison_preparation::{PreparedView, documents};
 use crate::comparison_resources::Resources;
+use crate::instance_policy::{self, Transparency};
 use crate::{equal_material, matching_tree, view_material};
 
 pub(crate) fn prepare(
@@ -16,6 +17,7 @@ pub(crate) fn prepare(
     paths: &BTreeMap<String, String>,
     moved: bool,
     equal_document: bool,
+    transparent: &Transparency,
 ) -> PreparedView {
     let [before, after] = documents(&artifacts);
     let trees = if equal_document {
@@ -31,7 +33,9 @@ pub(crate) fn prepare(
         ]
     };
     let material = match (moved, before, after) {
-        (false, Some(_), Some(document)) if equal_document => {
+        (false, Some(_), Some(document))
+            if equal_document && instance_policy::same_for(&document.tree, transparent) =>
+        {
             Some(equal_material::compare(document))
         }
         (false, Some(before), Some(after)) => Some(view_material::compare(
@@ -41,6 +45,7 @@ pub(crate) fn prepare(
             &format!("static/mokly-generated/{}", routes[1].unwrap_or("")),
             paths,
             &BTreeMap::new(),
+            transparent,
         )),
         _ => None,
     };

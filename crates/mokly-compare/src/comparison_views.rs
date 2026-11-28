@@ -19,12 +19,14 @@ use crate::comparison_routes;
 use crate::comparison_slots::Slots;
 use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::error::Result;
+use crate::instance_policy;
 use crate::instance_proof::InstanceProof;
 use crate::move_inventory::PlanIndex;
 use crate::move_types::Pairing;
 use crate::owned_styles;
 use crate::resource_memo::ResourceMemo;
 use crate::reuse_collection::Collection;
+use crate::reuse_digest;
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -77,7 +79,7 @@ pub(crate) fn collect(
     paths: &BTreeMap<String, String>,
     memo: &dyn ResourceMemo,
     plans: [&PlanIndex<'_>; 2],
-    reuse: Option<&mut Collection>,
+    mut reuse: Option<&mut Collection>,
 ) -> Result<Vec<PairViews>> {
     let pairs = &pairing.entries;
     let paths_preserved =
@@ -91,12 +93,17 @@ pub(crate) fn collect(
     after.check_cancelled().compare()?;
     let probes = reuse.as_ref().map(|reuse| reuse.probes.clone());
     let recording = reuse.as_ref().map(|reuse| reuse.recording.clone());
+    let transparent = [before.catalogue(), after.catalogue()].map(instance_policy::transparent);
+    if let Some(reuse) = &mut reuse {
+        reuse.projection = reuse_digest::digest(&(paths, transparent.each_ref().map(Arc::as_ref)));
+    }
     let preparation: &dyn ViewPreparation = &Preparation {
         probes: probes.as_ref(),
         recording: recording.as_deref(),
         before: before.as_ref(),
         after: after.as_ref(),
         paths,
+        transparent: &transparent,
         paths_preserved,
     };
     let consumers: Vec<_> = pairs
@@ -123,6 +130,7 @@ pub(crate) fn collect(
                 current,
                 component,
                 paths,
+                transparent: &transparent,
                 memo,
             }
         })

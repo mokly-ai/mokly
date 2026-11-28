@@ -20,6 +20,10 @@ excludedProps?: Array<string>,
  */
 ignoredParameters?: Array<IgnoredParameter>,
 /**
+ * Whether uses of this story component get implicit content slots.
+ */
+contentSlots?: boolean,
+/**
  * Repository-relative module and export name.
  */
 handle: string,

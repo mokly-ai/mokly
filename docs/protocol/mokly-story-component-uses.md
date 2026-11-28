@@ -1,7 +1,5 @@
 # Story Component Uses
 
-Status: The [`contentSlots` switch](#content-without-slots) is not built yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds it.
-
 This page continues the [instance contract](./mokly-instances.md). It defines
 the uses of story components, how they render, and the props and the slots
 that each use records. The [instance id rules](./mokly-instance-ids.md) give

@@ -76,6 +76,15 @@ pub struct RenderSource {
     pub slots: BTreeMap<String, String>,
     /// Config-relative public component CSS declarations.
     pub stylesheets: Vec<String>,
+    /// Composed content slot setting on a parent story. Absence uses the default.
+    pub content_slots: Option<bool>,
+}
+
+impl RenderSource {
+    /// Whether uses of this entry have implicit slots disabled.
+    pub fn content_slots_disabled(&self) -> bool {
+        self.method == RenderMethod::Story && self.content_slots == Some(false)
+    }
 }
 
 /// JavaScript metadata stays private and never enters the read model.

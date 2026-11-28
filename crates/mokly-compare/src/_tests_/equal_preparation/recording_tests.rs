@@ -134,6 +134,7 @@ fn compare(equal: bool) {
         before: &before,
         after: &after,
         paths: &paths,
+        transparent: &Default::default(),
         paths_preserved: true,
         probes: Some(&probes),
         recording: Some(&AtomicBool::new(true)),
@@ -184,6 +185,7 @@ fn compare(equal: bool) {
         current: None,
         component: None,
         paths: &paths,
+        transparent: &Default::default(),
         memo: &recording,
     };
     let mut result = PairViews::default();

@@ -1,7 +1,5 @@
 # Storybook Story Setup
 
-Status: Mokly does not read the [`contentSlots`](#globals-for-views) field yet, and it warns about that field as an unknown field. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) adds it.
-
 This page continues the [Storybook stories contract](./mokly-storybook.md). It
 defines how the sidecar sets up each story render, and the globals that each
 view gives a story.

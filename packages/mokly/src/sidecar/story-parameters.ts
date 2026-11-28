@@ -9,6 +9,7 @@ export function readStoryParameters(value: unknown) {
   const result = {
     viewports: new Map<string, Globals>(),
     colorSchemes: new Map<string, Globals>(),
+    contentSlots: true,
     ignoredParameters,
   };
   if (value === undefined) return result;
@@ -19,6 +20,11 @@ export function readStoryParameters(value: unknown) {
 
   for (const [field, mapping] of Object.entries(value)) {
     const path = `mokly.${field.toWellFormed()}`;
+    if (field === "contentSlots") {
+      if (typeof mapping === "boolean") result.contentSlots = mapping;
+      else ignoredParameters.push({ path, reason: "not-a-boolean" });
+      continue;
+    }
     if (field !== "viewports" && field !== "colorSchemes") {
       ignoredParameters.push({ path, reason: "unknown-field" });
       continue;

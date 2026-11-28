@@ -82,6 +82,7 @@ impl ViewStream<'_> {
             current: original.current,
             component: original.component.clone(),
             paths: original.paths,
+            transparent: original.transparent,
             memo,
         });
         let consumer: &dyn ViewConsumer = recording.as_ref().map_or(original, |consumer| consumer);

@@ -12,6 +12,7 @@ use mokly_model::canonical::compare_utf16;
 use mokly_model::usage::ComponentInputOwner;
 
 use crate::instance_inputs::{SlotInputs, SlotSignal};
+use crate::instance_policy::TransparentComponents;
 use crate::{material_nodes, material_urls};
 
 /// Typed canonical material, never used as captured document bytes.
@@ -34,9 +35,16 @@ pub(crate) struct Projection {
     pub(crate) instance_owner: Option<String>,
     pub(crate) ignored: BTreeSet<String>,
     pub(crate) instances: BTreeSet<String>,
+    pub(crate) transparent_components: TransparentComponents,
     pub(crate) paths: BTreeMap<String, String>,
     pub(crate) resources: BTreeMap<String, String>,
     pub(crate) route: String,
+}
+
+impl Projection {
+    pub(crate) fn folds_instance(&self, key: &str, path: &str) -> bool {
+        self.instances.contains(key) && !self.transparent_components.contains(path)
+    }
 }
 
 /// Canonicalize one composed tree without retaining it or changing output bytes.

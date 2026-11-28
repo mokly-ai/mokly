@@ -125,6 +125,7 @@ pub(super) fn compare_views(
             "after.html",
             paths,
             &BTreeMap::new(),
+            &Default::default(),
         )),
         _ => None,
     };

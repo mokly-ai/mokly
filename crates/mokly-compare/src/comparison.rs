@@ -22,7 +22,6 @@ use crate::move_inventory;
 use crate::move_types::MoveDetector;
 use crate::resource_memo::{Memo, ResourceMemo};
 use crate::reuse_collection::Collection;
-use crate::reuse_digest;
 use crate::use_case_impact;
 use crate::validation_head::Head;
 use crate::{affected, entry_classification, review_projection, root_impact, snapshots};
@@ -125,9 +124,6 @@ impl Engine {
             ),
         )?;
         let paths = pairing.paths(before_model, after_model);
-        if let Some(reuse) = &mut reuse {
-            reuse.paths = reuse_digest::digest(&paths);
-        }
         let pairs = comparison_views::collect(
             &pairing,
             before.clone(),

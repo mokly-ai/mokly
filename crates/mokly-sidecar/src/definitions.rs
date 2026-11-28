@@ -26,6 +26,8 @@ pub struct IgnoredParameter {
 pub enum IgnoredParameterReason {
     /// Expected a plain object.
     NotAnObject,
+    /// Expected a boolean.
+    NotABoolean,
     /// Unknown field of `mokly`.
     UnknownField,
     /// Unknown key in `colorSchemes`.
@@ -101,6 +103,10 @@ pub struct Definition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub ignored_parameters: Option<Vec<IgnoredParameter>>,
+    /// Whether uses of this story component get implicit content slots.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub content_slots: Option<bool>,
     /// Repository-relative module and export name.
     pub handle: String,
     /// Module that created the definition; it can differ from the exporting module.

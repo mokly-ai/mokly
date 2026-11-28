@@ -125,7 +125,7 @@ pub(crate) fn canonical(nodes: &[Node], projection: &Projection) -> Vec<Material
                         children,
                         raw,
                         head,
-                        projection.instances.contains(key),
+                        projection.folds_instance(key, path),
                         Finish::Extend,
                     ));
                 }

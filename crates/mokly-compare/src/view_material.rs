@@ -6,6 +6,7 @@ use mokly_html::composition::Composed;
 use mokly_html::tree::{self, Node, RegionKind};
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 
+use crate::instance_policy::Transparency;
 use crate::material::{self, Projection};
 use crate::{instance_impact, instance_inputs};
 
@@ -26,9 +27,17 @@ pub(crate) fn compare(
     after_route: &str,
     paths: &BTreeMap<String, String>,
     resources: &BTreeMap<String, String>,
+    transparent: &Transparency,
 ) -> MaterialComparison {
-    let (mut left, mut right) =
-        projections(before, after, before_route, after_route, paths, resources);
+    let (mut left, mut right) = projections(
+        before,
+        after,
+        before_route,
+        after_route,
+        paths,
+        resources,
+        transparent,
+    );
     let changed =
         material::canonical(&before.tree, &left) != material::canonical(&after.tree, &right);
     let root_changed = material::canonical(root(&before.tree).unwrap_or_default(), &left)
@@ -58,6 +67,7 @@ pub(crate) fn projections(
     after_route: &str,
     paths: &BTreeMap<String, String>,
     resources: &BTreeMap<String, String>,
+    transparent: &Transparency,
 ) -> (Projection, Projection) {
     let ignored_before = material::ignores(&before.tree);
     let ignored_after = material::ignores(&after.tree);
@@ -75,6 +85,7 @@ pub(crate) fn projections(
     let left = Projection {
         ignored: ignored.clone(),
         instances,
+        transparent_components: transparent[0].clone(),
         paths: paths.clone(),
         resources: resources.clone(),
         route: before_route.into(),
@@ -84,6 +95,7 @@ pub(crate) fn projections(
     let right = Projection {
         ignored,
         instances: left.instances.clone(),
+        transparent_components: transparent[1].clone(),
         route: after_route.into(),
         inputs: instance_inputs::collect(&after.usage),
         ..Default::default()

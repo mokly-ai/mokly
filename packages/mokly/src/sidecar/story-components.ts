@@ -4,6 +4,11 @@ import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 const memoType = Symbol.for("react.memo");
 export const forwardRefType = Symbol.for("react.forward_ref");
 
+interface StoryComponentEntry {
+  path: string;
+  contentSlots: boolean;
+}
+
 function identity(value: unknown): value is object {
   return (
     typeof value === "function" ||
@@ -41,12 +46,14 @@ export function storyComponentType(value: unknown): value is object {
 export class StoryComponents {
   private readonly byType = new Map<object, string[]>();
   private readonly byInner = new Map<object, string[]>();
+  private readonly withoutSlots = new Set<string>();
 
-  register(type: unknown, handle: string): void {
+  register(type: unknown, handle: string, contentSlots: boolean): void {
     if (!storyComponentType(type)) return;
     append(this.byType, type, handle);
     const inner = innerType(type);
     if (inner) append(this.byInner, inner, handle);
+    if (!contentSlots) this.withoutSlots.add(handle);
   }
 
   handles(type: object): string[] {
@@ -57,21 +64,22 @@ export class StoryComponents {
       ...(inner ? (this.byType.get(inner) ?? []) : []),
     ];
   }
-}
 
-export function storyComponentPath(
-  handles: readonly string[],
-  entries: Record<string, EntryBinding>,
-  ownHandle: string | undefined,
-): string | undefined {
-  if (ownHandle && handles.includes(ownHandle)) return;
-  let path: string | undefined;
-  for (const handle of handles) {
-    const candidate = entries[handle]?.path;
-    if (candidate !== undefined && (path === undefined || candidate < path))
-      path = candidate;
+  entry(
+    type: object,
+    entries: Record<string, EntryBinding>,
+    ownHandle: string | undefined,
+  ): StoryComponentEntry | undefined {
+    const handles = this.handles(type);
+    if (ownHandle && handles.includes(ownHandle)) return;
+    let selected: StoryComponentEntry | undefined;
+    for (const handle of handles) {
+      const path = entries[handle]?.path;
+      if (path !== undefined && (!selected || path < selected.path))
+        selected = { path, contentSlots: !this.withoutSlots.has(handle) };
+    }
+    return selected;
   }
-  return path;
 }
 
 function append(

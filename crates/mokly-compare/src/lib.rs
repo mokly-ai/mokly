@@ -81,6 +81,7 @@ mod workspace_patterns;
 #[cfg(windows)]
 mod windows_durability;
 
+mod instance_policy;
 mod matching_tree;
 mod material;
 mod material_nodes;

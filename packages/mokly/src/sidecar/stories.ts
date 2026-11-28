@@ -48,7 +48,9 @@ export function describeStoryFile(
       };
       generation.stories.set(id, stored);
       result.stories.push({ id, title, props, argTypes });
-      const { ignoredParameters } = readStoryParameters(story.parameters.mokly);
+      const { contentSlots, ignoredParameters } = readStoryParameters(
+        story.parameters.mokly,
+      );
       return {
         saved: {
           slug: exportName,
@@ -59,15 +61,21 @@ export function describeStoryFile(
           ...(ignoredParameters.length ? { ignoredParameters } : {}),
         },
         argTypes,
+        contentSlots,
         stored,
       };
     },
   );
   if (!first) return;
-  generation.storyComponents.register(read.component, handle);
+  generation.storyComponents.register(
+    read.component,
+    handle,
+    first.contentSlots,
+  );
   generation.stories.set(handle, first.stored);
   result.components.push({
     excludedProps: first.saved.excludedProps,
+    ...(first.contentSlots ? {} : { contentSlots: false }),
     ...(first.saved.ignoredParameters
       ? { ignoredParameters: first.saved.ignoredParameters }
       : {}),

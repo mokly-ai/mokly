@@ -48,7 +48,19 @@ impl<'a> Prepared<'a> {
             .filter(|(handle, _)| generation.unattributed.contains(*handle))
             .map(|(handle, binding)| (handle, &binding.path, &binding.title))
             .collect();
-        let shared = digest(&to_vec(&(&generation.environment, shared, unattributed))?);
+        let shared = (&generation.environment, shared, unattributed);
+        // Story parameters affect uses even when a consumer imports only the component module.
+        let without_slots: Vec<_> = inputs
+            .entries
+            .iter()
+            .filter(|(_, source)| source.content_slots_disabled())
+            .map(|(path, source)| (path, &source.handle))
+            .collect();
+        let shared = digest(&if without_slots.is_empty() {
+            to_vec(&shared)?
+        } else {
+            to_vec(&(shared, without_slots))?
+        });
         let unnamed_renderer = inputs
             .renderer
             .is_some_and(|renderer| !graph.contains_key(renderer));

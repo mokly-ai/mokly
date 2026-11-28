@@ -1,6 +1,6 @@
 # Component Change Attribution
 
-Status: How Changes keeps supplied content that the component of a [story component use](./mokly-story-component-uses.md) reads or renders outside its slots is not settled yet. [Track I decision 10](../../plans/storybook-support.md#track-i-decision-10-supplied-content-that-bypasses-its-slot) waits for the user. Until then, an edit of such content can drop out of Changes. The [transparent region](#normalization-and-input-ownership) of a use is not built yet. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) applies the answer and adds the region.
+Status: How Changes keeps supplied content that the component of a [story component use](./mokly-story-component-uses.md) reads or renders outside its slots is not settled yet. [Track I decision 10](../../plans/storybook-support.md#track-i-decision-10-supplied-content-that-bypasses-its-slot) waits for the user. Until then, an edit of such content can drop out of Changes. The [story component usage milestone](../../plans/storybook-support.md#milestone-35-story-component-usage) applies the answer.
 
 ## Changes Membership
 

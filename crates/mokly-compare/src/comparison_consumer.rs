@@ -19,6 +19,7 @@ use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::comparison_views::{ImmutableView, PairViews, PendingView, UsageView};
 use crate::error::Result;
+use crate::instance_policy::Transparency;
 use crate::instance_proof::ProofInput;
 use crate::resource_memo::ResourceMemo;
 use crate::{inline_styles, instance_proof, owned_styles, view_material};
@@ -40,6 +41,7 @@ pub(crate) struct Consumer<'a> {
     pub(crate) current: Option<&'a ModelEntry>,
     pub(crate) component: Option<String>,
     pub(crate) paths: &'a BTreeMap<String, String>,
+    pub(crate) transparent: &'a Transparency,
     pub(crate) memo: &'a dyn ResourceMemo,
 }
 
@@ -104,6 +106,7 @@ impl ViewConsumer for Consumer<'_> {
                 ),
                 self.paths,
                 &resources.aliases,
+                self.transparent,
             )),
             _ => material,
         };

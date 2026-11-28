@@ -16,6 +16,7 @@ use crate::comparison_documents;
 use crate::comparison_error::CompareResult;
 use crate::comparison_resources::{self, Resources};
 use crate::error::Result;
+use crate::instance_policy::Transparency;
 use crate::reuse_generation::RecordingGeneration;
 use crate::reuse_probes::Probes;
 use crate::reuse_reads::Recorder;
@@ -69,6 +70,7 @@ pub(crate) struct Preparation<'a> {
     pub(crate) after: &'a dyn RenderGeneration,
     /// Accepted entry relocations, fixed before view preparation starts.
     pub(crate) paths: &'a BTreeMap<String, String>,
+    pub(crate) transparent: &'a Transparency,
     /// Catalogue pairing preserved every original path spelling.
     pub(crate) paths_preserved: bool,
 }
@@ -95,6 +97,7 @@ impl ViewPreparation for Preparation<'_> {
                 before: &previous,
                 after: &current,
                 paths: self.paths,
+                transparent: self.transparent,
                 paths_preserved: self.paths_preserved,
                 probes: None,
                 recording: None,
@@ -141,6 +144,7 @@ impl ViewPreparation for Preparation<'_> {
                         self.paths,
                         moved,
                         equal,
+                        self.transparent,
                     ))))
                 }
                 Some(RetainedComparisonInput::Deferred(recipe)) => {
@@ -184,6 +188,7 @@ impl ViewPreparation for Preparation<'_> {
                 before: &previous,
                 after: &current,
                 paths: self.paths,
+                transparent: self.transparent,
                 paths_preserved: self.paths_preserved,
                 probes: None,
                 recording: None,
@@ -221,6 +226,7 @@ impl ViewPreparation for Preparation<'_> {
             self.paths,
             moved,
             false,
+            self.transparent,
         ))
     }
 }

@@ -70,6 +70,7 @@ impl RenderedMoves<'_> {
                     after_route,
                     paths,
                     &BTreeMap::new(),
+                    &self.transparent,
                 );
                 Ok(Some(MoveLines {
                     before: move_text::page(&material::canonical(&before.tree, &left)),

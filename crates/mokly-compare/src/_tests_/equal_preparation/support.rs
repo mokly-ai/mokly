@@ -130,6 +130,7 @@ pub(super) fn prepare_options(
         before,
         after: &after,
         paths: &paths,
+        transparent: &Default::default(),
         paths_preserved,
         recording: None,
         probes: None,

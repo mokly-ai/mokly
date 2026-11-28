@@ -47,6 +47,7 @@ pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> Pr
         method,
         slots: BTreeMap::new(),
         stylesheets: definition.stylesheets.clone(),
+        content_slots: definition.content_slots,
     };
     rendering.entries.insert(String::new(), parent.clone());
     rendering.use_cases.insert(
@@ -76,6 +77,7 @@ pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> Pr
     let mut variants = Vec::new();
     for variant in &definition.variants {
         let mut source = parent.clone();
+        source.content_slots = None;
         source.slots = variant.slots.clone();
         if story {
             source.handle = format!("{exporting_file}#{}", variant.slug);
@@ -168,6 +170,7 @@ fn ignored_parameters(parameters: &[IgnoredParameter]) -> Vec<IgnoredStoryParame
             path: parameter.path.clone(),
             reason: match parameter.reason {
                 IgnoredParameterReason::NotAnObject => "not an object",
+                IgnoredParameterReason::NotABoolean => "not a boolean",
                 IgnoredParameterReason::UnknownField => "unknown field",
                 IgnoredParameterReason::UnknownColorScheme => "unknown colour scheme",
                 IgnoredParameterReason::UnknownViewport => "unknown viewport",
